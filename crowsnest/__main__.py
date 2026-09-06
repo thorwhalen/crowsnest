@@ -15,6 +15,7 @@ from __future__ import annotations
 import json as _json
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 from crowsnest import hook as _hook
 from crowsnest import ledger as _ledger
@@ -211,6 +212,22 @@ def turns(
     return "\n".join(out)
 
 
+def report(*, out: str | None = None, home: str | None = None):
+    """Render the roster as one phone-readable HTML page: no stylesheet, script, or
+    request to anywhere.
+
+    Writes to `--out FILE`, or prints to stdout so you can pipe it:
+    `crowsnest report > roster.html`.
+    """
+    result = tools.report(home=home)
+    if not out:
+        return result["html"]
+    path = Path(out).expanduser()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(result["html"], encoding="utf-8")
+    return f"wrote {len(result['html'].encode('utf-8'))} bytes to {path}"
+
+
 def watch(
     *, interval: float = _watch.DFLT_INTERVAL, home: str | None = None, json: bool = False
 ):
@@ -336,7 +353,7 @@ def spawn(
     )
 
 
-_commands = [roster, show, turns, watch, ledger, hook, install_skills, spawn]
+_commands = [roster, show, turns, report, watch, ledger, hook, install_skills, spawn]
 
 
 def main(argv: list[str] | None = None) -> None:

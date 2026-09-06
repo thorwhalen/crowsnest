@@ -60,6 +60,21 @@ def test_unknown_session_is_a_clean_error(home, capsys):
     assert "no live session matches 'nobody'" in capsys.readouterr().err
 
 
+def test_report_prints_html_to_stdout(home, capsys):
+    main(["report", "--home", str(home)])
+    out = capsys.readouterr().out
+    assert out.startswith("<!doctype html>")
+    assert "shipper" in out and "Squash or rebase?" in out
+
+
+def test_report_out_writes_a_file(home, tmp_path, capsys):
+    target = tmp_path / "page.html"
+    main(["report", "--home", str(home), "--out", str(target)])
+    summary = capsys.readouterr().out
+    assert "wrote" in summary and str(target) in summary
+    assert target.read_text(encoding="utf-8").startswith("<!doctype html>")
+
+
 def test_install_skills_dry_run_names_both_assets(tmp_path, capsys):
     main(["install-skills", "--dry-run", "--target", str(tmp_path / "host")])
     out = capsys.readouterr().out
