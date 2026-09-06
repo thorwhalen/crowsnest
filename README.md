@@ -146,7 +146,14 @@ The only other writes in the package are `crowsnest spawn`, which starts a sessi
 
 ```python
 from crowsnest import (
-    roster, show, turns, events, live_sessions, spawn, read_ledger, update_ledger
+    roster,
+    show,
+    turns,
+    events,
+    live_sessions,
+    spawn,
+    read_ledger,
+    update_ledger,
 )
 
 roster()["counts"]  # {'waiting': 1, 'busy': 1, 'idle': 30, 'other': 0}
