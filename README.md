@@ -43,7 +43,7 @@ That answer is a synthesis. Every row behind it is one the `crowsnest` command p
 |---|---|---|
 | 1. read | `crowsnest`, `crowsnest show X`, `crowsnest turns X` — the registry and the transcript tail | nothing |
 | 2. ask | message a running session (Claude Code's `SendMessage`) and get an answer from its own context | one turn of its context |
-| 3. be told | `crowsnest watch`, one line per change, fed to the watching session's `Monitor` tool | nothing |
+| 3. be told | `crowsnest watch`, one line per change, fed to the watching session's `Monitor` tool — pushed by Claude Code's own hooks when they are wired up | nothing |
 
 The skill's rule is to never spend a costlier tier when a cheaper one answers, and never to ask a session that is `busy` or `waiting`.
 
@@ -54,6 +54,8 @@ crowsnest                          who is alive: waiting on you first, then busy
 crowsnest show <session>           one session: last asked, last said, running now, pending question
 crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
+crowsnest ledger [<session>]       one session's durable page, or all of them with ages
+crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
 crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
 crowsnest install-skills           link the skill and the scout subagent into ~/.claude
 ```
@@ -89,6 +91,40 @@ remote = true                         # its pids are not ours: alive while fresh
 
 Then `crowsnest --all-homes` prints every home with a column saying which, and `crowsnest show name@home --all-homes` picks one when a name exists in two.
 
+## The ledger: what a session leaves behind
+
+The roster and the transcript both describe *now*. Neither survives a `/clear` in the watching session, and neither says what a session decided or what it is still waiting on you for. So each session gets a small markdown file — `~/.local/share/crowsnest/ledger/<name>.md` — that it writes and a watcher reads:
+
+```markdown
+# lookout
+
+state: working
+last asked: 2026-09-06T18:12:00+00:00 · fix the widget
+last said: 2026-09-06T18:14:22+00:00 · Fixed and merged; PR 12 is green.
+open questions:
+- squash or rebase for the release?
+decisions:
+- the ledger lives under ~/.local/share/crowsnest
+
+## Notes
+
+Anything at all. Nothing in crowsnest ever rewrites this part.
+```
+
+`last asked` and `last said` are mechanical — the `Stop` hook below writes them from the transcript tail, so they are true without anyone deciding anything. `state`, `open questions` and `decisions` are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.
+
+## Being told instead of polling
+
+`crowsnest watch` notices a change within a poll and has to read a transcript to guess why. Claude Code knows both exactly and immediately, and will say so — if you give it a line to say it on:
+
+```jsonc
+// ~/.claude/settings.json
+"Stop":         [{"hooks": [{"type": "command", "command": "crowsnest hook stop"}]}],
+"Notification": [{"hooks": [{"type": "command", "command": "crowsnest hook notification"}]}]
+```
+
+With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session's last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. `crowsnest hook` prints nothing, exits 0 whatever happens, and does its work in single-digit milliseconds; without the hooks installed, `crowsnest watch` is exactly the registry diff it always was.
+
 ## What it reads
 
 - `~/.claude/sessions/<pid>.json`: written while a session runs. Name, session id, working directory, `busy` / `idle` / `waiting`, and when waiting, what for. Checked against a live process before it is reported, because a crash leaves the file behind.
@@ -96,19 +132,33 @@ Then `crowsnest --all-homes` prints every home with a column saying which, and `
 
 What a transcript's content *means* is [openloops](https://github.com/thorwhalen/openloops)' business, and crowsnest calls it rather than re-implementing it. openloops deliberately never looks at whether a process is running; crowsnest is that other half.
 
+## What it writes
+
+Nothing into another session, and nothing into a repository. Everything crowsnest writes is its own and lives under `~/.local/share/crowsnest` (`$CROWSNEST_DATA_DIR` or `$XDG_DATA_HOME` if you set either):
+
+- `ledger/<name>.md`: one per session, as above.
+- `events.jsonl`: one line per hook event, append-only, rotated by size. `crowsnest watch` tails it.
+- `hook.log`: one line for anything `crowsnest hook` swallowed, so "the hook did nothing" is a question with an answer.
+
+The only other writes in the package are `crowsnest spawn`, which starts a session, and `install-skills`, which writes symlinks.
+
 ## From Python
 
 ```python
-from crowsnest import roster, show, turns, events, live_sessions, spawn
+from crowsnest import (
+    roster, show, turns, events, live_sessions, spawn, read_ledger, update_ledger
+)
 
 roster()["counts"]  # {'waiting': 1, 'busy': 1, 'idle': 30, 'other': 0}
 show("monitor")["activity"]["last_assistant_text"]
+update_ledger("monitor", state="working", open_questions=["squash or rebase?"])
+read_ledger("monitor")["fields"]["last_said"]
 for event in events(interval=5):  # forever
     ...
 spawn("demo", cwd="/path/to/repo", prompt="run the tests")["pid"]
 ```
 
-Every function takes `home=` (the Claude Code config directory; a synced copy of another machine's works the same way) and the readers take `is_alive=` (how a registry pid is confirmed running).
+Every function takes `home=` (the Claude Code config directory; a synced copy of another machine's works the same way), the readers take `is_alive=` (how a registry pid is confirmed running), and everything that writes takes `ledger_dir=` or `events_path=`.
 
 ## Not in crowsnest
 

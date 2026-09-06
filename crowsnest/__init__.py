@@ -22,13 +22,23 @@ tiers, cheapest first:
 
 And one stream: :func:`crowsnest.watch.events` yields a line every time a session starts,
 exits, finishes a turn, or starts waiting on its human, so a monitor is told rather than
-made to poll.
+made to poll. When the user has wired ``crowsnest hook`` onto Claude Code's ``Stop`` and
+``Notification`` hooks (:mod:`crowsnest.hook`), those two moments are pushed into the
+stream as they happen instead of being noticed a poll later.
+
+Between the roster and the transcript there is a fourth thing, the only one crowsnest
+authors: the **ledger** (:mod:`crowsnest.ledger`), one small markdown file per session,
+holding what it was last asked and said, what it decided, and what it still needs from a
+human. A session writes its own; a watcher reads it and survives being cleared.
 
 Reading the others is the whole point, but the watching session also needs to *create*
 the sessions it will then watch: :func:`crowsnest.spawn.spawn` starts one, named, in a
-directory, and waits for the registry to see it. It is the one write in the package
-beyond the skill installer's symlinks; crowsnest still never sends into, or kills, a
-session that already exists.
+directory, and waits for the registry to see it.
+
+Those are the writes, and they are all of them: a session started, and files that are
+crowsnest's own and live outside any repository -- the ledgers, the hook event log (both
+under :func:`crowsnest.paths.data_dir`), and the symlinks the skill installer makes.
+crowsnest never sends into, kills, or writes into a session that already exists.
 
 >>> from crowsnest import live_sessions, roster
 >>> live_sessions(home='/nonexistent-dir-for-doctest')
@@ -36,6 +46,7 @@ session that already exists.
 """
 
 from crowsnest.activity import Activity, Turn, read_activity, read_turns
+from crowsnest.ledger import list_ledgers, read_ledger, update_ledger
 from crowsnest.registry import LiveSession, live_sessions
 from crowsnest.spawn import spawn
 from crowsnest.tools import resolve, roster, show, turns
@@ -46,12 +57,15 @@ __all__ = [
     "LiveSession",
     "Turn",
     "events",
+    "list_ledgers",
     "live_sessions",
     "read_activity",
+    "read_ledger",
     "read_turns",
     "resolve",
     "roster",
     "show",
     "spawn",
     "turns",
+    "update_ledger",
 ]
