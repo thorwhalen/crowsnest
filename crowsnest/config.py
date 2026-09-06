@@ -22,6 +22,9 @@ into a list of :class:`Home` records so that every reader can loop over them.
     path = "~/.cache/xa/remotes/server"   # a synced copy
     remote = true                         # liveness by freshness, no pid check
 
+On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML
+double-quoted string treats a backslash as an escape.
+
 ``remote = true`` is the one thing a home needs to say about itself: its pids cannot be
 checked here, so a record counts as live while its status is fresh (``fresh_seconds``,
 default one hour). Reading crosses accounts and machines; messaging and spawning do not,
