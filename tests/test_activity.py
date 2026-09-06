@@ -131,3 +131,8 @@ def test_turns_page_from_the_end(tmp_path):
 def test_turn_count_ignores_injected_user_records(tmp_path):
     path = write_transcript(tmp_path, "/w/demo", "s1", _three_turns())
     assert len(read_turns(path, last=50)) == 3
+
+
+def test_tail_turns_counts_human_prompts_in_the_window(tmp_path):
+    path = write_transcript(tmp_path, "/w/demo", "s1", _three_turns())
+    assert read_activity(path).tail_turns == 3
