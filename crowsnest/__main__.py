@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from crowsnest import skills as _skills
 from crowsnest import tools
 from crowsnest import watch as _watch
+from crowsnest.spawn import DFLT_WAIT
+from crowsnest.spawn import spawn as _spawn
 
 __all__ = ["main"]
 
@@ -248,7 +250,39 @@ def install_skills(
     return "\n".join(lines)
 
 
-_commands = [roster, show, turns, watch, install_skills]
+def spawn(
+    name: str,
+    *,
+    cwd: str = "",
+    prompt: str = "",
+    model: str = "",
+    effort: str = "",
+    remote_control: bool = True,
+    home: str | None = None,
+    wait: float = DFLT_WAIT,
+) -> str:
+    """Start a named session in `--cwd`; waits for it to register, then prints its row."""
+    if not cwd:
+        raise ValueError("spawn requires --cwd <dir>")
+    result = _spawn(
+        name,
+        cwd=cwd,
+        prompt=prompt,
+        model=model,
+        effort=effort,
+        remote_control=remote_control,
+        home=home,
+        wait=wait,
+    )
+    if not result["pid"]:
+        return f"{result['name']}: not confirmed ({result['how']})"
+    return (
+        f"{result['name']:<20}pid {result['pid']:<8}"
+        f"session {result['session_id'][:8]}  ({result['how']})"
+    )
+
+
+_commands = [roster, show, turns, watch, install_skills, spawn]
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -24,8 +24,11 @@ And one stream: :func:`crowsnest.watch.events` yields a line every time a sessio
 exits, finishes a turn, or starts waiting on its human, so a monitor is told rather than
 made to poll.
 
-Everything here is read-only. Nothing sends, spawns, kills, or writes into another
-session; the one write in the package is the skill installer, and it writes symlinks.
+Reading the others is the whole point, but the watching session also needs to *create*
+the sessions it will then watch: :func:`crowsnest.spawn.spawn` starts one, named, in a
+directory, and waits for the registry to see it. It is the one write in the package
+beyond the skill installer's symlinks; crowsnest still never sends into, or kills, a
+session that already exists.
 
 >>> from crowsnest import live_sessions, roster
 >>> live_sessions(home='/nonexistent-dir-for-doctest')
@@ -34,6 +37,7 @@ session; the one write in the package is the skill installer, and it writes syml
 
 from crowsnest.activity import Activity, Turn, read_activity, read_turns
 from crowsnest.registry import LiveSession, live_sessions
+from crowsnest.spawn import spawn
 from crowsnest.tools import resolve, roster, show, turns
 from crowsnest.watch import events
 
@@ -48,5 +52,6 @@ __all__ = [
     "resolve",
     "roster",
     "show",
+    "spawn",
     "turns",
 ]
