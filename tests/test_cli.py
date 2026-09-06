@@ -75,6 +75,42 @@ def test_report_out_writes_a_file(home, tmp_path, capsys):
     assert target.read_text(encoding="utf-8").startswith("<!doctype html>")
 
 
+def test_report_all_homes_shows_which_home_each_row_came_from(
+    tmp_path, monkeypatch, capsys
+):
+    from fixtures import (
+        finished_session,
+        registry_record,
+        write_registry,
+        write_transcript,
+    )
+
+    home_a = demo_home(tmp_path / "a")
+    home_b = tmp_path / "b" / "claude"
+    write_transcript(home_b, "/w/demo", "s1", finished_session("s1"))
+    write_registry(
+        home_b,
+        registry_record(201, "s1", name="fixer", status="idle", status_at_ms=1_000_000),
+    )
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(
+        f'[[homes]]\nname = "one"\npath = "{home_a}"\n\n[[homes]]\nname = "two"\npath = "{home_b}"\n'
+    )
+    monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
+    alive = ALIVE | {201}
+    monkeypatch.setattr(registry, "pid_alive", lambda pid: pid in alive)
+    monkeypatch.setattr(
+        tools,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(
+            **{"is_alive": lambda pid: pid in alive, **kw}
+        ),
+    )
+    main(["report", "--all-homes"])
+    html = capsys.readouterr().out
+    assert "one" in html and "two" in html
+
+
 def test_install_skills_dry_run_names_both_assets(tmp_path, capsys):
     main(["install-skills", "--dry-run", "--target", str(tmp_path / "host")])
     out = capsys.readouterr().out

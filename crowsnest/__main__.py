@@ -212,14 +212,15 @@ def turns(
     return "\n".join(out)
 
 
-def report(*, out: str | None = None, home: str | None = None):
+def report(*, out: str | None = None, home: str | None = None, all_homes: bool = False):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
 
     Writes to `--out FILE`, or prints to stdout so you can pipe it:
-    `crowsnest report > roster.html`.
+    `crowsnest report > roster.html`. `--all-homes` reads every home in the config file
+    (accounts, synced machines); each row shows which when it does not match `home`.
     """
-    result = tools.report(home=home)
+    result = tools.report(home=home, all_homes=all_homes)
     if not out:
         return result["html"]
     path = Path(out).expanduser()
