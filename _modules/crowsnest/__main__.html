@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.1 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -134,22 +134,36 @@
         <span class="k">return</span> <span class="n">stamp</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_age_of</span><span class="p">(</span><span class="n">stamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How long ago an ISO timestamp was, or '?' when it cannot be read."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">then</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">stamp</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"?"</span>
+    <span class="k">return</span> <span class="n">_age</span><span class="p">(</span><span class="n">then</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_row_detail</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">status</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
         <span class="n">cause</span> <span class="o">=</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_flight"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span>
-        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"waiting"</span><span class="p">,</span>
-            <span class="n">cause</span> <span class="ow">or</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_assistant_text"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
-        <span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cause</span> <span class="ow">and</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_text_at"</span><span class="p">):</span>
+            <span class="c1"># Its last words are from an earlier turn: say how old they are rather than</span>
+            <span class="c1"># print them as if they were the reason it waits.</span>
+            <span class="n">cause</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"last said </span><span class="si">{</span><span class="n">_age_of</span><span class="p">(</span><span class="n">act</span><span class="p">[</span><span class="s1">'last_text_at'</span><span class="p">])</span><span class="si">}</span><span class="s2"> ago"</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"waiting"</span><span class="p">,</span> <span class="n">cause</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="s2">" · "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">p</span><span class="p">),</span> <span class="n">limit</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"busy"</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">):</span>
         <span class="n">running</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_flight"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span>
         <span class="k">if</span> <span class="n">running</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="s2">"→ "</span> <span class="o">+</span> <span class="n">running</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"shell"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"in a shell"</span>
         <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="s2">"asked: "</span> <span class="o">+</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_user_prompt"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="n">limit</span><span class="p">)</span>
     <span class="n">said</span> <span class="o">=</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_assistant_text"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">said</span> <span class="ow">and</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"bg"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"(background session)"</span>
     <span class="n">mark</span> <span class="o">=</span> <span class="s2">"⚠ "</span> <span class="k">if</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"errored"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
     <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">mark</span><span class="si">}</span><span class="s1">"</span><span class="si">{</span><span class="n">said</span><span class="si">}</span><span class="s1">"'</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
 
@@ -214,6 +228,8 @@
             <span class="s2">"flags: "</span>
             <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">flags</span> <span class="o">+</span> <span class="p">([]</span> <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="s2">"tail_complete"</span><span class="p">]</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"tail only"</span><span class="p">])),</span>
         <span class="p">]</span>
+    <span class="n">floor</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="s2">"tail_complete"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"at least "</span>
+    <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"turns: </span><span class="si">{</span><span class="n">floor</span><span class="si">}{</span><span class="n">act</span><span class="p">[</span><span class="s1">'tail_turns'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 
 

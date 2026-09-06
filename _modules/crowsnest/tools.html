@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.tools &mdash; crowsnest 0.0.1 documentation</title>
+  <title>crowsnest.tools &mdash; crowsnest 0.0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -87,7 +87,7 @@
 <span class="sd">here prints, exits, or knows which surface called it.</span>
 
 <span class="sd">&gt;&gt;&gt; roster(home='/nonexistent-dir-for-doctest')['counts']</span>
-<span class="sd">{'waiting': 0, 'busy': 0, 'idle': 0, 'other': 0}</span>
+<span class="sd">{'waiting': 0, 'busy': 0, 'shell': 0, 'idle': 0, 'other': 0}</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -163,6 +163,8 @@
                 <span class="s2">"turn_open"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">turn_open</span><span class="p">,</span>
                 <span class="s2">"errored"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">errored</span><span class="p">,</span>
                 <span class="s2">"git_branch"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">git_branch</span><span class="p">,</span>
+                <span class="s2">"last_text_at"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">last_text_at</span><span class="p">,</span>
+                <span class="s2">"tail_turns"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">tail_turns</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
     <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">status</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">==</span> <span class="n">status</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">STATUSES</span><span class="p">}</span>

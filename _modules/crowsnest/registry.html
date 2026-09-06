@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.registry &mdash; crowsnest 0.0.1 documentation</title>
+  <title>crowsnest.registry &mdash; crowsnest 0.0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -128,8 +128,9 @@
 <span class="n">DFLT_HOME</span> <span class="o">=</span> <span class="s2">"~/.claude"</span>
 
 <span class="c1">#: The statuses the registry reports, in the order a roster shows them: what needs a human</span>
-<span class="c1">#: first, then what is working, then what is resting. Anything unrecognised sorts last.</span>
-<span class="n">STATUSES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">)</span>
+<span class="c1">#: first, then what is working (``shell`` is a session running a shell command, which is</span>
+<span class="c1">#: a kind of busy), then what is resting. Anything unrecognised sorts last.</span>
+<span class="n">STATUSES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">)</span>
 
 <span class="n">_PID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\d+$"</span><span class="p">)</span>
 <span class="n">_SLUG_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^A-Za-z0-9-]"</span><span class="p">)</span>
@@ -183,6 +184,19 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_pid_alive_windows</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Windows has no signal 0; ask the kernel for a query-only handle instead."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
+
+    <span class="n">query_limited_information</span> <span class="o">=</span> <span class="mh">0x1000</span>
+    <span class="n">kernel32</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span>  <span class="c1"># type: ignore[attr-defined]</span>
+    <span class="n">handle</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">OpenProcess</span><span class="p">(</span><span class="n">query_limited_information</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">pid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">handle</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
 <div class="viewcode-block" id="pid_alive">
 <a class="viewcode-back" href="../../module_docs/crowsnest/registry.html#crowsnest.pid_alive">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pid_alive</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -191,6 +205,11 @@
 <span class="sd">    No protection against pid reuse: ``xa.claude_fs.ephemeral_session_alive`` adds the</span>
 <span class="sd">    ``/proc`` start-time check on Linux, and is the replacement this seam exists for.</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"nt"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_pid_alive_windows</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>

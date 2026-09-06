@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.registry &mdash; crowsnest 0.0.1 documentation</title>
+  <title>crowsnest.registry &mdash; crowsnest 0.0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -143,9 +143,10 @@ reinvented: the registry and the transcripts move with it.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.registry.STATUSES">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">STATUSES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('waiting',</span> <span class="pre">'busy',</span> <span class="pre">'idle')</span></span><a class="headerlink" href="#crowsnest.registry.STATUSES" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">STATUSES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('waiting',</span> <span class="pre">'busy',</span> <span class="pre">'shell',</span> <span class="pre">'idle')</span></span><a class="headerlink" href="#crowsnest.registry.STATUSES" title="Link to this definition"></a></dt>
 <dd><p>what needs a human
-first, then what is working, then what is resting. Anything unrecognised sorts last.</p>
+first, then what is working (<code class="docutils literal notranslate"><span class="pre">shell</span></code> is a session running a shell command, which is
+a kind of busy), then what is resting. Anything unrecognised sorts last.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The statuses the registry reports, in the order a roster shows them</p>
