@@ -97,7 +97,7 @@ def template_text() -> str:
     >>> template_text().splitlines()[0]
     '# The lookout session'
     """
-    return template_path().read_text()
+    return template_path().read_text(encoding="utf-8")
 
 
 def settings_snippet(hooks=HOOKS) -> dict:
@@ -168,7 +168,7 @@ def _read_settings(path: Path) -> dict:
     if not path.is_file():
         return {}
     try:
-        loaded = json.loads(path.read_text() or "{}")
+        loaded = json.loads(path.read_text(encoding="utf-8") or "{}")
     except json.JSONDecodeError as exc:
         raise ValueError(
             f"{path} is not valid JSON ({exc}); fix it by hand first"
@@ -178,14 +178,14 @@ def _read_settings(path: Path) -> dict:
 
 def _backup(path: Path, *, now: datetime) -> Path:
     destination = path.with_name(f"{path.name}.backup-{now.strftime('%Y%m%dT%H%M%S')}")
-    destination.write_text(path.read_text())
+    destination.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
     return destination
 
 
 def _claude_md_plan(path: Path, wanted: str, *, force: bool) -> dict:
     if not path.exists():
         return {"action": "write", "reason": "not there yet"}
-    if path.read_text() == wanted:
+    if path.read_text(encoding="utf-8") == wanted:
         return {"action": "ok", "reason": "already the template"}
     if force:
         return {"action": "write", "reason": "replacing what was there (--force)"}
@@ -221,7 +221,7 @@ def init(
     md = {"path": str(claude_md), **_claude_md_plan(claude_md, wanted, force=force)}
     if md["action"] == "write" and not dry_run:
         claude_md.parent.mkdir(parents=True, exist_ok=True)
-        claude_md.write_text(wanted)
+        claude_md.write_text(wanted, encoding="utf-8")
 
     where_data = data_dir(store)
     data = {
@@ -254,7 +254,9 @@ def init(
             settings_path.parent.mkdir(parents=True, exist_ok=True)
             if settings_path.is_file():
                 backup = str(_backup(settings_path, now=now))
-            settings_path.write_text(json.dumps(merged, indent=2) + "\n")
+            settings_path.write_text(
+                json.dumps(merged, indent=2) + "\n", encoding="utf-8"
+            )
         settings = {
             "path": str(settings_path),
             "action": "add" if added else "ok",

@@ -13,7 +13,7 @@ from crowsnest.init import HOOKS, init, merged_hooks, settings_snippet, template
 
 
 def _settings(home):
-    return json.loads((home / "settings.json").read_text())
+    return json.loads((home / "settings.json").read_text(encoding="utf-8"))
 
 
 def _commands(settings, event):
@@ -26,7 +26,7 @@ def test_writes_the_template_and_makes_the_data_directory(tmp_path):
     where, store = tmp_path / "cn", tmp_path / "data"
     plan = init(directory=where, home=tmp_path / "claude", store=store)
     assert plan["claude_md"]["action"] == "write"
-    assert (where / "CLAUDE.md").read_text() == template_text()
+    assert (where / "CLAUDE.md").read_text(encoding="utf-8") == template_text()
     assert plan["data_dir"]["action"] == "create" and store.is_dir()
     assert plan["settings"]["action"] == "skipped"
 
@@ -43,14 +43,14 @@ def test_running_twice_changes_nothing(tmp_path):
 def test_a_hand_edited_claude_md_is_a_conflict_until_forced(tmp_path):
     where, store = tmp_path / "cn", tmp_path / "data"
     where.mkdir()
-    (where / "CLAUDE.md").write_text("# mine\n")
+    (where / "CLAUDE.md").write_text("# mine\n", encoding="utf-8")
     kwargs = {"directory": where, "home": tmp_path / "claude", "store": store}
     plan = init(**kwargs)
     assert plan["claude_md"]["action"] == "conflict"
-    assert (where / "CLAUDE.md").read_text() == "# mine\n"
+    assert (where / "CLAUDE.md").read_text(encoding="utf-8") == "# mine\n"
     forced = init(**kwargs, force=True)
     assert forced["claude_md"]["action"] == "write"
-    assert (where / "CLAUDE.md").read_text() == template_text()
+    assert (where / "CLAUDE.md").read_text(encoding="utf-8") == template_text()
 
 
 def test_dry_run_writes_nothing(tmp_path):
@@ -96,7 +96,9 @@ def test_an_existing_hook_is_kept_and_a_backup_is_written(tmp_path):
     assert settings["model"] == "opus"
     backup = plan["settings"]["backup"]
     assert backup, "an existing settings file is backed up before it is touched"
-    assert _commands(json.loads(Path(backup).read_text()), "Stop") == ["notify"]
+    assert _commands(json.loads(Path(backup).read_text(encoding="utf-8")), "Stop") == [
+        "notify"
+    ]
 
 
 def test_adding_the_hooks_twice_adds_nothing(tmp_path):
