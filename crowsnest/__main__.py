@@ -230,9 +230,15 @@ def report(*, out: str | None = None, home: str | None = None, all_homes: bool =
 
 
 def watch(
-    *, interval: float = _watch.DFLT_INTERVAL, home: str | None = None, json: bool = False
+    *,
+    interval: float = _watch.DFLT_INTERVAL,
+    home: str | None = None,
+    all_homes: bool = False,
+    json: bool = False,
 ):
     """Print one line per change, forever: started, exited, idle, busy, waiting, error.
+
+    `--all-homes` watches every home in the config file; a row then reads `name@home`.
 
     Plus `needs-you` and `stopped`, pushed by Claude Code's own hooks the moment they
     happen, when `crowsnest hook` is installed on them.
@@ -241,12 +247,13 @@ def watch(
     watching session. Stop with Ctrl-C.
     """
     try:
-        for event in _watch.events(interval=interval, home=home):
+        for event in _watch.events(interval=interval, home=home, all_homes=all_homes):
             if json:
                 line = _json.dumps(event)
             else:
                 when = _local(event["at"])
-                line = f"{when}  {event['kind']:<8} {event['name']} ({event['project']})"
+                who = event["name"] + (f"@{event['home']}" if event.get("home") else "")
+                line = f"{when}  {event['kind']:<8} {who} ({event['project']})"
                 if event["detail"]:
                     line += f" — {event['detail']}"
             print(line, flush=True)
