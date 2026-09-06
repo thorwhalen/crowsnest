@@ -53,6 +53,7 @@ The skill's rule is to never spend a costlier tier when a cheaper one answers, a
 crowsnest                          who is alive: waiting on you first, then busy, then idle
 crowsnest show <session>           one session: last asked, last said, running now, pending question
 crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
+crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin

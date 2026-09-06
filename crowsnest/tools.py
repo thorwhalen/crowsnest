@@ -10,13 +10,15 @@ here prints, exits, or knows which surface called it.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
 from crowsnest.config import homes
 from crowsnest.registry import STATUSES, LiveSession, fresh_within, live_sessions
+from crowsnest.report import DFLT_TITLE, render_report
 
-__all__ = ["resolve", "roster", "sessions", "show", "turns"]
+__all__ = ["report", "resolve", "roster", "sessions", "show", "turns"]
 
 #: How much of a prompt or a reply a roster row carries. ``show`` carries it whole.
 ROSTER_TEXT_LIMIT = 240
@@ -137,6 +139,29 @@ def show(
     s = resolve(session, home=home, all_homes=all_homes, config=config)
     act = read_activity(s.transcript, session_id=s.session_id, recent=recent)
     return {"session": s.as_dict(), "activity": act.as_dict()}
+
+
+def report(
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    made_at: str | None = None,
+    title: str = DFLT_TITLE,
+) -> dict:
+    """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
+    over what :func:`roster` returns.
+
+    ``made_at`` is the moment the snapshot claims to be from; it defaults to now, but a
+    caller that wants byte-stable output passes it explicitly -- this is the one
+    crowsnest function that stamps a generation time. ``all_homes`` reads every
+    configured home, and each row's ``home`` field (present when it does) shows up in
+    the page.
+    """
+    made_at = made_at or datetime.now(timezone.utc).isoformat()
+    data = roster(home=home, all_homes=all_homes, config=config)
+    html = render_report(data, made_at=made_at, title=title)
+    return {"html": html, "made_at": made_at}
 
 
 def turns(
