@@ -52,22 +52,36 @@ def _local(stamp: str) -> str:
         return stamp
 
 
+def _age_of(stamp: str) -> str:
+    """How long ago an ISO timestamp was, or '?' when it cannot be read."""
+    try:
+        then = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return "?"
+    return _age(then.timestamp())
+
+
 def _row_detail(row: dict, limit: int) -> str:
     act = row.get("activity") or {}
     status = row["status"]
     if status == "waiting":
         cause = act.get("pending_question") or "; ".join(act.get("in_flight") or ())
-        parts = [
-            row.get("waiting_for") or "waiting",
-            cause or act.get("last_assistant_text", ""),
-        ]
+        if not cause and act.get("last_text_at"):
+            # Its last words are from an earlier turn: say how old they are rather than
+            # print them as if they were the reason it waits.
+            cause = f"last said {_age_of(act['last_text_at'])} ago"
+        parts = [row.get("waiting_for") or "waiting", cause]
         return _one_line(" · ".join(p for p in parts if p), limit)
-    if status == "busy":
+    if status in ("busy", "shell"):
         running = "; ".join(act.get("in_flight") or ())
         if running:
             return _one_line("→ " + running, limit)
+        if status == "shell":
+            return "in a shell"
         return _one_line("asked: " + act.get("last_user_prompt", ""), limit)
     said = act.get("last_assistant_text", "")
+    if not said and row.get("kind") == "bg":
+        return "(background session)"
     mark = "⚠ " if act.get("errored") else ""
     return _one_line(f'{mark}"{said}"' if said else "", limit)
 
@@ -132,6 +146,8 @@ def show(session: str, *, home: str | None = None, recent: int = 8, json: bool =
             "flags: "
             + ", ".join(flags + ([] if act["tail_complete"] else ["tail only"])),
         ]
+    floor = "" if act["tail_complete"] else "at least "
+    out += ["", f"turns: {floor}{act['tail_turns']}"]
     return "\n".join(out)
 
 

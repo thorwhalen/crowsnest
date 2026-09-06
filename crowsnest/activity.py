@@ -213,6 +213,8 @@ class Activity:
     in-flight :data:`QUESTION_TOOL` call -- a session waiting on a person.
     ``tail_complete`` says whether the window reached the start of the file, which is what
     makes the difference between "no prompt in the tail" and "no prompt at all".
+    ``tail_turns`` is how many human prompts the window held: the session's turn count
+    when ``tail_complete`` is true, and a floor otherwise.
     """
 
     session_id: str = ""
@@ -228,6 +230,7 @@ class Activity:
     errored: bool = False
     git_branch: str = ""
     tail_complete: bool = True
+    tail_turns: int = 0
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -270,6 +273,7 @@ def read_activity(
         errored=session.ended_with_error,
         git_branch=session.git_branch,
         tail_complete=complete,
+        tail_turns=session.turn_count,
     )
 
 

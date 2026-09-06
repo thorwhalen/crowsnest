@@ -127,3 +127,6 @@ tmp/
 temp/
 # Local session handoffs (not for commit)
 .claude/handoffs/
+
+# Session worktrees created by `claude --worktree` (not for commit)
+.claude/worktrees/

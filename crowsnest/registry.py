@@ -46,8 +46,9 @@ HOME_ENV_VAR = "CLAUDE_CONFIG_DIR"
 DFLT_HOME = "~/.claude"
 
 #: The statuses the registry reports, in the order a roster shows them: what needs a human
-#: first, then what is working, then what is resting. Anything unrecognised sorts last.
-STATUSES = ("waiting", "busy", "idle")
+#: first, then what is working (``shell`` is a session running a shell command, which is
+#: a kind of busy), then what is resting. Anything unrecognised sorts last.
+STATUSES = ("waiting", "busy", "shell", "idle")
 
 _PID_RE = re.compile(r"^\d+$")
 _SLUG_RE = re.compile(r"[^A-Za-z0-9-]")
@@ -92,12 +93,30 @@ def transcript_path(cwd: str, session_id: str, *, home: str | Path | None = None
     return guess
 
 
+def _pid_alive_windows(pid: int) -> bool:
+    """Windows has no signal 0; ask the kernel for a query-only handle instead."""
+    import ctypes
+
+    query_limited_information = 0x1000
+    kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+    handle = kernel32.OpenProcess(query_limited_information, False, pid)
+    if not handle:
+        return False
+    kernel32.CloseHandle(handle)
+    return True
+
+
 def pid_alive(pid: int) -> bool:
     """Is there a process with this pid? Signal 0, the portable minimum.
 
     No protection against pid reuse: ``xa.claude_fs.ephemeral_session_alive`` adds the
     ``/proc`` start-time check on Linux, and is the replacement this seam exists for.
     """
+    if os.name == "nt":
+        try:
+            return _pid_alive_windows(pid)
+        except (AttributeError, OSError):
+            return False
     try:
         os.kill(pid, 0)
     except ProcessLookupError:

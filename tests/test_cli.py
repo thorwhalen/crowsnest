@@ -65,3 +65,68 @@ def test_install_skills_dry_run_names_both_assets(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "crowsnest-scout" in out and "would install" in out
     assert not (tmp_path / "host").exists()
+
+
+def test_shell_sorts_with_busy_and_bg_rows_are_not_blank(tmp_path, monkeypatch, capsys):
+    from fixtures import registry_record, write_registry
+
+    home = demo_home(tmp_path)
+    write_registry(
+        home,
+        registry_record(
+            107, "s7", name="sheller", status="shell", status_at_ms=9_000_000
+        ),
+    )
+    write_registry(
+        home, {**registry_record(108, "s8", name="worker", status="idle"), "kind": "bg"}
+    )
+    alive = ALIVE | {107, 108}
+    monkeypatch.setattr(registry, "pid_alive", lambda pid: pid in alive)
+    monkeypatch.setattr(
+        tools,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: pid in alive, **kw),
+    )
+    main(["--home", str(home)])
+    lines = [ln for ln in capsys.readouterr().out.splitlines() if ln.strip()]
+    order = [ln.split()[0] for ln in lines[:-1]]
+    assert order == ["waiting", "busy", "shell", "idle", "idle"]
+    assert "sheller" in lines[2] and "in a shell" in lines[2]
+    assert any("worker" in ln and "(background session)" in ln for ln in lines)
+    assert "1 shell" in lines[-1]
+
+
+def test_waiting_row_without_a_cause_shows_the_age_of_its_last_words(
+    tmp_path, monkeypatch, capsys
+):
+    from fixtures import (
+        finished_session,
+        registry_record,
+        write_registry,
+        write_transcript,
+    )
+
+    home = demo_home(tmp_path)
+    write_transcript(home, "/w/demo", "s9", finished_session("s9"))
+    write_registry(
+        home,
+        registry_record(
+            109, "s9", name="stalled", status="waiting", waiting_for="input needed"
+        ),
+    )
+    alive = ALIVE | {109}
+    monkeypatch.setattr(registry, "pid_alive", lambda pid: pid in alive)
+    monkeypatch.setattr(
+        tools,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: pid in alive, **kw),
+    )
+    main(["--home", str(home)])
+    [row] = [ln for ln in capsys.readouterr().out.splitlines() if "stalled" in ln]
+    assert "input needed · last said" in row and "ago" in row
+    assert "Fixed and merged" not in row
+
+
+def test_show_prints_the_turn_count(home, capsys):
+    main(["show", "fixer", "--home", str(home)])
+    assert "\nturns: 1" in capsys.readouterr().out

@@ -5,7 +5,7 @@ server or an HTTP endpoint would reference them by name and get the same dicts. 
 here prints, exits, or knows which surface called it.
 
 >>> roster(home='/nonexistent-dir-for-doctest')['counts']
-{'waiting': 0, 'busy': 0, 'idle': 0, 'other': 0}
+{'waiting': 0, 'busy': 0, 'shell': 0, 'idle': 0, 'other': 0}
 """
 
 from __future__ import annotations
@@ -76,6 +76,8 @@ def roster(
                 "turn_open": act.turn_open,
                 "errored": act.errored,
                 "git_branch": act.git_branch,
+                "last_text_at": act.last_text_at,
+                "tail_turns": act.tail_turns,
             }
         rows.append(row)
     counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}
