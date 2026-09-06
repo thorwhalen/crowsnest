@@ -72,6 +72,23 @@ def test_hooks_are_added_to_a_fresh_settings_file(tmp_path):
     assert _commands(settings, "SessionStart") == ["crowsnest --brief"]
 
 
+def test_the_two_push_hooks_are_async_and_the_roster_hook_is_not(tmp_path):
+    # `crowsnest hook stop` takes about a third of a second, most of it Python starting
+    # up. Watching must not be a tax on the turns it watches -- and nothing reads those
+    # two hooks' output. The SessionStart one is read, so it has to block.
+    home = tmp_path / "claude"
+    init(directory=tmp_path / "cn", home=home, store=tmp_path / "data", hooks=True)
+    hooks = _settings(home)["hooks"]
+
+    def entry(event):
+        (one,) = [e for group in hooks[event] for e in group["hooks"]]
+        return one
+
+    assert entry("Stop")["async"] is True
+    assert entry("Notification")["async"] is True
+    assert "async" not in entry("SessionStart")
+
+
 def test_an_existing_hook_is_kept_and_a_backup_is_written(tmp_path):
     home = tmp_path / "claude"
     home.mkdir()

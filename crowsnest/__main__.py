@@ -374,6 +374,7 @@ def init(
     elif settings["added"]:
         lines += ["", "## Hooks added"] + [
             f"- {h['event']} ({h['matcher'] or 'any'}): {h['command']}"
+            + (" [async]" if h["async"] else "")
             for h in settings["added"]
         ]
     return "\n".join(lines)

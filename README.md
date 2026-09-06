@@ -14,7 +14,7 @@ crowsnest install-skills       # link the skills and the scout subagent into ~/.
 crowsnest init --hooks         # in the directory you will run the lookout from
 ```
 
-`init` writes that directory's `CLAUDE.md` (the rules that keep a watching session small enough to be cleared at any moment), creates `~/.local/share/crowsnest/`, and — with `--hooks` — adds three lines to your `settings.json`, after backing it up and removing nothing. Without `--hooks` it prints them for you to paste.
+`init` writes that directory's `CLAUDE.md` (the rules that keep a watching session small enough to be cleared at any moment), creates `~/.local/share/crowsnest/`, and — with `--hooks` — adds three lines to your `settings.json`, after backing it up and removing nothing. Without `--hooks` it prints them for you to paste. The two that push events (`Stop`, `Notification`) are registered `async`, so watching costs the watched sessions no wall-clock; the `SessionStart` one blocks, because its roster is meant to be read.
 
 Then open a session, name it, and ask in whatever words you would have used anyway:
 

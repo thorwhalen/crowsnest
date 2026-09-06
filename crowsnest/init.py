@@ -13,9 +13,10 @@ Three things get set up, and each is idempotent because a person will run this a
 2. **The data directory** (:func:`crowsnest.paths.data_dir`): where the ledgers and the
    event log go, per the rule that an app's own directory holds code and nothing else.
    This is the one place that creates it; everything else only reads the path.
-3. **The hooks** (:data:`HOOKS`): the two that push events at the watching session, and
+3. **The hooks** (:data:`HOOKS`): the two that push events at the watching session --
+   registered ``async`` so that watching costs the watched sessions no wall-clock -- and
    the ``SessionStart`` one that re-prints the roster after every start, clear and
-   compaction -- the only way a roster survives a compaction verbatim. Printed by
+   compaction, which is the only way a roster survives a compaction verbatim. Printed by
    default; merged into ``settings.json`` on request, after a timestamped backup, adding
    to the existing hook arrays and removing nothing.
 
@@ -47,31 +48,39 @@ __all__ = [
 #:
 #: The first two are issue #7's push signal: ``Notification`` fires exactly when a session
 #: asks its human for something, ``Stop`` when a turn ends with the transcript in hand.
+#: Both are registered ``async``: a measured ``crowsnest hook stop`` takes about 375 ms
+#: end to end, two thirds of it Python starting up, and a watcher must never be a tax on
+#: the turns it watches. Nothing reads their output, so nothing is lost by not waiting.
+#:
 #: The third is the anti-amnesia one -- ``crowsnest --brief`` costs nothing (it reads the
 #: registry, not a single transcript) and its output is re-injected on every start, clear
-#: and compaction, which is what makes the roster part of the content that survives.
+#: and compaction, which is what makes the roster part of the content that survives. That
+#: output is the whole point, so this one stays synchronous.
 HOOKS = (
     {
         "event": "Notification",
         "matcher": "",
         "command": "crowsnest hook notification",
+        "async": True,
         "why": "a session is asking its human for something",
     },
     {
         "event": "Stop",
         "matcher": "",
         "command": "crowsnest hook stop",
+        "async": True,
         "why": "a session finished a turn; record its last words",
     },
     {
         "event": "SessionStart",
         "matcher": "startup|clear|compact",
         "command": "crowsnest --brief",
+        "async": False,
         "why": "re-print the roster after every start, clear and compaction",
     },
 )
 
-_HOOK_FIELDS = ("event", "matcher", "command")
+_HOOK_FIELDS = ("event", "matcher", "command", "async")
 
 
 def _checked(value, kind, message: str):
@@ -103,8 +112,8 @@ def template_text() -> str:
 def settings_snippet(hooks=HOOKS) -> dict:
     """The ``settings.json`` fragment these hooks amount to, for a human to paste.
 
-    >>> settings_snippet(HOOKS[1:2])
-    {'hooks': {'Stop': [{'matcher': '', 'hooks': [{'type': 'command', 'command': 'crowsnest hook stop'}]}]}}
+    >>> settings_snippet(HOOKS[2:])['hooks']['SessionStart']
+    [{'matcher': 'startup|clear|compact', 'hooks': [{'type': 'command', 'command': 'crowsnest --brief'}]}]
     """
     empty: dict[str, Any] = {}
     return merged_hooks(empty, hooks)[0]
@@ -119,8 +128,8 @@ def merged_hooks(settings: dict, hooks=HOOKS) -> tuple[dict, list[dict]]:
     the desktop notifier already on their ``Stop`` hook has to keep working.
 
     >>> settings, added = merged_hooks({}, HOOKS[1:2])
-    >>> settings['hooks']['Stop']
-    [{'matcher': '', 'hooks': [{'type': 'command', 'command': 'crowsnest hook stop'}]}]
+    >>> settings['hooks']['Stop'][0]['hooks']
+    [{'type': 'command', 'command': 'crowsnest hook stop', 'async': True}]
     >>> [h['command'] for h in added]
     ['crowsnest hook stop']
     >>> merged_hooks(settings, HOOKS[1:2])[1]
@@ -148,6 +157,8 @@ def merged_hooks(settings: dict, hooks=HOOKS) -> tuple[dict, list[dict]]:
         ):
             continue
         entry = {"type": "command", "command": spec["command"]}
+        if spec.get("async"):
+            entry["async"] = True
         same_matcher = next(
             (
                 group
