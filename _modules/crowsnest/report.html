@@ -1,0 +1,816 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.report &mdash; crowsnest 0.0.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=53b53b71"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.report</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.report</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The live roster as one self-contained HTML page: no stylesheet, script, font, or</span>
+<span class="sd">request to anywhere.</span>
+
+<span class="sd">The person operating the fleet often reads from a phone, and a terminal roster does not</span>
+<span class="sd">read well there. :func:`render_report` takes what :func:`crowsnest.tools.roster` returns</span>
+<span class="sd">and renders it in the same design language as ``ol dashboard`` in</span>
+<span class="sd">:mod:`openloops.dashboard` -- the two pages are meant to read as siblings. ``_CSS`` below</span>
+<span class="sd">is that page's stylesheet, copied rather than imported: it is a private name in</span>
+<span class="sd">``openloops.dashboard``, and importing a private name from another package can break at</span>
+<span class="sd">any release of it with no warning here. ``_Sanitizer`` is lifted for the same reason.</span>
+<span class="sd">Both carry a comment saying where they came from and when; an openloops issue tracks</span>
+<span class="sd">exposing the stylesheet publicly, after which the copy can become an import with a</span>
+<span class="sd">fallback.</span>
+
+<span class="sd">Four registers, in the order a person needs them: **Waiting on you** (a session holding</span>
+<span class="sd">for an answer, with the question verbatim), **Just finished** (idle within the last hour,</span>
+<span class="sd">last words clipped), **Working** (busy, with the tool call in flight), and **Quiet**</span>
+<span class="sd">(everything else, grouped by project). Every row carries an ``id="session-&lt;name&gt;"`` so a</span>
+<span class="sd">comment on the published page can anchor to it (crowsnest issue #4).</span>
+
+<span class="sd">Like the openloops dashboard, **the page is a snapshot, and it says so in its largest</span>
+<span class="sd">type.** ``made_at`` is a required-in-practice argument rather than a hidden ``now()``,</span>
+<span class="sd">which is also what lets a test compare bytes: the same roster and ``made_at`` render the</span>
+<span class="sd">same document, byte for byte.</span>
+
+<span class="sd">Every string reaches the page through :class:`_Sanitizer`, which is</span>
+<span class="sd">:func:`openloops.egress.scrub` plus HTML escaping. A row's ``last_assistant_text`` or</span>
+<span class="sd">``pending_question`` comes straight from a transcript, and a transcript is the highest-</span>
+<span class="sd">entropy secret source on a developer's machine; a home path is rewritten, a credential is</span>
+<span class="sd">withheld and counted, never printed -- the count is in the footer.</span>
+
+<span class="sd">&gt;&gt;&gt; html = render_report({'sessions': [], 'counts': {}}, made_at='2026-01-01T00:00:00Z')</span>
+<span class="sd">&gt;&gt;&gt; '&lt;title&gt;' in html and 'snapshot' in html</span>
+<span class="sd">True</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">html</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_html</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">openloops.egress</span><span class="w"> </span><span class="kn">import</span> <span class="n">CredentialFound</span><span class="p">,</span> <span class="n">scrub</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"render_report"</span><span class="p">]</span>
+
+<span class="c1">#: What the page is called when the caller does not name it.</span>
+<span class="n">DFLT_TITLE</span> <span class="o">=</span> <span class="s2">"crowsnest"</span>
+
+<span class="c1"># Copied from openloops.dashboard._CSS (private there) on 2026-09-06, so `ol dashboard`</span>
+<span class="c1"># and `crowsnest report` read as siblings without an import on a private name -- see the</span>
+<span class="c1"># module docstring. Keep it byte-identical to the source; openloops issue tracks exposing</span>
+<span class="c1"># it publicly, after which this becomes an import with a fallback to the copy below.</span>
+<span class="n">_CSS</span> <span class="o">=</span> <span class="s2">"""</span>
+<span class="s2">:root{</span>
+<span class="s2">  --ground:#eff0ec; --surface:#f8f9f5; --sunk:#e7e9e3;</span>
+<span class="s2">  --ink:#151c1a; --ink-soft:#56635f; --rule:#d2d7d0; --rule-soft:#e3e6e0;</span>
+<span class="s2">  --accent:#17514f;</span>
+<span class="s2">  --needs:#94510a; --needs-wash:#f2e6d4;</span>
+<span class="s2">  --free:#1e6b3c; --free-wash:#dfeade;</span>
+<span class="s2">  --waits:#6c7975; --waits-wash:#e6e9e4;</span>
+<span class="s2">  --unsure:#96234f; --unsure-wash:#f2dee4;</span>
+<span class="s2">  --done:#69766f; --done-wash:#e8ebe6;</span>
+<span class="s2">  --serif:ui-serif,Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;</span>
+<span class="s2">  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;</span>
+<span class="s2">  --step:clamp(0.5rem,1.2vw,0.9rem);</span>
+<span class="s2">}</span>
+<span class="s2">@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){</span>
+<span class="s2">  --ground:#0e1211; --surface:#151b19; --sunk:#111615;</span>
+<span class="s2">  --ink:#e4e8e3; --ink-soft:#94a29d; --rule:#29312e; --rule-soft:#1e2523;</span>
+<span class="s2">  --accent:#74c6bc;</span>
+<span class="s2">  --needs:#e0a44a; --needs-wash:#2c2317;</span>
+<span class="s2">  --free:#74c282; --free-wash:#182619;</span>
+<span class="s2">  --waits:#8b9994; --waits-wash:#1c2321;</span>
+<span class="s2">  --unsure:#f17fa5; --unsure-wash:#2c161f;</span>
+<span class="s2">  --done:#7f8f8a; --done-wash:#1a201e;</span>
+<span class="s2">} }</span>
+<span class="s2">:root[data-theme="dark"]{</span>
+<span class="s2">  --ground:#0e1211; --surface:#151b19; --sunk:#111615;</span>
+<span class="s2">  --ink:#e4e8e3; --ink-soft:#94a29d; --rule:#29312e; --rule-soft:#1e2523;</span>
+<span class="s2">  --accent:#74c6bc;</span>
+<span class="s2">  --needs:#e0a44a; --needs-wash:#2c2317;</span>
+<span class="s2">  --free:#74c282; --free-wash:#182619;</span>
+<span class="s2">  --waits:#8b9994; --waits-wash:#1c2321;</span>
+<span class="s2">  --unsure:#f17fa5; --unsure-wash:#2c161f;</span>
+<span class="s2">  --done:#7f8f8a; --done-wash:#1a201e;</span>
+<span class="s2">}</span>
+
+<span class="s2">*{box-sizing:border-box}</span>
+<span class="s2">body{</span>
+<span class="s2">  margin:0; background:var(--ground); color:var(--ink);</span>
+<span class="s2">  font-family:var(--serif); font-size:17px; line-height:1.55;</span>
+<span class="s2">  -webkit-font-smoothing:antialiased;</span>
+<span class="s2">}</span>
+<span class="s2">.sheet{max-width:64rem; margin:0 auto; padding:clamp(1.25rem,4vw,3.5rem) clamp(1rem,4vw,2.5rem) 4rem}</span>
+<span class="s2">h1,h2{text-wrap:balance; margin:0; font-weight:600; letter-spacing:-0.012em}</span>
+<span class="s2">p</span><span class="si">{margin:0}</span>
+<span class="s2">a{color:var(--accent); text-underline-offset:0.18em; text-decoration-thickness:from-font}</span>
+<span class="s2">a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:1px}</span>
+<span class="s2">code{font-family:var(--mono); font-size:0.82em}</span>
+<span class="s2">b,strong{font-weight:600}</span>
+<span class="s2">.sep{color:var(--rule); padding:0 0.15em}</span>
+
+<span class="s2">/* ---- masthead: the timestamp is the thesis, so it gets the type ---- */</span>
+<span class="s2">.masthead{display:grid; gap:1.1rem; padding-bottom:1.6rem; border-bottom:2px solid var(--ink)}</span>
+<span class="s2">.eyebrow{</span>
+<span class="s2">  font-family:var(--mono); font-size:0.7rem; letter-spacing:0.16em;</span>
+<span class="s2">  text-transform:uppercase; color:var(--ink-soft);</span>
+<span class="s2">}</span>
+<span class="s2">.masthead h1{font-size:clamp(2rem,5.2vw,3.1rem); line-height:1.05}</span>
+<span class="s2">.stamp{</span>
+<span class="s2">  font-family:var(--mono); font-size:clamp(1.05rem,2.6vw,1.5rem);</span>
+<span class="s2">  color:var(--accent); font-variant-numeric:tabular-nums; letter-spacing:-0.01em;</span>
+<span class="s2">}</span>
+<span class="s2">.stamp time{border-bottom:2px solid var(--accent); padding-bottom:0.08em}</span>
+<span class="s2">.claim{max-width:38rem; color:var(--ink-soft); font-size:0.98rem}</span>
+
+<span class="s2">.tally{</span>
+<span class="s2">  display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));</span>
+<span class="s2">  gap:1px; background:var(--rule); border:1px solid var(--rule); margin-top:0.4rem;</span>
+<span class="s2">}</span>
+<span class="s2">.tally-cell{background:var(--surface); padding:0.9rem 1rem 0.8rem}</span>
+<span class="s2">.tally-figure{</span>
+<span class="s2">  font-family:var(--mono); font-size:2.4rem; line-height:1;</span>
+<span class="s2">  font-variant-numeric:tabular-nums; letter-spacing:-0.03em;</span>
+<span class="s2">}</span>
+<span class="s2">.tally-name{</span>
+<span class="s2">  font-family:var(--mono); font-size:0.68rem; letter-spacing:0.13em;</span>
+<span class="s2">  text-transform:uppercase; color:var(--ink-soft); margin-top:0.45rem;</span>
+<span class="s2">}</span>
+<span class="s2">.tally--needs .tally-figure{color:var(--needs)}</span>
+<span class="s2">.tally--free .tally-figure{color:var(--free)}</span>
+<span class="s2">.tally--flight .tally-figure{color:var(--ink)}</span>
+<span class="s2">.tally--unsure .tally-figure{color:var(--unsure)}</span>
+
+<span class="s2">.instruments{list-style:none; margin:0; padding:0; display:grid; gap:1px; background:var(--rule)}</span>
+<span class="s2">.instrument{</span>
+<span class="s2">  background:var(--surface); display:grid; gap:0.15rem 0.9rem; padding:0.55rem 1rem;</span>
+<span class="s2">  grid-template-columns:7.5rem 5.5rem 1fr; align-items:baseline;</span>
+<span class="s2">  font-size:0.83rem; color:var(--ink-soft);</span>
+<span class="s2">}</span>
+<span class="s2">.instrument code{color:var(--ink); font-size:0.78rem}</span>
+<span class="s2">.instrument b{</span>
+<span class="s2">  font-family:var(--mono); font-size:0.66rem; letter-spacing:0.12em;</span>
+<span class="s2">  text-transform:uppercase; color:var(--free);</span>
+<span class="s2">}</span>
+<span class="s2">.instrument em{grid-column:3; font-style:normal; font-family:var(--mono); font-size:0.72rem; color:var(--ink-soft); opacity:0.8}</span>
+<span class="s2">.instrument--bad b{color:var(--unsure)}</span>
+<span class="s2">.instrument--bad{background:var(--unsure-wash)}</span>
+
+<span class="s2">/* ---- registers ---- */</span>
+<span class="s2">.register{margin-top:clamp(2.2rem,5vw,3.4rem)}</span>
+<span class="s2">.register-head{</span>
+<span class="s2">  display:grid; grid-template-columns:auto 1fr; gap:0 1.25rem; align-items:start;</span>
+<span class="s2">  padding-bottom:0.85rem; border-bottom:1px solid var(--ink);</span>
+<span class="s2">}</span>
+<span class="s2">.figure{</span>
+<span class="s2">  font-family:var(--mono); font-size:clamp(2.6rem,7vw,3.6rem); line-height:0.85;</span>
+<span class="s2">  font-variant-numeric:tabular-nums; letter-spacing:-0.045em; min-width:2ch;</span>
+<span class="s2">}</span>
+<span class="s2">.register--needs .figure{color:var(--needs)}</span>
+<span class="s2">.register--free .figure{color:var(--free)}</span>
+<span class="s2">.register--flight .figure{color:var(--ink)}</span>
+<span class="s2">.register--unsure .figure{color:var(--unsure)}</span>
+<span class="s2">.register h2{font-size:clamp(1.35rem,3vw,1.75rem)}</span>
+<span class="s2">.rule{color:var(--ink-soft); font-size:0.92rem; max-width:44rem; margin-top:0.3rem}</span>
+<span class="s2">.subhead{</span>
+<span class="s2">  font-family:var(--mono); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;</span>
+<span class="s2">  color:var(--ink-soft); margin-top:2rem; padding-bottom:0.5rem; border-bottom:1px solid var(--rule);</span>
+<span class="s2">}</span>
+
+<span class="s2">/* ---- ledger rows: hairlines, not cards ---- */</span>
+<span class="s2">.ledger{list-style:none; margin:0; padding:0}</span>
+<span class="s2">.row{</span>
+<span class="s2">  display:grid; grid-template-columns:5.75rem 1fr; gap:0 1.25rem;</span>
+<span class="s2">  padding:1.15rem 0 0.85rem; border-bottom:1px solid var(--rule-soft); position:relative;</span>
+<span class="s2">}</span>
+<span class="s2">.ledger--quiet .row</span><span class="si">{opacity:0.72}</span>
+<span class="s2">.rail{display:flex; flex-direction:column; gap:0.4rem; align-items:flex-start}</span>
+<span class="s2">.chip{</span>
+<span class="s2">  font-family:var(--mono); font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase;</span>
+<span class="s2">  padding:0.2rem 0.42rem; border:1px solid currentColor; white-space:nowrap;</span>
+<span class="s2">}</span>
+<span class="s2">.chip--needs{color:var(--needs); background:var(--needs-wash)}</span>
+<span class="s2">.chip--free{color:var(--free); background:var(--free-wash)}</span>
+<span class="s2">.chip--flight{color:var(--waits); background:var(--waits-wash)}</span>
+<span class="s2">.chip--unsure{color:var(--unsure); background:var(--unsure-wash)}</span>
+<span class="s2">.chip--done{color:var(--done); background:var(--done-wash)}</span>
+<span class="s2">.age{font-family:var(--mono); font-variant-numeric:tabular-nums; display:flex; align-items:baseline; gap:0.08em}</span>
+<span class="s2">.age b{font-size:1.7rem; line-height:1; letter-spacing:-0.03em; font-weight:500}</span>
+<span class="s2">.age i{font-style:normal; font-size:0.78rem; color:var(--ink-soft)}</span>
+<span class="s2">.body{display:grid; gap:0.35rem; min-width:0}</span>
+<span class="s2">.ask{font-size:1.04rem; line-height:1.35; text-wrap:pretty}</span>
+<span class="s2">.where{font-family:var(--mono); font-size:0.74rem; color:var(--ink-soft)}</span>
+<span class="s2">.ref{font-family:var(--mono); color:var(--accent)}</span>
+<span class="s2">.verdict{color:var(--free); font-size:0.95rem; font-style:italic}</span>
+<span class="s2">.caveat{color:var(--unsure); font-size:0.88rem; font-style:italic}</span>
+<span class="s2">.line{</span>
+<span class="s2">  display:grid; grid-template-columns:5.2rem 1fr; gap:0.6rem; align-items:baseline;</span>
+<span class="s2">  margin-top:0.15rem; min-width:0;</span>
+<span class="s2">}</span>
+<span class="s2">.line .tag{</span>
+<span class="s2">  font-family:var(--mono); font-size:0.62rem; letter-spacing:0.11em; text-transform:uppercase;</span>
+<span class="s2">  color:var(--ink-soft); padding-top:0.15em;</span>
+<span class="s2">}</span>
+<span class="s2">.line code{</span>
+<span class="s2">  display:block; background:var(--sunk); padding:0.42rem 0.55rem;</span>
+<span class="s2">  white-space:pre-wrap; overflow-wrap:anywhere; color:var(--ink); line-height:1.45;</span>
+<span class="s2">  border-left:2px solid var(--rule);</span>
+<span class="s2">}</span>
+<span class="s2">.gauge{grid-column:1/-1; height:3px; background:var(--rule-soft); margin-top:0.9rem}</span>
+<span class="s2">.gauge span{display:block; height:100%}</span>
+<span class="s2">.gauge--needs span{background:var(--needs)}</span>
+<span class="s2">.gauge--free span{background:var(--free)}</span>
+<span class="s2">.gauge--flight span{background:var(--waits)}</span>
+<span class="s2">.gauge--unsure span{background:var(--unsure)}</span>
+<span class="s2">.gauge--done span{background:var(--done)}</span>
+
+<span class="s2">/* ---- the dense "still waiting" list ---- */</span>
+<span class="s2">.thins{list-style:none; margin:0; padding:0}</span>
+<span class="s2">.thin{</span>
+<span class="s2">  display:grid; grid-template-columns:3.2rem 1fr; gap:0.2rem 0.9rem; align-items:baseline;</span>
+<span class="s2">  padding:0.6rem 0; border-bottom:1px solid var(--rule-soft); font-size:0.92rem;</span>
+<span class="s2">}</span>
+<span class="s2">.thin-age{font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink-soft); font-size:0.8rem}</span>
+<span class="s2">.thin-ask{min-width:0; overflow-wrap:anywhere}</span>
+<span class="s2">.thin-on{grid-column:2; color:var(--waits); font-size:0.72rem; overflow-wrap:anywhere}</span>
+
+<span class="s2">/* Borders rather than a 1px gap over a coloured ground: a wrapping flex row leaves</span>
+<span class="s2">   the ground showing as a stray block wherever the last cell stops short. */</span>
+<span class="s2">.tallystrip{</span>
+<span class="s2">  list-style:none; margin:1.1rem 0 0.4rem; padding:0; display:flex; flex-wrap:wrap;</span>
+<span class="s2">  background:var(--surface); border:1px solid var(--rule);</span>
+<span class="s2">}</span>
+<span class="s2">.tallystrip li{</span>
+<span class="s2">  padding:0.5rem 0.75rem; display:flex; gap:0.4rem; align-items:baseline;</span>
+<span class="s2">  border-right:1px solid var(--rule);</span>
+<span class="s2">}</span>
+<span class="s2">.tallystrip li:last-child{border-right:0}</span>
+<span class="s2">.tallystrip b{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:1rem}</span>
+<span class="s2">.tallystrip span{font-family:var(--mono); font-size:0.72rem; color:var(--ink-soft)}</span>
+
+<span class="s2">/* ---- unknown ---- */</span>
+<span class="s2">.unsures{list-style:none; margin:0; padding:0}</span>
+<span class="s2">.unsure-item{</span>
+<span class="s2">  display:grid; grid-template-columns:7.5rem 1fr; gap:0.3rem 1.25rem;</span>
+<span class="s2">  padding:1rem 0; border-bottom:1px solid var(--rule-soft);</span>
+<span class="s2">}</span>
+<span class="s2">.unsure-item .kind code{</span>
+<span class="s2">  color:var(--unsure); font-size:0.68rem; letter-spacing:0.09em; text-transform:uppercase;</span>
+<span class="s2">}</span>
+<span class="s2">.why{color:var(--ink-soft); font-size:0.92rem}</span>
+<span class="s2">.note{font-family:var(--mono); font-size:0.74rem; color:var(--ink-soft); opacity:0.85; overflow-wrap:anywhere}</span>
+<span class="s2">.proof{margin:0.6rem 0 0; padding-left:1.1rem; color:var(--ink-soft); font-size:0.93rem}</span>
+<span class="s2">.proof li{margin-top:0.2rem}</span>
+<span class="s2">.empty{color:var(--ink-soft); font-size:0.95rem; padding:1.1rem 0; font-style:italic}</span>
+<span class="s2">.empty--earned{font-style:normal; color:var(--ink)}</span>
+
+<span class="s2">.cannot{</span>
+<span class="s2">  display:grid; grid-template-columns:3.5rem 1fr; gap:1rem; align-items:start;</span>
+<span class="s2">  background:var(--unsure-wash); border-left:3px solid var(--unsure); padding:1.1rem 1.2rem; margin-top:1.2rem;</span>
+<span class="s2">}</span>
+<span class="s2">.cannot-mark{font-family:var(--mono); font-size:2.6rem; line-height:0.8; color:var(--unsure)}</span>
+<span class="s2">.cannot .ask{font-size:1rem}</span>
+
+<span class="s2">.colophon{</span>
+<span class="s2">  margin-top:3.5rem; padding-top:1.2rem; border-top:2px solid var(--ink);</span>
+<span class="s2">  display:grid; gap:0.55rem; color:var(--ink-soft); font-size:0.88rem;</span>
+<span class="s2">}</span>
+<span class="s2">/* The rule spans the sheet; only the prose is held to a readable measure. */</span>
+<span class="s2">.colophon p{max-width:44rem}</span>
+<span class="s2">.withheld{color:var(--unsure)}</span>
+
+<span class="s2">@media (max-width:34rem){</span>
+<span class="s2">  body{font-size:16px}</span>
+<span class="s2">  .row,.unsure-item{grid-template-columns:1fr}</span>
+<span class="s2">  .rail{flex-direction:row; align-items:baseline; gap:0.7rem}</span>
+<span class="s2">  .age b{font-size:1.25rem}</span>
+<span class="s2">  .line{grid-template-columns:1fr; gap:0.2rem}</span>
+<span class="s2">  .thin{grid-template-columns:1fr}</span>
+<span class="s2">  .thin-on{grid-column:1}</span>
+<span class="s2">  .instrument{grid-template-columns:1fr auto}</span>
+<span class="s2">  .instrument span,.instrument em{grid-column:1/-1}</span>
+<span class="s2">  .cannot{grid-template-columns:1fr}</span>
+<span class="s2">}</span>
+<span class="s2">@media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }</span>
+<span class="s2">"""</span>
+
+<span class="c1">#: An idle session counts as "just finished" for this long after it went idle.</span>
+<span class="n">FINISHED_WINDOW</span> <span class="o">=</span> <span class="mf">3600.0</span>
+
+<span class="c1">#: The largest whole unit an age is reported in, biggest first.</span>
+<span class="n">_AGE_UNITS</span> <span class="o">=</span> <span class="p">((</span><span class="mf">86400.0</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">),</span> <span class="p">(</span><span class="mf">3600.0</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">),</span> <span class="p">(</span><span class="mf">60.0</span><span class="p">,</span> <span class="s2">"m"</span><span class="p">))</span>
+
+<span class="n">_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^A-Za-z0-9_-]+"</span><span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------</span>
+<span class="c1"># The egress choke point. Nothing reaches the page except through here.</span>
+<span class="c1">#</span>
+<span class="c1"># Lifted from openloops.dashboard._Sanitizer (private there) rather than imported,</span>
+<span class="c1"># trimmed to the one method this page needs: no row here links anywhere, so `.url()`</span>
+<span class="c1"># does not come along.</span>
+<span class="c1"># --------------------------------------------------------------------------------</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Sanitizer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Scrub, then escape. The single path from a roster row to the document.</span>
+
+<span class="sd">    &gt;&gt;&gt; s = _Sanitizer()</span>
+<span class="sd">    &gt;&gt;&gt; s.text('a &lt; b')</span>
+<span class="sd">    'a &amp;lt; b'</span>
+<span class="sd">    &gt;&gt;&gt; s.text('token=' + 'ghp_' + 'A' * 36)</span>
+<span class="sd">    '[withheld: credential-shaped text (github_token)]'</span>
+<span class="sd">    &gt;&gt;&gt; s.withheld</span>
+<span class="sd">    ['github_token']</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">withheld</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">clean</span> <span class="o">=</span> <span class="n">scrub</span><span class="p">(</span><span class="s2">""</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">CredentialFound</span> <span class="k">as</span> <span class="n">found</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">withheld</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">pattern_name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"[withheld: credential-shaped text (</span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">pattern_name</span><span class="si">}</span><span class="s2">)]"</span>
+        <span class="k">return</span> <span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">clean</span><span class="p">,</span> <span class="n">quote</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------</span>
+<span class="c1"># Small readings of a row. None of them guess.</span>
+<span class="c1"># --------------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_epoch</span><span class="p">(</span><span class="n">made_at</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``made_at`` as Unix seconds, falling back to now when it will not parse."""</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">made_at</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"z"</span><span class="p">)):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">"+00:00"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_since</span><span class="p">(</span><span class="n">seconds</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""How long, as the largest whole unit that fits -- a ``(figure, unit)`` pair.</span>
+
+<span class="sd">    &gt;&gt;&gt; _since(90)</span>
+<span class="sd">    ('2', 'm')</span>
+<span class="sd">    &gt;&gt;&gt; _since(-5)</span>
+<span class="sd">    ('0', 's')</span>
+<span class="sd">    """</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seconds</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">size</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">_AGE_UNITS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">seconds</span> <span class="o">&gt;=</span> <span class="n">size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">seconds</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">size</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">unit</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"s"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_age</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">_since</span><span class="p">(</span><span class="n">now_epoch</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status_since"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_slug</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A row's label as a safe HTML id fragment.</span>
+
+<span class="sd">    &gt;&gt;&gt; _slug('xa needed_or-not')</span>
+<span class="sd">    'xa-needed_or-not'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_ID_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="ow">or</span> <span class="s2">"session"</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------</span>
+<span class="c1"># Fragments. Each returns a string; none of them touch the outside world.</span>
+<span class="c1">#</span>
+<span class="c1"># `_rail` and `_register` are adapted from openloops.dashboard (private there, and</span>
+<span class="c1"># small enough to lift rather than import): the same markup, generalised so the age</span>
+<span class="c1"># is not always a day count -- crowsnest's durations run from seconds to days.</span>
+<span class="c1"># --------------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rail</span><span class="p">(</span><span class="n">chip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tone</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">figure</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="rail"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;span class="chip chip--</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">"&gt;</span><span class="si">{</span><span class="n">chip</span><span class="si">}</span><span class="s1">&lt;/span&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;span class="age"&gt;&lt;b&gt;</span><span class="si">{</span><span class="n">figure</span><span class="si">}</span><span class="s1">&lt;/b&gt;&lt;i&gt;</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s1">&lt;/i&gt;&lt;/span&gt;'</span>
+        <span class="sa">f</span><span class="s2">"&lt;/div&gt;"</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_register</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">figure</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tone</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;section class="register register--</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">" id="</span><span class="si">{</span><span class="n">ident</span><span class="si">}</span><span class="s1">"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="register-head"&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;p class="figure"&gt;</span><span class="si">{</span><span class="n">figure</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;div&gt;&lt;h2&gt;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&lt;/h2&gt;&lt;p class="rule"&gt;</span><span class="si">{</span><span class="n">rule</span><span class="si">}</span><span class="s1">&lt;/p&gt;&lt;/div&gt;'</span>
+        <span class="sa">f</span><span class="s2">"&lt;/div&gt;</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="s2">&lt;/section&gt;"</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_empty</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;p class="empty"&gt;</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_where</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``project`` and, when the row carries one, the ``home`` it came from."""</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">))]</span>
+    <span class="n">home</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">home</span><span class="p">:</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">home</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s1">'&lt;p class="where"&gt;'</span> <span class="o">+</span> <span class="s1">' &lt;span class="sep"&gt;·&lt;/span&gt; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"&lt;/p&gt;"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_row</span><span class="p">(</span>
+    <span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span>
+    <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">chip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tone</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">figure</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">lines</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">ident</span> <span class="o">=</span> <span class="n">_slug</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s1">'&lt;p class="ask"&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">))</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span><span class="p">,</span>
+        <span class="n">_where</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span>
+        <span class="o">*</span><span class="n">lines</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;li class="row row--</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">" id="session-</span><span class="si">{</span><span class="n">ident</span><span class="si">}</span><span class="s1">"&gt;'</span>
+        <span class="o">+</span> <span class="n">_rail</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="n">tone</span><span class="p">,</span> <span class="n">figure</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s1">'&lt;div class="body"&gt;'</span>
+        <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">"&lt;/div&gt;&lt;/li&gt;"</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;p class="line"&gt;&lt;span class="tag"&gt;</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">&lt;/span&gt;&lt;code&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/code&gt;&lt;/p&gt;'</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------</span>
+<span class="c1"># The registers.</span>
+<span class="c1"># --------------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_waiting_row</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">figure</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="s2">"for"</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">"waiting_for"</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="s2">"asks"</span><span class="p">,</span> <span class="n">act</span><span class="p">[</span><span class="s2">"pending_question"</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">_row</span><span class="p">(</span>
+        <span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">chip</span><span class="o">=</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="n">tone</span><span class="o">=</span><span class="s2">"needs"</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">figure</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="n">lines</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_finished_row</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">figure</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_assistant_text"</span><span class="p">):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="s2">"said"</span><span class="p">,</span> <span class="n">act</span><span class="p">[</span><span class="s2">"last_assistant_text"</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">_row</span><span class="p">(</span>
+        <span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">chip</span><span class="o">=</span><span class="s2">"idle"</span><span class="p">,</span> <span class="n">tone</span><span class="o">=</span><span class="s2">"free"</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">figure</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="n">lines</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_working_row</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">figure</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">running</span> <span class="o">=</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_flight"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">running</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="s2">"running"</span><span class="p">,</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">running</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">_row</span><span class="p">(</span>
+        <span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">chip</span><span class="o">=</span><span class="s2">"busy"</span><span class="p">,</span> <span class="n">tone</span><span class="o">=</span><span class="s2">"flight"</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">figure</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="n">lines</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_by_project</span><span class="p">(</span>
+    <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]]:</span>
+    <span class="n">groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"(no project)"</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quiet_group</span><span class="p">(</span>
+    <span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">project</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">figure</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span>
+        <span class="n">ident</span> <span class="o">=</span> <span class="n">_slug</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+        <span class="n">home</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">' &lt;span class="sep"&gt;·&lt;/span&gt; </span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">home</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span> <span class="k">if</span> <span class="n">home</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">'&lt;li class="thin" id="session-</span><span class="si">{</span><span class="n">ident</span><span class="si">}</span><span class="s1">"&gt;'</span>
+            <span class="sa">f</span><span class="s1">'&lt;span class="thin-age"&gt;</span><span class="si">{</span><span class="n">figure</span><span class="si">}{</span><span class="n">unit</span><span class="si">}</span><span class="s1">&lt;/span&gt;'</span>
+            <span class="sa">f</span><span class="s1">'&lt;p class="thin-ask"&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">))</span><span class="si">}{</span><span class="n">tail</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span>
+            <span class="s2">"&lt;/li&gt;"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;p class="subhead"&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">project</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;ul class="thins"&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/ul&gt;'</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_register_from_rows</span><span class="p">(</span>
+    <span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span>
+    <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+    <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">row_fn</span><span class="p">,</span>
+    <span class="n">ident</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tone</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">empty</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">figure</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row_fn</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;ol class="ledger"&gt;</span><span class="si">{</span><span class="n">items</span><span class="si">}</span><span class="s1">&lt;/ol&gt;'</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">_empty</span><span class="p">(</span><span class="n">empty</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register</span><span class="p">(</span>
+        <span class="n">ident</span><span class="o">=</span><span class="n">ident</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">figure</span><span class="p">,</span> <span class="n">tone</span><span class="o">=</span><span class="n">tone</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="n">rule</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quiet_register</span><span class="p">(</span>
+    <span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">figure</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">_quiet_group</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">project</span><span class="p">,</span> <span class="n">group_rows</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">project</span><span class="p">,</span> <span class="n">group_rows</span> <span class="ow">in</span> <span class="n">_by_project</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">_empty</span><span class="p">(</span><span class="s2">"Nothing else is alive."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register</span><span class="p">(</span>
+        <span class="n">ident</span><span class="o">=</span><span class="s2">"quiet"</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"Quiet"</span><span class="p">,</span>
+        <span class="n">figure</span><span class="o">=</span><span class="n">figure</span><span class="p">,</span>
+        <span class="n">tone</span><span class="o">=</span><span class="s2">"done"</span><span class="p">,</span>
+        <span class="n">rule</span><span class="o">=</span><span class="s2">"Everything else, grouped by project."</span><span class="p">,</span>
+        <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_masthead</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">counts</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">stamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">tally</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">"Waiting"</span><span class="p">,</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">"needs"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Busy"</span><span class="p">,</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">"flight"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Idle"</span><span class="p">,</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"idle"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">"done"</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">cells</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="tally-cell tally--</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">"&gt;&lt;p class="tally-figure"&gt;</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span>
+        <span class="sa">f</span><span class="s1">'&lt;p class="tally-name"&gt;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&lt;/p&gt;&lt;/div&gt;'</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">tone</span> <span class="ow">in</span> <span class="n">tally</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="s1">'&lt;header class="masthead"&gt;'</span>
+        <span class="s1">'&lt;p class="eyebrow"&gt;crowsnest &lt;span class="sep"&gt;·&lt;/span&gt; snapshot, not a status page&lt;/p&gt;'</span>
+        <span class="sa">f</span><span class="s2">"&lt;h1&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/h1&gt;"</span>
+        <span class="sa">f</span><span class="s1">'&lt;p class="stamp"&gt;as of &lt;time&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">stamp</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/time&gt;&lt;/p&gt;'</span>
+        <span class="s1">'&lt;p class="claim"&gt;Every session below was alive at that moment, read from its '</span>
+        <span class="s2">"registry entry and the tail of its transcript, and nothing since. Re-run "</span>
+        <span class="s2">"&lt;code&gt;crowsnest report&lt;/code&gt; for a newer one.&lt;/p&gt;"</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="tally"&gt;</span><span class="si">{</span><span class="n">cells</span><span class="si">}</span><span class="s1">&lt;/div&gt;'</span>
+        <span class="s2">"&lt;/header&gt;"</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_footer</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">stamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">withheld</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">safe</span><span class="o">.</span><span class="n">withheld</span><span class="p">:</span>
+        <span class="n">kinds</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">safe</span><span class="o">.</span><span class="n">withheld</span><span class="p">)))</span>
+        <span class="n">withheld</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s1">'&lt;p class="withheld"&gt;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">safe</span><span class="o">.</span><span class="n">withheld</span><span class="p">)</span><span class="si">}</span><span class="s1"> field(s) were withheld from this '</span>
+            <span class="sa">f</span><span class="s2">"page because they matched a credential pattern (</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">kinds</span><span class="p">)</span><span class="si">}</span><span class="s2">). The "</span>
+            <span class="s2">"matched text is not printed anywhere, including here.&lt;/p&gt;"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="s1">'&lt;footer class="colophon"&gt;'</span>
+        <span class="sa">f</span><span class="s2">"&lt;p&gt;Rendered by &lt;code&gt;crowsnest report&lt;/code&gt; at </span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">stamp</span><span class="p">)</span><span class="si">}</span><span class="s2">. Re-run it "</span>
+        <span class="s2">"to get a newer one; there is no other way for this page to change.&lt;/p&gt;"</span>
+        <span class="s2">"&lt;p&gt;crowsnest never sends, spawns, kills or writes into another session. Nothing "</span>
+        <span class="s2">"here did either -- it read, and it reported.&lt;/p&gt;"</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">withheld</span><span class="si">}</span><span class="s2">"</span>
+        <span class="s2">"&lt;/footer&gt;"</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------</span>
+<span class="c1"># The document.</span>
+<span class="c1"># --------------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="render_report">
+<a class="viewcode-back" href="../../module_docs/crowsnest/report.html#crowsnest.report.render_report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_report</span><span class="p">(</span>
+    <span class="n">roster</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">made_at</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_TITLE</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.</span>
+
+<span class="sd">    ``made_at`` is the moment the snapshot claims to be from and is printed in the</span>
+<span class="sd">    largest type on the page; it is a required argument (not a hidden ``now()``) so that</span>
+<span class="sd">    two calls with the same ``roster`` and ``made_at`` render the identical document.</span>
+
+<span class="sd">    A session counts as "just finished" when it has been ``idle`` for less than</span>
+<span class="sd">    :data:`FINISHED_WINDOW` seconds, and "quiet" otherwise. Anything not ``waiting``,</span>
+<span class="sd">    ``busy`` or ``idle`` also falls into Quiet, so an unrecognised status is shown rather</span>
+<span class="sd">    than dropped.</span>
+<span class="sd">    """</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">_Sanitizer</span><span class="p">()</span>
+    <span class="n">sessions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">roster</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sessions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">roster</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"counts"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="n">now_epoch</span> <span class="o">=</span> <span class="n">_epoch</span><span class="p">(</span><span class="n">made_at</span><span class="p">)</span>
+    <span class="n">stamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">now_epoch</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+        <span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M UTC"</span>
+    <span class="p">)</span>
+
+    <span class="n">waiting</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">]</span>
+    <span class="n">busy</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"busy"</span><span class="p">]</span>
+    <span class="n">idle</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"idle"</span><span class="p">]</span>
+    <span class="n">finished</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">s</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">idle</span>
+        <span class="k">if</span> <span class="n">now_epoch</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status_since"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">FINISHED_WINDOW</span>
+    <span class="p">]</span>
+    <span class="n">quiet</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">idle</span> <span class="k">if</span> <span class="n">now_epoch</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status_since"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">FINISHED_WINDOW</span>
+    <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">)]</span>
+
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_masthead</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">title</span><span class="p">),</span>
+        <span class="n">_register_from_rows</span><span class="p">(</span>
+            <span class="n">safe</span><span class="p">,</span>
+            <span class="n">waiting</span><span class="p">,</span>
+            <span class="n">now_epoch</span><span class="p">,</span>
+            <span class="n">row_fn</span><span class="o">=</span><span class="n">_waiting_row</span><span class="p">,</span>
+            <span class="n">ident</span><span class="o">=</span><span class="s2">"waiting"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"Waiting on you"</span><span class="p">,</span>
+            <span class="n">tone</span><span class="o">=</span><span class="s2">"needs"</span><span class="p">,</span>
+            <span class="n">rule</span><span class="o">=</span><span class="s2">"Holding for an answer, with the question it asked verbatim."</span><span class="p">,</span>
+            <span class="n">empty</span><span class="o">=</span><span class="s2">"Nothing is waiting on you."</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_register_from_rows</span><span class="p">(</span>
+            <span class="n">safe</span><span class="p">,</span>
+            <span class="n">finished</span><span class="p">,</span>
+            <span class="n">now_epoch</span><span class="p">,</span>
+            <span class="n">row_fn</span><span class="o">=</span><span class="n">_finished_row</span><span class="p">,</span>
+            <span class="n">ident</span><span class="o">=</span><span class="s2">"finished"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"Just finished"</span><span class="p">,</span>
+            <span class="n">tone</span><span class="o">=</span><span class="s2">"free"</span><span class="p">,</span>
+            <span class="n">rule</span><span class="o">=</span><span class="s2">"Idle within the last hour, with its last words."</span><span class="p">,</span>
+            <span class="n">empty</span><span class="o">=</span><span class="s2">"No session went idle in the last hour."</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_register_from_rows</span><span class="p">(</span>
+            <span class="n">safe</span><span class="p">,</span>
+            <span class="n">busy</span><span class="p">,</span>
+            <span class="n">now_epoch</span><span class="p">,</span>
+            <span class="n">row_fn</span><span class="o">=</span><span class="n">_working_row</span><span class="p">,</span>
+            <span class="n">ident</span><span class="o">=</span><span class="s2">"working"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"Working"</span><span class="p">,</span>
+            <span class="n">tone</span><span class="o">=</span><span class="s2">"flight"</span><span class="p">,</span>
+            <span class="n">rule</span><span class="o">=</span><span class="s2">"Busy, with the tool call in flight."</span><span class="p">,</span>
+            <span class="n">empty</span><span class="o">=</span><span class="s2">"No session is running a tool right now."</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">_quiet_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">quiet</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">),</span>
+        <span class="n">_footer</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">stamp</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"&lt;title&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;"</span>
+        <span class="s1">'&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;'</span>
+        <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
+    <span class="p">)</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;main class="sheet"&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/main&gt;'</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="s1">'&lt;!doctype html&gt;</span><span class="se">\n</span><span class="s1">&lt;html lang="en"&gt;</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="sa">f</span><span class="s1">'&lt;head&gt;</span><span class="se">\n</span><span class="s1">&lt;meta charset="utf-8"&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="se">\n</span><span class="s1">&lt;/head&gt;</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="sa">f</span><span class="s2">"&lt;body&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s2">&lt;/body&gt;</span><span class="se">\n</span><span class="s2">&lt;/html&gt;</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+crowsnest.report
+================
+.. automodule:: crowsnest.report
+   :members:
