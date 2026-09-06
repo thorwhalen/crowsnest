@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.config &mdash; crowsnest 0.0.5 documentation</title>
+  <title>crowsnest.config &mdash; crowsnest 0.0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=282f96c0"></script>
+      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -106,6 +106,9 @@
 <span class="sd">    name = "server"</span>
 <span class="sd">    path = "~/.cache/xa/remotes/server"   # a synced copy</span>
 <span class="sd">    remote = true                         # liveness by freshness, no pid check</span>
+
+<span class="sd">On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML</span>
+<span class="sd">double-quoted string treats a backslash as an escape.</span>
 
 <span class="sd">``remote = true`` is the one thing a home needs to say about itself: its pids cannot be</span>
 <span class="sd">checked here, so a record counts as live while its status is fresh (``fresh_seconds``,</span>
