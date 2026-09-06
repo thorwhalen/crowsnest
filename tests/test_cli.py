@@ -150,8 +150,9 @@ def test_all_homes_reads_every_configured_home_with_a_column(
         registry_record(201, "s1", name="fixer", status="idle", status_at_ms=1_000_000),
     )
     cfg = tmp_path / "config.toml"
+    # TOML literal strings (single quotes) take a Windows path's backslashes as they are.
     cfg.write_text(
-        f'[[homes]]\nname = "one"\npath = "{home_a}"\n\n[[homes]]\nname = "two"\npath = "{home_b}"\n'
+        f"[[homes]]\nname = 'one'\npath = '{home_a}'\n\n[[homes]]\nname = 'two'\npath = '{home_b}'\n"
     )
     monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
     alive = ALIVE | {201}
