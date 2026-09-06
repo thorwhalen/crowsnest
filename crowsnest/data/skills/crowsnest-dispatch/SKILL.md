@@ -65,10 +65,10 @@ belongs in an issue the session can read.
 crowsnest spawn <name> --cwd <dir> --prompt "<the brief>"
 ```
 
-The row appears in `crowsnest` within seconds, named, in that directory, busy. Add
-`--remote-control` when the user will want to reach it from a phone. If your installed
-version has no `spawn` yet, say so and give the user the one line to run themselves:
-`claude -n <name>` in that directory.
+The row appears in `crowsnest` within seconds, named, in that directory, busy. Remote
+control is on by default, so the user can reach it from a phone. If the command reports
+that it could not confirm the session, do not spawn a second one — run `crowsnest` and
+look before you try again.
 
 For a session that already exists, `SendMessage` to its name from `ListAgents`, with the
 same five parts. Idle only — never a `busy` or `waiting` one.
