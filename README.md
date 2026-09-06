@@ -66,6 +66,28 @@ idle     10m  monitor               proj         "The sweep landed. It's the rep
 -- 32 live: 1 waiting, 1 busy, 30 idle
 ```
 
+## Several accounts and machines in one roster
+
+Reading crosses accounts and machines; messaging does not, so a crowsnest session operates the fleet of its own account and machine and can *read* all the others. List them once:
+
+```toml
+# ~/.config/crowsnest/config.toml
+[[homes]]
+name = "main"
+path = "~/.claude"
+
+[[homes]]
+name = "work"
+path = "~/.claude-work"          # a second account on this machine
+
+[[homes]]
+name = "server"
+path = "~/.cache/xa/remotes/server"   # a copy synced down with `xa sync`
+remote = true                         # its pids are not ours: alive while fresh
+```
+
+Then `crowsnest --all-homes` prints every home with a column saying which, and `crowsnest show name@home --all-homes` picks one when a name exists in two.
+
 ## What it reads
 
 - `~/.claude/sessions/<pid>.json`: written while a session runs. Name, session id, working directory, `busy` / `idle` / `waiting`, and when waiting, what for. Checked against a live process before it is reported, because a crash leaves the file behind.

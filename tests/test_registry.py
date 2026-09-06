@@ -45,3 +45,26 @@ def test_label_falls_back_to_the_session_id_head(tmp_path):
         s for s in live_sessions(home=home, is_alive=lambda pid: True) if s.pid == 106
     ]
     assert unnamed[0].label == "abcdef12"
+
+
+def test_remote_home_uses_freshness_instead_of_pids(tmp_path):
+    from crowsnest.registry import fresh_within
+
+    home = demo_home(tmp_path)
+    write_registry(
+        home,
+        registry_record(
+            555, "s5", name="far-fresh", status="idle", status_at_ms=1_000_000_000
+        ),
+    )
+    write_registry(
+        home,
+        registry_record(556, "s6", name="far-stale", status="idle", status_at_ms=1_000),
+    )
+    rule = fresh_within(3600, now=lambda: 1_000_000.0 + 60)
+    names = {s.name for s in live_sessions(home=home, is_live=rule, home_name="server")}
+    assert "far-fresh" in names and "far-stale" not in names
+    assert all(
+        s.home == "server"
+        for s in live_sessions(home=home, is_live=rule, home_name="server")
+    )
