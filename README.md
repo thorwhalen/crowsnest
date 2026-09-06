@@ -4,7 +4,7 @@
 
 A machine running many Claude Code sessions has a question nobody answers: *what are they all doing, and which of them needs me?* Each session knows only itself, the terminal tabs are silent until you click them, and the answer lives in forty scrollbacks.
 
-`crowsnest` reads what Claude Code already writes, the registry it keeps for every running session and the transcript each one appends to, and answers in three tiers, cheapest first. It never sends, spawns, kills or writes into another session.
+`crowsnest` reads what Claude Code already writes, the registry it keeps for every running session and the transcript each one appends to, and answers in three tiers, cheapest first. It can start a new named session (`crowsnest spawn`), but it never sends into, kills, or otherwise writes into a session that already exists.
 
 ## Start here
 
@@ -54,6 +54,7 @@ crowsnest                          who is alive: waiting on you first, then busy
 crowsnest show <session>           one session: last asked, last said, running now, pending question
 crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
+crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
 crowsnest install-skills           link the skill and the scout subagent into ~/.claude
 ```
 
@@ -98,16 +99,17 @@ What a transcript's content *means* is [openloops](https://github.com/thorwhalen
 ## From Python
 
 ```python
-from crowsnest import roster, show, turns, events, live_sessions
+from crowsnest import roster, show, turns, events, live_sessions, spawn
 
 roster()["counts"]  # {'waiting': 1, 'busy': 1, 'idle': 30, 'other': 0}
 show("monitor")["activity"]["last_assistant_text"]
 for event in events(interval=5):  # forever
     ...
+spawn("demo", cwd="/path/to/repo", prompt="run the tests")["pid"]
 ```
 
 Every function takes `home=` (the Claude Code config directory; a synced copy of another machine's works the same way) and the readers take `is_alive=` (how a registry pid is confirmed running).
 
 ## Not in crowsnest
 
-Starting a session, in some directory, from a phone, is [xa](https://github.com/thorwhalen/xa)'s job (`xa spawn`). Asking a session a question is Claude Code's own `SendMessage`; the skill says when.
+Killing or resuming a session is [xa](https://github.com/thorwhalen/xa)'s job (`xa spawn` is also the pointed replacement for `crowsnest spawn`'s spawner seam, adding hosts and a phone web UI). Asking a session a question is Claude Code's own `SendMessage`; the skill says when.
