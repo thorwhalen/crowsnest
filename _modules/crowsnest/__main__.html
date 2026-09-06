@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.10 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -446,26 +446,33 @@
     <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="p">(</span>
         <span class="p">(</span><span class="s2">"CLAUDE.md"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"claude_md"</span><span class="p">]),</span>
         <span class="p">(</span><span class="s2">"data dir"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"data_dir"</span><span class="p">]),</span>
-        <span class="p">(</span><span class="s2">"settings"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"user hooks"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"proj hooks"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"project_settings"</span><span class="p">]),</span>
     <span class="p">):</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'action'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;9</span><span class="si">}{</span><span class="n">label</span><span class="si">:</span><span class="s2">&lt;11</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'reason'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
-    <span class="n">settings</span> <span class="o">=</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"backup"</span><span class="p">]:</span>
-        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"backup    settings   </span><span class="si">{</span><span class="n">settings</span><span class="p">[</span><span class="s1">'backup'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"skipped"</span><span class="p">:</span>
-        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
-            <span class="s2">""</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">"## Add these to </span><span class="si">{</span><span class="n">settings</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2"> yourself, or re-run with --hooks"</span><span class="p">,</span>
-            <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">_init</span><span class="o">.</span><span class="n">settings_snippet</span><span class="p">(),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
-            <span class="s2">""</span><span class="p">,</span>
-            <span class="o">*</span><span class="p">[</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'event'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'why'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">_init</span><span class="o">.</span><span class="n">HOOKS</span><span class="p">],</span>
-        <span class="p">]</span>
-    <span class="k">elif</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"added"</span><span class="p">]:</span>
-        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"## Hooks added"</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
-            <span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'event'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'matcher'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'any'</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'command'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-            <span class="o">+</span> <span class="p">(</span><span class="s2">" [async]"</span> <span class="k">if</span> <span class="n">h</span><span class="p">[</span><span class="s2">"async"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"added"</span><span class="p">]</span>
-        <span class="p">]</span>
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]),</span> <span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"project_settings"</span><span class="p">])):</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"backup"</span><span class="p">]:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"backup    </span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">&lt;11</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'backup'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">][</span><span class="s2">"action"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"skipped"</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">scope</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">],</span> <span class="s2">"user"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"project_settings"</span><span class="p">],</span> <span class="s2">"project"</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="s2">""</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"## Add these to </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2"> yourself, or re-run with --hooks"</span><span class="p">,</span>
+                <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">_init</span><span class="o">.</span><span class="n">settings_snippet</span><span class="p">(</span><span class="n">_init</span><span class="o">.</span><span class="n">hooks_for</span><span class="p">(</span><span class="n">scope</span><span class="p">)),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+                <span class="s2">""</span><span class="p">,</span>
+                <span class="o">*</span><span class="p">[</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'event'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'why'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">_init</span><span class="o">.</span><span class="n">hooks_for</span><span class="p">(</span><span class="n">scope</span><span class="p">)],</span>
+            <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">added</span> <span class="o">=</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">][</span><span class="s2">"added"</span><span class="p">]</span> <span class="o">+</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"project_settings"</span><span class="p">][</span><span class="s2">"added"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">added</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"## Hooks added"</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'event'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'matcher'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'any'</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'scope'</span><span class="p">]</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'command'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+                <span class="o">+</span> <span class="p">(</span><span class="s2">" [async]"</span> <span class="k">if</span> <span class="n">h</span><span class="p">[</span><span class="s2">"async"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">added</span>
+            <span class="p">]</span>
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
 

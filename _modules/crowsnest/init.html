@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.init &mdash; crowsnest 0.0.10 documentation</title>
+  <title>crowsnest.init &mdash; crowsnest 0.0.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
+      <script src="../../_static/documentation_options.js?v=0c446633"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -145,12 +145,20 @@
 <span class="c1">#: registry, not a single transcript) and its output is re-injected on every start, clear</span>
 <span class="c1">#: and compaction, which is what makes the roster part of the content that survives. That</span>
 <span class="c1">#: output is the whole point, so this one stays synchronous.</span>
+<span class="c1">#:</span>
+<span class="c1">#: ``scope`` says which settings file each belongs in. The two push hooks are ``user``</span>
+<span class="c1">#: hooks: every session on the machine is a session worth watching, so they go in the</span>
+<span class="c1">#: config directory's ``settings.json``. The roster hook is a ``project`` hook: it goes in</span>
+<span class="c1">#: the watching session's own ``&lt;directory&gt;/.claude/settings.json``, so that only a</span>
+<span class="c1">#: session started there is handed a roster on start. In the user file it would print the</span>
+<span class="c1">#: roster into every session on the machine, which is the opposite of what a watcher is for.</span>
 <span class="n">HOOKS</span> <span class="o">=</span> <span class="p">(</span>
     <span class="p">{</span>
         <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"Notification"</span><span class="p">,</span>
         <span class="s2">"matcher"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
         <span class="s2">"command"</span><span class="p">:</span> <span class="s2">"crowsnest hook notification"</span><span class="p">,</span>
         <span class="s2">"async"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"scope"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
         <span class="s2">"why"</span><span class="p">:</span> <span class="s2">"a session is asking its human for something"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
@@ -158,6 +166,7 @@
         <span class="s2">"matcher"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
         <span class="s2">"command"</span><span class="p">:</span> <span class="s2">"crowsnest hook stop"</span><span class="p">,</span>
         <span class="s2">"async"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"scope"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
         <span class="s2">"why"</span><span class="p">:</span> <span class="s2">"a session finished a turn; record its last words"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
@@ -165,11 +174,23 @@
         <span class="s2">"matcher"</span><span class="p">:</span> <span class="s2">"startup|clear|compact"</span><span class="p">,</span>
         <span class="s2">"command"</span><span class="p">:</span> <span class="s2">"crowsnest --brief"</span><span class="p">,</span>
         <span class="s2">"async"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">"scope"</span><span class="p">:</span> <span class="s2">"project"</span><span class="p">,</span>
         <span class="s2">"why"</span><span class="p">:</span> <span class="s2">"re-print the roster after every start, clear and compaction"</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">)</span>
 
-<span class="n">_HOOK_FIELDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="s2">"matcher"</span><span class="p">,</span> <span class="s2">"command"</span><span class="p">,</span> <span class="s2">"async"</span><span class="p">)</span>
+<span class="n">_HOOK_FIELDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="s2">"matcher"</span><span class="p">,</span> <span class="s2">"command"</span><span class="p">,</span> <span class="s2">"async"</span><span class="p">,</span> <span class="s2">"scope"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">hooks_for</span><span class="p">(</span><span class="n">scope</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="n">HOOKS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The hook specs that belong in one settings file: ``user`` or ``project``.</span>
+
+<span class="sd">    &gt;&gt;&gt; [h['event'] for h in hooks_for('user')]</span>
+<span class="sd">    ['Notification', 'Stop']</span>
+<span class="sd">    &gt;&gt;&gt; [h['event'] for h in hooks_for('project')]</span>
+<span class="sd">    ['SessionStart']</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hooks</span> <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scope"</span><span class="p">)</span> <span class="o">==</span> <span class="n">scope</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_checked</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -320,12 +341,15 @@
 
 <span class="sd">    Writes ``CLAUDE.md`` into ``directory`` (default: the current one), creates the data</span>
 <span class="sd">    directory (``store``, else :func:`crowsnest.paths.data_dir`), and reports the hooks.</span>
-<span class="sd">    With ``hooks=True`` it also merges :data:`HOOKS` into ``home``'s ``settings.json``</span>
-<span class="sd">    (``home`` defaults to ``$CLAUDE_CONFIG_DIR`` or ``~/.claude``) after backing it up.</span>
+<span class="sd">    With ``hooks=True`` it also merges the ``user``-scope hooks into ``home``'s</span>
+<span class="sd">    ``settings.json`` (``home`` defaults to ``$CLAUDE_CONFIG_DIR`` or ``~/.claude``) and</span>
+<span class="sd">    the ``project``-scope ones into ``directory/.claude/settings.json``, each after a</span>
+<span class="sd">    backup. See :data:`HOOKS` for why the roster hook must not be user-wide.</span>
 
 <span class="sd">    Returns the plan: one row per thing, each with an ``action`` -- ``write`` / ``create``</span>
 <span class="sd">    / ``add`` when it changed, ``ok`` when it was already right, ``conflict`` when</span>
-<span class="sd">    something else was there, ``skipped`` when it was not asked for.</span>
+<span class="sd">    something else was there, ``skipped`` when it was not asked for. ``settings`` is the</span>
+<span class="sd">    user file's row and ``project_settings`` the project file's.</span>
 <span class="sd">    """</span>
     <span class="n">now</span> <span class="o">=</span> <span class="n">now</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">astimezone</span><span class="p">()</span>
     <span class="n">where</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">directory</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
@@ -350,34 +374,21 @@
     <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"create"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
         <span class="n">where_data</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">settings_path</span> <span class="o">=</span> <span class="n">claude_home</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"settings.json"</span>
     <span class="n">listed</span> <span class="o">=</span> <span class="p">[{</span><span class="n">k</span><span class="p">:</span> <span class="n">h</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_HOOK_FIELDS</span><span class="p">}</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">HOOKS</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">hooks</span><span class="p">:</span>
-        <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings_path</span><span class="p">),</span>
-            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"skipped"</span><span class="p">,</span>
-            <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"not asked for; pass --hooks to add them"</span><span class="p">,</span>
-            <span class="s2">"backup"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-            <span class="s2">"added"</span><span class="p">:</span> <span class="p">[],</span>
-        <span class="p">}</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">current</span> <span class="o">=</span> <span class="n">_read_settings</span><span class="p">(</span><span class="n">settings_path</span><span class="p">)</span>
-        <span class="n">merged</span><span class="p">,</span> <span class="n">added</span> <span class="o">=</span> <span class="n">merged_hooks</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">HOOKS</span><span class="p">)</span>
-        <span class="n">backup</span> <span class="o">=</span> <span class="s2">""</span>
-        <span class="k">if</span> <span class="n">added</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
-            <span class="n">settings_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">settings_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-                <span class="n">backup</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_backup</span><span class="p">(</span><span class="n">settings_path</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">))</span>
-            <span class="n">settings_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
-                <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span>
-            <span class="p">)</span>
-        <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings_path</span><span class="p">),</span>
-            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"add"</span> <span class="k">if</span> <span class="n">added</span> <span class="k">else</span> <span class="s2">"ok"</span><span class="p">,</span>
-            <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"already registered"</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">added</span> <span class="k">else</span> <span class="s2">"merged, nothing removed"</span><span class="p">,</span>
-            <span class="s2">"backup"</span><span class="p">:</span> <span class="n">backup</span><span class="p">,</span>
-            <span class="s2">"added"</span><span class="p">:</span> <span class="n">added</span><span class="p">,</span>
-        <span class="p">}</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">_apply_hooks</span><span class="p">(</span>
+        <span class="n">claude_home</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"settings.json"</span><span class="p">,</span>
+        <span class="n">hooks_for</span><span class="p">(</span><span class="s2">"user"</span><span class="p">),</span>
+        <span class="n">wanted</span><span class="o">=</span><span class="n">hooks</span><span class="p">,</span>
+        <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">,</span>
+        <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">project_settings</span> <span class="o">=</span> <span class="n">_apply_hooks</span><span class="p">(</span>
+        <span class="n">where</span> <span class="o">/</span> <span class="s2">".claude"</span> <span class="o">/</span> <span class="s2">"settings.json"</span><span class="p">,</span>
+        <span class="n">hooks_for</span><span class="p">(</span><span class="s2">"project"</span><span class="p">),</span>
+        <span class="n">wanted</span><span class="o">=</span><span class="n">hooks</span><span class="p">,</span>
+        <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">,</span>
+        <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"directory"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">where</span><span class="p">),</span>
@@ -385,9 +396,39 @@
         <span class="s2">"claude_md"</span><span class="p">:</span> <span class="n">md</span><span class="p">,</span>
         <span class="s2">"data_dir"</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
         <span class="s2">"settings"</span><span class="p">:</span> <span class="n">settings</span><span class="p">,</span>
+        <span class="s2">"project_settings"</span><span class="p">:</span> <span class="n">project_settings</span><span class="p">,</span>
         <span class="s2">"hooks"</span><span class="p">:</span> <span class="n">listed</span><span class="p">,</span>
     <span class="p">}</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_hooks</span><span class="p">(</span>
+    <span class="n">settings_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">specs</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">wanted</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Merge ``specs`` into one settings file (or report what would happen)."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">wanted</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings_path</span><span class="p">),</span>
+            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"skipped"</span><span class="p">,</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"not asked for; pass --hooks to add them"</span><span class="p">,</span>
+            <span class="s2">"backup"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"added"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">_read_settings</span><span class="p">(</span><span class="n">settings_path</span><span class="p">)</span>
+    <span class="n">merged</span><span class="p">,</span> <span class="n">added</span> <span class="o">=</span> <span class="n">merged_hooks</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">specs</span><span class="p">)</span>
+    <span class="n">backup</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">added</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">settings_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">settings_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">backup</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_backup</span><span class="p">(</span><span class="n">settings_path</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">))</span>
+        <span class="n">settings_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings_path</span><span class="p">),</span>
+        <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"add"</span> <span class="k">if</span> <span class="n">added</span> <span class="k">else</span> <span class="s2">"ok"</span><span class="p">,</span>
+        <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"already registered"</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">added</span> <span class="k">else</span> <span class="s2">"merged, nothing removed"</span><span class="p">,</span>
+        <span class="s2">"backup"</span><span class="p">:</span> <span class="n">backup</span><span class="p">,</span>
+        <span class="s2">"added"</span><span class="p">:</span> <span class="n">added</span><span class="p">,</span>
+    <span class="p">}</span>
 </pre></div>
 
            </div>
