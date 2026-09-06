@@ -68,8 +68,11 @@ def test_hooks_are_added_to_a_fresh_settings_file(tmp_path):
     settings = _settings(home)
     assert _commands(settings, "Stop") == ["crowsnest hook stop"]
     assert _commands(settings, "Notification") == ["crowsnest hook notification"]
-    assert settings["hooks"]["SessionStart"][0]["matcher"] == "startup|clear|compact"
-    assert _commands(settings, "SessionStart") == ["crowsnest --brief"]
+    assert "SessionStart" not in settings["hooks"]
+    project = json.loads((tmp_path / "cn" / ".claude" / "settings.json").read_text())
+    assert project["hooks"]["SessionStart"][0]["matcher"] == "startup|clear|compact"
+    assert _commands(project, "SessionStart") == ["crowsnest --brief"]
+    assert plan["project_settings"]["action"] == "add"
 
 
 def test_the_two_push_hooks_are_async_and_the_roster_hook_is_not(tmp_path):
@@ -78,15 +81,29 @@ def test_the_two_push_hooks_are_async_and_the_roster_hook_is_not(tmp_path):
     # two hooks' output. The SessionStart one is read, so it has to block.
     home = tmp_path / "claude"
     init(directory=tmp_path / "cn", home=home, store=tmp_path / "data", hooks=True)
-    hooks = _settings(home)["hooks"]
+    user_hooks = _settings(home)["hooks"]
+    project_hooks = json.loads(
+        (tmp_path / "cn" / ".claude" / "settings.json").read_text()
+    )["hooks"]
 
-    def entry(event):
+    def entry(hooks, event):
         (one,) = [e for group in hooks[event] for e in group["hooks"]]
         return one
 
-    assert entry("Stop")["async"] is True
-    assert entry("Notification")["async"] is True
-    assert "async" not in entry("SessionStart")
+    assert entry(user_hooks, "Stop")["async"] is True
+    assert entry(user_hooks, "Notification")["async"] is True
+    assert "async" not in entry(project_hooks, "SessionStart")
+
+
+def test_the_roster_hook_never_lands_in_the_user_file(tmp_path):
+    # In the user file it would print the roster into every session on the machine.
+    home = tmp_path / "claude"
+    init(directory=tmp_path / "cn", home=home, store=tmp_path / "data", hooks=True)
+    init(directory=tmp_path / "cn", home=home, store=tmp_path / "data", hooks=True)
+    assert "SessionStart" not in _settings(home)["hooks"]
+    project = json.loads((tmp_path / "cn" / ".claude" / "settings.json").read_text())
+    assert _commands(project, "SessionStart") == ["crowsnest --brief"]
+    assert "Stop" not in project["hooks"]
 
 
 def test_an_existing_hook_is_kept_and_a_backup_is_written(tmp_path):
