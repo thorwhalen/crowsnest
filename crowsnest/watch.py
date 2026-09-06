@@ -79,8 +79,18 @@ def snapshot(
     *,
     home: str | Path | None = None,
     is_alive: Callable[[int], bool] = pid_alive,
+    all_homes: bool = False,
+    config: str | Path | None = None,
 ) -> dict[str, LiveSession]:
-    """The live sessions right now, keyed by session id."""
+    """The live sessions right now, keyed by session id.
+
+    With ``all_homes`` every configured home is read (see :mod:`crowsnest.config`), each
+    with its own liveness rule, and every record carries its home's name.
+    """
+    if all_homes:
+        from crowsnest.tools import sessions
+
+        return {s.session_id: s for s in sessions(all_homes=True, config=config)}
     return {s.session_id: s for s in live_sessions(home=home, is_alive=is_alive)}
 
 
@@ -91,6 +101,7 @@ def _event(kind: str, session: LiveSession, detail: str) -> dict:
         "session_id": session.session_id,
         "name": session.label,
         "project": session.project,
+        "home": session.home,
         "status": session.status,
         "waiting_for": session.waiting_for,
         "detail": _one_line(detail),
@@ -253,8 +264,13 @@ def events(
     sleep: Callable[[float], None] = time.sleep,
     ticks: int | None = None,
     events_path: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
 ) -> Iterator[dict]:
     """Yield one dict per change, forever -- or for ``ticks`` snapshots when given.
+
+    ``all_homes`` watches every configured home at once; registry events then carry the
+    home's name. Hook events come from this machine's own hook log and carry none.
 
     The first snapshot is the baseline and yields nothing, and the hook log is opened at
     its end: a monitor that starts up is not told about forty sessions that were already
@@ -262,7 +278,7 @@ def events(
     the loop; nothing else should pass them.
     """
     log = _events_path(events_path)
-    before = snapshot(home=home, is_alive=is_alive)
+    before = snapshot(home=home, is_alive=is_alive, all_homes=all_homes, config=config)
     position = tail_position(log)
     taken = 0
     while ticks is None or taken < ticks:
@@ -271,7 +287,7 @@ def events(
         pushed = [event for event in map(hook_event, records) if event]
         yield from pushed
         stopped = {e["session_id"] for e in pushed if e["kind"] == "stopped"}
-        after = snapshot(home=home, is_alive=is_alive)
+        after = snapshot(home=home, is_alive=is_alive, all_homes=all_homes, config=config)
         for event in diff(before, after):
             # A hook already said this turn ended, and said why. One line, not two.
             if event["kind"] == "idle" and event["session_id"] in stopped:
