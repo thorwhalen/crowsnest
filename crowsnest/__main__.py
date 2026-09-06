@@ -310,13 +310,20 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
         for page in pages
     )
 
-def brief(session: str, *, home: str | None = None, json: bool = False):
+
+def brief(
+    session: str,
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    json: bool = False,
+):
     """openloops' digest for one session: what it has been doing, dated, in its own words.
 
     Reads no transcript and costs the session nothing. Empty until openloops has digested
     that session; `ol sync` is what fills it.
     """
-    result = tools.brief(session, home=home)
+    result = tools.brief(session, home=home, all_homes=all_homes)
     if json:
         return _json.dumps(result, indent=2)
     s = result["session"]
