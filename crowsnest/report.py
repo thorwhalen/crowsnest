@@ -4,12 +4,13 @@ request to anywhere.
 The person operating the fleet often reads from a phone, and a terminal roster does not
 read well there. :func:`render_report` takes what :func:`crowsnest.tools.roster` returns
 and renders it in the same design language as ``ol dashboard`` in
-:mod:`openloops.dashboard` -- the two pages are meant to read as siblings. So this module
-reuses :data:`openloops.dashboard._CSS` **by import**, not by copy: it is the whole
-stylesheet, and a forked copy is a copy that silently drifts the moment either page's
-design changes (crowsnest issue #3). ``_Sanitizer`` is different: it is private *and*
-small, so the few lines this page needs are lifted below with a comment saying where they
-came from, rather than importing a private class.
+:mod:`openloops.dashboard` -- the two pages are meant to read as siblings. ``_CSS`` below
+is that page's stylesheet, copied rather than imported: it is a private name in
+``openloops.dashboard``, and importing a private name from another package can break at
+any release of it with no warning here. ``_Sanitizer`` is lifted for the same reason.
+Both carry a comment saying where they came from and when; an openloops issue tracks
+exposing the stylesheet publicly, after which the copy can become an import with a
+fallback.
 
 Four registers, in the order a person needs them: **Waiting on you** (a session holding
 for an answer, with the question verbatim), **Just finished** (idle within the last hour,
@@ -41,14 +42,251 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from typing import Any
 
-# The whole stylesheet, reused rather than forked -- see the module docstring.
-from openloops.dashboard import _CSS
 from openloops.egress import CredentialFound, scrub
 
 __all__ = ["render_report"]
 
 #: What the page is called when the caller does not name it.
 DFLT_TITLE = "crowsnest"
+
+# Copied from openloops.dashboard._CSS (private there) on 2026-09-06, so `ol dashboard`
+# and `crowsnest report` read as siblings without an import on a private name -- see the
+# module docstring. Keep it byte-identical to the source; openloops issue tracks exposing
+# it publicly, after which this becomes an import with a fallback to the copy below.
+_CSS = """
+:root{
+  --ground:#eff0ec; --surface:#f8f9f5; --sunk:#e7e9e3;
+  --ink:#151c1a; --ink-soft:#56635f; --rule:#d2d7d0; --rule-soft:#e3e6e0;
+  --accent:#17514f;
+  --needs:#94510a; --needs-wash:#f2e6d4;
+  --free:#1e6b3c; --free-wash:#dfeade;
+  --waits:#6c7975; --waits-wash:#e6e9e4;
+  --unsure:#96234f; --unsure-wash:#f2dee4;
+  --done:#69766f; --done-wash:#e8ebe6;
+  --serif:ui-serif,Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --step:clamp(0.5rem,1.2vw,0.9rem);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --ground:#0e1211; --surface:#151b19; --sunk:#111615;
+  --ink:#e4e8e3; --ink-soft:#94a29d; --rule:#29312e; --rule-soft:#1e2523;
+  --accent:#74c6bc;
+  --needs:#e0a44a; --needs-wash:#2c2317;
+  --free:#74c282; --free-wash:#182619;
+  --waits:#8b9994; --waits-wash:#1c2321;
+  --unsure:#f17fa5; --unsure-wash:#2c161f;
+  --done:#7f8f8a; --done-wash:#1a201e;
+} }
+:root[data-theme="dark"]{
+  --ground:#0e1211; --surface:#151b19; --sunk:#111615;
+  --ink:#e4e8e3; --ink-soft:#94a29d; --rule:#29312e; --rule-soft:#1e2523;
+  --accent:#74c6bc;
+  --needs:#e0a44a; --needs-wash:#2c2317;
+  --free:#74c282; --free-wash:#182619;
+  --waits:#8b9994; --waits-wash:#1c2321;
+  --unsure:#f17fa5; --unsure-wash:#2c161f;
+  --done:#7f8f8a; --done-wash:#1a201e;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--serif); font-size:17px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.sheet{max-width:64rem; margin:0 auto; padding:clamp(1.25rem,4vw,3.5rem) clamp(1rem,4vw,2.5rem) 4rem}
+h1,h2{text-wrap:balance; margin:0; font-weight:600; letter-spacing:-0.012em}
+p{margin:0}
+a{color:var(--accent); text-underline-offset:0.18em; text-decoration-thickness:from-font}
+a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:1px}
+code{font-family:var(--mono); font-size:0.82em}
+b,strong{font-weight:600}
+.sep{color:var(--rule); padding:0 0.15em}
+
+/* ---- masthead: the timestamp is the thesis, so it gets the type ---- */
+.masthead{display:grid; gap:1.1rem; padding-bottom:1.6rem; border-bottom:2px solid var(--ink)}
+.eyebrow{
+  font-family:var(--mono); font-size:0.7rem; letter-spacing:0.16em;
+  text-transform:uppercase; color:var(--ink-soft);
+}
+.masthead h1{font-size:clamp(2rem,5.2vw,3.1rem); line-height:1.05}
+.stamp{
+  font-family:var(--mono); font-size:clamp(1.05rem,2.6vw,1.5rem);
+  color:var(--accent); font-variant-numeric:tabular-nums; letter-spacing:-0.01em;
+}
+.stamp time{border-bottom:2px solid var(--accent); padding-bottom:0.08em}
+.claim{max-width:38rem; color:var(--ink-soft); font-size:0.98rem}
+
+.tally{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));
+  gap:1px; background:var(--rule); border:1px solid var(--rule); margin-top:0.4rem;
+}
+.tally-cell{background:var(--surface); padding:0.9rem 1rem 0.8rem}
+.tally-figure{
+  font-family:var(--mono); font-size:2.4rem; line-height:1;
+  font-variant-numeric:tabular-nums; letter-spacing:-0.03em;
+}
+.tally-name{
+  font-family:var(--mono); font-size:0.68rem; letter-spacing:0.13em;
+  text-transform:uppercase; color:var(--ink-soft); margin-top:0.45rem;
+}
+.tally--needs .tally-figure{color:var(--needs)}
+.tally--free .tally-figure{color:var(--free)}
+.tally--flight .tally-figure{color:var(--ink)}
+.tally--unsure .tally-figure{color:var(--unsure)}
+
+.instruments{list-style:none; margin:0; padding:0; display:grid; gap:1px; background:var(--rule)}
+.instrument{
+  background:var(--surface); display:grid; gap:0.15rem 0.9rem; padding:0.55rem 1rem;
+  grid-template-columns:7.5rem 5.5rem 1fr; align-items:baseline;
+  font-size:0.83rem; color:var(--ink-soft);
+}
+.instrument code{color:var(--ink); font-size:0.78rem}
+.instrument b{
+  font-family:var(--mono); font-size:0.66rem; letter-spacing:0.12em;
+  text-transform:uppercase; color:var(--free);
+}
+.instrument em{grid-column:3; font-style:normal; font-family:var(--mono); font-size:0.72rem; color:var(--ink-soft); opacity:0.8}
+.instrument--bad b{color:var(--unsure)}
+.instrument--bad{background:var(--unsure-wash)}
+
+/* ---- registers ---- */
+.register{margin-top:clamp(2.2rem,5vw,3.4rem)}
+.register-head{
+  display:grid; grid-template-columns:auto 1fr; gap:0 1.25rem; align-items:start;
+  padding-bottom:0.85rem; border-bottom:1px solid var(--ink);
+}
+.figure{
+  font-family:var(--mono); font-size:clamp(2.6rem,7vw,3.6rem); line-height:0.85;
+  font-variant-numeric:tabular-nums; letter-spacing:-0.045em; min-width:2ch;
+}
+.register--needs .figure{color:var(--needs)}
+.register--free .figure{color:var(--free)}
+.register--flight .figure{color:var(--ink)}
+.register--unsure .figure{color:var(--unsure)}
+.register h2{font-size:clamp(1.35rem,3vw,1.75rem)}
+.rule{color:var(--ink-soft); font-size:0.92rem; max-width:44rem; margin-top:0.3rem}
+.subhead{
+  font-family:var(--mono); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+  color:var(--ink-soft); margin-top:2rem; padding-bottom:0.5rem; border-bottom:1px solid var(--rule);
+}
+
+/* ---- ledger rows: hairlines, not cards ---- */
+.ledger{list-style:none; margin:0; padding:0}
+.row{
+  display:grid; grid-template-columns:5.75rem 1fr; gap:0 1.25rem;
+  padding:1.15rem 0 0.85rem; border-bottom:1px solid var(--rule-soft); position:relative;
+}
+.ledger--quiet .row{opacity:0.72}
+.rail{display:flex; flex-direction:column; gap:0.4rem; align-items:flex-start}
+.chip{
+  font-family:var(--mono); font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase;
+  padding:0.2rem 0.42rem; border:1px solid currentColor; white-space:nowrap;
+}
+.chip--needs{color:var(--needs); background:var(--needs-wash)}
+.chip--free{color:var(--free); background:var(--free-wash)}
+.chip--flight{color:var(--waits); background:var(--waits-wash)}
+.chip--unsure{color:var(--unsure); background:var(--unsure-wash)}
+.chip--done{color:var(--done); background:var(--done-wash)}
+.age{font-family:var(--mono); font-variant-numeric:tabular-nums; display:flex; align-items:baseline; gap:0.08em}
+.age b{font-size:1.7rem; line-height:1; letter-spacing:-0.03em; font-weight:500}
+.age i{font-style:normal; font-size:0.78rem; color:var(--ink-soft)}
+.body{display:grid; gap:0.35rem; min-width:0}
+.ask{font-size:1.04rem; line-height:1.35; text-wrap:pretty}
+.where{font-family:var(--mono); font-size:0.74rem; color:var(--ink-soft)}
+.ref{font-family:var(--mono); color:var(--accent)}
+.verdict{color:var(--free); font-size:0.95rem; font-style:italic}
+.caveat{color:var(--unsure); font-size:0.88rem; font-style:italic}
+.line{
+  display:grid; grid-template-columns:5.2rem 1fr; gap:0.6rem; align-items:baseline;
+  margin-top:0.15rem; min-width:0;
+}
+.line .tag{
+  font-family:var(--mono); font-size:0.62rem; letter-spacing:0.11em; text-transform:uppercase;
+  color:var(--ink-soft); padding-top:0.15em;
+}
+.line code{
+  display:block; background:var(--sunk); padding:0.42rem 0.55rem;
+  white-space:pre-wrap; overflow-wrap:anywhere; color:var(--ink); line-height:1.45;
+  border-left:2px solid var(--rule);
+}
+.gauge{grid-column:1/-1; height:3px; background:var(--rule-soft); margin-top:0.9rem}
+.gauge span{display:block; height:100%}
+.gauge--needs span{background:var(--needs)}
+.gauge--free span{background:var(--free)}
+.gauge--flight span{background:var(--waits)}
+.gauge--unsure span{background:var(--unsure)}
+.gauge--done span{background:var(--done)}
+
+/* ---- the dense "still waiting" list ---- */
+.thins{list-style:none; margin:0; padding:0}
+.thin{
+  display:grid; grid-template-columns:3.2rem 1fr; gap:0.2rem 0.9rem; align-items:baseline;
+  padding:0.6rem 0; border-bottom:1px solid var(--rule-soft); font-size:0.92rem;
+}
+.thin-age{font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink-soft); font-size:0.8rem}
+.thin-ask{min-width:0; overflow-wrap:anywhere}
+.thin-on{grid-column:2; color:var(--waits); font-size:0.72rem; overflow-wrap:anywhere}
+
+/* Borders rather than a 1px gap over a coloured ground: a wrapping flex row leaves
+   the ground showing as a stray block wherever the last cell stops short. */
+.tallystrip{
+  list-style:none; margin:1.1rem 0 0.4rem; padding:0; display:flex; flex-wrap:wrap;
+  background:var(--surface); border:1px solid var(--rule);
+}
+.tallystrip li{
+  padding:0.5rem 0.75rem; display:flex; gap:0.4rem; align-items:baseline;
+  border-right:1px solid var(--rule);
+}
+.tallystrip li:last-child{border-right:0}
+.tallystrip b{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:1rem}
+.tallystrip span{font-family:var(--mono); font-size:0.72rem; color:var(--ink-soft)}
+
+/* ---- unknown ---- */
+.unsures{list-style:none; margin:0; padding:0}
+.unsure-item{
+  display:grid; grid-template-columns:7.5rem 1fr; gap:0.3rem 1.25rem;
+  padding:1rem 0; border-bottom:1px solid var(--rule-soft);
+}
+.unsure-item .kind code{
+  color:var(--unsure); font-size:0.68rem; letter-spacing:0.09em; text-transform:uppercase;
+}
+.why{color:var(--ink-soft); font-size:0.92rem}
+.note{font-family:var(--mono); font-size:0.74rem; color:var(--ink-soft); opacity:0.85; overflow-wrap:anywhere}
+.proof{margin:0.6rem 0 0; padding-left:1.1rem; color:var(--ink-soft); font-size:0.93rem}
+.proof li{margin-top:0.2rem}
+.empty{color:var(--ink-soft); font-size:0.95rem; padding:1.1rem 0; font-style:italic}
+.empty--earned{font-style:normal; color:var(--ink)}
+
+.cannot{
+  display:grid; grid-template-columns:3.5rem 1fr; gap:1rem; align-items:start;
+  background:var(--unsure-wash); border-left:3px solid var(--unsure); padding:1.1rem 1.2rem; margin-top:1.2rem;
+}
+.cannot-mark{font-family:var(--mono); font-size:2.6rem; line-height:0.8; color:var(--unsure)}
+.cannot .ask{font-size:1rem}
+
+.colophon{
+  margin-top:3.5rem; padding-top:1.2rem; border-top:2px solid var(--ink);
+  display:grid; gap:0.55rem; color:var(--ink-soft); font-size:0.88rem;
+}
+/* The rule spans the sheet; only the prose is held to a readable measure. */
+.colophon p{max-width:44rem}
+.withheld{color:var(--unsure)}
+
+@media (max-width:34rem){
+  body{font-size:16px}
+  .row,.unsure-item{grid-template-columns:1fr}
+  .rail{flex-direction:row; align-items:baseline; gap:0.7rem}
+  .age b{font-size:1.25rem}
+  .line{grid-template-columns:1fr; gap:0.2rem}
+  .thin{grid-template-columns:1fr}
+  .thin-on{grid-column:1}
+  .instrument{grid-template-columns:1fr auto}
+  .instrument span,.instrument em{grid-column:1/-1}
+  .cannot{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important; animation:none !important} }
+"""
 
 #: An idle session counts as "just finished" for this long after it went idle.
 FINISHED_WINDOW = 3600.0
