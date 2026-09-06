@@ -94,7 +94,9 @@ def test_report_all_homes_shows_which_home_each_row_came_from(
     )
     cfg = tmp_path / "config.toml"
     cfg.write_text(
-        f'[[homes]]\nname = "one"\npath = "{home_a}"\n\n[[homes]]\nname = "two"\npath = "{home_b}"\n'
+        # TOML literal (single-quoted) strings, not basic ones -- a Windows path's
+        # backslashes would otherwise be read as escapes.
+        f"[[homes]]\nname = \"one\"\npath = '{home_a}'\n\n[[homes]]\nname = \"two\"\npath = '{home_b}'\n"
     )
     monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
     alive = ALIVE | {201}
