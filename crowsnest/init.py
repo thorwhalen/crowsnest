@@ -56,12 +56,20 @@ __all__ = [
 #: registry, not a single transcript) and its output is re-injected on every start, clear
 #: and compaction, which is what makes the roster part of the content that survives. That
 #: output is the whole point, so this one stays synchronous.
+#:
+#: ``scope`` says which settings file each belongs in. The two push hooks are ``user``
+#: hooks: every session on the machine is a session worth watching, so they go in the
+#: config directory's ``settings.json``. The roster hook is a ``project`` hook: it goes in
+#: the watching session's own ``<directory>/.claude/settings.json``, so that only a
+#: session started there is handed a roster on start. In the user file it would print the
+#: roster into every session on the machine, which is the opposite of what a watcher is for.
 HOOKS = (
     {
         "event": "Notification",
         "matcher": "",
         "command": "crowsnest hook notification",
         "async": True,
+        "scope": "user",
         "why": "a session is asking its human for something",
     },
     {
@@ -69,6 +77,7 @@ HOOKS = (
         "matcher": "",
         "command": "crowsnest hook stop",
         "async": True,
+        "scope": "user",
         "why": "a session finished a turn; record its last words",
     },
     {
@@ -76,11 +85,23 @@ HOOKS = (
         "matcher": "startup|clear|compact",
         "command": "crowsnest --brief",
         "async": False,
+        "scope": "project",
         "why": "re-print the roster after every start, clear and compaction",
     },
 )
 
-_HOOK_FIELDS = ("event", "matcher", "command", "async")
+_HOOK_FIELDS = ("event", "matcher", "command", "async", "scope")
+
+
+def hooks_for(scope: str, hooks=HOOKS) -> tuple:
+    """The hook specs that belong in one settings file: ``user`` or ``project``.
+
+    >>> [h['event'] for h in hooks_for('user')]
+    ['Notification', 'Stop']
+    >>> [h['event'] for h in hooks_for('project')]
+    ['SessionStart']
+    """
+    return tuple(h for h in hooks if h.get("scope") == scope)
 
 
 def _checked(value, kind, message: str):
@@ -217,12 +238,15 @@ def init(
 
     Writes ``CLAUDE.md`` into ``directory`` (default: the current one), creates the data
     directory (``store``, else :func:`crowsnest.paths.data_dir`), and reports the hooks.
-    With ``hooks=True`` it also merges :data:`HOOKS` into ``home``'s ``settings.json``
-    (``home`` defaults to ``$CLAUDE_CONFIG_DIR`` or ``~/.claude``) after backing it up.
+    With ``hooks=True`` it also merges the ``user``-scope hooks into ``home``'s
+    ``settings.json`` (``home`` defaults to ``$CLAUDE_CONFIG_DIR`` or ``~/.claude``) and
+    the ``project``-scope ones into ``directory/.claude/settings.json``, each after a
+    backup. See :data:`HOOKS` for why the roster hook must not be user-wide.
 
     Returns the plan: one row per thing, each with an ``action`` -- ``write`` / ``create``
     / ``add`` when it changed, ``ok`` when it was already right, ``conflict`` when
-    something else was there, ``skipped`` when it was not asked for.
+    something else was there, ``skipped`` when it was not asked for. ``settings`` is the
+    user file's row and ``project_settings`` the project file's.
     """
     now = now or datetime.now(timezone.utc).astimezone()
     where = Path(directory).expanduser() if directory else Path.cwd()
@@ -247,34 +271,21 @@ def init(
     if data["action"] == "create" and not dry_run:
         where_data.mkdir(parents=True, exist_ok=True)
 
-    settings_path = claude_home(home) / "settings.json"
     listed = [{k: h[k] for k in _HOOK_FIELDS} for h in HOOKS]
-    if not hooks:
-        settings = {
-            "path": str(settings_path),
-            "action": "skipped",
-            "reason": "not asked for; pass --hooks to add them",
-            "backup": "",
-            "added": [],
-        }
-    else:
-        current = _read_settings(settings_path)
-        merged, added = merged_hooks(current, HOOKS)
-        backup = ""
-        if added and not dry_run:
-            settings_path.parent.mkdir(parents=True, exist_ok=True)
-            if settings_path.is_file():
-                backup = str(_backup(settings_path, now=now))
-            settings_path.write_text(
-                json.dumps(merged, indent=2) + "\n", encoding="utf-8"
-            )
-        settings = {
-            "path": str(settings_path),
-            "action": "add" if added else "ok",
-            "reason": "already registered" if not added else "merged, nothing removed",
-            "backup": backup,
-            "added": added,
-        }
+    settings = _apply_hooks(
+        claude_home(home) / "settings.json",
+        hooks_for("user"),
+        wanted=hooks,
+        dry_run=dry_run,
+        now=now,
+    )
+    project_settings = _apply_hooks(
+        where / ".claude" / "settings.json",
+        hooks_for("project"),
+        wanted=hooks,
+        dry_run=dry_run,
+        now=now,
+    )
 
     return {
         "directory": str(where),
@@ -282,5 +293,35 @@ def init(
         "claude_md": md,
         "data_dir": data,
         "settings": settings,
+        "project_settings": project_settings,
         "hooks": listed,
+    }
+
+
+def _apply_hooks(
+    settings_path: Path, specs, *, wanted: bool, dry_run: bool, now: datetime
+) -> dict:
+    """Merge ``specs`` into one settings file (or report what would happen)."""
+    if not wanted:
+        return {
+            "path": str(settings_path),
+            "action": "skipped",
+            "reason": "not asked for; pass --hooks to add them",
+            "backup": "",
+            "added": [],
+        }
+    current = _read_settings(settings_path)
+    merged, added = merged_hooks(current, specs)
+    backup = ""
+    if added and not dry_run:
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        if settings_path.is_file():
+            backup = str(_backup(settings_path, now=now))
+        settings_path.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8")
+    return {
+        "path": str(settings_path),
+        "action": "add" if added else "ok",
+        "reason": "already registered" if not added else "merged, nothing removed",
+        "backup": backup,
+        "added": added,
     }

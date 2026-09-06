@@ -357,26 +357,33 @@ def init(
     for label, row in (
         ("CLAUDE.md", plan["claude_md"]),
         ("data dir", plan["data_dir"]),
-        ("settings", plan["settings"]),
+        ("user hooks", plan["settings"]),
+        ("proj hooks", plan["project_settings"]),
     ):
         lines.append(f"{row['action']:<9}{label:<11}{row['path']}  ({row['reason']})")
-    settings = plan["settings"]
-    if settings["backup"]:
-        lines.append(f"backup    settings   {settings['backup']}")
-    if settings["action"] == "skipped":
-        lines += [
-            "",
-            f"## Add these to {settings['path']} yourself, or re-run with --hooks",
-            _json.dumps(_init.settings_snippet(), indent=2),
-            "",
-            *[f"- {h['event']}: {h['why']}" for h in _init.HOOKS],
-        ]
-    elif settings["added"]:
-        lines += ["", "## Hooks added"] + [
-            f"- {h['event']} ({h['matcher'] or 'any'}): {h['command']}"
-            + (" [async]" if h["async"] else "")
-            for h in settings["added"]
-        ]
+    for label, row in (("user", plan["settings"]), ("project", plan["project_settings"])):
+        if row["backup"]:
+            lines.append(f"backup    {label:<11}{row['backup']}")
+    if plan["settings"]["action"] == "skipped":
+        for label, row, scope in (
+            ("user", plan["settings"], "user"),
+            ("project", plan["project_settings"], "project"),
+        ):
+            lines += [
+                "",
+                f"## Add these to {row['path']} yourself, or re-run with --hooks",
+                _json.dumps(_init.settings_snippet(_init.hooks_for(scope)), indent=2),
+                "",
+                *[f"- {h['event']}: {h['why']}" for h in _init.hooks_for(scope)],
+            ]
+    else:
+        added = plan["settings"]["added"] + plan["project_settings"]["added"]
+        if added:
+            lines += ["", "## Hooks added"] + [
+                f"- {h['event']} ({h['matcher'] or 'any'}, {h['scope']}): {h['command']}"
+                + (" [async]" if h["async"] else "")
+                for h in added
+            ]
     return "\n".join(lines)
 
 
