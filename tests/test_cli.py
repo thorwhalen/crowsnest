@@ -113,11 +113,39 @@ def test_report_all_homes_shows_which_home_each_row_came_from(
     assert "one" in html and "two" in html
 
 
-def test_install_skills_dry_run_names_both_assets(tmp_path, capsys):
+def test_install_skills_dry_run_names_every_asset(tmp_path, capsys):
     main(["install-skills", "--dry-run", "--target", str(tmp_path / "host")])
     out = capsys.readouterr().out
-    assert "crowsnest-scout" in out and "would install" in out
+    # Discovered from the directories, so a new skill needs no change here but this one
+    # line: the worker skill in particular installs by default, on every machine.
+    for name in (
+        "crowsnest",
+        "crowsnest-dispatch",
+        "crowsnest-report",
+        "crowsnest-worker",
+        "crowsnest-scout",
+    ):
+        assert name in out
+    assert "would install" in out
     assert not (tmp_path / "host").exists()
+
+
+def test_init_dry_run_shows_the_plan_and_the_hook_lines(tmp_path, capsys):
+    main(
+        [
+            "init",
+            "--directory",
+            str(tmp_path / "cn"),
+            "--home",
+            str(tmp_path / "claude"),
+            "--dry-run",
+        ]
+    )
+    out = capsys.readouterr().out
+    assert "would set up" in out and "CLAUDE.md" in out
+    assert "crowsnest hook stop" in out and "crowsnest --brief" in out
+    assert "startup|clear|compact" in out
+    assert not (tmp_path / "cn").exists()
 
 
 def test_shell_sorts_with_busy_and_bg_rows_are_not_blank(tmp_path, monkeypatch, capsys):

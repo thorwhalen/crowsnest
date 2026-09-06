@@ -14,11 +14,14 @@ tiers, cheapest first:
    session was last asked, what it last said, the tool it is running now, the question
    it is waiting on -- read from the tail of its transcript, which costs the watched
    session nothing and never interrupts it. ``turns`` pages further back when the tail is
-   not enough.
+   not enough, and :func:`crowsnest.tools.brief` looks up openloops' dated digest of a
+   session without reading a transcript at all.
 3. **The ask**: a running session can be *messaged* and will answer from its own
    context. That is a Claude Code feature, not a Python one, so it lives in the shipped
-   skill (``crowsnest/data/skills/crowsnest/SKILL.md``) rather than here -- with the rule
-   that says when it is worth a turn of someone else's context and when it is not.
+   skills (``crowsnest/data/skills/``) rather than here -- with the rules that say when it
+   is worth a turn of someone else's context, how a corpus of work is handed to a session,
+   and how the watching session stays small enough to be cleared at any moment.
+   :mod:`crowsnest.init` is what sets a session up to live by them.
 
 And one stream: :func:`crowsnest.watch.events` yields a line every time a session starts,
 exits, finishes a turn, or starts waiting on its human, so a monitor is told rather than
@@ -49,13 +52,14 @@ from crowsnest.activity import Activity, Turn, read_activity, read_turns
 from crowsnest.ledger import list_ledgers, read_ledger, update_ledger
 from crowsnest.registry import LiveSession, live_sessions
 from crowsnest.spawn import spawn
-from crowsnest.tools import resolve, roster, show, turns
+from crowsnest.tools import brief, resolve, roster, show, turns
 from crowsnest.watch import events
 
 __all__ = [
     "Activity",
     "LiveSession",
     "Turn",
+    "brief",
     "events",
     "list_ledgers",
     "live_sessions",

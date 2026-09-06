@@ -10,8 +10,11 @@ A machine running many Claude Code sessions has a question nobody answers: *what
 
 ```bash
 pip install crowsnest          # Python 3.10+. Puts a `crowsnest` command on your PATH.
-crowsnest install-skills       # link the skill and the scout subagent into ~/.claude
+crowsnest install-skills       # link the skills and the scout subagent into ~/.claude
+crowsnest init --hooks         # in the directory you will run the lookout from
 ```
+
+`init` writes that directory's `CLAUDE.md` (the rules that keep a watching session small enough to be cleared at any moment), creates `~/.local/share/crowsnest/`, and — with `--hooks` — adds three lines to your `settings.json`, after backing it up and removing nothing. Without `--hooks` it prints them for you to paste. The two that push events (`Stop`, `Notification`) are registered `async`, so watching costs the watched sessions no wall-clock; the `SessionStart` one blocks, because its roster is meant to be read.
 
 Then open a session, name it, and ask in whatever words you would have used anyway:
 
@@ -53,12 +56,14 @@ The skill's rule is to never spend a costlier tier when a cheaper one answers, a
 crowsnest                          who is alive: waiting on you first, then busy, then idle
 crowsnest show <session>           one session: last asked, last said, running now, pending question
 crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
+crowsnest brief <session>          openloops' dated digest for one session; reads no transcript
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
 crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
-crowsnest install-skills           link the skill and the scout subagent into ~/.claude
+crowsnest init                     this session's CLAUDE.md, the data directory, the hook lines
+crowsnest install-skills           link the skills and the scout subagent into ~/.claude
 ```
 
 `<session>` is the name you gave the session with `claude -n <name>`, a unique prefix of one, a session-id prefix, or a pid.
@@ -120,11 +125,37 @@ Anything at all. Nothing in crowsnest ever rewrites this part.
 
 ```jsonc
 // ~/.claude/settings.json
-"Stop":         [{"hooks": [{"type": "command", "command": "crowsnest hook stop"}]}],
-"Notification": [{"hooks": [{"type": "command", "command": "crowsnest hook notification"}]}]
+"Stop":         [{"hooks": [{"type": "command", "command": "crowsnest hook stop", "async": true}]}],
+"Notification": [{"hooks": [{"type": "command", "command": "crowsnest hook notification", "async": true}]}]
 ```
 
-With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session's last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. `crowsnest hook` prints nothing, exits 0 whatever happens, and does its work in single-digit milliseconds; without the hooks installed, `crowsnest watch` is exactly the registry diff it always was.
+With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session's last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. `crowsnest hook` prints nothing and exits 0 whatever happens; `async` means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, `crowsnest watch` is exactly the registry diff it always was. `crowsnest init --hooks` writes all of this for you.
+
+## One walk, end to end
+
+A morning with a fleet, from the lookout session. Everything in italics is something you say; everything else it does.
+
+1. **Open it.** `claude -n lookout` in the directory you ran `crowsnest init` in. Its `CLAUDE.md` and the `SessionStart` hook put the roster in front of it before you type anything.
+2. *what needs me?* — it sends the `crowsnest-scout` subagent, which reads the ledgers, then the roster, and hands back a page: who is waiting, who just finished, what is working. The rosters never enter the lookout's own context.
+3. *start something on the parser tests* — the `crowsnest-dispatch` skill: it names the session, writes a brief that is pointers rather than prose (the issue URL, the acceptance line, the reply contract), and runs `crowsnest spawn parser-tests --cwd ~/proj/parser --prompt "…"`. A new terminal session appears, named, in that directory. It subscribes once with `notify_when_idle` and stops looking.
+4. **It is told when that finishes** — from the `crowsnest watch` stream under the `Monitor` tool, or from the one idle notice. Either way you hear about it without asking.
+5. *what did it do?* — `crowsnest ledger parser-tests`. The worker wrote that file itself, under the `crowsnest-worker` skill, which every session on the machine has; the lookout only reads it. `crowsnest brief parser-tests` adds openloops' dated digest of the same session, still without opening a transcript.
+6. *give me a page* — the `crowsnest-report` skill: `crowsnest report --out fleet.html`, published with the `Artifact` tool, one link, stable across re-publishes.
+7. **From your phone**, later: you highlight the row for `parser-tests`, comment *ask it what is left*, and send it to Claude. The lookout wakes on the comment, answers from the ledger, replies in the thread, resolves it, and re-publishes the page.
+
+At no point does the lookout edit a file in any of those repositories, or read a transcript itself. That is the whole design: the corpus sessions hold the context, and the lookout stays small enough to `/clear` at any moment.
+
+## What it ships for agents
+
+| | What it is for |
+|---|---|
+| `crowsnest` skill | be the lookout: the three tiers, and the rules that keep it small |
+| `crowsnest-dispatch` skill | hand a corpus of work to a session instead of doing it |
+| `crowsnest-report` skill | the page, publishing it, and acting on comments left on it |
+| `crowsnest-worker` skill | for every *other* session: answer a status request in five lines, keep your ledger |
+| `crowsnest-scout` subagent | do the reading in a fresh context and return a page |
+
+`crowsnest install-skills` links all of them into `~/.claude` (or `--target`) and never overwrites anything that is not already ours. The worker skill installs everywhere by default, because any session on the machine may be asked.
 
 ## What it reads
 
@@ -150,6 +181,7 @@ from crowsnest import (
     roster,
     show,
     turns,
+    brief,
     events,
     live_sessions,
     spawn,
@@ -159,6 +191,7 @@ from crowsnest import (
 
 roster()["counts"]  # {'waiting': 1, 'busy': 1, 'idle': 30, 'other': 0}
 show("monitor")["activity"]["last_assistant_text"]
+brief("monitor")["digest"]  # openloops' dated digest, or None if there is none yet
 update_ledger("monitor", state="working", open_questions=["squash or rebase?"])
 read_ledger("monitor")["fields"]["last_said"]
 for event in events(interval=5):  # forever

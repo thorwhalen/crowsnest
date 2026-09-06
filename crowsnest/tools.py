@@ -13,12 +13,14 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
+from openloops.tools import show as _openloops_digest
+
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
 from crowsnest.config import homes
 from crowsnest.registry import STATUSES, LiveSession, fresh_within, live_sessions
 from crowsnest.report import DFLT_TITLE, render_report
 
-__all__ = ["report", "resolve", "roster", "sessions", "show", "turns"]
+__all__ = ["brief", "report", "resolve", "roster", "sessions", "show", "turns"]
 
 #: How much of a prompt or a reply a roster row carries. ``show`` carries it whole.
 ROSTER_TEXT_LIMIT = 240
@@ -177,3 +179,30 @@ def turns(
     s = resolve(session, home=home, all_homes=all_homes, config=config)
     found = read_turns(s.transcript, last=last, before=before)
     return {"session": s.as_dict(), "turns": [t.as_dict() for t in found]}
+
+
+def brief(
+    session: str,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    digests_store=None,
+) -> dict:
+    """openloops' digest for one live session: what it has been doing, dated, in its words.
+
+    A digest is written by openloops when a session's turn ends, so this answers "what has
+    this session been up to" without reading a transcript at all, and without spending a
+    turn of that session's context. It is a lookup, not a second reader: the digest's
+    content is openloops' business, and ``digests_store`` is the seam it reads from.
+
+    ``digest`` is ``None`` when openloops has not digested this session yet -- a normal
+    state for a session started minutes ago -- and ``why`` says so.
+    """
+    s = resolve(session, home=home, all_homes=all_homes, config=config)
+    try:
+        digest = _openloops_digest(s.session_id, digests_store=digests_store)
+    except KeyError as exc:
+        why = exc.args[0] if exc.args else str(exc)
+        return {"session": s.as_dict(), "digest": None, "why": why}
+    return {"session": s.as_dict(), "digest": digest, "why": ""}
