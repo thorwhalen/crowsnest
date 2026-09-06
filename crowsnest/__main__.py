@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from crowsnest import hook as _hook
+from crowsnest import init as _init
 from crowsnest import ledger as _ledger
 from crowsnest import skills as _skills
 from crowsnest import tools
@@ -309,6 +310,67 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
         for page in pages
     )
 
+def brief(session: str, *, home: str | None = None, json: bool = False):
+    """openloops' digest for one session: what it has been doing, dated, in its own words.
+
+    Reads no transcript and costs the session nothing. Empty until openloops has digested
+    that session; `ol sync` is what fills it.
+    """
+    result = tools.brief(session, home=home)
+    if json:
+        return _json.dumps(result, indent=2)
+    s = result["session"]
+    out = [f"# {s['label']} — digest  ({s['status']}, {s['cwd']})"]
+    if result["digest"] is None:
+        out += ["", f"(no openloops digest yet: {result['why']})", "Run `ol sync` first."]
+    else:
+        out += ["", result["digest"]["text"].strip()]
+    return "\n".join(out)
+
+
+def init(
+    *,
+    directory: str | None = None,
+    home: str | None = None,
+    hooks: bool = False,
+    force: bool = False,
+    dry_run: bool = False,
+):
+    """Set this directory up as a watching session's home: its CLAUDE.md, data dir, hooks.
+
+    Writes `CLAUDE.md` from the bundled template (never over a different one without
+    `--force`), creates the data directory, and prints the hook lines. `--hooks` adds
+    them to your settings for you, after a timestamped backup, removing nothing.
+    """
+    plan = _init.init(
+        directory=directory, home=home, hooks=hooks, force=force, dry_run=dry_run
+    )
+    verb = "would set up" if plan["dry_run"] else "set up"
+    lines = [f"{verb} {plan['directory']}"]
+    for label, row in (
+        ("CLAUDE.md", plan["claude_md"]),
+        ("data dir", plan["data_dir"]),
+        ("settings", plan["settings"]),
+    ):
+        lines.append(f"{row['action']:<9}{label:<11}{row['path']}  ({row['reason']})")
+    settings = plan["settings"]
+    if settings["backup"]:
+        lines.append(f"backup    settings   {settings['backup']}")
+    if settings["action"] == "skipped":
+        lines += [
+            "",
+            f"## Add these to {settings['path']} yourself, or re-run with --hooks",
+            _json.dumps(_init.settings_snippet(), indent=2),
+            "",
+            *[f"- {h['event']}: {h['why']}" for h in _init.HOOKS],
+        ]
+    elif settings["added"]:
+        lines += ["", "## Hooks added"] + [
+            f"- {h['event']} ({h['matcher'] or 'any'}): {h['command']}"
+            for h in settings["added"]
+        ]
+    return "\n".join(lines)
+
 
 def install_skills(
     *,
@@ -317,7 +379,7 @@ def install_skills(
     force: bool = False,
     dry_run: bool = False,
 ):
-    """Link the bundled skill and subagent into ~/.claude (or `--target`). Idempotent."""
+    """Link the bundled skills and the subagent into ~/.claude (or `--target`). Idempotent."""
     names = [n for n in (only or "").split(",") if n.strip()] or None
     plan = _skills.install_skills(target=target, only=names, force=force, dry_run=dry_run)
     lines = [f"{'would install' if dry_run else 'installed'} into {plan['target']}"]
@@ -361,7 +423,19 @@ def spawn(
     )
 
 
-_commands = [roster, show, turns, report, watch, ledger, hook, install_skills, spawn]
+_commands = [
+    roster,
+    show,
+    turns,
+    brief,
+    report,
+    watch,
+    ledger,
+    hook,
+    spawn,
+    init,
+    install_skills,
+]
 
 
 def main(argv: list[str] | None = None) -> None:
