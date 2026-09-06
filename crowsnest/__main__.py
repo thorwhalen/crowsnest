@@ -1,0 +1,234 @@
+"""The ``crowsnest`` command: the one surface v0 builds.
+
+Every verb is a thin renderer over a function in :mod:`crowsnest.tools`, the single list
+all surfaces dispatch from. The core prints nothing and exits nothing; the formatting is
+here so that a later MCP or HTTP adapter needs no change to the core.
+
+Bare ``crowsnest`` prints the roster, because the fewest keystrokes have to produce the
+useful thing.
+"""
+
+# PYTHON_ARGCOMPLETE_OK
+
+from __future__ import annotations
+
+import json as _json
+import sys
+from datetime import datetime, timezone
+
+from crowsnest import skills as _skills
+from crowsnest import tools
+from crowsnest import watch as _watch
+
+__all__ = ["main"]
+
+DEFAULT_COMMAND = "roster"
+
+
+def _age(epoch: float | None) -> str:
+    if not epoch:
+        return "?"
+    seconds = max(0.0, datetime.now(timezone.utc).timestamp() - epoch)
+    for size, unit in ((86400, "d"), (3600, "h"), (60, "m")):
+        if seconds >= size:
+            return f"{seconds / size:.0f}{unit}"
+    return f"{seconds:.0f}s"
+
+
+def _one_line(text: str, limit: int) -> str:
+    text = " ".join((text or "").split())
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+def _local(stamp: str) -> str:
+    """An ISO timestamp as local ``HH:MM``, or the raw value when unparseable."""
+    try:
+        return (
+            datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+            .astimezone()
+            .strftime("%H:%M")
+        )
+    except ValueError:
+        return stamp
+
+
+def _row_detail(row: dict, limit: int) -> str:
+    act = row.get("activity") or {}
+    status = row["status"]
+    if status == "waiting":
+        cause = act.get("pending_question") or "; ".join(act.get("in_flight") or ())
+        parts = [
+            row.get("waiting_for") or "waiting",
+            cause or act.get("last_assistant_text", ""),
+        ]
+        return _one_line(" · ".join(p for p in parts if p), limit)
+    if status == "busy":
+        running = "; ".join(act.get("in_flight") or ())
+        if running:
+            return _one_line("→ " + running, limit)
+        return _one_line("asked: " + act.get("last_user_prompt", ""), limit)
+    said = act.get("last_assistant_text", "")
+    mark = "⚠ " if act.get("errored") else ""
+    return _one_line(f'{mark}"{said}"' if said else "", limit)
+
+
+def roster(*, home: str | None = None, brief: bool = False, width: int = 110):
+    """Who is alive, most urgent first: waiting on you, then busy, then idle.
+
+    `--brief` answers from the registry alone, without reading any transcript.
+    """
+    result = tools.roster(home=home, activity=not brief)
+    lines = []
+    for row in result["sessions"]:
+        head = f"{row['status']:<8}{_age(row['status_since']):>4}  {row['label'][:26]:<27}{row['project'][:16]:<17}"
+        detail = "" if brief else _row_detail(row, max(20, width - len(head)))
+        lines.append((head + detail).rstrip())
+    counts = result["counts"]
+    summary = ", ".join(f"{n} {k}" for k, n in counts.items() if n)
+    lines.append(f"-- {len(result['sessions'])} live: {summary or 'none'}")
+    return "\n".join(lines)
+
+
+def show(session: str, *, home: str | None = None, recent: int = 8, json: bool = False):
+    """One session in full: what it was asked, what it said, what it is running now.
+
+    `session` is a registry name, a unique prefix of one, a session-id prefix, or a pid.
+    """
+    result = tools.show(session, home=home, recent=recent)
+    if json:
+        return _json.dumps(result, indent=2)
+    s, act = result["session"], result["activity"]
+    since = _age(s["status_since"])
+    out = [
+        f"# {s['label']}  ({s['status']} for {since}"
+        + (f", {s['waiting_for']}" if s["waiting_for"] else "")
+        + ")"
+    ]
+    out.append(
+        f"pid {s['pid']} · session {s['session_id'][:8]} · {s['cwd']}"
+        + (f" · branch {act['git_branch']}" if act["git_branch"] else "")
+        + (" · remote control on" if s["remote_control"] else "")
+    )
+    if act["pending_question"]:
+        out += ["", "## Waiting on you", act["pending_question"]]
+    if act["in_flight"]:
+        out += ["", "## In flight", *[f"- {t}" for t in act["in_flight"]]]
+    out += [
+        "",
+        f"## Last asked ({_local(act['last_prompt_at'])})",
+        act["last_user_prompt"] or "(none in the tail)",
+    ]
+    out += [
+        "",
+        f"## Last said ({_local(act['last_text_at'])})",
+        act["last_assistant_text"] or "(none in the tail)",
+    ]
+    if act["recent_tools"]:
+        out += ["", "## Recent tools", *[f"- {t}" for t in act["recent_tools"]]]
+    flags = [k for k in ("turn_open", "errored") if act[k]]
+    if flags or not act["tail_complete"]:
+        out += [
+            "",
+            "flags: "
+            + ", ".join(flags + ([] if act["tail_complete"] else ["tail only"])),
+        ]
+    return "\n".join(out)
+
+
+def turns(
+    session: str,
+    *,
+    last: int = 5,
+    before: int | None = None,
+    home: str | None = None,
+    json: bool = False,
+):
+    """The last few turns of a session, oldest first. `--before N` pages back from turn N."""
+    result = tools.turns(session, last=last, before=before, home=home)
+    if json:
+        return _json.dumps(result, indent=2)
+    out = [f"# {result['session']['label']} — turns"]
+    for t in result["turns"]:
+        out += [
+            "",
+            f"## turn {t['index']}  ({_local(t['prompt_at'])})",
+            f"> {t['prompt']}",
+        ]
+        if t["tools"]:
+            out.append(
+                f"tools ({len(t['tools'])}): "
+                + "; ".join(t["tools"][:8])
+                + (" …" if len(t["tools"]) > 8 else "")
+            )
+        out.append(t["reply"] or "(no final text)")
+    if not result["turns"]:
+        out.append("(no turns)")
+    return "\n".join(out)
+
+
+def watch(
+    *, interval: float = _watch.DFLT_INTERVAL, home: str | None = None, json: bool = False
+):
+    """Print one line per change, forever: started, exited, idle, busy, waiting, error.
+
+    Built for Claude Code's `Monitor` tool: each line becomes a notification in the
+    watching session. Stop with Ctrl-C.
+    """
+    try:
+        for event in _watch.events(interval=interval, home=home):
+            if json:
+                line = _json.dumps(event)
+            else:
+                when = _local(event["at"])
+                line = f"{when}  {event['kind']:<8} {event['name']} ({event['project']})"
+                if event["detail"]:
+                    line += f" — {event['detail']}"
+            print(line, flush=True)
+    except KeyboardInterrupt:
+        pass
+
+
+def install_skills(
+    *,
+    target: str | None = None,
+    only: str | None = None,
+    force: bool = False,
+    dry_run: bool = False,
+):
+    """Link the bundled skill and subagent into ~/.claude (or `--target`). Idempotent."""
+    names = [n for n in (only or "").split(",") if n.strip()] or None
+    plan = _skills.install_skills(target=target, only=names, force=force, dry_run=dry_run)
+    lines = [f"{'would install' if dry_run else 'installed'} into {plan['target']}"]
+    for row in plan["actions"]:
+        how = f" ({row['method']})" if row["method"] else ""
+        lines.append(
+            f"{row['action']:<9}{row['kind']:<7}{row['name']:<18}{row['reason']}{how}"
+        )
+    return "\n".join(lines)
+
+
+_commands = [roster, show, turns, watch, install_skills]
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Dispatch the ``crowsnest`` command. Bare ``crowsnest`` runs :func:`roster`."""
+    import cw
+
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if not argv or argv[0].startswith("-") and argv[0] not in ("-h", "--help"):
+        argv = [DEFAULT_COMMAND, *argv]
+    parser = cw.mk_parser(
+        _commands, prog="crowsnest", description=__doc__.splitlines()[0]
+    )
+    try:
+        code = cw.run(parser, argv)
+    except (ValueError, KeyError) as exc:
+        message = exc.args[0] if exc.args else str(exc)
+        print(f"crowsnest: {message}", file=sys.stderr)
+        sys.exit(2)
+    if code:
+        raise SystemExit(code)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,1 @@
+../../crowsnest/data/agents/crowsnest-scout.md
