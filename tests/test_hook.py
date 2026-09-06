@@ -40,7 +40,12 @@ def home(tmp_path, monkeypatch):
 
 
 def events_written(data):
-    return [json.loads(line) for line in (data / "events.jsonl").read_text().splitlines()]
+    return read_lines(data / "events.jsonl")
+
+
+def read_lines(path):
+    """utf-8 explicitly: crowsnest writes it, and a platform default may not read it."""
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
 def test_a_stop_writes_an_event_and_the_two_mechanical_ledger_fields(data, home):
@@ -130,7 +135,7 @@ def test_a_payload_with_no_session_never_raises_and_leaves_one_log_line(data):
     done = hook.handle("stop", {})
     assert done["ok"] is False and "session_id" in done["error"]
     assert not (data / "events.jsonl").exists()
-    assert (data / "hook.log").read_text().count("\n") == 1
+    assert (data / "hook.log").read_text(encoding="utf-8").count("\n") == 1
 
 
 def test_a_payload_that_is_not_even_a_dict_never_raises(data):
@@ -151,9 +156,9 @@ def test_the_event_log_is_rotated_when_it_outgrows_its_size(data, home):
     retired = sorted(data.glob("events-*.jsonl"))
     assert retired, "an oversized log should have been renamed out of the way"
     kept = [
-        json.loads(line)
+        record
         for path in [*retired, data / "events.jsonl"]
-        for line in path.read_text().splitlines()
+        for record in read_lines(path)
     ]
     assert kept == [{"n": index} for index in range(6)]  # rotation loses nothing
     assert len(events_written(data)) < 6  # and the live file really did start over

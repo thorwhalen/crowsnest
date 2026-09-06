@@ -39,7 +39,9 @@ def test_a_write_changes_only_the_named_field_and_nothing_else(tmp_path):
         decisions=["ship on green"],
         ledger_dir=tmp_path,
     )
-    before = ledger_path("lookout", ledger_dir=tmp_path).read_text()
+    # utf-8 explicitly: the stamp separator is a middle dot, and Windows' default
+    # encoding would decode the file crowsnest wrote into something else.
+    before = ledger_path("lookout", ledger_dir=tmp_path).read_text(encoding="utf-8")
     after = update_ledger("lookout", state="waiting", ledger_dir=tmp_path)["text"]
     assert after == before.replace("state: working", "state: waiting")
 

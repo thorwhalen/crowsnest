@@ -83,7 +83,7 @@ def test_hook_survives_nonsense_on_stdin(data, monkeypatch, capsys):
     main(["hook", "stop"])
     assert capsys.readouterr().out == ""
     assert not (data / "events.jsonl").exists()
-    assert "session_id" in (data / "hook.log").read_text()
+    assert "session_id" in (data / "hook.log").read_text(encoding="utf-8")
 
 
 def test_hook_survives_an_empty_stdin(data, monkeypatch, capsys):
