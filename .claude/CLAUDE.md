@@ -1,12 +1,36 @@
 # crowsnest — dev notes
 
-Seams (one kwarg each): `home=` (the Claude Code config dir; a synced copy of another
-machine's is the replacement — `xa.hosts.ssh.SSHHost` pulls one); `is_alive=` (pid check;
-`xa.claude_fs.ephemeral_session_alive` is the /proc-aware replacement); `spawner=` in
-`crowsnest.spawn.spawn` (starts the built `claude` argv somewhere a person can find it;
-`xa spawn` is the pointed replacement, adding hosts and a phone web UI). Surfaces built:
-CLI (`cw`), shipped skill + subagent. Not seams: rendering, the status vocabulary, tail size.
+The map for an agent working *on* crowsnest. Users get the shipped skills instead
+(`crowsnest/data/skills/`); `.claude/skills/*` here are symlinks to them.
 
-- Core is `crowsnest/tools.py` (JSON dicts in and out); `__main__.py` renders only.
-- Transcript *content* parsing is openloops' (`parse_session`); do not re-implement it here.
-- The skill is at `crowsnest/data/skills/crowsnest/`; `.claude/skills/crowsnest` is a symlink to it.
+## Seams (one keyword argument each) and their current defaults
+
+| Seam | Default | Replacement it exists for |
+|---|---|---|
+| `home=` on every reader | `$CLAUDE_CONFIG_DIR` or `~/.claude` | a synced copy of another machine's home (`xa sync`); several via `[[homes]]` in `~/.config/crowsnest/config.toml` and `all_homes=` |
+| `is_alive=` / `is_live=` in `registry.live_sessions` | pid signal 0 | `fresh_within()` for remote homes; `xa.claude_fs.ephemeral_session_alive` for /proc |
+| `spawner=` in `spawn.spawn` | tmux, else an iTerm tab, else a subprocess | `xa spawn` |
+| `ledger_dir=` / `events_path=` in `ledger`, `hook`, `watch` | under `crowsnest.paths.data_dir()` | a test's `tmp_path`; a shared store later |
+| `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
+
+Surfaces built: the `cw` CLI (`__main__.py` renders, `tools.py` is the JSON core), the
+shipped skills (`crowsnest`, `-dispatch`, `-report`, `-worker`) and the `crowsnest-scout`
+subagent, the HTML report (openloops dashboard design, published as a claude.ai artifact).
+Not seams: rendering, the status vocabulary, tail size, the ledger's field names.
+
+## Rules of the repo
+
+- Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
+- Nothing in `tools.py` prints or exits. Every function takes and returns JSON-able values.
+- Tests use synthetic fixtures only (`tests/fixtures.py`); never a real transcript or registry record.
+- Non-code data lives under `crowsnest.paths.data_dir()`, never in the repo.
+- A merge to `main` releases to PyPI. Merge serially: `gh run list --branch main --limit 1`
+  must say `completed` before the next merge, or the version push-back is rejected (i2mint/wads#81).
+- Worktrees under `.claude/worktrees/` are session worktrees (`claude --worktree`); a finished
+  one must detach (`git checkout --detach origin/main`), never check out `main`.
+
+## Where the reasoning is
+
+Discussion #9 (operating model, rejected alternatives, references); issue #6 (the eight
+rules cn lives by); #7 (ledger and hook events, with the measured hook cost); #4 and #19
+(the artifact loop and the `--fragment` follow-up).
