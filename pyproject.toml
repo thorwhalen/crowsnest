@@ -46,7 +46,7 @@ packages = ["crowsnest"]
 # skill directories after reaching them through the bridge first. `only-include` never
 # enters `.claude` at all. (Measured on openloops, 2026-08-27.)
 [tool.hatch.build.targets.sdist]
-only-include = ["crowsnest", "tests", "README.md", "LICENSE", "pyproject.toml"]
+only-include = ["crowsnest", "tests", ".github", "README.md", "LICENSE", "pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "crowsnest"]
@@ -54,3 +54,10 @@ addopts = "--doctest-modules"
 
 [tool.ruff]
 line-length = 90
+target-version = "py310"
+
+[tool.wads.ci]
+project_name = "crowsnest"
+
+[tool.wads.ci.testing]
+python_versions = ["3.10", "3.12"]
