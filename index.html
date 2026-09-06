@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to crowsnest’s documentation! &mdash; crowsnest 0.0.9 documentation</title>
+  <title>Welcome to crowsnest’s documentation! &mdash; crowsnest 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="_static/documentation_options.js?v=a83ce22a"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -96,6 +97,7 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.Activity"><code class="docutils literal notranslate"><span class="pre">Activity</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.LiveSession"><code class="docutils literal notranslate"><span class="pre">LiveSession</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.Turn"><code class="docutils literal notranslate"><span class="pre">Turn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.brief"><code class="docutils literal notranslate"><span class="pre">brief()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.list_ledgers"><code class="docutils literal notranslate"><span class="pre">list_ledgers()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.live_sessions"><code class="docutils literal notranslate"><span class="pre">live_sessions()</span></code></a></li>
@@ -149,6 +151,15 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.rotate"><code class="docutils literal notranslate"><span class="pre">rotate()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/init.html">crowsnest.init</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.HOOKS"><code class="docutils literal notranslate"><span class="pre">HOOKS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.merged_hooks"><code class="docutils literal notranslate"><span class="pre">merged_hooks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.settings_snippet"><code class="docutils literal notranslate"><span class="pre">settings_snippet()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.template_path"><code class="docutils literal notranslate"><span class="pre">template_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.template_text"><code class="docutils literal notranslate"><span class="pre">template_text()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/ledger.html">crowsnest.ledger</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.FIELDS"><code class="docutils literal notranslate"><span class="pre">FIELDS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.FREE_HEADING"><code class="docutils literal notranslate"><span class="pre">FREE_HEADING</span></code></a></li>
@@ -199,6 +210,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/tools.html">crowsnest.tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.brief"><code class="docutils literal notranslate"><span class="pre">brief()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.report"><code class="docutils literal notranslate"><span class="pre">report()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.roster"><code class="docutils literal notranslate"><span class="pre">roster()</span></code></a></li>
@@ -229,7 +241,7 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-<p>Release: 0.0.9</p>
+<p>Release: 0.0.10</p>
 <p>Last change: Sep 06, 2026</p>
 </section>
 

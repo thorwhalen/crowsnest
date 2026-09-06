@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.init &mdash; crowsnest 0.0.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.init</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.init</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Everything a crowsnest session needs before it can be one, set up in one command.</span>
+
+<span class="sd">A watching session is not a normal session: it has to hold almost nothing, delegate every</span>
+<span class="sd">read, and survive being cleared. Those are rules, and rules only bind an agent when they</span>
+<span class="sd">are re-read from disk on every restart -- so they live in a ``CLAUDE.md`` in the session's</span>
+<span class="sd">own directory, shipped as a template here and written out by ``crowsnest init``.</span>
+
+<span class="sd">Three things get set up, and each is idempotent because a person will run this again:</span>
+
+<span class="sd">1. **The rules**: ``CLAUDE.md`` from :func:`template_text`. A file that is already the</span>
+<span class="sd">   template is left alone; a file that differs is *never* silently overwritten, because</span>
+<span class="sd">   the one the user hand-edited is worth more than ours.</span>
+<span class="sd">2. **The data directory** (:func:`crowsnest.paths.data_dir`): where the ledgers and the</span>
+<span class="sd">   event log go, per the rule that an app's own directory holds code and nothing else.</span>
+<span class="sd">   This is the one place that creates it; everything else only reads the path.</span>
+<span class="sd">3. **The hooks** (:data:`HOOKS`): the two that push events at the watching session --</span>
+<span class="sd">   registered ``async`` so that watching costs the watched sessions no wall-clock -- and</span>
+<span class="sd">   the ``SessionStart`` one that re-prints the roster after every start, clear and</span>
+<span class="sd">   compaction, which is the only way a roster survives a compaction verbatim. Printed by</span>
+<span class="sd">   default; merged into ``settings.json`` on request, after a timestamped backup, adding</span>
+<span class="sd">   to the existing hook arrays and removing nothing.</span>
+
+<span class="sd">&gt;&gt;&gt; [h['event'] for h in HOOKS]</span>
+<span class="sd">['Notification', 'Stop', 'SessionStart']</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_home</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"HOOKS"</span><span class="p">,</span>
+    <span class="s2">"init"</span><span class="p">,</span>
+    <span class="s2">"merged_hooks"</span><span class="p">,</span>
+    <span class="s2">"settings_snippet"</span><span class="p">,</span>
+    <span class="s2">"template_path"</span><span class="p">,</span>
+    <span class="s2">"template_text"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: The hooks a watching session wants, as ``settings.json`` speaks of them.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The first two are issue #7's push signal: ``Notification`` fires exactly when a session</span>
+<span class="c1">#: asks its human for something, ``Stop`` when a turn ends with the transcript in hand.</span>
+<span class="c1">#: Both are registered ``async``: a measured ``crowsnest hook stop`` takes about 375 ms</span>
+<span class="c1">#: end to end, two thirds of it Python starting up, and a watcher must never be a tax on</span>
+<span class="c1">#: the turns it watches. Nothing reads their output, so nothing is lost by not waiting.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The third is the anti-amnesia one -- ``crowsnest --brief`` costs nothing (it reads the</span>
+<span class="c1">#: registry, not a single transcript) and its output is re-injected on every start, clear</span>
+<span class="c1">#: and compaction, which is what makes the roster part of the content that survives. That</span>
+<span class="c1">#: output is the whole point, so this one stays synchronous.</span>
+<span class="n">HOOKS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"Notification"</span><span class="p">,</span>
+        <span class="s2">"matcher"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"command"</span><span class="p">:</span> <span class="s2">"crowsnest hook notification"</span><span class="p">,</span>
+        <span class="s2">"async"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"why"</span><span class="p">:</span> <span class="s2">"a session is asking its human for something"</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"Stop"</span><span class="p">,</span>
+        <span class="s2">"matcher"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"command"</span><span class="p">:</span> <span class="s2">"crowsnest hook stop"</span><span class="p">,</span>
+        <span class="s2">"async"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"why"</span><span class="p">:</span> <span class="s2">"a session finished a turn; record its last words"</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"SessionStart"</span><span class="p">,</span>
+        <span class="s2">"matcher"</span><span class="p">:</span> <span class="s2">"startup|clear|compact"</span><span class="p">,</span>
+        <span class="s2">"command"</span><span class="p">:</span> <span class="s2">"crowsnest --brief"</span><span class="p">,</span>
+        <span class="s2">"async"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">"why"</span><span class="p">:</span> <span class="s2">"re-print the roster after every start, clear and compaction"</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">_HOOK_FIELDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"event"</span><span class="p">,</span> <span class="s2">"matcher"</span><span class="p">,</span> <span class="s2">"command"</span><span class="p">,</span> <span class="s2">"async"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_checked</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``value``, when it is a ``kind``.</span>
+
+<span class="sd">    A settings file whose shape is wrong is a *value* problem -- the user typed something</span>
+<span class="sd">    into a JSON file -- and the CLI turns a ``ValueError`` into one clean line rather than</span>
+<span class="sd">    a traceback, so that is what this raises.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="template_path">
+<a class="viewcode-back" href="../../module_docs/crowsnest/init.html#crowsnest.init.template_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">template_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The bundled ``CLAUDE.md`` a watching session is given."""</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"templates"</span> <span class="o">/</span> <span class="s2">"CLAUDE.md"</span></div>
+
+
+
+<div class="viewcode-block" id="template_text">
+<a class="viewcode-back" href="../../module_docs/crowsnest/init.html#crowsnest.init.template_text">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">template_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The text of the bundled ``CLAUDE.md``.</span>
+
+<span class="sd">    &gt;&gt;&gt; template_text().splitlines()[0]</span>
+<span class="sd">    '# The lookout session'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">template_path</span><span class="p">()</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="settings_snippet">
+<a class="viewcode-back" href="../../module_docs/crowsnest/init.html#crowsnest.init.settings_snippet">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">settings_snippet</span><span class="p">(</span><span class="n">hooks</span><span class="o">=</span><span class="n">HOOKS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``settings.json`` fragment these hooks amount to, for a human to paste.</span>
+
+<span class="sd">    &gt;&gt;&gt; settings_snippet(HOOKS[2:])['hooks']['SessionStart']</span>
+<span class="sd">    [{'matcher': 'startup|clear|compact', 'hooks': [{'type': 'command', 'command': 'crowsnest --brief'}]}]</span>
+<span class="sd">    """</span>
+    <span class="n">empty</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">merged_hooks</span><span class="p">(</span><span class="n">empty</span><span class="p">,</span> <span class="n">hooks</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="merged_hooks">
+<a class="viewcode-back" href="../../module_docs/crowsnest/init.html#crowsnest.init.merged_hooks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merged_hooks</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="n">HOOKS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""A copy of ``settings`` with every hook present, and the ones that were added.</span>
+
+<span class="sd">    Additive by construction: an event's existing groups are kept, a group with the same</span>
+<span class="sd">    matcher gains one command, and a command already registered anywhere under that event</span>
+<span class="sd">    is not registered twice. Nothing is ever removed -- the file belongs to the user, and</span>
+<span class="sd">    the desktop notifier already on their ``Stop`` hook has to keep working.</span>
+
+<span class="sd">    &gt;&gt;&gt; settings, added = merged_hooks({}, HOOKS[1:2])</span>
+<span class="sd">    &gt;&gt;&gt; settings['hooks']['Stop'][0]['hooks']</span>
+<span class="sd">    [{'type': 'command', 'command': 'crowsnest hook stop', 'async': True}]</span>
+<span class="sd">    &gt;&gt;&gt; [h['command'] for h in added]</span>
+<span class="sd">    ['crowsnest hook stop']</span>
+<span class="sd">    &gt;&gt;&gt; merged_hooks(settings, HOOKS[1:2])[1]</span>
+<span class="sd">    []</span>
+<span class="sd">    """</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">settings</span><span class="p">))</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="n">_checked</span><span class="p">(</span>
+        <span class="n">merged</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"hooks"</span><span class="p">,</span> <span class="p">{}),</span>
+        <span class="nb">dict</span><span class="p">,</span>
+        <span class="s2">"settings['hooks'] is not an object; fix it by hand first"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">added</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">hooks</span><span class="p">:</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">_checked</span><span class="p">(</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="s2">"event"</span><span class="p">],</span> <span class="p">[]),</span>
+            <span class="nb">list</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"settings['hooks'][</span><span class="si">{</span><span class="n">spec</span><span class="p">[</span><span class="s1">'event'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">] is not a list; fix it by hand first"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"command"</span><span class="p">)</span> <span class="o">==</span> <span class="n">spec</span><span class="p">[</span><span class="s2">"command"</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hooks"</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"command"</span><span class="p">,</span> <span class="s2">"command"</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">"command"</span><span class="p">]}</span>
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"async"</span><span class="p">):</span>
+            <span class="n">entry</span><span class="p">[</span><span class="s2">"async"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">same_matcher</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">group</span>
+                <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">group</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"matcher"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="o">==</span> <span class="n">spec</span><span class="p">[</span><span class="s2">"matcher"</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">same_matcher</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"matcher"</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">"matcher"</span><span class="p">],</span> <span class="s2">"hooks"</span><span class="p">:</span> <span class="p">[</span><span class="n">entry</span><span class="p">]})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">same_matcher</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"hooks"</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+        <span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_HOOK_FIELDS</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">merged</span><span class="p">,</span> <span class="n">added</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_settings</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">loaded</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is not valid JSON (</span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">); fix it by hand first"</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">return</span> <span class="n">_checked</span><span class="p">(</span><span class="n">loaded</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is not a JSON object; fix it by hand first"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_backup</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">destination</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.backup-</span><span class="si">{</span><span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y%m</span><span class="si">%d</span><span class="s1">T%H%M%S'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">destination</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">destination</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_claude_md_plan</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">wanted</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"action"</span><span class="p">:</span> <span class="s2">"write"</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"not there yet"</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="o">==</span> <span class="n">wanted</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"action"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"already the template"</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">force</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"action"</span><span class="p">:</span> <span class="s2">"write"</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"replacing what was there (--force)"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"action"</span><span class="p">:</span> <span class="s2">"conflict"</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"differs from the template; left as it is"</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="init">
+<a class="viewcode-back" href="../../module_docs/crowsnest/init.html#crowsnest.init.init">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">hooks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Set a directory up as a watching session's home. Idempotent; safe to re-run.</span>
+
+<span class="sd">    Writes ``CLAUDE.md`` into ``directory`` (default: the current one), creates the data</span>
+<span class="sd">    directory (``store``, else :func:`crowsnest.paths.data_dir`), and reports the hooks.</span>
+<span class="sd">    With ``hooks=True`` it also merges :data:`HOOKS` into ``home``'s ``settings.json``</span>
+<span class="sd">    (``home`` defaults to ``$CLAUDE_CONFIG_DIR`` or ``~/.claude``) after backing it up.</span>
+
+<span class="sd">    Returns the plan: one row per thing, each with an ``action`` -- ``write`` / ``create``</span>
+<span class="sd">    / ``add`` when it changed, ``ok`` when it was already right, ``conflict`` when</span>
+<span class="sd">    something else was there, ``skipped`` when it was not asked for.</span>
+<span class="sd">    """</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">now</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">astimezone</span><span class="p">()</span>
+    <span class="n">where</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">directory</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="n">template_text</span><span class="p">()</span>
+
+    <span class="n">claude_md</span> <span class="o">=</span> <span class="n">where</span> <span class="o">/</span> <span class="s2">"CLAUDE.md"</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">claude_md</span><span class="p">),</span> <span class="o">**</span><span class="n">_claude_md_plan</span><span class="p">(</span><span class="n">claude_md</span><span class="p">,</span> <span class="n">wanted</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">)}</span>
+    <span class="k">if</span> <span class="n">md</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"write"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">claude_md</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">claude_md</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">wanted</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+    <span class="n">where_data</span> <span class="o">=</span> <span class="n">data_dir</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">where_data</span><span class="p">),</span>
+        <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"ok"</span> <span class="k">if</span> <span class="n">where_data</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"create"</span><span class="p">,</span>
+        <span class="s2">"reason"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">"already there"</span>
+            <span class="k">if</span> <span class="n">where_data</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+            <span class="k">else</span> <span class="s2">"the ledgers and the event log go here"</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"create"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">where_data</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">settings_path</span> <span class="o">=</span> <span class="n">claude_home</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"settings.json"</span>
+    <span class="n">listed</span> <span class="o">=</span> <span class="p">[{</span><span class="n">k</span><span class="p">:</span> <span class="n">h</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_HOOK_FIELDS</span><span class="p">}</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">HOOKS</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">hooks</span><span class="p">:</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings_path</span><span class="p">),</span>
+            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"skipped"</span><span class="p">,</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"not asked for; pass --hooks to add them"</span><span class="p">,</span>
+            <span class="s2">"backup"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"added"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">_read_settings</span><span class="p">(</span><span class="n">settings_path</span><span class="p">)</span>
+        <span class="n">merged</span><span class="p">,</span> <span class="n">added</span> <span class="o">=</span> <span class="n">merged_hooks</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">HOOKS</span><span class="p">)</span>
+        <span class="n">backup</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">added</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+            <span class="n">settings_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">settings_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="n">backup</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_backup</span><span class="p">(</span><span class="n">settings_path</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">))</span>
+            <span class="n">settings_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span>
+            <span class="p">)</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings_path</span><span class="p">),</span>
+            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"add"</span> <span class="k">if</span> <span class="n">added</span> <span class="k">else</span> <span class="s2">"ok"</span><span class="p">,</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"already registered"</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">added</span> <span class="k">else</span> <span class="s2">"merged, nothing removed"</span><span class="p">,</span>
+            <span class="s2">"backup"</span><span class="p">:</span> <span class="n">backup</span><span class="p">,</span>
+            <span class="s2">"added"</span><span class="p">:</span> <span class="n">added</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"directory"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">where</span><span class="p">),</span>
+        <span class="s2">"dry_run"</span><span class="p">:</span> <span class="n">dry_run</span><span class="p">,</span>
+        <span class="s2">"claude_md"</span><span class="p">:</span> <span class="n">md</span><span class="p">,</span>
+        <span class="s2">"data_dir"</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+        <span class="s2">"settings"</span><span class="p">:</span> <span class="n">settings</span><span class="p">,</span>
+        <span class="s2">"hooks"</span><span class="p">:</span> <span class="n">listed</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

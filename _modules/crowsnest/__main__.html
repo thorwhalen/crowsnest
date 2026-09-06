@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.9 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -106,6 +107,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">hook</span> <span class="k">as</span> <span class="n">_hook</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span> <span class="k">as</span> <span class="n">_init</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ledger</span> <span class="k">as</span> <span class="n">_ledger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">skills</span> <span class="k">as</span> <span class="n">_skills</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">tools</span>
@@ -398,6 +400,75 @@
     <span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">brief</span><span class="p">(</span>
+    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""openloops' digest for one session: what it has been doing, dated, in its own words.</span>
+
+<span class="sd">    Reads no transcript and costs the session nothing. Empty until openloops has digested</span>
+<span class="sd">    that session; `ol sync` is what fills it.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">brief</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"session"</span><span class="p">]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> — digest  (</span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'status'</span><span class="p">]</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'cwd'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">"digest"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"(no openloops digest yet: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'why'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="s2">"Run `ol sync` first."</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s2">"digest"</span><span class="p">][</span><span class="s2">"text"</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">hooks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Set this directory up as a watching session's home: its CLAUDE.md, data dir, hooks.</span>
+
+<span class="sd">    Writes `CLAUDE.md` from the bundled template (never over a different one without</span>
+<span class="sd">    `--force`), creates the data directory, and prints the hook lines. `--hooks` adds</span>
+<span class="sd">    them to your settings for you, after a timestamped backup, removing nothing.</span>
+<span class="sd">    """</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="n">_init</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
+        <span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="n">hooks</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span>
+    <span class="p">)</span>
+    <span class="n">verb</span> <span class="o">=</span> <span class="s2">"would set up"</span> <span class="k">if</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"dry_run"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"set up"</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">verb</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'directory'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"CLAUDE.md"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"claude_md"</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"data dir"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"data_dir"</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"settings"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]),</span>
+    <span class="p">):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'action'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;9</span><span class="si">}{</span><span class="n">label</span><span class="si">:</span><span class="s2">&lt;11</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'reason'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"backup"</span><span class="p">]:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"backup    settings   </span><span class="si">{</span><span class="n">settings</span><span class="p">[</span><span class="s1">'backup'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"skipped"</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="s2">""</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"## Add these to </span><span class="si">{</span><span class="n">settings</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2"> yourself, or re-run with --hooks"</span><span class="p">,</span>
+            <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">_init</span><span class="o">.</span><span class="n">settings_snippet</span><span class="p">(),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+            <span class="s2">""</span><span class="p">,</span>
+            <span class="o">*</span><span class="p">[</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'event'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'why'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">_init</span><span class="o">.</span><span class="n">HOOKS</span><span class="p">],</span>
+        <span class="p">]</span>
+    <span class="k">elif</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"added"</span><span class="p">]:</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"## Hooks added"</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'event'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'matcher'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'any'</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">'command'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+            <span class="o">+</span> <span class="p">(</span><span class="s2">" [async]"</span> <span class="k">if</span> <span class="n">h</span><span class="p">[</span><span class="s2">"async"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"added"</span><span class="p">]</span>
+        <span class="p">]</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">install_skills</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -405,7 +476,7 @@
     <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Link the bundled skill and subagent into ~/.claude (or `--target`). Idempotent."""</span>
+<span class="w">    </span><span class="sd">"""Link the bundled skills and the subagent into ~/.claude (or `--target`). Idempotent."""</span>
     <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="n">only</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">_skills</span><span class="o">.</span><span class="n">install_skills</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="n">names</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">)</span>
     <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'would install'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">dry_run</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'installed'</span><span class="si">}</span><span class="s2"> into </span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
@@ -449,7 +520,19 @@
     <span class="p">)</span>
 
 
-<span class="n">_commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">roster</span><span class="p">,</span> <span class="n">show</span><span class="p">,</span> <span class="n">turns</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">watch</span><span class="p">,</span> <span class="n">ledger</span><span class="p">,</span> <span class="n">hook</span><span class="p">,</span> <span class="n">install_skills</span><span class="p">,</span> <span class="n">spawn</span><span class="p">]</span>
+<span class="n">_commands</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">roster</span><span class="p">,</span>
+    <span class="n">show</span><span class="p">,</span>
+    <span class="n">turns</span><span class="p">,</span>
+    <span class="n">brief</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">,</span>
+    <span class="n">watch</span><span class="p">,</span>
+    <span class="n">ledger</span><span class="p">,</span>
+    <span class="n">hook</span><span class="p">,</span>
+    <span class="n">spawn</span><span class="p">,</span>
+    <span class="n">init</span><span class="p">,</span>
+    <span class="n">install_skills</span><span class="p">,</span>
+<span class="p">]</span>
 
 
 <div class="viewcode-block" id="main">

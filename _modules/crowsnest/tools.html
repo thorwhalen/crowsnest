@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.tools &mdash; crowsnest 0.0.9 documentation</title>
+  <title>crowsnest.tools &mdash; crowsnest 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -101,12 +102,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">openloops.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">show</span> <span class="k">as</span> <span class="n">_openloops_digest</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.activity</span><span class="w"> </span><span class="kn">import</span> <span class="n">RECENT_TOOLS</span><span class="p">,</span> <span class="n">read_activity</span><span class="p">,</span> <span class="n">read_turns</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">homes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">STATUSES</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">fresh_within</span><span class="p">,</span> <span class="n">live_sessions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.report</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_TITLE</span><span class="p">,</span> <span class="n">render_report</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"report"</span><span class="p">,</span> <span class="s2">"resolve"</span><span class="p">,</span> <span class="s2">"roster"</span><span class="p">,</span> <span class="s2">"sessions"</span><span class="p">,</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"turns"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"brief"</span><span class="p">,</span> <span class="s2">"report"</span><span class="p">,</span> <span class="s2">"resolve"</span><span class="p">,</span> <span class="s2">"roster"</span><span class="p">,</span> <span class="s2">"sessions"</span><span class="p">,</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"turns"</span><span class="p">]</span>
 
 <span class="c1">#: How much of a prompt or a reply a roster row carries. ``show`` carries it whole.</span>
 <span class="n">ROSTER_TEXT_LIMIT</span> <span class="o">=</span> <span class="mi">240</span>
@@ -282,6 +285,36 @@
     <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">read_turns</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]}</span></div>
+
+
+
+<div class="viewcode-block" id="brief">
+<a class="viewcode-back" href="../../module_docs/crowsnest/tools.html#crowsnest.brief">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">brief</span><span class="p">(</span>
+    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">digests_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""openloops' digest for one live session: what it has been doing, dated, in its words.</span>
+
+<span class="sd">    A digest is written by openloops when a session's turn ends, so this answers "what has</span>
+<span class="sd">    this session been up to" without reading a transcript at all, and without spending a</span>
+<span class="sd">    turn of that session's context. It is a lookup, not a second reader: the digest's</span>
+<span class="sd">    content is openloops' business, and ``digests_store`` is the seam it reads from.</span>
+
+<span class="sd">    ``digest`` is ``None`` when openloops has not digested this session yet -- a normal</span>
+<span class="sd">    state for a session started minutes ago -- and ``why`` says so.</span>
+<span class="sd">    """</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">why</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">why</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="n">digest</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span></div>
 
 </pre></div>
 

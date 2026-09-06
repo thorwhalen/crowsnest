@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.skills &mdash; crowsnest 0.0.9 documentation</title>
+  <title>crowsnest.skills &mdash; crowsnest 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
@@ -95,7 +96,12 @@
              
   <section id="module-crowsnest.skills">
 <span id="crowsnest-skills"></span><h1>crowsnest.skills<a class="headerlink" href="#module-crowsnest.skills" title="Link to this heading"></a></h1>
-<p>The agent-facing surface: one skill, one subagent, and the command that installs them.</p>
+<p>The agent-facing surface: the skills, the subagent, and the command that installs them.</p>
+<p>Four skills and one subagent, discovered from the directories rather than listed here, so
+adding one is adding a directory: <code class="docutils literal notranslate"><span class="pre">crowsnest</span></code> (be the lookout), <code class="docutils literal notranslate"><span class="pre">crowsnest-dispatch</span></code>
+(hand work to a session), <code class="docutils literal notranslate"><span class="pre">crowsnest-report</span></code> (the page and its comment loop),
+<code class="docutils literal notranslate"><span class="pre">crowsnest-worker</span></code> (for every <em>other</em> session: how to answer the lookout in five lines),
+and the <code class="docutils literal notranslate"><span class="pre">crowsnest-scout</span></code> subagent that does the reading in a fresh context.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">crowsnest</span></code> command is plumbing. What a person wants is a session that runs it and
 says what matters – and that is a markdown file an agent host loads, shipped inside the
 package so that upgrading the package upgrades the skill. Installing one is a symlink;
@@ -103,7 +109,7 @@ where symlinks are unavailable, a copy, and the plan says which happened.</p>
 <p>Nothing already at a destination is overwritten: a foreign file of the same name reads
 <code class="docutils literal notranslate"><span class="pre">conflict</span></code> and stays as it was until <code class="docutils literal notranslate"><span class="pre">force=True</span></code>.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">bundled</span><span class="p">())</span>
-<span class="go">['crowsnest', 'crowsnest-scout']</span>
+<span class="go">['crowsnest', 'crowsnest-dispatch', 'crowsnest-report', 'crowsnest-scout', 'crowsnest-worker']</span>
 </pre></div>
 </div>
 <dl class="py class">
@@ -121,13 +127,13 @@ where symlinks are unavailable, a copy, and the plan says which happened.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.skills.install_skills">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.skills.</span></span><span class="sig-name descname"><span class="pre">install_skills</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/skills.html#install_skills"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.skills.install_skills" title="Link to this definition"></a></dt>
-<dd><p>Make the bundled skill and subagent visible to Claude Code. Idempotent.</p>
+<dd><p>Make the bundled skills and the subagent visible to Claude Code. Idempotent.</p>
 <p>Links each into <code class="docutils literal notranslate"><span class="pre">target</span></code> (default <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CONFIG_DIR</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code>). Returns
 the plan: one row per asset with its action – <code class="docutils literal notranslate"><span class="pre">install</span></code>, <code class="docutils literal notranslate"><span class="pre">ok</span></code> (already ours) or
 <code class="docutils literal notranslate"><span class="pre">conflict</span></code> (something else is there; left alone unless <code class="docutils literal notranslate"><span class="pre">force</span></code>).</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span> <span class="o">=</span> <span class="n">install_skills</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s1">'/nonexistent/host'</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="p">[</span><span class="s1">'counts'</span><span class="p">]</span>
-<span class="go">{'install': 2, 'ok': 0, 'conflict': 0}</span>
+<span class="go">{'install': 5, 'ok': 0, 'conflict': 0}</span>
 </pre></div>
 </div>
 </dd></dl>

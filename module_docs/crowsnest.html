@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest &mdash; crowsnest 0.0.9 documentation</title>
+  <title>crowsnest &mdash; crowsnest 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -57,6 +57,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.Turn"><code class="docutils literal notranslate"><span class="pre">Turn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.brief"><code class="docutils literal notranslate"><span class="pre">brief()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.list_ledgers"><code class="docutils literal notranslate"><span class="pre">list_ledgers()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.live_sessions"><code class="docutils literal notranslate"><span class="pre">live_sessions()</span></code></a></li>
@@ -75,6 +76,7 @@
 <li class="toctree-l1"><a class="reference internal" href="crowsnest/activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="crowsnest/ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="crowsnest/registry.html">crowsnest.registry</a></li>
@@ -125,11 +127,14 @@ where, since when. Instant; no transcript is read.</p></li>
 session was last asked, what it last said, the tool it is running now, the question
 it is waiting on – read from the tail of its transcript, which costs the watched
 session nothing and never interrupts it. <code class="docutils literal notranslate"><span class="pre">turns</span></code> pages further back when the tail is
-not enough.</p></li>
+not enough, and <a class="reference internal" href="crowsnest/tools.html#crowsnest.tools.brief" title="crowsnest.tools.brief"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.brief()</span></code></a> looks up openloops’ dated digest of a
+session without reading a transcript at all.</p></li>
 <li><p><strong>The ask</strong>: a running session can be <em>messaged</em> and will answer from its own
 context. That is a Claude Code feature, not a Python one, so it lives in the shipped
-skill (<code class="docutils literal notranslate"><span class="pre">crowsnest/data/skills/crowsnest/SKILL.md</span></code>) rather than here – with the rule
-that says when it is worth a turn of someone else’s context and when it is not.</p></li>
+skills (<code class="docutils literal notranslate"><span class="pre">crowsnest/data/skills/</span></code>) rather than here – with the rules that say when it
+is worth a turn of someone else’s context, how a corpus of work is handed to a session,
+and how the watching session stays small enough to be cleared at any moment.
+<a class="reference internal" href="crowsnest/init.html#module-crowsnest.init" title="crowsnest.init"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.init</span></code></a> is what sets a session up to live by them.</p></li>
 </ol>
 <p>And one stream: <a class="reference internal" href="crowsnest/watch.html#crowsnest.watch.events" title="crowsnest.watch.events"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.watch.events()</span></code></a> yields a line every time a session starts,
 exits, finishes a turn, or starts waiting on its human, so a monitor is told rather than
@@ -187,6 +192,18 @@ when <code class="docutils literal notranslate"><span class="pre">tail_complete<
 <dt class="sig sig-object py" id="crowsnest.Turn">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.</span></span><span class="sig-name descname"><span class="pre">Turn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reply</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reply_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#Turn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.Turn" title="Link to this definition"></a></dt>
 <dd><p>One exchange: a human prompt, what the assistant did, and its last words.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.brief">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.</span></span><span class="sig-name descname"><span class="pre">brief</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">digests_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../_modules/crowsnest/tools.html#brief"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.brief" title="Link to this definition"></a></dt>
+<dd><p>openloops’ digest for one live session: what it has been doing, dated, in its words.</p>
+<p>A digest is written by openloops when a session’s turn ends, so this answers “what has
+this session been up to” without reading a transcript at all, and without spending a
+turn of that session’s context. It is a lookup, not a second reader: the digest’s
+content is openloops’ business, and <code class="docutils literal notranslate"><span class="pre">digests_store</span></code> is the seam it reads from.</p>
+<p><code class="docutils literal notranslate"><span class="pre">digest</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> when openloops has not digested this session yet – a normal
+state for a session started minutes ago – and <code class="docutils literal notranslate"><span class="pre">why</span></code> says so.</p>
 </dd></dl>
 
 <dl class="py function">

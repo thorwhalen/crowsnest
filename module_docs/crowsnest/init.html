@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.init &mdash; crowsnest 0.0.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.ledger" href="ledger.html" />
+    <link rel="prev" title="crowsnest.hook" href="hook.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.init</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.init.HOOKS"><code class="docutils literal notranslate"><span class="pre">HOOKS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.init.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.init.merged_hooks"><code class="docutils literal notranslate"><span class="pre">merged_hooks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.init.settings_snippet"><code class="docutils literal notranslate"><span class="pre">settings_snippet()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.init.template_path"><code class="docutils literal notranslate"><span class="pre">template_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.init.template_text"><code class="docutils literal notranslate"><span class="pre">template_text()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.init</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/init.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.init">
+<span id="crowsnest-init"></span><h1>crowsnest.init<a class="headerlink" href="#module-crowsnest.init" title="Link to this heading"></a></h1>
+<p>Everything a crowsnest session needs before it can be one, set up in one command.</p>
+<p>A watching session is not a normal session: it has to hold almost nothing, delegate every
+read, and survive being cleared. Those are rules, and rules only bind an agent when they
+are re-read from disk on every restart – so they live in a <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> in the session’s
+own directory, shipped as a template here and written out by <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">init</span></code>.</p>
+<p>Three things get set up, and each is idempotent because a person will run this again:</p>
+<ol class="arabic simple">
+<li><p><strong>The rules</strong>: <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> from <a class="reference internal" href="#crowsnest.init.template_text" title="crowsnest.init.template_text"><code class="xref py py-func docutils literal notranslate"><span class="pre">template_text()</span></code></a>. A file that is already the
+template is left alone; a file that differs is <em>never</em> silently overwritten, because
+the one the user hand-edited is worth more than ours.</p></li>
+<li><p><strong>The data directory</strong> (<a class="reference internal" href="paths.html#crowsnest.paths.data_dir" title="crowsnest.paths.data_dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.paths.data_dir()</span></code></a>): where the ledgers and the
+event log go, per the rule that an app’s own directory holds code and nothing else.
+This is the one place that creates it; everything else only reads the path.</p></li>
+<li><p><strong>The hooks</strong> (<a class="reference internal" href="#crowsnest.init.HOOKS" title="crowsnest.init.HOOKS"><code class="xref py py-data docutils literal notranslate"><span class="pre">HOOKS</span></code></a>): the two that push events at the watching session –
+registered <code class="docutils literal notranslate"><span class="pre">async</span></code> so that watching costs the watched sessions no wall-clock – and
+the <code class="docutils literal notranslate"><span class="pre">SessionStart</span></code> one that re-prints the roster after every start, clear and
+compaction, which is the only way a roster survives a compaction verbatim. Printed by
+default; merged into <code class="docutils literal notranslate"><span class="pre">settings.json</span></code> on request, after a timestamped backup, adding
+to the existing hook arrays and removing nothing.</p></li>
+</ol>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="s1">'event'</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">HOOKS</span><span class="p">]</span>
+<span class="go">['Notification', 'Stop', 'SessionStart']</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.init.HOOKS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">HOOKS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">({'async':</span> <span class="pre">True,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">hook</span> <span class="pre">notification',</span> <span class="pre">'event':</span> <span class="pre">'Notification',</span> <span class="pre">'matcher':</span> <span class="pre">'',</span> <span class="pre">'why':</span> <span class="pre">'a</span> <span class="pre">session</span> <span class="pre">is</span> <span class="pre">asking</span> <span class="pre">its</span> <span class="pre">human</span> <span class="pre">for</span> <span class="pre">something'},</span> <span class="pre">{'async':</span> <span class="pre">True,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">hook</span> <span class="pre">stop',</span> <span class="pre">'event':</span> <span class="pre">'Stop',</span> <span class="pre">'matcher':</span> <span class="pre">'',</span> <span class="pre">'why':</span> <span class="pre">'a</span> <span class="pre">session</span> <span class="pre">finished</span> <span class="pre">a</span> <span class="pre">turn;</span> <span class="pre">record</span> <span class="pre">its</span> <span class="pre">last</span> <span class="pre">words'},</span> <span class="pre">{'async':</span> <span class="pre">False,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">--brief',</span> <span class="pre">'event':</span> <span class="pre">'SessionStart',</span> <span class="pre">'matcher':</span> <span class="pre">'startup|clear|compact',</span> <span class="pre">'why':</span> <span class="pre">'re-print</span> <span class="pre">the</span> <span class="pre">roster</span> <span class="pre">after</span> <span class="pre">every</span> <span class="pre">start,</span> <span class="pre">clear</span> <span class="pre">and</span> <span class="pre">compaction'})</span></span><a class="headerlink" href="#crowsnest.init.HOOKS" title="Link to this definition"></a></dt>
+<dd><p>The hooks a watching session wants, as <code class="docutils literal notranslate"><span class="pre">settings.json</span></code> speaks of them.</p>
+<p>The first two are issue #7’s push signal: <code class="docutils literal notranslate"><span class="pre">Notification</span></code> fires exactly when a session
+asks its human for something, <code class="docutils literal notranslate"><span class="pre">Stop</span></code> when a turn ends with the transcript in hand.
+Both are registered <code class="docutils literal notranslate"><span class="pre">async</span></code>: a measured <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span> <span class="pre">stop</span></code> takes about 375 ms
+end to end, two thirds of it Python starting up, and a watcher must never be a tax on
+the turns it watches. Nothing reads their output, so nothing is lost by not waiting.</p>
+<p>The third is the anti-amnesia one – <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">--brief</span></code> costs nothing (it reads the
+registry, not a single transcript) and its output is re-injected on every start, clear
+and compaction, which is what makes the roster part of the content that survives. That
+output is the whole point, so this one stays synchronous.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.init.init">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hooks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/init.html#init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.init.init" title="Link to this definition"></a></dt>
+<dd><p>Set a directory up as a watching session’s home. Idempotent; safe to re-run.</p>
+<p>Writes <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> into <code class="docutils literal notranslate"><span class="pre">directory</span></code> (default: the current one), creates the data
+directory (<code class="docutils literal notranslate"><span class="pre">store</span></code>, else <a class="reference internal" href="paths.html#crowsnest.paths.data_dir" title="crowsnest.paths.data_dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.paths.data_dir()</span></code></a>), and reports the hooks.
+With <code class="docutils literal notranslate"><span class="pre">hooks=True</span></code> it also merges <a class="reference internal" href="#crowsnest.init.HOOKS" title="crowsnest.init.HOOKS"><code class="xref py py-data docutils literal notranslate"><span class="pre">HOOKS</span></code></a> into <code class="docutils literal notranslate"><span class="pre">home</span></code>’s <code class="docutils literal notranslate"><span class="pre">settings.json</span></code>
+(<code class="docutils literal notranslate"><span class="pre">home</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CONFIG_DIR</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code>) after backing it up.</p>
+<p>Returns the plan: one row per thing, each with an <code class="docutils literal notranslate"><span class="pre">action</span></code> – <code class="docutils literal notranslate"><span class="pre">write</span></code> / <code class="docutils literal notranslate"><span class="pre">create</span></code>
+/ <code class="docutils literal notranslate"><span class="pre">add</span></code> when it changed, <code class="docutils literal notranslate"><span class="pre">ok</span></code> when it was already right, <code class="docutils literal notranslate"><span class="pre">conflict</span></code> when
+something else was there, <code class="docutils literal notranslate"><span class="pre">skipped</span></code> when it was not asked for.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.init.merged_hooks">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">merged_hooks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hooks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">({'async':</span> <span class="pre">True,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">hook</span> <span class="pre">notification',</span> <span class="pre">'event':</span> <span class="pre">'Notification',</span> <span class="pre">'matcher':</span> <span class="pre">'',</span> <span class="pre">'why':</span> <span class="pre">'a</span> <span class="pre">session</span> <span class="pre">is</span> <span class="pre">asking</span> <span class="pre">its</span> <span class="pre">human</span> <span class="pre">for</span> <span class="pre">something'},</span> <span class="pre">{'async':</span> <span class="pre">True,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">hook</span> <span class="pre">stop',</span> <span class="pre">'event':</span> <span class="pre">'Stop',</span> <span class="pre">'matcher':</span> <span class="pre">'',</span> <span class="pre">'why':</span> <span class="pre">'a</span> <span class="pre">session</span> <span class="pre">finished</span> <span class="pre">a</span> <span class="pre">turn;</span> <span class="pre">record</span> <span class="pre">its</span> <span class="pre">last</span> <span class="pre">words'},</span> <span class="pre">{'async':</span> <span class="pre">False,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">--brief',</span> <span class="pre">'event':</span> <span class="pre">'SessionStart',</span> <span class="pre">'matcher':</span> <span class="pre">'startup|clear|compact',</span> <span class="pre">'why':</span> <span class="pre">'re-print</span> <span class="pre">the</span> <span class="pre">roster</span> <span class="pre">after</span> <span class="pre">every</span> <span class="pre">start,</span> <span class="pre">clear</span> <span class="pre">and</span> <span class="pre">compaction'})</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/init.html#merged_hooks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.init.merged_hooks" title="Link to this definition"></a></dt>
+<dd><p>A copy of <code class="docutils literal notranslate"><span class="pre">settings</span></code> with every hook present, and the ones that were added.</p>
+<p>Additive by construction: an event’s existing groups are kept, a group with the same
+matcher gains one command, and a command already registered anywhere under that event
+is not registered twice. Nothing is ever removed – the file belongs to the user, and
+the desktop notifier already on their <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook has to keep working.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="p">,</span> <span class="n">added</span> <span class="o">=</span> <span class="n">merged_hooks</span><span class="p">({},</span> <span class="n">HOOKS</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="p">[</span><span class="s1">'hooks'</span><span class="p">][</span><span class="s1">'Stop'</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">'hooks'</span><span class="p">]</span>
+<span class="go">[{'type': 'command', 'command': 'crowsnest hook stop', 'async': True}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="s1">'command'</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">added</span><span class="p">]</span>
+<span class="go">['crowsnest hook stop']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">merged_hooks</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">HOOKS</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.init.settings_snippet">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">settings_snippet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hooks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">({'async':</span> <span class="pre">True,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">hook</span> <span class="pre">notification',</span> <span class="pre">'event':</span> <span class="pre">'Notification',</span> <span class="pre">'matcher':</span> <span class="pre">'',</span> <span class="pre">'why':</span> <span class="pre">'a</span> <span class="pre">session</span> <span class="pre">is</span> <span class="pre">asking</span> <span class="pre">its</span> <span class="pre">human</span> <span class="pre">for</span> <span class="pre">something'},</span> <span class="pre">{'async':</span> <span class="pre">True,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">hook</span> <span class="pre">stop',</span> <span class="pre">'event':</span> <span class="pre">'Stop',</span> <span class="pre">'matcher':</span> <span class="pre">'',</span> <span class="pre">'why':</span> <span class="pre">'a</span> <span class="pre">session</span> <span class="pre">finished</span> <span class="pre">a</span> <span class="pre">turn;</span> <span class="pre">record</span> <span class="pre">its</span> <span class="pre">last</span> <span class="pre">words'},</span> <span class="pre">{'async':</span> <span class="pre">False,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">--brief',</span> <span class="pre">'event':</span> <span class="pre">'SessionStart',</span> <span class="pre">'matcher':</span> <span class="pre">'startup|clear|compact',</span> <span class="pre">'why':</span> <span class="pre">'re-print</span> <span class="pre">the</span> <span class="pre">roster</span> <span class="pre">after</span> <span class="pre">every</span> <span class="pre">start,</span> <span class="pre">clear</span> <span class="pre">and</span> <span class="pre">compaction'})</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/init.html#settings_snippet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.init.settings_snippet" title="Link to this definition"></a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">settings.json</span></code> fragment these hooks amount to, for a human to paste.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings_snippet</span><span class="p">(</span><span class="n">HOOKS</span><span class="p">[</span><span class="mi">2</span><span class="p">:])[</span><span class="s1">'hooks'</span><span class="p">][</span><span class="s1">'SessionStart'</span><span class="p">]</span>
+<span class="go">[{'matcher': 'startup|clear|compact', 'hooks': [{'type': 'command', 'command': 'crowsnest --brief'}]}]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.init.template_path">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">template_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/crowsnest/init.html#template_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.init.template_path" title="Link to this definition"></a></dt>
+<dd><p>The bundled <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> a watching session is given.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.init.template_text">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">template_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/init.html#template_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.init.template_text" title="Link to this definition"></a></dt>
+<dd><p>The text of the bundled <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">template_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">'# The lookout session'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hook.html" class="btn btn-neutral float-left" title="crowsnest.hook" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ledger.html" class="btn btn-neutral float-right" title="crowsnest.ledger" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

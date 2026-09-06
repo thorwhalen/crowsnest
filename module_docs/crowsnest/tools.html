@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.tools &mdash; crowsnest 0.0.9 documentation</title>
+  <title>crowsnest.tools &mdash; crowsnest 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
@@ -61,6 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
 <li class="toctree-l1"><a class="reference internal" href="spawn.html">crowsnest.spawn</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.tools.brief"><code class="docutils literal notranslate"><span class="pre">brief()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.tools.report"><code class="docutils literal notranslate"><span class="pre">report()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.tools.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.tools.roster"><code class="docutils literal notranslate"><span class="pre">roster()</span></code></a></li>
@@ -106,6 +108,18 @@ here prints, exits, or knows which surface called it.</p>
 <span class="go">{'waiting': 0, 'busy': 0, 'shell': 0, 'idle': 0, 'other': 0}</span>
 </pre></div>
 </div>
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tools.brief">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">brief</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">digests_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/tools.html#brief"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.brief" title="Link to this definition"></a></dt>
+<dd><p>openloops’ digest for one live session: what it has been doing, dated, in its words.</p>
+<p>A digest is written by openloops when a session’s turn ends, so this answers “what has
+this session been up to” without reading a transcript at all, and without spending a
+turn of that session’s context. It is a lookup, not a second reader: the digest’s
+content is openloops’ business, and <code class="docutils literal notranslate"><span class="pre">digests_store</span></code> is the seam it reads from.</p>
+<p><code class="docutils literal notranslate"><span class="pre">digest</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> when openloops has not digested this session yet – a normal
+state for a session started minutes ago – and <code class="docutils literal notranslate"><span class="pre">why</span></code> says so.</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.tools.report">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">made_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'crowsnest'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/tools.html#report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.report" title="Link to this definition"></a></dt>

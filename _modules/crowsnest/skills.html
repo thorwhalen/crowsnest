@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.skills &mdash; crowsnest 0.0.9 documentation</title>
+  <title>crowsnest.skills &mdash; crowsnest 0.0.10 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
+      <script src="../../_static/documentation_options.js?v=a83ce22a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -86,7 +87,13 @@
            <div itemprop="articleBody">
              
   <h1>Source code for crowsnest.skills</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""The agent-facing surface: one skill, one subagent, and the command that installs them.</span>
+<span></span><span class="sd">"""The agent-facing surface: the skills, the subagent, and the command that installs them.</span>
+
+<span class="sd">Four skills and one subagent, discovered from the directories rather than listed here, so</span>
+<span class="sd">adding one is adding a directory: ``crowsnest`` (be the lookout), ``crowsnest-dispatch``</span>
+<span class="sd">(hand work to a session), ``crowsnest-report`` (the page and its comment loop),</span>
+<span class="sd">``crowsnest-worker`` (for every *other* session: how to answer the lookout in five lines),</span>
+<span class="sd">and the ``crowsnest-scout`` subagent that does the reading in a fresh context.</span>
 
 <span class="sd">The ``crowsnest`` command is plumbing. What a person wants is a session that runs it and</span>
 <span class="sd">says what matters -- and that is a markdown file an agent host loads, shipped inside the</span>
@@ -97,7 +104,7 @@
 <span class="sd">``conflict`` and stays as it was until ``force=True``.</span>
 
 <span class="sd">&gt;&gt;&gt; sorted(asset.name for asset in bundled())</span>
-<span class="sd">['crowsnest', 'crowsnest-scout']</span>
+<span class="sd">['crowsnest', 'crowsnest-dispatch', 'crowsnest-report', 'crowsnest-scout', 'crowsnest-worker']</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -204,7 +211,7 @@
     <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Make the bundled skill and subagent visible to Claude Code. Idempotent.</span>
+<span class="w">    </span><span class="sd">"""Make the bundled skills and the subagent visible to Claude Code. Idempotent.</span>
 
 <span class="sd">    Links each into ``target`` (default ``$CLAUDE_CONFIG_DIR`` or ``~/.claude``). Returns</span>
 <span class="sd">    the plan: one row per asset with its action -- ``install``, ``ok`` (already ours) or</span>
@@ -212,7 +219,7 @@
 
 <span class="sd">    &gt;&gt;&gt; plan = install_skills(target='/nonexistent/host', dry_run=True)</span>
 <span class="sd">    &gt;&gt;&gt; plan['counts']</span>
-<span class="sd">    {'install': 2, 'ok': 0, 'conflict': 0}</span>
+<span class="sd">    {'install': 5, 'ok': 0, 'conflict': 0}</span>
 <span class="sd">    """</span>
     <span class="n">host</span> <span class="o">=</span> <span class="n">claude_home</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
     <span class="n">link</span> <span class="o">=</span> <span class="n">_symlinks_work</span><span class="p">()</span>
