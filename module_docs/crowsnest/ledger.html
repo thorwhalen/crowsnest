@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.ledger &mdash; crowsnest 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.paths" href="paths.html" />
+    <link rel="prev" title="crowsnest.hook" href="hook.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.ledger</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.FIELDS"><code class="docutils literal notranslate"><span class="pre">FIELDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.FREE_HEADING"><code class="docutils literal notranslate"><span class="pre">FREE_HEADING</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.LEDGER_DIRNAME"><code class="docutils literal notranslate"><span class="pre">LEDGER_DIRNAME</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.STAMP_SEP"><code class="docutils literal notranslate"><span class="pre">STAMP_SEP</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.ledger_dir"><code class="docutils literal notranslate"><span class="pre">ledger_dir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.ledger_path"><code class="docutils literal notranslate"><span class="pre">ledger_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.list_ledgers"><code class="docutils literal notranslate"><span class="pre">list_ledgers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.read_ledger"><code class="docutils literal notranslate"><span class="pre">read_ledger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.safe_name"><code class="docutils literal notranslate"><span class="pre">safe_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.split_stamp"><code class="docutils literal notranslate"><span class="pre">split_stamp()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.stamped"><code class="docutils literal notranslate"><span class="pre">stamped()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.ledger.update_ledger"><code class="docutils literal notranslate"><span class="pre">update_ledger()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.ledger</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/ledger.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.ledger">
+<span id="crowsnest-ledger"></span><h1>crowsnest.ledger<a class="headerlink" href="#module-crowsnest.ledger" title="Link to this heading"></a></h1>
+<p>The ledger: the durable page a session leaves for the watcher, one file per session.</p>
+<p>The roster says a session is idle; it does not say what it decided, what it is still
+waiting on a human for, or what it was doing three clears ago. A transcript says all of
+that but costs a read of megabytes and a model’s attention to interpret. The ledger is
+the third thing: a small markdown file per session, written by the session itself and by
+the <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook, that a watcher reads just in time and a human can open in an editor.</p>
+<p>The file is deliberately dull:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># lookout
+
+state: working
+last asked: 2026-09-06T18:12:00+00:00 · fix the widget
+last said: 2026-09-06T18:14:22+00:00 · Fixed and merged; PR 12 is green.
+open questions:
+- squash or rebase for the release?
+decisions:
+- the ledger lives under ~/.local/share/crowsnest
+
+## Notes
+
+Anything at all. Nothing in crowsnest ever rewrites this part.
+</pre></div>
+</div>
+<p>Three regions, and which is whose is the whole design:</p>
+<p><em>The preamble</em> – everything above the first field – and <em>the free part</em> – everything
+from the first <code class="docutils literal notranslate"><span class="pre">##</span></code> heading to the end of the file – are preserved byte for byte by
+<a class="reference internal" href="#crowsnest.ledger.update_ledger" title="crowsnest.ledger.update_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">update_ledger()</span></code></a>. The free part is where a session writes prose it wants to survive
+its own context, and where a human answers.</p>
+<p><em>The fields</em> are the five in <a class="reference internal" href="#crowsnest.ledger.FIELDS" title="crowsnest.ledger.FIELDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">FIELDS</span></code></a>, in that order. <code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">asked</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span>
+<span class="pre">said</span></code> are mechanical: the <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook writes them from the transcript tail (see
+<a class="reference internal" href="hook.html#module-crowsnest.hook" title="crowsnest.hook"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.hook</span></code></a>), stamped with the time, so they are true without anyone deciding
+anything. <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">open</span> <span class="pre">questions</span></code> and <code class="docutils literal notranslate"><span class="pre">decisions</span></code> are judgements, and only the
+session whose ledger it is writes those – a watcher that authored them would be
+inventing the thing it went there to learn. A field is one line when its value is one
+line and a bulleted list when it is several; an empty field is the bare label, so a human
+opening the file always sees where to type.</p>
+<p><a class="reference internal" href="#crowsnest.ledger.update_ledger" title="crowsnest.ledger.update_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">update_ledger()</span></code></a> rewrites <em>only</em> the fields it is given and leaves every other byte
+of the file alone, which is what makes it safe for a hook and a human to write the same
+file minutes apart.</p>
+<p>The directory is <code class="docutils literal notranslate"><span class="pre">&lt;crowsnest</span> <span class="pre">data</span> <span class="pre">dir&gt;/ledger</span></code> (see <a class="reference internal" href="paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.paths</span></code></a>), and every
+function here takes <code class="docutils literal notranslate"><span class="pre">ledger_dir=</span></code> so a test – or a second machine’s copy – points
+somewhere else.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">where</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">update_ledger</span><span class="p">(</span><span class="s1">'lookout'</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s1">'working'</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">where</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page</span> <span class="o">=</span> <span class="n">update_ledger</span><span class="p">(</span><span class="s1">'lookout'</span><span class="p">,</span> <span class="n">decisions</span><span class="o">=</span><span class="p">[</span><span class="s1">'ship on green'</span><span class="p">],</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">where</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page</span><span class="p">[</span><span class="s1">'fields'</span><span class="p">][</span><span class="s1">'state'</span><span class="p">],</span> <span class="n">page</span><span class="p">[</span><span class="s1">'fields'</span><span class="p">][</span><span class="s1">'decisions'</span><span class="p">]</span>
+<span class="go">('working', '- ship on green')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">list_ledgers</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">where</span><span class="p">)]</span>
+<span class="go">['lookout']</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.ledger.FIELDS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('state',</span> <span class="pre">'last_asked',</span> <span class="pre">'last_said',</span> <span class="pre">'open_questions',</span> <span class="pre">'decisions')</span></span><a class="headerlink" href="#crowsnest.ledger.FIELDS" title="Link to this definition"></a></dt>
+<dd><p>The fixed fields, in the order they are written. Two are mechanical (<code class="docutils literal notranslate"><span class="pre">last_asked</span></code>,
+<code class="docutils literal notranslate"><span class="pre">last_said</span></code>: the hook writes them from the transcript) and three are judgements
+(<code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">open_questions</span></code>, <code class="docutils literal notranslate"><span class="pre">decisions</span></code>: the session itself writes those).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.ledger.FREE_HEADING">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">FREE_HEADING</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'##</span> <span class="pre">Notes'</span></span><a class="headerlink" href="#crowsnest.ledger.FREE_HEADING" title="Link to this definition"></a></dt>
+<dd><p>Everything from the first heading at this level down is the human’s, and is never
+rewritten. A new ledger is created with this one heading and nothing under it.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.ledger.LEDGER_DIRNAME">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">LEDGER_DIRNAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ledger'</span></span><a class="headerlink" href="#crowsnest.ledger.LEDGER_DIRNAME" title="Link to this definition"></a></dt>
+<dd><p>The subdirectory of the data directory that holds the ledgers.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.ledger.STAMP_SEP">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">STAMP_SEP</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'</span> <span class="pre">·</span> <span class="pre">'</span></span><a class="headerlink" href="#crowsnest.ledger.STAMP_SEP" title="Link to this definition"></a></dt>
+<dd><p>What separates a field’s timestamp from its text, in the fields that carry one.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.ledger_dir">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">ledger_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/crowsnest/ledger.html#ledger_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.ledger_dir" title="Link to this definition"></a></dt>
+<dd><p>Where ledgers live: <code class="docutils literal notranslate"><span class="pre">path</span></code> when given, else <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/ledger</span></code>.</p>
+<p>The directory is not created here; <a class="reference internal" href="#crowsnest.ledger.update_ledger" title="crowsnest.ledger.update_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">update_ledger()</span></code></a> creates it when it writes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.ledger_path">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">ledger_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/crowsnest/ledger.html#ledger_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.ledger_path" title="Link to this definition"></a></dt>
+<dd><p>The file one session’s ledger lives in, whether or not it exists yet.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ledger_path</span><span class="p">(</span><span class="s1">'lookout'</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="s1">'/x/y'</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+<span class="go">'/x/y/lookout.md'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.list_ledgers">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">list_ledgers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/ledger.html#list_ledgers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.list_ledgers" title="Link to this definition"></a></dt>
+<dd><p>Every ledger, most recently written first: name, path, state, and how old it is.</p>
+<p>The cheap sweep. A watcher runs this to see which sessions have said anything lately
+and reads only the ledgers that matter.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.read_ledger">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">read_ledger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/ledger.html#read_ledger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.read_ledger" title="Link to this definition"></a></dt>
+<dd><p>One session’s ledger as a JSON-able dict; a shaped empty one when there is none.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fields</span></code> always carries all of <a class="reference internal" href="#crowsnest.ledger.FIELDS" title="crowsnest.ledger.FIELDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">FIELDS</span></code></a>, missing ones as <code class="docutils literal notranslate"><span class="pre">''</span></code>, so a caller
+never has to test for a key. <code class="docutils literal notranslate"><span class="pre">free</span></code> is the part below the first heading, and
+<code class="docutils literal notranslate"><span class="pre">text</span></code> is the file exactly as it is on disk.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.safe_name">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">safe_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/ledger.html#safe_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.safe_name" title="Link to this definition"></a></dt>
+<dd><p>A session name as a file stem: anything outside <code class="docutils literal notranslate"><span class="pre">[A-Za-z0-9._-]</span></code> becomes a dash.</p>
+<p>Session names come from <code class="docutils literal notranslate"><span class="pre">claude</span> <span class="pre">-n</span> <span class="pre">&lt;name&gt;</span></code> and are not constrained to be filenames.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">safe_name</span><span class="p">(</span><span class="s1">'cn/xa needs you'</span><span class="p">)</span>
+<span class="go">'cn-xa-needs-you'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">safe_name</span><span class="p">(</span><span class="s1">'  '</span><span class="p">)</span>
+<span class="go">'unnamed'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.split_stamp">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">split_stamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/ledger.html#split_stamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.split_stamp" title="Link to this definition"></a></dt>
+<dd><p>A stamped value back into <code class="docutils literal notranslate"><span class="pre">(when,</span> <span class="pre">what)</span></code>; <code class="docutils literal notranslate"><span class="pre">('',</span> <span class="pre">value)</span></code> when it carries no time.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">split_stamp</span><span class="p">(</span><span class="s1">'2026-09-06T18:14:22+00:00 · Fixed and merged.'</span><span class="p">)</span>
+<span class="go">('2026-09-06T18:14:22+00:00', 'Fixed and merged.')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">split_stamp</span><span class="p">(</span><span class="s1">'just words'</span><span class="p">)</span>
+<span class="go">('', 'just words')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.stamped">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">stamped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/ledger.html#stamped"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.stamped" title="Link to this definition"></a></dt>
+<dd><p>A one-line field value carrying its time: <code class="docutils literal notranslate"><span class="pre">&lt;when&gt;</span> <span class="pre">·</span> <span class="pre">&lt;what&gt;</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stamped</span><span class="p">(</span><span class="s1">'Fixed and merged.'</span><span class="p">,</span> <span class="s1">'2026-09-06T18:14:22+00:00'</span><span class="p">)</span>
+<span class="go">'2026-09-06T18:14:22+00:00 · Fixed and merged.'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stamped</span><span class="p">(</span><span class="s1">'two</span><span class="se">\n</span><span class="s1">lines'</span><span class="p">)</span>
+<span class="go">'two lines'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.update_ledger">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">update_ledger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fields</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/ledger.html#update_ledger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.update_ledger" title="Link to this definition"></a></dt>
+<dd><p>Rewrite the named fields of one ledger and leave every other byte of it alone.</p>
+<p>Each value is a string (one line, or several) or a sequence of strings (rendered as
+bullets); <code class="docutils literal notranslate"><span class="pre">None</span></code> means <em>do not touch this field</em>, and <code class="docutils literal notranslate"><span class="pre">''</span></code> means <em>empty it</em>. A
+field the file does not yet have is appended after the ones it does, above the free
+part. The file is created from a template when it is missing.</p>
+<p>Raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> on a name that is not one of <a class="reference internal" href="#crowsnest.ledger.FIELDS" title="crowsnest.ledger.FIELDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">FIELDS</span></code></a> – a typo that
+silently wrote nothing would be worse than a stack trace.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hook.html" class="btn btn-neutral float-left" title="crowsnest.hook" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="paths.html" class="btn btn-neutral float-right" title="crowsnest.paths" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

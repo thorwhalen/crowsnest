@@ -1,0 +1,484 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.ledger &mdash; crowsnest 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.ledger</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.ledger</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The ledger: the durable page a session leaves for the watcher, one file per session.</span>
+
+<span class="sd">The roster says a session is idle; it does not say what it decided, what it is still</span>
+<span class="sd">waiting on a human for, or what it was doing three clears ago. A transcript says all of</span>
+<span class="sd">that but costs a read of megabytes and a model's attention to interpret. The ledger is</span>
+<span class="sd">the third thing: a small markdown file per session, written by the session itself and by</span>
+<span class="sd">the ``Stop`` hook, that a watcher reads just in time and a human can open in an editor.</span>
+
+<span class="sd">The file is deliberately dull::</span>
+
+<span class="sd">    # lookout</span>
+
+<span class="sd">    state: working</span>
+<span class="sd">    last asked: 2026-09-06T18:12:00+00:00 · fix the widget</span>
+<span class="sd">    last said: 2026-09-06T18:14:22+00:00 · Fixed and merged; PR 12 is green.</span>
+<span class="sd">    open questions:</span>
+<span class="sd">    - squash or rebase for the release?</span>
+<span class="sd">    decisions:</span>
+<span class="sd">    - the ledger lives under ~/.local/share/crowsnest</span>
+
+<span class="sd">    ## Notes</span>
+
+<span class="sd">    Anything at all. Nothing in crowsnest ever rewrites this part.</span>
+
+<span class="sd">Three regions, and which is whose is the whole design:</span>
+
+<span class="sd">*The preamble* -- everything above the first field -- and *the free part* -- everything</span>
+<span class="sd">from the first ``##`` heading to the end of the file -- are preserved byte for byte by</span>
+<span class="sd">:func:`update_ledger`. The free part is where a session writes prose it wants to survive</span>
+<span class="sd">its own context, and where a human answers.</span>
+
+<span class="sd">*The fields* are the five in :data:`FIELDS`, in that order. ``last asked`` and ``last</span>
+<span class="sd">said`` are mechanical: the ``Stop`` hook writes them from the transcript tail (see</span>
+<span class="sd">:mod:`crowsnest.hook`), stamped with the time, so they are true without anyone deciding</span>
+<span class="sd">anything. ``state``, ``open questions`` and ``decisions`` are judgements, and only the</span>
+<span class="sd">session whose ledger it is writes those -- a watcher that authored them would be</span>
+<span class="sd">inventing the thing it went there to learn. A field is one line when its value is one</span>
+<span class="sd">line and a bulleted list when it is several; an empty field is the bare label, so a human</span>
+<span class="sd">opening the file always sees where to type.</span>
+
+<span class="sd">:func:`update_ledger` rewrites *only* the fields it is given and leaves every other byte</span>
+<span class="sd">of the file alone, which is what makes it safe for a hook and a human to write the same</span>
+<span class="sd">file minutes apart.</span>
+
+<span class="sd">The directory is ``&lt;crowsnest data dir&gt;/ledger`` (see :mod:`crowsnest.paths`), and every</span>
+<span class="sd">function here takes ``ledger_dir=`` so a test -- or a second machine's copy -- points</span>
+<span class="sd">somewhere else.</span>
+
+<span class="sd">&gt;&gt;&gt; import tempfile</span>
+<span class="sd">&gt;&gt;&gt; where = tempfile.mkdtemp()</span>
+<span class="sd">&gt;&gt;&gt; _ = update_ledger('lookout', state='working', ledger_dir=where)</span>
+<span class="sd">&gt;&gt;&gt; page = update_ledger('lookout', decisions=['ship on green'], ledger_dir=where)</span>
+<span class="sd">&gt;&gt;&gt; page['fields']['state'], page['fields']['decisions']</span>
+<span class="sd">('working', '- ship on green')</span>
+<span class="sd">&gt;&gt;&gt; [row['name'] for row in list_ledgers(ledger_dir=where)]</span>
+<span class="sd">['lookout']</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"FIELDS"</span><span class="p">,</span>
+    <span class="s2">"FREE_HEADING"</span><span class="p">,</span>
+    <span class="s2">"LEDGER_DIRNAME"</span><span class="p">,</span>
+    <span class="s2">"STAMP_SEP"</span><span class="p">,</span>
+    <span class="s2">"ledger_dir"</span><span class="p">,</span>
+    <span class="s2">"ledger_path"</span><span class="p">,</span>
+    <span class="s2">"list_ledgers"</span><span class="p">,</span>
+    <span class="s2">"read_ledger"</span><span class="p">,</span>
+    <span class="s2">"safe_name"</span><span class="p">,</span>
+    <span class="s2">"split_stamp"</span><span class="p">,</span>
+    <span class="s2">"stamped"</span><span class="p">,</span>
+    <span class="s2">"update_ledger"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: The subdirectory of the data directory that holds the ledgers.</span>
+<span class="n">LEDGER_DIRNAME</span> <span class="o">=</span> <span class="s2">"ledger"</span>
+
+<span class="c1">#: The fixed fields, in the order they are written. Two are mechanical (``last_asked``,</span>
+<span class="c1">#: ``last_said``: the hook writes them from the transcript) and three are judgements</span>
+<span class="c1">#: (``state``, ``open_questions``, ``decisions``: the session itself writes those).</span>
+<span class="n">FIELDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"state"</span><span class="p">,</span> <span class="s2">"last_asked"</span><span class="p">,</span> <span class="s2">"last_said"</span><span class="p">,</span> <span class="s2">"open_questions"</span><span class="p">,</span> <span class="s2">"decisions"</span><span class="p">)</span>
+
+<span class="c1">#: Everything from the first heading at this level down is the human's, and is never</span>
+<span class="c1">#: rewritten. A new ledger is created with this one heading and nothing under it.</span>
+<span class="n">FREE_HEADING</span> <span class="o">=</span> <span class="s2">"## Notes"</span>
+
+<span class="c1">#: What separates a field's timestamp from its text, in the fields that carry one.</span>
+<span class="n">STAMP_SEP</span> <span class="o">=</span> <span class="s2">" · "</span>
+
+<span class="n">_LABELS</span> <span class="o">=</span> <span class="p">{</span><span class="n">field</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">):</span> <span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">FIELDS</span><span class="p">}</span>
+<span class="n">_FIELD_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^("</span> <span class="o">+</span> <span class="s2">"|"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_LABELS</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">"):[ \t]?(.*)$"</span><span class="p">)</span>
+<span class="n">_HEADING_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^#{2,}\s"</span><span class="p">)</span>
+<span class="n">_UNSAFE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^A-Za-z0-9._-]+"</span><span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Where</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dir</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="n">LEDGER_DIRNAME</span>
+
+
+<div class="viewcode-block" id="ledger_dir">
+<a class="viewcode-back" href="../../module_docs/crowsnest/ledger.html#crowsnest.ledger_dir">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ledger_dir</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Where ledgers live: ``path`` when given, else ``&lt;data dir&gt;/ledger``.</span>
+
+<span class="sd">    The directory is not created here; :func:`update_ledger` creates it when it writes.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_dir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="safe_name">
+<a class="viewcode-back" href="../../module_docs/crowsnest/ledger.html#crowsnest.safe_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">safe_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A session name as a file stem: anything outside ``[A-Za-z0-9._-]`` becomes a dash.</span>
+
+<span class="sd">    Session names come from ``claude -n &lt;name&gt;`` and are not constrained to be filenames.</span>
+
+<span class="sd">    &gt;&gt;&gt; safe_name('cn/xa needs you')</span>
+<span class="sd">    'cn-xa-needs-you'</span>
+<span class="sd">    &gt;&gt;&gt; safe_name('  ')</span>
+<span class="sd">    'unnamed'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_UNSAFE_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"-."</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"unnamed"</span></div>
+
+
+
+<div class="viewcode-block" id="ledger_path">
+<a class="viewcode-back" href="../../module_docs/crowsnest/ledger.html#crowsnest.ledger_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ledger_path</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The file one session's ledger lives in, whether or not it exists yet.</span>
+
+<span class="sd">    &gt;&gt;&gt; ledger_path('lookout', ledger_dir='/x/y').as_posix()</span>
+<span class="sd">    '/x/y/lookout.md'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_dir</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">safe_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">.md"</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Stamped values</span>
+
+
+<div class="viewcode-block" id="stamped">
+<a class="viewcode-back" href="../../module_docs/crowsnest/ledger.html#crowsnest.stamped">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stamped</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A one-line field value carrying its time: ``&lt;when&gt; · &lt;what&gt;``.</span>
+
+<span class="sd">    &gt;&gt;&gt; stamped('Fixed and merged.', '2026-09-06T18:14:22+00:00')</span>
+<span class="sd">    '2026-09-06T18:14:22+00:00 · Fixed and merged.'</span>
+<span class="sd">    &gt;&gt;&gt; stamped('two\\nlines')</span>
+<span class="sd">    'two lines'</span>
+<span class="sd">    """</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">at</span><span class="si">}{</span><span class="n">STAMP_SEP</span><span class="si">}{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">at</span> <span class="k">else</span> <span class="n">text</span></div>
+
+
+
+<div class="viewcode-block" id="split_stamp">
+<a class="viewcode-back" href="../../module_docs/crowsnest/ledger.html#crowsnest.split_stamp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_stamp</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A stamped value back into ``(when, what)``; ``('', value)`` when it carries no time.</span>
+
+<span class="sd">    &gt;&gt;&gt; split_stamp('2026-09-06T18:14:22+00:00 · Fixed and merged.')</span>
+<span class="sd">    ('2026-09-06T18:14:22+00:00', 'Fixed and merged.')</span>
+<span class="sd">    &gt;&gt;&gt; split_stamp('just words')</span>
+<span class="sd">    ('', 'just words')</span>
+<span class="sd">    """</span>
+    <span class="n">when</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">what</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">STAMP_SEP</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">when</span><span class="p">,</span> <span class="n">what</span><span class="p">)</span> <span class="k">if</span> <span class="n">sep</span> <span class="k">else</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The format</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""A ledger's three regions: the preamble, the fields with their raw lines, the free part.</span>
+
+<span class="sd">    A field's raw lines are kept exactly as they were read, so a field nobody asked to</span>
+<span class="sd">    change is written back byte for byte. Only a label in :data:`FIELDS` opens a field;</span>
+<span class="sd">    any other line joins whatever came before it.</span>
+<span class="sd">    """</span>
+    <span class="n">preamble</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">free</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">_HEADING_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="n">free</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="n">index</span><span class="p">:]</span>
+            <span class="k">break</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">_FIELD_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">_LABELS</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)],</span> <span class="p">[</span><span class="n">line</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="n">fields</span><span class="p">:</span>
+            <span class="n">fields</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">preamble</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fields</span><span class="p">:</span>  <span class="c1"># the blank line before the free part is the free part's, not a field's</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">moved</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">last</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">last</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="n">moved</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">last</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+        <span class="n">free</span> <span class="o">=</span> <span class="n">moved</span> <span class="o">+</span> <span class="n">free</span>
+    <span class="k">return</span> <span class="n">preamble</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">free</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_value_of</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The value a field's raw lines carry, without its label and without trailing blanks."""</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="n">_FIELD_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  <span class="c1"># raw[0] is how the field was found</span>
+    <span class="n">rest</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+    <span class="k">while</span> <span class="n">rest</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rest</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="n">rest</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rest</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">head</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(([</span><span class="n">head</span><span class="p">]</span> <span class="k">if</span> <span class="n">head</span> <span class="k">else</span> <span class="p">[])</span> <span class="o">+</span> <span class="n">rest</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_render</span><span class="p">(</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The lines one field occupies. A sequence becomes bullets; one plain line stays inline.</span>
+
+<span class="sd">    &gt;&gt;&gt; _render('state', 'working')</span>
+<span class="sd">    ['state: working']</span>
+<span class="sd">    &gt;&gt;&gt; _render('decisions', ['ship on green', 'squash'])</span>
+<span class="sd">    ['decisions:', '- ship on green', '- squash']</span>
+<span class="sd">    &gt;&gt;&gt; _render('open questions', '')</span>
+<span class="sd">    ['open questions:']</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="p">(</span><span class="n">value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+    <span class="k">while</span> <span class="n">parts</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">:"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">:"</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_template</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">:"</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">_LABELS</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="se">\n\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n\n</span><span class="si">{</span><span class="n">FREE_HEADING</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Replace the file in one step, so a hook killed mid-write leaves the old one intact."""</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">".tmp"</span><span class="p">)</span>
+    <span class="n">tmp</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Read, write, list</span>
+
+
+<div class="viewcode-block" id="read_ledger">
+<a class="viewcode-back" href="../../module_docs/crowsnest/ledger.html#crowsnest.read_ledger">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One session's ledger as a JSON-able dict; a shaped empty one when there is none.</span>
+
+<span class="sd">    ``fields`` always carries all of :data:`FIELDS`, missing ones as ``''``, so a caller</span>
+<span class="sd">    never has to test for a key. ``free`` is the part below the first heading, and</span>
+<span class="sd">    ``text`` is the file exactly as it is on disk.</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">ledger_path</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+        <span class="n">updated_at</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span>
+        <span class="n">exists</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="n">text</span><span class="p">,</span> <span class="n">updated_at</span><span class="p">,</span> <span class="n">exists</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">free</span> <span class="o">=</span> <span class="n">_split</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">FIELDS</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">values</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">_value_of</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">raw</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">})</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+        <span class="s2">"exists"</span><span class="p">:</span> <span class="n">exists</span><span class="p">,</span>
+        <span class="s2">"updated_at"</span><span class="p">:</span> <span class="n">updated_at</span><span class="p">,</span>
+        <span class="s2">"fields"</span><span class="p">:</span> <span class="n">values</span><span class="p">,</span>
+        <span class="s2">"free"</span><span class="p">:</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">free</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">),</span>
+        <span class="s2">"text"</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="update_ledger">
+<a class="viewcode-back" href="../../module_docs/crowsnest/ledger.html#crowsnest.update_ledger">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Rewrite the named fields of one ledger and leave every other byte of it alone.</span>
+
+<span class="sd">    Each value is a string (one line, or several) or a sequence of strings (rendered as</span>
+<span class="sd">    bullets); ``None`` means *do not touch this field*, and ``''`` means *empty it*. A</span>
+<span class="sd">    field the file does not yet have is appended after the ones it does, above the free</span>
+<span class="sd">    part. The file is created from a template when it is missing.</span>
+
+<span class="sd">    Raises ``ValueError`` on a name that is not one of :data:`FIELDS` -- a typo that</span>
+<span class="sd">    silently wrote nothing would be worse than a stack trace.</span>
+<span class="sd">    """</span>
+    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">FIELDS</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"not a ledger field: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; known: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FIELDS</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">fields</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">ledger_path</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">_template</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">preamble</span><span class="p">,</span> <span class="n">parsed</span><span class="p">,</span> <span class="n">free</span> <span class="o">=</span> <span class="n">_split</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">preamble</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">raw</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="n">_render</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">),</span> <span class="n">wanted</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">wanted</span> <span class="k">else</span> <span class="n">raw</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">FIELDS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">wanted</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">}:</span>
+            <span class="n">lines</span> <span class="o">+=</span> <span class="n">_render</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">),</span> <span class="n">wanted</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="n">free</span>
+    <span class="n">_write</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">read_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="list_ledgers">
+<a class="viewcode-back" href="../../module_docs/crowsnest/ledger.html#crowsnest.list_ledgers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_ledgers</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every ledger, most recently written first: name, path, state, and how old it is.</span>
+
+<span class="sd">    The cheap sweep. A watcher runs this to see which sessions have said anything lately</span>
+<span class="sd">    and reads only the ledgers that matter.</span>
+<span class="sd">    """</span>
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">_dir</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.md"</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">read_ledger</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"name"</span><span class="p">:</span> <span class="n">page</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+                <span class="s2">"path"</span><span class="p">:</span> <span class="n">page</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span>
+                <span class="s2">"state"</span><span class="p">:</span> <span class="n">page</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">][</span><span class="s2">"state"</span><span class="p">],</span>
+                <span class="s2">"last_said"</span><span class="p">:</span> <span class="n">page</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">][</span><span class="s2">"last_said"</span><span class="p">],</span>
+                <span class="s2">"updated_at"</span><span class="p">:</span> <span class="n">page</span><span class="p">[</span><span class="s2">"updated_at"</span><span class="p">],</span>
+                <span class="s2">"age_seconds"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">now</span> <span class="o">-</span> <span class="n">page</span><span class="p">[</span><span class="s2">"updated_at"</span><span class="p">]),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="o">-</span><span class="n">row</span><span class="p">[</span><span class="s2">"updated_at"</span><span class="p">])</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

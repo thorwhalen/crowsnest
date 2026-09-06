@@ -1,0 +1,278 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.hook &mdash; crowsnest 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.ledger" href="ledger.html" />
+    <link rel="prev" title="crowsnest.config" href="config.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.hook</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.DETAIL_LIMIT"><code class="docutils literal notranslate"><span class="pre">DETAIL_LIMIT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.EVENTS"><code class="docutils literal notranslate"><span class="pre">EVENTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.EVENTS_FILENAME"><code class="docutils literal notranslate"><span class="pre">EVENTS_FILENAME</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.LOG_FILENAME"><code class="docutils literal notranslate"><span class="pre">LOG_FILENAME</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.MAX_EVENT_BYTES"><code class="docutils literal notranslate"><span class="pre">MAX_EVENT_BYTES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.MAX_LOG_BYTES"><code class="docutils literal notranslate"><span class="pre">MAX_LOG_BYTES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.append_event"><code class="docutils literal notranslate"><span class="pre">append_event()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.events_path"><code class="docutils literal notranslate"><span class="pre">events_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.handle"><code class="docutils literal notranslate"><span class="pre">handle()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.log_path"><code class="docutils literal notranslate"><span class="pre">log_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.hook.rotate"><code class="docutils literal notranslate"><span class="pre">rotate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.hook</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/hook.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.hook">
+<span id="crowsnest-hook"></span><h1>crowsnest.hook<a class="headerlink" href="#module-crowsnest.hook" title="Link to this heading"></a></h1>
+<p>The push half of the stream: what Claude Code’s own hooks tell crowsnest.</p>
+<p><a class="reference internal" href="watch.html#module-crowsnest.watch" title="crowsnest.watch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.watch</span></code></a> learns things by polling the registry, which is honest but late
+and vague: it can see that a session went from <code class="docutils literal notranslate"><span class="pre">busy</span></code> to <code class="docutils literal notranslate"><span class="pre">idle</span></code>, seconds after the
+fact, and has to read a transcript to guess why. Claude Code already knows both, exactly
+and immediately, and will say so: a <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook fires the moment a turn ends, and a
+<code class="docutils literal notranslate"><span class="pre">Notification</span></code> hook fires the moment a session wants its human – a permission prompt,
+a question, an idle nudge – with the message in hand.</p>
+<p>So crowsnest offers itself as one line on each of those hooks:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">"Stop"</span><span class="p">:</span>         <span class="p">[{</span><span class="s2">"hooks"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"command"</span><span class="p">,</span> <span class="s2">"command"</span><span class="p">:</span> <span class="s2">"crowsnest hook stop"</span><span class="p">}]}]</span>
+<span class="s2">"Notification"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"hooks"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"command"</span><span class="p">,</span> <span class="s2">"command"</span><span class="p">:</span> <span class="s2">"crowsnest hook notification"</span><span class="p">}]}]</span>
+</pre></div>
+</div>
+<p>(<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">init</span></code> is what actually writes those into <code class="docutils literal notranslate"><span class="pre">~/.claude/settings.json</span></code>; this
+module is only what they call.)</p>
+<p><a class="reference internal" href="#crowsnest.hook.handle" title="crowsnest.hook.handle"><code class="xref py py-func docutils literal notranslate"><span class="pre">handle()</span></code></a> does two things and no more. It appends one JSON line to the event log –
+<code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/events.jsonl</span></code>, which <a class="reference internal" href="watch.html#crowsnest.watch.events" title="crowsnest.watch.events"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.watch.events()</span></code></a> tails – and, on a
+stop, writes the two <em>mechanical</em> ledger fields, <code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">asked</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">said</span></code>, from
+the transcript tail. It writes nothing a human or the session would have had to think
+about: <a class="reference internal" href="ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.ledger</span></code></a> says why.</p>
+<p><strong>It runs inside somebody else’s session, so it may not fail and may not be slow.</strong> Every
+error is swallowed into one line in <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/hook.log</span></code> and reported in the returned
+dict; the caller (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code>) prints nothing and exits 0 whatever happens. The
+work is one registry listing and one transcript tail: measured at 3.4 ms on a 1.5 MB
+transcript, and <code class="docutils literal notranslate"><span class="pre">tests/test_hook.py</span></code> holds it under 100 ms.</p>
+<p>What that measurement leaves out is the process. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span> <span class="pre">stop</span></code> end to end was
+375 ms on the machine this was written on, of which 223 ms was starting Python at all and
+about 120 ms was importing <code class="docutils literal notranslate"><span class="pre">openloops</span></code> (and its <code class="docutils literal notranslate"><span class="pre">dol</span></code>) for the transcript reader. If
+that ever needs to come down, the lever is importing <code class="docutils literal notranslate"><span class="pre">openloops.transcripts</span></code> inside
+<a class="reference internal" href="activity.html#crowsnest.activity.read_activity" title="crowsnest.activity.read_activity"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.activity.read_activity()</span></code></a> rather than at the top of the module, which would
+take the notification path – the one that has a human waiting at the end of it – down to
+the interpreter’s own floor. It has not been spent, because a third of a second at the end
+of a turn that took thirty seconds is not what anyone is waiting for.</p>
+<p>Which payload fields this relies on, of the ones the hooks reference documents
+(<a class="reference external" href="https://code.claude.com/docs/en/hooks">https://code.claude.com/docs/en/hooks</a>) – all of them optional here, because a payload
+that is missing one must still produce an event:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">session_id</span></code> – the key the registry is looked up by, for the session’s name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cwd</span></code> – the fallback for the project name when the registry has no record.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transcript_path</span></code> – read (tail only) on <code class="docutils literal notranslate"><span class="pre">stop</span></code>, for what the session was last asked.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">last_assistant_message</span></code> (<code class="docutils literal notranslate"><span class="pre">Stop</span></code>) – the turn’s final text, used verbatim when
+present so the common case needs nothing from the transcript.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code> and <code class="docutils literal notranslate"><span class="pre">notification_type</span></code> (<code class="docutils literal notranslate"><span class="pre">Notification</span></code>) – what the session wants and
+which kind of wanting it is.</p></li>
+</ul>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">where</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">done</span> <span class="o">=</span> <span class="n">handle</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s1">'notification'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">{</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'abc12345'</span><span class="p">,</span> <span class="s1">'cwd'</span><span class="p">:</span> <span class="s1">'/w/demo'</span><span class="p">,</span>
+<span class="gp">... </span>     <span class="s1">'message'</span><span class="p">:</span> <span class="s1">'Claude needs your permission to use Bash'</span><span class="p">,</span>
+<span class="gp">... </span>     <span class="s1">'notification_type'</span><span class="p">:</span> <span class="s1">'permission_prompt'</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">home</span><span class="o">=</span><span class="s1">'/nonexistent-dir-for-doctest'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">events_path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="s1">'events.jsonl'</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">done</span><span class="p">[</span><span class="s1">'ok'</span><span class="p">],</span> <span class="n">done</span><span class="p">[</span><span class="s1">'record'</span><span class="p">][</span><span class="s1">'name'</span><span class="p">],</span> <span class="n">done</span><span class="p">[</span><span class="s1">'record'</span><span class="p">][</span><span class="s1">'project'</span><span class="p">]</span>
+<span class="go">(True, 'abc12345', 'demo')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">done</span><span class="p">[</span><span class="s1">'record'</span><span class="p">][</span><span class="s1">'detail'</span><span class="p">]</span>
+<span class="go">'Claude needs your permission to use Bash'</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.hook.DETAIL_LIMIT">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">DETAIL_LIMIT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">400</span></span><a class="headerlink" href="#crowsnest.hook.DETAIL_LIMIT" title="Link to this definition"></a></dt>
+<dd><p>How much of a message or a final text an event line and a ledger field carry. The
+transcript has the rest; these two files are meant to stay scannable.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.hook.EVENTS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">EVENTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('stop',</span> <span class="pre">'notification')</span></span><a class="headerlink" href="#crowsnest.hook.EVENTS" title="Link to this definition"></a></dt>
+<dd><p>The hook events crowsnest does something with. Any other event name is still logged as
+an event line – a new hook wired up by a hopeful user costs nothing and breaks nothing.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.hook.EVENTS_FILENAME">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">EVENTS_FILENAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'events.jsonl'</span></span><a class="headerlink" href="#crowsnest.hook.EVENTS_FILENAME" title="Link to this definition"></a></dt>
+<dd><p>The event log’s name under the data directory. One JSON object per line, append-only.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.hook.LOG_FILENAME">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">LOG_FILENAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'hook.log'</span></span><a class="headerlink" href="#crowsnest.hook.LOG_FILENAME" title="Link to this definition"></a></dt>
+<dd><p>Where a swallowed error goes, so that “the hook did nothing” is a question with an answer.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.hook.MAX_EVENT_BYTES">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">MAX_EVENT_BYTES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4194304</span></span><a class="headerlink" href="#crowsnest.hook.MAX_EVENT_BYTES" title="Link to this definition"></a></dt>
+<dd><p>When the event log passes this, it is renamed with the time and a new one is started.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.hook.MAX_LOG_BYTES">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">MAX_LOG_BYTES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">262144</span></span><a class="headerlink" href="#crowsnest.hook.MAX_LOG_BYTES" title="Link to this definition"></a></dt>
+<dd><p>The same, for the error log, which should never come near it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.hook.append_event">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">append_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">events_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4194304</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/crowsnest/hook.html#append_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.hook.append_event" title="Link to this definition"></a></dt>
+<dd><p>Append one JSON line to the event log, rotating it first if it has outgrown <code class="docutils literal notranslate"><span class="pre">max_bytes</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.hook.events_path">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">events_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/crowsnest/hook.html#events_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.hook.events_path" title="Link to this definition"></a></dt>
+<dd><p>The event log: <code class="docutils literal notranslate"><span class="pre">path</span></code> when given, else <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/events.jsonl</span></code>.</p>
+<p>Spelled out here rather than in <a class="reference internal" href="paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.paths</span></code></a> because the module that writes
+a kind of data owns where that kind of data goes; <code class="docutils literal notranslate"><span class="pre">paths</span></code> owns only the root.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.hook.handle">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/hook.html#handle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.hook.handle" title="Link to this definition"></a></dt>
+<dd><p>Record one hook event: an event line always, a ledger update on <code class="docutils literal notranslate"><span class="pre">stop</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> is <code class="docutils literal notranslate"><span class="pre">stop</span></code> or <code class="docutils literal notranslate"><span class="pre">notification</span></code> (the <code class="docutils literal notranslate"><span class="pre">hook_event_name</span></code> spelling works
+too; case does not matter). <code class="docutils literal notranslate"><span class="pre">payload</span></code> is the JSON Claude Code wrote on the hook’s
+stdin – see the module docstring for which of its fields are read.</p>
+<p>Returns a JSON-able dict: <code class="docutils literal notranslate"><span class="pre">ok</span></code>, the <code class="docutils literal notranslate"><span class="pre">record</span></code> written, the <code class="docutils literal notranslate"><span class="pre">events</span></code> file it went
+to, and the <code class="docutils literal notranslate"><span class="pre">ledger</span></code> path when one was updated. <strong>Never raises</strong>: a failure comes
+back as <code class="docutils literal notranslate"><span class="pre">ok=False</span></code> with the reason, and is also one line in the hook log.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.hook.log_path">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">log_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/crowsnest/hook.html#log_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.hook.log_path" title="Link to this definition"></a></dt>
+<dd><p>The hook’s own error log: <code class="docutils literal notranslate"><span class="pre">path</span></code> when given, else <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/hook.log</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.hook.rotate">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.hook.</span></span><span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4194304</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/crowsnest/hook.html#rotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.hook.rotate" title="Link to this definition"></a></dt>
+<dd><p>Rename an oversized log out of the way; return where it went, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Simple on purpose: the retired file keeps its name plus the time it was retired, and
+nothing prunes it. A reader that remembers an offset sees the inode change and starts
+again at the beginning of the new file, which is what
+<a class="reference internal" href="watch.html#crowsnest.watch.tail_events" title="crowsnest.watch.tail_events"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.watch.tail_events()</span></code></a> does.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config.html" class="btn btn-neutral float-left" title="crowsnest.config" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ledger.html" class="btn btn-neutral float-right" title="crowsnest.ledger" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

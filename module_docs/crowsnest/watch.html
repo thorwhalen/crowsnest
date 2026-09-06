@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.watch &mdash; crowsnest 0.0.6 documentation</title>
+  <title>crowsnest.watch &mdash; crowsnest 0.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -52,6 +52,8 @@
 <li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
@@ -59,9 +61,14 @@
 <li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.watch</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.DFLT_INTERVAL"><code class="docutils literal notranslate"><span class="pre">DFLT_INTERVAL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.HOOK_KINDS"><code class="docutils literal notranslate"><span class="pre">HOOK_KINDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.WORKING"><code class="docutils literal notranslate"><span class="pre">WORKING</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.diff"><code class="docutils literal notranslate"><span class="pre">diff()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.hook_event"><code class="docutils literal notranslate"><span class="pre">hook_event()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.snapshot"><code class="docutils literal notranslate"><span class="pre">snapshot()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.tail_events"><code class="docutils literal notranslate"><span class="pre">tail_events()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.tail_position"><code class="docutils literal notranslate"><span class="pre">tail_position()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -94,19 +101,28 @@
 <span id="crowsnest-watch"></span><h1>crowsnest.watch<a class="headerlink" href="#module-crowsnest.watch" title="Link to this heading"></a></h1>
 <p>A stream of what changed, so a monitor is told instead of made to poll.</p>
 <p>A session that watches the others has two ways to learn something happened: read the
-roster again and compare, or be handed the difference. This module is the second.
-<a class="reference internal" href="#crowsnest.watch.events" title="crowsnest.watch.events"><code class="xref py py-func docutils literal notranslate"><span class="pre">events()</span></code></a> takes a snapshot of the registry and the transcript files, sleeps, takes
-another, and yields one small dict for every change worth a line: a session started or
-exited, went from busy to idle (with its last words), or started waiting on its human
-(with what for).</p>
-<p>Nothing here is notified by Claude Code; the stream is built from polling the same
-read-only sources as the roster, at an interval a human would not notice. A busy session
-appending to its transcript is <em>not</em> an event – it is what busy means – so a working
-session produces silence until it stops.</p>
+roster again and compare, or be handed the difference. This module is the second, and it
+has two sources.</p>
+<p><strong>The registry diff.</strong> <a class="reference internal" href="#crowsnest.watch.snapshot" title="crowsnest.watch.snapshot"><code class="xref py py-func docutils literal notranslate"><span class="pre">snapshot()</span></code></a> takes the roster, <a class="reference internal" href="#crowsnest.watch.diff" title="crowsnest.watch.diff"><code class="xref py py-func docutils literal notranslate"><span class="pre">diff()</span></code></a> compares it with
+the one before, and every change worth a line becomes one small dict: a session started
+or exited, went from busy to idle (with its last words), or started waiting on its human
+(with what for). Nothing here is notified by anyone; it is the same read-only files the
+roster reads, at an interval a human would not notice. A busy session appending to its
+transcript is <em>not</em> an event – it is what busy means – so a working session produces
+silence until it stops.</p>
+<p><strong>The hook log.</strong> When the user has wired <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code> onto Claude Code’s <code class="docutils literal notranslate"><span class="pre">Stop</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Notification</span></code> hooks (see <a class="reference internal" href="hook.html#module-crowsnest.hook" title="crowsnest.hook"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.hook</span></code></a>), those two moments are <em>pushed</em>
+into <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/events.jsonl</span></code> as they happen. <a class="reference internal" href="#crowsnest.watch.tail_events" title="crowsnest.watch.tail_events"><code class="xref py py-func docutils literal notranslate"><span class="pre">tail_events()</span></code></a> reads what has been
+appended since the last tick and turns it into <code class="docutils literal notranslate"><span class="pre">stopped</span></code> and <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> events. They
+arrive a poll earlier than the registry can notice, and they carry the reason rather than
+a guess at it – so when a hook <code class="docutils literal notranslate"><span class="pre">stopped</span></code> and a polled <code class="docutils literal notranslate"><span class="pre">idle</span></code> describe the same turn
+ending, the polled one is dropped and the hook’s line is the one that is yielded. With no
+hooks installed the file never appears and the stream is exactly the registry diff.</p>
 <p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> prints this stream one line per event, which is the shape Claude
 Code’s own <code class="docutils literal notranslate"><span class="pre">Monitor</span></code> tool consumes: each line becomes a notification in the watching
 session’s conversation.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">events</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="s1">'/nonexistent-dir-for-doctest'</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sleep</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="kc">None</span><span class="p">))</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">events</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="s1">'/nonexistent-dir-for-doctest'</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sleep</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">events_path</span><span class="o">=</span><span class="s1">'/nonexistent-dir-for-doctest/events.jsonl'</span><span class="p">))</span>
 <span class="go">[]</span>
 </pre></div>
 </div>
@@ -117,28 +133,87 @@ session’s conversation.</p>
 to a human and two file listings per tick is nothing.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.watch.HOOK_KINDS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">HOOK_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'notification':</span> <span class="pre">'needs-you',</span> <span class="pre">'stop':</span> <span class="pre">'stopped'}</span></span><a class="headerlink" href="#crowsnest.watch.HOOK_KINDS" title="Link to this definition"></a></dt>
+<dd><p>What a hook event is called in the stream. <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> and <code class="docutils literal notranslate"><span class="pre">stopped</span></code> are named for
+what the human should do about them, which is what the registry statuses are not.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.watch.WORKING">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">WORKING</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('busy',</span> <span class="pre">'shell')</span></span><a class="headerlink" href="#crowsnest.watch.WORKING" title="Link to this definition"></a></dt>
+<dd><p>the session is working. A session
+running shell commands flips between them several times a minute, and neither flip is
+news; a move in or out of the pair still is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Statuses that mean the same thing to a watcher</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.watch.diff">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">before:</span> <span class="pre">dict[str,</span> <span class="pre">~crowsnest.registry.LiveSession],</span> <span class="pre">after:</span> <span class="pre">dict[str,</span> <span class="pre">~crowsnest.registry.LiveSession],</span> <span class="pre">*,</span> <span class="pre">activity:</span> <span class="pre">~collections.abc.Callable[[~crowsnest.registry.LiveSession],</span> <span class="pre">~crowsnest.activity.Activity]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/watch.html#diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.diff" title="Link to this definition"></a></dt>
 <dd><p>The events between two snapshots: started, exited, and every status change.</p>
 <p>A status change is reported under the <em>new</em> status as its kind (<code class="docutils literal notranslate"><span class="pre">idle</span></code>, <code class="docutils literal notranslate"><span class="pre">busy</span></code>,
 <code class="docutils literal notranslate"><span class="pre">waiting</span></code>), with the transcript tail read once to say what it means; an idle
-session whose last words were an error banner is reported as <code class="docutils literal notranslate"><span class="pre">error</span></code> instead.</p>
+session whose last words were an error banner is reported as <code class="docutils literal notranslate"><span class="pre">error</span></code> instead.
+<code class="docutils literal notranslate"><span class="pre">busy</span></code> and <code class="docutils literal notranslate"><span class="pre">shell</span></code> count as one state – see <a class="reference internal" href="#crowsnest.watch.WORKING" title="crowsnest.watch.WORKING"><code class="xref py py-data docutils literal notranslate"><span class="pre">WORKING</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.watch.events">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">*,</span> <span class="pre">interval:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">5.0,</span> <span class="pre">home:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pathlib.Path</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">is_alive:</span> <span class="pre">~collections.abc.Callable[[int],</span> <span class="pre">bool]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">pid_alive&gt;,</span> <span class="pre">sleep:</span> <span class="pre">~collections.abc.Callable[[float],</span> <span class="pre">None]</span> <span class="pre">=</span> <span class="pre">&lt;built-in</span> <span class="pre">function</span> <span class="pre">sleep&gt;,</span> <span class="pre">ticks:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/watch.html#events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.events" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">*,</span> <span class="pre">interval:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">5.0,</span> <span class="pre">home:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pathlib.Path</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">is_alive:</span> <span class="pre">~collections.abc.Callable[[int],</span> <span class="pre">bool]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">pid_alive&gt;,</span> <span class="pre">sleep:</span> <span class="pre">~collections.abc.Callable[[float],</span> <span class="pre">None]</span> <span class="pre">=</span> <span class="pre">&lt;built-in</span> <span class="pre">function</span> <span class="pre">sleep&gt;,</span> <span class="pre">ticks:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">events_path:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pathlib.Path</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/watch.html#events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.events" title="Link to this definition"></a></dt>
 <dd><p>Yield one dict per change, forever – or for <code class="docutils literal notranslate"><span class="pre">ticks</span></code> snapshots when given.</p>
-<p>The first snapshot is the baseline and yields nothing: a monitor that starts up is
-not told about forty sessions that were already there. <code class="docutils literal notranslate"><span class="pre">sleep</span></code> and <code class="docutils literal notranslate"><span class="pre">ticks</span></code> exist
-so a test can drive the loop; nothing else should pass them.</p>
+<p>The first snapshot is the baseline and yields nothing, and the hook log is opened at
+its end: a monitor that starts up is not told about forty sessions that were already
+there, nor about yesterday’s events. <code class="docutils literal notranslate"><span class="pre">sleep</span></code> and <code class="docutils literal notranslate"><span class="pre">ticks</span></code> exist so a test can drive
+the loop; nothing else should pass them.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.watch.hook_event">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">hook_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/crowsnest/watch.html#hook_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.hook_event" title="Link to this definition"></a></dt>
+<dd><p>One line of the hook log as an event, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for an event kind we do not stream.</p>
+<p>The keys are the registry events’ keys, so a consumer needs one shape. <code class="docutils literal notranslate"><span class="pre">status</span></code> is
+empty because a hook says what <em>happened</em>, not what the session is now; a
+notification’s kind (<code class="docutils literal notranslate"><span class="pre">permission_prompt</span></code>, <code class="docutils literal notranslate"><span class="pre">idle_prompt</span></code>, …) is what it waits
+for, so it goes in <code class="docutils literal notranslate"><span class="pre">waiting_for</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">hook_event</span><span class="p">({</span><span class="s1">'event'</span><span class="p">:</span> <span class="s1">'stop'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'lookout'</span><span class="p">,</span> <span class="s1">'detail'</span><span class="p">:</span> <span class="s1">'Merged.'</span><span class="p">})[</span><span class="s1">'kind'</span><span class="p">]</span>
+<span class="go">'stopped'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hook_event</span><span class="p">({</span><span class="s1">'event'</span><span class="p">:</span> <span class="s1">'session-start'</span><span class="p">})</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.watch.snapshot">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">*,</span> <span class="pre">home:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pathlib.Path</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">is_alive:</span> <span class="pre">~collections.abc.Callable[[int],</span> <span class="pre">bool]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">pid_alive&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="registry.html#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><span class="pre">LiveSession</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/watch.html#snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.snapshot" title="Link to this definition"></a></dt>
 <dd><p>The live sessions right now, keyed by session id.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.watch.tail_events">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">tail_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/watch.html#tail_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.tail_events" title="Link to this definition"></a></dt>
+<dd><p>The JSON lines appended since <code class="docutils literal notranslate"><span class="pre">position</span></code>, and where to resume.</p>
+<p>Three things can have happened to the file since the last read, and all three are the
+same answer: it was rotated (a new inode), it was truncated (smaller than the offset),
+or it did not exist and now does. In each case the read starts at the beginning of
+whatever file is there now, so no line is skipped and none is replayed. A trailing
+fragment – a line the writer has not finished – is left for the next read.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.watch.tail_position">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">tail_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/watch.html#tail_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.tail_position" title="Link to this definition"></a></dt>
+<dd><p>Where a reader that wants only <em>new</em> lines should start: the end of the file now.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tail_position</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span>
+<span class="go">(-1, 0)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.6 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1fd71caa"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -50,6 +50,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
@@ -101,6 +103,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">hook</span> <span class="k">as</span> <span class="n">_hook</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ledger</span> <span class="k">as</span> <span class="n">_ledger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">skills</span> <span class="k">as</span> <span class="n">_skills</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">tools</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">watch</span> <span class="k">as</span> <span class="n">_watch</span>
@@ -299,6 +303,9 @@
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Print one line per change, forever: started, exited, idle, busy, waiting, error.</span>
 
+<span class="sd">    Plus `needs-you` and `stopped`, pushed by Claude Code's own hooks the moment they</span>
+<span class="sd">    happen, when `crowsnest hook` is installed on them.</span>
+
 <span class="sd">    Built for Claude Code's `Monitor` tool: each line becomes a notification in the</span>
 <span class="sd">    watching session. Stop with Ctrl-C.</span>
 <span class="sd">    """</span>
@@ -314,6 +321,55 @@
             <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
         <span class="k">pass</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">hook</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Record one Claude Code hook event. Reads the hook's JSON on stdin.</span>
+
+<span class="sd">    Two lines in `~/.claude/settings.json` install it -- a `Stop` hook running</span>
+<span class="sd">    `crowsnest hook stop`, and a `Notification` hook running `crowsnest hook</span>
+<span class="sd">    notification` (`crowsnest init` writes them for you). Prints nothing and always</span>
+<span class="sd">    exits 0: a crowsnest that is broken must not break the session it is watching.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="n">_json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># `handle` logs the why; the hook still exits 0</span>
+        <span class="n">_hook</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">payload</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{},</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001, S110 -- `handle` logged it; exiting 0 is the job</span>
+        <span class="k">pass</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ledger</span><span class="p">(</span><span class="o">*</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""One session's ledger, or -- with no name -- every ledger with its age.</span>
+
+<span class="sd">    A ledger is the durable page a session leaves behind: what it was last asked and</span>
+<span class="sd">    said, what it decided, what it is still waiting on you for. Printed verbatim,</span>
+<span class="sd">    because it is markdown a human wrote and a human reads.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">_ledger</span><span class="o">.</span><span class="n">list_ledgers</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'updated_at'</span><span class="p">])</span><span class="si">:</span><span class="s2">&gt;4</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'name'</span><span class="p">][:</span><span class="mi">26</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;27</span><span class="si">}</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'state'</span><span class="p">]</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'-'</span><span class="p">)[:</span><span class="mi">16</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;17</span><span class="si">}</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_one_line</span><span class="p">(</span><span class="n">_ledger</span><span class="o">.</span><span class="n">split_stamp</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'last_said'</span><span class="p">])[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span>
+        <span class="p">]</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"-- </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">_ledger</span><span class="o">.</span><span class="n">ledger_dir</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="p">[</span><span class="n">_ledger</span><span class="o">.</span><span class="n">read_ledger</span><span class="p">(</span><span class="n">one</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">one</span> <span class="ow">in</span> <span class="n">name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">pages</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pages</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">pages</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">_ledger</span><span class="o">.</span><span class="n">list_ledgers</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">page</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">page</span><span class="p">[</span><span class="s2">"exists"</span><span class="p">]</span>
+        <span class="k">else</span> <span class="sa">f</span><span class="s2">"(no ledger for </span><span class="si">{</span><span class="n">page</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="n">known</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">pages</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">install_skills</span><span class="p">(</span>
@@ -367,7 +423,7 @@
     <span class="p">)</span>
 
 
-<span class="n">_commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">roster</span><span class="p">,</span> <span class="n">show</span><span class="p">,</span> <span class="n">turns</span><span class="p">,</span> <span class="n">watch</span><span class="p">,</span> <span class="n">install_skills</span><span class="p">,</span> <span class="n">spawn</span><span class="p">]</span>
+<span class="n">_commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">roster</span><span class="p">,</span> <span class="n">show</span><span class="p">,</span> <span class="n">turns</span><span class="p">,</span> <span class="n">watch</span><span class="p">,</span> <span class="n">ledger</span><span class="p">,</span> <span class="n">hook</span><span class="p">,</span> <span class="n">install_skills</span><span class="p">,</span> <span class="n">spawn</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="main">

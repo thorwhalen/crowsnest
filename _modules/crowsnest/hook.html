@@ -1,0 +1,441 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.hook &mdash; crowsnest 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.hook</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.hook</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The push half of the stream: what Claude Code's own hooks tell crowsnest.</span>
+
+<span class="sd">:mod:`crowsnest.watch` learns things by polling the registry, which is honest but late</span>
+<span class="sd">and vague: it can see that a session went from ``busy`` to ``idle``, seconds after the</span>
+<span class="sd">fact, and has to read a transcript to guess why. Claude Code already knows both, exactly</span>
+<span class="sd">and immediately, and will say so: a ``Stop`` hook fires the moment a turn ends, and a</span>
+<span class="sd">``Notification`` hook fires the moment a session wants its human -- a permission prompt,</span>
+<span class="sd">a question, an idle nudge -- with the message in hand.</span>
+
+<span class="sd">So crowsnest offers itself as one line on each of those hooks::</span>
+
+<span class="sd">    "Stop":         [{"hooks": [{"type": "command", "command": "crowsnest hook stop"}]}]</span>
+<span class="sd">    "Notification": [{"hooks": [{"type": "command", "command": "crowsnest hook notification"}]}]</span>
+
+<span class="sd">(``crowsnest init`` is what actually writes those into ``~/.claude/settings.json``; this</span>
+<span class="sd">module is only what they call.)</span>
+
+<span class="sd">:func:`handle` does two things and no more. It appends one JSON line to the event log --</span>
+<span class="sd">``&lt;data dir&gt;/events.jsonl``, which :func:`crowsnest.watch.events` tails -- and, on a</span>
+<span class="sd">stop, writes the two *mechanical* ledger fields, ``last asked`` and ``last said``, from</span>
+<span class="sd">the transcript tail. It writes nothing a human or the session would have had to think</span>
+<span class="sd">about: :mod:`crowsnest.ledger` says why.</span>
+
+<span class="sd">**It runs inside somebody else's session, so it may not fail and may not be slow.** Every</span>
+<span class="sd">error is swallowed into one line in ``&lt;data dir&gt;/hook.log`` and reported in the returned</span>
+<span class="sd">dict; the caller (``crowsnest hook``) prints nothing and exits 0 whatever happens. The</span>
+<span class="sd">work is one registry listing and one transcript tail: measured at 3.4 ms on a 1.5 MB</span>
+<span class="sd">transcript, and ``tests/test_hook.py`` holds it under 100 ms.</span>
+
+<span class="sd">What that measurement leaves out is the process. ``crowsnest hook stop`` end to end was</span>
+<span class="sd">375 ms on the machine this was written on, of which 223 ms was starting Python at all and</span>
+<span class="sd">about 120 ms was importing ``openloops`` (and its ``dol``) for the transcript reader. If</span>
+<span class="sd">that ever needs to come down, the lever is importing ``openloops.transcripts`` inside</span>
+<span class="sd">:func:`crowsnest.activity.read_activity` rather than at the top of the module, which would</span>
+<span class="sd">take the notification path -- the one that has a human waiting at the end of it -- down to</span>
+<span class="sd">the interpreter's own floor. It has not been spent, because a third of a second at the end</span>
+<span class="sd">of a turn that took thirty seconds is not what anyone is waiting for.</span>
+
+<span class="sd">Which payload fields this relies on, of the ones the hooks reference documents</span>
+<span class="sd">(https://code.claude.com/docs/en/hooks) -- all of them optional here, because a payload</span>
+<span class="sd">that is missing one must still produce an event:</span>
+
+<span class="sd">- ``session_id`` -- the key the registry is looked up by, for the session's name.</span>
+<span class="sd">- ``cwd`` -- the fallback for the project name when the registry has no record.</span>
+<span class="sd">- ``transcript_path`` -- read (tail only) on ``stop``, for what the session was last asked.</span>
+<span class="sd">- ``last_assistant_message`` (``Stop``) -- the turn's final text, used verbatim when</span>
+<span class="sd">  present so the common case needs nothing from the transcript.</span>
+<span class="sd">- ``message`` and ``notification_type`` (``Notification``) -- what the session wants and</span>
+<span class="sd">  which kind of wanting it is.</span>
+
+<span class="sd">&gt;&gt;&gt; import os, tempfile</span>
+<span class="sd">&gt;&gt;&gt; where = tempfile.mkdtemp()</span>
+<span class="sd">&gt;&gt;&gt; done = handle(</span>
+<span class="sd">...     'notification',</span>
+<span class="sd">...     {'session_id': 'abc12345', 'cwd': '/w/demo',</span>
+<span class="sd">...      'message': 'Claude needs your permission to use Bash',</span>
+<span class="sd">...      'notification_type': 'permission_prompt'},</span>
+<span class="sd">...     home='/nonexistent-dir-for-doctest',</span>
+<span class="sd">...     events_path=os.path.join(where, 'events.jsonl'),</span>
+<span class="sd">... )</span>
+<span class="sd">&gt;&gt;&gt; done['ok'], done['record']['name'], done['record']['project']</span>
+<span class="sd">(True, 'abc12345', 'demo')</span>
+<span class="sd">&gt;&gt;&gt; done['record']['detail']</span>
+<span class="sd">'Claude needs your permission to use Bash'</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.activity</span><span class="w"> </span><span class="kn">import</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">read_activity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.ledger</span><span class="w"> </span><span class="kn">import</span> <span class="n">stamped</span><span class="p">,</span> <span class="n">update_ledger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">live_sessions</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"DETAIL_LIMIT"</span><span class="p">,</span>
+    <span class="s2">"EVENTS"</span><span class="p">,</span>
+    <span class="s2">"EVENTS_FILENAME"</span><span class="p">,</span>
+    <span class="s2">"LOG_FILENAME"</span><span class="p">,</span>
+    <span class="s2">"MAX_EVENT_BYTES"</span><span class="p">,</span>
+    <span class="s2">"MAX_LOG_BYTES"</span><span class="p">,</span>
+    <span class="s2">"append_event"</span><span class="p">,</span>
+    <span class="s2">"events_path"</span><span class="p">,</span>
+    <span class="s2">"handle"</span><span class="p">,</span>
+    <span class="s2">"log_path"</span><span class="p">,</span>
+    <span class="s2">"rotate"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: The event log's name under the data directory. One JSON object per line, append-only.</span>
+<span class="n">EVENTS_FILENAME</span> <span class="o">=</span> <span class="s2">"events.jsonl"</span>
+
+<span class="c1">#: Where a swallowed error goes, so that "the hook did nothing" is a question with an answer.</span>
+<span class="n">LOG_FILENAME</span> <span class="o">=</span> <span class="s2">"hook.log"</span>
+
+<span class="c1">#: The hook events crowsnest does something with. Any other event name is still logged as</span>
+<span class="c1">#: an event line -- a new hook wired up by a hopeful user costs nothing and breaks nothing.</span>
+<span class="n">EVENTS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"stop"</span><span class="p">,</span> <span class="s2">"notification"</span><span class="p">)</span>
+
+<span class="c1">#: How much of a message or a final text an event line and a ledger field carry. The</span>
+<span class="c1">#: transcript has the rest; these two files are meant to stay scannable.</span>
+<span class="n">DETAIL_LIMIT</span> <span class="o">=</span> <span class="mi">400</span>
+
+<span class="c1">#: When the event log passes this, it is renamed with the time and a new one is started.</span>
+<span class="n">MAX_EVENT_BYTES</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>
+
+<span class="c1">#: The same, for the error log, which should never come near it.</span>
+<span class="n">MAX_LOG_BYTES</span> <span class="o">=</span> <span class="mi">256</span> <span class="o">*</span> <span class="mi">1024</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DETAIL_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">text</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">text</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Where crowsnest's two written files are</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_events</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="n">EVENTS_FILENAME</span>
+
+
+<div class="viewcode-block" id="events_path">
+<a class="viewcode-back" href="../../module_docs/crowsnest/hook.html#crowsnest.hook.events_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">events_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The event log: ``path`` when given, else ``&lt;data dir&gt;/events.jsonl``.</span>
+
+<span class="sd">    Spelled out here rather than in :mod:`crowsnest.paths` because the module that writes</span>
+<span class="sd">    a kind of data owns where that kind of data goes; ``paths`` owns only the root.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_events</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="log_path">
+<a class="viewcode-back" href="../../module_docs/crowsnest/hook.html#crowsnest.hook.log_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">log_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The hook's own error log: ``path`` when given, else ``&lt;data dir&gt;/hook.log``."""</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="n">LOG_FILENAME</span></div>
+
+
+
+<div class="viewcode-block" id="rotate">
+<a class="viewcode-back" href="../../module_docs/crowsnest/hook.html#crowsnest.hook.rotate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rotate</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">MAX_EVENT_BYTES</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Rename an oversized log out of the way; return where it went, or ``None``.</span>
+
+<span class="sd">    Simple on purpose: the retired file keeps its name plus the time it was retired, and</span>
+<span class="sd">    nothing prunes it. A reader that remembers an offset sees the inode change and starts</span>
+<span class="sd">    again at the beginning of the new file, which is what</span>
+<span class="sd">    :func:`crowsnest.watch.tail_events` does.</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&lt;=</span> <span class="n">max_bytes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">stamp</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y%m</span><span class="si">%d</span><span class="s2">T%H%M%S"</span><span class="p">)</span>
+        <span class="n">retired</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">stamp</span><span class="si">}{</span><span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">nth</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># a second is coarse; two rotations inside one must not eat each other</span>
+        <span class="k">while</span> <span class="n">retired</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">nth</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">retired</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">stamp</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">nth</span><span class="si">}{</span><span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">retired</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">retired</span></div>
+
+
+
+<div class="viewcode-block" id="append_event">
+<a class="viewcode-back" href="../../module_docs/crowsnest/hook.html#crowsnest.hook.append_event">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">append_event</span><span class="p">(</span>
+    <span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">MAX_EVENT_BYTES</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Append one JSON line to the event log, rotating it first if it has outgrown ``max_bytes``."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">_events</span><span class="p">(</span><span class="n">events_path</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rotate</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">max_bytes</span><span class="o">=</span><span class="n">max_bytes</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+        <span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_log</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One line about something that went wrong. The last thing that may fail, so it may not."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">log_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">rotate</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">max_bytes</span><span class="o">=</span><span class="n">MAX_LOG_BYTES</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">target</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_now</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001, S110 -- the logger is the last thing that may fail</span>
+        <span class="k">pass</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The event</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_identify</span><span class="p">(</span>
+    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The session's name and project: the registry's answer, else what the payload allows.</span>
+
+<span class="sd">    The registry is the only place the *name* a human gave a session exists, and the hook</span>
+<span class="sd">    payload does not carry it. Listing it is a directory of small files -- cheaper than</span>
+<span class="sd">    the transcript read that follows.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">session_id</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span> <span class="o">==</span> <span class="n">session_id</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">session</span><span class="o">.</span><span class="n">project</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- an unreadable registry is not fatal here</span>
+            <span class="n">_log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"registry: </span><span class="si">{</span><span class="n">exc</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">session_id</span><span class="p">[:</span><span class="mi">8</span><span class="p">],</span> <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_activity</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Activity</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The transcript tail, read once per stop and not at all for anything else."""</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">!=</span> <span class="s2">"stop"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Activity</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">read_activity</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"transcript_path"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span> <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_detail</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">activity</span><span class="p">:</span> <span class="n">Activity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The one line the event carries: why a session wants you, or what it just said."""</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"notification"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"message"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"stop"</span><span class="p">:</span>
+        <span class="n">said</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_assistant_message"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_assistant_text</span>
+        <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">said</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s2">""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_ledger</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">activity</span><span class="p">:</span> <span class="n">Activity</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The two mechanical fields, and only those. An empty one is left alone, not blanked."""</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">:</span>
+        <span class="n">fields</span><span class="p">[</span><span class="s2">"last_asked"</span><span class="p">]</span> <span class="o">=</span> <span class="n">stamped</span><span class="p">(</span>
+            <span class="n">_one_line</span><span class="p">(</span><span class="n">activity</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">),</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_prompt_at</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">record</span><span class="p">[</span><span class="s2">"detail"</span><span class="p">]:</span>
+        <span class="n">fields</span><span class="p">[</span><span class="s2">"last_said"</span><span class="p">]</span> <span class="o">=</span> <span class="n">stamped</span><span class="p">(</span>
+            <span class="n">record</span><span class="p">[</span><span class="s2">"detail"</span><span class="p">],</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_text_at</span> <span class="ow">or</span> <span class="n">record</span><span class="p">[</span><span class="s2">"at"</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fields</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">update_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)[</span><span class="s2">"path"</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- the event line already landed; keep it</span>
+        <span class="n">_log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ledger </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">""</span>
+
+
+<div class="viewcode-block" id="handle">
+<a class="viewcode-back" href="../../module_docs/crowsnest/hook.html#crowsnest.hook.handle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span>
+    <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Record one hook event: an event line always, a ledger update on ``stop``.</span>
+
+<span class="sd">    ``event`` is ``stop`` or ``notification`` (the ``hook_event_name`` spelling works</span>
+<span class="sd">    too; case does not matter). ``payload`` is the JSON Claude Code wrote on the hook's</span>
+<span class="sd">    stdin -- see the module docstring for which of its fields are read.</span>
+
+<span class="sd">    Returns a JSON-able dict: ``ok``, the ``record`` written, the ``events`` file it went</span>
+<span class="sd">    to, and the ``ledger`` path when one was updated. **Never raises**: a failure comes</span>
+<span class="sd">    back as ``ok=False`` with the reason, and is also one line in the hook log.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">payload</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">session_id</span><span class="p">:</span>
+            <span class="c1"># Every hook payload carries one. Without it an "event" names nobody, and a</span>
+            <span class="c1"># line in the log saying so is worth more than a line in the stream.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"hook payload has no session_id"</span><span class="p">)</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">project</span> <span class="o">=</span> <span class="n">_identify</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">cwd</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+        <span class="n">activity</span> <span class="o">=</span> <span class="n">_activity</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"at"</span><span class="p">:</span> <span class="n">_now</span><span class="p">(),</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
+            <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">"project"</span><span class="p">:</span> <span class="n">project</span><span class="p">,</span>
+            <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_detail</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">activity</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"notification"</span><span class="p">:</span>
+            <span class="n">record</span><span class="p">[</span><span class="s2">"notification_type"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notification_type"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">written</span> <span class="o">=</span> <span class="n">append_event</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">)</span>
+        <span class="n">ledger</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"stop"</span> <span class="ow">and</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">ledger</span> <span class="o">=</span> <span class="n">_write_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">activity</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"record"</span><span class="p">:</span> <span class="n">record</span><span class="p">,</span> <span class="s2">"events"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">written</span><span class="p">),</span> <span class="s2">"ledger"</span><span class="p">:</span> <span class="n">ledger</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a broken crowsnest may not break a session</span>
+        <span class="n">_log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"event"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="p">),</span> <span class="s2">"error"</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">exc</span><span class="p">)}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
