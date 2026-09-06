@@ -1,0 +1,4 @@
+crowsnest.registry
+==================
+.. automodule:: crowsnest.registry
+   :members:

@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.watch &mdash; crowsnest 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.watch</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.watch</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""A stream of what changed, so a monitor is told instead of made to poll.</span>
+
+<span class="sd">A session that watches the others has two ways to learn something happened: read the</span>
+<span class="sd">roster again and compare, or be handed the difference. This module is the second.</span>
+<span class="sd">:func:`events` takes a snapshot of the registry and the transcript files, sleeps, takes</span>
+<span class="sd">another, and yields one small dict for every change worth a line: a session started or</span>
+<span class="sd">exited, went from busy to idle (with its last words), or started waiting on its human</span>
+<span class="sd">(with what for).</span>
+
+<span class="sd">Nothing here is notified by Claude Code; the stream is built from polling the same</span>
+<span class="sd">read-only sources as the roster, at an interval a human would not notice. A busy session</span>
+<span class="sd">appending to its transcript is *not* an event -- it is what busy means -- so a working</span>
+<span class="sd">session produces silence until it stops.</span>
+
+<span class="sd">``crowsnest watch`` prints this stream one line per event, which is the shape Claude</span>
+<span class="sd">Code's own ``Monitor`` tool consumes: each line becomes a notification in the watching</span>
+<span class="sd">session's conversation.</span>
+
+<span class="sd">&gt;&gt;&gt; list(events(home='/nonexistent-dir-for-doctest', ticks=1, sleep=lambda s: None))</span>
+<span class="sd">[]</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.activity</span><span class="w"> </span><span class="kn">import</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">read_activity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">live_sessions</span><span class="p">,</span> <span class="n">pid_alive</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"DFLT_INTERVAL"</span><span class="p">,</span> <span class="s2">"diff"</span><span class="p">,</span> <span class="s2">"events"</span><span class="p">,</span> <span class="s2">"snapshot"</span><span class="p">]</span>
+
+<span class="c1">#: Seconds between snapshots. A turn takes seconds to minutes; five seconds is invisible</span>
+<span class="c1">#: to a human and two file listings per tick is nothing.</span>
+<span class="n">DFLT_INTERVAL</span> <span class="o">=</span> <span class="mf">5.0</span>
+
+<span class="c1">#: How much of a session's last words an event carries. One line; the roster has the rest.</span>
+<span class="n">DETAIL_LIMIT</span> <span class="o">=</span> <span class="mi">200</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DETAIL_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">text</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">text</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
+
+
+<div class="viewcode-block" id="snapshot">
+<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.snapshot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">snapshot</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_alive</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">pid_alive</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The live sessions right now, keyed by session id."""</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">)}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_event</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"at"</span><span class="p">:</span> <span class="n">_now</span><span class="p">(),</span>
+        <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
+        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+        <span class="s2">"project"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
+        <span class="s2">"status"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="s2">"waiting_for"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="p">,</span>
+        <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="n">detail</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_status_detail</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">activity</span><span class="p">:</span> <span class="n">Activity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The one line that says what a status change means for the human."""</span>
+    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
+        <span class="n">cause</span> <span class="o">=</span> <span class="n">activity</span><span class="o">.</span><span class="n">pending_question</span> <span class="ow">or</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">activity</span><span class="o">.</span><span class="n">in_flight</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">" · "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="p">,</span> <span class="n">cause</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"idle"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">activity</span><span class="o">.</span><span class="n">errored</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"ended with an error: "</span> <span class="o">+</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_assistant_text</span>
+        <span class="k">return</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_assistant_text</span> <span class="ow">or</span> <span class="s2">"(no final text in the tail)"</span>
+    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"busy"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"asked: "</span> <span class="o">+</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_user_prompt</span> <span class="k">if</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_user_prompt</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="s2">""</span>
+
+
+<div class="viewcode-block" id="diff">
+<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.diff">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diff</span><span class="p">(</span>
+    <span class="n">before</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">],</span>
+    <span class="n">after</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">activity</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="n">Activity</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">read_activity</span><span class="p">(</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span>
+    <span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The events between two snapshots: started, exited, and every status change.</span>
+
+<span class="sd">    A status change is reported under the *new* status as its kind (``idle``, ``busy``,</span>
+<span class="sd">    ``waiting``), with the transcript tail read once to say what it means; an idle</span>
+<span class="sd">    session whose last words were an error banner is reported as ``error`` instead.</span>
+<span class="sd">    """</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">cur</span> <span class="ow">in</span> <span class="n">after</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="n">before</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="s2">"started"</span><span class="p">,</span> <span class="n">cur</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cur</span><span class="o">.</span><span class="n">kind</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'session'</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">cur</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">prev</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">act</span> <span class="o">=</span> <span class="n">activity</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="s2">"error"</span> <span class="k">if</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"idle"</span> <span class="ow">and</span> <span class="n">act</span><span class="o">.</span><span class="n">errored</span> <span class="k">else</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">cur</span><span class="p">,</span> <span class="n">_status_detail</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">act</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">prev</span> <span class="ow">in</span> <span class="n">before</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">sid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">after</span><span class="p">:</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="s2">"exited"</span><span class="p">,</span> <span class="n">prev</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="events">
+<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.events">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">events</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INTERVAL</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_alive</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">pid_alive</span><span class="p">,</span>
+    <span class="n">sleep</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">,</span>
+    <span class="n">ticks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Yield one dict per change, forever -- or for ``ticks`` snapshots when given.</span>
+
+<span class="sd">    The first snapshot is the baseline and yields nothing: a monitor that starts up is</span>
+<span class="sd">    not told about forty sessions that were already there. ``sleep`` and ``ticks`` exist</span>
+<span class="sd">    so a test can drive the loop; nothing else should pass them.</span>
+<span class="sd">    """</span>
+    <span class="n">before</span> <span class="o">=</span> <span class="n">snapshot</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">)</span>
+    <span class="n">taken</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">ticks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">taken</span> <span class="o">&lt;</span> <span class="n">ticks</span><span class="p">:</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">snapshot</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">diff</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+        <span class="n">taken</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

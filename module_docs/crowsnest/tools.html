@@ -1,0 +1,163 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.tools &mdash; crowsnest 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.watch" href="watch.html" />
+    <link rel="prev" title="crowsnest.skills" href="skills.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.tools.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.tools.roster"><code class="docutils literal notranslate"><span class="pre">roster()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.tools.show"><code class="docutils literal notranslate"><span class="pre">show()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.tools.turns"><code class="docutils literal notranslate"><span class="pre">turns()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.tools</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/tools.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.tools">
+<span id="crowsnest-tools"></span><h1>crowsnest.tools<a class="headerlink" href="#module-crowsnest.tools" title="Link to this heading"></a></h1>
+<p>The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.</p>
+<p>This is the single list every surface dispatches from. The CLI renders these; an MCP
+server or an HTTP endpoint would reference them by name and get the same dicts. Nothing
+here prints, exits, or knows which surface called it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">roster</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="s1">'/nonexistent-dir-for-doctest'</span><span class="p">)[</span><span class="s1">'counts'</span><span class="p">]</span>
+<span class="go">{'waiting': 0, 'busy': 0, 'idle': 0, 'other': 0}</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tools.resolve">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="registry.html#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><span class="pre">LiveSession</span></a></span></span><a class="reference internal" href="../../_modules/crowsnest/tools.html#resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.resolve" title="Link to this definition"></a></dt>
+<dd><p>The live session a human means by <code class="docutils literal notranslate"><span class="pre">session</span></code>.</p>
+<p>Tried in order: the exact registry name, a unique name prefix, a unique session-id
+prefix, the pid. Raises <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> naming the candidates when nothing or too much
+matches – an ambiguous pick is a wrong pick half the time.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tools.roster">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">roster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">240</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/tools.html#roster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.roster" title="Link to this definition"></a></dt>
+<dd><p>Every live session, most urgent first, each with a clipped view of its activity.</p>
+<p><code class="docutils literal notranslate"><span class="pre">activity=False</span></code> skips the transcript tails and answers from the registry alone –
+instant, and enough to know who is waiting.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tools.show">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/tools.html#show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.show" title="Link to this definition"></a></dt>
+<dd><p>One session in full: its registry record and its activity, unclipped.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tools.turns">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">turns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">last</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/tools.html#turns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.turns" title="Link to this definition"></a></dt>
+<dd><p>The last <code class="docutils literal notranslate"><span class="pre">last</span></code> turns of a session, oldest first; <code class="docutils literal notranslate"><span class="pre">before=N</span></code> pages back from turn N.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="skills.html" class="btn btn-neutral float-left" title="crowsnest.skills" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="watch.html" class="btn btn-neutral float-right" title="crowsnest.watch" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

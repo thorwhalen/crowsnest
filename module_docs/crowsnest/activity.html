@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.activity &mdash; crowsnest 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.registry" href="registry.html" />
+    <link rel="prev" title="crowsnest.__main__" href="__main__.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.activity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.Activity"><code class="docutils literal notranslate"><span class="pre">Activity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.QUESTION_TOOL"><code class="docutils literal notranslate"><span class="pre">QUESTION_TOOL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.RECENT_TOOLS"><code class="docutils literal notranslate"><span class="pre">RECENT_TOOLS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.TAIL_BYTES"><code class="docutils literal notranslate"><span class="pre">TAIL_BYTES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.Turn"><code class="docutils literal notranslate"><span class="pre">Turn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.describe_tool"><code class="docutils literal notranslate"><span class="pre">describe_tool()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.load_records"><code class="docutils literal notranslate"><span class="pre">load_records()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.read_activity"><code class="docutils literal notranslate"><span class="pre">read_activity()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.read_turns"><code class="docutils literal notranslate"><span class="pre">read_turns()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.activity.tail_records"><code class="docutils literal notranslate"><span class="pre">tail_records()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.activity</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/activity.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.activity">
+<span id="crowsnest-activity"></span><h1>crowsnest.activity<a class="headerlink" href="#module-crowsnest.activity" title="Link to this heading"></a></h1>
+<p>What a session is doing right now, read from the tail of its transcript.</p>
+<p>A transcript is append-only and can run to megabytes; the part that says what a session
+is doing <em>now</em> is its last few kilobytes. So <a class="reference internal" href="#crowsnest.activity.read_activity" title="crowsnest.activity.read_activity"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_activity()</span></code></a> reads from the end,
+widening the window only until it has seen one human prompt, and reports what it found:
+what the session was last asked, what it last said, the tools it ran most recently, the
+tool call that has not returned yet, and – the case a monitor exists for – a question it
+has put to its human that nobody has answered.</p>
+<p>What the transcript’s <em>content</em> means is <code class="xref py py-mod docutils literal notranslate"><span class="pre">openloops.transcripts</span></code>’s business – which
+<code class="docutils literal notranslate"><span class="pre">user</span></code> line is a person speaking and which is tooling, what the assistant’s last words
+were, whether the turn ended – and <code class="xref py py-func docutils literal notranslate"><span class="pre">openloops.transcripts.parse_session()</span></code> is called
+on the tail rather than that logic being written a second time. What this module adds is
+the tool-level view that a dated digest has no use for and a live monitor cannot do
+without.</p>
+<p><a class="reference internal" href="#crowsnest.activity.read_turns" title="crowsnest.activity.read_turns"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_turns()</span></code></a> is the deep path. It reads the whole file and pages backwards through
+turns, for when the tail did not carry enough context and the alternative is spending a
+turn of the watched session’s own context asking it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">read_activity</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span><span class="o">.</span><span class="n">last_user_prompt</span>
+<span class="go">''</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.activity.Activity">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">Activity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_event_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_user_prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_prompt_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_assistant_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_text_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recent_tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_flight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pending_question</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">turn_open</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errored</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_branch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_complete</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/activity.html#Activity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.Activity" title="Link to this definition"></a></dt>
+<dd><p>What one session is doing, as its transcript tail reads. Flat and JSON-shaped.</p>
+<p><code class="docutils literal notranslate"><span class="pre">in_flight</span></code> lists tool calls with no result yet, oldest first: normally one, several
+when calls were issued in parallel. <code class="docutils literal notranslate"><span class="pre">pending_question</span></code> is the first question of an
+in-flight <a class="reference internal" href="#crowsnest.activity.QUESTION_TOOL" title="crowsnest.activity.QUESTION_TOOL"><code class="xref py py-data docutils literal notranslate"><span class="pre">QUESTION_TOOL</span></code></a> call – a session waiting on a person.
+<code class="docutils literal notranslate"><span class="pre">tail_complete</span></code> says whether the window reached the start of the file, which is what
+makes the difference between “no prompt in the tail” and “no prompt at all”.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.activity.QUESTION_TOOL">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">QUESTION_TOOL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'AskUserQuestion'</span></span><a class="headerlink" href="#crowsnest.activity.QUESTION_TOOL" title="Link to this definition"></a></dt>
+<dd><p>The tool Claude Code uses to put a structured question to its human. A call to it with
+no result yet is a session waiting on a person.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.activity.RECENT_TOOLS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">RECENT_TOOLS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></span><a class="headerlink" href="#crowsnest.activity.RECENT_TOOLS" title="Link to this definition"></a></dt>
+<dd><p>How many recent tool calls an <a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><code class="xref py py-class docutils literal notranslate"><span class="pre">Activity</span></code></a> carries.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.activity.TAIL_BYTES">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">TAIL_BYTES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">262144</span></span><a class="headerlink" href="#crowsnest.activity.TAIL_BYTES" title="Link to this definition"></a></dt>
+<dd><p>How much of the file’s end is read first. A turn of tool calls is a few kilobytes; a
+quarter megabyte covers the last several turns of nearly every session and costs a
+few milliseconds. The window doubles until it holds a human prompt.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.activity.Turn">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">Turn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reply</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reply_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/activity.html#Turn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.Turn" title="Link to this definition"></a></dt>
+<dd><p>One exchange: a human prompt, what the assistant did, and its last words.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.describe_tool">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">describe_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">80</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/activity.html#describe_tool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.describe_tool" title="Link to this definition"></a></dt>
+<dd><p>One line naming a tool call: the tool, and the argument that says what it did.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'Bash'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'command'</span><span class="p">:</span> <span class="s1">'ls -la'</span><span class="p">,</span> <span class="s1">'description'</span><span class="p">:</span> <span class="s1">'List files'</span><span class="p">})</span>
+<span class="go">'Bash: List files'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'Read'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'file_path'</span><span class="p">:</span> <span class="s1">'/a/b/c.py'</span><span class="p">})</span>
+<span class="go">'Read: c.py'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'AskUserQuestion'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'questions'</span><span class="p">:</span> <span class="p">[{</span><span class="s1">'question'</span><span class="p">:</span> <span class="s1">'Ship it?'</span><span class="p">}]})</span>
+<span class="go">'AskUserQuestion: Ship it?'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'ListAgents'</span><span class="p">,</span> <span class="p">{})</span>
+<span class="go">'ListAgents'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.load_records">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">load_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/activity.html#load_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.load_records" title="Link to this definition"></a></dt>
+<dd><p>Every record in a transcript, tolerating blank and malformed lines.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.read_activity">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">read_activity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">262144</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><span class="pre">Activity</span></a></span></span><a class="reference internal" href="../../_modules/crowsnest/activity.html#read_activity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.read_activity" title="Link to this definition"></a></dt>
+<dd><p>Read the tail of a transcript into an <a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><code class="xref py py-class docutils literal notranslate"><span class="pre">Activity</span></code></a>.</p>
+<p>Costs the watched session nothing: the file is opened read-only and the session is
+never signalled, messaged or otherwise made aware.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.read_turns">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">read_turns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">last</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.activity.Turn" title="crowsnest.activity.Turn"><span class="pre">Turn</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/activity.html#read_turns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.read_turns" title="Link to this definition"></a></dt>
+<dd><p>The last <code class="docutils literal notranslate"><span class="pre">last</span></code> turns of a transcript, oldest first; <code class="docutils literal notranslate"><span class="pre">before=N</span></code> pages back.</p>
+<p>Reads the whole file. This is the deep path, taken on request when the tail did not
+carry enough context – still cheaper than a turn of the watched session’s own.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.tail_records">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">tail_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">path:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~pathlib.Path,</span> <span class="pre">*,</span> <span class="pre">tail_bytes:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">262144,</span> <span class="pre">enough:</span> <span class="pre">~collections.abc.Callable[[list[dict]],</span> <span class="pre">bool]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_has_prompt&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/activity.html#tail_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.tail_records" title="Link to this definition"></a></dt>
+<dd><p>The records in the last <code class="docutils literal notranslate"><span class="pre">tail_bytes</span></code> of a transcript, widening until <code class="docutils literal notranslate"><span class="pre">enough</span></code>.</p>
+<p>Returns the records and whether the window reached the start of the file. The first
+line of a window that starts mid-file is a fragment and is dropped.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tail_records</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span>
+<span class="go">([], True)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="__main__.html" class="btn btn-neutral float-left" title="crowsnest.__main__" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="registry.html" class="btn btn-neutral float-right" title="crowsnest.registry" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

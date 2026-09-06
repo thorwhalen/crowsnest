@@ -1,0 +1,4 @@
+crowsnest.skills
+================
+.. automodule:: crowsnest.skills
+   :members:

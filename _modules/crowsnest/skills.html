@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.skills &mdash; crowsnest 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.skills</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.skills</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The agent-facing surface: one skill, one subagent, and the command that installs them.</span>
+
+<span class="sd">The ``crowsnest`` command is plumbing. What a person wants is a session that runs it and</span>
+<span class="sd">says what matters -- and that is a markdown file an agent host loads, shipped inside the</span>
+<span class="sd">package so that upgrading the package upgrades the skill. Installing one is a symlink;</span>
+<span class="sd">where symlinks are unavailable, a copy, and the plan says which happened.</span>
+
+<span class="sd">Nothing already at a destination is overwritten: a foreign file of the same name reads</span>
+<span class="sd">``conflict`` and stays as it was until ``force=True``.</span>
+
+<span class="sd">&gt;&gt;&gt; sorted(asset.name for asset in bundled())</span>
+<span class="sd">['crowsnest', 'crowsnest-scout']</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_home</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Asset"</span><span class="p">,</span> <span class="s2">"bundled"</span><span class="p">,</span> <span class="s2">"install_skills"</span><span class="p">]</span>
+
+<span class="n">_HOST_SUBDIR</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"skill"</span><span class="p">:</span> <span class="s2">"skills"</span><span class="p">,</span> <span class="s2">"agent"</span><span class="p">:</span> <span class="s2">"agents"</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="Asset">
+<a class="viewcode-back" href="../../module_docs/crowsnest/skills.html#crowsnest.skills.Asset">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Asset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One installable thing: a skill directory or a subagent file."""</span>
+
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Path</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">destination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">host</span> <span class="o">/</span> <span class="n">_HOST_SUBDIR</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">directory</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"skill"</span>
+            <span class="k">else</span> <span class="n">directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.md"</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_data_dir</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"data"</span>
+
+
+<div class="viewcode-block" id="bundled">
+<a class="viewcode-back" href="../../module_docs/crowsnest/skills.html#crowsnest.skills.bundled">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bundled</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Asset</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every skill and subagent this package ships, discovered from the directories."""</span>
+    <span class="n">skills</span> <span class="o">=</span> <span class="n">_data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"skills"</span>
+    <span class="n">agents</span> <span class="o">=</span> <span class="n">_data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"agents"</span>
+    <span class="n">assets</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">Asset</span><span class="p">(</span><span class="s2">"skill"</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">skills</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">skills</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="k">else</span> <span class="p">())</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">"SKILL.md"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+    <span class="p">]</span>
+    <span class="n">assets</span> <span class="o">+=</span> <span class="p">[</span><span class="n">Asset</span><span class="p">(</span><span class="s2">"agent"</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">agents</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.md"</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">assets</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_symlinks_work</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"probe"</span><span class="p">,</span> <span class="n">target_is_directory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_points_here</span><span class="p">(</span><span class="n">destination</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">destination</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">()</span> <span class="ow">and</span> <span class="n">destination</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">==</span> <span class="n">source</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_remove</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">()</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_place</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">link</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">destination</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">_remove</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">link</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">target_is_directory</span><span class="o">=</span><span class="n">source</span><span class="o">.</span><span class="n">is_dir</span><span class="p">())</span>
+            <span class="k">return</span> <span class="s2">"symlink"</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"copy"</span>
+
+
+<div class="viewcode-block" id="install_skills">
+<a class="viewcode-back" href="../../module_docs/crowsnest/skills.html#crowsnest.skills.install_skills">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">install_skills</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">only</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Make the bundled skill and subagent visible to Claude Code. Idempotent.</span>
+
+<span class="sd">    Links each into ``target`` (default ``$CLAUDE_CONFIG_DIR`` or ``~/.claude``). Returns</span>
+<span class="sd">    the plan: one row per asset with its action -- ``install``, ``ok`` (already ours) or</span>
+<span class="sd">    ``conflict`` (something else is there; left alone unless ``force``).</span>
+
+<span class="sd">    &gt;&gt;&gt; plan = install_skills(target='/nonexistent/host', dry_run=True)</span>
+<span class="sd">    &gt;&gt;&gt; plan['counts']</span>
+<span class="sd">    {'install': 2, 'ok': 0, 'conflict': 0}</span>
+<span class="sd">    """</span>
+    <span class="n">host</span> <span class="o">=</span> <span class="n">claude_home</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="n">link</span> <span class="o">=</span> <span class="n">_symlinks_work</span><span class="p">()</span>
+    <span class="n">assets</span> <span class="o">=</span> <span class="n">bundled</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">only</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">wanted</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">only</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()}</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="n">wanted</span> <span class="o">-</span> <span class="p">{</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no bundled asset named </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">assets</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">assets</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="n">asset</span><span class="o">.</span><span class="n">destination</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
+        <span class="n">exists</span> <span class="o">=</span> <span class="n">destination</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="n">destination</span><span class="o">.</span><span class="n">is_symlink</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
+            <span class="n">action</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="s2">"install"</span><span class="p">,</span> <span class="s2">"not present"</span>
+        <span class="k">elif</span> <span class="n">_points_here</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">asset</span><span class="o">.</span><span class="n">source</span><span class="p">):</span>
+            <span class="n">action</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"already linked to this package"</span>
+        <span class="k">elif</span> <span class="n">force</span><span class="p">:</span>
+            <span class="n">action</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="s2">"install"</span><span class="p">,</span> <span class="s2">"replacing what was there"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">action</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="s2">"conflict"</span><span class="p">,</span> <span class="s2">"something else with this name is already there"</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"install"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">_place</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="n">link</span><span class="p">)</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"kind"</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
+                <span class="s2">"name"</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"destination"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">destination</span><span class="p">),</span>
+                <span class="s2">"action"</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span>
+                <span class="s2">"method"</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+                <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span> <span class="o">==</span> <span class="n">k</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"install"</span><span class="p">,</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"conflict"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"target"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">host</span><span class="p">),</span> <span class="s2">"dry_run"</span><span class="p">:</span> <span class="n">dry_run</span><span class="p">,</span> <span class="s2">"actions"</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">:</span> <span class="n">counts</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

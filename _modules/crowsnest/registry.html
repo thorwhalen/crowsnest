@@ -1,0 +1,348 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.registry &mdash; crowsnest 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.registry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.registry</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Who is alive right now, read from the registry Claude Code keeps while a session runs.</span>
+
+<span class="sd">Claude Code writes ``~/.claude/sessions/&lt;pid&gt;.json`` when a session starts, keeps it</span>
+<span class="sd">current while the session runs, and removes it on a clean exit. It is the one place that</span>
+<span class="sd">says -- without opening a transcript -- which sessions exist *now*, what each is called,</span>
+<span class="sd">where it is, and whether it is ``busy``, ``idle`` or ``waiting`` for its human; and when</span>
+<span class="sd">it is waiting, what for. It also carries the socket other sessions message it on, which</span>
+<span class="sd">is what makes a registered session *askable* and an unregistered process not.</span>
+
+<span class="sd">Two things this module does not do. It never reads a transcript: that is</span>
+<span class="sd">:mod:`crowsnest.activity`, and keeping the two apart is what keeps the roster instant on a</span>
+<span class="sd">machine with forty sessions. And it does not take the file's presence as proof of life --</span>
+<span class="sd">a crash or a reboot leaves the file behind -- so every record is checked against a running</span>
+<span class="sd">process before it is reported, through the ``is_alive`` seam.</span>
+
+<span class="sd">&gt;&gt;&gt; live_sessions(home='/nonexistent-dir-for-doctest')</span>
+<span class="sd">[]</span>
+<span class="sd">&gt;&gt;&gt; project_slug('/Users/me/py/proj/video_gen')</span>
+<span class="sd">'-Users-me-py-proj-video-gen'</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"DFLT_HOME"</span><span class="p">,</span>
+    <span class="s2">"HOME_ENV_VAR"</span><span class="p">,</span>
+    <span class="s2">"STATUSES"</span><span class="p">,</span>
+    <span class="s2">"LiveSession"</span><span class="p">,</span>
+    <span class="s2">"claude_home"</span><span class="p">,</span>
+    <span class="s2">"live_sessions"</span><span class="p">,</span>
+    <span class="s2">"pid_alive"</span><span class="p">,</span>
+    <span class="s2">"project_slug"</span><span class="p">,</span>
+    <span class="s2">"transcript_path"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: Claude Code's own variable for relocating its config directory. Honoured, not</span>
+<span class="c1">#: reinvented: the registry and the transcripts move with it.</span>
+<span class="n">HOME_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CLAUDE_CONFIG_DIR"</span>
+<span class="n">DFLT_HOME</span> <span class="o">=</span> <span class="s2">"~/.claude"</span>
+
+<span class="c1">#: The statuses the registry reports, in the order a roster shows them: what needs a human</span>
+<span class="c1">#: first, then what is working, then what is resting. Anything unrecognised sorts last.</span>
+<span class="n">STATUSES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">)</span>
+
+<span class="n">_PID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\d+$"</span><span class="p">)</span>
+<span class="n">_SLUG_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^A-Za-z0-9-]"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="claude_home">
+<a class="viewcode-back" href="../../module_docs/crowsnest/registry.html#crowsnest.claude_home">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">claude_home</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The Claude Code config directory: ``path``, else ``$CLAUDE_CONFIG_DIR``, else ``~/.claude``.</span>
+
+<span class="sd">    &gt;&gt;&gt; claude_home('/x/y').as_posix()</span>
+<span class="sd">    '/x/y'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+    <span class="n">override</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">HOME_ENV_VAR</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">override</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">override</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">DFLT_HOME</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="project_slug">
+<a class="viewcode-back" href="../../module_docs/crowsnest/registry.html#crowsnest.project_slug">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">project_slug</span><span class="p">(</span><span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The directory name Claude Code files a working directory's transcripts under.</span>
+
+<span class="sd">    Lossy on purpose (theirs, not ours): every character outside ``[A-Za-z0-9-]`` becomes</span>
+<span class="sd">    a dash, so ``video_gen`` and ``video.gen`` collide. :func:`transcript_path` falls back</span>
+<span class="sd">    to a search when the guess misses.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_SLUG_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="n">cwd</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="transcript_path">
+<a class="viewcode-back" href="../../module_docs/crowsnest/registry.html#crowsnest.transcript_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">transcript_path</span><span class="p">(</span><span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Where the transcript for ``(cwd, session_id)`` is, or should be.</span>
+
+<span class="sd">    The slug guess is tried first; when it misses -- an encoding edge, a session that</span>
+<span class="sd">    changed directory before its first line -- every project directory is searched for</span>
+<span class="sd">    the session id, which is unique. A path that exists nowhere is still returned, so a</span>
+<span class="sd">    caller can say *which* file is missing.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">claude_home</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"projects"</span>
+    <span class="n">guess</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="n">project_slug</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session_id</span><span class="si">}</span><span class="s2">.jsonl"</span>
+    <span class="k">if</span> <span class="n">guess</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">guess</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"*/</span><span class="si">{</span><span class="n">session_id</span><span class="si">}</span><span class="s2">.jsonl"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">candidate</span>
+    <span class="k">return</span> <span class="n">guess</span></div>
+
+
+
+<div class="viewcode-block" id="pid_alive">
+<a class="viewcode-back" href="../../module_docs/crowsnest/registry.html#crowsnest.pid_alive">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pid_alive</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Is there a process with this pid? Signal 0, the portable minimum.</span>
+
+<span class="sd">    No protection against pid reuse: ``xa.claude_fs.ephemeral_session_alive`` adds the</span>
+<span class="sd">    ``/proc`` start-time check on Linux, and is the replacement this seam exists for.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="ne">PermissionError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="LiveSession">
+<a class="viewcode-back" href="../../module_docs/crowsnest/registry.html#crowsnest.LiveSession">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LiveSession</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One running session, as the registry describes it. Flat and JSON-shaped."""</span>
+
+    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">waiting_for</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">status_since</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">started_at</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">transcript</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The working directory's last component -- the name a human uses for it."""</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The name the user gave the session, else the head of its id."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"project"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_json</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ms_to_s</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1000.0</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_session</span><span class="p">(</span><span class="n">rec</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiveSession</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">pid</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">cwd</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pid"</span><span class="p">),</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sessionId"</span><span class="p">),</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">session_id</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">cwd</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">LiveSession</span><span class="p">(</span>
+        <span class="n">pid</span><span class="o">=</span><span class="n">pid</span><span class="p">,</span>
+        <span class="n">session_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">session_id</span><span class="p">),</span>
+        <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="n">cwd</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">cwd</span><span class="p">),</span>
+        <span class="n">kind</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="n">status</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"unknown"</span><span class="p">),</span>
+        <span class="n">waiting_for</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waitingFor"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="n">status_since</span><span class="o">=</span><span class="n">_ms_to_s</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"statusUpdatedAt"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"updatedAt"</span><span class="p">)),</span>
+        <span class="n">started_at</span><span class="o">=</span><span class="n">_ms_to_s</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"startedAt"</span><span class="p">)),</span>
+        <span class="n">remote_control</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bridgeSessionId"</span><span class="p">)),</span>
+        <span class="n">version</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="n">transcript</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">transcript_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cwd</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">session_id</span><span class="p">),</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rank</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">STATUSES</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="p">)</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">STATUSES</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">STATUSES</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="o">-</span><span class="n">session</span><span class="o">.</span><span class="n">status_since</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="live_sessions">
+<a class="viewcode-back" href="../../module_docs/crowsnest/registry.html#crowsnest.live_sessions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">live_sessions</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_alive</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">pid_alive</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">LiveSession</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every registered session whose process is running, most urgent first.</span>
+
+<span class="sd">    Ordered by :data:`STATUSES` and then by how recently the status changed, so a roster</span>
+<span class="sd">    printed from this list reads top-down as: waiting on you, then working, then idle,</span>
+<span class="sd">    newest first within each.</span>
+
+<span class="sd">    ``home`` is the Claude Code config directory to read -- a synced copy of another</span>
+<span class="sd">    machine's works the same way, which is how one roster can cover several hosts.</span>
+<span class="sd">    ``is_alive`` decides whether a registry file still has a process behind it.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">claude_home</span><span class="p">(</span><span class="n">home</span><span class="p">)</span>
+    <span class="n">registry</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"sessions"</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registry</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LiveSession</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">registry</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">!=</span> <span class="s2">".json"</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_PID_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">rec</span> <span class="o">=</span> <span class="n">_read_json</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">_session</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">session</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_alive</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_rank</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.__main__</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.__main__</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The ``crowsnest`` command: the one surface v0 builds.</span>
+
+<span class="sd">Every verb is a thin renderer over a function in :mod:`crowsnest.tools`, the single list</span>
+<span class="sd">all surfaces dispatch from. The core prints nothing and exits nothing; the formatting is</span>
+<span class="sd">here so that a later MCP or HTTP adapter needs no change to the core.</span>
+
+<span class="sd">Bare ``crowsnest`` prints the roster, because the fewest keystrokes have to produce the</span>
+<span class="sd">useful thing.</span>
+<span class="sd">"""</span>
+
+<span class="c1"># PYTHON_ARGCOMPLETE_OK</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">skills</span> <span class="k">as</span> <span class="n">_skills</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">tools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">watch</span> <span class="k">as</span> <span class="n">_watch</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"main"</span><span class="p">]</span>
+
+<span class="n">DEFAULT_COMMAND</span> <span class="o">=</span> <span class="s2">"roster"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_age</span><span class="p">(</span><span class="n">epoch</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">epoch</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"?"</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span class="o">-</span> <span class="n">epoch</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">size</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">86400</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">),</span> <span class="p">(</span><span class="mi">3600</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">),</span> <span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="s2">"m"</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">seconds</span> <span class="o">&gt;=</span> <span class="n">size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">seconds</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">size</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}{</span><span class="n">unit</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">text</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">text</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_local</span><span class="p">(</span><span class="n">stamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""An ISO timestamp as local ``HH:MM``, or the raw value when unparseable."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">stamp</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">astimezone</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">stamp</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_row_detail</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
+        <span class="n">cause</span> <span class="o">=</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_flight"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"waiting"</span><span class="p">,</span>
+            <span class="n">cause</span> <span class="ow">or</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_assistant_text"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="s2">" · "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">p</span><span class="p">),</span> <span class="n">limit</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"busy"</span><span class="p">:</span>
+        <span class="n">running</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_flight"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span>
+        <span class="k">if</span> <span class="n">running</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="s2">"→ "</span> <span class="o">+</span> <span class="n">running</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="s2">"asked: "</span> <span class="o">+</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_user_prompt"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="n">limit</span><span class="p">)</span>
+    <span class="n">said</span> <span class="o">=</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_assistant_text"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">mark</span> <span class="o">=</span> <span class="s2">"⚠ "</span> <span class="k">if</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"errored"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">mark</span><span class="si">}</span><span class="s1">"</span><span class="si">{</span><span class="n">said</span><span class="si">}</span><span class="s1">"'</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">roster</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">brief</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">110</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Who is alive, most urgent first: waiting on you, then busy, then idle.</span>
+
+<span class="sd">    `--brief` answers from the registry alone, without reading any transcript.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">roster</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">activity</span><span class="o">=</span><span class="ow">not</span> <span class="n">brief</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">"sessions"</span><span class="p">]:</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'status'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}{</span><span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'status_since'</span><span class="p">])</span><span class="si">:</span><span class="s2">&gt;4</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'label'</span><span class="p">][:</span><span class="mi">26</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;27</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'project'</span><span class="p">][:</span><span class="mi">16</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;17</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">brief</span> <span class="k">else</span> <span class="n">_row_detail</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">width</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">)))</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">head</span> <span class="o">+</span> <span class="n">detail</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"counts"</span><span class="p">]</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"-- </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">'sessions'</span><span class="p">])</span><span class="si">}</span><span class="s2"> live: </span><span class="si">{</span><span class="n">summary</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">recent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""One session in full: what it was asked, what it said, what it is running now.</span>
+
+<span class="sd">    `session` is a registry name, a unique prefix of one, a session-id prefix, or a pid.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">recent</span><span class="o">=</span><span class="n">recent</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">s</span><span class="p">,</span> <span class="n">act</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"session"</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="s2">"activity"</span><span class="p">]</span>
+    <span class="n">since</span> <span class="o">=</span> <span class="n">_age</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"status_since"</span><span class="p">])</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'status'</span><span class="p">]</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">since</span><span class="si">}</span><span class="s2">"</span>
+        <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">", </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'waiting_for'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s2">"waiting_for"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">")"</span>
+    <span class="p">]</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"pid </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'pid'</span><span class="p">]</span><span class="si">}</span><span class="s2"> · session </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'session_id'</span><span class="p">][:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'cwd'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+        <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">" · branch </span><span class="si">{</span><span class="n">act</span><span class="p">[</span><span class="s1">'git_branch'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="s2">"git_branch"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">(</span><span class="s2">" · remote control on"</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s2">"remote_control"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="s2">"pending_question"</span><span class="p">]:</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"## Waiting on you"</span><span class="p">,</span> <span class="n">act</span><span class="p">[</span><span class="s2">"pending_question"</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="s2">"in_flight"</span><span class="p">]:</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"## In flight"</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">act</span><span class="p">[</span><span class="s2">"in_flight"</span><span class="p">]]]</span>
+    <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"## Last asked (</span><span class="si">{</span><span class="n">_local</span><span class="p">(</span><span class="n">act</span><span class="p">[</span><span class="s1">'last_prompt_at'</span><span class="p">])</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+        <span class="n">act</span><span class="p">[</span><span class="s2">"last_user_prompt"</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"(none in the tail)"</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"## Last said (</span><span class="si">{</span><span class="n">_local</span><span class="p">(</span><span class="n">act</span><span class="p">[</span><span class="s1">'last_text_at'</span><span class="p">])</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+        <span class="n">act</span><span class="p">[</span><span class="s2">"last_assistant_text"</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"(none in the tail)"</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="s2">"recent_tools"</span><span class="p">]:</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"## Recent tools"</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">act</span><span class="p">[</span><span class="s2">"recent_tools"</span><span class="p">]]]</span>
+    <span class="n">flags</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"turn_open"</span><span class="p">,</span> <span class="s2">"errored"</span><span class="p">)</span> <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">flags</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">act</span><span class="p">[</span><span class="s2">"tail_complete"</span><span class="p">]:</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"flags: "</span>
+            <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">flags</span> <span class="o">+</span> <span class="p">([]</span> <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="s2">"tail_complete"</span><span class="p">]</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"tail only"</span><span class="p">])),</span>
+        <span class="p">]</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">turns</span><span class="p">(</span>
+    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The last few turns of a session, oldest first. `--before N` pages back from turn N."""</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">turns</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'session'</span><span class="p">][</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> — turns"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">]:</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="s2">""</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"## turn </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="s1">'index'</span><span class="p">]</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">_local</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s1">'prompt_at'</span><span class="p">])</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"&gt; </span><span class="si">{</span><span class="n">t</span><span class="p">[</span><span class="s1">'prompt'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">t</span><span class="p">[</span><span class="s2">"tools"</span><span class="p">]:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"tools (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s1">'tools'</span><span class="p">])</span><span class="si">}</span><span class="s2">): "</span>
+                <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s2">"tools"</span><span class="p">][:</span><span class="mi">8</span><span class="p">])</span>
+                <span class="o">+</span> <span class="p">(</span><span class="s2">" …"</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s2">"tools"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">8</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s2">"reply"</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"(no final text)"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">"turns"</span><span class="p">]:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"(no turns)"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">watch</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_watch</span><span class="o">.</span><span class="n">DFLT_INTERVAL</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Print one line per change, forever: started, exited, idle, busy, waiting, error.</span>
+
+<span class="sd">    Built for Claude Code's `Monitor` tool: each line becomes a notification in the</span>
+<span class="sd">    watching session. Stop with Ctrl-C.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">_watch</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="n">interval</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">when</span> <span class="o">=</span> <span class="n">_local</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">"at"</span><span class="p">])</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">when</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'project'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
+                <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"detail"</span><span class="p">]:</span>
+                    <span class="n">line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">" — </span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'detail'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">install_skills</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">only</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Link the bundled skill and subagent into ~/.claude (or `--target`). Idempotent."""</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="n">only</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="n">_skills</span><span class="o">.</span><span class="n">install_skills</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="n">names</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'would install'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">dry_run</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'installed'</span><span class="si">}</span><span class="s2"> into </span><span class="si">{</span><span class="n">plan</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">]:</span>
+        <span class="n">how</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'method'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'action'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;9</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;7</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;18</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'reason'</span><span class="p">]</span><span class="si">}{</span><span class="n">how</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+
+<span class="n">_commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">roster</span><span class="p">,</span> <span class="n">show</span><span class="p">,</span> <span class="n">turns</span><span class="p">,</span> <span class="n">watch</span><span class="p">,</span> <span class="n">install_skills</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../module_docs/crowsnest/__main__.html#crowsnest.__main__.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Dispatch the ``crowsnest`` command. Bare ``crowsnest`` runs :func:`roster`."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cw</span>
+
+    <span class="n">argv</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">argv</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">argv</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">argv</span> <span class="ow">or</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"-h"</span><span class="p">,</span> <span class="s2">"--help"</span><span class="p">):</span>
+        <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">DEFAULT_COMMAND</span><span class="p">,</span> <span class="o">*</span><span class="n">argv</span><span class="p">]</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">mk_parser</span><span class="p">(</span>
+        <span class="n">_commands</span><span class="p">,</span> <span class="n">prog</span><span class="o">=</span><span class="s2">"crowsnest"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">argv</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"crowsnest: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">code</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">code</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

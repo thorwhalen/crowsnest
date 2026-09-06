@@ -1,0 +1,162 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.skills &mdash; crowsnest 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.tools" href="tools.html" />
+    <link rel="prev" title="crowsnest.registry" href="registry.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.skills</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.skills.Asset"><code class="docutils literal notranslate"><span class="pre">Asset</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.skills.bundled"><code class="docutils literal notranslate"><span class="pre">bundled()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.skills.install_skills"><code class="docutils literal notranslate"><span class="pre">install_skills()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.skills</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/skills.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.skills">
+<span id="crowsnest-skills"></span><h1>crowsnest.skills<a class="headerlink" href="#module-crowsnest.skills" title="Link to this heading"></a></h1>
+<p>The agent-facing surface: one skill, one subagent, and the command that installs them.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">crowsnest</span></code> command is plumbing. What a person wants is a session that runs it and
+says what matters – and that is a markdown file an agent host loads, shipped inside the
+package so that upgrading the package upgrades the skill. Installing one is a symlink;
+where symlinks are unavailable, a copy, and the plan says which happened.</p>
+<p>Nothing already at a destination is overwritten: a foreign file of the same name reads
+<code class="docutils literal notranslate"><span class="pre">conflict</span></code> and stays as it was until <code class="docutils literal notranslate"><span class="pre">force=True</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">bundled</span><span class="p">())</span>
+<span class="go">['crowsnest', 'crowsnest-scout']</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.skills.Asset">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.skills.</span></span><span class="sig-name descname"><span class="pre">Asset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/skills.html#Asset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.skills.Asset" title="Link to this definition"></a></dt>
+<dd><p>One installable thing: a skill directory or a subagent file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.skills.bundled">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.skills.</span></span><span class="sig-name descname"><span class="pre">bundled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.skills.Asset" title="crowsnest.skills.Asset"><span class="pre">Asset</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/skills.html#bundled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.skills.bundled" title="Link to this definition"></a></dt>
+<dd><p>Every skill and subagent this package ships, discovered from the directories.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.skills.install_skills">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.skills.</span></span><span class="sig-name descname"><span class="pre">install_skills</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/skills.html#install_skills"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.skills.install_skills" title="Link to this definition"></a></dt>
+<dd><p>Make the bundled skill and subagent visible to Claude Code. Idempotent.</p>
+<p>Links each into <code class="docutils literal notranslate"><span class="pre">target</span></code> (default <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CONFIG_DIR</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code>). Returns
+the plan: one row per asset with its action – <code class="docutils literal notranslate"><span class="pre">install</span></code>, <code class="docutils literal notranslate"><span class="pre">ok</span></code> (already ours) or
+<code class="docutils literal notranslate"><span class="pre">conflict</span></code> (something else is there; left alone unless <code class="docutils literal notranslate"><span class="pre">force</span></code>).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span> <span class="o">=</span> <span class="n">install_skills</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s1">'/nonexistent/host'</span><span class="p">,</span> <span class="n">dry_run</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plan</span><span class="p">[</span><span class="s1">'counts'</span><span class="p">]</span>
+<span class="go">{'install': 2, 'ok': 0, 'conflict': 0}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="registry.html" class="btn btn-neutral float-left" title="crowsnest.registry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tools.html" class="btn btn-neutral float-right" title="crowsnest.tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
