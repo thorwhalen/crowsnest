@@ -78,9 +78,9 @@ What a transcript's content *means* is [openloops](https://github.com/thorwhalen
 ```python
 from crowsnest import roster, show, turns, events, live_sessions
 
-roster()["counts"]                     # {'waiting': 1, 'busy': 1, 'idle': 30, 'other': 0}
+roster()["counts"]  # {'waiting': 1, 'busy': 1, 'idle': 30, 'other': 0}
 show("monitor")["activity"]["last_assistant_text"]
-for event in events(interval=5):       # forever
+for event in events(interval=5):  # forever
     ...
 ```
 
