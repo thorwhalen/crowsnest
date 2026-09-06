@@ -16,6 +16,8 @@ import json as _json
 import sys
 from datetime import datetime, timezone
 
+from crowsnest import hook as _hook
+from crowsnest import ledger as _ledger
 from crowsnest import skills as _skills
 from crowsnest import tools
 from crowsnest import watch as _watch
@@ -214,6 +216,9 @@ def watch(
 ):
     """Print one line per change, forever: started, exited, idle, busy, waiting, error.
 
+    Plus `needs-you` and `stopped`, pushed by Claude Code's own hooks the moment they
+    happen, when `crowsnest hook` is installed on them.
+
     Built for Claude Code's `Monitor` tool: each line becomes a notification in the
     watching session. Stop with Ctrl-C.
     """
@@ -229,6 +234,55 @@ def watch(
             print(line, flush=True)
     except KeyboardInterrupt:
         pass
+
+
+def hook(event: str, *, home: str | None = None):
+    """Record one Claude Code hook event. Reads the hook's JSON on stdin.
+
+    Two lines in `~/.claude/settings.json` install it -- a `Stop` hook running
+    `crowsnest hook stop`, and a `Notification` hook running `crowsnest hook
+    notification` (`crowsnest init` writes them for you). Prints nothing and always
+    exits 0: a crowsnest that is broken must not break the session it is watching.
+    """
+    try:
+        try:
+            payload = _json.loads(sys.stdin.read() or "{}")
+        except ValueError:
+            payload = {}  # `handle` logs the why; the hook still exits 0
+        _hook.handle(event, payload if isinstance(payload, dict) else {}, home=home)
+    except Exception:  # noqa: BLE001, S110 -- `handle` logged it; exiting 0 is the job
+        pass
+
+
+def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
+    """One session's ledger, or -- with no name -- every ledger with its age.
+
+    A ledger is the durable page a session leaves behind: what it was last asked and
+    said, what it decided, what it is still waiting on you for. Printed verbatim,
+    because it is markdown a human wrote and a human reads.
+    """
+    if not name:
+        rows = _ledger.list_ledgers(ledger_dir=ledger_dir)
+        if json:
+            return _json.dumps(rows, indent=2)
+        lines = [
+            f"{_age(row['updated_at']):>4}  {row['name'][:26]:<27}"
+            f"{(row['state'] or '-')[:16]:<17}"
+            f"{_one_line(_ledger.split_stamp(row['last_said'])[1], 60)}".rstrip()
+            for row in rows
+        ]
+        lines.append(f"-- {len(rows)} in {_ledger.ledger_dir(ledger_dir)}")
+        return "\n".join(lines)
+    pages = [_ledger.read_ledger(one, ledger_dir=ledger_dir) for one in name]
+    if json:
+        return _json.dumps(pages if len(pages) > 1 else pages[0], indent=2)
+    known = ", ".join(row["name"] for row in _ledger.list_ledgers(ledger_dir=ledger_dir))
+    return "\n\n".join(
+        page["text"].rstrip()
+        if page["exists"]
+        else f"(no ledger for {page['name']!r}; known: {known or 'none'})"
+        for page in pages
+    )
 
 
 def install_skills(
@@ -282,7 +336,7 @@ def spawn(
     )
 
 
-_commands = [roster, show, turns, watch, install_skills, spawn]
+_commands = [roster, show, turns, watch, ledger, hook, install_skills, spawn]
 
 
 def main(argv: list[str] | None = None) -> None:

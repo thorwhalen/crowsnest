@@ -204,3 +204,49 @@ ALIVE = {101, 102, 103}
 
 def alive(pid: int) -> bool:
     return pid in ALIVE
+
+
+def hook_payload(
+    event: str = "Stop",
+    *,
+    session: str = "s1",
+    cwd: str = "/w/demo",
+    transcript: str = "",
+    **extra,
+) -> dict:
+    """The JSON Claude Code writes on a hook's stdin, with the fields crowsnest reads."""
+    return {
+        "session_id": session,
+        "cwd": cwd,
+        "transcript_path": transcript,
+        "hook_event_name": event,
+        "permission_mode": "default",
+        **extra,
+    }
+
+
+def big_transcript(path: Path, *, session: str = "s1", turns: int = 400) -> Path:
+    """A transcript the size a session that has been running all day reaches (megabytes)."""
+    filler = "x" * 900
+    records: list[dict] = []
+    for turn in range(turns):
+        at = stamp(1, 9 + turn // 60, turn % 60)
+        records += [
+            user(f"turn {turn}: {filler}", at=at, session=session),
+            assistant(
+                at=at,
+                session=session,
+                blocks=[
+                    tool_use(
+                        "Bash",
+                        {"command": filler, "description": "work"},
+                        call_id=f"c{turn}",
+                    )
+                ],
+            ),
+            tool_result(f"c{turn}", at=at, session=session, text=filler),
+            assistant(f"done with turn {turn}", at=at, session=session),
+        ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(json.dumps(r) + "\n" for r in records))
+    return path
