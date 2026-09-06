@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.8 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.9 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=53b53b71"></script>
+      <script src="../../_static/documentation_options.js?v=f7cdbf68"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -318,9 +318,15 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">watch</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_watch</span><span class="o">.</span><span class="n">DFLT_INTERVAL</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_watch</span><span class="o">.</span><span class="n">DFLT_INTERVAL</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Print one line per change, forever: started, exited, idle, busy, waiting, error.</span>
+
+<span class="sd">    `--all-homes` watches every home in the config file; a row then reads `name@home`.</span>
 
 <span class="sd">    Plus `needs-you` and `stopped`, pushed by Claude Code's own hooks the moment they</span>
 <span class="sd">    happen, when `crowsnest hook` is installed on them.</span>
@@ -329,12 +335,13 @@
 <span class="sd">    watching session. Stop with Ctrl-C.</span>
 <span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">_watch</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="n">interval</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">_watch</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="n">interval</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
                 <span class="n">line</span> <span class="o">=</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">when</span> <span class="o">=</span> <span class="n">_local</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">"at"</span><span class="p">])</span>
-                <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">when</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'project'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
+                <span class="n">who</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"@</span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">when</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'project'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
                 <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"detail"</span><span class="p">]:</span>
                     <span class="n">line</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">" — </span><span class="si">{</span><span class="n">event</span><span class="p">[</span><span class="s1">'detail'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
