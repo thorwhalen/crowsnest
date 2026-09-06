@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -34,6 +35,7 @@ __all__ = [
     "STATUSES",
     "LiveSession",
     "claude_home",
+    "fresh_within",
     "live_sessions",
     "pid_alive",
     "project_slug",
@@ -144,6 +146,7 @@ class LiveSession:
     remote_control: bool
     version: str
     transcript: str
+    home: str = ""
 
     @property
     def project(self) -> str:
@@ -177,7 +180,7 @@ def _ms_to_s(value) -> float:
         return 0.0
 
 
-def _session(rec: dict, *, home: Path) -> LiveSession | None:
+def _session(rec: dict, *, home: Path, home_name: str = "") -> LiveSession | None:
     pid, session_id, cwd = rec.get("pid"), rec.get("sessionId"), rec.get("cwd")
     if not isinstance(pid, int) or not session_id or not cwd:
         return None
@@ -194,6 +197,7 @@ def _session(rec: dict, *, home: Path) -> LiveSession | None:
         remote_control=bool(rec.get("bridgeSessionId")),
         version=str(rec.get("version") or ""),
         transcript=str(transcript_path(str(cwd), str(session_id), home=home)),
+        home=home_name,
     )
 
 
@@ -204,10 +208,33 @@ def _rank(session: LiveSession) -> tuple[int, float]:
     return (order, -session.status_since)
 
 
+def fresh_within(
+    seconds: float, *, now: Callable[[], float] = time.time
+) -> Callable[[LiveSession], bool]:
+    """A liveness rule for a synced copy of another machine's home: alive while fresh.
+
+    The pids in such a copy belong to the other machine, so the only evidence of life is
+    that the record changed recently. Pass the result as ``is_live=``.
+
+    >>> rule = fresh_within(60, now=lambda: 1000.0)
+    >>> rule(LiveSession(1, 's', '', '/w', '', 'idle', '', 990.0, 0, False, '', ''))
+    True
+    >>> rule(LiveSession(1, 's', '', '/w', '', 'idle', '', 900.0, 0, False, '', ''))
+    False
+    """
+
+    def rule(session: LiveSession) -> bool:
+        return now() - session.status_since <= seconds
+
+    return rule
+
+
 def live_sessions(
     *,
     home: str | Path | None = None,
     is_alive: Callable[[int], bool] = pid_alive,
+    is_live: Callable[[LiveSession], bool] | None = None,
+    home_name: str = "",
 ) -> list[LiveSession]:
     """Every registered session whose process is running, most urgent first.
 
@@ -217,7 +244,10 @@ def live_sessions(
 
     ``home`` is the Claude Code config directory to read -- a synced copy of another
     machine's works the same way, which is how one roster can cover several hosts.
-    ``is_alive`` decides whether a registry file still has a process behind it.
+    ``is_alive`` decides whether a registry file still has a process behind it; for a
+    synced copy pass ``is_live=fresh_within(...)`` instead, which replaces the pid check
+    with a freshness rule. ``home_name`` is stamped on every record so a roster over
+    several homes can say where each row came from.
     """
     root = claude_home(home)
     registry = root / "sessions"
@@ -230,8 +260,13 @@ def live_sessions(
         rec = _read_json(path)
         if rec is None:
             continue
-        session = _session(rec, home=root)
-        if session is None or not is_alive(session.pid):
+        session = _session(rec, home=root, home_name=home_name)
+        if session is None:
+            continue
+        if is_live is not None:
+            if not is_live(session):
+                continue
+        elif not is_alive(session.pid):
             continue
         found.append(session)
     return sorted(found, key=_rank)

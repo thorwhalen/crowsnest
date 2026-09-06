@@ -130,3 +130,47 @@ def test_waiting_row_without_a_cause_shows_the_age_of_its_last_words(
 def test_show_prints_the_turn_count(home, capsys):
     main(["show", "fixer", "--home", str(home)])
     assert "\nturns: 1" in capsys.readouterr().out
+
+
+def test_all_homes_reads_every_configured_home_with_a_column(
+    tmp_path, monkeypatch, capsys
+):
+    from fixtures import (
+        finished_session,
+        registry_record,
+        write_registry,
+        write_transcript,
+    )
+
+    home_a = demo_home(tmp_path / "a")
+    home_b = tmp_path / "b" / "claude"
+    write_transcript(home_b, "/w/demo", "s1", finished_session("s1"))
+    write_registry(
+        home_b,
+        registry_record(201, "s1", name="fixer", status="idle", status_at_ms=1_000_000),
+    )
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(
+        f'[[homes]]\nname = "one"\npath = "{home_a}"\n\n[[homes]]\nname = "two"\npath = "{home_b}"\n'
+    )
+    monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
+    alive = ALIVE | {201}
+    monkeypatch.setattr(registry, "pid_alive", lambda pid: pid in alive)
+    monkeypatch.setattr(
+        tools,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(
+            **{"is_alive": lambda pid: pid in alive, **kw}
+        ),
+    )
+    main(["--all-homes"])
+    out = capsys.readouterr().out
+    rows = [ln for ln in out.splitlines() if ln.strip() and not ln.startswith("--")]
+    assert len(rows) == 4
+    assert sum("one " in ln for ln in rows) == 3 and sum("two " in ln for ln in rows) == 1
+    # the same name in two homes is ambiguous without a home, and picked with one
+    with pytest.raises(SystemExit):
+        main(["show", "fixer", "--all-homes"])
+    assert "fixer@one, fixer@two" in capsys.readouterr().err
+    main(["show", "fixer@two", "--all-homes"])
+    assert "home two" in capsys.readouterr().out

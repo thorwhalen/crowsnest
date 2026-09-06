@@ -86,15 +86,28 @@ def _row_detail(row: dict, limit: int) -> str:
     return _one_line(f'{mark}"{said}"' if said else "", limit)
 
 
-def roster(*, home: str | None = None, brief: bool = False, width: int = 110):
+def roster(
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    brief: bool = False,
+    width: int = 110,
+):
     """Who is alive, most urgent first: waiting on you, then busy, then idle.
 
     `--brief` answers from the registry alone, without reading any transcript.
+    `--all-homes` reads every home in the config file (accounts, synced machines) and
+    adds a column saying which.
     """
-    result = tools.roster(home=home, activity=not brief)
+    result = tools.roster(home=home, all_homes=all_homes, activity=not brief)
     lines = []
+    tagged = any(row.get("home") for row in result["sessions"])
     for row in result["sessions"]:
-        head = f"{row['status']:<8}{_age(row['status_since']):>4}  {row['label'][:26]:<27}{row['project'][:16]:<17}"
+        where = f"{row['home'][:10]:<11}" if tagged else ""
+        head = (
+            f"{row['status']:<8}{_age(row['status_since']):>4}  {where}"
+            f"{row['label'][:26]:<27}{row['project'][:16]:<17}"
+        )
         detail = "" if brief else _row_detail(row, max(20, width - len(head)))
         lines.append((head + detail).rstrip())
     counts = result["counts"]
@@ -103,12 +116,20 @@ def roster(*, home: str | None = None, brief: bool = False, width: int = 110):
     return "\n".join(lines)
 
 
-def show(session: str, *, home: str | None = None, recent: int = 8, json: bool = False):
+def show(
+    session: str,
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    recent: int = 8,
+    json: bool = False,
+):
     """One session in full: what it was asked, what it said, what it is running now.
 
-    `session` is a registry name, a unique prefix of one, a session-id prefix, or a pid.
+    `session` is a registry name, a unique prefix of one, a session-id prefix, or a pid;
+    with `--all-homes`, `name@home` picks one home.
     """
-    result = tools.show(session, home=home, recent=recent)
+    result = tools.show(session, home=home, all_homes=all_homes, recent=recent)
     if json:
         return _json.dumps(result, indent=2)
     s, act = result["session"], result["activity"]
@@ -120,6 +141,7 @@ def show(session: str, *, home: str | None = None, recent: int = 8, json: bool =
     ]
     out.append(
         f"pid {s['pid']} · session {s['session_id'][:8]} · {s['cwd']}"
+        + (f" · home {s['home']}" if s.get("home") else "")
         + (f" · branch {act['git_branch']}" if act["git_branch"] else "")
         + (" · remote control on" if s["remote_control"] else "")
     )
@@ -157,10 +179,13 @@ def turns(
     last: int = 5,
     before: int | None = None,
     home: str | None = None,
+    all_homes: bool = False,
     json: bool = False,
 ):
     """The last few turns of a session, oldest first. `--before N` pages back from turn N."""
-    result = tools.turns(session, last=last, before=before, home=home)
+    result = tools.turns(
+        session, last=last, before=before, home=home, all_homes=all_homes
+    )
     if json:
         return _json.dumps(result, indent=2)
     out = [f"# {result['session']['label']} — turns"]
