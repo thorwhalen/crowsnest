@@ -5,6 +5,7 @@
    module_docs/crowsnest
    module_docs/crowsnest/__main__
    module_docs/crowsnest/activity
+   module_docs/crowsnest/paths
    module_docs/crowsnest/registry
    module_docs/crowsnest/skills
    module_docs/crowsnest/tools
