@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.2 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -49,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
@@ -169,15 +170,28 @@
     <span class="k">return</span> <span class="n">_one_line</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">mark</span><span class="si">}</span><span class="s1">"</span><span class="si">{</span><span class="n">said</span><span class="si">}</span><span class="s1">"'</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">roster</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">brief</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">110</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">roster</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">brief</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">110</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Who is alive, most urgent first: waiting on you, then busy, then idle.</span>
 
 <span class="sd">    `--brief` answers from the registry alone, without reading any transcript.</span>
+<span class="sd">    `--all-homes` reads every home in the config file (accounts, synced machines) and</span>
+<span class="sd">    adds a column saying which.</span>
 <span class="sd">    """</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">roster</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">activity</span><span class="o">=</span><span class="ow">not</span> <span class="n">brief</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">roster</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">activity</span><span class="o">=</span><span class="ow">not</span> <span class="n">brief</span><span class="p">)</span>
     <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">tagged</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">"sessions"</span><span class="p">])</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">"sessions"</span><span class="p">]:</span>
-        <span class="n">head</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'status'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}{</span><span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'status_since'</span><span class="p">])</span><span class="si">:</span><span class="s2">&gt;4</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'label'</span><span class="p">][:</span><span class="mi">26</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;27</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'project'</span><span class="p">][:</span><span class="mi">16</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;17</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'home'</span><span class="p">][:</span><span class="mi">10</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;11</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">tagged</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'status'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}{</span><span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'status_since'</span><span class="p">])</span><span class="si">:</span><span class="s2">&gt;4</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'label'</span><span class="p">][:</span><span class="mi">26</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;27</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'project'</span><span class="p">][:</span><span class="mi">16</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;17</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
         <span class="n">detail</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">brief</span> <span class="k">else</span> <span class="n">_row_detail</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">width</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">)))</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">head</span> <span class="o">+</span> <span class="n">detail</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
     <span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"counts"</span><span class="p">]</span>
@@ -186,12 +200,20 @@
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">recent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span>
+    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">recent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">"""One session in full: what it was asked, what it said, what it is running now.</span>
 
-<span class="sd">    `session` is a registry name, a unique prefix of one, a session-id prefix, or a pid.</span>
+<span class="sd">    `session` is a registry name, a unique prefix of one, a session-id prefix, or a pid;</span>
+<span class="sd">    with `--all-homes`, `name@home` picks one home.</span>
 <span class="sd">    """</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">recent</span><span class="o">=</span><span class="n">recent</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">recent</span><span class="o">=</span><span class="n">recent</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">s</span><span class="p">,</span> <span class="n">act</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"session"</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="s2">"activity"</span><span class="p">]</span>
@@ -203,6 +225,7 @@
     <span class="p">]</span>
     <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">"pid </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'pid'</span><span class="p">]</span><span class="si">}</span><span class="s2"> · session </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'session_id'</span><span class="p">][:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'cwd'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+        <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">" · home </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
         <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">" · branch </span><span class="si">{</span><span class="n">act</span><span class="p">[</span><span class="s1">'git_branch'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">act</span><span class="p">[</span><span class="s2">"git_branch"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
         <span class="o">+</span> <span class="p">(</span><span class="s2">" · remote control on"</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s2">"remote_control"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
     <span class="p">)</span>
@@ -240,10 +263,13 @@
     <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
     <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The last few turns of a session, oldest first. `--before N` pages back from turn N."""</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">turns</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">turns</span><span class="p">(</span>
+        <span class="n">session</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'session'</span><span class="p">][</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> — turns"</span><span class="p">]</span>

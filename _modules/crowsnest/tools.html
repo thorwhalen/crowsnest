@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.tools &mdash; crowsnest 0.0.2 documentation</title>
+  <title>crowsnest.tools &mdash; crowsnest 0.0.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -49,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
@@ -96,9 +97,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.activity</span><span class="w"> </span><span class="kn">import</span> <span class="n">RECENT_TOOLS</span><span class="p">,</span> <span class="n">read_activity</span><span class="p">,</span> <span class="n">read_turns</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">STATUSES</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">live_sessions</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">homes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">STATUSES</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">fresh_within</span><span class="p">,</span> <span class="n">live_sessions</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"resolve"</span><span class="p">,</span> <span class="s2">"roster"</span><span class="p">,</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"turns"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"resolve"</span><span class="p">,</span> <span class="s2">"roster"</span><span class="p">,</span> <span class="s2">"sessions"</span><span class="p">,</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"turns"</span><span class="p">]</span>
 
 <span class="c1">#: How much of a prompt or a reply a roster row carries. ``show`` carries it whole.</span>
 <span class="n">ROSTER_TEXT_LIMIT</span> <span class="o">=</span> <span class="mi">240</span>
@@ -109,27 +111,66 @@
     <span class="k">return</span> <span class="n">text</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">text</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
 
 
+<div class="viewcode-block" id="sessions">
+<a class="viewcode-back" href="../../module_docs/crowsnest/tools.html#crowsnest.sessions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sessions</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">LiveSession</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The live sessions of one home, or of every configured home when ``all_homes``.</span>
+
+<span class="sd">    With ``all_homes`` each record carries the name of the home it came from, and a home</span>
+<span class="sd">    marked ``remote`` in the config is read with a freshness rule instead of a pid check.</span>
+<span class="sd">    Rows keep the roster order within each home; homes come in config order.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_homes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LiveSession</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">):</span>
+        <span class="n">rule</span> <span class="o">=</span> <span class="n">fresh_within</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">fresh_seconds</span><span class="p">)</span> <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">remote</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">h</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">home_name</span><span class="o">=</span><span class="n">h</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">is_live</span><span class="o">=</span><span class="n">rule</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tag</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span> <span class="k">else</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
+
+
 <div class="viewcode-block" id="resolve">
 <a class="viewcode-back" href="../../module_docs/crowsnest/tools.html#crowsnest.resolve">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiveSession</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span>
+    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiveSession</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The live session a human means by ``session``.</span>
 
 <span class="sd">    Tried in order: the exact registry name, a unique name prefix, a unique session-id</span>
-<span class="sd">    prefix, the pid. Raises ``KeyError`` naming the candidates when nothing or too much</span>
-<span class="sd">    matches -- an ambiguous pick is a wrong pick half the time.</span>
+<span class="sd">    prefix, the pid. ``name@home`` names a session in one home when several homes are</span>
+<span class="sd">    read. Raises ``KeyError`` naming the candidates when nothing or too much matches --</span>
+<span class="sd">    an ambiguous pick is a wrong pick half the time.</span>
 <span class="sd">    """</span>
     <span class="n">wanted</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="n">sessions</span> <span class="o">=</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-    <span class="n">exact</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">wanted</span><span class="p">]</span>
+    <span class="n">candidates</span> <span class="o">=</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"@"</span> <span class="ow">in</span> <span class="n">wanted</span> <span class="ow">and</span> <span class="n">all_homes</span><span class="p">:</span>
+        <span class="n">wanted</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">in_home</span> <span class="o">=</span> <span class="n">wanted</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"@"</span><span class="p">)</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">candidates</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">home</span> <span class="o">==</span> <span class="n">in_home</span><span class="p">]</span>
+    <span class="n">sessions_</span> <span class="o">=</span> <span class="n">candidates</span>
+    <span class="n">exact</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions_</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">wanted</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">exact</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">exact</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">by_name</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">wanted</span><span class="p">)]</span>
-    <span class="n">by_id</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">wanted</span><span class="p">)]</span>
-    <span class="n">by_pid</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">wanted</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">pid</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">wanted</span><span class="p">)]</span>
+    <span class="n">by_name</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions_</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">wanted</span><span class="p">)]</span>
+    <span class="n">by_id</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions_</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">wanted</span><span class="p">)]</span>
+    <span class="n">by_pid</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions_</span> <span class="k">if</span> <span class="n">wanted</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">pid</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">wanted</span><span class="p">)]</span>
     <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="p">(</span><span class="n">by_name</span><span class="p">,</span> <span class="n">by_id</span><span class="p">,</span> <span class="n">by_pid</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">matches</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">s</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">exact</span> <span class="o">+</span> <span class="n">by_name</span> <span class="o">+</span> <span class="n">by_id</span> <span class="o">+</span> <span class="n">by_pid</span><span class="p">})</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">_tag</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">exact</span> <span class="o">+</span> <span class="n">by_name</span> <span class="o">+</span> <span class="n">by_id</span> <span class="o">+</span> <span class="n">by_pid</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">matches</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">wanted</span><span class="si">!r}</span><span class="s2"> is ambiguous: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no live session matches </span><span class="si">{</span><span class="n">wanted</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span></div>
@@ -141,16 +182,19 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">roster</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">activity</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">text_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">ROSTER_TEXT_LIMIT</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Every live session, most urgent first, each with a clipped view of its activity.</span>
 
 <span class="sd">    ``activity=False`` skips the transcript tails and answers from the registry alone --</span>
-<span class="sd">    instant, and enough to know who is waiting.</span>
+<span class="sd">    instant, and enough to know who is waiting. ``all_homes`` reads every configured</span>
+<span class="sd">    home (see :mod:`crowsnest.config`) and stamps each row with its home's name.</span>
 <span class="sd">    """</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">):</span>
         <span class="n">row</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">activity</span><span class="p">:</span>
             <span class="n">act</span> <span class="o">=</span> <span class="n">read_activity</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">recent</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
@@ -180,10 +224,12 @@
     <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">recent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">RECENT_TOOLS</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""One session in full: its registry record and its activity, unclipped."""</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
     <span class="n">act</span> <span class="o">=</span> <span class="n">read_activity</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">recent</span><span class="o">=</span><span class="n">recent</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"activity"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()}</span></div>
 
@@ -197,9 +243,11 @@
     <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
     <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The last ``last`` turns of a session, oldest first; ``before=N`` pages back from turn N."""</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">read_turns</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]}</span></div>
 

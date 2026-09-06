@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; crowsnest 0.0.2 documentation</title>
+  <title>Index &mdash; crowsnest 0.0.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="_static/documentation_options.js?v=8c5712d9"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -49,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest.html">crowsnest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
@@ -88,6 +89,7 @@
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
@@ -128,6 +130,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/registry.html#crowsnest.registry.claude_home">claude_home() (in module crowsnest.registry)</a>
 </li>
+      <li><a href="module_docs/crowsnest/config.html#crowsnest.config.CONFIG_ENV_VAR">CONFIG_ENV_VAR (in module crowsnest.config)</a>
+</li>
+      <li><a href="module_docs/crowsnest/config.html#crowsnest.config.config_path">config_path() (in module crowsnest.config)</a>
+</li>
       <li>
     crowsnest
 
@@ -150,14 +156,21 @@
 </li>
       </ul></li>
       <li>
+    crowsnest.config
+
+      <ul>
+        <li><a href="module_docs/crowsnest/config.html#module-crowsnest.config">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
     crowsnest.paths
 
       <ul>
         <li><a href="module_docs/crowsnest/paths.html#module-crowsnest.paths">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     crowsnest.registry
 
@@ -196,9 +209,11 @@
 </li>
       <li><a href="module_docs/crowsnest/paths.html#crowsnest.paths.DATA_DIR_ENV_VAR">DATA_DIR_ENV_VAR (in module crowsnest.paths)</a>
 </li>
+      <li><a href="module_docs/crowsnest/activity.html#crowsnest.activity.describe_tool">describe_tool() (in module crowsnest.activity)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="module_docs/crowsnest/activity.html#crowsnest.activity.describe_tool">describe_tool() (in module crowsnest.activity)</a>
+      <li><a href="module_docs/crowsnest/config.html#crowsnest.config.DFLT_FRESH_SECONDS">DFLT_FRESH_SECONDS (in module crowsnest.config)</a>
 </li>
       <li><a href="module_docs/crowsnest/watch.html#crowsnest.watch.DFLT_INTERVAL">DFLT_INTERVAL (in module crowsnest.watch)</a>
 </li>
@@ -219,10 +234,24 @@
   </ul></td>
 </tr></table>
 
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/crowsnest/registry.html#crowsnest.registry.fresh_within">fresh_within() (in module crowsnest.registry)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/crowsnest/config.html#crowsnest.config.Home">Home (class in crowsnest.config)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/registry.html#crowsnest.registry.HOME_ENV_VAR">HOME_ENV_VAR (in module crowsnest.registry)</a>
+</li>
+      <li><a href="module_docs/crowsnest/config.html#crowsnest.config.homes">homes() (in module crowsnest.config)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -277,6 +306,8 @@
         <li><a href="module_docs/crowsnest/__main__.html#module-crowsnest.__main__">crowsnest.__main__</a>
 </li>
         <li><a href="module_docs/crowsnest/activity.html#module-crowsnest.activity">crowsnest.activity</a>
+</li>
+        <li><a href="module_docs/crowsnest/config.html#module-crowsnest.config">crowsnest.config</a>
 </li>
         <li><a href="module_docs/crowsnest/paths.html#module-crowsnest.paths">crowsnest.paths</a>
 </li>
@@ -355,6 +386,8 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/crowsnest/tools.html#crowsnest.tools.sessions">sessions() (in module crowsnest.tools)</a>
+</li>
       <li><a href="module_docs/crowsnest.html#crowsnest.show">show() (in module crowsnest)</a>
 
       <ul>

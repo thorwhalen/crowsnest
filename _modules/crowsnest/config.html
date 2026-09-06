@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.config &mdash; crowsnest 0.0.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8c5712d9"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.config</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The homes a roster covers: one by default, several when a config file says so.</span>
+
+<span class="sd">A *home* is a Claude Code config directory -- the thing ``claude_home()`` returns -- and</span>
+<span class="sd">crowsnest reads one of them unless told otherwise. A person with two accounts on one</span>
+<span class="sd">machine has two; a person who syncs a server's ``~/.claude`` down with ``xa sync`` has a</span>
+<span class="sd">third, whose registry pids belong to another machine. This module turns a small TOML file</span>
+<span class="sd">into a list of :class:`Home` records so that every reader can loop over them.</span>
+
+<span class="sd">.. code-block:: toml</span>
+
+<span class="sd">    # ~/.config/crowsnest/config.toml</span>
+<span class="sd">    [[homes]]</span>
+<span class="sd">    name = "main"</span>
+<span class="sd">    path = "~/.claude"</span>
+
+<span class="sd">    [[homes]]</span>
+<span class="sd">    name = "iq"</span>
+<span class="sd">    path = "~/.claude-iq"</span>
+
+<span class="sd">    [[homes]]</span>
+<span class="sd">    name = "server"</span>
+<span class="sd">    path = "~/.cache/xa/remotes/server"   # a synced copy</span>
+<span class="sd">    remote = true                         # liveness by freshness, no pid check</span>
+
+<span class="sd">``remote = true`` is the one thing a home needs to say about itself: its pids cannot be</span>
+<span class="sd">checked here, so a record counts as live while its status is fresh (``fresh_seconds``,</span>
+<span class="sd">default one hour). Reading crosses accounts and machines; messaging and spawning do not,</span>
+<span class="sd">and nothing in this module pretends otherwise.</span>
+
+<span class="sd">&gt;&gt;&gt; homes(path='/nonexistent-config-for-doctest')[0].name</span>
+<span class="sd">'local'</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_home</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>  <span class="c1"># type: ignore[no-redef]</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"CONFIG_ENV_VAR"</span><span class="p">,</span> <span class="s2">"DFLT_FRESH_SECONDS"</span><span class="p">,</span> <span class="s2">"Home"</span><span class="p">,</span> <span class="s2">"config_path"</span><span class="p">,</span> <span class="s2">"homes"</span><span class="p">]</span>
+
+<span class="c1">#: Overrides the config file location outright.</span>
+<span class="n">CONFIG_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CROWSNEST_CONFIG"</span>
+
+<span class="c1">#: How recently a remote home's registry record must have changed to count as live.</span>
+<span class="n">DFLT_FRESH_SECONDS</span> <span class="o">=</span> <span class="mf">3600.0</span>
+
+<span class="c1">#: The name of the one home used when no config file exists.</span>
+<span class="n">DFLT_HOME_NAME</span> <span class="o">=</span> <span class="s2">"local"</span>
+
+
+<div class="viewcode-block" id="Home">
+<a class="viewcode-back" href="../../module_docs/crowsnest/config.html#crowsnest.config.Home">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Home</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One Claude Code config directory to read, and how to judge liveness in it."""</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">remote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">fresh_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_FRESH_SECONDS</span></div>
+
+
+
+<div class="viewcode-block" id="config_path">
+<a class="viewcode-back" href="../../module_docs/crowsnest/config.html#crowsnest.config.config_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``path``, else ``$CROWSNEST_CONFIG``, else ``$XDG_CONFIG_HOME/crowsnest/config.toml``."""</span>
+    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+    <span class="n">override</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CONFIG_ENV_VAR</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">override</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">override</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+    <span class="n">xdg</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"XDG_CONFIG_HOME"</span><span class="p">)</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">xdg</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">xdg</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".config"</span>
+    <span class="k">return</span> <span class="n">base</span> <span class="o">/</span> <span class="s2">"crowsnest"</span> <span class="o">/</span> <span class="s2">"config.toml"</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_default_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Home</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Home</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">DFLT_HOME_NAME</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">claude_home</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="homes">
+<a class="viewcode-back" href="../../module_docs/crowsnest/config.html#crowsnest.config.homes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The configured homes, or the default one when there is no config file.</span>
+
+<span class="sd">    A config file that cannot be parsed is an error worth seeing, not a silent fallback:</span>
+<span class="sd">    a person who wrote one meant it.</span>
+<span class="sd">    """</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span>
+    <span class="k">with</span> <span class="n">file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: every [[homes]] entry needs a path"</span><span class="p">)</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Home</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
+                <span class="n">remote</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+                <span class="n">fresh_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fresh_seconds"</span><span class="p">,</span> <span class="n">DFLT_FRESH_SECONDS</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span> <span class="ow">or</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
