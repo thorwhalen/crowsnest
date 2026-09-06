@@ -8,11 +8,12 @@ a phone over Remote Control. It never resumes or kills a session -- that stays w
 one somewhere a person can find it, and waits for :mod:`crowsnest.registry` to see it.
 
 >>> claude_argv('demo', prompt='hello')
-['claude', '--dangerously-skip-permissions', '-n', 'demo', '--remote-control', 'hello']
+['claude', '--remote-control', '--dangerously-skip-permissions', '-n', 'demo', 'hello']
 """
 
 from __future__ import annotations
 
+import os
 import shlex
 import shutil
 import subprocess
@@ -23,7 +24,7 @@ from pathlib import Path
 
 from crowsnest.registry import LiveSession, live_sessions
 
-__all__ = ["claude_argv", "default_spawner", "spawn"]
+__all__ = ["child_env", "claude_argv", "default_spawner", "spawn"]
 
 CLAUDE_BIN = "claude"
 
@@ -43,22 +44,37 @@ def claude_argv(
     """The ``claude`` command line for a new named session.
 
     Permissions are skipped because a spawned session has no one at the keyboard to
-    approve them; ``--remote-control`` goes right before the prompt so its optional
-    value can never swallow it. Empty strings mean "let claude decide" and are omitted.
+    approve them. ``--remote-control`` takes an *optional* value and so would swallow
+    the prompt if it came right before it; it goes first instead, where the next token
+    is always another flag. Empty strings mean "let claude decide" and are omitted.
 
     >>> claude_argv('demo', model='opus', effort='high', remote_control=False)
     ['claude', '--dangerously-skip-permissions', '-n', 'demo', '--model', 'opus', '--effort', 'high']
     """
-    argv = [CLAUDE_BIN, "--dangerously-skip-permissions", "-n", name]
+    argv = [CLAUDE_BIN]
+    if remote_control:
+        argv.append("--remote-control")
+    argv += ["--dangerously-skip-permissions", "-n", name]
     if model:
         argv += ["--model", model]
     if effort:
         argv += ["--effort", effort]
-    if remote_control:
-        argv.append("--remote-control")
     if prompt:
         argv.append(prompt)
     return argv
+
+
+def child_env(environ: dict[str, str] | None = None) -> dict[str, str]:
+    """``environ`` (default ``os.environ``) without this session's own Claude Code markers.
+
+    A spawner launched from inside a running session inherits that session's
+    ``CLAUDE*`` variables (``CLAUDECODE``, ``CLAUDE_CODE_SESSION_ID``, ``CLAUDE_EFFORT``,
+    the messaging socket, ...) unless they are stripped first -- and Claude Code reads
+    them to register the new process as a *child* of the spawning session, under its
+    name and effort, rather than as the standalone session `spawn` asked for.
+    """
+    environ = os.environ if environ is None else environ
+    return {k: v for k, v in environ.items() if not k.startswith("CLAUDE")}
 
 
 def _tmux_spawner(argv: list[str], *, cwd: str, name: str) -> None:
@@ -68,13 +84,15 @@ def _tmux_spawner(argv: list[str], *, cwd: str, name: str) -> None:
         capture_output=True,
         text=True,
         check=False,
+        env=child_env(),
     )
     if result.returncode != 0:
         raise RuntimeError(f"tmux new-session failed: {result.stderr.strip()}")
 
 
 def _iterm_spawner(argv: list[str], *, cwd: str, name: str) -> None:
-    command = shlex.join(argv)
+    unset = " ".join(f"-u {k}" for k in os.environ if k.startswith("CLAUDE"))
+    command = f"env {unset} {shlex.join(argv)}" if unset else shlex.join(argv)
     script = (
         'tell application "iTerm2"\n'
         "  activate\n"
@@ -100,6 +118,7 @@ def _subprocess_spawner(argv: list[str], *, cwd: str, name: str) -> None:
     subprocess.Popen(
         argv,
         cwd=cwd,
+        env=child_env(),
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,

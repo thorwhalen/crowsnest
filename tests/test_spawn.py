@@ -1,21 +1,33 @@
+import subprocess
 import sys
 import threading
 
 from fixtures import registry_record, write_registry
 
 from crowsnest import registry
-from crowsnest.spawn import claude_argv, default_spawner, spawn
+from crowsnest.spawn import child_env, claude_argv, default_spawner, spawn
 
 spawn_module = sys.modules["crowsnest.spawn"]
+
+
+def test_child_env_strips_every_claude_marker_but_keeps_the_rest():
+    given = {
+        "CLAUDECODE": "1",
+        "CLAUDE_CODE_SESSION_ID": "s1",
+        "CLAUDE_EFFORT": "high",
+        "PATH": "/usr/bin",
+        "HOME": "/home/x",
+    }
+    assert child_env(given) == {"PATH": "/usr/bin", "HOME": "/home/x"}
 
 
 def test_claude_argv_default_is_skip_permissions_named_and_remote_controlled():
     assert claude_argv("demo") == [
         "claude",
+        "--remote-control",
         "--dangerously-skip-permissions",
         "-n",
         "demo",
-        "--remote-control",
     ]
 
 
@@ -23,6 +35,7 @@ def test_claude_argv_carries_model_effort_and_prompt_last():
     argv = claude_argv("demo", prompt="go", model="opus", effort="high")
     assert argv == [
         "claude",
+        "--remote-control",
         "--dangerously-skip-permissions",
         "-n",
         "demo",
@@ -30,7 +43,6 @@ def test_claude_argv_carries_model_effort_and_prompt_last():
         "opus",
         "--effort",
         "high",
-        "--remote-control",
         "go",
     ]
 
@@ -38,6 +50,13 @@ def test_claude_argv_carries_model_effort_and_prompt_last():
 def test_claude_argv_omits_remote_control_flag_when_disabled():
     argv = claude_argv("demo", remote_control=False)
     assert "--remote-control" not in argv
+
+
+def test_claude_argv_never_puts_remote_control_right_before_the_prompt():
+    """`--remote-control` takes an optional value and would swallow the prompt."""
+    argv = claude_argv("demo", prompt="go")
+    idx = argv.index("--remote-control")
+    assert argv[idx + 1].startswith("-")
 
 
 def test_default_spawner_picks_tmux_when_on_path(monkeypatch):
@@ -94,6 +113,38 @@ def test_spawn_returns_pid_and_session_id_once_the_registry_sees_it(
         "how": "custom",
     }
     assert calls and calls[0][1] == "/some/repo" and calls[0][2] == "demo"
+
+
+def test_tmux_spawner_strips_claude_markers_from_the_child_env(monkeypatch):
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "parent-session")
+    captured = {}
+
+    def fake_run(argv, **kwargs):
+        captured.update(kwargs)
+        return subprocess.CompletedProcess(argv, 0, "", "")
+
+    monkeypatch.setattr(spawn_module.subprocess, "run", fake_run)
+    spawn_module._tmux_spawner(["claude"], cwd="/some/repo", name="demo")
+
+    assert not any(k.startswith("CLAUDE") for k in captured["env"])
+
+
+def test_subprocess_spawner_strips_claude_markers_from_the_child_env(monkeypatch):
+    monkeypatch.setenv("CLAUDE_EFFORT", "high")
+    captured = {}
+
+    def fake_popen(argv, **kwargs):
+        captured.update(kwargs)
+
+        class _Proc:
+            pass
+
+        return _Proc()
+
+    monkeypatch.setattr(spawn_module.subprocess, "Popen", fake_popen)
+    spawn_module._subprocess_spawner(["claude"], cwd="/some/repo", name="demo")
+
+    assert not any(k.startswith("CLAUDE") for k in captured["env"])
 
 
 def test_spawn_reports_when_the_registry_never_sees_it(tmp_path, monkeypatch):
