@@ -176,7 +176,17 @@ def spawn(
     Returns ``{"name", "pid", "session_id", "how"}``. When the registry file never shows
     up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so -- the session may
     still be starting, or may have failed before it could register.
+
+    A name that a live session already carries is refused (``ValueError``): the name is
+    the address for everything after -- ``show``, ``open``, a message -- and two sessions
+    behind one name make all of them ambiguous. Pick another, a suffix will do.
     """
+    taken = [s for s in live_sessions(home=home) if s.name == name]
+    if taken:
+        raise ValueError(
+            f"a live session is already named {name!r} (pid {taken[0].pid}, in "
+            f"{taken[0].cwd}); pick another name, for instance {name!r} with a suffix"
+        )
     how = "custom"
     if spawner is None:
         spawner, how = default_spawner()

@@ -40,6 +40,11 @@ Publish the file with the `Artifact` tool. Two things matter:
 - **Start the watch**, so comments reach you. Publishing arms it; the result line says
   whether it actually connected. If it did not, say so — the user is about to comment into
   a void otherwise.
+- **One console owner per artifact.** One page has one intent queue, and two sessions
+  polling it would race on the same intents. When more than one watching session is
+  open, either each publishes its own page (its own URL) or exactly one of them runs the
+  console loop of section 5 for the shared page; a second session that republishes the
+  shared page passes its `url` and leaves the loop to the owner.
 
 Give the user the link in one line. Say when it was generated.
 

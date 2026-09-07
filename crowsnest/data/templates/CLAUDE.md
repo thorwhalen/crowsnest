@@ -23,7 +23,11 @@ doing, a corpus session does it. Reading is delegated too: send the **`crowsnest
 subagent, which runs the commands in a fresh context and returns a page. Raw `crowsnest`
 output in your context is a page of tokens you will still be paying for in an hour.
 
-The one exception is your own files: this `CLAUDE.md`, your notes, a report you publish.
+Two exceptions. Your own files: this `CLAUDE.md`, your notes, a report you publish. And
+the **brief roster**: `crowsnest --brief` reads the registry only, costs milliseconds and
+one line per session, so for a quick question ("is anything waiting on me?", "is X still
+busy?") read it yourself and answer at once. Anything that opens a transcript goes to the
+scout.
 
 ### 3. Workers summarise; you do not
 
@@ -75,6 +79,14 @@ with the split written down in both briefs.
 pushed. Do not poll the roster in a loop, and do not lean on `notify_when_idle` for
 anything ongoing — it is one-shot and it expires. Use it only for "tell me when this one
 particular dispatch is done".
+
+**Never wait inside a turn.** Your user types the next question while you work, and it
+waits exactly as long as your current turn. A worker's reply, an idle notice, a
+subagent's page, a CI run, a merge: every one of them arrives as a wake-up on its own.
+So send, subscribe, or hand the wait to a background task (`run_in_background`, a
+`Monitor`), and **end the turn**. Answer when the notification comes. A `sleep`, a
+`--watch`, or an `until … done` loop in the foreground is the one thing that makes you
+slow, and it is never needed.
 
 ## When you are compacted
 
