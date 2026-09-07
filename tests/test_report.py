@@ -230,3 +230,25 @@ def test_tools_report_wires_roster_into_render_report(monkeypatch):
     result = tools.report(made_at=STAMP)
     assert result["made_at"] == STAMP
     assert "<title>crowsnest</title>" in result["html"]
+
+
+def test_the_fragment_has_no_document_wrapper_and_the_page_still_does():
+    roster = {"sessions": [], "counts": {}}
+    made = "2026-01-02T03:04:05+00:00"
+    page = render_report(roster, made_at=made)
+    frag = render_report(roster, made_at=made, fragment=True)
+    for tag in ("<!doctype", "<html", "<head>", "<body>", "</html>"):
+        assert tag in page.lower()
+        assert tag not in frag.lower()
+    assert frag.startswith("<title>crowsnest</title>\n<style>")
+    assert '<main class="sheet">' in frag and frag.endswith("</main>\n")
+    assert frag == render_report(roster, made_at=made, fragment=True)
+
+
+def test_the_fragment_carries_the_same_content_as_the_page():
+    roster = {"sessions": [], "counts": {}}
+    made = "2026-01-02T03:04:05+00:00"
+    page = render_report(roster, made_at=made)
+    frag = render_report(roster, made_at=made, fragment=True)
+    body = page.split("<body>\n", 1)[1].split("\n</body>", 1)[0]
+    assert frag.endswith(body + "\n")

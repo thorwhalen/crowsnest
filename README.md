@@ -58,6 +58,7 @@ crowsnest show <session>           one session: last asked, last said, running n
 crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
 crowsnest brief <session>          openloops' dated digest for one session; reads no transcript
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
+                                   (--fragment: without the document wrapper, for publishing as an artifact)
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
@@ -140,7 +141,7 @@ A morning with a fleet, from the lookout session. Everything in italics is somet
 3. *start something on the parser tests* — the `crowsnest-dispatch` skill: it names the session, writes a brief that is pointers rather than prose (the issue URL, the acceptance line, the reply contract), and runs `crowsnest spawn parser-tests --cwd ~/proj/parser --prompt "…"`. A new terminal session appears, named, in that directory. It subscribes once with `notify_when_idle` and stops looking.
 4. **It is told when that finishes** — from the `crowsnest watch` stream under the `Monitor` tool, or from the one idle notice. Either way you hear about it without asking.
 5. *what did it do?* — `crowsnest ledger parser-tests`. The worker wrote that file itself, under the `crowsnest-worker` skill, which every session on the machine has; the lookout only reads it. `crowsnest brief parser-tests` adds openloops' dated digest of the same session, still without opening a transcript.
-6. *give me a page* — the `crowsnest-report` skill: `crowsnest report --out fleet.html`, published with the `Artifact` tool, one link, stable across re-publishes.
+6. *give me a page* — the `crowsnest-report` skill: `crowsnest report --fragment --out fleet.html`, published with the `Artifact` tool, one link, stable across re-publishes.
 7. **From your phone**, later: you highlight the row for `parser-tests`, comment *ask it what is left*, and send it to Claude. The lookout wakes on the comment, answers from the ledger, replies in the thread, resolves it, and re-publishes the page.
 
 At no point does the lookout edit a file in any of those repositories, or read a transcript itself. That is the whole design: the corpus sessions hold the context, and the lookout stays small enough to `/clear` at any moment.

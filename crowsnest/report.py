@@ -611,13 +611,22 @@ def _footer(safe: _Sanitizer, stamp: str) -> str:
 
 
 def render_report(
-    roster: Mapping[str, Any], *, made_at: str, title: str = DFLT_TITLE
+    roster: Mapping[str, Any],
+    *,
+    made_at: str,
+    title: str = DFLT_TITLE,
+    fragment: bool = False,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
     ``made_at`` is the moment the snapshot claims to be from and is printed in the
     largest type on the page; it is a required argument (not a hidden ``now()``) so that
     two calls with the same ``roster`` and ``made_at`` render the identical document.
+
+    ``fragment=True`` returns the page the way a host that wraps it in its own document
+    wants it -- the claude.ai artifact publisher does: the ``<title>``, then the
+    ``<style>``, then the body's content, with no doctype, ``<html>``, ``<head>`` or
+    ``<body>`` of its own. Same content, same bytes for the same inputs.
 
     A session counts as "just finished" when it has been ``idle`` for less than
     :data:`FINISHED_WINDOW` seconds, and "quiet" otherwise. Anything not ``waiting``,
@@ -682,12 +691,16 @@ def render_report(
         _quiet_register(safe, quiet, now_epoch),
         _footer(safe, stamp),
     ]
-    head = (
-        f"<title>{safe.text(title)}</title>"
-        '<meta name="viewport" content="width=device-width, initial-scale=1">'
-        f"<style>{_CSS}</style>"
-    )
+    title_tag = f"<title>{safe.text(title)}</title>"
+    style_tag = f"<style>{_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
+    if fragment:
+        return f"{title_tag}\n{style_tag}\n{body}\n"
+    head = (
+        f"{title_tag}"
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        f"{style_tag}"
+    )
     return (
         '<!doctype html>\n<html lang="en">\n'
         f'<head>\n<meta charset="utf-8">\n{head}\n</head>\n'

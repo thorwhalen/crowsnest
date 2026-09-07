@@ -20,7 +20,7 @@ channel, because the user can highlight a row, write an instruction, and send it
 ## 1. Render
 
 ```bash
-crowsnest report --out <file>.html
+crowsnest report --fragment --out <file>.html   # --fragment: the publisher supplies the document wrapper
 ```
 
 Four registers, in the order a person needs them: **Waiting on you**, **Just finished**,

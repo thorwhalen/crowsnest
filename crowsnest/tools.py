@@ -150,9 +150,11 @@ def report(
     config: str | Path | None = None,
     made_at: str | None = None,
     title: str = DFLT_TITLE,
+    fragment: bool = False,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
-    over what :func:`roster` returns.
+    over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
+    that supplies its own (the artifact publisher).
 
     ``made_at`` is the moment the snapshot claims to be from; it defaults to now, but a
     caller that wants byte-stable output passes it explicitly -- this is the one
@@ -162,8 +164,8 @@ def report(
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
     data = roster(home=home, all_homes=all_homes, config=config)
-    html = render_report(data, made_at=made_at, title=title)
-    return {"html": html, "made_at": made_at}
+    html = render_report(data, made_at=made_at, title=title, fragment=fragment)
+    return {"html": html, "made_at": made_at, "fragment": fragment}
 
 
 def turns(
