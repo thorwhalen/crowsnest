@@ -45,6 +45,7 @@ from crowsnest.registry import LiveSession, live_sessions, pid_alive
 __all__ = [
     "DFLT_INTERVAL",
     "HOOK_KINDS",
+    "QUIET_NOTIFICATIONS",
     "WORKING",
     "diff",
     "events",
@@ -64,6 +65,12 @@ DETAIL_LIMIT = 200
 #: What a hook event is called in the stream. ``needs-you`` and ``stopped`` are named for
 #: what the human should do about them, which is what the registry statuses are not.
 HOOK_KINDS = {"notification": "needs-you", "stop": "stopped"}
+
+#: Notification types that are not a request. Claude Code sends ``idle_prompt`` when a
+#: session has merely sat idle for a minute after finishing a turn -- which the ``stop``
+#: event already said, with the last words. Streaming it as ``needs-you`` would wake the
+#: watcher for nothing, several times an hour per session. Observed 2026-09-07.
+QUIET_NOTIFICATIONS = frozenset({"idle_prompt"})
 
 
 def _now() -> str:
@@ -236,13 +243,22 @@ def hook_event(record: dict) -> dict | None:
     notification's kind (``permission_prompt``, ``idle_prompt``, ...) is what it waits
     for, so it goes in ``waiting_for``.
 
+    A notification whose type is in :data:`QUIET_NOTIFICATIONS` is not streamed either:
+    it is Claude Code noticing a session is idle, not the session asking for anything.
+
     >>> hook_event({'event': 'stop', 'name': 'lookout', 'detail': 'Merged.'})['kind']
     'stopped'
     >>> hook_event({'event': 'session-start'}) is None
     True
+    >>> hook_event({'event': 'notification', 'notification_type': 'idle_prompt'}) is None
+    True
+    >>> hook_event({'event': 'notification', 'notification_type': 'permission_prompt'})['kind']
+    'needs-you'
     """
     kind = HOOK_KINDS.get(str(record.get("event") or "").lower())
     if kind is None:
+        return None
+    if kind == "needs-you" and record.get("notification_type") in QUIET_NOTIFICATIONS:
         return None
     return {
         "at": str(record.get("at") or _now()),
