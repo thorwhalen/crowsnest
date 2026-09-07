@@ -19,7 +19,7 @@ import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from crowsnest.registry import LiveSession, live_sessions
@@ -40,8 +40,12 @@ def claude_argv(
     model: str = "",
     effort: str = "",
     remote_control: bool = True,
+    add_dirs: Sequence[str] = (),
 ) -> list[str]:
     """The ``claude`` command line for a new named session.
+
+    ``add_dirs`` are extra directories the session may work in (``--add-dir``, which
+    takes several values and so is placed where a flag follows it, never the prompt).
 
     Permissions are skipped because a spawned session has no one at the keyboard to
     approve them. ``--remote-control`` takes an *optional* value and so would swallow
@@ -54,6 +58,8 @@ def claude_argv(
     argv = [CLAUDE_BIN]
     if remote_control:
         argv.append("--remote-control")
+    if add_dirs:
+        argv += ["--add-dir", *[str(d) for d in add_dirs]]
     argv += ["--dangerously-skip-permissions", "-n", name]
     if model:
         argv += ["--model", model]
@@ -165,8 +171,12 @@ def spawn(
     spawner: Callable[..., None] | None = None,
     home: str | Path | None = None,
     wait: float = DFLT_WAIT,
+    add_dirs: Sequence[str] = (),
 ) -> dict:
     """Start a session named ``name`` in ``cwd``, and wait for the registry to see it.
+
+    ``add_dirs`` are further directories the session is allowed to work in (a fleet
+    manager gets every repository of its fleet this way).
 
     ``spawner`` is the seam: a callable ``(argv, *, cwd, name)`` that starts the built
     ``claude`` command line somewhere a person can find it -- the default is
@@ -191,7 +201,12 @@ def spawn(
     if spawner is None:
         spawner, how = default_spawner()
     argv = claude_argv(
-        name, prompt=prompt, model=model, effort=effort, remote_control=remote_control
+        name,
+        prompt=prompt,
+        model=model,
+        effort=effort,
+        remote_control=remote_control,
+        add_dirs=add_dirs,
     )
     spawner(argv, cwd=cwd, name=name)
     found = _find_by_name(name, home=home, wait=wait)
