@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.registry &mdash; crowsnest 0.0.17 documentation</title>
+  <title>crowsnest.registry &mdash; crowsnest 0.0.19 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=63b572e7"></script>
+      <script src="../../_static/documentation_options.js?v=2fd7553c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -58,10 +58,12 @@
 <li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.registry</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.registry.CLAUDE_AI_SESSIONS"><code class="docutils literal notranslate"><span class="pre">CLAUDE_AI_SESSIONS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.registry.HOME_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">HOME_ENV_VAR</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.registry.LiveSession"><code class="docutils literal notranslate"><span class="pre">LiveSession</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#crowsnest.registry.LiveSession.label"><code class="docutils literal notranslate"><span class="pre">LiveSession.label</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#crowsnest.registry.LiveSession.project"><code class="docutils literal notranslate"><span class="pre">LiveSession.project</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#crowsnest.registry.LiveSession.session_url"><code class="docutils literal notranslate"><span class="pre">LiveSession.session_url</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.registry.STATUSES"><code class="docutils literal notranslate"><span class="pre">STATUSES</span></code></a></li>
@@ -125,6 +127,17 @@ process before it is reported, through the <code class="docutils literal notrans
 </pre></div>
 </div>
 <dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.registry.CLAUDE_AI_SESSIONS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">CLAUDE_AI_SESSIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'https://claude.ai/code/'</span></span><a class="headerlink" href="#crowsnest.registry.CLAUDE_AI_SESSIONS" title="Link to this definition"></a></dt>
+<dd><p>this prefix plus its bridge id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Where a Remote Control session opens on the web</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.registry.HOME_ENV_VAR">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">HOME_ENV_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CLAUDE_CONFIG_DIR'</span></span><a class="headerlink" href="#crowsnest.registry.HOME_ENV_VAR" title="Link to this definition"></a></dt>
 <dd><p>Claude Code’s own variable for relocating its config directory. Honoured, not
@@ -133,7 +146,7 @@ reinvented: the registry and the transcripts move with it.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.registry.LiveSession">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">LiveSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting_for</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_since</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_control</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transcript</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/registry.html#LiveSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.LiveSession" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">LiveSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting_for</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_since</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_control</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transcript</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge_session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/registry.html#LiveSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.LiveSession" title="Link to this definition"></a></dt>
 <dd><p>One running session, as the registry describes it. Flat and JSON-shaped.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="crowsnest.registry.LiveSession.label">
@@ -145,6 +158,12 @@ reinvented: the registry and the transcripts move with it.</p>
 <dt class="sig sig-object py" id="crowsnest.registry.LiveSession.project">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">project</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#crowsnest.registry.LiveSession.project" title="Link to this definition"></a></dt>
 <dd><p>The working directory’s last component – the name a human uses for it.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crowsnest.registry.LiveSession.session_url">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">session_url</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#crowsnest.registry.LiveSession.session_url" title="Link to this definition"></a></dt>
+<dd><p>The session on claude.ai, when it runs with Remote Control; else <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p>
 </dd></dl>
 
 </dd></dl>

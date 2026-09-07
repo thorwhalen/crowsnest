@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.report &mdash; crowsnest 0.0.17 documentation</title>
+  <title>crowsnest.report &mdash; crowsnest 0.0.19 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=63b572e7"></script>
+      <script src="../../_static/documentation_options.js?v=2fd7553c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -231,13 +231,68 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;p class="empty"&gt;</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_link</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""An anchor, or ``''`` when the sanitizer will not follow the URL."""</span>
+    <span class="n">href</span> <span class="o">=</span> <span class="n">safe</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;a href="</span><span class="si">{</span><span class="n">href</span><span class="si">}</span><span class="s1">"&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/a&gt;'</span> <span class="k">if</span> <span class="n">href</span> <span class="k">else</span> <span class="s2">""</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_where</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""``project`` and, when the row carries one, the ``home`` it came from."""</span>
+<span class="w">    </span><span class="sd">"""``project``, the ``home`` when the row carries one, and where the row leads.</span>
+
+<span class="sd">    Two links when the row has them: the session on claude.ai (a session running with</span>
+<span class="sd">    Remote Control, which opens on a phone too) and the repository behind its directory.</span>
+<span class="sd">    """</span>
     <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">))]</span>
     <span class="n">home</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">home</span><span class="p">:</span>
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">home</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">url</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="p">((</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_url"</span><span class="p">),</span> <span class="s2">"open"</span><span class="p">),</span> <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"repo_url"</span><span class="p">),</span> <span class="s2">"repo"</span><span class="p">)):</span>
+        <span class="n">anchor</span> <span class="o">=</span> <span class="n">_link</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">anchor</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span>
     <span class="k">return</span> <span class="s1">'&lt;p class="where"&gt;'</span> <span class="o">+</span> <span class="s1">' &lt;span class="sep"&gt;·&lt;/span&gt; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"&lt;/p&gt;"</span>
+
+
+<span class="n">_GITHUB_REF</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"^https?://github\.com/([^/]+)/([^/]+)/(?:issues|pull|discussions)/(\d+)"</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ref_label</span><span class="p">(</span><span class="n">loc</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What to call a reference: its text, else ``repo#N`` for a GitHub one, else its type.</span>
+
+<span class="sd">    &gt;&gt;&gt; _ref_label({'type': 'pr', 'url': 'https://github.com/o/r/pull/27', 'text': ''})</span>
+<span class="sd">    'r#27'</span>
+<span class="sd">    &gt;&gt;&gt; _ref_label({'type': 'issue', 'url': 'https://example.org/x', 'text': ''})</span>
+<span class="sd">    'issue'</span>
+<span class="sd">    """</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"text"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">text</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">_GITHUB_REF</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"ref"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_refs</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The issues and pull requests the session mentioned, as links; ``''`` when none."""</span>
+    <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">anchors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"locators"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">)))</span>
+        <span class="n">anchor</span> <span class="o">=</span> <span class="n">_link</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">),</span> <span class="n">_ref_label</span><span class="p">(</span><span class="n">loc</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">anchor</span><span class="p">:</span>
+            <span class="n">anchors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">anchor</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">anchors</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="s1">'&lt;p class="where"&gt;refs &lt;span class="sep"&gt;·&lt;/span&gt; '</span> <span class="o">+</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"&lt;/p&gt;"</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_row</span><span class="p">(</span>
@@ -255,6 +310,7 @@
         <span class="sa">f</span><span class="s1">'&lt;p class="ask"&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">))</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span><span class="p">,</span>
         <span class="n">_where</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span>
         <span class="o">*</span><span class="n">lines</span><span class="p">,</span>
+        <span class="n">_refs</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span>
     <span class="p">]</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s1">'&lt;li class="row row--</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">" id="session-</span><span class="si">{</span><span class="n">ident</span><span class="si">}</span><span class="s1">"&gt;'</span>
@@ -328,6 +384,9 @@
         <span class="n">ident</span> <span class="o">=</span> <span class="n">_slug</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
         <span class="n">home</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span>
         <span class="n">tail</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">' &lt;span class="sep"&gt;·&lt;/span&gt; </span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">home</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span> <span class="k">if</span> <span class="n">home</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">opener</span> <span class="o">=</span> <span class="n">_link</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_url"</span><span class="p">),</span> <span class="s2">"open"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">opener</span><span class="p">:</span>
+            <span class="n">tail</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">' &lt;span class="sep"&gt;·&lt;/span&gt; </span><span class="si">{</span><span class="n">opener</span><span class="si">}</span><span class="s1">'</span>
         <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="sa">f</span><span class="s1">'&lt;li class="thin" id="session-</span><span class="si">{</span><span class="n">ident</span><span class="si">}</span><span class="s1">"&gt;'</span>
             <span class="sa">f</span><span class="s1">'&lt;span class="thin-age"&gt;</span><span class="si">{</span><span class="n">figure</span><span class="si">}{</span><span class="n">unit</span><span class="si">}</span><span class="s1">&lt;/span&gt;'</span>
