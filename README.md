@@ -158,6 +158,10 @@ At no point does the lookout edit a file in any of those repositories, or read a
 
 `crowsnest install-skills` links all of them into `~/.claude` (or `--target`) and never overwrites anything that is not already ours. The worker skill installs everywhere by default, because any session on the machine may be asked.
 
+## What the hooks add
+
+`crowsnest init --hooks` registers two user-wide hooks, both asynchronous so they never delay a turn: `Stop` (a turn ended; the session's last words go to its ledger and the event log) and `Notification` (a session asked for something). It puts the roster-on-start hook only in the crowsnest directory's own `.claude/settings.json`, so no other session is handed a roster. An `idle_prompt` notification (a session merely sitting idle) is recorded but never streamed as `needs-you`.
+
 ## What it reads
 
 - `~/.claude/sessions/<pid>.json`: written while a session runs. Name, session id, working directory, `busy` / `idle` / `waiting`, and when waiting, what for. Checked against a live process before it is reported, because a crash leaves the file behind.
