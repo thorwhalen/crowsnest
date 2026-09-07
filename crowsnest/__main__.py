@@ -23,6 +23,7 @@ from crowsnest import ledger as _ledger
 from crowsnest import skills as _skills
 from crowsnest import tools
 from crowsnest import watch as _watch
+from crowsnest.open import open_session as _open_session
 from crowsnest.spawn import DFLT_WAIT
 from crowsnest.spawn import spawn as _spawn
 
@@ -446,6 +447,12 @@ def spawn(
     )
 
 
+def open(session: str, *, home: str | None = None, all_homes: bool = False) -> str:
+    """Raise `session`'s terminal on the desktop, or say where it runs when none is found."""
+    result = _open_session(session, home=home, all_homes=all_homes)
+    return f"{result['name']}: {result['how']} ({result['detail']})"
+
+
 _commands = [
     roster,
     show,
@@ -456,6 +463,7 @@ _commands = [
     ledger,
     hook,
     spawn,
+    open,
     init,
     install_skills,
 ]
