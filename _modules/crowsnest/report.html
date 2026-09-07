@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.report &mdash; crowsnest 0.0.20 documentation</title>
+  <title>crowsnest.report &mdash; crowsnest 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -125,6 +125,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextvars</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
@@ -133,7 +134,112 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">openloops.dashboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSS</span> <span class="k">as</span> <span class="n">_CSS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">openloops.dashboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sanitizer</span> <span class="k">as</span> <span class="n">_Sanitizer</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"render_report"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"CONSOLE_CSS"</span><span class="p">,</span> <span class="s2">"CONSOLE_SCRIPT"</span><span class="p">,</span> <span class="s2">"render_report"</span><span class="p">]</span>
+
+<span class="c1">#: Set for the duration of one :func:`render_report` call in interactive mode, so the row</span>
+<span class="c1">#: renderers add their controls without every signature growing a flag.</span>
+<span class="n">_interactive</span><span class="p">:</span> <span class="n">contextvars</span><span class="o">.</span><span class="n">ContextVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">contextvars</span><span class="o">.</span><span class="n">ContextVar</span><span class="p">(</span>
+    <span class="s2">"crowsnest_report_interactive"</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="c1">#: The console's styles, on top of the shared stylesheet's tokens. Interactive mode only.</span>
+<span class="n">CONSOLE_CSS</span> <span class="o">=</span> <span class="s2">"""</span>
+<span class="s2">.console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;</span>
+<span class="s2">  font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}</span>
+<span class="s2">.acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}</span>
+<span class="s2">.acts button,.console button{font:inherit;font-family:var(--mono);font-size:.68rem;</span>
+<span class="s2">  letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer;</span>
+<span class="s2">  border:1px solid var(--accent);background:transparent;color:var(--accent)}</span>
+<span class="s2">.acts button:hover,.console button:hover,.acts button:focus-visible,.console button:focus-visible{</span>
+<span class="s2">  background:var(--accent);color:var(--surface)}</span>
+<span class="s2">.acts textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;</span>
+<span class="s2">  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}</span>
+<span class="s2">.answers{list-style:none;margin:.2rem 0 0;padding:0;width:100%;font-family:var(--mono);</span>
+<span class="s2">  font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}</span>
+<span class="s2">.answers li b{color:var(--ink);font-weight:500}</span>
+<span class="s2">"""</span>
+
+<span class="c1">#: The console's one script. It loads nothing from anywhere: the only thing it talks to</span>
+<span class="c1">#: is the host's ``db`` capability, and when that is absent it leaves the page exactly as</span>
+<span class="c1">#: the static one. Everything read back from the store is untrusted and rendered as text.</span>
+<span class="n">CONSOLE_SCRIPT</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"""</span>
+<span class="s2">(async () =&gt; {</span>
+<span class="s2">  const status = document.getElementById("console-status");</span>
+<span class="s2">  const say = (t) =&gt; { if (status) status.textContent = t; };</span>
+<span class="s2">  const use = window.claude &amp;&amp; window.claude.use;</span>
+<span class="s2">  if (typeof use !== "function") return;</span>
+<span class="s2">  let db = null;</span>
+<span class="s2">  try { db = await window.claude.use("db"); } catch (e) { db = null; }</span>
+<span class="s2">  if (!db) { say("console off: open this page in the claude.ai viewer to act from it"); return; }</span>
+<span class="s2">  document.querySelectorAll("[data-console]").forEach((el) =&gt; { el.hidden = false; });</span>
+<span class="s2">  say("console on: every action is queued for the crowsnest session, which polls while you use this page");</span>
+<span class="s2">  const intents = db.collection("intents");</span>
+<span class="s2">  async function submit(kind, session, home, text) {</span>
+<span class="s2">    const at = new Date().toISOString();</span>
+<span class="s2">    try {</span>
+<span class="s2">      await intents.add({ kind, session, home, text, at, status: "queued" });</span>
+<span class="s2">      say("queued " + kind + (session ? " for " + session : "") + " at " + at.slice(11, 19) + " UTC");</span>
+<span class="s2">    } catch (e) { say("could not queue: " + ((e &amp;&amp; e.code) || e)); }</span>
+<span class="s2">  }</span>
+<span class="s2">  document.querySelectorAll(".acts").forEach((acts) =&gt; {</span>
+<span class="s2">    const session = acts.dataset.session || "", home = acts.dataset.home || "";</span>
+<span class="s2">    const box = acts.querySelector("textarea"), send = acts.querySelector("[data-kind=send]");</span>
+<span class="s2">    let pending = "";</span>
+<span class="s2">    acts.querySelectorAll("button[data-kind]").forEach((b) =&gt; b.addEventListener("click", () =&gt; {</span>
+<span class="s2">      const kind = b.dataset.kind;</span>
+<span class="s2">      if (kind === "tell" || kind === "start") {</span>
+<span class="s2">        pending = kind; box.hidden = false; send.hidden = false;</span>
+<span class="s2">        box.placeholder = kind === "tell" ? "what to tell " + session : "what to start in " + session + "'s directory";</span>
+<span class="s2">        box.focus(); return;</span>
+<span class="s2">      }</span>
+<span class="s2">      if (kind === "send") {</span>
+<span class="s2">        const text = box.value.trim(); if (!text || !pending) return;</span>
+<span class="s2">        submit(pending, session, home, text);</span>
+<span class="s2">        box.value = ""; box.hidden = true; send.hidden = true; pending = ""; return;</span>
+<span class="s2">      }</span>
+<span class="s2">      if (kind === "handled") {</span>
+<span class="s2">        submit("handled", session, home, "");</span>
+<span class="s2">        const row = acts.closest("li"); if (row) row.style.opacity = "0.35"; return;</span>
+<span class="s2">      }</span>
+<span class="s2">      submit(kind, session, home, "");</span>
+<span class="s2">    }));</span>
+<span class="s2">  });</span>
+<span class="s2">  const refresh = document.querySelector("[data-kind=refresh]");</span>
+<span class="s2">  if (refresh) refresh.addEventListener("click", () =&gt; submit("refresh", "", "", ""));</span>
+<span class="s2">  const log = document.getElementById("console-log");</span>
+<span class="s2">  function paint(doc) {</span>
+<span class="s2">    const d = doc.data ? doc.data() : null; if (!d) return;</span>
+<span class="s2">    const id = "intent-" + doc.id;</span>
+<span class="s2">    const line = (d.kind || "?") + " · " + (d.status || "queued") + (d.text ? " · " + d.text : "") + (d.answer ? " — " + d.answer : "");</span>
+<span class="s2">    let home = null;</span>
+<span class="s2">    if (d.session) {</span>
+<span class="s2">      const sel = '.acts[data-session="' + String(d.session).replace(/["\]/g, "\$&amp;") + '"] .answers';</span>
+<span class="s2">      home = document.querySelector(sel);</span>
+<span class="s2">    }</span>
+<span class="s2">    if (!home) home = log;</span>
+<span class="s2">    if (!home) return;</span>
+<span class="s2">    let li = document.getElementById(id);</span>
+<span class="s2">    if (!li) { li = document.createElement("li"); li.id = id; home.prepend(li); }</span>
+<span class="s2">    li.textContent = ""; const b = document.createElement("b"); b.textContent = (d.at || "").slice(11, 16) + " "; li.appendChild(b);</span>
+<span class="s2">    li.appendChild(document.createTextNode(line));</span>
+<span class="s2">  }</span>
+<span class="s2">  try {</span>
+<span class="s2">    intents.orderBy("at", "desc").limit(60).onSnapshot((snap) =&gt; {</span>
+<span class="s2">      const docs = snap &amp;&amp; snap.docs ? snap.docs : [];</span>
+<span class="s2">      if (docs.length) docs.forEach(paint); else if (snap &amp;&amp; typeof snap.forEach === "function") snap.forEach(paint);</span>
+<span class="s2">    }, (err) =&gt; say("console lost its feed: " + ((err &amp;&amp; err.code) || err)));</span>
+<span class="s2">  } catch (e) { say("console cannot subscribe: " + ((e &amp;&amp; e.code) || e)); }</span>
+<span class="s2">})();</span>
+<span class="s2">"""</span>
+
+<span class="c1">#: The actions a row offers. ``kind`` is what the intent document carries; the watching</span>
+<span class="c1">#: session's ``crowsnest-report`` skill says what each one does.</span>
+<span class="n">ROW_ACTIONS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">"ask"</span><span class="p">,</span> <span class="s2">"Ask"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tell"</span><span class="p">,</span> <span class="s2">"Tell"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"start"</span><span class="p">,</span> <span class="s2">"Start work here"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"handled"</span><span class="p">,</span> <span class="s2">"Handled"</span><span class="p">),</span>
+<span class="p">)</span>
 
 <span class="c1">#: What the page is called when the caller does not name it.</span>
 <span class="n">DFLT_TITLE</span> <span class="o">=</span> <span class="s2">"crowsnest"</span>
@@ -312,6 +418,7 @@
         <span class="n">_where</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span>
         <span class="o">*</span><span class="n">lines</span><span class="p">,</span>
         <span class="n">_refs</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span>
+        <span class="n">_controls</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span>
     <span class="p">]</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s1">'&lt;li class="row row--</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">" id="session-</span><span class="si">{</span><span class="n">ident</span><span class="si">}</span><span class="s1">"&gt;'</span>
@@ -319,6 +426,25 @@
         <span class="o">+</span> <span class="s1">'&lt;div class="body"&gt;'</span>
         <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
         <span class="o">+</span> <span class="s2">"&lt;/div&gt;&lt;/li&gt;"</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_controls</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The row's console: hidden until the page's ``db`` resolves; empty in static mode."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="n">buttons</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;button type="button" data-kind="</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s1">"&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/button&gt;'</span>
+        <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">ROW_ACTIONS</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="acts" data-console hidden data-session="</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">))</span><span class="si">}</span><span class="s1">"'</span>
+        <span class="sa">f</span><span class="s1">' data-home="</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span><span class="si">}</span><span class="s1">"&gt;'</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">buttons</span><span class="si">}</span><span class="s2">"</span>
+        <span class="s1">'&lt;textarea hidden rows="2"&gt;&lt;/textarea&gt;'</span>
+        <span class="s1">'&lt;button type="button" data-kind="send" hidden&gt;Send&lt;/button&gt;'</span>
+        <span class="s1">'&lt;ul class="answers"&gt;&lt;/ul&gt;'</span>
+        <span class="s2">"&lt;/div&gt;"</span>
     <span class="p">)</span>
 
 
@@ -463,8 +589,20 @@
         <span class="s1">'&lt;p class="claim"&gt;Every session below was alive at that moment, read from its '</span>
         <span class="s2">"registry entry and the tail of its transcript, and nothing since. Re-run "</span>
         <span class="s2">"&lt;code&gt;crowsnest report&lt;/code&gt; for a newer one.&lt;/p&gt;"</span>
-        <span class="sa">f</span><span class="s1">'&lt;div class="tally"&gt;</span><span class="si">{</span><span class="n">cells</span><span class="si">}</span><span class="s1">&lt;/div&gt;'</span>
-        <span class="s2">"&lt;/header&gt;"</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="tally"&gt;</span><span class="si">{</span><span class="n">cells</span><span class="si">}</span><span class="s1">&lt;/div&gt;'</span> <span class="o">+</span> <span class="n">_console</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"&lt;/header&gt;"</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_console</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refresh, the status line, and the log of intents that belong to no row."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="s1">'&lt;div class="console" data-console hidden&gt;'</span>
+        <span class="s1">'&lt;button type="button" data-kind="refresh"&gt;Refresh&lt;/button&gt;'</span>
+        <span class="s1">'&lt;span id="console-status"&gt;&lt;/span&gt;'</span>
+        <span class="s2">"&lt;/div&gt;"</span>
+        <span class="s1">'&lt;ul class="answers" id="console-log" data-console hidden&gt;&lt;/ul&gt;'</span>
     <span class="p">)</span>
 
 
@@ -501,12 +639,19 @@
     <span class="n">made_at</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_TITLE</span><span class="p">,</span>
     <span class="n">fragment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.</span>
 
 <span class="sd">    ``made_at`` is the moment the snapshot claims to be from and is printed in the</span>
 <span class="sd">    largest type on the page; it is a required argument (not a hidden ``now()``) so that</span>
 <span class="sd">    two calls with the same ``roster`` and ``made_at`` render the identical document.</span>
+
+<span class="sd">    ``interactive=True`` adds the console: per-row buttons and a Refresh, hidden until the</span>
+<span class="sd">    page's ``db`` capability resolves in the claude.ai viewer, and one inline script that</span>
+<span class="sd">    queues each press as an intent document for the watching session to act on (see the</span>
+<span class="sd">    ``crowsnest-report`` skill). It still loads nothing from anywhere; without ``db`` it</span>
+<span class="sd">    renders exactly as the static page. The static page carries no script at all.</span>
 
 <span class="sd">    ``fragment=True`` returns the page the way a host that wraps it in its own document</span>
 <span class="sd">    wants it -- the claude.ai artifact publisher does: the ``&lt;title&gt;``, then the</span>
@@ -518,6 +663,17 @@
 <span class="sd">    ``busy`` or ``idle`` also falls into Quiet, so an unrecognised status is shown rather</span>
 <span class="sd">    than dropped.</span>
 <span class="sd">    """</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">interactive</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_render</span><span class="p">(</span><span class="n">roster</span><span class="p">,</span> <span class="n">made_at</span><span class="o">=</span><span class="n">made_at</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="n">fragment</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_interactive</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">token</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_render</span><span class="p">(</span>
+    <span class="n">roster</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">made_at</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fragment</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">safe</span> <span class="o">=</span> <span class="n">_Sanitizer</span><span class="p">()</span>
     <span class="n">sessions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">roster</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sessions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span>
     <span class="n">counts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">roster</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"counts"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
@@ -578,7 +734,11 @@
     <span class="p">]</span>
     <span class="n">title_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;title&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;"</span>
     <span class="n">style_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
+    <span class="k">if</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+        <span class="n">style_tag</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">CONSOLE_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
     <span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;main class="sheet"&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/main&gt;'</span>
+    <span class="k">if</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+        <span class="n">body</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&lt;script&gt;</span><span class="si">{</span><span class="n">CONSOLE_SCRIPT</span><span class="si">}</span><span class="s2">&lt;/script&gt;"</span>
     <span class="k">if</span> <span class="n">fragment</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title_tag</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">style_tag</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
     <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
@@ -590,8 +750,7 @@
         <span class="s1">'&lt;!doctype html&gt;</span><span class="se">\n</span><span class="s1">&lt;html lang="en"&gt;</span><span class="se">\n</span><span class="s1">'</span>
         <span class="sa">f</span><span class="s1">'&lt;head&gt;</span><span class="se">\n</span><span class="s1">&lt;meta charset="utf-8"&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="se">\n</span><span class="s1">&lt;/head&gt;</span><span class="se">\n</span><span class="s1">'</span>
         <span class="sa">f</span><span class="s2">"&lt;body&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s2">&lt;/body&gt;</span><span class="se">\n</span><span class="s2">&lt;/html&gt;</span><span class="se">\n</span><span class="s2">"</span>
-    <span class="p">)</span></div>
-
+    <span class="p">)</span>
 </pre></div>
 
            </div>
