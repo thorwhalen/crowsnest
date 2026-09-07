@@ -35,6 +35,7 @@ True
 
 from __future__ import annotations
 
+import contextvars
 import re
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
@@ -43,7 +44,112 @@ from typing import Any
 from openloops.dashboard import CSS as _CSS
 from openloops.dashboard import Sanitizer as _Sanitizer
 
-__all__ = ["render_report"]
+__all__ = ["CONSOLE_CSS", "CONSOLE_SCRIPT", "render_report"]
+
+#: Set for the duration of one :func:`render_report` call in interactive mode, so the row
+#: renderers add their controls without every signature growing a flag.
+_interactive: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "crowsnest_report_interactive", default=False
+)
+
+#: The console's styles, on top of the shared stylesheet's tokens. Interactive mode only.
+CONSOLE_CSS = """
+.console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;
+  font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
+.acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}
+.acts button,.console button{font:inherit;font-family:var(--mono);font-size:.68rem;
+  letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer;
+  border:1px solid var(--accent);background:transparent;color:var(--accent)}
+.acts button:hover,.console button:hover,.acts button:focus-visible,.console button:focus-visible{
+  background:var(--accent);color:var(--surface)}
+.acts textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;
+  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
+.answers{list-style:none;margin:.2rem 0 0;padding:0;width:100%;font-family:var(--mono);
+  font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}
+.answers li b{color:var(--ink);font-weight:500}
+"""
+
+#: The console's one script. It loads nothing from anywhere: the only thing it talks to
+#: is the host's ``db`` capability, and when that is absent it leaves the page exactly as
+#: the static one. Everything read back from the store is untrusted and rendered as text.
+CONSOLE_SCRIPT = r"""
+(async () => {
+  const status = document.getElementById("console-status");
+  const say = (t) => { if (status) status.textContent = t; };
+  const use = window.claude && window.claude.use;
+  if (typeof use !== "function") return;
+  let db = null;
+  try { db = await window.claude.use("db"); } catch (e) { db = null; }
+  if (!db) { say("console off: open this page in the claude.ai viewer to act from it"); return; }
+  document.querySelectorAll("[data-console]").forEach((el) => { el.hidden = false; });
+  say("console on: every action is queued for the crowsnest session, which polls while you use this page");
+  const intents = db.collection("intents");
+  async function submit(kind, session, home, text) {
+    const at = new Date().toISOString();
+    try {
+      await intents.add({ kind, session, home, text, at, status: "queued" });
+      say("queued " + kind + (session ? " for " + session : "") + " at " + at.slice(11, 19) + " UTC");
+    } catch (e) { say("could not queue: " + ((e && e.code) || e)); }
+  }
+  document.querySelectorAll(".acts").forEach((acts) => {
+    const session = acts.dataset.session || "", home = acts.dataset.home || "";
+    const box = acts.querySelector("textarea"), send = acts.querySelector("[data-kind=send]");
+    let pending = "";
+    acts.querySelectorAll("button[data-kind]").forEach((b) => b.addEventListener("click", () => {
+      const kind = b.dataset.kind;
+      if (kind === "tell" || kind === "start") {
+        pending = kind; box.hidden = false; send.hidden = false;
+        box.placeholder = kind === "tell" ? "what to tell " + session : "what to start in " + session + "'s directory";
+        box.focus(); return;
+      }
+      if (kind === "send") {
+        const text = box.value.trim(); if (!text || !pending) return;
+        submit(pending, session, home, text);
+        box.value = ""; box.hidden = true; send.hidden = true; pending = ""; return;
+      }
+      if (kind === "handled") {
+        submit("handled", session, home, "");
+        const row = acts.closest("li"); if (row) row.style.opacity = "0.35"; return;
+      }
+      submit(kind, session, home, "");
+    }));
+  });
+  const refresh = document.querySelector("[data-kind=refresh]");
+  if (refresh) refresh.addEventListener("click", () => submit("refresh", "", "", ""));
+  const log = document.getElementById("console-log");
+  function paint(doc) {
+    const d = doc.data ? doc.data() : null; if (!d) return;
+    const id = "intent-" + doc.id;
+    const line = (d.kind || "?") + " · " + (d.status || "queued") + (d.text ? " · " + d.text : "") + (d.answer ? " — " + d.answer : "");
+    let home = null;
+    if (d.session) {
+      const sel = '.acts[data-session="' + String(d.session).replace(/["\]/g, "\$&") + '"] .answers';
+      home = document.querySelector(sel);
+    }
+    if (!home) home = log;
+    if (!home) return;
+    let li = document.getElementById(id);
+    if (!li) { li = document.createElement("li"); li.id = id; home.prepend(li); }
+    li.textContent = ""; const b = document.createElement("b"); b.textContent = (d.at || "").slice(11, 16) + " "; li.appendChild(b);
+    li.appendChild(document.createTextNode(line));
+  }
+  try {
+    intents.orderBy("at", "desc").limit(60).onSnapshot((snap) => {
+      const docs = snap && snap.docs ? snap.docs : [];
+      if (docs.length) docs.forEach(paint); else if (snap && typeof snap.forEach === "function") snap.forEach(paint);
+    }, (err) => say("console lost its feed: " + ((err && err.code) || err)));
+  } catch (e) { say("console cannot subscribe: " + ((e && e.code) || e)); }
+})();
+"""
+
+#: The actions a row offers. ``kind`` is what the intent document carries; the watching
+#: session's ``crowsnest-report`` skill says what each one does.
+ROW_ACTIONS = (
+    ("ask", "Ask"),
+    ("tell", "Tell"),
+    ("start", "Start work here"),
+    ("handled", "Handled"),
+)
 
 #: What the page is called when the caller does not name it.
 DFLT_TITLE = "crowsnest"
@@ -222,6 +328,7 @@ def _row(
         _where(safe, row),
         *lines,
         _refs(safe, row),
+        _controls(safe, row),
     ]
     return (
         f'<li class="row row--{tone}" id="session-{ident}">'
@@ -229,6 +336,25 @@ def _row(
         + '<div class="body">'
         + "".join(body)
         + "</div></li>"
+    )
+
+
+def _controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """The row's console: hidden until the page's ``db`` resolves; empty in static mode."""
+    if not _interactive.get():
+        return ""
+    buttons = "".join(
+        f'<button type="button" data-kind="{kind}">{safe.text(label)}</button>'
+        for kind, label in ROW_ACTIONS
+    )
+    return (
+        f'<div class="acts" data-console hidden data-session="{safe.text(row.get("label"))}"'
+        f' data-home="{safe.text(row.get("home") or "")}">'
+        f"{buttons}"
+        '<textarea hidden rows="2"></textarea>'
+        '<button type="button" data-kind="send" hidden>Send</button>'
+        '<ul class="answers"></ul>'
+        "</div>"
     )
 
 
@@ -373,8 +499,20 @@ def _masthead(safe: _Sanitizer, counts: Mapping[str, Any], stamp: str, title: st
         '<p class="claim">Every session below was alive at that moment, read from its '
         "registry entry and the tail of its transcript, and nothing since. Re-run "
         "<code>crowsnest report</code> for a newer one.</p>"
-        f'<div class="tally">{cells}</div>'
-        "</header>"
+        f'<div class="tally">{cells}</div>' + _console() + "</header>"
+    )
+
+
+def _console() -> str:
+    """Refresh, the status line, and the log of intents that belong to no row."""
+    if not _interactive.get():
+        return ""
+    return (
+        '<div class="console" data-console hidden>'
+        '<button type="button" data-kind="refresh">Refresh</button>'
+        '<span id="console-status"></span>'
+        "</div>"
+        '<ul class="answers" id="console-log" data-console hidden></ul>'
     )
 
 
@@ -409,12 +547,19 @@ def render_report(
     made_at: str,
     title: str = DFLT_TITLE,
     fragment: bool = False,
+    interactive: bool = False,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
     ``made_at`` is the moment the snapshot claims to be from and is printed in the
     largest type on the page; it is a required argument (not a hidden ``now()``) so that
     two calls with the same ``roster`` and ``made_at`` render the identical document.
+
+    ``interactive=True`` adds the console: per-row buttons and a Refresh, hidden until the
+    page's ``db`` capability resolves in the claude.ai viewer, and one inline script that
+    queues each press as an intent document for the watching session to act on (see the
+    ``crowsnest-report`` skill). It still loads nothing from anywhere; without ``db`` it
+    renders exactly as the static page. The static page carries no script at all.
 
     ``fragment=True`` returns the page the way a host that wraps it in its own document
     wants it -- the claude.ai artifact publisher does: the ``<title>``, then the
@@ -426,6 +571,16 @@ def render_report(
     ``busy`` or ``idle`` also falls into Quiet, so an unrecognised status is shown rather
     than dropped.
     """
+    token = _interactive.set(interactive)
+    try:
+        return _render(roster, made_at=made_at, title=title, fragment=fragment)
+    finally:
+        _interactive.reset(token)
+
+
+def _render(
+    roster: Mapping[str, Any], *, made_at: str, title: str, fragment: bool
+) -> str:
     safe = _Sanitizer()
     sessions = list(roster.get("sessions") or [])
     counts = dict(roster.get("counts") or {})
@@ -486,7 +641,11 @@ def render_report(
     ]
     title_tag = f"<title>{safe.text(title)}</title>"
     style_tag = f"<style>{_CSS}</style>"
+    if _interactive.get():
+        style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
+    if _interactive.get():
+        body += f"<script>{CONSOLE_SCRIPT}</script>"
     if fragment:
         return f"{title_tag}\n{style_tag}\n{body}\n"
     head = (

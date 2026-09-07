@@ -58,7 +58,8 @@ crowsnest show <session>           one session: last asked, last said, running n
 crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
 crowsnest brief <session>          openloops' dated digest for one session; reads no transcript
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
-                                   (--fragment: without the document wrapper, for publishing as an artifact)
+                                   (--fragment: without the document wrapper, for publishing as an artifact;
+                                    --interactive: buttons per row and a Refresh, live when published with the db capability)
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin

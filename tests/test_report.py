@@ -306,3 +306,45 @@ def test_a_quiet_row_with_remote_control_links_too():
     )
     html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
     assert '<a href="https://claude.ai/code/session_01OLD">open</a>' in html
+
+
+def _interactive_page():
+    r = row(label="fixer", status="busy", status_since=since(10), home="one")
+    return render_report({"sessions": [r], "counts": {}}, made_at=STAMP, interactive=True)
+
+
+def test_the_static_page_carries_no_script_and_the_interactive_one_exactly_one():
+    r = row(label="fixer", status="busy", status_since=since(10))
+    static = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
+    assert "<script" not in static and "data-console" not in static
+    page = _interactive_page()
+    assert page.count("<script>") == 1 and "src=" not in page
+    for forbidden in ("http://", "https://cdn", "<link", "@import", "fetch("):
+        assert forbidden not in page.split("<script>")[1]
+
+
+def test_the_console_controls_are_hidden_until_the_page_lights_them_up():
+    page = _interactive_page()
+    assert '<div class="console" data-console hidden>' in page
+    assert 'data-kind="refresh"' in page and 'id="console-status"' in page
+    assert 'data-session="fixer"' in page and 'data-home="one"' in page
+    for kind in ("ask", "tell", "start", "handled"):
+        assert f'data-kind="{kind}"' in page
+    acts = page.split('<div class="acts"', 1)[1].split("</div>", 1)[0]
+    assert acts.startswith(" data-console hidden")
+
+
+def test_the_interactive_fragment_keeps_the_script_and_the_extra_style():
+    r = row(label="fixer", status="busy", status_since=since(10))
+    frag = render_report(
+        {"sessions": [r], "counts": {}}, made_at=STAMP, fragment=True, interactive=True
+    )
+    assert frag.startswith("<title>crowsnest</title>\n<style>")
+    assert frag.count("<style>") == 2 and frag.count("<script>") == 1
+    assert "<html" not in frag and "<body" not in frag
+
+
+def test_interactive_rendering_does_not_leak_into_the_next_static_render():
+    _interactive_page()
+    r = row(label="fixer", status="busy", status_since=since(10))
+    assert "<script" not in render_report({"sessions": [r], "counts": {}}, made_at=STAMP)

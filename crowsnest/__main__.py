@@ -220,6 +220,7 @@ def report(
     home: str | None = None,
     all_homes: bool = False,
     fragment: bool = False,
+    interactive: bool = False,
 ):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
@@ -228,9 +229,13 @@ def report(
     `crowsnest report > roster.html`. `--all-homes` reads every home in the config file
     (accounts, synced machines); each row shows which when it does not match `home`.
     `--fragment` leaves out the document wrapper, which is what publishing the page as
-    a claude.ai artifact wants (the publisher wraps it itself).
+    a claude.ai artifact wants (the publisher wraps it itself). `--interactive` adds the
+    console (buttons per row and a Refresh) that works when the page is published with
+    the `db` capability; without it the page is the static one.
     """
-    result = tools.report(home=home, all_homes=all_homes, fragment=fragment)
+    result = tools.report(
+        home=home, all_homes=all_homes, fragment=fragment, interactive=interactive
+    )
     if not out:
         return result["html"]
     path = Path(out).expanduser()
