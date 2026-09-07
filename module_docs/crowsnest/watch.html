@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.watch &mdash; crowsnest 0.0.14 documentation</title>
+  <title>crowsnest.watch &mdash; crowsnest 0.0.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=544df88d"></script>
+      <script src="../../_static/documentation_options.js?v=f0357c94"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -64,6 +64,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.watch</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.DFLT_INTERVAL"><code class="docutils literal notranslate"><span class="pre">DFLT_INTERVAL</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.HOOK_KINDS"><code class="docutils literal notranslate"><span class="pre">HOOK_KINDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.QUIET_NOTIFICATIONS"><code class="docutils literal notranslate"><span class="pre">QUIET_NOTIFICATIONS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.WORKING"><code class="docutils literal notranslate"><span class="pre">WORKING</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.diff"><code class="docutils literal notranslate"><span class="pre">diff()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.watch.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
@@ -143,6 +144,15 @@ what the human should do about them, which is what the registry statuses are not
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.watch.QUIET_NOTIFICATIONS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">QUIET_NOTIFICATIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'idle_prompt'})</span></span><a class="headerlink" href="#crowsnest.watch.QUIET_NOTIFICATIONS" title="Link to this definition"></a></dt>
+<dd><p>Notification types that are not a request. Claude Code sends <code class="docutils literal notranslate"><span class="pre">idle_prompt</span></code> when a
+session has merely sat idle for a minute after finishing a turn – which the <code class="docutils literal notranslate"><span class="pre">stop</span></code>
+event already said, with the last words. Streaming it as <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> would wake the
+watcher for nothing, several times an hour per session. Observed 2026-09-07.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.watch.WORKING">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">WORKING</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('busy',</span> <span class="pre">'shell')</span></span><a class="headerlink" href="#crowsnest.watch.WORKING" title="Link to this definition"></a></dt>
 <dd><p>the session is working. A session
@@ -185,10 +195,16 @@ the loop; nothing else should pass them.</p>
 empty because a hook says what <em>happened</em>, not what the session is now; a
 notification’s kind (<code class="docutils literal notranslate"><span class="pre">permission_prompt</span></code>, <code class="docutils literal notranslate"><span class="pre">idle_prompt</span></code>, …) is what it waits
 for, so it goes in <code class="docutils literal notranslate"><span class="pre">waiting_for</span></code>.</p>
+<p>A notification whose type is in <a class="reference internal" href="#crowsnest.watch.QUIET_NOTIFICATIONS" title="crowsnest.watch.QUIET_NOTIFICATIONS"><code class="xref py py-data docutils literal notranslate"><span class="pre">QUIET_NOTIFICATIONS</span></code></a> is not streamed either:
+it is Claude Code noticing a session is idle, not the session asking for anything.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">hook_event</span><span class="p">({</span><span class="s1">'event'</span><span class="p">:</span> <span class="s1">'stop'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'lookout'</span><span class="p">,</span> <span class="s1">'detail'</span><span class="p">:</span> <span class="s1">'Merged.'</span><span class="p">})[</span><span class="s1">'kind'</span><span class="p">]</span>
 <span class="go">'stopped'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">hook_event</span><span class="p">({</span><span class="s1">'event'</span><span class="p">:</span> <span class="s1">'session-start'</span><span class="p">})</span> <span class="ow">is</span> <span class="kc">None</span>
 <span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hook_event</span><span class="p">({</span><span class="s1">'event'</span><span class="p">:</span> <span class="s1">'notification'</span><span class="p">,</span> <span class="s1">'notification_type'</span><span class="p">:</span> <span class="s1">'idle_prompt'</span><span class="p">})</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hook_event</span><span class="p">({</span><span class="s1">'event'</span><span class="p">:</span> <span class="s1">'notification'</span><span class="p">,</span> <span class="s1">'notification_type'</span><span class="p">:</span> <span class="s1">'permission_prompt'</span><span class="p">})[</span><span class="s1">'kind'</span><span class="p">]</span>
+<span class="go">'needs-you'</span>
 </pre></div>
 </div>
 </dd></dl>

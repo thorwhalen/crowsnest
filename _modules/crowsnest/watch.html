@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.watch &mdash; crowsnest 0.0.14 documentation</title>
+  <title>crowsnest.watch &mdash; crowsnest 0.0.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=544df88d"></script>
+      <script src="../../_static/documentation_options.js?v=f0357c94"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -134,6 +134,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"DFLT_INTERVAL"</span><span class="p">,</span>
     <span class="s2">"HOOK_KINDS"</span><span class="p">,</span>
+    <span class="s2">"QUIET_NOTIFICATIONS"</span><span class="p">,</span>
     <span class="s2">"WORKING"</span><span class="p">,</span>
     <span class="s2">"diff"</span><span class="p">,</span>
     <span class="s2">"events"</span><span class="p">,</span>
@@ -153,6 +154,12 @@
 <span class="c1">#: What a hook event is called in the stream. ``needs-you`` and ``stopped`` are named for</span>
 <span class="c1">#: what the human should do about them, which is what the registry statuses are not.</span>
 <span class="n">HOOK_KINDS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"notification"</span><span class="p">:</span> <span class="s2">"needs-you"</span><span class="p">,</span> <span class="s2">"stop"</span><span class="p">:</span> <span class="s2">"stopped"</span><span class="p">}</span>
+
+<span class="c1">#: Notification types that are not a request. Claude Code sends ``idle_prompt`` when a</span>
+<span class="c1">#: session has merely sat idle for a minute after finishing a turn -- which the ``stop``</span>
+<span class="c1">#: event already said, with the last words. Streaming it as ``needs-you`` would wake the</span>
+<span class="c1">#: watcher for nothing, several times an hour per session. Observed 2026-09-07.</span>
+<span class="n">QUIET_NOTIFICATIONS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"idle_prompt"</span><span class="p">})</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -339,13 +346,22 @@
 <span class="sd">    notification's kind (``permission_prompt``, ``idle_prompt``, ...) is what it waits</span>
 <span class="sd">    for, so it goes in ``waiting_for``.</span>
 
+<span class="sd">    A notification whose type is in :data:`QUIET_NOTIFICATIONS` is not streamed either:</span>
+<span class="sd">    it is Claude Code noticing a session is idle, not the session asking for anything.</span>
+
 <span class="sd">    &gt;&gt;&gt; hook_event({'event': 'stop', 'name': 'lookout', 'detail': 'Merged.'})['kind']</span>
 <span class="sd">    'stopped'</span>
 <span class="sd">    &gt;&gt;&gt; hook_event({'event': 'session-start'}) is None</span>
 <span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; hook_event({'event': 'notification', 'notification_type': 'idle_prompt'}) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; hook_event({'event': 'notification', 'notification_type': 'permission_prompt'})['kind']</span>
+<span class="sd">    'needs-you'</span>
 <span class="sd">    """</span>
     <span class="n">kind</span> <span class="o">=</span> <span class="n">HOOK_KINDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"event"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">kind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"needs-you"</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notification_type"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">QUIET_NOTIFICATIONS</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"at"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"at"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_now</span><span class="p">()),</span>
