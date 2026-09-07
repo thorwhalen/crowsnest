@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.report &mdash; crowsnest 0.0.12 documentation</title>
+  <title>crowsnest.report &mdash; crowsnest 0.0.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3bbcec59"></script>
+      <script src="../../_static/documentation_options.js?v=9fc46840"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -702,13 +702,22 @@
 <div class="viewcode-block" id="render_report">
 <a class="viewcode-back" href="../../module_docs/crowsnest/report.html#crowsnest.report.render_report">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_report</span><span class="p">(</span>
-    <span class="n">roster</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">made_at</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_TITLE</span>
+    <span class="n">roster</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">made_at</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_TITLE</span><span class="p">,</span>
+    <span class="n">fragment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.</span>
 
 <span class="sd">    ``made_at`` is the moment the snapshot claims to be from and is printed in the</span>
 <span class="sd">    largest type on the page; it is a required argument (not a hidden ``now()``) so that</span>
 <span class="sd">    two calls with the same ``roster`` and ``made_at`` render the identical document.</span>
+
+<span class="sd">    ``fragment=True`` returns the page the way a host that wraps it in its own document</span>
+<span class="sd">    wants it -- the claude.ai artifact publisher does: the ``&lt;title&gt;``, then the</span>
+<span class="sd">    ``&lt;style&gt;``, then the body's content, with no doctype, ``&lt;html&gt;``, ``&lt;head&gt;`` or</span>
+<span class="sd">    ``&lt;body&gt;`` of its own. Same content, same bytes for the same inputs.</span>
 
 <span class="sd">    A session counts as "just finished" when it has been ``idle`` for less than</span>
 <span class="sd">    :data:`FINISHED_WINDOW` seconds, and "quiet" otherwise. Anything not ``waiting``,</span>
@@ -773,12 +782,16 @@
         <span class="n">_quiet_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">quiet</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">),</span>
         <span class="n">_footer</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">stamp</span><span class="p">),</span>
     <span class="p">]</span>
-    <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">"&lt;title&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;"</span>
-        <span class="s1">'&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;'</span>
-        <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
-    <span class="p">)</span>
+    <span class="n">title_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;title&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;"</span>
+    <span class="n">style_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
     <span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;main class="sheet"&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/main&gt;'</span>
+    <span class="k">if</span> <span class="n">fragment</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title_tag</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">style_tag</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title_tag</span><span class="si">}</span><span class="s2">"</span>
+        <span class="s1">'&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;'</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">style_tag</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="s1">'&lt;!doctype html&gt;</span><span class="se">\n</span><span class="s1">&lt;html lang="en"&gt;</span><span class="se">\n</span><span class="s1">'</span>
         <span class="sa">f</span><span class="s1">'&lt;head&gt;</span><span class="se">\n</span><span class="s1">&lt;meta charset="utf-8"&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="se">\n</span><span class="s1">&lt;/head&gt;</span><span class="se">\n</span><span class="s1">'</span>
