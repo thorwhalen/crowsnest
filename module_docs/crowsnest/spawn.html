@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.spawn &mdash; crowsnest 0.0.22 documentation</title>
+  <title>crowsnest.spawn &mdash; crowsnest 0.0.23 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=96ec9c95"></script>
+      <script src="../../_static/documentation_options.js?v=3294188c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -155,6 +155,9 @@ and a phone web UI.</p>
 <p>Returns <code class="docutils literal notranslate"><span class="pre">{&quot;name&quot;,</span> <span class="pre">&quot;pid&quot;,</span> <span class="pre">&quot;session_id&quot;,</span> <span class="pre">&quot;how&quot;}</span></code>. When the registry file never shows
 up within <code class="docutils literal notranslate"><span class="pre">wait</span></code> seconds, <code class="docutils literal notranslate"><span class="pre">pid</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">how</span></code> says so – the session may
 still be starting, or may have failed before it could register.</p>
+<p>A name that a live session already carries is refused (<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>): the name is
+the address for everything after – <code class="docutils literal notranslate"><span class="pre">show</span></code>, <code class="docutils literal notranslate"><span class="pre">open</span></code>, a message – and two sessions
+behind one name make all of them ambiguous. Pick another, a suffix will do.</p>
 </dd></dl>
 
 </section>

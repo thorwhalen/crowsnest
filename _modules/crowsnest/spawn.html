@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.spawn &mdash; crowsnest 0.0.22 documentation</title>
+  <title>crowsnest.spawn &mdash; crowsnest 0.0.23 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=96ec9c95"></script>
+      <script src="../../_static/documentation_options.js?v=3294188c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -277,7 +277,17 @@
 <span class="sd">    Returns ``{"name", "pid", "session_id", "how"}``. When the registry file never shows</span>
 <span class="sd">    up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so -- the session may</span>
 <span class="sd">    still be starting, or may have failed before it could register.</span>
+
+<span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
+<span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
+<span class="sd">    behind one name make all of them ambiguous. Pick another, a suffix will do.</span>
 <span class="sd">    """</span>
+    <span class="n">taken</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">taken</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"a live session is already named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> (pid </span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">, in "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">); pick another name, for instance </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> with a suffix"</span>
+        <span class="p">)</span>
     <span class="n">how</span> <span class="o">=</span> <span class="s2">"custom"</span>
     <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">spawner</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">default_spawner</span><span class="p">()</span>
