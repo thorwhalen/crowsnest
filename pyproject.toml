@@ -25,7 +25,7 @@ classifiers = [
 # speaking, what the assistant's last words were -- and crowsnest adds the live half it
 # deliberately leaves out: which sessions are running, and what each is doing this
 # minute. `cw` builds the CLI from the same functions the library exposes.
-dependencies = ["openloops>=0.1.8", "cw>=0.1.1,<0.2"]
+dependencies = ["openloops>=0.1.9", "cw>=0.1.1,<0.2"]
 
 [project.scripts]
 crowsnest = "crowsnest.__main__:main"
