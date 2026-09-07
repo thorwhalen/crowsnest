@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.open &mdash; crowsnest 0.0.20 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.open</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.open</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Bring a live session's terminal to the front, or say where it runs.</span>
+
+<span class="sd">Spawning a new session (:mod:`crowsnest.spawn`) is the one write crowsnest performs on</span>
+<span class="sd">purpose; this is the other exception to "reads only" -- selecting and focusing a window</span>
+<span class="sd">that already exists is not writing into the session, and :func:`open_session` never</span>
+<span class="sd">sends it keystrokes. On macOS the default opener tries an iTerm tab whose title carries</span>
+<span class="sd">the session's name (Claude Code sets the terminal title with ``-n``), then a tmux</span>
+<span class="sd">session of that name; elsewhere -- or with no ``osascript`` -- there is no scriptable</span>
+<span class="sd">terminal to drive, so the tmux strategy can only report the attach command.</span>
+
+<span class="sd">&gt;&gt;&gt; _quoted('a "b"')</span>
+<span class="sd">'"a \\\\"b\\\\""'</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiveSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"default_opener"</span><span class="p">,</span> <span class="s2">"open_session"</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quoted</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""`text` as an AppleScript string literal."""</span>
+    <span class="k">return</span> <span class="s1">'"'</span> <span class="o">+</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\\</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\\\</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s1">'</span><span class="se">\\</span><span class="s1">"'</span><span class="p">)</span> <span class="o">+</span> <span class="s1">'"'</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iterm_tab_opener</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Select and activate the iTerm tab whose session name or title contains ``session.name``."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"osascript"</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">needle</span> <span class="o">=</span> <span class="n">_quoted</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'tell application "iTerm2"</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s2">"  repeat with w in windows</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"    repeat with t in tabs of w</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"      repeat with s in sessions of t</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"        if (name of s contains </span><span class="si">{</span><span class="n">needle</span><span class="si">}</span><span class="s2">) then</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"          select w</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"          tell w to select t</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"          select s</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"          activate</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s1">'          return "found"</span><span class="se">\n</span><span class="s1">'</span>
+        <span class="s2">"        end if</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"      end repeat</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"    end repeat</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"  end repeat</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"end tell</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s1">'return "not found"</span><span class="se">\n</span><span class="s1">'</span>
+    <span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"osascript"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">script</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"found"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"how"</span><span class="p">:</span> <span class="s2">"iterm"</span><span class="p">,</span> <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"activated the iTerm tab for </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_tmux_session</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"has-session"</span><span class="p">,</span> <span class="s2">"-t"</span><span class="p">,</span> <span class="n">name</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tmux_opener</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A tmux session named ``session.name``: attach it in a new iTerm tab, else say the command."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"tmux"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_has_tmux_session</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"tmux attach -t </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"darwin"</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"osascript"</span><span class="p">):</span>
+        <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">'tell application "iTerm2"</span><span class="se">\n</span><span class="s1">'</span>
+            <span class="s2">"  activate</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  if (count of windows) = 0 then</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"    create window with default profile</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  end if</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  tell current window</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"    set newTab to (create tab with default profile)</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"    tell current session of newTab</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s1">'      write text "</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">"</span><span class="se">\n</span><span class="s1">'</span>
+            <span class="s2">"    end tell</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"  end tell</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"end tell</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"osascript"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">script</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"tmux"</span><span class="p">,</span>
+                <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"opened a new iTerm tab running `</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">`"</span><span class="p">,</span>
+            <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"how"</span><span class="p">:</span> <span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"detail"</span><span class="p">:</span> <span class="n">command</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="default_opener">
+<a class="viewcode-back" href="../../module_docs/crowsnest/open.html#crowsnest.open.default_opener">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">default_opener</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The strongest opener this machine offers, tried in order: iTerm tab, then tmux.</span>
+
+<span class="sd">    Elsewhere than macOS -- or with no ``osascript`` -- the iTerm strategy never matches</span>
+<span class="sd">    and the tmux one only reports the attach command; there is nothing to focus.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_opener</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_iterm_tab_opener</span><span class="p">,</span> <span class="n">_tmux_opener</span><span class="p">):</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">strategy</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">found</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">_opener</span></div>
+
+
+
+<div class="viewcode-block" id="open_session">
+<a class="viewcode-back" href="../../module_docs/crowsnest/open.html#crowsnest.open.open_session">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">open_session</span><span class="p">(</span>
+    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">opener</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise ``session``'s terminal, or say where it runs when none can be found.</span>
+
+<span class="sd">    ``opener`` is the seam: a callable ``(session: LiveSession) -&gt; dict | None``</span>
+<span class="sd">    returning ``{"how", "detail"}`` on success, ``None`` when it found nothing -- the</span>
+<span class="sd">    default composes the iTerm-then-tmux strategies in :func:`default_opener`. Never</span>
+<span class="sd">    sends keys into the session; only selects and focuses what is already there.</span>
+
+<span class="sd">    Returns ``{"name", "how", "detail"}``; ``how`` is ``"not found"`` when no strategy</span>
+<span class="sd">    matched, with the pid and cwd in ``detail`` so the caller can say where it runs.</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">)</span>
+    <span class="n">opener</span> <span class="o">=</span> <span class="n">opener</span> <span class="ow">or</span> <span class="n">default_opener</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">opener</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"not found"</span><span class="p">,</span>
+            <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"pid </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">result</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

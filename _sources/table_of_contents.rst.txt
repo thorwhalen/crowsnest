@@ -9,6 +9,7 @@
    module_docs/crowsnest/hook
    module_docs/crowsnest/init
    module_docs/crowsnest/ledger
+   module_docs/crowsnest/open
    module_docs/crowsnest/paths
    module_docs/crowsnest/registry
    module_docs/crowsnest/report
