@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.report &mdash; crowsnest 0.0.13 documentation</title>
+  <title>crowsnest.report &mdash; crowsnest 0.0.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=9fc46840"></script>
+      <script src="../../_static/documentation_options.js?v=544df88d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -99,13 +99,12 @@ request to anywhere.</p>
 <p>The person operating the fleet often reads from a phone, and a terminal roster does not
 read well there. <a class="reference internal" href="#crowsnest.report.render_report" title="crowsnest.report.render_report"><code class="xref py py-func docutils literal notranslate"><span class="pre">render_report()</span></code></a> takes what <a class="reference internal" href="tools.html#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.roster()</span></code></a> returns
 and renders it in the same design language as <code class="docutils literal notranslate"><span class="pre">ol</span> <span class="pre">dashboard</span></code> in
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">openloops.dashboard</span></code> – the two pages are meant to read as siblings. <code class="docutils literal notranslate"><span class="pre">_CSS</span></code> below
-is that page’s stylesheet, copied rather than imported: it is a private name in
-<code class="docutils literal notranslate"><span class="pre">openloops.dashboard</span></code>, and importing a private name from another package can break at
-any release of it with no warning here. <code class="docutils literal notranslate"><span class="pre">_Sanitizer</span></code> is lifted for the same reason.
-Both carry a comment saying where they came from and when; an openloops issue tracks
-exposing the stylesheet publicly, after which the copy can become an import with a
-fallback.</p>
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">openloops.dashboard</span></code> – the two pages are meant to read as siblings. The stylesheet
+and the sanitizer are that module’s own, imported by their public names (<code class="docutils literal notranslate"><span class="pre">CSS</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Sanitizer</span></code>, public since openloops 0.1.9, which is why that is the floor in
+<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>): one stylesheet, so the two pages cannot drift apart, and one egress
+choke point, so a home path or a credential in a session’s last words is rewritten or
+withheld here exactly as it is there.</p>
 <p>Four registers, in the order a person needs them: <strong>Waiting on you</strong> (a session holding
 for an answer, with the question verbatim), <strong>Just finished</strong> (idle within the last hour,
 last words clipped), <strong>Working</strong> (busy, with the tool call in flight), and <strong>Quiet</strong>
