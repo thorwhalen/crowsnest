@@ -77,7 +77,7 @@ CONSOLE_SCRIPT = r"""
   const status = document.getElementById("console-status");
   const say = (t) => { if (status) status.textContent = t; };
   const use = window.claude && window.claude.use;
-  if (typeof use !== "function") return;
+  if (typeof use !== "function") { say("console off: this copy of the page is not in the claude.ai viewer"); return; }
   let db = null;
   try { db = await window.claude.use("db"); } catch (e) { db = null; }
   if (!db) { say("console off: open this page in the claude.ai viewer to act from it"); return; }
@@ -508,9 +508,9 @@ def _console() -> str:
     if not _interactive.get():
         return ""
     return (
-        '<div class="console" data-console hidden>'
-        '<button type="button" data-kind="refresh">Refresh</button>'
-        '<span id="console-status"></span>'
+        '<div class="console">'
+        '<button type="button" data-kind="refresh" data-console hidden>Refresh</button>'
+        '<span id="console-status">console: connecting to this page\'s store…</span>'
         "</div>"
         '<ul class="answers" id="console-log" data-console hidden></ul>'
     )

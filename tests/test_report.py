@@ -325,8 +325,9 @@ def test_the_static_page_carries_no_script_and_the_interactive_one_exactly_one()
 
 def test_the_console_controls_are_hidden_until_the_page_lights_them_up():
     page = _interactive_page()
-    assert '<div class="console" data-console hidden>' in page
-    assert 'data-kind="refresh"' in page and 'id="console-status"' in page
+    assert '<div class="console">' in page
+    assert 'data-kind="refresh" data-console hidden' in page
+    assert 'id="console-status">console: connecting' in page
     assert 'data-session="fixer"' in page and 'data-home="one"' in page
     for kind in ("ask", "tell", "start", "handled"):
         assert f'data-kind="{kind}"' in page
