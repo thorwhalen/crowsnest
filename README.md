@@ -96,7 +96,7 @@ path = "~/.cache/xa/remotes/server"   # a copy synced down with `xa sync`
 remote = true                         # its pids are not ours: alive while fresh
 ```
 
-Then `crowsnest --all-homes` prints every home with a column saying which, `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`.
+Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which, `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`.
 
 ## The ledger: what a session leaves behind
 

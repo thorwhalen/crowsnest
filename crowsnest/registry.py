@@ -30,6 +30,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 __all__ = [
+    "CLAUDE_AI_SESSIONS",
     "DFLT_HOME",
     "HOME_ENV_VAR",
     "STATUSES",
@@ -46,6 +47,9 @@ __all__ = [
 #: reinvented: the registry and the transcripts move with it.
 HOME_ENV_VAR = "CLAUDE_CONFIG_DIR"
 DFLT_HOME = "~/.claude"
+
+#: Where a Remote Control session opens on the web: this prefix plus its bridge id.
+CLAUDE_AI_SESSIONS = "https://claude.ai/code/"
 
 #: The statuses the registry reports, in the order a roster shows them: what needs a human
 #: first, then what is working (``shell`` is a session running a shell command, which is
@@ -147,6 +151,16 @@ class LiveSession:
     version: str
     transcript: str
     home: str = ""
+    bridge_session_id: str = ""
+
+    @property
+    def session_url(self) -> str:
+        """The session on claude.ai, when it runs with Remote Control; else ``''``."""
+        return (
+            f"{CLAUDE_AI_SESSIONS}{self.bridge_session_id}"
+            if self.bridge_session_id
+            else ""
+        )
 
     @property
     def project(self) -> str:
@@ -162,6 +176,7 @@ class LiveSession:
         d = asdict(self)
         d["project"] = self.project
         d["label"] = self.label
+        d["session_url"] = self.session_url
         return d
 
 
@@ -198,6 +213,7 @@ def _session(rec: dict, *, home: Path, home_name: str = "") -> LiveSession | Non
         version=str(rec.get("version") or ""),
         transcript=str(transcript_path(str(cwd), str(session_id), home=home)),
         home=home_name,
+        bridge_session_id=str(rec.get("bridgeSessionId") or ""),
     )
 
 

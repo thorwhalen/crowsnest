@@ -10,7 +10,10 @@ here prints, exits, or knows which surface called it.
 
 from __future__ import annotations
 
+import re
+import subprocess
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 
 from openloops.tools import show as _openloops_digest
@@ -20,7 +23,66 @@ from crowsnest.config import homes
 from crowsnest.registry import STATUSES, LiveSession, fresh_within, live_sessions
 from crowsnest.report import DFLT_TITLE, render_report
 
-__all__ = ["brief", "report", "resolve", "roster", "sessions", "show", "turns"]
+__all__ = [
+    "brief",
+    "repo_url",
+    "report",
+    "resolve",
+    "roster",
+    "sessions",
+    "show",
+    "turns",
+]
+
+#: How many issue or PR references a roster row carries. The page shows them; ``show``
+#: carries them all.
+ROSTER_LOCATORS = 4
+
+_SSH_REMOTE = re.compile(r"^(?:ssh://)?(?:[\w.-]+@)?([\w.-]+)[:/](.+?)(?:\.git)?/?$")
+
+
+def _normalise_remote(raw: str) -> str:
+    """An ``origin`` URL as a browser link, or ``''`` when it is not one.
+
+    >>> _normalise_remote('git@github.com:o/r.git')
+    'https://github.com/o/r'
+    >>> _normalise_remote('https://github.com/o/r.git')
+    'https://github.com/o/r'
+    >>> _normalise_remote('ssh://git@github.com/o/r')
+    'https://github.com/o/r'
+    >>> _normalise_remote('/local/bare/repo.git')
+    ''
+    """
+    raw = raw.strip()
+    if raw.startswith(("http://", "https://")):
+        return raw.removesuffix(".git")
+    if raw.startswith("/") or not raw:
+        return ""
+    m = _SSH_REMOTE.match(raw)
+    return f"https://{m.group(1)}/{m.group(2)}" if m else ""
+
+
+@lru_cache(maxsize=256)
+def repo_url(cwd: str) -> str:
+    """The browser URL of the repository at ``cwd``'s ``origin``, or ``''``.
+
+    Read once per directory per process: a roster asks for forty directories, most of
+    them the same few repositories.
+    """
+    if not cwd:
+        return ""
+    try:
+        out = subprocess.run(
+            ["git", "-C", cwd, "config", "--get", "remote.origin.url"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return _normalise_remote(out.stdout) if out.returncode == 0 else ""
+
 
 #: How much of a prompt or a reply a roster row carries. ``show`` carries it whole.
 ROSTER_TEXT_LIMIT = 240
@@ -108,6 +170,7 @@ def roster(
     rows = []
     for s in sessions(home=home, all_homes=all_homes, config=config):
         row = s.as_dict()
+        row["repo_url"] = repo_url(s.cwd)
         if activity:
             act = read_activity(s.transcript, session_id=s.session_id, recent=3)
             row["activity"] = {
@@ -122,6 +185,7 @@ def roster(
                 "git_branch": act.git_branch,
                 "last_text_at": act.last_text_at,
                 "tail_turns": act.tail_turns,
+                "locators": list(act.locators[-ROSTER_LOCATORS:]),
             }
         rows.append(row)
     counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}

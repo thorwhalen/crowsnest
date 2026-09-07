@@ -214,7 +214,9 @@ class Activity:
     ``tail_complete`` says whether the window reached the start of the file, which is what
     makes the difference between "no prompt in the tail" and "no prompt at all".
     ``tail_turns`` is how many human prompts the window held: the session's turn count
-    when ``tail_complete`` is true, and a floor otherwise.
+    when ``tail_complete`` is true, and a floor otherwise. ``locators`` are the typed
+    references openloops found in the window -- issues, pull requests -- each a dict with
+    ``type``, ``url`` and ``text``, oldest first.
     """
 
     session_id: str = ""
@@ -231,6 +233,7 @@ class Activity:
     git_branch: str = ""
     tail_complete: bool = True
     tail_turns: int = 0
+    locators: tuple[dict, ...] = ()
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -274,6 +277,7 @@ def read_activity(
         git_branch=session.git_branch,
         tail_complete=complete,
         tail_turns=session.turn_count,
+        locators=tuple(loc.as_dict() for loc in session.locators),
     )
 
 
