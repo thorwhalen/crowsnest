@@ -63,9 +63,14 @@ crowsnest watch                    one line per change, forever (started, exited
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
 crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
+crowsnest open <session>           raise its terminal on the desktop, or say where it runs
 crowsnest init                     this session's CLAUDE.md, the data directory, the hook lines
 crowsnest install-skills           link the skills and the scout subagent into ~/.claude
 ```
+
+`open` is a desktop command -- it looks for an iTerm tab or a tmux session and has nothing
+to raise from a web page, so a claude.ai artifact (`crowsnest report`) can only tell you
+where a session runs, never bring its terminal to the front for you.
 
 `<session>` is the name you gave the session with `claude -n <name>`, a unique prefix of one, a session-id prefix, or a pid.
 
