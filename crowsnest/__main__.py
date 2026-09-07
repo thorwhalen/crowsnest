@@ -213,15 +213,23 @@ def turns(
     return "\n".join(out)
 
 
-def report(*, out: str | None = None, home: str | None = None, all_homes: bool = False):
+def report(
+    *,
+    out: str | None = None,
+    home: str | None = None,
+    all_homes: bool = False,
+    fragment: bool = False,
+):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
 
     Writes to `--out FILE`, or prints to stdout so you can pipe it:
     `crowsnest report > roster.html`. `--all-homes` reads every home in the config file
     (accounts, synced machines); each row shows which when it does not match `home`.
+    `--fragment` leaves out the document wrapper, which is what publishing the page as
+    a claude.ai artifact wants (the publisher wraps it itself).
     """
-    result = tools.report(home=home, all_homes=all_homes)
+    result = tools.report(home=home, all_homes=all_homes, fragment=fragment)
     if not out:
         return result["html"]
     path = Path(out).expanduser()
