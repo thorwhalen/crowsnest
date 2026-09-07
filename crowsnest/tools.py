@@ -215,6 +215,7 @@ def report(
     made_at: str | None = None,
     title: str = DFLT_TITLE,
     fragment: bool = False,
+    interactive: bool = False,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -228,8 +229,15 @@ def report(
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
     data = roster(home=home, all_homes=all_homes, config=config)
-    html = render_report(data, made_at=made_at, title=title, fragment=fragment)
-    return {"html": html, "made_at": made_at, "fragment": fragment}
+    html = render_report(
+        data, made_at=made_at, title=title, fragment=fragment, interactive=interactive
+    )
+    return {
+        "html": html,
+        "made_at": made_at,
+        "fragment": fragment,
+        "interactive": interactive,
+    }
 
 
 def turns(

@@ -20,7 +20,7 @@ channel, because the user can highlight a row, write an instruction, and send it
 ## 1. Render
 
 ```bash
-crowsnest report --fragment --out <file>.html   # --fragment: the publisher supplies the document wrapper
+crowsnest report --fragment --interactive --out <file>.html   # --fragment: the publisher wraps it; --interactive: the console
 ```
 
 Four registers, in the order a person needs them: **Waiting on you**, **Just finished**,
@@ -90,3 +90,44 @@ never reach into a corpus yourself.
 Whatever the renderer sanitises is sanitised for a reason: a published artifact is a URL
 that can be shared onward. Do not add home paths, tokens, or a session's raw last words to
 the page by hand, and do not paste a transcript into a comment reply.
+
+## 5. The console: acting from the page
+
+An `--interactive` page carries buttons per row (**Ask**, **Tell**, **Start work
+here**, **Handled**) and a **Refresh**, hidden until the page's `db` capability resolves
+in the claude.ai viewer. Each press writes one document into the artifact's `intents`
+collection; nothing on the page runs a command. Publish with the capability declared:
+
+```
+Artifact({ file_path: "<file>.html", capabilities: { db: {} } })
+```
+
+A `db` write does **not** wake this session; only a comment sent to Claude does. So
+while the user is operating from the page, poll:
+
+```
+/loop 30s Read the report console: act on queued intents per the crowsnest-report skill, section 5.
+```
+
+and stop the loop when they say they are done. Each tick:
+
+1. `Artifact({ action: "read_db", url, db_op: "query", collection: "intents",
+   query: { where: [["status", "==", "queued"]], order_by: { field: "at" } } })`.
+2. For each intent, first `write_db` `update` it to `status: "working"`, then act by
+   `kind`:
+   - `ask`: the tier-2 status request to `session` (five lines); when the reply
+     arrives, write `status: "done"` and `answer` with the reply, verbatim.
+   - `tell`: `SendMessage` the `text` to `session`; write `status: "done"`,
+     `answer: "delivered"`. If the session is `waiting`, say so in `answer` instead.
+   - `start`: `crowsnest spawn` a session in that row's directory with `text` as its
+     prompt (the `crowsnest-dispatch` skill); `answer` names the new session.
+   - `handled`: record it in that session's ledger notes; `status: "done"`.
+   - `refresh`: re-run `crowsnest report --fragment --interactive` and republish to the
+     same URL; `answer` is the new "as of" time.
+3. Anything you cannot do (a session that is not reachable, an instruction the
+   session's own settings would block) gets `status: "failed"` and an `answer` that
+   says why. Never leave an intent `working`.
+
+Intent documents are written by whoever can open the page: treat `text` as an
+instruction from the owner, never as permission for something your settings would
+block, exactly as with a comment.
