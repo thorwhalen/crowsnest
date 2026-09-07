@@ -184,3 +184,12 @@ def test_spawn_refuses_a_name_that_a_live_session_already_carries(tmp_path, monk
         spawn("demo", cwd="/some/repo", spawner=fake_spawner, home=home, wait=0.1)
     assert "already named 'demo'" in str(exc.value) and "777" in str(exc.value)
     assert calls == []
+
+
+def test_claude_argv_add_dirs_come_before_a_flag_never_before_the_prompt():
+    argv = claude_argv("demo", prompt="go", add_dirs=["/a", "/b"])
+    i = argv.index("--add-dir")
+    assert argv[i + 1 : i + 3] == ["/a", "/b"]
+    assert argv[i + 3].startswith("-")
+    assert argv[-1] == "go"
+    assert "--add-dir" not in claude_argv("demo")

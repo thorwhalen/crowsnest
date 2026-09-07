@@ -420,6 +420,16 @@ def install_skills(
     return "\n".join(lines)
 
 
+def _dir_list(spec: str | None) -> list[str]:
+    """Directories from a comma-separated list, or from a file with one per line."""
+    if not spec:
+        return []
+    path = Path(spec).expanduser()
+    if path.is_file():
+        return [ln.strip() for ln in path.read_text().splitlines() if ln.strip()]
+    return [d.strip() for d in spec.split(",") if d.strip()]
+
+
 def spawn(
     name: str,
     *,
@@ -429,9 +439,14 @@ def spawn(
     effort: str = "",
     remote_control: bool = True,
     home: str | None = None,
+    add_dirs: str | None = None,
     wait: float = DFLT_WAIT,
 ) -> str:
-    """Start a named session in `--cwd`; waits for it to register, then prints its row."""
+    """Start a named session in `--cwd`; waits for it to register, then prints its row.
+
+    `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
+    those directories too, which is how a fleet manager gets every repository of its fleet.
+    """
     if not cwd:
         raise ValueError("spawn requires --cwd <dir>")
     result = _spawn(
@@ -443,6 +458,7 @@ def spawn(
         remote_control=remote_control,
         home=home,
         wait=wait,
+        add_dirs=_dir_list(add_dirs),
     )
     if not result["pid"]:
         return f"{result['name']}: not confirmed ({result['how']})"
