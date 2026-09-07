@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.report &mdash; crowsnest 0.0.21 documentation</title>
+  <title>crowsnest.report &mdash; crowsnest 0.0.22 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
+      <script src="../../_static/documentation_options.js?v=96ec9c95"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -167,7 +167,7 @@
 <span class="s2">  const status = document.getElementById("console-status");</span>
 <span class="s2">  const say = (t) =&gt; { if (status) status.textContent = t; };</span>
 <span class="s2">  const use = window.claude &amp;&amp; window.claude.use;</span>
-<span class="s2">  if (typeof use !== "function") return;</span>
+<span class="s2">  if (typeof use !== "function") { say("console off: this copy of the page is not in the claude.ai viewer"); return; }</span>
 <span class="s2">  let db = null;</span>
 <span class="s2">  try { db = await window.claude.use("db"); } catch (e) { db = null; }</span>
 <span class="s2">  if (!db) { say("console off: open this page in the claude.ai viewer to act from it"); return; }</span>
@@ -598,9 +598,9 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
         <span class="k">return</span> <span class="s2">""</span>
     <span class="k">return</span> <span class="p">(</span>
-        <span class="s1">'&lt;div class="console" data-console hidden&gt;'</span>
-        <span class="s1">'&lt;button type="button" data-kind="refresh"&gt;Refresh&lt;/button&gt;'</span>
-        <span class="s1">'&lt;span id="console-status"&gt;&lt;/span&gt;'</span>
+        <span class="s1">'&lt;div class="console"&gt;'</span>
+        <span class="s1">'&lt;button type="button" data-kind="refresh" data-console hidden&gt;Refresh&lt;/button&gt;'</span>
+        <span class="s1">'&lt;span id="console-status"&gt;console: connecting to this page</span><span class="se">\'</span><span class="s1">s store…&lt;/span&gt;'</span>
         <span class="s2">"&lt;/div&gt;"</span>
         <span class="s1">'&lt;ul class="answers" id="console-log" data-console hidden&gt;&lt;/ul&gt;'</span>
     <span class="p">)</span>
