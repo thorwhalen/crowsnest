@@ -163,3 +163,24 @@ def test_spawn_reports_when_the_registry_never_sees_it(tmp_path, monkeypatch):
     assert result["pid"] == 0
     assert result["session_id"] == ""
     assert "ghost" in result["how"]
+
+
+def test_spawn_refuses_a_name_that_a_live_session_already_carries(tmp_path, monkeypatch):
+    import pytest
+
+    monkeypatch.setattr(
+        spawn_module,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: True, **kw),
+    )
+    home = tmp_path / "claude"
+    write_registry(home, registry_record(777, "sess-taken", name="demo", status="idle"))
+    calls = []
+
+    def fake_spawner(argv, *, cwd, name):
+        calls.append(name)
+
+    with pytest.raises(ValueError) as exc:
+        spawn("demo", cwd="/some/repo", spawner=fake_spawner, home=home, wait=0.1)
+    assert "already named 'demo'" in str(exc.value) and "777" in str(exc.value)
+    assert calls == []
