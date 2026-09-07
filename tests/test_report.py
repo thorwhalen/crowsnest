@@ -252,3 +252,57 @@ def test_the_fragment_carries_the_same_content_as_the_page():
     frag = render_report(roster, made_at=made, fragment=True)
     body = page.split("<body>\n", 1)[1].split("\n</body>", 1)[0]
     assert frag.endswith(body + "\n")
+
+
+def test_a_row_with_a_remote_control_session_links_to_it_and_its_repository():
+    r = row(
+        label="fixer",
+        status="busy",
+        status_since=since(10),
+        session_url="https://claude.ai/code/session_01ABC",
+        repo_url="https://github.com/o/r",
+    )
+    html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
+    assert '<a href="https://claude.ai/code/session_01ABC">open</a>' in html
+    assert '<a href="https://github.com/o/r">repo</a>' in html
+
+
+def test_a_row_without_remote_control_has_no_open_link():
+    r = row(
+        label="fixer", status="busy", status_since=since(10), session_url="", repo_url=""
+    )
+    html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
+    assert ">open</a>" not in html and ">repo</a>" not in html
+
+
+def test_mentioned_issues_and_prs_become_links_and_bad_schemes_are_dropped():
+    r = row(
+        label="fixer",
+        status="idle",
+        status_since=since(10),
+        activity={
+            "last_assistant_text": "Filed it.",
+            "locators": [
+                {
+                    "type": "issue",
+                    "url": "https://github.com/o/r/issues/7",
+                    "text": "o/r#7",
+                },
+                {"type": "pr", "url": "javascript:alert(1)", "text": "evil"},
+            ],
+        },
+    )
+    html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
+    assert '<a href="https://github.com/o/r/issues/7">o/r#7</a>' in html
+    assert "javascript:" not in html and "evil" not in html
+
+
+def test_a_quiet_row_with_remote_control_links_too():
+    r = row(
+        label="old",
+        status="idle",
+        status_since=since(7200),
+        session_url="https://claude.ai/code/session_01OLD",
+    )
+    html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
+    assert '<a href="https://claude.ai/code/session_01OLD">open</a>' in html

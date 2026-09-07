@@ -142,13 +142,68 @@ def _empty(message: str) -> str:
     return f'<p class="empty">{message}</p>'
 
 
+def _link(safe: _Sanitizer, url: Any, label: str) -> str:
+    """An anchor, or ``''`` when the sanitizer will not follow the URL."""
+    href = safe.url(url)
+    return f'<a href="{href}">{safe.text(label)}</a>' if href else ""
+
+
 def _where(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
-    """``project`` and, when the row carries one, the ``home`` it came from."""
+    """``project``, the ``home`` when the row carries one, and where the row leads.
+
+    Two links when the row has them: the session on claude.ai (a session running with
+    Remote Control, which opens on a phone too) and the repository behind its directory.
+    """
     parts = [safe.text(row.get("project"))]
     home = row.get("home")
     if home:
         parts.append(safe.text(home))
+    for url, label in ((row.get("session_url"), "open"), (row.get("repo_url"), "repo")):
+        anchor = _link(safe, url, label)
+        if anchor:
+            parts.append(anchor)
     return '<p class="where">' + ' <span class="sep">·</span> '.join(parts) + "</p>"
+
+
+_GITHUB_REF = re.compile(
+    r"^https?://github\.com/([^/]+)/([^/]+)/(?:issues|pull|discussions)/(\d+)"
+)
+
+
+def _ref_label(loc: Mapping[str, Any]) -> str:
+    """What to call a reference: its text, else ``repo#N`` for a GitHub one, else its type.
+
+    >>> _ref_label({'type': 'pr', 'url': 'https://github.com/o/r/pull/27', 'text': ''})
+    'r#27'
+    >>> _ref_label({'type': 'issue', 'url': 'https://example.org/x', 'text': ''})
+    'issue'
+    """
+    text = str(loc.get("text") or "").strip()
+    if text:
+        return text
+    m = _GITHUB_REF.match(str(loc.get("url") or ""))
+    if m:
+        return f"{m.group(2)}#{m.group(3)}"
+    return str(loc.get("type") or "ref")
+
+
+def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """The issues and pull requests the session mentioned, as links; ``''`` when none."""
+    act = row.get("activity") or {}
+    anchors = []
+    seen: set[str] = set()
+    for loc in act.get("locators") or ():
+        if not isinstance(loc, Mapping) or loc.get("url") in seen:
+            continue
+        seen.add(str(loc.get("url")))
+        anchor = _link(safe, loc.get("url"), _ref_label(loc))
+        if anchor:
+            anchors.append(anchor)
+    if not anchors:
+        return ""
+    return (
+        '<p class="where">refs <span class="sep">·</span> ' + " ".join(anchors) + "</p>"
+    )
 
 
 def _row(
@@ -166,6 +221,7 @@ def _row(
         f'<p class="ask">{safe.text(row.get("label"))}</p>',
         _where(safe, row),
         *lines,
+        _refs(safe, row),
     ]
     return (
         f'<li class="row row--{tone}" id="session-{ident}">'
@@ -239,6 +295,9 @@ def _quiet_group(
         ident = _slug(str(row.get("label") or row.get("session_id") or ""))
         home = row.get("home")
         tail = f' <span class="sep">·</span> {safe.text(home)}' if home else ""
+        opener = _link(safe, row.get("session_url"), "open")
+        if opener:
+            tail += f' <span class="sep">·</span> {opener}'
         items.append(
             f'<li class="thin" id="session-{ident}">'
             f'<span class="thin-age">{figure}{unit}</span>'

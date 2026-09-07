@@ -68,3 +68,28 @@ def test_remote_home_uses_freshness_instead_of_pids(tmp_path):
         s.home == "server"
         for s in live_sessions(home=home, is_live=rule, home_name="server")
     )
+
+
+def test_a_remote_control_session_carries_its_claude_ai_url(tmp_path):
+    home = demo_home(tmp_path)
+    write_registry(
+        home,
+        {
+            **registry_record(301, "rc1", name="remote", status="idle"),
+            "bridgeSessionId": "session_01XYZ",
+        },
+    )
+    [s] = [
+        s
+        for s in live_sessions(home=home, is_alive=lambda pid: True)
+        if s.name == "remote"
+    ]
+    assert s.remote_control is True
+    assert s.session_url == "https://claude.ai/code/session_01XYZ"
+    assert s.as_dict()["session_url"] == s.session_url
+    [plain] = [
+        s
+        for s in live_sessions(home=home, is_alive=lambda pid: True)
+        if s.name == "fixer"
+    ]
+    assert plain.session_url == ""
