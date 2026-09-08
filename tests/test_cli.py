@@ -256,3 +256,42 @@ def test_all_homes_reads_every_configured_home_with_a_column(
     assert "fixer@one, fixer@two" in capsys.readouterr().err
     main(["show", "fixer@two", "--all-homes"])
     assert "home two" in capsys.readouterr().out
+
+
+def test_spawn_profile_picks_the_home_and_says_which(tmp_path, monkeypatch, capsys):
+    import sys
+
+    spawn_module = sys.modules["crowsnest.spawn"]
+
+    other = tmp_path / "other-home"
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(f"[[homes]]\nname = 'other'\npath = '{other}'\n")
+    monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
+    monkeypatch.setattr(
+        spawn_module,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: True, **kw),
+    )
+    seen = []
+    monkeypatch.setattr(
+        spawn_module,
+        "default_spawner",
+        lambda: ((lambda argv, *, cwd, name, home: seen.append(home)), "fake"),
+    )
+    main(["spawn", "demo", "--cwd", "/some/repo", "--profile", "other", "--wait", "0.1"])
+    out = capsys.readouterr().out
+    assert seen == [other]
+    assert "not confirmed" in out and str(other) in out
+
+
+def test_spawn_refuses_an_unknown_profile_with_a_clear_error(
+    tmp_path, monkeypatch, capsys
+):
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(f"[[homes]]\nname = 'other'\npath = '{tmp_path / 'o'}'\n")
+    monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
+    monkeypatch.setattr("shutil.which", lambda cmd, **kw: None)
+    with pytest.raises(SystemExit):
+        main(["spawn", "demo", "--cwd", "/some/repo", "--profile", "typo"])
+    err = capsys.readouterr().err
+    assert "typo" in err and "other" in err

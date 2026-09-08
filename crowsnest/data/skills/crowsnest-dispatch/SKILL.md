@@ -65,11 +65,14 @@ belongs in an issue the session can read.
 crowsnest spawn <name> --cwd <dir> --prompt "<the brief>"
 ```
 
-The row appears in `crowsnest` within seconds, named, in that directory, busy, and on
-your own account (the new session inherits your `CLAUDE_CONFIG_DIR`; `--home` picks
-another). Remote control is on by default, so the user can reach it from a phone. If the command reports
-that it could not confirm the session, do not spawn a second one — run `crowsnest` and
-look before you try again.
+The row appears in `crowsnest` within seconds, named, in that directory, busy, and
+running the way you run: your account and your `claude` binary. `--profile <name>` starts
+it on another account instead (`--home <dir>` spells the home out); the row then shows
+under that home, so `crowsnest --all-homes` is what finds it. Remote control is on by
+default, so the user can reach it from a phone. If the command reports that it could not
+confirm the session, do not spawn a second one — run `crowsnest --all-homes` and look
+before you try again: a session that started but registered on another account is the one
+thing that looks like a failure and is not.
 
 For a session that already exists, `SendMessage` to its name from `ListAgents`, with the
 same five parts. Idle only — never a `busy` or `waiting` one.

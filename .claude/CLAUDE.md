@@ -10,6 +10,9 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 | `home=` on every reader | `$CLAUDE_CONFIG_DIR` or `~/.claude` | a synced copy of another machine's home (`xa sync`); several via `[[homes]]` in `~/.config/crowsnest/config.toml` and `all_homes=` |
 | `is_alive=` / `is_live=` in `registry.live_sessions` | pid signal 0 | `fresh_within()` for remote homes; `xa.claude_fs.ephemeral_session_alive` for /proc |
 | `spawner=` in `spawn.spawn`, a callable `(argv, *, cwd, name, home)` | tmux, else an iTerm tab, else a subprocess; `home` is the account (`None`: the spawner's own), and `child_env`/`env_prefix` turn it into an environment | `xa spawn`, which translates the one path for its host |
+| `resolver=` in `account.profile_home`, a callable `(name) -> Path` raising `KeyError` | the `[[homes]]` names first, then `claude-profile dir <name>` on `PATH` | wherever else a machine keeps its account names |
+| `binary=` in `spawn.spawn` / `claude_argv` | the bare `claude`; each *local* spawner substitutes `account.claude_bin()` (`$CLAUDE_CODE_EXECPATH`, else an absolute `which claude`) via `spawn.local_argv`, so the command line a remote spawner is handed stays runnable there | another build, another version |
+| `drop=` in `child_env` / `env_prefix` | `account.DROPPED_VARS` (`ANTHROPIC_API_KEY`) | anything else that would override the account the home selects |
 | `ledger_dir=` / `events_path=` in `ledger`, `hook`, `watch` | under `crowsnest.paths.data_dir()` | a test's `tmp_path`; a shared store later |
 | `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
 

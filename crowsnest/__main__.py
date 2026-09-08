@@ -104,7 +104,8 @@ def roster(
 
     `--brief` answers from the registry alone, without reading any transcript.
     `--all-homes` reads every home in the config file (accounts, synced machines) and
-    adds a column saying which.
+    adds a column saying which -- which is also where a session spawned under another
+    account shows up.
     """
     result = tools.roster(home=home, all_homes=all_homes, activity=not brief)
     lines = []
@@ -234,7 +235,10 @@ def report(
     the `db` capability; without it the page is the static one.
     """
     result = tools.report(
-        home=home, all_homes=all_homes, fragment=fragment, interactive=interactive
+        home=home,
+        all_homes=all_homes,
+        fragment=fragment,
+        interactive=interactive,
     )
     if not out:
         return result["html"]
@@ -439,13 +443,19 @@ def spawn(
     effort: str = "",
     remote_control: bool = True,
     home: str | None = None,
+    profile: str = "",
+    binary: str = "",
     add_dirs: str | None = None,
     wait: float = DFLT_WAIT,
 ) -> str:
     """Start a named session in `--cwd`; waits for it to register, then prints its row.
 
-    The session runs under this session's own account (its `CLAUDE_CONFIG_DIR`), or under
-    `--home` when given, which is then also the registry watched for it.
+    The session runs as this one does: same account (its `CLAUDE_CONFIG_DIR`) and same
+    `claude` binary. `--profile NAME` picks another account by name -- a `[[homes]]` name
+    from the config file, else a name your `claude-profile` command knows -- and
+    `$CROWSNEST_PROFILE` is that choice made once; `--home DIR` spells the home out
+    instead, and is then also the registry watched for the new session. `--binary PATH`
+    runs a different `claude`.
 
     `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
     those directories too, which is how a fleet manager gets every repository of its fleet.
@@ -460,14 +470,17 @@ def spawn(
         effort=effort,
         remote_control=remote_control,
         home=home,
+        profile=profile,
+        binary=binary,
         wait=wait,
         add_dirs=_dir_list(add_dirs),
     )
+    where = f" in {result['home']}" if result.get("home") else ""
     if not result["pid"]:
-        return f"{result['name']}: not confirmed ({result['how']})"
+        return f"{result['name']}: not confirmed ({result['how']}){where}"
     return (
         f"{result['name']:<20}pid {result['pid']:<8}"
-        f"session {result['session_id'][:8]}  ({result['how']})"
+        f"session {result['session_id'][:8]}  ({result['how']}){where}"
     )
 
 
@@ -475,6 +488,13 @@ def open(session: str, *, home: str | None = None, all_homes: bool = False) -> s
     """Raise `session`'s terminal on the desktop, or say where it runs when none is found."""
     result = _open_session(session, home=home, all_homes=all_homes)
     return f"{result['name']}: {result['how']} ({result['detail']})"
+
+
+# `--profile` collides with `--prompt` on `p`, and the parser drops the short flag from
+# both rather than guess. `--prompt` is the flag this verb exists for, so it keeps `-p`
+# and `--profile` gets no short form. `_cw` is the parser's documented function-attribute
+# tier, a plain dict so declaring this costs no import.
+spawn._cw = {"params": {"prompt": {"flags": ["-p", "--prompt"]}}}
 
 
 _commands = [
