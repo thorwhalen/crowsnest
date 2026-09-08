@@ -258,45 +258,6 @@ def test_all_homes_reads_every_configured_home_with_a_column(
     assert "home two" in capsys.readouterr().out
 
 
-def test_all_homes_env_var_makes_it_the_default(tmp_path, monkeypatch, capsys):
-    """A watching session that operates two accounts says so once, not per command."""
-    from fixtures import registry_record, write_registry
-
-    home_a = demo_home(tmp_path / "a")
-    home_b = tmp_path / "b" / "claude"
-    write_registry(
-        home_b,
-        registry_record(
-            201, "s9", name="other-acct", status="idle", status_at_ms=1_000_000
-        ),
-    )
-    cfg = tmp_path / "config.toml"
-    cfg.write_text(
-        f"[[homes]]\nname = 'one'\npath = '{home_a}'\n\n[[homes]]\nname = 'two'\npath = '{home_b}'\n"
-    )
-    monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
-    alive = ALIVE | {201}
-    monkeypatch.setattr(registry, "pid_alive", lambda pid: pid in alive)
-    monkeypatch.setattr(
-        tools,
-        "live_sessions",
-        lambda **kw: registry.live_sessions(
-            **{"is_alive": lambda pid: pid in alive, **kw}
-        ),
-    )
-    monkeypatch.delenv("CROWSNEST_ALL_HOMES", raising=False)
-    main([])
-    assert "other-acct" not in capsys.readouterr().out
-
-    monkeypatch.setenv("CROWSNEST_ALL_HOMES", "1")
-    main([])
-    assert "other-acct" in capsys.readouterr().out
-
-    monkeypatch.setenv("CROWSNEST_ALL_HOMES", "0")
-    main([])
-    assert "other-acct" not in capsys.readouterr().out
-
-
 def test_spawn_profile_picks_the_home_and_says_which(tmp_path, monkeypatch, capsys):
     import sys
 

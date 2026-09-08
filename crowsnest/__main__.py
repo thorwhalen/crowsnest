@@ -13,7 +13,6 @@ useful thing.
 from __future__ import annotations
 
 import json as _json
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,21 +30,6 @@ from crowsnest.spawn import spawn as _spawn
 __all__ = ["main"]
 
 DEFAULT_COMMAND = "roster"
-
-#: Set it to make ``--all-homes`` the default: a watching session that operates two
-#: accounts wants every roster, `show`, `watch` and `open` to span them, and saying so
-#: once beats remembering the flag. Only turns the flag on -- ``--home DIR`` still scopes
-#: a single command to one home.
-ALL_HOMES_ENV_VAR = "CROWSNEST_ALL_HOMES"
-
-_FALSE = ("", "0", "false", "no", "off")
-
-
-def _all_homes(flag: bool) -> bool:
-    """``--all-homes``, or the standing default in ``$CROWSNEST_ALL_HOMES``."""
-    return (
-        bool(flag) or os.environ.get(ALL_HOMES_ENV_VAR, "").strip().lower() not in _FALSE
-    )
 
 
 def _age(epoch: float | None) -> str:
@@ -120,10 +104,10 @@ def roster(
 
     `--brief` answers from the registry alone, without reading any transcript.
     `--all-homes` reads every home in the config file (accounts, synced machines) and
-    adds a column saying which -- which is also what a session spawned under another
-    account shows up in. Set `$CROWSNEST_ALL_HOMES=1` to make that the default.
+    adds a column saying which -- which is also where a session spawned under another
+    account shows up.
     """
-    result = tools.roster(home=home, all_homes=_all_homes(all_homes), activity=not brief)
+    result = tools.roster(home=home, all_homes=all_homes, activity=not brief)
     lines = []
     tagged = any(row.get("home") for row in result["sessions"])
     for row in result["sessions"]:
@@ -153,9 +137,7 @@ def show(
     `session` is a registry name, a unique prefix of one, a session-id prefix, or a pid;
     with `--all-homes`, `name@home` picks one home.
     """
-    result = tools.show(
-        session, home=home, all_homes=_all_homes(all_homes), recent=recent
-    )
+    result = tools.show(session, home=home, all_homes=all_homes, recent=recent)
     if json:
         return _json.dumps(result, indent=2)
     s, act = result["session"], result["activity"]
@@ -210,7 +192,7 @@ def turns(
 ):
     """The last few turns of a session, oldest first. `--before N` pages back from turn N."""
     result = tools.turns(
-        session, last=last, before=before, home=home, all_homes=_all_homes(all_homes)
+        session, last=last, before=before, home=home, all_homes=all_homes
     )
     if json:
         return _json.dumps(result, indent=2)
@@ -254,7 +236,7 @@ def report(
     """
     result = tools.report(
         home=home,
-        all_homes=_all_homes(all_homes),
+        all_homes=all_homes,
         fragment=fragment,
         interactive=interactive,
     )
@@ -284,9 +266,7 @@ def watch(
     watching session. Stop with Ctrl-C.
     """
     try:
-        for event in _watch.events(
-            interval=interval, home=home, all_homes=_all_homes(all_homes)
-        ):
+        for event in _watch.events(interval=interval, home=home, all_homes=all_homes):
             if json:
                 line = _json.dumps(event)
             else:
@@ -361,7 +341,7 @@ def brief(
     Reads no transcript and costs the session nothing. Empty until openloops has digested
     that session; `ol sync` is what fills it.
     """
-    result = tools.brief(session, home=home, all_homes=_all_homes(all_homes))
+    result = tools.brief(session, home=home, all_homes=all_homes)
     if json:
         return _json.dumps(result, indent=2)
     s = result["session"]
@@ -506,8 +486,15 @@ def spawn(
 
 def open(session: str, *, home: str | None = None, all_homes: bool = False) -> str:
     """Raise `session`'s terminal on the desktop, or say where it runs when none is found."""
-    result = _open_session(session, home=home, all_homes=_all_homes(all_homes))
+    result = _open_session(session, home=home, all_homes=all_homes)
     return f"{result['name']}: {result['how']} ({result['detail']})"
+
+
+# `--profile` collides with `--prompt` on `p`, and the parser drops the short flag from
+# both rather than guess. `--prompt` is the flag this verb exists for, so it keeps `-p`
+# and `--profile` gets no short form. `_cw` is the parser's documented function-attribute
+# tier, a plain dict so declaring this costs no import.
+spawn._cw = {"params": {"prompt": {"flags": ["-p", "--prompt"]}}}
 
 
 _commands = [

@@ -11,8 +11,10 @@ A spawned session runs, by default, as the session that spawned it: the same *ac
 and the same *binary*. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so
 :func:`child_env` carries that variable (with the ``CLAUDE_PROFILE`` label a shell may
 pair with it) into the child while stripping every other ``CLAUDE*`` marker, and
-:func:`claude_argv` starts the child with :func:`crowsnest.account.claude_bin` -- this
+:func:`local_argv` starts the child with :func:`crowsnest.account.claude_bin` -- this
 session's own executable -- rather than leaving a login shell's ``PATH`` to pick one.
+That substitution is each *local* spawner's, not :func:`claude_argv`'s, so the command
+line a remote spawner is handed stays runnable where it is going.
 ``home=`` puts the child under another home, ``profile=`` names one
 (:mod:`crowsnest.account`), and :data:`crowsnest.account.DROPPED_VARS` never travels.
 
@@ -41,6 +43,7 @@ __all__ = [
     "claude_argv",
     "default_spawner",
     "env_prefix",
+    "local_argv",
     "spawn",
 ]
 
@@ -71,9 +74,9 @@ def claude_argv(
     ``add_dirs`` are extra directories the session may work in (``--add-dir``, which
     takes several values and so is placed where a flag follows it, never the prompt).
 
-    ``binary`` is what actually runs, the bare name by default so this stays a pure
-    function of its arguments; :func:`spawn` fills in :func:`crowsnest.account.claude_bin`,
-    the executable *this* session runs, so the child is the same version.
+    ``binary`` is what actually runs. It stays the bare name unless a caller names one:
+    the local spawners substitute :func:`local_argv` when they run the line here, and a
+    spawner that sends it elsewhere keeps a command line its target can resolve.
 
     Permissions are skipped because a spawned session has no one at the keyboard to
     approve them. ``--remote-control`` takes an *optional* value and so would swallow
@@ -190,6 +193,24 @@ def env_prefix(
     return tokens + assignments
 
 
+def local_argv(argv: list[str]) -> list[str]:
+    """``argv`` with the bare ``claude`` replaced by *this machine's* -- and this
+    session's -- executable (:func:`crowsnest.account.claude_bin`).
+
+    For the spawners that start a session on this machine. It is deliberately not done in
+    :func:`claude_argv`: a command line is built once and a spawner may send it somewhere
+    else entirely (``xa spawn`` runs it over ssh), where an absolute local path names
+    nothing. So ``argv`` stays portable, each spawner resolves it for its own target, and
+    a caller who named a binary explicitly is left alone.
+
+    >>> local_argv(['/opt/claude-next', '-n', 'demo'])
+    ['/opt/claude-next', '-n', 'demo']
+    """
+    if not argv or argv[0] != CLAUDE_BIN:
+        return argv
+    return [claude_bin(), *argv[1:]]
+
+
 def _tmux_spawner(
     argv: list[str], *, cwd: str, name: str, home: str | Path | None
 ) -> None:
@@ -197,7 +218,7 @@ def _tmux_spawner(
     # the account goes into the command line; ``env=`` still matters when this call is
     # what starts the server.
     env = child_env(home=home)
-    command = shlex.join(env_prefix(env) + argv)
+    command = shlex.join(env_prefix(env) + local_argv(argv))
     result = subprocess.run(
         ["tmux", "new-session", "-d", "-s", name, "-c", cwd, command],
         capture_output=True,
@@ -217,7 +238,7 @@ def _applescript_string(text: str) -> str:
 def _iterm_spawner(
     argv: list[str], *, cwd: str, name: str, home: str | Path | None
 ) -> None:
-    command = shlex.join(env_prefix(child_env(home=home)) + argv)
+    command = shlex.join(env_prefix(child_env(home=home)) + local_argv(argv))
     line = _applescript_string(f"cd {shlex.quote(cwd)} && {command}")
     script = (
         'tell application "iTerm2"\n'
@@ -244,7 +265,7 @@ def _subprocess_spawner(
     argv: list[str], *, cwd: str, name: str, home: str | Path | None
 ) -> None:
     subprocess.Popen(
-        argv,
+        local_argv(argv),
         cwd=cwd,
         env=child_env(home=home),
         stdin=subprocess.DEVNULL,
@@ -304,7 +325,9 @@ def spawn(
     manager gets every repository of its fleet this way).
 
     ``spawner`` is the seam: a callable ``(argv, *, cwd, name, home)`` that starts the
-    built ``claude`` command line somewhere a person can find it, under the account
+    built ``claude`` command line somewhere a person can find it -- ``argv[0]`` is the
+    bare name unless the caller chose one, so a spawner resolves it for its own target
+    (:func:`local_argv` does that for this machine) -- under the account
     ``home`` (``None``: the spawner's own) -- the default is :func:`default_spawner`'s
     pick, and :func:`child_env` and :func:`env_prefix` are what a spawner derives its
     environment with. ``xa spawn`` is the pointed replacement, adding hosts and a phone
@@ -315,7 +338,7 @@ def spawn(
     crowsnest session on one account creates sessions on that account. ``profile`` names
     a home instead of spelling it (:func:`crowsnest.account.account_home`, which also
     reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``
-    to run, defaulting to the one this session runs.
+    to run; left out, each local spawner runs the one this session runs.
 
     Returns ``{"name", "pid", "session_id", "how", "home"}``, ``home`` being the account
     the session was started under (``""``: the spawning session's own). When the registry
@@ -343,7 +366,7 @@ def spawn(
         effort=effort,
         remote_control=remote_control,
         add_dirs=add_dirs,
-        binary=binary or claude_bin(),
+        binary=binary,
     )
     spawner(argv, cwd=cwd, name=name, home=home)
     where = str(home) if home is not None else ""

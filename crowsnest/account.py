@@ -36,7 +36,6 @@ import subprocess
 from pathlib import Path
 
 from crowsnest.config import config_path, homes
-from crowsnest.registry import DFLT_HOME
 
 __all__ = [
     "CLAUDE_BIN",
@@ -73,6 +72,7 @@ PROFILE_CMD = "claude-profile"
 DROPPED_VARS = ("ANTHROPIC_API_KEY",)
 
 _PROFILE_TIMEOUT = 10.0
+_DFLT_PATHEXT = ".COM;.EXE;.BAT;.CMD"
 
 
 def claude_bin(environ: dict[str, str] | None = None) -> str:
@@ -87,35 +87,66 @@ def claude_bin(environ: dict[str, str] | None = None) -> str:
     """
     environ = os.environ if environ is None else environ
     exec_path = environ.get(EXEC_ENV_VAR) or ""
-    if exec_path and os.path.isfile(exec_path) and os.access(exec_path, os.X_OK):
+    if exec_path and os.path.isfile(exec_path) and _runnable(exec_path, environ):
         return exec_path
     return shutil.which(CLAUDE_BIN, path=environ.get("PATH")) or CLAUDE_BIN
 
 
-def shell_profile_home(name: str, *, cmd: str = PROFILE_CMD) -> Path:
-    """The home ``cmd dir <name>`` reports, raising ``KeyError`` when it does not know it.
+def _runnable(path: str, environ: dict[str, str]) -> bool:
+    """Can this file be executed? Windows has no execute bit, so ask ``PATHEXT`` instead.
 
-    Empty output means the default home, which is how a profile scheme spells "leave
-    ``CLAUDE_CONFIG_DIR`` unset"; :func:`crowsnest.spawn.child_env` unsets it again from
-    the path, so the two spellings meet.
+    ``os.access(X_OK)`` is true of every readable file there, which would make an
+    npm install's ``cli.js`` the command and fail with ``WinError 193``.
     """
-    exe = shutil.which(cmd)
-    if exe is None:
-        raise KeyError(name)
+    if os.name != "nt":
+        return os.access(path, os.X_OK)
+    suffixes = (environ.get("PATHEXT") or _DFLT_PATHEXT).split(os.pathsep)
+    return os.path.splitext(path)[1].lower() in {s.strip().lower() for s in suffixes if s}
+
+
+def _asked(exe: str, *argv: str) -> str | None:
+    """The last non-empty line ``exe argv`` printed, ``''`` when it printed none, ``None``
+    when it failed. Only the last line: a command may narrate before it answers."""
     try:
         result = subprocess.run(
-            [exe, "dir", name],
+            [exe, *argv],
             capture_output=True,
             text=True,
             timeout=_PROFILE_TIMEOUT,
             check=False,
         )
-    except (OSError, subprocess.SubprocessError) as exc:
-        raise KeyError(name) from exc
+    except (OSError, subprocess.SubprocessError):
+        return None
     if result.returncode != 0:
+        return None
+    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    return lines[-1] if lines else ""
+
+
+def shell_profile_home(name: str, *, cmd: str = PROFILE_CMD) -> Path:
+    """The home ``cmd dir <name>`` reports, raising ``KeyError`` when it does not know it.
+
+    ``dir`` prints *nothing* for the home a profile scheme reaches by leaving
+    ``CLAUDE_CONFIG_DIR`` unset. That is not enough to act on: a lookup that simply echoes
+    its table prints nothing for a name it does not have either, and taking silence for
+    "the default account" would spawn there -- the very bug this module exists to prevent.
+    So an empty answer is confirmed with ``home <name>``, which names the directory
+    outright and fails for a name it does not know. Only an absolute path is believed.
+    """
+    exe = shutil.which(cmd)
+    if exe is None:
         raise KeyError(name)
-    value = result.stdout.strip()
-    return Path(value).expanduser() if value else Path(DFLT_HOME).expanduser()
+    value = _asked(exe, "dir", name)
+    if value is None:
+        raise KeyError(name)
+    if not value:
+        value = _asked(exe, "home", name)
+    if not value:
+        raise KeyError(name)
+    home = Path(value).expanduser()
+    if not home.is_absolute():
+        raise KeyError(name)
+    return home
 
 
 def profile_home(
@@ -132,10 +163,21 @@ def profile_home(
     :func:`shell_profile_home`, which asks a ``claude-profile`` command on ``PATH``). A
     name neither knows is an error, never a silent fall back to the default account: that
     is the mistake this whole module exists to prevent.
+
+    A home the config marks ``remote`` is refused rather than returned. Those are synced
+    copies of *another machine's* home, read-only by construction (:mod:`crowsnest.config`:
+    reading crosses machines, spawning does not); starting a local session in one would
+    write session records into a directory the next sync overwrites.
     """
     known = homes(path=config)
     for home in known:
         if home.name == name:
+            if home.remote:
+                raise ValueError(
+                    f"profile {name!r} names a remote home ({home.path}) -- a synced copy "
+                    f"of another machine's, which a local session must not write into. "
+                    f"Spawn on a local account, or on that machine."
+                )
             return home.path
     resolver = shell_profile_home if resolver is None else resolver
     try:
@@ -176,7 +218,7 @@ def account_home(
     if home is not None:
         return home
     environ = os.environ if environ is None else environ
-    name = profile or environ.get(PROFILE_ENV_VAR) or ""
+    name = (profile or environ.get(PROFILE_ENV_VAR) or "").strip()
     if not name:
         return None
     return profile_home(name, config=config, resolver=resolver)

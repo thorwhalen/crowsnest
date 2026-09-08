@@ -93,12 +93,44 @@ def test_profile_home_refuses_an_unknown_name_rather_than_silently_defaulting(tm
 
 
 @posix_only
-def test_shell_profile_home_maps_empty_output_to_the_default_home(tmp_path, monkeypatch):
-    """`claude-profile dir tw` prints nothing: the default home is reached by unsetting."""
+def test_shell_profile_home_confirms_an_empty_answer_with_the_directory(
+    tmp_path, monkeypatch
+):
+    """`dir tw` prints nothing (the home reached by unsetting); `home tw` names it."""
     fake = _executable(tmp_path / "claude-profile")
-    fake.write_text("#!/bin/sh\nexit 0\n")
+    fake.write_text(
+        '#!/bin/sh\ncase "$1 $2" in\n  "dir tw") ;;\n'
+        '  "home tw") echo "$HOME/.claude" ;;\n  *) exit 1 ;;\nesac\n'
+    )
     monkeypatch.setattr("shutil.which", lambda cmd, **kw: str(fake))
     assert shell_profile_home("tw") == Path(DFLT_HOME).expanduser()
+
+
+@posix_only
+def test_an_empty_answer_alone_is_not_taken_for_the_default_account(
+    tmp_path, monkeypatch
+):
+    """A lookup that just echoes its table prints nothing for a name it lacks, and
+    exits 0. Reading that as "the default account" would spawn there -- the whole bug."""
+    fake = _executable(tmp_path / "claude-profile")
+    fake.write_text('#!/bin/sh\ncase "$2" in iq) echo /h/.claude-iq ;; esac\nexit 0\n')
+    monkeypatch.setattr("shutil.which", lambda cmd, **kw: str(fake))
+    assert shell_profile_home("iq") == Path("/h/.claude-iq")
+    with pytest.raises(KeyError):
+        shell_profile_home("typo")
+
+
+@posix_only
+def test_shell_profile_home_believes_only_an_absolute_path(tmp_path, monkeypatch):
+    """A command that narrates answers on its last line; anything else is not a home."""
+    chatty = _executable(tmp_path / "claude-profile")
+    chatty.write_text('#!/bin/sh\necho "note: using cached map"\necho /h/.claude-iq\n')
+    monkeypatch.setattr("shutil.which", lambda cmd, **kw: str(chatty))
+    assert shell_profile_home("iq") == Path("/h/.claude-iq")
+
+    chatty.write_text('#!/bin/sh\necho "profile iq is not configured"\n')
+    with pytest.raises(KeyError):
+        shell_profile_home("iq")
 
 
 @posix_only
@@ -182,3 +214,23 @@ def test_claude_bin_reads_the_process_environment_by_default(tmp_path, monkeypat
     monkeypatch.delenv(EXEC_ENV_VAR)
     monkeypatch.setenv("PATH", str(tmp_path))  # holds claude-x, no `claude`
     assert claude_bin() == CLAUDE_BIN
+
+
+def test_profile_home_refuses_a_remote_mirror(tmp_path):
+    """A synced copy of another machine's home is read-only: reading crosses machines,
+    spawning does not."""
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(
+        "[[homes]]\nname = 'server'\npath = '"
+        + (tmp_path / "mirror").as_posix()
+        + "'\nremote = true\n"
+    )
+    with pytest.raises(ValueError) as exc:
+        profile_home("server", config=cfg, resolver=lambda name: Path("/h/elsewhere"))
+    assert "remote" in str(exc.value)
+
+
+def test_a_standing_profile_survives_a_trailing_newline(tmp_path):
+    """`export CROWSNEST_PROFILE=$(some-command)` keeps the newline."""
+    got = account_home(config=_config(tmp_path), environ={PROFILE_ENV_VAR: "iq\n"})
+    assert got == Path("~/.claude-iq").expanduser()

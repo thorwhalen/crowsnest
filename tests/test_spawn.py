@@ -8,7 +8,14 @@ import pytest
 from fixtures import registry_record, write_registry
 
 from crowsnest import registry
-from crowsnest.spawn import child_env, claude_argv, default_spawner, env_prefix, spawn
+from crowsnest.spawn import (
+    child_env,
+    claude_argv,
+    default_spawner,
+    env_prefix,
+    local_argv,
+    spawn,
+)
 
 spawn_module = sys.modules["crowsnest.spawn"]
 
@@ -244,6 +251,8 @@ def test_tmux_spawner_puts_the_account_on_the_command_line_and_in_the_env(
         return subprocess.CompletedProcess(argv, 0, "", "")
 
     monkeypatch.setattr(spawn_module.subprocess, "run", fake_run)
+    exe = str(tmp_path / "claude-2.1.263")
+    monkeypatch.setattr(spawn_module, "claude_bin", lambda: exe)
     home = tmp_path / ".claude-iq"
     spawn_module._tmux_spawner(
         ["claude", "-n", "demo"], cwd="/some/repo", name="demo", home=home
@@ -255,7 +264,7 @@ def test_tmux_spawner_puts_the_account_on_the_command_line_and_in_the_env(
     assert command.startswith("env ")
     assert "-u CLAUDE_CODE_SESSION_ID" in command
     assert f"CLAUDE_CONFIG_DIR={home.resolve()}" in command
-    assert command.endswith(" claude -n demo")
+    assert command.endswith(f" {shlex.quote(exe)} -n demo")
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="the iTerm spawner is macOS only")
@@ -268,6 +277,8 @@ def test_iterm_spawner_puts_the_account_on_the_command_line(monkeypatch, tmp_pat
         return subprocess.CompletedProcess(argv, 0, "", "")
 
     monkeypatch.setattr(spawn_module.subprocess, "run", fake_run)
+    exe = str(tmp_path / "claude-2.1.263")
+    monkeypatch.setattr(spawn_module, "claude_bin", lambda: exe)
     home = tmp_path / ".claude-iq"
     spawn_module._iterm_spawner(
         ["claude", "-n", "demo"], cwd="/some/repo", name="demo", home=home
@@ -276,7 +287,7 @@ def test_iterm_spawner_puts_the_account_on_the_command_line(monkeypatch, tmp_pat
     script = captured["script"]
     assert "cd /some/repo && env -u " in script
     assert "-u CLAUDE_CODE_SESSION_ID" in script
-    assert f"CLAUDE_CONFIG_DIR={home.resolve()} claude -n demo" in script
+    assert f"CLAUDE_CONFIG_DIR={home.resolve()} {shlex.quote(exe)} -n demo" in script
 
 
 def test_iterm_spawner_escapes_the_applescript_string(monkeypatch):
@@ -290,6 +301,7 @@ def test_iterm_spawner_escapes_the_applescript_string(monkeypatch):
     monkeypatch.setattr(spawn_module.subprocess, "run", fake_run)
     prompt = 'say "hi" \\ bye'
     cwd = '/some/"repo"'
+    monkeypatch.setattr(spawn_module, "claude_bin", lambda: "claude")
     spawn_module._iterm_spawner(["claude", prompt], cwd=cwd, name="demo", home=None)
     line = next(l for l in captured["script"].splitlines() if "write text" in l)
     body = line.split('write text "', 1)[1][:-1]
@@ -305,7 +317,10 @@ def test_subprocess_spawner_runs_under_the_env_it_is_given(monkeypatch):
     monkeypatch.setenv("CLAUDE_EFFORT", "high")
     captured = {}
 
+    captured_argv = []
+
     def fake_popen(argv, **kwargs):
+        captured_argv.append(argv)
         captured.update(kwargs)
 
         class _Proc:
@@ -314,7 +329,9 @@ def test_subprocess_spawner_runs_under_the_env_it_is_given(monkeypatch):
         return _Proc()
 
     monkeypatch.setattr(spawn_module.subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(spawn_module, "claude_bin", lambda: "/v/claude")
     spawn_module._subprocess_spawner(["claude"], cwd="/some/repo", name="demo", home=None)
+    assert captured_argv == [["/v/claude"]]
 
     assert captured["env"] == child_env()
     assert "CLAUDE_EFFORT" not in captured["env"]
@@ -387,7 +404,9 @@ def test_env_prefix_unsets_the_api_key_absolutely_not_only_when_we_have_one():
     assert tokens[tokens.index("ANTHROPIC_API_KEY") - 1] == "-u"
 
 
-def test_spawn_starts_the_child_with_this_sessions_own_claude(tmp_path, monkeypatch):
+def test_spawn_hands_the_spawner_a_portable_command_line(tmp_path, monkeypatch):
+    """`argv[0]` stays the bare name: a spawner may run it on another machine, where an
+    absolute local path names nothing. Resolving it is the spawner's, per target."""
     exe = tmp_path / "claude-2.1.263"
     exe.write_text("#!/bin/sh\n")
     exe.chmod(0o755)
@@ -403,7 +422,14 @@ def test_spawn_starts_the_child_with_this_sessions_own_claude(tmp_path, monkeypa
         seen.append(argv)
 
     spawn("demo", cwd="/some/repo", spawner=fake_spawner, home=tmp_path / "h", wait=0.1)
-    assert seen[0][0] == str(exe)
+    assert seen[0][0] == "claude"
+    # and a local spawner turns that into this session's own executable
+    assert local_argv(seen[0])[0] == str(exe)
+
+
+def test_local_argv_leaves_an_explicitly_named_binary_alone(monkeypatch):
+    monkeypatch.setenv("CLAUDE_CODE_EXECPATH", "/somewhere/claude-2.1.263")
+    assert local_argv(["/opt/claude-next", "-n", "d"]) == ["/opt/claude-next", "-n", "d"]
 
 
 def test_spawn_takes_a_binary_over_the_one_it_would_have_picked(tmp_path, monkeypatch):
@@ -486,3 +512,34 @@ def test_spawn_says_nothing_about_a_home_when_it_used_its_own_account(
     monkeypatch.delenv("CROWSNEST_PROFILE", raising=False)
     result = spawn("demo", cwd="/some/repo", spawner=lambda *a, **k: None, wait=0.1)
     assert result["home"] == ""
+
+
+def test_the_tmux_command_line_carries_a_second_accounts_identity_with_no_home_given(
+    monkeypatch, tmp_path
+):
+    """The bug this exists for: a running tmux server hands a new session *its*
+    environment, so an account inherited only through `os.environ` never reaches the
+    child and its login shell rebinds it to the default one."""
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / ".claude-iq"))
+    monkeypatch.setenv("CLAUDE_PROFILE", "iq")
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "parent-session")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-parent")
+    monkeypatch.setattr(spawn_module, "claude_bin", lambda: "/v/claude")
+    captured = {}
+
+    def fake_run(argv, **kwargs):
+        captured["command"] = argv[-1]
+        return subprocess.CompletedProcess(argv, 0, "", "")
+
+    monkeypatch.setattr(spawn_module.subprocess, "run", fake_run)
+    spawn_module._tmux_spawner(
+        ["claude", "-n", "demo"], cwd="/some/repo", name="demo", home=None
+    )
+
+    command = captured["command"]
+    assert f"CLAUDE_CONFIG_DIR={tmp_path / '.claude-iq'}" in command
+    assert "CLAUDE_PROFILE=iq" in command
+    assert "-u CLAUDE_CODE_SESSION_ID" in command
+    assert "-u ANTHROPIC_API_KEY" in command
+    assert "ANTHROPIC_API_KEY=sk-parent" not in command
+    assert command.endswith(" /v/claude -n demo")

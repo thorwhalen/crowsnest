@@ -103,9 +103,9 @@ path = "~/.cache/xa/remotes/server"   # a copy synced down with `xa sync`
 remote = true                         # its pids are not ours: alive while fresh
 ```
 
-Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which — which is also how a session spawned with `--profile` shows up, on the account it actually runs on — `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`. `CROWSNEST_ALL_HOMES=1` makes that the default, for a watching session that operates two accounts.
+Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which — which is also how a session spawned with `--profile` shows up, on the account it actually runs on — `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`.
 
-A profile name is resolved against the `[[homes]]` names above first, then against a `claude-profile dir <name>` command on your `PATH` if you keep one; a name neither knows is an error, never a quiet fall back to the default account.
+A profile name is resolved against the `[[homes]]` names above first, then against a `claude-profile dir <name>` command on your `PATH` if you keep one; a name neither knows is an error, never a quiet fall back to the default account, and a home marked `remote` is refused — those are another machine's, read-only.
 
 ## The ledger: what a session leaves behind
 
