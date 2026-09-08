@@ -27,13 +27,7 @@ import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-from crowsnest.registry import (
-    DFLT_HOME,
-    HOME_ENV_VAR,
-    LiveSession,
-    claude_home,
-    live_sessions,
-)
+from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessions
 
 __all__ = [
     "ACCOUNT_VARS",
@@ -114,8 +108,9 @@ def child_env(
 
     >>> child_env({'CLAUDECODE': '1', 'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'})
     {'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'}
-    >>> child_env({'CLAUDE_CONFIG_DIR': '/h/iq', 'CLAUDE_PROFILE': 'iq'}, home='/h/work')
-    {'CLAUDE_CONFIG_DIR': '/h/work'}
+    >>> env = child_env({'CLAUDE_CONFIG_DIR': '/h/iq', 'CLAUDE_PROFILE': 'iq'}, home='/h/work')
+    >>> sorted(env), env['CLAUDE_CONFIG_DIR'].endswith('work')
+    (['CLAUDE_CONFIG_DIR'], True)
     """
     environ = os.environ if environ is None else environ
     env = {
@@ -125,14 +120,19 @@ def child_env(
     }
     if home is None:
         return env
-    target = Path(home).expanduser()
-    if target != claude_home(environ.get(HOME_ENV_VAR) or None):
+    target = _resolved(home)
+    if target != _resolved(environ.get(HOME_ENV_VAR) or DFLT_HOME):
         env.pop(_PROFILE_VAR, None)
-    if target == Path(DFLT_HOME).expanduser():
+    if target == _resolved(DFLT_HOME):
         env.pop(HOME_ENV_VAR, None)
     else:
         env[HOME_ENV_VAR] = str(target)
     return env
+
+
+def _resolved(home: str | Path) -> Path:
+    """One spelling per home, so a relative path or a symlink still names the same account."""
+    return Path(home).expanduser().resolve()
 
 
 def env_prefix(
@@ -162,10 +162,13 @@ def env_prefix(
     return tokens + assignments
 
 
-def _tmux_spawner(argv: list[str], *, cwd: str, name: str, env: dict[str, str]) -> None:
+def _tmux_spawner(
+    argv: list[str], *, cwd: str, name: str, home: str | Path | None
+) -> None:
     # A running tmux server gives a new session *its* environment, not this client's, so
     # the account goes into the command line; ``env=`` still matters when this call is
     # what starts the server.
+    env = child_env(home=home)
     command = shlex.join(env_prefix(env) + argv)
     result = subprocess.run(
         ["tmux", "new-session", "-d", "-s", name, "-c", cwd, command],
@@ -178,8 +181,16 @@ def _tmux_spawner(argv: list[str], *, cwd: str, name: str, env: dict[str, str]) 
         raise RuntimeError(f"tmux new-session failed: {result.stderr.strip()}")
 
 
-def _iterm_spawner(argv: list[str], *, cwd: str, name: str, env: dict[str, str]) -> None:
-    command = shlex.join(env_prefix(env) + argv)
+def _applescript_string(text: str) -> str:
+    """``text`` as the inside of a double-quoted AppleScript string literal."""
+    return text.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _iterm_spawner(
+    argv: list[str], *, cwd: str, name: str, home: str | Path | None
+) -> None:
+    command = shlex.join(env_prefix(child_env(home=home)) + argv)
+    line = _applescript_string(f"cd {shlex.quote(cwd)} && {command}")
     script = (
         'tell application "iTerm2"\n'
         "  activate\n"
@@ -189,7 +200,7 @@ def _iterm_spawner(argv: list[str], *, cwd: str, name: str, env: dict[str, str])
         "  tell current window\n"
         "    set newTab to (create tab with default profile)\n"
         "    tell current session of newTab\n"
-        f'      write text "cd {shlex.quote(cwd)} && {command}"\n'
+        f'      write text "{line}"\n'
         "    end tell\n"
         "  end tell\n"
         "end tell\n"
@@ -202,12 +213,12 @@ def _iterm_spawner(argv: list[str], *, cwd: str, name: str, env: dict[str, str])
 
 
 def _subprocess_spawner(
-    argv: list[str], *, cwd: str, name: str, env: dict[str, str]
+    argv: list[str], *, cwd: str, name: str, home: str | Path | None
 ) -> None:
     subprocess.Popen(
         argv,
         cwd=cwd,
-        env=env,
+        env=child_env(home=home),
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -261,10 +272,12 @@ def spawn(
     ``add_dirs`` are further directories the session is allowed to work in (a fleet
     manager gets every repository of its fleet this way).
 
-    ``spawner`` is the seam: a callable ``(argv, *, cwd, name, env)`` that starts the
-    built ``claude`` command line somewhere a person can find it, under the environment
-    ``env`` (see :func:`child_env`) -- the default is :func:`default_spawner`'s pick.
-    ``xa spawn`` is the pointed replacement, adding hosts and a phone web UI.
+    ``spawner`` is the seam: a callable ``(argv, *, cwd, name, home)`` that starts the
+    built ``claude`` command line somewhere a person can find it, under the account
+    ``home`` (``None``: the spawner's own) -- the default is :func:`default_spawner`'s
+    pick, and :func:`child_env` and :func:`env_prefix` are what a spawner derives its
+    environment with. ``xa spawn`` is the pointed replacement, adding hosts and a phone
+    web UI; it gets the account as one path to translate, not a local environment.
 
     ``home`` is both the home whose registry is watched for the new session and the
     account it is started under; left out, both are the spawning session's own, so a
@@ -295,7 +308,7 @@ def spawn(
         remote_control=remote_control,
         add_dirs=add_dirs,
     )
-    spawner(argv, cwd=cwd, name=name, env=child_env(home=home))
+    spawner(argv, cwd=cwd, name=name, home=home)
     found = _find_by_name(name, home=home, wait=wait)
     if found is None:
         return {
