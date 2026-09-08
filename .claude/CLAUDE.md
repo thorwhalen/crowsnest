@@ -9,7 +9,7 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 |---|---|---|
 | `home=` on every reader | `$CLAUDE_CONFIG_DIR` or `~/.claude` | a synced copy of another machine's home (`xa sync`); several via `[[homes]]` in `~/.config/crowsnest/config.toml` and `all_homes=` |
 | `is_alive=` / `is_live=` in `registry.live_sessions` | pid signal 0 | `fresh_within()` for remote homes; `xa.claude_fs.ephemeral_session_alive` for /proc |
-| `spawner=` in `spawn.spawn` | tmux, else an iTerm tab, else a subprocess | `xa spawn` |
+| `spawner=` in `spawn.spawn`, a callable `(argv, *, cwd, name, env)` | tmux, else an iTerm tab, else a subprocess; `env` is `child_env(home=)`, the spawner's own account unless `home=` says otherwise | `xa spawn` |
 | `ledger_dir=` / `events_path=` in `ledger`, `hook`, `watch` | under `crowsnest.paths.data_dir()` | a test's `tmp_path`; a shared store later |
 | `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
 

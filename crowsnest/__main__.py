@@ -444,6 +444,9 @@ def spawn(
 ) -> str:
     """Start a named session in `--cwd`; waits for it to register, then prints its row.
 
+    The session runs under this session's own account (its `CLAUDE_CONFIG_DIR`), or under
+    `--home` when given, which is then also the registry watched for it.
+
     `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
     those directories too, which is how a fleet manager gets every repository of its fleet.
     """
