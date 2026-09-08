@@ -1,3 +1,4 @@
+import os
 import stat
 import sys
 from pathlib import Path
@@ -21,6 +22,9 @@ posix_only = pytest.mark.skipif(sys.platform == "win32", reason="POSIX executabl
 
 
 def _executable(path: Path) -> Path:
+    """A file the platform will actually run: an execute bit, or a `.exe` suffix."""
+    if os.name == "nt":
+        path = path.with_suffix(".exe")
     path.write_text("#!/bin/sh\n")
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
     return path

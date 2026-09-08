@@ -1,3 +1,4 @@
+import os
 import shlex
 import subprocess
 import sys
@@ -407,7 +408,7 @@ def test_env_prefix_unsets_the_api_key_absolutely_not_only_when_we_have_one():
 def test_spawn_hands_the_spawner_a_portable_command_line(tmp_path, monkeypatch):
     """`argv[0]` stays the bare name: a spawner may run it on another machine, where an
     absolute local path names nothing. Resolving it is the spawner's, per target."""
-    exe = tmp_path / "claude-2.1.263"
+    exe = tmp_path / ("claude-2.1.263.exe" if os.name == "nt" else "claude-2.1.263")
     exe.write_text("#!/bin/sh\n")
     exe.chmod(0o755)
     monkeypatch.setenv("CLAUDE_CODE_EXECPATH", str(exe))
