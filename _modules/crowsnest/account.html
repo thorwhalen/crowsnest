@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.account &mdash; crowsnest 0.0.26 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/account.html">crowsnest.account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.account</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.account</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Which account a new session runs under, and which ``claude`` binary starts it.</span>
+
+<span class="sd">An *account* is a Claude Code home -- the directory ``CLAUDE_CONFIG_DIR`` names, holding</span>
+<span class="sd">the credentials, the registry and the transcripts of one signed-in identity. A person</span>
+<span class="sd">with two of them has two of everything, and a session started with the wrong one signs in</span>
+<span class="sd">as the wrong person and registers where its spawner is not looking. So the default here is</span>
+<span class="sd">"whatever this process is already running as", and everything else is an explicit choice.</span>
+
+<span class="sd">Three questions, one module:</span>
+
+<span class="sd">*Which home?* :func:`account_home`. ``home=`` names a directory outright; ``profile=``</span>
+<span class="sd">names one, resolved by :func:`profile_home` against the homes in</span>
+<span class="sd">``~/.config/crowsnest/config.toml`` first (:mod:`crowsnest.config`, the naming scheme</span>
+<span class="sd">crowsnest already has) and then against a ``claude-profile`` command on ``PATH``, the</span>
+<span class="sd">convention a shell profile scheme installs. ``$CROWSNEST_PROFILE`` is the default a</span>
+<span class="sd">watching session sets once. Neither given: ``None``, meaning this process's own account.</span>
+
+<span class="sd">*Which binary?* :func:`claude_bin`. Claude Code tells a session where its own executable</span>
+<span class="sd">is in ``$CLAUDE_CODE_EXECPATH``; a session spawning another should hand it the same one</span>
+<span class="sd">rather than whatever a login shell's ``PATH`` resolves ``claude`` to, which on a machine</span>
+<span class="sd">mid-upgrade is a different version and on a machine with two installs a different program.</span>
+
+<span class="sd">*What must not travel?* :data:`DROPPED_VARS`. ``ANTHROPIC_API_KEY`` bills an API account</span>
+<span class="sd">rather than the signed-in subscription, and inherits silently; a spawned session should</span>
+<span class="sd">be signed in as its home says, so the key is dropped unless a caller asks to keep it.</span>
+
+<span class="sd">&gt;&gt;&gt; claude_bin({'CLAUDE_CODE_EXECPATH': '/no/such/binary', 'PATH': ''})</span>
+<span class="sd">'claude'</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">config_path</span><span class="p">,</span> <span class="n">homes</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"CLAUDE_BIN"</span><span class="p">,</span>
+    <span class="s2">"DROPPED_VARS"</span><span class="p">,</span>
+    <span class="s2">"EXEC_ENV_VAR"</span><span class="p">,</span>
+    <span class="s2">"PROFILE_CMD"</span><span class="p">,</span>
+    <span class="s2">"PROFILE_ENV_VAR"</span><span class="p">,</span>
+    <span class="s2">"account_home"</span><span class="p">,</span>
+    <span class="s2">"claude_bin"</span><span class="p">,</span>
+    <span class="s2">"profile_home"</span><span class="p">,</span>
+    <span class="s2">"shell_profile_home"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: The command a new session is started with when nothing better is known.</span>
+<span class="n">CLAUDE_BIN</span> <span class="o">=</span> <span class="s2">"claude"</span>
+
+<span class="c1">#: Claude Code's own variable holding the path of the binary running this session.</span>
+<span class="n">EXEC_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CLAUDE_CODE_EXECPATH"</span>
+
+<span class="c1">#: The default profile a watching session sets once, instead of passing ``--profile``</span>
+<span class="c1">#: to every spawn.</span>
+<span class="n">PROFILE_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CROWSNEST_PROFILE"</span>
+
+<span class="c1">#: The command asked for a profile's home when the config file does not name it. The</span>
+<span class="c1">#: convention a shell profile scheme installs: ``claude-profile dir &lt;name&gt;`` prints the</span>
+<span class="c1">#: ``CLAUDE_CONFIG_DIR`` value for ``&lt;name&gt;``, *empty* for the default home (which Claude</span>
+<span class="c1">#: Code reaches only by the variable's absence), and exits non-zero for a name it does</span>
+<span class="c1">#: not know.</span>
+<span class="n">PROFILE_CMD</span> <span class="o">=</span> <span class="s2">"claude-profile"</span>
+
+<span class="c1">#: Variables a spawned session must not inherit, whatever they are set to here. Not</span>
+<span class="c1">#: ``CLAUDE*`` markers (:mod:`crowsnest.spawn` strips those); things that would override</span>
+<span class="c1">#: the account the home selects.</span>
+<span class="n">DROPPED_VARS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ANTHROPIC_API_KEY"</span><span class="p">,)</span>
+
+<span class="n">_PROFILE_TIMEOUT</span> <span class="o">=</span> <span class="mf">10.0</span>
+<span class="n">_DFLT_PATHEXT</span> <span class="o">=</span> <span class="s2">".COM;.EXE;.BAT;.CMD"</span>
+
+
+<div class="viewcode-block" id="claude_bin">
+<a class="viewcode-back" href="../../module_docs/crowsnest/account.html#crowsnest.account.claude_bin">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">claude_bin</span><span class="p">(</span><span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``claude`` a new session should be started with: this session's own if known.</span>
+
+<span class="sd">    ``$CLAUDE_CODE_EXECPATH`` when it points at a runnable file -- the exact binary this</span>
+<span class="sd">    session runs, so a spawned session is the same version signed in the same way -- else</span>
+<span class="sd">    the absolute path ``PATH`` resolves, else the bare name for a shell to resolve later.</span>
+
+<span class="sd">    &gt;&gt;&gt; claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''})</span>
+<span class="sd">    'claude'</span>
+<span class="sd">    """</span>
+    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+    <span class="n">exec_path</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">EXEC_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">exec_path</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">exec_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_runnable</span><span class="p">(</span><span class="n">exec_path</span><span class="p">,</span> <span class="n">environ</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exec_path</span>
+    <span class="k">return</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">CLAUDE_BIN</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATH"</span><span class="p">))</span> <span class="ow">or</span> <span class="n">CLAUDE_BIN</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_runnable</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Can this file be executed? Windows has no execute bit, so ask ``PATHEXT`` instead.</span>
+
+<span class="sd">    ``os.access(X_OK)`` is true of every readable file there, which would make an</span>
+<span class="sd">    npm install's ``cli.js`` the command and fail with ``WinError 193``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">"nt"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span>
+    <span class="n">suffixes</span> <span class="o">=</span> <span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATHEXT"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_DFLT_PATHEXT</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">suffixes</span> <span class="k">if</span> <span class="n">s</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">argv</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The last non-empty line ``exe argv`` printed, ``''`` when it printed none, ``None``</span>
+<span class="sd">    when it failed. Only the last line: a command may narrate before it answers."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">exe</span><span class="p">,</span> <span class="o">*</span><span class="n">argv</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">_PROFILE_TIMEOUT</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">""</span>
+
+
+<div class="viewcode-block" id="shell_profile_home">
+<a class="viewcode-back" href="../../module_docs/crowsnest/account.html#crowsnest.account.shell_profile_home">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">shell_profile_home</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PROFILE_CMD</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The home ``cmd dir &lt;name&gt;`` reports, raising ``KeyError`` when it does not know it.</span>
+
+<span class="sd">    ``dir`` prints *nothing* for the home a profile scheme reaches by leaving</span>
+<span class="sd">    ``CLAUDE_CONFIG_DIR`` unset. That is not enough to act on: a lookup that simply echoes</span>
+<span class="sd">    its table prints nothing for a name it does not have either, and taking silence for</span>
+<span class="sd">    "the default account" would spawn there -- the very bug this module exists to prevent.</span>
+<span class="sd">    So an empty answer is confirmed with ``home &lt;name&gt;``, which names the directory</span>
+<span class="sd">    outright and fails for a name it does not know. Only an absolute path is believed.</span>
+<span class="sd">    """</span>
+    <span class="n">exe</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="s2">"dir"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="s2">"home"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">home</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">home</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">home</span></div>
+
+
+
+<div class="viewcode-block" id="profile_home">
+<a class="viewcode-back" href="../../module_docs/crowsnest/account.html#crowsnest.account.profile_home">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">profile_home</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The home a profile name means, or ``ValueError`` naming what is known.</span>
+
+<span class="sd">    The configured homes first -- ``[[homes]]`` in :mod:`crowsnest.config` is the naming</span>
+<span class="sd">    scheme crowsnest already has, and issue #1's roster reads the same names -- then</span>
+<span class="sd">    ``resolver``, the seam for a machine whose profile names live elsewhere (default:</span>
+<span class="sd">    :func:`shell_profile_home`, which asks a ``claude-profile`` command on ``PATH``). A</span>
+<span class="sd">    name neither knows is an error, never a silent fall back to the default account: that</span>
+<span class="sd">    is the mistake this whole module exists to prevent.</span>
+
+<span class="sd">    A home the config marks ``remote`` is refused rather than returned. Those are synced</span>
+<span class="sd">    copies of *another machine's* home, read-only by construction (:mod:`crowsnest.config`:</span>
+<span class="sd">    reading crosses machines, spawning does not); starting a local session in one would</span>
+<span class="sd">    write session records into a directory the next sync overwrites.</span>
+<span class="sd">    """</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="n">homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">home</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">home</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">home</span><span class="o">.</span><span class="n">remote</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"profile </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> names a remote home (</span><span class="si">{</span><span class="n">home</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">) -- a synced copy "</span>
+                    <span class="sa">f</span><span class="s2">"of another machine's, which a local session must not write into. "</span>
+                    <span class="sa">f</span><span class="s2">"Spawn on a local account, or on that machine."</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">home</span><span class="o">.</span><span class="n">path</span>
+    <span class="n">resolver</span> <span class="o">=</span> <span class="n">shell_profile_home</span> <span class="k">if</span> <span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resolver</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">resolver</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"unknown profile </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: no [[homes]] entry named that in "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2"> (it has </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">known</span><span class="p">)</span><span class="si">}</span><span class="s2">), and "</span>
+        <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">PROFILE_CMD</span><span class="si">}</span><span class="s2"> dir </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">` does not know it either"</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="account_home">
+<a class="viewcode-back" href="../../module_docs/crowsnest/account.html#crowsnest.account.account_home">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">account_home</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The home a new session should run under: ``home``, else ``profile``, else the default.</span>
+
+<span class="sd">    ``None`` comes back when nothing selects a home, and means "this process's own</span>
+<span class="sd">    account" -- which is not the same as the default account, and is why this returns</span>
+<span class="sd">    ``None`` rather than ``~/.claude``. ``$CROWSNEST_PROFILE`` stands in for ``profile``</span>
+<span class="sd">    so a watching session states its account once instead of on every spawn.</span>
+
+<span class="sd">    &gt;&gt;&gt; account_home(environ={})</span>
+<span class="sd">    &gt;&gt;&gt; account_home(home='/h/.claude-iq', environ={})</span>
+<span class="sd">    '/h/.claude-iq'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">profile</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"give either a home directory or a profile name, not both "</span>
+            <span class="sa">f</span><span class="s2">"(home=</span><span class="si">{</span><span class="n">home</span><span class="si">!r}</span><span class="s2">, profile=</span><span class="si">{</span><span class="n">profile</span><span class="si">!r}</span><span class="s2">)"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">home</span>
+    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">profile</span> <span class="ow">or</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PROFILE_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">profile_home</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

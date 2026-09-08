@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.spawn &mdash; crowsnest 0.0.25 documentation</title>
+  <title>crowsnest.spawn &mdash; crowsnest 0.0.26 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=5d650c58"></script>
+      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -48,6 +48,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/account.html">crowsnest.account</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
@@ -97,10 +98,16 @@
 <span class="sd">``xa`` (:func:`crowsnest.spawn.spawn` is the seam ``xa spawn`` replaces) -- it only starts</span>
 <span class="sd">one somewhere a person can find it, and waits for :mod:`crowsnest.registry` to see it.</span>
 
-<span class="sd">A spawned session runs under the *account* of the session that spawned it: Claude Code</span>
-<span class="sd">picks its account by ``CLAUDE_CONFIG_DIR``, and :func:`child_env` carries that variable</span>
-<span class="sd">(with the ``CLAUDE_PROFILE`` label a shell may pair with it) into the child while</span>
-<span class="sd">stripping every other ``CLAUDE*`` marker. ``home=`` puts the child under another home.</span>
+<span class="sd">A spawned session runs, by default, as the session that spawned it: the same *account*</span>
+<span class="sd">and the same *binary*. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so</span>
+<span class="sd">:func:`child_env` carries that variable (with the ``CLAUDE_PROFILE`` label a shell may</span>
+<span class="sd">pair with it) into the child while stripping every other ``CLAUDE*`` marker, and</span>
+<span class="sd">:func:`local_argv` starts the child with :func:`crowsnest.account.claude_bin` -- this</span>
+<span class="sd">session's own executable -- rather than leaving a login shell's ``PATH`` to pick one.</span>
+<span class="sd">That substitution is each *local* spawner's, not :func:`claude_argv`'s, so the command</span>
+<span class="sd">line a remote spawner is handed stays runnable where it is going.</span>
+<span class="sd">``home=`` puts the child under another home, ``profile=`` names one</span>
+<span class="sd">(:mod:`crowsnest.account`), and :data:`crowsnest.account.DROPPED_VARS` never travels.</span>
 
 <span class="sd">&gt;&gt;&gt; claude_argv('demo', prompt='hello')</span>
 <span class="sd">['claude', '--remote-control', '--dangerously-skip-permissions', '-n', 'demo', 'hello']</span>
@@ -117,18 +124,19 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.account</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLAUDE_BIN</span><span class="p">,</span> <span class="n">DROPPED_VARS</span><span class="p">,</span> <span class="n">account_home</span><span class="p">,</span> <span class="n">claude_bin</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_HOME</span><span class="p">,</span> <span class="n">HOME_ENV_VAR</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">live_sessions</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"ACCOUNT_VARS"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BIN"</span><span class="p">,</span>
     <span class="s2">"child_env"</span><span class="p">,</span>
     <span class="s2">"claude_argv"</span><span class="p">,</span>
     <span class="s2">"default_spawner"</span><span class="p">,</span>
     <span class="s2">"env_prefix"</span><span class="p">,</span>
+    <span class="s2">"local_argv"</span><span class="p">,</span>
     <span class="s2">"spawn"</span><span class="p">,</span>
 <span class="p">]</span>
-
-<span class="n">CLAUDE_BIN</span> <span class="o">=</span> <span class="s2">"claude"</span>
 
 <span class="c1">#: The variables that select which account a session runs under. ``CLAUDE_CONFIG_DIR`` is</span>
 <span class="c1">#: Claude Code's own (its config, credentials and registry all move with it); a shell</span>
@@ -152,11 +160,16 @@
     <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CLAUDE_BIN</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""The ``claude`` command line for a new named session.</span>
 
 <span class="sd">    ``add_dirs`` are extra directories the session may work in (``--add-dir``, which</span>
 <span class="sd">    takes several values and so is placed where a flag follows it, never the prompt).</span>
+
+<span class="sd">    ``binary`` is what actually runs. It stays the bare name unless a caller names one:</span>
+<span class="sd">    the local spawners substitute :func:`local_argv` when they run the line here, and a</span>
+<span class="sd">    spawner that sends it elsewhere keeps a command line its target can resolve.</span>
 
 <span class="sd">    Permissions are skipped because a spawned session has no one at the keyboard to</span>
 <span class="sd">    approve them. ``--remote-control`` takes an *optional* value and so would swallow</span>
@@ -165,8 +178,10 @@
 
 <span class="sd">    &gt;&gt;&gt; claude_argv('demo', model='opus', effort='high', remote_control=False)</span>
 <span class="sd">    ['claude', '--dangerously-skip-permissions', '-n', 'demo', '--model', 'opus', '--effort', 'high']</span>
+<span class="sd">    &gt;&gt;&gt; claude_argv('demo', binary='/v/2.1.263')[0]</span>
+<span class="sd">    '/v/2.1.263'</span>
 <span class="sd">    """</span>
-    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">CLAUDE_BIN</span><span class="p">]</span>
+    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">binary</span> <span class="ow">or</span> <span class="n">CLAUDE_BIN</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">remote_control</span><span class="p">:</span>
         <span class="n">argv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"--remote-control"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">add_dirs</span><span class="p">:</span>
@@ -185,7 +200,10 @@
 <div class="viewcode-block" id="child_env">
 <a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.child_env">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">child_env</span><span class="p">(</span>
-    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">drop</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DROPPED_VARS</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""``environ`` (default ``os.environ``) as a new session should inherit it.</span>
 
@@ -201,17 +219,24 @@
 <span class="sd">    which Claude Code reaches only by the variable's absence. The ``CLAUDE_PROFILE``</span>
 <span class="sd">    label travels only with the account it labels.</span>
 
+<span class="sd">    ``drop`` goes too, and for the opposite reason: a variable that would *override* the</span>
+<span class="sd">    account the home selects (:data:`crowsnest.account.DROPPED_VARS`, an API key that</span>
+<span class="sd">    bills elsewhere). Pass ``drop=()`` to inherit them after all.</span>
+
 <span class="sd">    &gt;&gt;&gt; child_env({'CLAUDECODE': '1', 'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'})</span>
 <span class="sd">    {'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'}</span>
+<span class="sd">    &gt;&gt;&gt; child_env({'ANTHROPIC_API_KEY': 'sk-x', 'PATH': '/bin'})</span>
+<span class="sd">    {'PATH': '/bin'}</span>
 <span class="sd">    &gt;&gt;&gt; env = child_env({'CLAUDE_CONFIG_DIR': '/h/iq', 'CLAUDE_PROFILE': 'iq'}, home='/h/work')</span>
 <span class="sd">    &gt;&gt;&gt; sorted(env), env['CLAUDE_CONFIG_DIR'].endswith('work')</span>
 <span class="sd">    (['CLAUDE_CONFIG_DIR'], True)</span>
 <span class="sd">    """</span>
     <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+    <span class="n">dropped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">drop</span><span class="p">)</span>
     <span class="n">env</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">environ</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ACCOUNT_VARS</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ACCOUNT_VARS</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dropped</span>
     <span class="p">}</span>
     <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">env</span>
@@ -234,7 +259,10 @@
 <div class="viewcode-block" id="env_prefix">
 <a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.env_prefix">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">env_prefix</span><span class="p">(</span>
-    <span class="n">env</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">env</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">drop</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DROPPED_VARS</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""The ``env -u ... K=V ...`` tokens that make a fresh shell run a command under ``env``.</span>
 
@@ -245,12 +273,16 @@
 <span class="sd">    ``CLAUDE*`` marker of ``environ`` (default ``os.environ``) is unset. Empty when there</span>
 <span class="sd">    is nothing to say, so the caller can run the command bare.</span>
 
+<span class="sd">    ``drop`` is unset the same absolute way, and for the same reason: this process not</span>
+<span class="sd">    having an API key says nothing about the shell that will run the command.</span>
+
 <span class="sd">    &gt;&gt;&gt; env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={'CLAUDECODE': '1'})</span>
-<span class="sd">    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', 'CLAUDE_CONFIG_DIR=/h/iq']</span>
+<span class="sd">    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR=/h/iq']</span>
 <span class="sd">    """</span>
     <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
     <span class="n">unset</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">environ</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span><span class="p">]</span>
     <span class="n">unset</span> <span class="o">+=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ACCOUNT_VARS</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unset</span><span class="p">]</span>
+    <span class="n">unset</span> <span class="o">+=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">drop</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unset</span><span class="p">]</span>
     <span class="n">assignments</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">unset</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">assignments</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
@@ -261,6 +293,27 @@
 
 
 
+<div class="viewcode-block" id="local_argv">
+<a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.local_argv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``argv`` with the bare ``claude`` replaced by *this machine's* -- and this</span>
+<span class="sd">    session's -- executable (:func:`crowsnest.account.claude_bin`).</span>
+
+<span class="sd">    For the spawners that start a session on this machine. It is deliberately not done in</span>
+<span class="sd">    :func:`claude_argv`: a command line is built once and a spawner may send it somewhere</span>
+<span class="sd">    else entirely (``xa spawn`` runs it over ssh), where an absolute local path names</span>
+<span class="sd">    nothing. So ``argv`` stays portable, each spawner resolves it for its own target, and</span>
+<span class="sd">    a caller who named a binary explicitly is left alone.</span>
+
+<span class="sd">    &gt;&gt;&gt; local_argv(['/opt/claude-next', '-n', 'demo'])</span>
+<span class="sd">    ['/opt/claude-next', '-n', 'demo']</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">argv</span> <span class="ow">or</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">CLAUDE_BIN</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">argv</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">claude_bin</span><span class="p">(),</span> <span class="o">*</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_tmux_spawner</span><span class="p">(</span>
     <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -268,7 +321,7 @@
     <span class="c1"># the account goes into the command line; ``env=`` still matters when this call is</span>
     <span class="c1"># what starts the server.</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-    <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env_prefix</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="o">+</span> <span class="n">argv</span><span class="p">)</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env_prefix</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="o">+</span> <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">))</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
         <span class="p">[</span><span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"new-session"</span><span class="p">,</span> <span class="s2">"-d"</span><span class="p">,</span> <span class="s2">"-s"</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="n">cwd</span><span class="p">,</span> <span class="n">command</span><span class="p">],</span>
         <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -288,7 +341,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_iterm_spawner</span><span class="p">(</span>
     <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env_prefix</span><span class="p">(</span><span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">))</span> <span class="o">+</span> <span class="n">argv</span><span class="p">)</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env_prefix</span><span class="p">(</span><span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">))</span> <span class="o">+</span> <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">))</span>
     <span class="n">line</span> <span class="o">=</span> <span class="n">_applescript_string</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cd </span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s1">'tell application "iTerm2"</span><span class="se">\n</span><span class="s1">'</span>
@@ -315,7 +368,7 @@
     <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-        <span class="n">argv</span><span class="p">,</span>
+        <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">),</span>
         <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span>
         <span class="n">env</span><span class="o">=</span><span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">),</span>
         <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
@@ -368,8 +421,11 @@
     <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">spawner</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_WAIT</span><span class="p">,</span>
     <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Start a session named ``name`` in ``cwd``, and wait for the registry to see it.</span>
 
@@ -377,7 +433,9 @@
 <span class="sd">    manager gets every repository of its fleet this way).</span>
 
 <span class="sd">    ``spawner`` is the seam: a callable ``(argv, *, cwd, name, home)`` that starts the</span>
-<span class="sd">    built ``claude`` command line somewhere a person can find it, under the account</span>
+<span class="sd">    built ``claude`` command line somewhere a person can find it -- ``argv[0]`` is the</span>
+<span class="sd">    bare name unless the caller chose one, so a spawner resolves it for its own target</span>
+<span class="sd">    (:func:`local_argv` does that for this machine) -- under the account</span>
 <span class="sd">    ``home`` (``None``: the spawner's own) -- the default is :func:`default_spawner`'s</span>
 <span class="sd">    pick, and :func:`child_env` and :func:`env_prefix` are what a spawner derives its</span>
 <span class="sd">    environment with. ``xa spawn`` is the pointed replacement, adding hosts and a phone</span>
@@ -385,16 +443,21 @@
 
 <span class="sd">    ``home`` is both the home whose registry is watched for the new session and the</span>
 <span class="sd">    account it is started under; left out, both are the spawning session's own, so a</span>
-<span class="sd">    crowsnest session on one account creates sessions on that account.</span>
+<span class="sd">    crowsnest session on one account creates sessions on that account. ``profile`` names</span>
+<span class="sd">    a home instead of spelling it (:func:`crowsnest.account.account_home`, which also</span>
+<span class="sd">    reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``</span>
+<span class="sd">    to run; left out, each local spawner runs the one this session runs.</span>
 
-<span class="sd">    Returns ``{"name", "pid", "session_id", "how"}``. When the registry file never shows</span>
-<span class="sd">    up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so -- the session may</span>
-<span class="sd">    still be starting, or may have failed before it could register.</span>
+<span class="sd">    Returns ``{"name", "pid", "session_id", "how", "home"}``, ``home`` being the account</span>
+<span class="sd">    the session was started under (``""``: the spawning session's own). When the registry</span>
+<span class="sd">    file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so --</span>
+<span class="sd">    the session may still be starting, or may have failed before it could register.</span>
 
 <span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
 <span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
 <span class="sd">    behind one name make all of them ambiguous. Pick another, a suffix will do.</span>
 <span class="sd">    """</span>
+    <span class="n">home</span> <span class="o">=</span> <span class="n">account_home</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
     <span class="n">taken</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">taken</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -411,8 +474,10 @@
         <span class="n">effort</span><span class="o">=</span><span class="n">effort</span><span class="p">,</span>
         <span class="n">remote_control</span><span class="o">=</span><span class="n">remote_control</span><span class="p">,</span>
         <span class="n">add_dirs</span><span class="o">=</span><span class="n">add_dirs</span><span class="p">,</span>
+        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">spawner</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+    <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">_find_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
@@ -420,8 +485,15 @@
             <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
             <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
             <span class="s2">"how"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">: no registry file for </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> within </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span><span class="p">,</span>
+            <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
         <span class="p">}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"pid"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">}</span></div>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
+        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
+        <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+    <span class="p">}</span></div>
 
 </pre></div>
 

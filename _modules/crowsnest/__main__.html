@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.25 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.26 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=5d650c58"></script>
+      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -48,6 +48,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/account.html">crowsnest.account</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
@@ -194,7 +195,8 @@
 
 <span class="sd">    `--brief` answers from the registry alone, without reading any transcript.</span>
 <span class="sd">    `--all-homes` reads every home in the config file (accounts, synced machines) and</span>
-<span class="sd">    adds a column saying which.</span>
+<span class="sd">    adds a column saying which -- which is also where a session spawned under another</span>
+<span class="sd">    account shows up.</span>
 <span class="sd">    """</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">roster</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">activity</span><span class="o">=</span><span class="ow">not</span> <span class="n">brief</span><span class="p">)</span>
     <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
@@ -324,7 +326,10 @@
 <span class="sd">    the `db` capability; without it the page is the static one.</span>
 <span class="sd">    """</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
-        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="n">fragment</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span>
+        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+        <span class="n">fragment</span><span class="o">=</span><span class="n">fragment</span><span class="p">,</span>
+        <span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="s2">"html"</span><span class="p">]</span>
@@ -529,13 +534,19 @@
     <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
     <span class="n">add_dirs</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_WAIT</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Start a named session in `--cwd`; waits for it to register, then prints its row.</span>
 
-<span class="sd">    The session runs under this session's own account (its `CLAUDE_CONFIG_DIR`), or under</span>
-<span class="sd">    `--home` when given, which is then also the registry watched for it.</span>
+<span class="sd">    The session runs as this one does: same account (its `CLAUDE_CONFIG_DIR`) and same</span>
+<span class="sd">    `claude` binary. `--profile NAME` picks another account by name -- a `[[homes]]` name</span>
+<span class="sd">    from the config file, else a name your `claude-profile` command knows -- and</span>
+<span class="sd">    `$CROWSNEST_PROFILE` is that choice made once; `--home DIR` spells the home out</span>
+<span class="sd">    instead, and is then also the registry watched for the new session. `--binary PATH`</span>
+<span class="sd">    runs a different `claude`.</span>
 
 <span class="sd">    `--add-dirs a,b,c` (or a file path with one directory per line) grants the session</span>
 <span class="sd">    those directories too, which is how a fleet manager gets every repository of its fleet.</span>
@@ -550,14 +561,17 @@
         <span class="n">effort</span><span class="o">=</span><span class="n">effort</span><span class="p">,</span>
         <span class="n">remote_control</span><span class="o">=</span><span class="n">remote_control</span><span class="p">,</span>
         <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+        <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span>
+        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
         <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">,</span>
         <span class="n">add_dirs</span><span class="o">=</span><span class="n">_dir_list</span><span class="p">(</span><span class="n">add_dirs</span><span class="p">),</span>
     <span class="p">)</span>
+    <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" in </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">: not confirmed (</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'how'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">: not confirmed (</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'how'</span><span class="p">]</span><span class="si">}</span><span class="s2">)</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;20</span><span class="si">}</span><span class="s2">pid </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'pid'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2">"</span>
-        <span class="sa">f</span><span class="s2">"session </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'session_id'</span><span class="p">][:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'how'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="sa">f</span><span class="s2">"session </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'session_id'</span><span class="p">][:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'how'</span><span class="p">]</span><span class="si">}</span><span class="s2">)</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span>
     <span class="p">)</span>
 
 
@@ -565,6 +579,13 @@
 <span class="w">    </span><span class="sd">"""Raise `session`'s terminal on the desktop, or say where it runs when none is found."""</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">_open_session</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">)</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'how'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'detail'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
+
+
+<span class="c1"># `--profile` collides with `--prompt` on `p`, and the parser drops the short flag from</span>
+<span class="c1"># both rather than guess. `--prompt` is the flag this verb exists for, so it keeps `-p`</span>
+<span class="c1"># and `--profile` gets no short form. `_cw` is the parser's documented function-attribute</span>
+<span class="c1"># tier, a plain dict so declaring this costs no import.</span>
+<span class="n">spawn</span><span class="o">.</span><span class="n">_cw</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"params"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"prompt"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"flags"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"-p"</span><span class="p">,</span> <span class="s2">"--prompt"</span><span class="p">]}}}</span>
 
 
 <span class="n">_commands</span> <span class="o">=</span> <span class="p">[</span>
