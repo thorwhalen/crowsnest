@@ -4,6 +4,8 @@ import sys
 import threading
 from pathlib import Path
 
+import pytest
+
 from fixtures import registry_record, write_registry
 
 from crowsnest import registry
@@ -97,7 +99,7 @@ def test_child_env_reads_the_current_account_from_environ_not_the_process(monkey
     given = {"CLAUDE_PROFILE": "tw"}
     # environ says default account; home names another: the label goes
     assert child_env(given, home="/h/.claude-iq") == {
-        "CLAUDE_CONFIG_DIR": "/h/.claude-iq"
+        "CLAUDE_CONFIG_DIR": _resolved("/h/.claude-iq")
     }
 
 
@@ -246,6 +248,7 @@ def test_tmux_spawner_puts_the_account_on_the_command_line_and_in_the_env(
     assert command.endswith(" claude -n demo")
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="the iTerm spawner is macOS only")
 def test_iterm_spawner_puts_the_account_on_the_command_line(monkeypatch, tmp_path):
     monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "parent-session")
     captured = {}
