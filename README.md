@@ -84,7 +84,7 @@ idle     10m  monitor               proj         "The sweep landed. It's the rep
 
 ## Several accounts and machines in one roster
 
-Reading crosses accounts and machines; messaging does not, so a crowsnest session operates the fleet of its own account and machine and can *read* all the others. List them once:
+Reading crosses accounts and machines; messaging does not, so a crowsnest session operates the fleet of its own account and machine and can *read* all the others. What it spawns lands on its own account too: `crowsnest spawn` carries the spawning session's `CLAUDE_CONFIG_DIR` into the new one (and `--home` starts one under another home instead), so a second-account crowsnest never opens sessions under the default account by mistake. List them once:
 
 ```toml
 # ~/.config/crowsnest/config.toml

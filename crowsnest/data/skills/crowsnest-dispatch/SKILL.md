@@ -65,8 +65,9 @@ belongs in an issue the session can read.
 crowsnest spawn <name> --cwd <dir> --prompt "<the brief>"
 ```
 
-The row appears in `crowsnest` within seconds, named, in that directory, busy. Remote
-control is on by default, so the user can reach it from a phone. If the command reports
+The row appears in `crowsnest` within seconds, named, in that directory, busy, and on
+your own account (the new session inherits your `CLAUDE_CONFIG_DIR`; `--home` picks
+another). Remote control is on by default, so the user can reach it from a phone. If the command reports
 that it could not confirm the session, do not spawn a second one — run `crowsnest` and
 look before you try again.
 

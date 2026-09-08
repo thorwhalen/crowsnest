@@ -7,6 +7,11 @@ a phone over Remote Control. It never resumes or kills a session -- that stays w
 ``xa`` (:func:`crowsnest.spawn.spawn` is the seam ``xa spawn`` replaces) -- it only starts
 one somewhere a person can find it, and waits for :mod:`crowsnest.registry` to see it.
 
+A spawned session runs under the *account* of the session that spawned it: Claude Code
+picks its account by ``CLAUDE_CONFIG_DIR``, and :func:`child_env` carries that variable
+(with the ``CLAUDE_PROFILE`` label a shell may pair with it) into the child while
+stripping every other ``CLAUDE*`` marker. ``home=`` puts the child under another home.
+
 >>> claude_argv('demo', prompt='hello')
 ['claude', '--remote-control', '--dangerously-skip-permissions', '-n', 'demo', 'hello']
 """
@@ -22,11 +27,25 @@ import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-from crowsnest.registry import LiveSession, live_sessions
+from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessions
 
-__all__ = ["child_env", "claude_argv", "default_spawner", "spawn"]
+__all__ = [
+    "ACCOUNT_VARS",
+    "child_env",
+    "claude_argv",
+    "default_spawner",
+    "env_prefix",
+    "spawn",
+]
 
 CLAUDE_BIN = "claude"
+
+#: The variables that select which account a session runs under. ``CLAUDE_CONFIG_DIR`` is
+#: Claude Code's own (its config, credentials and registry all move with it); a shell
+#: profile scheme commonly pairs it with a ``CLAUDE_PROFILE`` label and re-derives one
+#: from the other, so the two travel together or not at all.
+ACCOUNT_VARS = (HOME_ENV_VAR, "CLAUDE_PROFILE")
+_PROFILE_VAR = "CLAUDE_PROFILE"
 
 #: How long `spawn` waits, by default, for the registry to notice the new session.
 DFLT_WAIT = 20.0
@@ -70,35 +89,108 @@ def claude_argv(
     return argv
 
 
-def child_env(environ: dict[str, str] | None = None) -> dict[str, str]:
-    """``environ`` (default ``os.environ``) without this session's own Claude Code markers.
+def child_env(
+    environ: dict[str, str] | None = None, *, home: str | Path | None = None
+) -> dict[str, str]:
+    """``environ`` (default ``os.environ``) as a new session should inherit it.
 
-    A spawner launched from inside a running session inherits that session's
-    ``CLAUDE*`` variables (``CLAUDECODE``, ``CLAUDE_CODE_SESSION_ID``, ``CLAUDE_EFFORT``,
-    the messaging socket, ...) unless they are stripped first -- and Claude Code reads
-    them to register the new process as a *child* of the spawning session, under its
+    Every ``CLAUDE*`` marker of the *spawning* session goes (``CLAUDECODE``,
+    ``CLAUDE_CODE_SESSION_ID``, ``CLAUDE_EFFORT``, the messaging socket, ...): Claude Code
+    reads them to register the new process as a *child* of the spawning session, under its
     name and effort, rather than as the standalone session `spawn` asked for.
+
+    The account stays. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so without
+    it a session spawned from a second account would open under the default one, in a
+    registry the spawner is not watching. With ``home`` the child runs under that home
+    instead: ``CLAUDE_CONFIG_DIR`` set to it, or *unset* when it is the default home,
+    which Claude Code reaches only by the variable's absence. The ``CLAUDE_PROFILE``
+    label travels only with the account it labels.
+
+    >>> child_env({'CLAUDECODE': '1', 'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'})
+    {'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'}
+    >>> env = child_env({'CLAUDE_CONFIG_DIR': '/h/iq', 'CLAUDE_PROFILE': 'iq'}, home='/h/work')
+    >>> sorted(env), env['CLAUDE_CONFIG_DIR'].endswith('work')
+    (['CLAUDE_CONFIG_DIR'], True)
     """
     environ = os.environ if environ is None else environ
-    return {k: v for k, v in environ.items() if not k.startswith("CLAUDE")}
+    env = {
+        k: v
+        for k, v in environ.items()
+        if not k.startswith("CLAUDE") or k in ACCOUNT_VARS
+    }
+    if home is None:
+        return env
+    target = _resolved(home)
+    if target != _resolved(environ.get(HOME_ENV_VAR) or DFLT_HOME):
+        env.pop(_PROFILE_VAR, None)
+    if target == _resolved(DFLT_HOME):
+        env.pop(HOME_ENV_VAR, None)
+    else:
+        env[HOME_ENV_VAR] = str(target)
+    return env
 
 
-def _tmux_spawner(argv: list[str], *, cwd: str, name: str) -> None:
-    command = shlex.join(argv)
+def _resolved(home: str | Path) -> Path:
+    """One spelling per home, so a relative path or a symlink still names the same account."""
+    return Path(home).expanduser().resolve()
+
+
+def env_prefix(
+    env: dict[str, str], *, environ: dict[str, str] | None = None
+) -> list[str]:
+    """The ``env -u ... K=V ...`` tokens that make a fresh shell run a command under ``env``.
+
+    For the spawners that hand a command *line* to another program (tmux, a terminal
+    tab): the shell that runs it is not this process's child and starts with whatever
+    ``CLAUDE*`` variables its own login put there, so the account is stated absolutely
+    -- every account variable is unset, then those in ``env`` are set -- and every other
+    ``CLAUDE*`` marker of ``environ`` (default ``os.environ``) is unset. Empty when there
+    is nothing to say, so the caller can run the command bare.
+
+    >>> env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={'CLAUDECODE': '1'})
+    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', 'CLAUDE_CONFIG_DIR=/h/iq']
+    """
+    environ = os.environ if environ is None else environ
+    unset = [k for k in environ if k.startswith("CLAUDE") and k not in env]
+    unset += [k for k in ACCOUNT_VARS if k not in env and k not in unset]
+    assignments = [f"{k}={v}" for k, v in env.items() if k.startswith("CLAUDE")]
+    if not unset and not assignments:
+        return []
+    tokens = ["env"]
+    for k in unset:
+        tokens += ["-u", k]
+    return tokens + assignments
+
+
+def _tmux_spawner(
+    argv: list[str], *, cwd: str, name: str, home: str | Path | None
+) -> None:
+    # A running tmux server gives a new session *its* environment, not this client's, so
+    # the account goes into the command line; ``env=`` still matters when this call is
+    # what starts the server.
+    env = child_env(home=home)
+    command = shlex.join(env_prefix(env) + argv)
     result = subprocess.run(
         ["tmux", "new-session", "-d", "-s", name, "-c", cwd, command],
         capture_output=True,
         text=True,
         check=False,
-        env=child_env(),
+        env=env,
     )
     if result.returncode != 0:
         raise RuntimeError(f"tmux new-session failed: {result.stderr.strip()}")
 
 
-def _iterm_spawner(argv: list[str], *, cwd: str, name: str) -> None:
-    unset = " ".join(f"-u {k}" for k in os.environ if k.startswith("CLAUDE"))
-    command = f"env {unset} {shlex.join(argv)}" if unset else shlex.join(argv)
+def _applescript_string(text: str) -> str:
+    """``text`` as the inside of a double-quoted AppleScript string literal."""
+    return text.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _iterm_spawner(
+    argv: list[str], *, cwd: str, name: str, home: str | Path | None
+) -> None:
+    command = shlex.join(env_prefix(child_env(home=home)) + argv)
+    line = _applescript_string(f"cd {shlex.quote(cwd)} && {command}")
     script = (
         'tell application "iTerm2"\n'
         "  activate\n"
@@ -108,7 +200,7 @@ def _iterm_spawner(argv: list[str], *, cwd: str, name: str) -> None:
         "  tell current window\n"
         "    set newTab to (create tab with default profile)\n"
         "    tell current session of newTab\n"
-        f'      write text "cd {shlex.quote(cwd)} && {command}"\n'
+        f'      write text "{line}"\n'
         "    end tell\n"
         "  end tell\n"
         "end tell\n"
@@ -120,11 +212,13 @@ def _iterm_spawner(argv: list[str], *, cwd: str, name: str) -> None:
         raise RuntimeError(f"osascript failed: {result.stderr.strip()}")
 
 
-def _subprocess_spawner(argv: list[str], *, cwd: str, name: str) -> None:
+def _subprocess_spawner(
+    argv: list[str], *, cwd: str, name: str, home: str | Path | None
+) -> None:
     subprocess.Popen(
         argv,
         cwd=cwd,
-        env=child_env(),
+        env=child_env(home=home),
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -178,10 +272,16 @@ def spawn(
     ``add_dirs`` are further directories the session is allowed to work in (a fleet
     manager gets every repository of its fleet this way).
 
-    ``spawner`` is the seam: a callable ``(argv, *, cwd, name)`` that starts the built
-    ``claude`` command line somewhere a person can find it -- the default is
-    :func:`default_spawner`'s pick. ``xa spawn`` is the pointed replacement, adding hosts
-    and a phone web UI.
+    ``spawner`` is the seam: a callable ``(argv, *, cwd, name, home)`` that starts the
+    built ``claude`` command line somewhere a person can find it, under the account
+    ``home`` (``None``: the spawner's own) -- the default is :func:`default_spawner`'s
+    pick, and :func:`child_env` and :func:`env_prefix` are what a spawner derives its
+    environment with. ``xa spawn`` is the pointed replacement, adding hosts and a phone
+    web UI; it gets the account as one path to translate, not a local environment.
+
+    ``home`` is both the home whose registry is watched for the new session and the
+    account it is started under; left out, both are the spawning session's own, so a
+    crowsnest session on one account creates sessions on that account.
 
     Returns ``{"name", "pid", "session_id", "how"}``. When the registry file never shows
     up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so -- the session may
@@ -208,7 +308,7 @@ def spawn(
         remote_control=remote_control,
         add_dirs=add_dirs,
     )
-    spawner(argv, cwd=cwd, name=name)
+    spawner(argv, cwd=cwd, name=name, home=home)
     found = _find_by_name(name, home=home, wait=wait)
     if found is None:
         return {
