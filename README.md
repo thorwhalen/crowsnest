@@ -64,6 +64,7 @@ crowsnest watch                    one line per change, forever (started, exited
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
 crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
+                                   (--profile NAME: on another account; --binary PATH: another claude)
 crowsnest open <session>           raise its terminal on the desktop, or say where it runs
 crowsnest init                     this session's CLAUDE.md, the data directory, the hook lines
 crowsnest install-skills           link the skills and the scout subagent into ~/.claude
@@ -84,7 +85,7 @@ idle     10m  monitor               proj         "The sweep landed. It's the rep
 
 ## Several accounts and machines in one roster
 
-Reading crosses accounts and machines; messaging does not, so a crowsnest session operates the fleet of its own account and machine and can *read* all the others. What it spawns lands on its own account too: `crowsnest spawn` carries the spawning session's `CLAUDE_CONFIG_DIR` into the new one (and `--home` starts one under another home instead), so a second-account crowsnest never opens sessions under the default account by mistake. List them once:
+Reading crosses accounts and machines; messaging does not, so a crowsnest session operates the fleet of its own account and machine and can *read* all the others. What it spawns lands on its own account too: `crowsnest spawn` starts the new session the way this one runs — same account (its `CLAUDE_CONFIG_DIR`, stated absolutely on the command line, because a `tmux` server hands a new session *its* environment rather than the client's) and same `claude` binary (`$CLAUDE_CODE_EXECPATH`, not whatever a login shell's `PATH` resolves) — so a second-account crowsnest never opens sessions under the default account by mistake, and `ANTHROPIC_API_KEY` is dropped so the child signs in as its account, not as an API bill. `--profile NAME` starts one on another account, `--home DIR` spells that home out, and `$CROWSNEST_PROFILE` is that choice made once. List the homes once:
 
 ```toml
 # ~/.config/crowsnest/config.toml
@@ -102,7 +103,9 @@ path = "~/.cache/xa/remotes/server"   # a copy synced down with `xa sync`
 remote = true                         # its pids are not ours: alive while fresh
 ```
 
-Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which, `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`.
+Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which — which is also how a session spawned with `--profile` shows up, on the account it actually runs on — `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`. `CROWSNEST_ALL_HOMES=1` makes that the default, for a watching session that operates two accounts.
+
+A profile name is resolved against the `[[homes]]` names above first, then against a `claude-profile dir <name>` command on your `PATH` if you keep one; a name neither knows is an error, never a quiet fall back to the default account.
 
 ## The ledger: what a session leaves behind
 

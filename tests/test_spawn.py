@@ -5,7 +5,6 @@ import threading
 from pathlib import Path
 
 import pytest
-
 from fixtures import registry_record, write_registry
 
 from crowsnest import registry
@@ -116,13 +115,23 @@ def test_env_prefix_states_the_account_absolutely_and_unsets_the_markers():
         "CLAUDE_EFFORT",
         "-u",
         "CLAUDE_PROFILE",
+        "-u",
+        "ANTHROPIC_API_KEY",
         "CLAUDE_CONFIG_DIR=/h/.claude-iq",
     ]
 
 
 def test_env_prefix_for_the_default_account_unsets_the_account_variables_too():
     tokens = env_prefix({"PATH": "/b"}, environ={"PATH": "/b"})
-    assert tokens == ["env", "-u", "CLAUDE_CONFIG_DIR", "-u", "CLAUDE_PROFILE"]
+    assert tokens == [
+        "env",
+        "-u",
+        "CLAUDE_CONFIG_DIR",
+        "-u",
+        "CLAUDE_PROFILE",
+        "-u",
+        "ANTHROPIC_API_KEY",
+    ]
 
 
 def test_claude_argv_default_is_skip_permissions_named_and_remote_controlled():
@@ -216,6 +225,7 @@ def test_spawn_returns_pid_and_session_id_once_the_registry_sees_it(
         "pid": 4242,
         "session_id": "sess-abcdef",
         "how": "custom",
+        "home": str(home),
     }
     assert calls and calls[0][1] == "/some/repo" and calls[0][2] == "demo"
     assert calls[0][3] == home
@@ -356,3 +366,123 @@ def test_claude_argv_add_dirs_come_before_a_flag_never_before_the_prompt():
     assert argv[i + 3].startswith("-")
     assert argv[-1] == "go"
     assert "--add-dir" not in claude_argv("demo")
+
+
+# --- the account, the binary and what must not travel, end to end -------------
+
+
+def test_child_env_drops_the_api_key_so_the_child_signs_in_as_its_home_says():
+    given = {"ANTHROPIC_API_KEY": "sk-x", "CLAUDE_CONFIG_DIR": "/h/iq", "PATH": "/b"}
+    assert child_env(given) == {"CLAUDE_CONFIG_DIR": "/h/iq", "PATH": "/b"}
+
+
+def test_child_env_keeps_the_api_key_when_told_to():
+    given = {"ANTHROPIC_API_KEY": "sk-x", "PATH": "/b"}
+    assert child_env(given, drop=()) == given
+
+
+def test_env_prefix_unsets_the_api_key_absolutely_not_only_when_we_have_one():
+    """The login shell running the command line may set it even when this process does not."""
+    tokens = env_prefix({"PATH": "/b"}, environ={"PATH": "/b"})
+    assert tokens[tokens.index("ANTHROPIC_API_KEY") - 1] == "-u"
+
+
+def test_spawn_starts_the_child_with_this_sessions_own_claude(tmp_path, monkeypatch):
+    exe = tmp_path / "claude-2.1.263"
+    exe.write_text("#!/bin/sh\n")
+    exe.chmod(0o755)
+    monkeypatch.setenv("CLAUDE_CODE_EXECPATH", str(exe))
+    monkeypatch.setattr(
+        spawn_module,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: True, **kw),
+    )
+    seen = []
+
+    def fake_spawner(argv, *, cwd, name, home):
+        seen.append(argv)
+
+    spawn("demo", cwd="/some/repo", spawner=fake_spawner, home=tmp_path / "h", wait=0.1)
+    assert seen[0][0] == str(exe)
+
+
+def test_spawn_takes_a_binary_over_the_one_it_would_have_picked(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        spawn_module,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: True, **kw),
+    )
+    seen = []
+
+    def fake_spawner(argv, *, cwd, name, home):
+        seen.append(argv)
+
+    spawn(
+        "demo",
+        cwd="/some/repo",
+        spawner=fake_spawner,
+        home=tmp_path / "h",
+        binary="/opt/claude-next",
+        wait=0.1,
+    )
+    assert seen[0][0] == "/opt/claude-next"
+
+
+def test_spawn_resolves_a_profile_name_to_the_home_it_watches_and_starts_under(
+    tmp_path, monkeypatch
+):
+    cfg = tmp_path / "config.toml"
+    other = tmp_path / "other-home"
+    cfg.write_text(f'[[homes]]\nname = "other"\npath = "{other.as_posix()}"\n')
+    monkeypatch.setattr(
+        spawn_module,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: True, **kw),
+    )
+    seen = []
+
+    def fake_spawner(argv, *, cwd, name, home):
+        seen.append(home)
+
+    result = spawn(
+        "demo",
+        cwd="/some/repo",
+        spawner=fake_spawner,
+        profile="other",
+        config=cfg,
+        wait=0.1,
+    )
+    assert seen == [other]
+    assert result["home"] == str(other)
+
+
+def test_spawn_refuses_a_profile_it_cannot_resolve(tmp_path, monkeypatch):
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('[[homes]]\nname = "other"\npath = "/h/other"\n')
+    monkeypatch.setattr("shutil.which", lambda cmd, **kw: None)
+    called = []
+
+    with pytest.raises(ValueError) as exc:
+        spawn(
+            "demo",
+            cwd="/some/repo",
+            spawner=lambda *a, **k: called.append(1),
+            profile="typo",
+            config=cfg,
+            wait=0.1,
+        )
+    assert "typo" in str(exc.value) and called == []
+
+
+def test_spawn_says_nothing_about_a_home_when_it_used_its_own_account(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(
+        spawn_module,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: True, **kw),
+    )
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "h"))
+    monkeypatch.delenv("CROWSNEST_PROFILE", raising=False)
+    result = spawn("demo", cwd="/some/repo", spawner=lambda *a, **k: None, wait=0.1)
+    assert result["home"] == ""

@@ -7,10 +7,14 @@ a phone over Remote Control. It never resumes or kills a session -- that stays w
 ``xa`` (:func:`crowsnest.spawn.spawn` is the seam ``xa spawn`` replaces) -- it only starts
 one somewhere a person can find it, and waits for :mod:`crowsnest.registry` to see it.
 
-A spawned session runs under the *account* of the session that spawned it: Claude Code
-picks its account by ``CLAUDE_CONFIG_DIR``, and :func:`child_env` carries that variable
-(with the ``CLAUDE_PROFILE`` label a shell may pair with it) into the child while
-stripping every other ``CLAUDE*`` marker. ``home=`` puts the child under another home.
+A spawned session runs, by default, as the session that spawned it: the same *account*
+and the same *binary*. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so
+:func:`child_env` carries that variable (with the ``CLAUDE_PROFILE`` label a shell may
+pair with it) into the child while stripping every other ``CLAUDE*`` marker, and
+:func:`claude_argv` starts the child with :func:`crowsnest.account.claude_bin` -- this
+session's own executable -- rather than leaving a login shell's ``PATH`` to pick one.
+``home=`` puts the child under another home, ``profile=`` names one
+(:mod:`crowsnest.account`), and :data:`crowsnest.account.DROPPED_VARS` never travels.
 
 >>> claude_argv('demo', prompt='hello')
 ['claude', '--remote-control', '--dangerously-skip-permissions', '-n', 'demo', 'hello']
@@ -27,18 +31,18 @@ import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
+from crowsnest.account import CLAUDE_BIN, DROPPED_VARS, account_home, claude_bin
 from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessions
 
 __all__ = [
     "ACCOUNT_VARS",
+    "CLAUDE_BIN",
     "child_env",
     "claude_argv",
     "default_spawner",
     "env_prefix",
     "spawn",
 ]
-
-CLAUDE_BIN = "claude"
 
 #: The variables that select which account a session runs under. ``CLAUDE_CONFIG_DIR`` is
 #: Claude Code's own (its config, credentials and registry all move with it); a shell
@@ -60,11 +64,16 @@ def claude_argv(
     effort: str = "",
     remote_control: bool = True,
     add_dirs: Sequence[str] = (),
+    binary: str = CLAUDE_BIN,
 ) -> list[str]:
     """The ``claude`` command line for a new named session.
 
     ``add_dirs`` are extra directories the session may work in (``--add-dir``, which
     takes several values and so is placed where a flag follows it, never the prompt).
+
+    ``binary`` is what actually runs, the bare name by default so this stays a pure
+    function of its arguments; :func:`spawn` fills in :func:`crowsnest.account.claude_bin`,
+    the executable *this* session runs, so the child is the same version.
 
     Permissions are skipped because a spawned session has no one at the keyboard to
     approve them. ``--remote-control`` takes an *optional* value and so would swallow
@@ -73,8 +82,10 @@ def claude_argv(
 
     >>> claude_argv('demo', model='opus', effort='high', remote_control=False)
     ['claude', '--dangerously-skip-permissions', '-n', 'demo', '--model', 'opus', '--effort', 'high']
+    >>> claude_argv('demo', binary='/v/2.1.263')[0]
+    '/v/2.1.263'
     """
-    argv = [CLAUDE_BIN]
+    argv = [binary or CLAUDE_BIN]
     if remote_control:
         argv.append("--remote-control")
     if add_dirs:
@@ -90,7 +101,10 @@ def claude_argv(
 
 
 def child_env(
-    environ: dict[str, str] | None = None, *, home: str | Path | None = None
+    environ: dict[str, str] | None = None,
+    *,
+    home: str | Path | None = None,
+    drop: Sequence[str] = DROPPED_VARS,
 ) -> dict[str, str]:
     """``environ`` (default ``os.environ``) as a new session should inherit it.
 
@@ -106,17 +120,24 @@ def child_env(
     which Claude Code reaches only by the variable's absence. The ``CLAUDE_PROFILE``
     label travels only with the account it labels.
 
+    ``drop`` goes too, and for the opposite reason: a variable that would *override* the
+    account the home selects (:data:`crowsnest.account.DROPPED_VARS`, an API key that
+    bills elsewhere). Pass ``drop=()`` to inherit them after all.
+
     >>> child_env({'CLAUDECODE': '1', 'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'})
     {'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'}
+    >>> child_env({'ANTHROPIC_API_KEY': 'sk-x', 'PATH': '/bin'})
+    {'PATH': '/bin'}
     >>> env = child_env({'CLAUDE_CONFIG_DIR': '/h/iq', 'CLAUDE_PROFILE': 'iq'}, home='/h/work')
     >>> sorted(env), env['CLAUDE_CONFIG_DIR'].endswith('work')
     (['CLAUDE_CONFIG_DIR'], True)
     """
     environ = os.environ if environ is None else environ
+    dropped = set(drop)
     env = {
         k: v
         for k, v in environ.items()
-        if not k.startswith("CLAUDE") or k in ACCOUNT_VARS
+        if (not k.startswith("CLAUDE") or k in ACCOUNT_VARS) and k not in dropped
     }
     if home is None:
         return env
@@ -136,7 +157,10 @@ def _resolved(home: str | Path) -> Path:
 
 
 def env_prefix(
-    env: dict[str, str], *, environ: dict[str, str] | None = None
+    env: dict[str, str],
+    *,
+    environ: dict[str, str] | None = None,
+    drop: Sequence[str] = DROPPED_VARS,
 ) -> list[str]:
     """The ``env -u ... K=V ...`` tokens that make a fresh shell run a command under ``env``.
 
@@ -147,12 +171,16 @@ def env_prefix(
     ``CLAUDE*`` marker of ``environ`` (default ``os.environ``) is unset. Empty when there
     is nothing to say, so the caller can run the command bare.
 
+    ``drop`` is unset the same absolute way, and for the same reason: this process not
+    having an API key says nothing about the shell that will run the command.
+
     >>> env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={'CLAUDECODE': '1'})
-    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', 'CLAUDE_CONFIG_DIR=/h/iq']
+    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR=/h/iq']
     """
     environ = os.environ if environ is None else environ
     unset = [k for k in environ if k.startswith("CLAUDE") and k not in env]
     unset += [k for k in ACCOUNT_VARS if k not in env and k not in unset]
+    unset += [k for k in drop if k not in env and k not in unset]
     assignments = [f"{k}={v}" for k, v in env.items() if k.startswith("CLAUDE")]
     if not unset and not assignments:
         return []
@@ -264,8 +292,11 @@ def spawn(
     remote_control: bool = True,
     spawner: Callable[..., None] | None = None,
     home: str | Path | None = None,
+    profile: str = "",
+    config: str | Path | None = None,
     wait: float = DFLT_WAIT,
     add_dirs: Sequence[str] = (),
+    binary: str = "",
 ) -> dict:
     """Start a session named ``name`` in ``cwd``, and wait for the registry to see it.
 
@@ -281,16 +312,21 @@ def spawn(
 
     ``home`` is both the home whose registry is watched for the new session and the
     account it is started under; left out, both are the spawning session's own, so a
-    crowsnest session on one account creates sessions on that account.
+    crowsnest session on one account creates sessions on that account. ``profile`` names
+    a home instead of spelling it (:func:`crowsnest.account.account_home`, which also
+    reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``
+    to run, defaulting to the one this session runs.
 
-    Returns ``{"name", "pid", "session_id", "how"}``. When the registry file never shows
-    up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so -- the session may
-    still be starting, or may have failed before it could register.
+    Returns ``{"name", "pid", "session_id", "how", "home"}``, ``home`` being the account
+    the session was started under (``""``: the spawning session's own). When the registry
+    file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so --
+    the session may still be starting, or may have failed before it could register.
 
     A name that a live session already carries is refused (``ValueError``): the name is
     the address for everything after -- ``show``, ``open``, a message -- and two sessions
     behind one name make all of them ambiguous. Pick another, a suffix will do.
     """
+    home = account_home(home=home, profile=profile, config=config)
     taken = [s for s in live_sessions(home=home) if s.name == name]
     if taken:
         raise ValueError(
@@ -307,8 +343,10 @@ def spawn(
         effort=effort,
         remote_control=remote_control,
         add_dirs=add_dirs,
+        binary=binary or claude_bin(),
     )
     spawner(argv, cwd=cwd, name=name, home=home)
+    where = str(home) if home is not None else ""
     found = _find_by_name(name, home=home, wait=wait)
     if found is None:
         return {
@@ -316,5 +354,12 @@ def spawn(
             "pid": 0,
             "session_id": "",
             "how": f"{how}: no registry file for {name!r} within {wait:.0f}s",
+            "home": where,
         }
-    return {"name": name, "pid": found.pid, "session_id": found.session_id, "how": how}
+    return {
+        "name": name,
+        "pid": found.pid,
+        "session_id": found.session_id,
+        "how": how,
+        "home": where,
+    }

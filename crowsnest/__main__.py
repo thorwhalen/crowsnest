@@ -13,6 +13,7 @@ useful thing.
 from __future__ import annotations
 
 import json as _json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,6 +31,21 @@ from crowsnest.spawn import spawn as _spawn
 __all__ = ["main"]
 
 DEFAULT_COMMAND = "roster"
+
+#: Set it to make ``--all-homes`` the default: a watching session that operates two
+#: accounts wants every roster, `show`, `watch` and `open` to span them, and saying so
+#: once beats remembering the flag. Only turns the flag on -- ``--home DIR`` still scopes
+#: a single command to one home.
+ALL_HOMES_ENV_VAR = "CROWSNEST_ALL_HOMES"
+
+_FALSE = ("", "0", "false", "no", "off")
+
+
+def _all_homes(flag: bool) -> bool:
+    """``--all-homes``, or the standing default in ``$CROWSNEST_ALL_HOMES``."""
+    return (
+        bool(flag) or os.environ.get(ALL_HOMES_ENV_VAR, "").strip().lower() not in _FALSE
+    )
 
 
 def _age(epoch: float | None) -> str:
@@ -104,9 +120,10 @@ def roster(
 
     `--brief` answers from the registry alone, without reading any transcript.
     `--all-homes` reads every home in the config file (accounts, synced machines) and
-    adds a column saying which.
+    adds a column saying which -- which is also what a session spawned under another
+    account shows up in. Set `$CROWSNEST_ALL_HOMES=1` to make that the default.
     """
-    result = tools.roster(home=home, all_homes=all_homes, activity=not brief)
+    result = tools.roster(home=home, all_homes=_all_homes(all_homes), activity=not brief)
     lines = []
     tagged = any(row.get("home") for row in result["sessions"])
     for row in result["sessions"]:
@@ -136,7 +153,9 @@ def show(
     `session` is a registry name, a unique prefix of one, a session-id prefix, or a pid;
     with `--all-homes`, `name@home` picks one home.
     """
-    result = tools.show(session, home=home, all_homes=all_homes, recent=recent)
+    result = tools.show(
+        session, home=home, all_homes=_all_homes(all_homes), recent=recent
+    )
     if json:
         return _json.dumps(result, indent=2)
     s, act = result["session"], result["activity"]
@@ -191,7 +210,7 @@ def turns(
 ):
     """The last few turns of a session, oldest first. `--before N` pages back from turn N."""
     result = tools.turns(
-        session, last=last, before=before, home=home, all_homes=all_homes
+        session, last=last, before=before, home=home, all_homes=_all_homes(all_homes)
     )
     if json:
         return _json.dumps(result, indent=2)
@@ -234,7 +253,10 @@ def report(
     the `db` capability; without it the page is the static one.
     """
     result = tools.report(
-        home=home, all_homes=all_homes, fragment=fragment, interactive=interactive
+        home=home,
+        all_homes=_all_homes(all_homes),
+        fragment=fragment,
+        interactive=interactive,
     )
     if not out:
         return result["html"]
@@ -262,7 +284,9 @@ def watch(
     watching session. Stop with Ctrl-C.
     """
     try:
-        for event in _watch.events(interval=interval, home=home, all_homes=all_homes):
+        for event in _watch.events(
+            interval=interval, home=home, all_homes=_all_homes(all_homes)
+        ):
             if json:
                 line = _json.dumps(event)
             else:
@@ -337,7 +361,7 @@ def brief(
     Reads no transcript and costs the session nothing. Empty until openloops has digested
     that session; `ol sync` is what fills it.
     """
-    result = tools.brief(session, home=home, all_homes=all_homes)
+    result = tools.brief(session, home=home, all_homes=_all_homes(all_homes))
     if json:
         return _json.dumps(result, indent=2)
     s = result["session"]
@@ -439,13 +463,19 @@ def spawn(
     effort: str = "",
     remote_control: bool = True,
     home: str | None = None,
+    profile: str = "",
+    binary: str = "",
     add_dirs: str | None = None,
     wait: float = DFLT_WAIT,
 ) -> str:
     """Start a named session in `--cwd`; waits for it to register, then prints its row.
 
-    The session runs under this session's own account (its `CLAUDE_CONFIG_DIR`), or under
-    `--home` when given, which is then also the registry watched for it.
+    The session runs as this one does: same account (its `CLAUDE_CONFIG_DIR`) and same
+    `claude` binary. `--profile NAME` picks another account by name -- a `[[homes]]` name
+    from the config file, else a name your `claude-profile` command knows -- and
+    `$CROWSNEST_PROFILE` is that choice made once; `--home DIR` spells the home out
+    instead, and is then also the registry watched for the new session. `--binary PATH`
+    runs a different `claude`.
 
     `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
     those directories too, which is how a fleet manager gets every repository of its fleet.
@@ -460,20 +490,23 @@ def spawn(
         effort=effort,
         remote_control=remote_control,
         home=home,
+        profile=profile,
+        binary=binary,
         wait=wait,
         add_dirs=_dir_list(add_dirs),
     )
+    where = f" in {result['home']}" if result.get("home") else ""
     if not result["pid"]:
-        return f"{result['name']}: not confirmed ({result['how']})"
+        return f"{result['name']}: not confirmed ({result['how']}){where}"
     return (
         f"{result['name']:<20}pid {result['pid']:<8}"
-        f"session {result['session_id'][:8]}  ({result['how']})"
+        f"session {result['session_id'][:8]}  ({result['how']}){where}"
     )
 
 
 def open(session: str, *, home: str | None = None, all_homes: bool = False) -> str:
     """Raise `session`'s terminal on the desktop, or say where it runs when none is found."""
-    result = _open_session(session, home=home, all_homes=all_homes)
+    result = _open_session(session, home=home, all_homes=_all_homes(all_homes))
     return f"{result['name']}: {result['how']} ({result['detail']})"
 
 

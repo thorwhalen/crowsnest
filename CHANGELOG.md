@@ -2,6 +2,13 @@
 
 Newest first. The version is bumped by CI on every merge to `main`, so one merge is one entry.
 
+## 0.0.27 (2026-09-08)
+
+- `spawn` starts the new session the way the spawning one runs: same account *and* same `claude` binary (`$CLAUDE_CODE_EXECPATH`), stated absolutely on the command line so a `tmux` login shell cannot rebind it.
+- `spawn --profile <name>` starts one on another account, resolved against the `[[homes]]` names and then `claude-profile dir <name>`; `$CROWSNEST_PROFILE` is that choice made once. An unknown name is an error, never the default account.
+- `ANTHROPIC_API_KEY` no longer travels into a spawned session (`child_env(drop=())` keeps it).
+- `spawn` reports the home it started under; `$CROWSNEST_ALL_HOMES=1` makes `--all-homes` the default, which is how a session spawned on another account shows up in the roster.
+
 ## 0.0.17 (2026-09-07)
 
 - `watch` no longer streams an `idle_prompt` notification as `needs-you`.
