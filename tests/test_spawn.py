@@ -276,13 +276,12 @@ def test_iterm_spawner_escapes_the_applescript_string(monkeypatch):
 
     monkeypatch.setattr(spawn_module.subprocess, "run", fake_run)
     prompt = 'say "hi" \\ bye'
-    spawn_module._iterm_spawner(
-        ["claude", prompt], cwd='/some/"repo"', name="demo", home=None
-    )
+    cwd = '/some/"repo"'
+    spawn_module._iterm_spawner(["claude", prompt], cwd=cwd, name="demo", home=None)
     line = next(l for l in captured["script"].splitlines() if "write text" in l)
     body = line.split('write text "', 1)[1][:-1]
     unescaped = body.replace('\\"', '"').replace("\\\\", "\\")
-    expected = f"cd {shlex.quote('/some/"repo"')} && " + shlex.join(
+    expected = f"cd {shlex.quote(cwd)} && " + shlex.join(
         spawn_module.env_prefix(child_env()) + ["claude", prompt]
     )
     assert unescaped == expected
