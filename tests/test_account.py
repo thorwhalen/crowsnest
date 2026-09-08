@@ -1,4 +1,5 @@
 import stat
+import sys
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,10 @@ from crowsnest.account import (
     shell_profile_home,
 )
 from crowsnest.registry import DFLT_HOME
+
+#: `which` needs a PATHEXT extension on Windows, and a `#!/bin/sh` file is not runnable
+#: there; the two facts under test are POSIX ones about a POSIX helper command.
+posix_only = pytest.mark.skipif(sys.platform == "win32", reason="POSIX executables")
 
 
 def _executable(path: Path) -> Path:
@@ -47,6 +52,7 @@ def test_claude_bin_ignores_an_execpath_that_is_not_runnable(tmp_path):
         assert claude_bin({EXEC_ENV_VAR: value, "PATH": ""}) == CLAUDE_BIN
 
 
+@posix_only
 def test_claude_bin_falls_back_to_an_absolute_path_from_path(tmp_path):
     """An absolute path survives a login shell whose PATH is not this process's."""
     exe = _executable(tmp_path / CLAUDE_BIN)
@@ -86,6 +92,7 @@ def test_profile_home_refuses_an_unknown_name_rather_than_silently_defaulting(tm
     assert "nope" in message and "main" in message and "iq" in message
 
 
+@posix_only
 def test_shell_profile_home_maps_empty_output_to_the_default_home(tmp_path, monkeypatch):
     """`claude-profile dir tw` prints nothing: the default home is reached by unsetting."""
     fake = _executable(tmp_path / "claude-profile")
@@ -94,6 +101,7 @@ def test_shell_profile_home_maps_empty_output_to_the_default_home(tmp_path, monk
     assert shell_profile_home("tw") == Path(DFLT_HOME).expanduser()
 
 
+@posix_only
 def test_shell_profile_home_raises_key_error_when_the_command_says_no(
     tmp_path, monkeypatch
 ):
