@@ -13,6 +13,7 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 | `resolver=` in `account.profile_home`, a callable `(name) -> Path` raising `KeyError` | the `[[homes]]` names first, then `claude-profile dir <name>` on `PATH` | wherever else a machine keeps its account names |
 | `binary=` in `spawn.spawn` / `claude_argv` | the bare `claude`; each *local* spawner substitutes `account.claude_bin()` (`$CLAUDE_CODE_EXECPATH`, else an absolute `which claude`) via `spawn.local_argv`, so the command line a remote spawner is handed stays runnable there | another build, another version |
 | `drop=` in `child_env` / `env_prefix` | `account.DROPPED_VARS` (`ANTHROPIC_API_KEY`) | anything else that would override the account the home selects |
+| `markers=` in `env_prefix` | `spawn.SESSION_VARS`, the session-identity markers derived from the `claude` binary's name table | another host's Claude Code, whose markers a remote `xa spawn` knows and this machine does not |
 | `ledger_dir=` / `events_path=` in `ledger`, `hook`, `watch` | under `crowsnest.paths.data_dir()` | a test's `tmp_path`; a shared store later |
 | `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
 
