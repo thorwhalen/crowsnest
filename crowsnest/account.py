@@ -19,12 +19,16 @@ watching session sets once. Neither given: ``None``, meaning this process's own 
 is in ``$CLAUDE_CODE_EXECPATH``; a session spawning another should hand it the same one
 rather than whatever a login shell's ``PATH`` resolves ``claude`` to, which on a machine
 mid-upgrade is a different version and on a machine with two installs a different program.
+A person can say otherwise -- ``$CROWSNEST_CLAUDE_BIN`` for one shell, ``claude_bin`` in
+the config file once and for all (:func:`configured_claude_bin`) -- and a stated choice
+outranks the inherited one. It must be something that can actually be executed: a shell
+alias cannot, and saying so is the point of the error there.
 
 *What must not travel?* :data:`DROPPED_VARS`. ``ANTHROPIC_API_KEY`` bills an API account
 rather than the signed-in subscription, and inherits silently; a spawned session should
 be signed in as its home says, so the key is dropped unless a caller asks to keep it.
 
->>> claude_bin({'CLAUDE_CODE_EXECPATH': '/no/such/binary', 'PATH': ''})
+>>> claude_bin({'CLAUDE_CODE_EXECPATH': '/no/such/binary', 'PATH': ''}, config='/no/cfg')
 'claude'
 """
 
@@ -35,22 +39,31 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from crowsnest.config import config_path, homes
+from crowsnest.config import CLAUDE_BIN_KEY, claude_bin_setting, config_path, homes
 
 __all__ = [
     "CLAUDE_BIN",
+    "CLAUDE_BIN_ENV_VAR",
     "DROPPED_VARS",
     "EXEC_ENV_VAR",
     "PROFILE_CMD",
     "PROFILE_ENV_VAR",
     "account_home",
     "claude_bin",
+    "configured_claude_bin",
     "profile_home",
     "shell_profile_home",
 ]
 
 #: The command a new session is started with when nothing better is known.
 CLAUDE_BIN = "claude"
+
+#: Names the launcher for one shell, outranking both the config file's ``claude_bin``
+#: and the binary this session runs. For a machine whose Claude Code is not the
+#: ``claude`` a login shell finds first. Set to empty it is simply *not set*, so the
+#: config file is consulted next -- clearing it returns you to the configured launcher,
+#: not to the inherited one.
+CLAUDE_BIN_ENV_VAR = "CROWSNEST_CLAUDE_BIN"
 
 #: Claude Code's own variable holding the path of the binary running this session.
 EXEC_ENV_VAR = "CLAUDE_CODE_EXECPATH"
@@ -75,17 +88,99 @@ _PROFILE_TIMEOUT = 10.0
 _DFLT_PATHEXT = ".COM;.EXE;.BAT;.CMD"
 
 
-def claude_bin(environ: dict[str, str] | None = None) -> str:
-    """The ``claude`` a new session should be started with: this session's own if known.
+def configured_claude_bin(
+    environ: dict[str, str] | None = None, *, config: str | Path | None = None
+) -> str:
+    """The launcher a *person* chose, resolved to a runnable path, or ``''`` for none.
 
-    ``$CLAUDE_CODE_EXECPATH`` when it points at a runnable file -- the exact binary this
-    session runs, so a spawned session is the same version signed in the same way -- else
-    the absolute path ``PATH`` resolves, else the bare name for a shell to resolve later.
+    ``$CROWSNEST_CLAUDE_BIN`` first, then ``claude_bin`` in the config file
+    (:func:`crowsnest.config.claude_bin_setting`) -- an environment variable is how you
+    say it for one shell, a config file how you say it once.
 
-    >>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''})
+    Unlike the fallbacks in :func:`claude_bin`, a *stated* launcher that cannot run is an
+    error rather than something to work around. The bare name a spawner may be handed is
+    a promise that some other machine will resolve it; a name typed into a config file is
+    a claim about *this* one, and the failure it otherwise produces -- a terminal that
+    opens, prints "command not found" and closes -- is invisible to the spawner, which
+    only reports that the registry never saw the session.
+
+    >>> configured_claude_bin({}, config='/nonexistent-config-for-doctest')
+    ''
+    """
+    environ = os.environ if environ is None else environ
+    value = (environ.get(CLAUDE_BIN_ENV_VAR) or "").strip()
+    source, from_file = f"${CLAUDE_BIN_ENV_VAR}", False
+    if not value:
+        value = claude_bin_setting(path=config)
+        source, from_file = f"{CLAUDE_BIN_KEY!r} in {config_path(config)}", True
+    if not value:
+        return ""
+    if from_file and _is_relative_path(value):
+        raise ValueError(
+            f"{source} names {value!r}, a path relative to whatever directory happens to "
+            f"be current. A config file is read for every spawn from everywhere, and the "
+            f"session being started has its own `--cwd`, so that path would name a "
+            f"different program in each of them -- or none. Write it out in full "
+            f"(``~`` is expanded), or use a bare name and let PATH find it."
+        )
+    found = _found_executable(value, environ)
+    if found is None:
+        raise ValueError(
+            f"{source} names {value!r}, which is not a runnable command here. "
+            f"If it is a shell alias or a shell function, that is the whole problem: "
+            f"those exist only inside an interactive shell, and a session is spawned by "
+            f"tmux or a bare subprocess, neither of which reads your shell's startup "
+            f"files. Give a script on PATH or an absolute path instead -- `type -a "
+            f"{value}` will show you which it is. Note also that crowsnest already "
+            f"skips permissions and already drops {DROPPED_VARS[0]}, so a wrapper that "
+            f"only does those two things has nothing left to add."
+        )
+    return found
+
+
+def _is_relative_path(value: str) -> bool:
+    """Is ``value`` a path, and a relative one? A bare name is not a path."""
+    expanded = os.path.expanduser(value)
+    return _has_separator(expanded) and not os.path.isabs(expanded)
+
+
+def _has_separator(value: str) -> bool:
+    return os.sep in value or bool(os.altsep and os.altsep in value)
+
+
+def _found_executable(value: str, environ: dict[str, str]) -> str | None:
+    """``value`` as something that can be executed, or ``None``.
+
+    A path is taken as written (and must exist); a bare name is looked up on ``PATH``.
+    """
+    if _has_separator(value):
+        path = os.path.expanduser(value)
+        runnable = os.path.isfile(path) and _runnable(path, environ)
+        return os.path.abspath(path) if runnable else None
+    return shutil.which(value, path=environ.get("PATH", ""))
+
+
+def claude_bin(
+    environ: dict[str, str] | None = None, *, config: str | Path | None = None
+) -> str:
+    """The ``claude`` a new session should be started with.
+
+    A person's own choice first (:func:`configured_claude_bin`); failing that, this
+    session's own binary. ``$CLAUDE_CODE_EXECPATH`` when it points at a runnable file --
+    the exact binary this session runs, so a spawned session is the same version signed
+    in the same way -- else the absolute path ``PATH`` resolves, else the bare name for a
+    shell to resolve later.
+
+    The order is deliberate: a stated preference outranks inheritance, because a person
+    who names a launcher is usually saying "not the one you would have picked".
+
+    >>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''}, config='/no/such/config')
     'claude'
     """
     environ = os.environ if environ is None else environ
+    chosen = configured_claude_bin(environ, config=config)
+    if chosen:
+        return chosen
     exec_path = environ.get(EXEC_ENV_VAR) or ""
     if exec_path and os.path.isfile(exec_path) and _runnable(exec_path, environ):
         return exec_path
@@ -101,7 +196,9 @@ def _runnable(path: str, environ: dict[str, str]) -> bool:
     if os.name != "nt":
         return os.access(path, os.X_OK)
     suffixes = (environ.get("PATHEXT") or _DFLT_PATHEXT).split(os.pathsep)
-    return os.path.splitext(path)[1].lower() in {s.strip().lower() for s in suffixes if s}
+    return os.path.splitext(path)[1].lower() in {
+        s.strip().lower() for s in suffixes if s
+    }
 
 
 def _asked(exe: str, *argv: str) -> str | None:

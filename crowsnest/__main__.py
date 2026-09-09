@@ -454,8 +454,15 @@ def spawn(
     `claude` binary. `--profile NAME` picks another account by name -- a `[[homes]]` name
     from the config file, else a name your `claude-profile` command knows -- and
     `$CROWSNEST_PROFILE` is that choice made once; `--home DIR` spells the home out
-    instead, and is then also the registry watched for the new session. `--binary PATH`
-    runs a different `claude`.
+    instead, and is then also the registry watched for the new session.
+
+    `--binary PATH` runs a different `claude` for this one spawn, verbatim and unchecked
+    -- a spawner may run the line on another machine, where this one's PATH means nothing.
+    `$CROWSNEST_CLAUDE_BIN` says it for a shell and `claude_bin` in the config file says
+    it once; those two are claims about *this* machine, so they are checked. Each has to
+    be a command that exists -- a script on PATH or an absolute path. A shell alias is not
+    one: aliases live only in an interactive shell, and a session is started by tmux or a
+    bare subprocess, which read no startup files.
 
     `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
     those directories too, which is how a fleet manager gets every repository of its fleet.

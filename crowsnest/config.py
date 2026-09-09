@@ -1,4 +1,4 @@
-"""The homes a roster covers: one by default, several when a config file says so.
+"""The homes a roster covers, and the ``claude`` a spawn starts -- what a config file says.
 
 A *home* is a Claude Code config directory -- the thing ``claude_home()`` returns -- and
 crowsnest reads one of them unless told otherwise. A person with two accounts on one
@@ -9,6 +9,8 @@ into a list of :class:`Home` records so that every reader can loop over them.
 .. code-block:: toml
 
     # ~/.config/crowsnest/config.toml
+    claude_bin = "claude-next"            # what `spawn` runs; default: this session's own
+
     [[homes]]
     name = "main"
     path = "~/.claude"
@@ -21,6 +23,12 @@ into a list of :class:`Home` records so that every reader can loop over them.
     name = "server"
     path = "~/.cache/xa/remotes/server"   # a synced copy
     remote = true                         # liveness by freshness, no pid check
+
+The one non-``homes`` setting is ``claude_bin`` (:func:`claude_bin_setting`), for a
+machine whose Claude Code is not the ``claude`` a login shell finds first. **It goes
+above the first** ``[[homes]]``: TOML gives every key after a table header to that
+table, so a ``claude_bin`` written at the bottom belongs to the last home and does
+nothing. :func:`claude_bin_setting` refuses that arrangement rather than ignoring it.
 
 On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML
 double-quoted string treats a backslash as an escape.
@@ -48,7 +56,19 @@ if sys.version_info >= (3, 11):
 else:  # pragma: no cover
     import tomli as tomllib  # type: ignore[no-redef]
 
-__all__ = ["CONFIG_ENV_VAR", "DFLT_FRESH_SECONDS", "Home", "config_path", "homes"]
+__all__ = [
+    "CLAUDE_BIN_KEY",
+    "CONFIG_ENV_VAR",
+    "DFLT_FRESH_SECONDS",
+    "Home",
+    "claude_bin_setting",
+    "config_path",
+    "homes",
+]
+
+#: The top-level config key naming the command that starts a session. See
+#: :func:`crowsnest.account.claude_bin` for what a person would put there and why.
+CLAUDE_BIN_KEY = "claude_bin"
 
 #: Overrides the config file location outright.
 CONFIG_ENV_VAR = "CROWSNEST_CONFIG"
@@ -82,6 +102,61 @@ def config_path(path: str | Path | None = None) -> Path:
     return base / "crowsnest" / "config.toml"
 
 
+def _loaded(path: str | Path | None) -> dict:
+    """The config file as a mapping, empty when there is none.
+
+    A file that cannot be parsed raises, here as in :func:`homes`: a person who wrote one
+    meant it, and a silent fallback would spawn under settings they did not choose.
+    """
+    file = config_path(path)
+    if not file.is_file():
+        return {}
+    with file.open("rb") as f:
+        return tomllib.load(f)
+
+
+def claude_bin_setting(*, path: str | Path | None = None) -> str:
+    """The ``claude_bin`` the config file names, or ``''`` when it names none.
+
+    .. code-block:: toml
+
+        claude_bin = "claude-next"   # a name on PATH, or an absolute path
+
+    Whether it can actually run is :func:`crowsnest.account.claude_bin`'s business, not
+    this module's: reading a config file and vetting a command are different jobs, and
+    the one that fails needs to say so in terms of the command.
+    """
+    data = _loaded(path)
+    value = data.get(CLAUDE_BIN_KEY)
+    if value is None:
+        _refuse_a_misplaced_claude_bin(data, path)
+        return ""
+    if not isinstance(value, str):
+        raise TypeError(
+            f"{config_path(path)}: {CLAUDE_BIN_KEY} must be a string naming a command, "
+            f"not {type(value).__name__} ({value!r})"
+        )
+    return value.strip()
+
+
+def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:
+    """Raise if ``claude_bin`` was written under a ``[[homes]]`` entry.
+
+    The easy mistake, and a silent one: TOML hands every key after a table header to
+    that table, so a ``claude_bin`` added at the end of the file becomes a field of the
+    last home -- read by nothing, reported by nothing, and the launcher stays whatever
+    it was. Cheaper to say so than to let someone re-read their own config file.
+    """
+    for entry in data.get("homes") or []:
+        if isinstance(entry, dict) and CLAUDE_BIN_KEY in entry:
+            raise ValueError(
+                f"{config_path(path)}: {CLAUDE_BIN_KEY} is inside the "
+                f"[[homes]] entry {entry.get('name', '?')!r}, where it does nothing -- "
+                f"TOML gives every key after a table header to that table. Move it "
+                f"above the first [[homes]] line."
+            )
+
+
 def _default_home() -> Home:
     return Home(name=DFLT_HOME_NAME, path=claude_home())
 
@@ -93,10 +168,9 @@ def homes(*, path: str | Path | None = None) -> list[Home]:
     a person who wrote one meant it.
     """
     file = config_path(path)
-    if not file.is_file():
+    data = _loaded(path)
+    if not data:
         return [_default_home()]
-    with file.open("rb") as f:
-        data = tomllib.load(f)
     found = []
     for entry in data.get("homes") or []:
         if not isinstance(entry, dict) or not entry.get("path"):
