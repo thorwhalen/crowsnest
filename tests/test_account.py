@@ -332,15 +332,16 @@ def test_a_relative_path_in_the_environment_is_still_allowed(tmp_path, monkeypat
     (tmp_path / "bin").mkdir()
     exe = _executable(tmp_path / "bin" / "claude")
     monkeypatch.chdir(tmp_path)
-    environ = {CLAUDE_BIN_ENV_VAR: os.path.join("bin", "claude"), "PATH": ""}
+    environ = {CLAUDE_BIN_ENV_VAR: os.path.join("bin", exe.name), "PATH": ""}
     assert claude_bin(environ, config="/no/such/config") == str(exe)
 
 
 def test_a_home_relative_path_in_the_config_file_is_fine(tmp_path, monkeypatch):
     """`~` is anchored, so it is not the relative case."""
     exe = _executable(tmp_path / "claude-home")
+    # `os.path.expanduser` reads USERPROFILE on Windows and HOME on POSIX
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     cfg = tmp_path / "config.toml"
     cfg.write_text(f'claude_bin = "~/{exe.name}"\n')
     assert claude_bin({"PATH": ""}, config=cfg) == str(exe)

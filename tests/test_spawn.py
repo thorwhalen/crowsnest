@@ -118,6 +118,15 @@ def test_child_env_reads_the_current_account_from_environ_not_the_process(monkey
     }
 
 
+def _runnable_file(path):
+    """A file this platform will actually execute: an exec bit, or a PATHEXT suffix."""
+    if os.name == "nt":
+        path = path.with_suffix(".exe")
+    path.write_text("#!/bin/sh\n")
+    path.chmod(path.stat().st_mode | stat.S_IXUSR)
+    return path
+
+
 def _unset(tokens):
     """The names ``tokens`` unsets, in order."""
     return [k for flag, k in pairwise(tokens) if flag == "-u"]
@@ -682,9 +691,7 @@ def test_a_named_binary_survives_a_configured_one(tmp_path, monkeypatch):
     and a local spawner still resolves it through the configured launcher. That is
     deliberate, and the one place where "--binary wins" would be too glib.
     """
-    exe = tmp_path / "cclaude"
-    exe.write_text("#!/bin/sh\n")
-    exe.chmod(exe.stat().st_mode | stat.S_IXUSR)
+    exe = _runnable_file(tmp_path / "cclaude")
     monkeypatch.setenv(CLAUDE_BIN_ENV_VAR, str(exe))
     assert local_argv(["/opt/claude-next", "-n", "demo"])[0] == "/opt/claude-next"
     assert local_argv(["claude", "-n", "demo"])[0] == str(exe)
@@ -700,15 +707,12 @@ def test_spawn_config_selects_the_launcher_too_not_only_the_homes(
     binary being the one half that used to be read from the ambient file.
     """
 
-    def executable(path):
-        path.write_text("#!/bin/sh\n")
-        path.chmod(path.stat().st_mode | stat.S_IXUSR)
-        return path
-
     ambient = tmp_path / "ambient.toml"
-    ambient.write_text(f'claude_bin = "{executable(tmp_path / "amb").as_posix()}"\n')
+    ambient.write_text(
+        f'claude_bin = "{_runnable_file(tmp_path / "amb").as_posix()}"\n'
+    )
     monkeypatch.setenv("CROWSNEST_CONFIG", str(ambient))
-    chosen = executable(tmp_path / "chosen")
+    chosen = _runnable_file(tmp_path / "chosen")
     explicit = tmp_path / "explicit.toml"
     explicit.write_text(f'claude_bin = "{chosen.as_posix()}"\n')
 
