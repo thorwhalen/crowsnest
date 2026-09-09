@@ -89,9 +89,7 @@ def test_child_env_home_is_resolved_so_the_child_and_the_poll_agree(
     link.symlink_to(real)
     monkeypatch.chdir(tmp_path)
     given = {"PATH": "/b"}
-    assert child_env(given, home="real-home")["CLAUDE_CONFIG_DIR"] == str(
-        real.resolve()
-    )
+    assert child_env(given, home="real-home")["CLAUDE_CONFIG_DIR"] == str(real.resolve())
     assert child_env(given, home=link)["CLAUDE_CONFIG_DIR"] == str(real.resolve())
 
 
@@ -438,9 +436,7 @@ def test_subprocess_spawner_runs_under_the_env_it_is_given(monkeypatch):
 
     monkeypatch.setattr(spawn_module.subprocess, "Popen", fake_popen)
     monkeypatch.setattr(spawn_module, "claude_bin", lambda: "/v/claude")
-    spawn_module._subprocess_spawner(
-        ["claude"], cwd="/some/repo", name="demo", home=None
-    )
+    spawn_module._subprocess_spawner(["claude"], cwd="/some/repo", name="demo", home=None)
     assert captured_argv == [["/v/claude"]]
 
     assert captured["env"] == child_env()
@@ -458,18 +454,14 @@ def test_spawn_reports_when_the_registry_never_sees_it(tmp_path, monkeypatch):
     def silent_spawner(argv, *, cwd, name, home):
         pass
 
-    result = spawn(
-        "ghost", cwd="/some/repo", spawner=silent_spawner, home=home, wait=0.2
-    )
+    result = spawn("ghost", cwd="/some/repo", spawner=silent_spawner, home=home, wait=0.2)
 
     assert result["pid"] == 0
     assert result["session_id"] == ""
     assert "ghost" in result["how"]
 
 
-def test_spawn_refuses_a_name_that_a_live_session_already_carries(
-    tmp_path, monkeypatch
-):
+def test_spawn_refuses_a_name_that_a_live_session_already_carries(tmp_path, monkeypatch):
     import pytest
 
     monkeypatch.setattr(
