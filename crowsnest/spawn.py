@@ -39,6 +39,7 @@ from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessio
 __all__ = [
     "ACCOUNT_VARS",
     "CLAUDE_BIN",
+    "SESSION_VARS",
     "child_env",
     "claude_argv",
     "default_spawner",
@@ -53,6 +54,34 @@ __all__ = [
 #: from the other, so the two travel together or not at all.
 ACCOUNT_VARS = (HOME_ENV_VAR, "CLAUDE_PROFILE")
 _PROFILE_VAR = "CLAUDE_PROFILE"
+
+#: The ``CLAUDE*`` markers Claude Code puts in a session's environment, named so that
+#: :func:`env_prefix` can unset them whether or not *this* process has them.
+#:
+#: :func:`child_env` can test its own environment, because it hands the child a complete
+#: one. A command *line* cannot: it is run by a shell whose environment is that shell's
+#: own. A tmux server first started from inside a session keeps that session's markers in
+#: its global environment and gives them to every window it opens afterwards -- including
+#: one spawned much later from a plain terminal, where this process has no marker to see
+#: and so nothing to unset. The markers visible here are therefore not the markers the
+#: child will meet, and a list that must be stated rather than discovered is a list.
+#:
+#: Account variables are deliberately absent: they are :data:`ACCOUNT_VARS`, which
+#: :func:`env_prefix` states outright rather than merely unsetting. Unsetting a name
+#: nothing set is free, so this errs towards naming; a marker a later version invents is
+#: still caught by the scan of ``environ`` when the spawning process is itself a session.
+SESSION_VARS = (
+    "CLAUDECODE",
+    "CLAUDE_CODE_BRIDGE_SESSION_ID",
+    "CLAUDE_CODE_CHILD_SESSION",
+    "CLAUDE_CODE_ENTRYPOINT",
+    "CLAUDE_CODE_EXECPATH",
+    "CLAUDE_CODE_MESSAGING_SOCKET",
+    "CLAUDE_CODE_MESSAGING_TOKEN",
+    "CLAUDE_CODE_SESSION_ID",
+    "CLAUDE_EFFORT",
+    "CLAUDE_PID",
+)
 
 #: How long `spawn` waits, by default, for the registry to notice the new session.
 DFLT_WAIT = 20.0
@@ -164,26 +193,43 @@ def env_prefix(
     *,
     environ: dict[str, str] | None = None,
     drop: Sequence[str] = DROPPED_VARS,
+    markers: Sequence[str] = SESSION_VARS,
 ) -> list[str]:
     """The ``env -u ... K=V ...`` tokens that make a fresh shell run a command under ``env``.
 
     For the spawners that hand a command *line* to another program (tmux, a terminal
     tab): the shell that runs it is not this process's child and starts with whatever
-    ``CLAUDE*`` variables its own login put there, so the account is stated absolutely
-    -- every account variable is unset, then those in ``env`` are set -- and every other
-    ``CLAUDE*`` marker of ``environ`` (default ``os.environ``) is unset. Empty when there
-    is nothing to say, so the caller can run the command bare.
+    ``CLAUDE*`` variables its own login put there. So everything is stated absolutely --
+    ``markers`` (:data:`SESSION_VARS`) and ``drop`` are unset by name, every account
+    variable is unset, then those in ``env`` are set. Empty when there is nothing to say,
+    so the caller can run the command bare.
 
-    ``drop`` is unset the same absolute way, and for the same reason: this process not
-    having an API key says nothing about the shell that will run the command.
+    Absolutely, and not "whatever this process has", because the two differ exactly when
+    it matters: a tmux server started once from inside a session hands that session's
+    markers to every window it opens afterwards, so a spawn run later from a plain
+    terminal -- nothing to see, nothing to unset -- would put its new session under the
+    name and effort of a session that has long since ended. ``environ`` (default
+    ``os.environ``) is still scanned, which adds any ``CLAUDE*`` a later version invents
+    when the spawning process is itself a session; the fixed list is the floor, not the
+    ceiling.
 
-    >>> env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={'CLAUDECODE': '1'})
+    ``drop`` is unset for the neighbouring reason: this process not having an API key
+    says nothing about the shell that will run the command.
+
+    >>> env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={}, markers=('CLAUDECODE',))
     ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR=/h/iq']
+
+    A marker only the *shell* will have is unset all the same:
+
+    >>> env_prefix({}, environ={}, markers=('CLAUDECODE',), drop=())
+    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_CONFIG_DIR', '-u', 'CLAUDE_PROFILE']
     """
     environ = os.environ if environ is None else environ
-    unset = [k for k in environ if k.startswith("CLAUDE") and k not in env]
-    unset += [k for k in ACCOUNT_VARS if k not in env and k not in unset]
-    unset += [k for k in drop if k not in env and k not in unset]
+    seen = [k for k in environ if k.startswith("CLAUDE")]
+    unset: list[str] = []
+    for k in (*markers, *seen, *ACCOUNT_VARS, *drop):
+        if k not in env and k not in unset:
+            unset.append(k)
     assignments = [f"{k}={v}" for k, v in env.items() if k.startswith("CLAUDE")]
     if not unset and not assignments:
         return []
