@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.27 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -545,8 +545,15 @@
 <span class="sd">    `claude` binary. `--profile NAME` picks another account by name -- a `[[homes]]` name</span>
 <span class="sd">    from the config file, else a name your `claude-profile` command knows -- and</span>
 <span class="sd">    `$CROWSNEST_PROFILE` is that choice made once; `--home DIR` spells the home out</span>
-<span class="sd">    instead, and is then also the registry watched for the new session. `--binary PATH`</span>
-<span class="sd">    runs a different `claude`.</span>
+<span class="sd">    instead, and is then also the registry watched for the new session.</span>
+
+<span class="sd">    `--binary PATH` runs a different `claude` for this one spawn, verbatim and unchecked</span>
+<span class="sd">    -- a spawner may run the line on another machine, where this one's PATH means nothing.</span>
+<span class="sd">    `$CROWSNEST_CLAUDE_BIN` says it for a shell and `claude_bin` in the config file says</span>
+<span class="sd">    it once; those two are claims about *this* machine, so they are checked. Each has to</span>
+<span class="sd">    be a command that exists -- a script on PATH or an absolute path. A shell alias is not</span>
+<span class="sd">    one: aliases live only in an interactive shell, and a session is started by tmux or a</span>
+<span class="sd">    bare subprocess, which read no startup files.</span>
 
 <span class="sd">    `--add-dirs a,b,c` (or a file path with one directory per line) grants the session</span>
 <span class="sd">    those directories too, which is how a fleet manager gets every repository of its fleet.</span>

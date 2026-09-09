@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.config &mdash; crowsnest 0.0.27 documentation</title>
+  <title>crowsnest.config &mdash; crowsnest 0.0.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -54,9 +54,11 @@
 <li class="toctree-l1"><a class="reference internal" href="account.html">crowsnest.account</a></li>
 <li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.config</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.config.CLAUDE_BIN_KEY"><code class="docutils literal notranslate"><span class="pre">CLAUDE_BIN_KEY</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.config.CONFIG_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">CONFIG_ENV_VAR</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.config.DFLT_FRESH_SECONDS"><code class="docutils literal notranslate"><span class="pre">DFLT_FRESH_SECONDS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.config.Home"><code class="docutils literal notranslate"><span class="pre">Home</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.config.claude_bin_setting"><code class="docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.config.config_path"><code class="docutils literal notranslate"><span class="pre">config_path()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.config.homes"><code class="docutils literal notranslate"><span class="pre">homes()</span></code></a></li>
 </ul>
@@ -100,13 +102,15 @@
              
   <section id="module-crowsnest.config">
 <span id="crowsnest-config"></span><h1>crowsnest.config<a class="headerlink" href="#module-crowsnest.config" title="Link to this heading"></a></h1>
-<p>The homes a roster covers: one by default, several when a config file says so.</p>
+<p>The homes a roster covers, and the <code class="docutils literal notranslate"><span class="pre">claude</span></code> a spawn starts – what a config file says.</p>
 <p>A <em>home</em> is a Claude Code config directory – the thing <code class="docutils literal notranslate"><span class="pre">claude_home()</span></code> returns – and
 crowsnest reads one of them unless told otherwise. A person with two accounts on one
 machine has two; a person who syncs a server’s <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code> down with <code class="docutils literal notranslate"><span class="pre">xa</span> <span class="pre">sync</span></code> has a
 third, whose registry pids belong to another machine. This module turns a small TOML file
 into a list of <a class="reference internal" href="#crowsnest.config.Home" title="crowsnest.config.Home"><code class="xref py py-class docutils literal notranslate"><span class="pre">Home</span></code></a> records so that every reader can loop over them.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># ~/.config/crowsnest/config.toml</span>
+<span class="n">claude_bin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"claude-next"</span><span class="w">            </span><span class="c1"># what `spawn` runs; default: this session's own</span>
+
 <span class="k">[[homes]]</span>
 <span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"main"</span>
 <span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/.claude"</span>
@@ -121,6 +125,11 @@ into a list of <a class="reference internal" href="#crowsnest.config.Home" title
 <span class="n">remote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                         </span><span class="c1"># liveness by freshness, no pid check</span>
 </pre></div>
 </div>
+<p>The one non-<code class="docutils literal notranslate"><span class="pre">homes</span></code> setting is <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code> (<a class="reference internal" href="#crowsnest.config.claude_bin_setting" title="crowsnest.config.claude_bin_setting"><code class="xref py py-func docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a>), for a
+machine whose Claude Code is not the <code class="docutils literal notranslate"><span class="pre">claude</span></code> a login shell finds first. <strong>It goes
+above the first</strong> <code class="docutils literal notranslate"><span class="pre">[[homes]]</span></code>: TOML gives every key after a table header to that
+table, so a <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code> written at the bottom belongs to the last home and does
+nothing. <a class="reference internal" href="#crowsnest.config.claude_bin_setting" title="crowsnest.config.claude_bin_setting"><code class="xref py py-func docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a> refuses that arrangement rather than ignoring it.</p>
 <p>On Windows write paths in single quotes (<code class="docutils literal notranslate"><span class="pre">path</span> <span class="pre">=</span> <span class="pre">'C:\Users\me\.claude'</span></code>): a TOML
 double-quoted string treats a backslash as an escape.</p>
 <p><code class="docutils literal notranslate"><span class="pre">remote</span> <span class="pre">=</span> <span class="pre">true</span></code> is the one thing a home needs to say about itself: its pids cannot be
@@ -131,6 +140,13 @@ and nothing in this module pretends otherwise.</p>
 <span class="go">'local'</span>
 </pre></div>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.config.CLAUDE_BIN_KEY">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">CLAUDE_BIN_KEY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'claude_bin'</span></span><a class="headerlink" href="#crowsnest.config.CLAUDE_BIN_KEY" title="Link to this definition"></a></dt>
+<dd><p>The top-level config key naming the command that starts a session. See
+<a class="reference internal" href="account.html#crowsnest.account.claude_bin" title="crowsnest.account.claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.account.claude_bin()</span></code></a> for what a person would put there and why.</p>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.config.CONFIG_ENV_VAR">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">CONFIG_ENV_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CROWSNEST_CONFIG'</span></span><a class="headerlink" href="#crowsnest.config.CONFIG_ENV_VAR" title="Link to this definition"></a></dt>
@@ -147,6 +163,18 @@ and nothing in this module pretends otherwise.</p>
 <dt class="sig sig-object py" id="crowsnest.config.Home">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">Home</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fresh_seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3600.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/config.html#Home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.Home" title="Link to this definition"></a></dt>
 <dd><p>One Claude Code config directory to read, and how to judge liveness in it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.config.claude_bin_setting">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">claude_bin_setting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/config.html#claude_bin_setting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.claude_bin_setting" title="Link to this definition"></a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">''</span></code> when it names none.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="n">claude_bin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"claude-next"</span><span class="w">   </span><span class="c1"># a name on PATH, or an absolute path</span>
+</pre></div>
+</div>
+<p>Whether it can actually run is <a class="reference internal" href="account.html#crowsnest.account.claude_bin" title="crowsnest.account.claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.account.claude_bin()</span></code></a>’s business, not
+this module’s: reading a config file and vetting a command are different jobs, and
+the one that fails needs to say so in terms of the command.</p>
 </dd></dl>
 
 <dl class="py function">

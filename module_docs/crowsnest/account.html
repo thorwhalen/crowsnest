@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.account &mdash; crowsnest 0.0.27 documentation</title>
+  <title>crowsnest.account &mdash; crowsnest 0.0.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,12 +53,14 @@
 <li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.account</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.CLAUDE_BIN"><code class="docutils literal notranslate"><span class="pre">CLAUDE_BIN</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.CLAUDE_BIN_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">CLAUDE_BIN_ENV_VAR</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.DROPPED_VARS"><code class="docutils literal notranslate"><span class="pre">DROPPED_VARS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.EXEC_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">EXEC_ENV_VAR</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.PROFILE_CMD"><code class="docutils literal notranslate"><span class="pre">PROFILE_CMD</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.PROFILE_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">PROFILE_ENV_VAR</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.account_home"><code class="docutils literal notranslate"><span class="pre">account_home()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.claude_bin"><code class="docutils literal notranslate"><span class="pre">claude_bin()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.configured_claude_bin"><code class="docutils literal notranslate"><span class="pre">configured_claude_bin()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.profile_home"><code class="docutils literal notranslate"><span class="pre">profile_home()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crowsnest.account.shell_profile_home"><code class="docutils literal notranslate"><span class="pre">shell_profile_home()</span></code></a></li>
 </ul>
@@ -120,11 +122,15 @@ watching session sets once. Neither given: <code class="docutils literal notrans
 <p><em>Which binary?</em> <a class="reference internal" href="#crowsnest.account.claude_bin" title="crowsnest.account.claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">claude_bin()</span></code></a>. Claude Code tells a session where its own executable
 is in <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CODE_EXECPATH</span></code>; a session spawning another should hand it the same one
 rather than whatever a login shell’s <code class="docutils literal notranslate"><span class="pre">PATH</span></code> resolves <code class="docutils literal notranslate"><span class="pre">claude</span></code> to, which on a machine
-mid-upgrade is a different version and on a machine with two installs a different program.</p>
+mid-upgrade is a different version and on a machine with two installs a different program.
+A person can say otherwise – <code class="docutils literal notranslate"><span class="pre">$CROWSNEST_CLAUDE_BIN</span></code> for one shell, <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code> in
+the config file once and for all (<a class="reference internal" href="#crowsnest.account.configured_claude_bin" title="crowsnest.account.configured_claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">configured_claude_bin()</span></code></a>) – and a stated choice
+outranks the inherited one. It must be something that can actually be executed: a shell
+alias cannot, and saying so is the point of the error there.</p>
 <p><em>What must not travel?</em> <a class="reference internal" href="#crowsnest.account.DROPPED_VARS" title="crowsnest.account.DROPPED_VARS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DROPPED_VARS</span></code></a>. <code class="docutils literal notranslate"><span class="pre">ANTHROPIC_API_KEY</span></code> bills an API account
 rather than the signed-in subscription, and inherits silently; a spawned session should
 be signed in as its home says, so the key is dropped unless a caller asks to keep it.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_bin</span><span class="p">({</span><span class="s1">'CLAUDE_CODE_EXECPATH'</span><span class="p">:</span> <span class="s1">'/no/such/binary'</span><span class="p">,</span> <span class="s1">'PATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">})</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_bin</span><span class="p">({</span><span class="s1">'CLAUDE_CODE_EXECPATH'</span><span class="p">:</span> <span class="s1">'/no/such/binary'</span><span class="p">,</span> <span class="s1">'PATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">},</span> <span class="n">config</span><span class="o">=</span><span class="s1">'/no/cfg'</span><span class="p">)</span>
 <span class="go">'claude'</span>
 </pre></div>
 </div>
@@ -132,6 +138,16 @@ be signed in as its home says, so the key is dropped unless a caller asks to kee
 <dt class="sig sig-object py" id="crowsnest.account.CLAUDE_BIN">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.account.</span></span><span class="sig-name descname"><span class="pre">CLAUDE_BIN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'claude'</span></span><a class="headerlink" href="#crowsnest.account.CLAUDE_BIN" title="Link to this definition"></a></dt>
 <dd><p>The command a new session is started with when nothing better is known.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.account.CLAUDE_BIN_ENV_VAR">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.account.</span></span><span class="sig-name descname"><span class="pre">CLAUDE_BIN_ENV_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CROWSNEST_CLAUDE_BIN'</span></span><a class="headerlink" href="#crowsnest.account.CLAUDE_BIN_ENV_VAR" title="Link to this definition"></a></dt>
+<dd><p>Names the launcher for one shell, outranking both the config file’s <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code>
+and the binary this session runs. For a machine whose Claude Code is not the
+<code class="docutils literal notranslate"><span class="pre">claude</span></code> a login shell finds first. Set to empty it is simply <em>not set</em>, so the
+config file is consulted next – clearing it returns you to the configured launcher,
+not to the inherited one.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -182,13 +198,36 @@ so a watching session states its account once instead of on every spawn.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.account.claude_bin">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.account.</span></span><span class="sig-name descname"><span class="pre">claude_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/account.html#claude_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.account.claude_bin" title="Link to this definition"></a></dt>
-<dd><p>The <code class="docutils literal notranslate"><span class="pre">claude</span></code> a new session should be started with: this session’s own if known.</p>
-<p><code class="docutils literal notranslate"><span class="pre">$CLAUDE_CODE_EXECPATH</span></code> when it points at a runnable file – the exact binary this
-session runs, so a spawned session is the same version signed in the same way – else
-the absolute path <code class="docutils literal notranslate"><span class="pre">PATH</span></code> resolves, else the bare name for a shell to resolve later.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_bin</span><span class="p">({</span><span class="s1">'CLAUDE_CODE_EXECPATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'PATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">})</span>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.account.</span></span><span class="sig-name descname"><span class="pre">claude_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/account.html#claude_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.account.claude_bin" title="Link to this definition"></a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">claude</span></code> a new session should be started with.</p>
+<p>A person’s own choice first (<a class="reference internal" href="#crowsnest.account.configured_claude_bin" title="crowsnest.account.configured_claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">configured_claude_bin()</span></code></a>); failing that, this
+session’s own binary. <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CODE_EXECPATH</span></code> when it points at a runnable file –
+the exact binary this session runs, so a spawned session is the same version signed
+in the same way – else the absolute path <code class="docutils literal notranslate"><span class="pre">PATH</span></code> resolves, else the bare name for a
+shell to resolve later.</p>
+<p>The order is deliberate: a stated preference outranks inheritance, because a person
+who names a launcher is usually saying “not the one you would have picked”.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_bin</span><span class="p">({</span><span class="s1">'CLAUDE_CODE_EXECPATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'PATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">},</span> <span class="n">config</span><span class="o">=</span><span class="s1">'/no/such/config'</span><span class="p">)</span>
 <span class="go">'claude'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.account.configured_claude_bin">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.account.</span></span><span class="sig-name descname"><span class="pre">configured_claude_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/account.html#configured_claude_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.account.configured_claude_bin" title="Link to this definition"></a></dt>
+<dd><p>The launcher a <em>person</em> chose, resolved to a runnable path, or <code class="docutils literal notranslate"><span class="pre">''</span></code> for none.</p>
+<p><code class="docutils literal notranslate"><span class="pre">$CROWSNEST_CLAUDE_BIN</span></code> first, then <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code> in the config file
+(<a class="reference internal" href="config.html#crowsnest.config.claude_bin_setting" title="crowsnest.config.claude_bin_setting"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.config.claude_bin_setting()</span></code></a>) – an environment variable is how you
+say it for one shell, a config file how you say it once.</p>
+<p>Unlike the fallbacks in <a class="reference internal" href="#crowsnest.account.claude_bin" title="crowsnest.account.claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">claude_bin()</span></code></a>, a <em>stated</em> launcher that cannot run is an
+error rather than something to work around. The bare name a spawner may be handed is
+a promise that some other machine will resolve it; a name typed into a config file is
+a claim about <em>this</em> one, and the failure it otherwise produces – a terminal that
+opens, prints “command not found” and closes – is invisible to the spawner, which
+only reports that the registry never saw the session.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">configured_claude_bin</span><span class="p">({},</span> <span class="n">config</span><span class="o">=</span><span class="s1">'/nonexistent-config-for-doctest'</span><span class="p">)</span>
+<span class="go">''</span>
 </pre></div>
 </div>
 </dd></dl>

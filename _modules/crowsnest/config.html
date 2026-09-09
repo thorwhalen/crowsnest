@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.config &mdash; crowsnest 0.0.27 documentation</title>
+  <title>crowsnest.config &mdash; crowsnest 0.0.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -89,7 +89,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for crowsnest.config</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""The homes a roster covers: one by default, several when a config file says so.</span>
+<span></span><span class="sd">"""The homes a roster covers, and the ``claude`` a spawn starts -- what a config file says.</span>
 
 <span class="sd">A *home* is a Claude Code config directory -- the thing ``claude_home()`` returns -- and</span>
 <span class="sd">crowsnest reads one of them unless told otherwise. A person with two accounts on one</span>
@@ -100,6 +100,8 @@
 <span class="sd">.. code-block:: toml</span>
 
 <span class="sd">    # ~/.config/crowsnest/config.toml</span>
+<span class="sd">    claude_bin = "claude-next"            # what `spawn` runs; default: this session's own</span>
+
 <span class="sd">    [[homes]]</span>
 <span class="sd">    name = "main"</span>
 <span class="sd">    path = "~/.claude"</span>
@@ -112,6 +114,12 @@
 <span class="sd">    name = "server"</span>
 <span class="sd">    path = "~/.cache/xa/remotes/server"   # a synced copy</span>
 <span class="sd">    remote = true                         # liveness by freshness, no pid check</span>
+
+<span class="sd">The one non-``homes`` setting is ``claude_bin`` (:func:`claude_bin_setting`), for a</span>
+<span class="sd">machine whose Claude Code is not the ``claude`` a login shell finds first. **It goes</span>
+<span class="sd">above the first** ``[[homes]]``: TOML gives every key after a table header to that</span>
+<span class="sd">table, so a ``claude_bin`` written at the bottom belongs to the last home and does</span>
+<span class="sd">nothing. :func:`claude_bin_setting` refuses that arrangement rather than ignoring it.</span>
 
 <span class="sd">On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML</span>
 <span class="sd">double-quoted string treats a backslash as an escape.</span>
@@ -139,7 +147,19 @@
 <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>  <span class="c1"># type: ignore[no-redef]</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"CONFIG_ENV_VAR"</span><span class="p">,</span> <span class="s2">"DFLT_FRESH_SECONDS"</span><span class="p">,</span> <span class="s2">"Home"</span><span class="p">,</span> <span class="s2">"config_path"</span><span class="p">,</span> <span class="s2">"homes"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"CLAUDE_BIN_KEY"</span><span class="p">,</span>
+    <span class="s2">"CONFIG_ENV_VAR"</span><span class="p">,</span>
+    <span class="s2">"DFLT_FRESH_SECONDS"</span><span class="p">,</span>
+    <span class="s2">"Home"</span><span class="p">,</span>
+    <span class="s2">"claude_bin_setting"</span><span class="p">,</span>
+    <span class="s2">"config_path"</span><span class="p">,</span>
+    <span class="s2">"homes"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: The top-level config key naming the command that starts a session. See</span>
+<span class="c1">#: :func:`crowsnest.account.claude_bin` for what a person would put there and why.</span>
+<span class="n">CLAUDE_BIN_KEY</span> <span class="o">=</span> <span class="s2">"claude_bin"</span>
 
 <span class="c1">#: Overrides the config file location outright.</span>
 <span class="n">CONFIG_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CROWSNEST_CONFIG"</span>
@@ -179,6 +199,64 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The config file as a mapping, empty when there is none.</span>
+
+<span class="sd">    A file that cannot be parsed raises, here as in :func:`homes`: a person who wrote one</span>
+<span class="sd">    meant it, and a silent fallback would spawn under settings they did not choose.</span>
+<span class="sd">    """</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="n">file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="claude_bin_setting">
+<a class="viewcode-back" href="../../module_docs/crowsnest/config.html#crowsnest.config.claude_bin_setting">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">claude_bin_setting</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``claude_bin`` the config file names, or ``''`` when it names none.</span>
+
+<span class="sd">    .. code-block:: toml</span>
+
+<span class="sd">        claude_bin = "claude-next"   # a name on PATH, or an absolute path</span>
+
+<span class="sd">    Whether it can actually run is :func:`crowsnest.account.claude_bin`'s business, not</span>
+<span class="sd">    this module's: reading a config file and vetting a command are different jobs, and</span>
+<span class="sd">    the one that fails needs to say so in terms of the command.</span>
+<span class="sd">    """</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CLAUDE_BIN_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_refuse_a_misplaced_claude_bin</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">CLAUDE_BIN_KEY</span><span class="si">}</span><span class="s2"> must be a string naming a command, "</span>
+            <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">)"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_refuse_a_misplaced_claude_bin</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise if ``claude_bin`` was written under a ``[[homes]]`` entry.</span>
+
+<span class="sd">    The easy mistake, and a silent one: TOML hands every key after a table header to</span>
+<span class="sd">    that table, so a ``claude_bin`` added at the end of the file becomes a field of the</span>
+<span class="sd">    last home -- read by nothing, reported by nothing, and the launcher stays whatever</span>
+<span class="sd">    it was. Cheaper to say so than to let someone re-read their own config file.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">CLAUDE_BIN_KEY</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">CLAUDE_BIN_KEY</span><span class="si">}</span><span class="s2"> is inside the "</span>
+                <span class="sa">f</span><span class="s2">"[[homes]] entry </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'name'</span><span class="p">,</span><span class="w"> </span><span class="s1">'?'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">, where it does nothing -- "</span>
+                <span class="sa">f</span><span class="s2">"TOML gives every key after a table header to that table. Move it "</span>
+                <span class="sa">f</span><span class="s2">"above the first [[homes]] line."</span>
+            <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_default_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Home</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">Home</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">DFLT_HOME_NAME</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">claude_home</span><span class="p">())</span>
 
@@ -192,10 +270,9 @@
 <span class="sd">    a person who wrote one meant it.</span>
 <span class="sd">    """</span>
     <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span>
-    <span class="k">with</span> <span class="n">file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
     <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">):</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.account &mdash; crowsnest 0.0.27 documentation</title>
+  <title>crowsnest.account &mdash; crowsnest 0.0.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -110,12 +110,16 @@
 <span class="sd">is in ``$CLAUDE_CODE_EXECPATH``; a session spawning another should hand it the same one</span>
 <span class="sd">rather than whatever a login shell's ``PATH`` resolves ``claude`` to, which on a machine</span>
 <span class="sd">mid-upgrade is a different version and on a machine with two installs a different program.</span>
+<span class="sd">A person can say otherwise -- ``$CROWSNEST_CLAUDE_BIN`` for one shell, ``claude_bin`` in</span>
+<span class="sd">the config file once and for all (:func:`configured_claude_bin`) -- and a stated choice</span>
+<span class="sd">outranks the inherited one. It must be something that can actually be executed: a shell</span>
+<span class="sd">alias cannot, and saying so is the point of the error there.</span>
 
 <span class="sd">*What must not travel?* :data:`DROPPED_VARS`. ``ANTHROPIC_API_KEY`` bills an API account</span>
 <span class="sd">rather than the signed-in subscription, and inherits silently; a spawned session should</span>
 <span class="sd">be signed in as its home says, so the key is dropped unless a caller asks to keep it.</span>
 
-<span class="sd">&gt;&gt;&gt; claude_bin({'CLAUDE_CODE_EXECPATH': '/no/such/binary', 'PATH': ''})</span>
+<span class="sd">&gt;&gt;&gt; claude_bin({'CLAUDE_CODE_EXECPATH': '/no/such/binary', 'PATH': ''}, config='/no/cfg')</span>
 <span class="sd">'claude'</span>
 <span class="sd">"""</span>
 
@@ -126,22 +130,31 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">config_path</span><span class="p">,</span> <span class="n">homes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLAUDE_BIN_KEY</span><span class="p">,</span> <span class="n">claude_bin_setting</span><span class="p">,</span> <span class="n">config_path</span><span class="p">,</span> <span class="n">homes</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"CLAUDE_BIN"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BIN_ENV_VAR"</span><span class="p">,</span>
     <span class="s2">"DROPPED_VARS"</span><span class="p">,</span>
     <span class="s2">"EXEC_ENV_VAR"</span><span class="p">,</span>
     <span class="s2">"PROFILE_CMD"</span><span class="p">,</span>
     <span class="s2">"PROFILE_ENV_VAR"</span><span class="p">,</span>
     <span class="s2">"account_home"</span><span class="p">,</span>
     <span class="s2">"claude_bin"</span><span class="p">,</span>
+    <span class="s2">"configured_claude_bin"</span><span class="p">,</span>
     <span class="s2">"profile_home"</span><span class="p">,</span>
     <span class="s2">"shell_profile_home"</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="c1">#: The command a new session is started with when nothing better is known.</span>
 <span class="n">CLAUDE_BIN</span> <span class="o">=</span> <span class="s2">"claude"</span>
+
+<span class="c1">#: Names the launcher for one shell, outranking both the config file's ``claude_bin``</span>
+<span class="c1">#: and the binary this session runs. For a machine whose Claude Code is not the</span>
+<span class="c1">#: ``claude`` a login shell finds first. Set to empty it is simply *not set*, so the</span>
+<span class="c1">#: config file is consulted next -- clearing it returns you to the configured launcher,</span>
+<span class="c1">#: not to the inherited one.</span>
+<span class="n">CLAUDE_BIN_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CROWSNEST_CLAUDE_BIN"</span>
 
 <span class="c1">#: Claude Code's own variable holding the path of the binary running this session.</span>
 <span class="n">EXEC_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CLAUDE_CODE_EXECPATH"</span>
@@ -166,19 +179,104 @@
 <span class="n">_DFLT_PATHEXT</span> <span class="o">=</span> <span class="s2">".COM;.EXE;.BAT;.CMD"</span>
 
 
+<div class="viewcode-block" id="configured_claude_bin">
+<a class="viewcode-back" href="../../module_docs/crowsnest/account.html#crowsnest.account.configured_claude_bin">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">configured_claude_bin</span><span class="p">(</span>
+    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The launcher a *person* chose, resolved to a runnable path, or ``''`` for none.</span>
+
+<span class="sd">    ``$CROWSNEST_CLAUDE_BIN`` first, then ``claude_bin`` in the config file</span>
+<span class="sd">    (:func:`crowsnest.config.claude_bin_setting`) -- an environment variable is how you</span>
+<span class="sd">    say it for one shell, a config file how you say it once.</span>
+
+<span class="sd">    Unlike the fallbacks in :func:`claude_bin`, a *stated* launcher that cannot run is an</span>
+<span class="sd">    error rather than something to work around. The bare name a spawner may be handed is</span>
+<span class="sd">    a promise that some other machine will resolve it; a name typed into a config file is</span>
+<span class="sd">    a claim about *this* one, and the failure it otherwise produces -- a terminal that</span>
+<span class="sd">    opens, prints "command not found" and closes -- is invisible to the spawner, which</span>
+<span class="sd">    only reports that the registry never saw the session.</span>
+
+<span class="sd">    &gt;&gt;&gt; configured_claude_bin({}, config='/nonexistent-config-for-doctest')</span>
+<span class="sd">    ''</span>
+<span class="sd">    """</span>
+    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CLAUDE_BIN_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">source</span><span class="p">,</span> <span class="n">from_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"$</span><span class="si">{</span><span class="n">CLAUDE_BIN_ENV_VAR</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">claude_bin_setting</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">source</span><span class="p">,</span> <span class="n">from_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">CLAUDE_BIN_KEY</span><span class="si">!r}</span><span class="s2"> in </span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">from_file</span> <span class="ow">and</span> <span class="n">_is_relative_path</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> names </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">, a path relative to whatever directory happens to "</span>
+            <span class="sa">f</span><span class="s2">"be current. A config file is read for every spawn from everywhere, and the "</span>
+            <span class="sa">f</span><span class="s2">"session being started has its own `--cwd`, so that path would name a "</span>
+            <span class="sa">f</span><span class="s2">"different program in each of them -- or none. Write it out in full "</span>
+            <span class="sa">f</span><span class="s2">"(``~`` is expanded), or use a bare name and let PATH find it."</span>
+        <span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_found_executable</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">environ</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> names </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">, which is not a runnable command here. "</span>
+            <span class="sa">f</span><span class="s2">"If it is a shell alias or a shell function, that is the whole problem: "</span>
+            <span class="sa">f</span><span class="s2">"those exist only inside an interactive shell, and a session is spawned by "</span>
+            <span class="sa">f</span><span class="s2">"tmux or a bare subprocess, neither of which reads your shell's startup "</span>
+            <span class="sa">f</span><span class="s2">"files. Give a script on PATH or an absolute path instead -- `type -a "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">` will show you which it is. Note also that crowsnest already "</span>
+            <span class="sa">f</span><span class="s2">"skips permissions and already drops </span><span class="si">{</span><span class="n">DROPPED_VARS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, so a wrapper that "</span>
+            <span class="sa">f</span><span class="s2">"only does those two things has nothing left to add."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_relative_path</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Is ``value`` a path, and a relative one? A bare name is not a path."""</span>
+    <span class="n">expanded</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_has_separator</span><span class="p">(</span><span class="n">expanded</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">expanded</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_separator</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="ow">in</span> <span class="n">value</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">altsep</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">altsep</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_found_executable</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``value`` as something that can be executed, or ``None``.</span>
+
+<span class="sd">    A path is taken as written (and must exist); a bare name is looked up on ``PATH``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">_has_separator</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">runnable</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_runnable</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">environ</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">runnable</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATH"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+
+
 <div class="viewcode-block" id="claude_bin">
 <a class="viewcode-back" href="../../module_docs/crowsnest/account.html#crowsnest.account.claude_bin">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">claude_bin</span><span class="p">(</span><span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""The ``claude`` a new session should be started with: this session's own if known.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">claude_bin</span><span class="p">(</span>
+    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``claude`` a new session should be started with.</span>
 
-<span class="sd">    ``$CLAUDE_CODE_EXECPATH`` when it points at a runnable file -- the exact binary this</span>
-<span class="sd">    session runs, so a spawned session is the same version signed in the same way -- else</span>
-<span class="sd">    the absolute path ``PATH`` resolves, else the bare name for a shell to resolve later.</span>
+<span class="sd">    A person's own choice first (:func:`configured_claude_bin`); failing that, this</span>
+<span class="sd">    session's own binary. ``$CLAUDE_CODE_EXECPATH`` when it points at a runnable file --</span>
+<span class="sd">    the exact binary this session runs, so a spawned session is the same version signed</span>
+<span class="sd">    in the same way -- else the absolute path ``PATH`` resolves, else the bare name for a</span>
+<span class="sd">    shell to resolve later.</span>
 
-<span class="sd">    &gt;&gt;&gt; claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''})</span>
+<span class="sd">    The order is deliberate: a stated preference outranks inheritance, because a person</span>
+<span class="sd">    who names a launcher is usually saying "not the one you would have picked".</span>
+
+<span class="sd">    &gt;&gt;&gt; claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''}, config='/no/such/config')</span>
 <span class="sd">    'claude'</span>
 <span class="sd">    """</span>
     <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+    <span class="n">chosen</span> <span class="o">=</span> <span class="n">configured_claude_bin</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">chosen</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">chosen</span>
     <span class="n">exec_path</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">EXEC_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
     <span class="k">if</span> <span class="n">exec_path</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">exec_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_runnable</span><span class="p">(</span><span class="n">exec_path</span><span class="p">,</span> <span class="n">environ</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">exec_path</span>
@@ -195,7 +293,9 @@
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">"nt"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span>
     <span class="n">suffixes</span> <span class="o">=</span> <span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATHEXT"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_DFLT_PATHEXT</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">suffixes</span> <span class="k">if</span> <span class="n">s</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">suffixes</span> <span class="k">if</span> <span class="n">s</span>
+    <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">argv</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.spawn &mdash; crowsnest 0.0.27 documentation</title>
+  <title>crowsnest.spawn &mdash; crowsnest 0.0.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -259,9 +259,10 @@ passed explicitly rather than left to whatever the shell happens to hold.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.spawn.local_argv">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.spawn.</span></span><span class="sig-name descname"><span class="pre">local_argv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/spawn.html#local_argv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.spawn.local_argv" title="Link to this definition"></a></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">argv</span></code> with the bare <code class="docutils literal notranslate"><span class="pre">claude</span></code> replaced by <em>this machine’s</em> – and this
-session’s – executable (<a class="reference internal" href="account.html#crowsnest.account.claude_bin" title="crowsnest.account.claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.account.claude_bin()</span></code></a>).</p>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.spawn.</span></span><span class="sig-name descname"><span class="pre">local_argv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/spawn.html#local_argv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.spawn.local_argv" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">argv</span></code> with the bare <code class="docutils literal notranslate"><span class="pre">claude</span></code> replaced by the one <em>this machine</em> should run
+(<a class="reference internal" href="account.html#crowsnest.account.claude_bin" title="crowsnest.account.claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.account.claude_bin()</span></code></a>): what a person configured, else this session’s
+own executable.</p>
 <p>For the spawners that start a session on this machine. It is deliberately not done in
 <a class="reference internal" href="#crowsnest.spawn.claude_argv" title="crowsnest.spawn.claude_argv"><code class="xref py py-func docutils literal notranslate"><span class="pre">claude_argv()</span></code></a>: a command line is built once and a spawner may send it somewhere
 else entirely (<code class="docutils literal notranslate"><span class="pre">xa</span> <span class="pre">spawn</span></code> runs it over ssh), where an absolute local path names
