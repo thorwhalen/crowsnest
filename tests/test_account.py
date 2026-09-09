@@ -7,10 +7,12 @@ import pytest
 
 from crowsnest.account import (
     CLAUDE_BIN,
+    CLAUDE_BIN_ENV_VAR,
     EXEC_ENV_VAR,
     PROFILE_ENV_VAR,
     account_home,
     claude_bin,
+    configured_claude_bin,
     profile_home,
     shell_profile_home,
 )
@@ -238,3 +240,70 @@ def test_a_standing_profile_survives_a_trailing_newline(tmp_path):
     """`export CROWSNEST_PROFILE=$(some-command)` keeps the newline."""
     got = account_home(config=_config(tmp_path), environ={PROFILE_ENV_VAR: "iq\n"})
     assert got == Path("~/.claude-iq").expanduser()
+
+
+def test_configured_binary_outranks_the_binary_this_session_runs(tmp_path):
+    """A person who names a launcher is saying "not the one you would have picked"."""
+    mine = _executable(tmp_path / "claude-next")
+    inherited = _executable(tmp_path / "claude-now")
+    environ = {CLAUDE_BIN_ENV_VAR: str(mine), EXEC_ENV_VAR: str(inherited), "PATH": ""}
+    assert claude_bin(environ, config="/no/such/config") == str(mine)
+
+
+def test_configured_binary_is_read_from_the_process_environment_by_default(
+    tmp_path, monkeypatch
+):
+    """The point of the variable: set it in a shell, spawn from that shell."""
+    mine = _executable(tmp_path / "claude-next")
+    monkeypatch.setenv(CLAUDE_BIN_ENV_VAR, str(mine))
+    assert claude_bin() == str(mine)
+
+
+def test_configured_binary_may_be_a_bare_name_on_path(tmp_path):
+    exe = _executable(tmp_path / "cclaude")
+    environ = {CLAUDE_BIN_ENV_VAR: exe.name, "PATH": str(tmp_path)}
+    assert claude_bin(environ, config="/no/such/config") == str(exe)
+
+
+def test_the_config_file_names_a_binary_when_the_environment_does_not(tmp_path):
+    exe = _executable(tmp_path / "claude-from-config")
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(f'claude_bin = "{exe.as_posix()}"\n')
+    assert claude_bin({"PATH": ""}, config=cfg) == str(exe)
+
+
+def test_the_environment_outranks_the_config_file(tmp_path):
+    from_env = _executable(tmp_path / "claude-env")
+    from_cfg = _executable(tmp_path / "claude-cfg")
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(f'claude_bin = "{from_cfg.as_posix()}"\n')
+    environ = {CLAUDE_BIN_ENV_VAR: str(from_env), "PATH": ""}
+    assert claude_bin(environ, config=cfg) == str(from_env)
+
+
+def test_a_configured_binary_that_cannot_run_is_an_error_naming_the_alias_trap():
+    """The failure this prevents is invisible: a terminal opens, says "command not
+    found", closes, and `spawn` reports only that the registry never saw the session."""
+    environ = {CLAUDE_BIN_ENV_VAR: "cclaude", "PATH": ""}
+    with pytest.raises(ValueError) as excinfo:
+        claude_bin(environ, config="/no/such/config")
+    message = str(excinfo.value)
+    assert "cclaude" in message
+    assert "alias" in message
+    assert CLAUDE_BIN_ENV_VAR in message
+
+
+def test_a_configured_path_that_is_not_executable_is_refused(tmp_path):
+    """A file that exists is not the same as a file that runs."""
+    plain = tmp_path / "not-executable"
+    plain.write_text("#!/bin/sh\n")
+    with pytest.raises(ValueError):
+        claude_bin({CLAUDE_BIN_ENV_VAR: str(plain), "PATH": ""}, config="/no/such/cfg")
+
+
+def test_nothing_configured_leaves_the_inherited_behaviour_alone(tmp_path):
+    """The seam is additive: with no configuration, #38's answer still holds."""
+    exe = _executable(tmp_path / "claude-inherited")
+    environ = {EXEC_ENV_VAR: str(exe), "PATH": ""}
+    assert claude_bin(environ, config="/no/such/config") == str(exe)
+    assert configured_claude_bin(environ, config="/no/such/config") == ""

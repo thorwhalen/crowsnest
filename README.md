@@ -107,6 +107,25 @@ Every report row links to the session on claude.ai (when it runs with Remote Con
 
 A profile name is resolved against the `[[homes]]` names above first, then against a `claude-profile dir <name>` command on your `PATH` if you keep one; a name neither knows is an error, never a quiet fall back to the default account, and a home marked `remote` is refused — those are another machine's, read-only.
 
+### Which `claude` gets started
+
+By default, the one this session runs (`$CLAUDE_CODE_EXECPATH`) — so a spawned session is the same build, signed in the same way, even mid-upgrade. Say otherwise when your Claude Code is not the `claude` a login shell finds first:
+
+```bash
+export CROWSNEST_CLAUDE_BIN=/opt/claude-next     # this shell
+```
+
+```toml
+# ~/.config/crowsnest/config.toml — once and for all
+claude_bin = "claude-next"
+```
+
+and `--binary PATH` overrides both for one spawn. Precedence is narrowest-first: `--binary`, then `$CROWSNEST_CLAUDE_BIN`, then `claude_bin`, then the inherited binary.
+
+It has to be something that can actually be executed — a script on your `PATH` or an absolute path. **A shell alias is not.** Aliases exist only inside an interactive shell, and a session is started by `tmux` or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints `command not found` and closes. If you have an alias you want to reuse, make it a two-line script instead.
+
+Before you do: a wrapper whose whole job is `--dangerously-skip-permissions` and `env -u ANTHROPIC_API_KEY` — the usual shape — has nothing to add, because `crowsnest spawn` already does both.
+
 ## The ledger: what a session leaves behind
 
 The roster and the transcript both describe *now*. Neither survives a `/clear` in the watching session, and neither says what a session decided or what it is still waiting on you for. So each session gets a small markdown file — `~/.local/share/crowsnest/ledger/<name>.md` — that it writes and a watcher reads:

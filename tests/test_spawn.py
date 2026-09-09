@@ -1,5 +1,6 @@
 import os
 import re
+import stat
 import shlex
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import pytest
 from fixtures import registry_record, write_registry
 
 from crowsnest import registry
+from crowsnest.account import CLAUDE_BIN_ENV_VAR
 from crowsnest.spawn import (
     ACCOUNT_VARS,
     SESSION_VARS,
@@ -653,3 +655,21 @@ def test_the_tmux_command_line_carries_a_second_accounts_identity_with_no_home_g
     assert "-u ANTHROPIC_API_KEY" in command
     assert "ANTHROPIC_API_KEY=sk-parent" not in command
     assert command.endswith(" /v/claude -n demo")
+
+
+def test_local_argv_uses_the_configured_binary(tmp_path, monkeypatch):
+    """End of the chain: what a person configures is what tmux is actually handed."""
+    exe = tmp_path / ("cclaude.exe" if os.name == "nt" else "cclaude")
+    exe.write_text("#!/bin/sh\n")
+    exe.chmod(exe.stat().st_mode | stat.S_IXUSR)
+    monkeypatch.setenv(CLAUDE_BIN_ENV_VAR, str(exe))
+    assert local_argv(["claude", "-n", "demo"]) == [str(exe), "-n", "demo"]
+
+
+def test_local_argv_leaves_an_explicitly_named_binary_alone(tmp_path, monkeypatch):
+    """`--binary` is the narrower statement and wins over the configured default."""
+    exe = tmp_path / "cclaude"
+    exe.write_text("#!/bin/sh\n")
+    exe.chmod(exe.stat().st_mode | stat.S_IXUSR)
+    monkeypatch.setenv(CLAUDE_BIN_ENV_VAR, str(exe))
+    assert local_argv(["/opt/claude-next", "-n", "demo"])[0] == "/opt/claude-next"

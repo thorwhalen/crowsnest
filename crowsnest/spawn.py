@@ -296,8 +296,9 @@ def env_prefix(
 
 
 def local_argv(argv: list[str]) -> list[str]:
-    """``argv`` with the bare ``claude`` replaced by *this machine's* -- and this
-    session's -- executable (:func:`crowsnest.account.claude_bin`).
+    """``argv`` with the bare ``claude`` replaced by the one *this machine* should run
+    (:func:`crowsnest.account.claude_bin`): what a person configured, else this session's
+    own executable.
 
     For the spawners that start a session on this machine. It is deliberately not done in
     :func:`claude_argv`: a command line is built once and a spawner may send it somewhere
