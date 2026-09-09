@@ -1,4 +1,5 @@
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -10,6 +11,8 @@ from fixtures import registry_record, write_registry
 
 from crowsnest import registry
 from crowsnest.spawn import (
+    ACCOUNT_VARS,
+    SESSION_VARS,
     child_env,
     claude_argv,
     default_spawner,
@@ -86,7 +89,9 @@ def test_child_env_home_is_resolved_so_the_child_and_the_poll_agree(
     link.symlink_to(real)
     monkeypatch.chdir(tmp_path)
     given = {"PATH": "/b"}
-    assert child_env(given, home="real-home")["CLAUDE_CONFIG_DIR"] == str(real.resolve())
+    assert child_env(given, home="real-home")["CLAUDE_CONFIG_DIR"] == str(
+        real.resolve()
+    )
     assert child_env(given, home=link)["CLAUDE_CONFIG_DIR"] == str(real.resolve())
 
 
@@ -110,6 +115,11 @@ def test_child_env_reads_the_current_account_from_environ_not_the_process(monkey
     }
 
 
+def _unset(tokens):
+    """The names ``tokens`` unsets, in order."""
+    return [k for flag, k in zip(tokens, tokens[1:]) if flag == "-u"]
+
+
 def test_env_prefix_states_the_account_absolutely_and_unsets_the_markers():
     tokens = env_prefix(
         {"CLAUDE_CONFIG_DIR": "/h/.claude-iq", "PATH": "/b"},
@@ -117,10 +127,7 @@ def test_env_prefix_states_the_account_absolutely_and_unsets_the_markers():
     )
     assert tokens == [
         "env",
-        "-u",
-        "CLAUDECODE",
-        "-u",
-        "CLAUDE_EFFORT",
+        *(t for k in SESSION_VARS for t in ("-u", k)),
         "-u",
         "CLAUDE_PROFILE",
         "-u",
@@ -133,6 +140,7 @@ def test_env_prefix_for_the_default_account_unsets_the_account_variables_too():
     tokens = env_prefix({"PATH": "/b"}, environ={"PATH": "/b"})
     assert tokens == [
         "env",
+        *(t for k in SESSION_VARS for t in ("-u", k)),
         "-u",
         "CLAUDE_CONFIG_DIR",
         "-u",
@@ -140,6 +148,104 @@ def test_env_prefix_for_the_default_account_unsets_the_account_variables_too():
         "-u",
         "ANTHROPIC_API_KEY",
     ]
+
+
+def test_session_vars_names_the_markers_that_actually_identify_a_session():
+    """Pinned literally, on purpose. `SESSION_VARS` *is* the change, so a test that
+    builds its expectation out of `SESSION_VARS` says nothing about its contents -- and
+    the characteristic failure of a transcribed constant is a typo in one name."""
+    for name in (
+        "CLAUDECODE",
+        "CLAUDE_CODE_SESSION_ID",
+        "CLAUDE_CODE_SESSION_KIND",
+        "CLAUDE_CODE_SESSION_NAME",
+        "CLAUDE_CODE_MESSAGING_SOCKET",
+        "CLAUDE_CODE_MESSAGING_TOKEN",
+        "CLAUDE_CODE_BRIDGE_SESSION_ID",
+        "CLAUDE_CODE_ENTRYPOINT",
+        "CLAUDE_CODE_EXECPATH",
+        "CLAUDE_CODE_CHILD_SESSION",
+        "CLAUDE_CODE_SSE_PORT",
+        "CLAUDE_BG_BACKEND",
+        "CLAUDE_BG_SOURCE",
+        "CLAUDE_BG_RENDEZVOUS_SOCK",
+        "CLAUDE_JOB_DIR",
+        "CLAUDE_EFFORT",
+        "CLAUDE_PID",
+    ):
+        assert name in SESSION_VARS, name
+
+
+def test_session_vars_is_well_formed_and_leaves_the_account_alone():
+    assert len(set(SESSION_VARS)) == len(SESSION_VARS), "duplicate name"
+    assert all(re.fullmatch(r"CLAUDE[A-Z0-9_]*", n) for n in SESSION_VARS)
+    assert not set(SESSION_VARS) & set(ACCOUNT_VARS), "the account is stated, not unset"
+
+
+@pytest.mark.skipif(
+    "CLAUDECODE" not in os.environ,
+    reason="only a live Claude Code session carries the markers to check against",
+)
+def test_session_vars_covers_every_marker_this_live_session_carries():
+    """The tripwire for drift. `SESSION_VARS` is derived from one version of the `claude`
+    binary, so the failure mode is a family it grew later going quietly un-unset. Inside
+    a real session the environment is the oracle."""
+    uncovered = (
+        {k for k in os.environ if k.startswith("CLAUDE")}
+        - set(SESSION_VARS)
+        - set(ACCOUNT_VARS)
+    )
+    assert not uncovered, (
+        f"this session carries {sorted(uncovered)}, which SESSION_VARS does not name. "
+        f"If they identify the session, add them (see SESSION_VARS for the derivation). "
+        f"If they are your own configuration rather than Claude Code's, they belong in "
+        f"neither list and this test needs an exemption."
+    )
+
+
+def test_env_prefix_unsets_the_session_markers_this_process_does_not_have():
+    """The gap a fixed list closes.
+
+    A tmux server started once from inside a session keeps that session's markers in its
+    global environment and hands them to every window it opens afterwards. Spawn from a
+    plain terminal hours later and this process has no marker to see -- but the shell
+    tmux runs the command line in does, and the new session would register as a child of
+    a session that ended long ago. So the names are stated, not discovered.
+    """
+    tokens = env_prefix({"PATH": "/b"}, environ={"PATH": "/b"})
+    assert set(SESSION_VARS) <= set(_unset(tokens))
+    assert "CLAUDECODE" in SESSION_VARS
+    assert "CLAUDE_CODE_SESSION_ID" in SESSION_VARS
+
+
+def test_env_prefix_still_unsets_a_marker_the_fixed_list_has_never_heard_of():
+    """The fixed list is the floor, not the ceiling: a marker a later version of Claude
+    Code invents is caught by the scan of ``environ`` whenever the spawner is a session.
+    """
+    tokens = env_prefix({"PATH": "/b"}, environ={"CLAUDE_CODE_FUTURE_THING": "1"})
+    assert "CLAUDE_CODE_FUTURE_THING" in _unset(tokens)
+
+
+def test_env_prefix_never_unsets_what_it_is_about_to_set():
+    """`markers` may name an account variable; `env` still wins, or the child would be
+    handed `-u CLAUDE_CONFIG_DIR` and `CLAUDE_CONFIG_DIR=...` in the same command."""
+    tokens = env_prefix(
+        {"CLAUDE_CONFIG_DIR": "/h/.claude-iq"},
+        environ={},
+        markers=("CLAUDE_CONFIG_DIR", "CLAUDECODE"),
+    )
+    assert _unset(tokens) == ["CLAUDECODE", "CLAUDE_PROFILE", "ANTHROPIC_API_KEY"]
+    assert tokens[-1] == "CLAUDE_CONFIG_DIR=/h/.claude-iq"
+
+
+def test_env_prefix_states_an_inherited_api_key_instead_of_leaving_it_to_the_shell():
+    """`child_env(drop=())` means "inherit it after all" -- from the *spawner*. The shell
+    that runs the command line may hold a different key, or none, so the value travels
+    explicitly rather than by omission."""
+    env = child_env({"ANTHROPIC_API_KEY": "sk-mine", "PATH": "/b"}, drop=())
+    tokens = env_prefix(env, environ={"PATH": "/b"}, drop=())
+    assert "ANTHROPIC_API_KEY=sk-mine" in tokens
+    assert "ANTHROPIC_API_KEY" not in _unset(tokens)
 
 
 def test_claude_argv_default_is_skip_permissions_named_and_remote_controlled():
@@ -190,7 +296,8 @@ def test_default_spawner_picks_tmux_when_on_path(monkeypatch):
 
 def test_default_spawner_falls_back_to_iterm_on_macos(monkeypatch):
     monkeypatch.setattr(
-        "shutil.which", lambda name: "/usr/bin/osascript" if name == "osascript" else None
+        "shutil.which",
+        lambda name: "/usr/bin/osascript" if name == "osascript" else None,
     )
     monkeypatch.setattr("sys.platform", "darwin")
     _, how = default_spawner()
@@ -331,7 +438,9 @@ def test_subprocess_spawner_runs_under_the_env_it_is_given(monkeypatch):
 
     monkeypatch.setattr(spawn_module.subprocess, "Popen", fake_popen)
     monkeypatch.setattr(spawn_module, "claude_bin", lambda: "/v/claude")
-    spawn_module._subprocess_spawner(["claude"], cwd="/some/repo", name="demo", home=None)
+    spawn_module._subprocess_spawner(
+        ["claude"], cwd="/some/repo", name="demo", home=None
+    )
     assert captured_argv == [["/v/claude"]]
 
     assert captured["env"] == child_env()
@@ -349,14 +458,18 @@ def test_spawn_reports_when_the_registry_never_sees_it(tmp_path, monkeypatch):
     def silent_spawner(argv, *, cwd, name, home):
         pass
 
-    result = spawn("ghost", cwd="/some/repo", spawner=silent_spawner, home=home, wait=0.2)
+    result = spawn(
+        "ghost", cwd="/some/repo", spawner=silent_spawner, home=home, wait=0.2
+    )
 
     assert result["pid"] == 0
     assert result["session_id"] == ""
     assert "ghost" in result["how"]
 
 
-def test_spawn_refuses_a_name_that_a_live_session_already_carries(tmp_path, monkeypatch):
+def test_spawn_refuses_a_name_that_a_live_session_already_carries(
+    tmp_path, monkeypatch
+):
     import pytest
 
     monkeypatch.setattr(
@@ -430,7 +543,11 @@ def test_spawn_hands_the_spawner_a_portable_command_line(tmp_path, monkeypatch):
 
 def test_local_argv_leaves_an_explicitly_named_binary_alone(monkeypatch):
     monkeypatch.setenv("CLAUDE_CODE_EXECPATH", "/somewhere/claude-2.1.263")
-    assert local_argv(["/opt/claude-next", "-n", "d"]) == ["/opt/claude-next", "-n", "d"]
+    assert local_argv(["/opt/claude-next", "-n", "d"]) == [
+        "/opt/claude-next",
+        "-n",
+        "d",
+    ]
 
 
 def test_spawn_takes_a_binary_over_the_one_it_would_have_picked(tmp_path, monkeypatch):

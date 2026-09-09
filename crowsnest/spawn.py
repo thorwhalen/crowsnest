@@ -39,6 +39,7 @@ from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessio
 __all__ = [
     "ACCOUNT_VARS",
     "CLAUDE_BIN",
+    "SESSION_VARS",
     "child_env",
     "claude_argv",
     "default_spawner",
@@ -53,6 +54,81 @@ __all__ = [
 #: from the other, so the two travel together or not at all.
 ACCOUNT_VARS = (HOME_ENV_VAR, "CLAUDE_PROFILE")
 _PROFILE_VAR = "CLAUDE_PROFILE"
+
+#: The ``CLAUDE*`` variables that identify *one running session* -- who it is, what
+#: started it, how to talk to it -- named so that :func:`env_prefix` can unset them
+#: whether or not *this* process has them.
+#:
+#: :func:`child_env` can test its own environment, because it hands the child a complete
+#: one. A command *line* cannot: it is run by a shell whose environment is that shell's
+#: own. A tmux server first started from inside a session keeps that session's markers in
+#: its global environment and gives them to every window it opens afterwards -- including
+#: one spawned much later from a plain terminal, where this process has no marker to see
+#: and so nothing to unset. The markers visible here are therefore not the markers the
+#: child will meet, and a list that must be stated rather than discovered is a list.
+#:
+#: *Identity, not configuration.* Claude Code reads some seven hundred ``CLAUDE*``
+#: variables, nearly all of them settings a person may deliberately export (proxies,
+#: token ceilings, feature switches). Those are none of our business and stay. What must
+#: go is the session's own identity: it is what makes the child register as a *child* of
+#: the spawner rather than as the standalone session `spawn` asked for. Hence the
+#: families below -- the session and background-job plumbing, the messaging and bridge
+#: sockets, the job and project directories -- and nothing else.
+#:
+#: Derived by matching those families against the name table of the ``claude`` binary
+#: (``strings $(crowsnest.account.claude_bin()) | grep -oE 'CLAUDE[A-Z0-9_]*'``) rather
+#: than typed out, because a hand-copied constant's characteristic failure is a typo that
+#: nothing detects. Re-derive it when Claude Code grows a new family;
+#: ``test_session_vars_covers_every_marker_this_live_session_carries`` is the tripwire.
+#:
+#: Account variables are deliberately absent: they are :data:`ACCOUNT_VARS`, which
+#: :func:`env_prefix` states outright rather than merely unsetting.
+SESSION_VARS = (
+    "CLAUDECODE",
+    "CLAUDE_AGENT_SDK_VERSION",
+    "CLAUDE_BG_AUTH_SNAPSHOT_PATH",
+    "CLAUDE_BG_BACKEND",
+    "CLAUDE_BG_CLAIM_AUTH",
+    "CLAUDE_BG_DISPATCHER_RATE_LIMIT_TIER",
+    "CLAUDE_BG_DISPATCHER_SUBSCRIPTION_TYPE",
+    "CLAUDE_BG_ISOLATION",
+    "CLAUDE_BG_MEMORY_TOGGLED_OFF",
+    "CLAUDE_BG_POST_CLEAR_RESPAWN",
+    "CLAUDE_BG_PTY_AUTH",
+    "CLAUDE_BG_RENDEZVOUS_SOCK",
+    "CLAUDE_BG_RV_AUTH",
+    "CLAUDE_BG_SESSION_PERMISSION_RULES",
+    "CLAUDE_BG_SOCKET_TOKENS_PATH",
+    "CLAUDE_BG_SOURCE",
+    "CLAUDE_BG_STARTUP_WEDGE_MS",
+    "CLAUDE_BG_TCC_DISCLAIMED",
+    "CLAUDE_CODE_BRIDGE_SESSION_ID",
+    "CLAUDE_CODE_CHILD_SESSION",
+    "CLAUDE_CODE_CLOUD_SESSION_ID",
+    "CLAUDE_CODE_ENTRYPOINT",
+    "CLAUDE_CODE_EXECPATH",
+    "CLAUDE_CODE_MESSAGING_SOCKET",
+    "CLAUDE_CODE_MESSAGING_TOKEN",
+    "CLAUDE_CODE_REMOTE_SESSION_ID",
+    "CLAUDE_CODE_REMOTE_SESSION_ORIGIN",
+    "CLAUDE_CODE_REMOTE_SESSION_UUID",
+    "CLAUDE_CODE_SESSION_ACCESS_TOKEN",
+    "CLAUDE_CODE_SESSION_ID",
+    "CLAUDE_CODE_SESSION_KIND",
+    "CLAUDE_CODE_SESSION_LOG",
+    "CLAUDE_CODE_SESSION_NAME",
+    "CLAUDE_CODE_SESSION_ORIGIN",
+    "CLAUDE_CODE_SPAWN_TIMESTAMP_MS",
+    "CLAUDE_CODE_SSE_PORT",
+    "CLAUDE_CODE_TRIGGER_ID",
+    "CLAUDE_CODE_WORKER_EPOCH",
+    "CLAUDE_EFFORT",
+    "CLAUDE_JOB_DIR",
+    "CLAUDE_PID",
+    "CLAUDE_PROJECT_DIR",
+    "CLAUDE_PROJECT_UUID",
+    "CLAUDE_SESSION_ID",
+)
 
 #: How long `spawn` waits, by default, for the registry to notice the new session.
 DFLT_WAIT = 20.0
@@ -164,27 +240,53 @@ def env_prefix(
     *,
     environ: dict[str, str] | None = None,
     drop: Sequence[str] = DROPPED_VARS,
+    markers: Sequence[str] = SESSION_VARS,
 ) -> list[str]:
     """The ``env -u ... K=V ...`` tokens that make a fresh shell run a command under ``env``.
 
     For the spawners that hand a command *line* to another program (tmux, a terminal
     tab): the shell that runs it is not this process's child and starts with whatever
-    ``CLAUDE*`` variables its own login put there, so the account is stated absolutely
-    -- every account variable is unset, then those in ``env`` are set -- and every other
-    ``CLAUDE*`` marker of ``environ`` (default ``os.environ``) is unset. Empty when there
-    is nothing to say, so the caller can run the command bare.
+    ``CLAUDE*`` variables its own login put there. So each name this function *controls*
+    -- ``markers`` (:data:`SESSION_VARS`), the ``CLAUDE*`` of ``environ``,
+    :data:`ACCOUNT_VARS`, ``drop`` and :data:`crowsnest.account.DROPPED_VARS` -- is
+    stated either way round: set when ``env`` has it, unset when it does not. Nothing
+    controlled is left to the shell.
 
-    ``drop`` is unset the same absolute way, and for the same reason: this process not
-    having an API key says nothing about the shell that will run the command.
+    Stated, rather than "whatever this process has", because the two differ exactly when
+    it matters: a tmux server started once from inside a session hands that session's
+    markers to every window it opens afterwards, so a spawn run later from a plain
+    terminal -- nothing to see, nothing to unset -- would put its new session under the
+    name and effort of a session that has long since ended. The scan of ``environ``
+    (default ``os.environ``) is kept on top of the list, but only as a bonus: it can add
+    a name a later version invents *when the spawner is itself a session*, which is
+    precisely the case that already worked. The list is what covers the case that did
+    not, so a marker missing from it is missing, full stop -- see :data:`SESSION_VARS`
+    for how to re-derive it.
 
-    >>> env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={'CLAUDECODE': '1'})
+    ``drop`` is unset for the neighbouring reason: this process not having an API key
+    says nothing about the shell that will run the command. Conversely ``drop=()`` --
+    ``child_env``'s "inherit it after all" -- puts the key in ``env``, and it is then
+    passed explicitly rather than left to whatever the shell happens to hold.
+
+    >>> env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={}, markers=('CLAUDECODE',))
     ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR=/h/iq']
+
+    A marker only the *shell* will have is unset all the same:
+
+    >>> env_prefix({}, environ={}, markers=('CLAUDECODE',), drop=())
+    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_CONFIG_DIR', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY']
     """
     environ = os.environ if environ is None else environ
-    unset = [k for k in environ if k.startswith("CLAUDE") and k not in env]
-    unset += [k for k in ACCOUNT_VARS if k not in env and k not in unset]
-    unset += [k for k in drop if k not in env and k not in unset]
-    assignments = [f"{k}={v}" for k, v in env.items() if k.startswith("CLAUDE")]
+    seen = [k for k in environ if k.startswith("CLAUDE")]
+    controlled: list[str] = []
+    for k in (*markers, *seen, *ACCOUNT_VARS, *drop, *DROPPED_VARS):
+        if k not in controlled:
+            controlled.append(k)
+    unset = [k for k in controlled if k not in env]
+    stated = set(controlled)
+    assignments = [
+        f"{k}={v}" for k, v in env.items() if k.startswith("CLAUDE") or k in stated
+    ]
     if not unset and not assignments:
         return []
     tokens = ["env"]
