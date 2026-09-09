@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crowsnest"
-version = "0.0.28"
+version = "0.0.29"
 description = "One session that watches your other Claude Code sessions: who is busy, who is waiting on you, what each one just said, and how to ask one directly"
 readme = "README.md"
 license = "MIT"
