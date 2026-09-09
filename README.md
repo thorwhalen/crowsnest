@@ -116,13 +116,18 @@ export CROWSNEST_CLAUDE_BIN=/opt/claude-next     # this shell
 ```
 
 ```toml
-# ~/.config/crowsnest/config.toml — once and for all
+# ~/.config/crowsnest/config.toml — once and for all.
+# Above the first [[homes]]: TOML gives every key after a table header to that
+# table, so a claude_bin at the bottom of the file belongs to the last home and
+# does nothing. crowsnest refuses that arrangement rather than ignoring it.
 claude_bin = "claude-next"
 ```
 
-and `--binary PATH` overrides both for one spawn. Precedence is narrowest-first: `--binary`, then `$CROWSNEST_CLAUDE_BIN`, then `claude_bin`, then the inherited binary.
+and `--binary PATH` names one for a single spawn. `--binary` is handed to the spawner **verbatim and unchecked**, because a spawner may run the line on another machine where this one's `PATH` means nothing — so an absolute path or a name only the target resolves both survive it. The corollary is that `--binary claude` means *the bare name*, which a local spawner then resolves through the settings above; to force the plain one, say `--binary "$(which claude)"`.
 
-It has to be something that can actually be executed — a script on your `PATH` or an absolute path. **A shell alias is not.** Aliases exist only inside an interactive shell, and a session is started by `tmux` or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints `command not found` and closes. If you have an alias you want to reuse, make it a two-line script instead.
+The two persistent settings are checked, because they are claims about *this* machine: `$CROWSNEST_CLAUDE_BIN` first, then `claude_bin`, then the inherited binary.
+
+Either has to be something that can actually be executed — a script on your `PATH` or an absolute path (a relative path is refused in the config file, which is read from every directory). **A shell alias is not.** Aliases exist only inside an interactive shell, and a session is started by `tmux` or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints `command not found` and closes. If you have an alias you want to reuse, make it a two-line script instead.
 
 Before you do: a wrapper whose whole job is `--dangerously-skip-permissions` and `env -u ANTHROPIC_API_KEY` — the usual shape — has nothing to add, because `crowsnest spawn` already does both.
 

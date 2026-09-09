@@ -2,6 +2,18 @@
 
 Newest first. The version is bumped by CI on every merge to `main`, so one merge is one entry.
 
+## 0.0.29 (2026-09-09)
+
+- Say which `claude` a spawn starts, persistently: `$CROWSNEST_CLAUDE_BIN` for one shell, `claude_bin` in `~/.config/crowsnest/config.toml` once and for all. The default is unchanged -- the binary this session runs.
+- A *stated* launcher that cannot be executed raises, naming the case that causes it: a shell **alias**, which exists only in an interactive shell and so is invisible to `tmux` and to a bare subprocess. A relative path in the config file is refused too -- that file is read from every directory. `--binary` stays verbatim and unchecked, because a spawner may run the line on another machine.
+- `claude_bin` written under a `[[homes]]` entry is refused rather than silently ignored (TOML gives every key after a table header to that table).
+- `spawn(config=...)` now selects the launcher as well as the homes; it used to name only half the config file.
+
+## 0.0.28 (2026-09-09)
+
+- `spawn` unsets the session markers **by name** (`SESSION_VARS`), not only the ones the spawning process happens to carry. A `tmux` server first started from inside a session hands that session's markers to every window it opens afterwards, so a spawn from a plain terminal could put a new session under a dead one's name and effort (#39).
+- `env_prefix` states every variable it controls either way round, so `child_env(drop=())` now travels through a command line instead of being left to the shell.
+
 ## 0.0.27 (2026-09-08)
 
 - `spawn` starts the new session the way the spawning one runs: same account *and* same `claude` binary (`$CLAUDE_CODE_EXECPATH`), stated absolutely on the command line so a `tmux` login shell cannot rebind it.

@@ -70,7 +70,8 @@ def test_claude_bin_falls_back_to_an_absolute_path_from_path(tmp_path):
 
 def test_profile_home_reads_the_configured_homes_first(tmp_path):
     assert (
-        profile_home("iq", config=_config(tmp_path)) == Path("~/.claude-iq").expanduser()
+        profile_home("iq", config=_config(tmp_path))
+        == Path("~/.claude-iq").expanduser()
     )
 
 
@@ -117,7 +118,8 @@ def test_an_empty_answer_alone_is_not_taken_for_the_default_account(
     tmp_path, monkeypatch
 ):
     """A lookup that just echoes its table prints nothing for a name it lacks, and
-    exits 0. Reading that as "the default account" would spawn there -- the whole bug."""
+    exits 0. Reading that as "the default account" would spawn there -- the whole bug.
+    """
     fake = _executable(tmp_path / "claude-profile")
     fake.write_text('#!/bin/sh\ncase "$2" in iq) echo /h/.claude-iq ;; esac\nexit 0\n')
     monkeypatch.setattr("shutil.which", lambda cmd, **kw: str(fake))
@@ -307,3 +309,44 @@ def test_nothing_configured_leaves_the_inherited_behaviour_alone(tmp_path):
     environ = {EXEC_ENV_VAR: str(exe), "PATH": ""}
     assert claude_bin(environ, config="/no/such/config") == str(exe)
     assert configured_claude_bin(environ, config="/no/such/config") == ""
+
+
+def test_a_relative_path_in_the_config_file_is_refused_not_resolved(tmp_path):
+    """The config file is read from every directory; the spawn has its own `--cwd`.
+
+    Resolving `bin/claude` against whatever happens to be current would name a different
+    program per caller -- silently, since each one exists.
+    """
+    for repo in ("repoA", "repoB"):
+        (tmp_path / repo / "bin").mkdir(parents=True)
+        _executable(tmp_path / repo / "bin" / "claude")
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('claude_bin = "bin/claude"\n')
+    with pytest.raises(ValueError) as exc:
+        claude_bin({"PATH": ""}, config=cfg)
+    assert "relative" in str(exc.value)
+
+
+def test_a_relative_path_in_the_environment_is_still_allowed(tmp_path, monkeypatch):
+    """A variable is set in a shell, where a relative path means what the shell means."""
+    (tmp_path / "bin").mkdir()
+    exe = _executable(tmp_path / "bin" / "claude")
+    monkeypatch.chdir(tmp_path)
+    environ = {CLAUDE_BIN_ENV_VAR: os.path.join("bin", "claude"), "PATH": ""}
+    assert claude_bin(environ, config="/no/such/config") == str(exe)
+
+
+def test_a_home_relative_path_in_the_config_file_is_fine(tmp_path, monkeypatch):
+    """`~` is anchored, so it is not the relative case."""
+    exe = _executable(tmp_path / "claude-home")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(f'claude_bin = "~/{exe.name}"\n')
+    assert claude_bin({"PATH": ""}, config=cfg) == str(exe)
+
+
+def test_a_bare_name_is_looked_up_only_on_the_given_path(tmp_path):
+    """An `environ` with no PATH means this environ has none, not "read the real one"."""
+    with pytest.raises(ValueError):
+        claude_bin({CLAUDE_BIN_ENV_VAR: "ls"}, config="/no/such/config")

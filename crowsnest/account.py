@@ -60,7 +60,9 @@ CLAUDE_BIN = "claude"
 
 #: Names the launcher for one shell, outranking both the config file's ``claude_bin``
 #: and the binary this session runs. For a machine whose Claude Code is not the
-#: ``claude`` a login shell finds first.
+#: ``claude`` a login shell finds first. Set to empty it is simply *not set*, so the
+#: config file is consulted next -- clearing it returns you to the configured launcher,
+#: not to the inherited one.
 CLAUDE_BIN_ENV_VAR = "CROWSNEST_CLAUDE_BIN"
 
 #: Claude Code's own variable holding the path of the binary running this session.
@@ -107,12 +109,20 @@ def configured_claude_bin(
     """
     environ = os.environ if environ is None else environ
     value = (environ.get(CLAUDE_BIN_ENV_VAR) or "").strip()
-    source = f"${CLAUDE_BIN_ENV_VAR}"
+    source, from_file = f"${CLAUDE_BIN_ENV_VAR}", False
     if not value:
         value = claude_bin_setting(path=config)
-        source = f"{CLAUDE_BIN_KEY!r} in {config_path(config)}"
+        source, from_file = f"{CLAUDE_BIN_KEY!r} in {config_path(config)}", True
     if not value:
         return ""
+    if from_file and _is_relative_path(value):
+        raise ValueError(
+            f"{source} names {value!r}, a path relative to whatever directory happens to "
+            f"be current. A config file is read for every spawn from everywhere, and the "
+            f"session being started has its own `--cwd`, so that path would name a "
+            f"different program in each of them -- or none. Write it out in full "
+            f"(``~`` is expanded), or use a bare name and let PATH find it."
+        )
     found = _found_executable(value, environ)
     if found is None:
         raise ValueError(
@@ -128,16 +138,26 @@ def configured_claude_bin(
     return found
 
 
+def _is_relative_path(value: str) -> bool:
+    """Is ``value`` a path, and a relative one? A bare name is not a path."""
+    expanded = os.path.expanduser(value)
+    return _has_separator(expanded) and not os.path.isabs(expanded)
+
+
+def _has_separator(value: str) -> bool:
+    return os.sep in value or bool(os.altsep and os.altsep in value)
+
+
 def _found_executable(value: str, environ: dict[str, str]) -> str | None:
     """``value`` as something that can be executed, or ``None``.
 
     A path is taken as written (and must exist); a bare name is looked up on ``PATH``.
     """
-    if os.sep in value or (os.altsep and os.altsep in value):
+    if _has_separator(value):
         path = os.path.expanduser(value)
         runnable = os.path.isfile(path) and _runnable(path, environ)
         return os.path.abspath(path) if runnable else None
-    return shutil.which(value, path=environ.get("PATH"))
+    return shutil.which(value, path=environ.get("PATH", ""))
 
 
 def claude_bin(
@@ -176,7 +196,9 @@ def _runnable(path: str, environ: dict[str, str]) -> bool:
     if os.name != "nt":
         return os.access(path, os.X_OK)
     suffixes = (environ.get("PATHEXT") or _DFLT_PATHEXT).split(os.pathsep)
-    return os.path.splitext(path)[1].lower() in {s.strip().lower() for s in suffixes if s}
+    return os.path.splitext(path)[1].lower() in {
+        s.strip().lower() for s in suffixes if s
+    }
 
 
 def _asked(exe: str, *argv: str) -> str | None:

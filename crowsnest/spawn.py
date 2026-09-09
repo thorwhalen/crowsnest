@@ -31,6 +31,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable, Sequence
+from functools import partial
 from pathlib import Path
 
 from crowsnest.account import CLAUDE_BIN, DROPPED_VARS, account_home, claude_bin
@@ -295,7 +296,7 @@ def env_prefix(
     return tokens + assignments
 
 
-def local_argv(argv: list[str]) -> list[str]:
+def local_argv(argv: list[str], *, config: str | Path | None = None) -> list[str]:
     """``argv`` with the bare ``claude`` replaced by the one *this machine* should run
     (:func:`crowsnest.account.claude_bin`): what a person configured, else this session's
     own executable.
@@ -311,17 +312,22 @@ def local_argv(argv: list[str]) -> list[str]:
     """
     if not argv or argv[0] != CLAUDE_BIN:
         return argv
-    return [claude_bin(), *argv[1:]]
+    return [claude_bin(config=config), *argv[1:]]
 
 
 def _tmux_spawner(
-    argv: list[str], *, cwd: str, name: str, home: str | Path | None
+    argv: list[str],
+    *,
+    cwd: str,
+    name: str,
+    home: str | Path | None,
+    config: str | Path | None = None,
 ) -> None:
     # A running tmux server gives a new session *its* environment, not this client's, so
     # the account goes into the command line; ``env=`` still matters when this call is
     # what starts the server.
     env = child_env(home=home)
-    command = shlex.join(env_prefix(env) + local_argv(argv))
+    command = shlex.join(env_prefix(env) + local_argv(argv, config=config))
     result = subprocess.run(
         ["tmux", "new-session", "-d", "-s", name, "-c", cwd, command],
         capture_output=True,
@@ -339,9 +345,16 @@ def _applescript_string(text: str) -> str:
 
 
 def _iterm_spawner(
-    argv: list[str], *, cwd: str, name: str, home: str | Path | None
+    argv: list[str],
+    *,
+    cwd: str,
+    name: str,
+    home: str | Path | None,
+    config: str | Path | None = None,
 ) -> None:
-    command = shlex.join(env_prefix(child_env(home=home)) + local_argv(argv))
+    command = shlex.join(
+        env_prefix(child_env(home=home)) + local_argv(argv, config=config)
+    )
     line = _applescript_string(f"cd {shlex.quote(cwd)} && {command}")
     script = (
         'tell application "iTerm2"\n'
@@ -365,10 +378,15 @@ def _iterm_spawner(
 
 
 def _subprocess_spawner(
-    argv: list[str], *, cwd: str, name: str, home: str | Path | None
+    argv: list[str],
+    *,
+    cwd: str,
+    name: str,
+    home: str | Path | None,
+    config: str | Path | None = None,
 ) -> None:
     subprocess.Popen(
-        local_argv(argv),
+        local_argv(argv, config=config),
         cwd=cwd,
         env=child_env(home=home),
         stdin=subprocess.DEVNULL,
@@ -376,6 +394,11 @@ def _subprocess_spawner(
         stderr=subprocess.DEVNULL,
         start_new_session=True,
     )
+
+
+#: The spawners this module ships. Named so :func:`spawn` can tell one of its own --
+#: which takes the ``config`` naming the launcher -- from a caller's, which does not.
+_BUILTIN_SPAWNERS = (_tmux_spawner, _iterm_spawner, _subprocess_spawner)
 
 
 def default_spawner() -> tuple[Callable[..., None], str]:
@@ -462,6 +485,12 @@ def spawn(
     how = "custom"
     if spawner is None:
         spawner, how = default_spawner()
+        if spawner in _BUILTIN_SPAWNERS:
+            # Ours alone are told which config file names the launcher. The seam's
+            # signature stays `(argv, *, cwd, name, home)`, so nothing else -- a
+            # caller's spawner, a replaced `default_spawner` -- is handed a keyword it
+            # never asked for. Anything else resolves its own binary for its own target.
+            spawner = partial(spawner, config=config)
     argv = claude_argv(
         name,
         prompt=prompt,

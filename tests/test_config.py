@@ -52,3 +52,23 @@ def test_claude_bin_setting_survives_a_file_with_no_homes_at_all(tmp_path):
     cfg.write_text('claude_bin = "claude-next"\n')
     assert claude_bin_setting(path=cfg) == "claude-next"
     assert len(homes(path=cfg)) == 1
+
+
+def test_claude_bin_under_a_homes_entry_is_refused_not_ignored(tmp_path):
+    """The silent mistake: TOML gives every key after a table header to that table, so a
+    `claude_bin` at the bottom of the file becomes a field of the last home and does
+    nothing at all."""
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('[[homes]]\nname = "main"\npath = "~/.c"\nclaude_bin = "x"\n')
+    with pytest.raises(ValueError) as exc:
+        claude_bin_setting(path=cfg)
+    assert "main" in str(exc.value) and "above the first" in str(exc.value)
+
+
+def test_a_non_string_claude_bin_is_refused(tmp_path):
+    """Otherwise `claude_bin = 12` produces an error telling you to run `type -a 12`."""
+    cfg = tmp_path / "config.toml"
+    cfg.write_text("claude_bin = 12\n")
+    with pytest.raises(TypeError) as exc:
+        claude_bin_setting(path=cfg)
+    assert "must be a string" in str(exc.value)

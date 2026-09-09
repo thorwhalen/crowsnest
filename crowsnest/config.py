@@ -9,6 +9,8 @@ into a list of :class:`Home` records so that every reader can loop over them.
 .. code-block:: toml
 
     # ~/.config/crowsnest/config.toml
+    claude_bin = "claude-next"            # what `spawn` runs; default: this session's own
+
     [[homes]]
     name = "main"
     path = "~/.claude"
@@ -22,10 +24,11 @@ into a list of :class:`Home` records so that every reader can loop over them.
     path = "~/.cache/xa/remotes/server"   # a synced copy
     remote = true                         # liveness by freshness, no pid check
 
-    claude_bin = "claude-next"            # what `spawn` runs; default: this session's own
-
 The one non-``homes`` setting is ``claude_bin`` (:func:`claude_bin_setting`), for a
-machine whose Claude Code is not the ``claude`` a login shell finds first.
+machine whose Claude Code is not the ``claude`` a login shell finds first. **It goes
+above the first** ``[[homes]]``: TOML gives every key after a table header to that
+table, so a ``claude_bin`` written at the bottom belongs to the last home and does
+nothing. :func:`claude_bin_setting` refuses that arrangement rather than ignoring it.
 
 On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML
 double-quoted string treats a backslash as an escape.
@@ -123,8 +126,35 @@ def claude_bin_setting(*, path: str | Path | None = None) -> str:
     this module's: reading a config file and vetting a command are different jobs, and
     the one that fails needs to say so in terms of the command.
     """
-    value = _loaded(path).get(CLAUDE_BIN_KEY)
-    return str(value).strip() if value else ""
+    data = _loaded(path)
+    value = data.get(CLAUDE_BIN_KEY)
+    if value is None:
+        _refuse_a_misplaced_claude_bin(data, path)
+        return ""
+    if not isinstance(value, str):
+        raise TypeError(
+            f"{config_path(path)}: {CLAUDE_BIN_KEY} must be a string naming a command, "
+            f"not {type(value).__name__} ({value!r})"
+        )
+    return value.strip()
+
+
+def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:
+    """Raise if ``claude_bin`` was written under a ``[[homes]]`` entry.
+
+    The easy mistake, and a silent one: TOML hands every key after a table header to
+    that table, so a ``claude_bin`` added at the end of the file becomes a field of the
+    last home -- read by nothing, reported by nothing, and the launcher stays whatever
+    it was. Cheaper to say so than to let someone re-read their own config file.
+    """
+    for entry in data.get("homes") or []:
+        if isinstance(entry, dict) and CLAUDE_BIN_KEY in entry:
+            raise ValueError(
+                f"{config_path(path)}: {CLAUDE_BIN_KEY} is inside the "
+                f"[[homes]] entry {entry.get('name', '?')!r}, where it does nothing -- "
+                f"TOML gives every key after a table header to that table. Move it "
+                f"above the first [[homes]] line."
+            )
 
 
 def _default_home() -> Home:
