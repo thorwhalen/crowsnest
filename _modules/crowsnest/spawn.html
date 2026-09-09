@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.spawn &mdash; crowsnest 0.0.26 documentation</title>
+  <title>crowsnest.spawn &mdash; crowsnest 0.0.27 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -130,6 +130,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"ACCOUNT_VARS"</span><span class="p">,</span>
     <span class="s2">"CLAUDE_BIN"</span><span class="p">,</span>
+    <span class="s2">"SESSION_VARS"</span><span class="p">,</span>
     <span class="s2">"child_env"</span><span class="p">,</span>
     <span class="s2">"claude_argv"</span><span class="p">,</span>
     <span class="s2">"default_spawner"</span><span class="p">,</span>
@@ -144,6 +145,81 @@
 <span class="c1">#: from the other, so the two travel together or not at all.</span>
 <span class="n">ACCOUNT_VARS</span> <span class="o">=</span> <span class="p">(</span><span class="n">HOME_ENV_VAR</span><span class="p">,</span> <span class="s2">"CLAUDE_PROFILE"</span><span class="p">)</span>
 <span class="n">_PROFILE_VAR</span> <span class="o">=</span> <span class="s2">"CLAUDE_PROFILE"</span>
+
+<span class="c1">#: The ``CLAUDE*`` variables that identify *one running session* -- who it is, what</span>
+<span class="c1">#: started it, how to talk to it -- named so that :func:`env_prefix` can unset them</span>
+<span class="c1">#: whether or not *this* process has them.</span>
+<span class="c1">#:</span>
+<span class="c1">#: :func:`child_env` can test its own environment, because it hands the child a complete</span>
+<span class="c1">#: one. A command *line* cannot: it is run by a shell whose environment is that shell's</span>
+<span class="c1">#: own. A tmux server first started from inside a session keeps that session's markers in</span>
+<span class="c1">#: its global environment and gives them to every window it opens afterwards -- including</span>
+<span class="c1">#: one spawned much later from a plain terminal, where this process has no marker to see</span>
+<span class="c1">#: and so nothing to unset. The markers visible here are therefore not the markers the</span>
+<span class="c1">#: child will meet, and a list that must be stated rather than discovered is a list.</span>
+<span class="c1">#:</span>
+<span class="c1">#: *Identity, not configuration.* Claude Code reads some seven hundred ``CLAUDE*``</span>
+<span class="c1">#: variables, nearly all of them settings a person may deliberately export (proxies,</span>
+<span class="c1">#: token ceilings, feature switches). Those are none of our business and stay. What must</span>
+<span class="c1">#: go is the session's own identity: it is what makes the child register as a *child* of</span>
+<span class="c1">#: the spawner rather than as the standalone session `spawn` asked for. Hence the</span>
+<span class="c1">#: families below -- the session and background-job plumbing, the messaging and bridge</span>
+<span class="c1">#: sockets, the job and project directories -- and nothing else.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Derived by matching those families against the name table of the ``claude`` binary</span>
+<span class="c1">#: (``strings $(crowsnest.account.claude_bin()) | grep -oE 'CLAUDE[A-Z0-9_]*'``) rather</span>
+<span class="c1">#: than typed out, because a hand-copied constant's characteristic failure is a typo that</span>
+<span class="c1">#: nothing detects. Re-derive it when Claude Code grows a new family;</span>
+<span class="c1">#: ``test_session_vars_covers_every_marker_this_live_session_carries`` is the tripwire.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Account variables are deliberately absent: they are :data:`ACCOUNT_VARS`, which</span>
+<span class="c1">#: :func:`env_prefix` states outright rather than merely unsetting.</span>
+<span class="n">SESSION_VARS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"CLAUDECODE"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_AGENT_SDK_VERSION"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_AUTH_SNAPSHOT_PATH"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_BACKEND"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_CLAIM_AUTH"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_DISPATCHER_RATE_LIMIT_TIER"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_DISPATCHER_SUBSCRIPTION_TYPE"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_ISOLATION"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_MEMORY_TOGGLED_OFF"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_POST_CLEAR_RESPAWN"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_PTY_AUTH"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_RENDEZVOUS_SOCK"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_RV_AUTH"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_SESSION_PERMISSION_RULES"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_SOCKET_TOKENS_PATH"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_SOURCE"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_STARTUP_WEDGE_MS"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_BG_TCC_DISCLAIMED"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_BRIDGE_SESSION_ID"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_CHILD_SESSION"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_CLOUD_SESSION_ID"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_ENTRYPOINT"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_EXECPATH"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_MESSAGING_SOCKET"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_MESSAGING_TOKEN"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_ID"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_ORIGIN"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_UUID"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_SESSION_ACCESS_TOKEN"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_SESSION_ID"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_SESSION_KIND"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_SESSION_LOG"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_SESSION_NAME"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_SESSION_ORIGIN"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_SPAWN_TIMESTAMP_MS"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_SSE_PORT"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_TRIGGER_ID"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_CODE_WORKER_EPOCH"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_EFFORT"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_JOB_DIR"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_PID"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_PROJECT_DIR"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_PROJECT_UUID"</span><span class="p">,</span>
+    <span class="s2">"CLAUDE_SESSION_ID"</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="c1">#: How long `spawn` waits, by default, for the registry to notice the new session.</span>
 <span class="n">DFLT_WAIT</span> <span class="o">=</span> <span class="mf">20.0</span>
@@ -263,27 +339,53 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">drop</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DROPPED_VARS</span><span class="p">,</span>
+    <span class="n">markers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">SESSION_VARS</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""The ``env -u ... K=V ...`` tokens that make a fresh shell run a command under ``env``.</span>
 
 <span class="sd">    For the spawners that hand a command *line* to another program (tmux, a terminal</span>
 <span class="sd">    tab): the shell that runs it is not this process's child and starts with whatever</span>
-<span class="sd">    ``CLAUDE*`` variables its own login put there, so the account is stated absolutely</span>
-<span class="sd">    -- every account variable is unset, then those in ``env`` are set -- and every other</span>
-<span class="sd">    ``CLAUDE*`` marker of ``environ`` (default ``os.environ``) is unset. Empty when there</span>
-<span class="sd">    is nothing to say, so the caller can run the command bare.</span>
+<span class="sd">    ``CLAUDE*`` variables its own login put there. So each name this function *controls*</span>
+<span class="sd">    -- ``markers`` (:data:`SESSION_VARS`), the ``CLAUDE*`` of ``environ``,</span>
+<span class="sd">    :data:`ACCOUNT_VARS`, ``drop`` and :data:`crowsnest.account.DROPPED_VARS` -- is</span>
+<span class="sd">    stated either way round: set when ``env`` has it, unset when it does not. Nothing</span>
+<span class="sd">    controlled is left to the shell.</span>
 
-<span class="sd">    ``drop`` is unset the same absolute way, and for the same reason: this process not</span>
-<span class="sd">    having an API key says nothing about the shell that will run the command.</span>
+<span class="sd">    Stated, rather than "whatever this process has", because the two differ exactly when</span>
+<span class="sd">    it matters: a tmux server started once from inside a session hands that session's</span>
+<span class="sd">    markers to every window it opens afterwards, so a spawn run later from a plain</span>
+<span class="sd">    terminal -- nothing to see, nothing to unset -- would put its new session under the</span>
+<span class="sd">    name and effort of a session that has long since ended. The scan of ``environ``</span>
+<span class="sd">    (default ``os.environ``) is kept on top of the list, but only as a bonus: it can add</span>
+<span class="sd">    a name a later version invents *when the spawner is itself a session*, which is</span>
+<span class="sd">    precisely the case that already worked. The list is what covers the case that did</span>
+<span class="sd">    not, so a marker missing from it is missing, full stop -- see :data:`SESSION_VARS`</span>
+<span class="sd">    for how to re-derive it.</span>
 
-<span class="sd">    &gt;&gt;&gt; env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={'CLAUDECODE': '1'})</span>
+<span class="sd">    ``drop`` is unset for the neighbouring reason: this process not having an API key</span>
+<span class="sd">    says nothing about the shell that will run the command. Conversely ``drop=()`` --</span>
+<span class="sd">    ``child_env``'s "inherit it after all" -- puts the key in ``env``, and it is then</span>
+<span class="sd">    passed explicitly rather than left to whatever the shell happens to hold.</span>
+
+<span class="sd">    &gt;&gt;&gt; env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={}, markers=('CLAUDECODE',))</span>
 <span class="sd">    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR=/h/iq']</span>
+
+<span class="sd">    A marker only the *shell* will have is unset all the same:</span>
+
+<span class="sd">    &gt;&gt;&gt; env_prefix({}, environ={}, markers=('CLAUDECODE',), drop=())</span>
+<span class="sd">    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_CONFIG_DIR', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY']</span>
 <span class="sd">    """</span>
     <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
-    <span class="n">unset</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">environ</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span><span class="p">]</span>
-    <span class="n">unset</span> <span class="o">+=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ACCOUNT_VARS</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unset</span><span class="p">]</span>
-    <span class="n">unset</span> <span class="o">+=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">drop</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unset</span><span class="p">]</span>
-    <span class="n">assignments</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)]</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">environ</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)]</span>
+    <span class="n">controlled</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">markers</span><span class="p">,</span> <span class="o">*</span><span class="n">seen</span><span class="p">,</span> <span class="o">*</span><span class="n">ACCOUNT_VARS</span><span class="p">,</span> <span class="o">*</span><span class="n">drop</span><span class="p">,</span> <span class="o">*</span><span class="n">DROPPED_VARS</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">controlled</span><span class="p">:</span>
+            <span class="n">controlled</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="n">unset</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">controlled</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span><span class="p">]</span>
+    <span class="n">stated</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">controlled</span><span class="p">)</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">stated</span>
+    <span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">unset</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">assignments</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[]</span>
     <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"env"</span><span class="p">]</span>
