@@ -11,6 +11,7 @@
    module_docs/crowsnest/init
    module_docs/crowsnest/ledger
    module_docs/crowsnest/lineage
+   module_docs/crowsnest/links
    module_docs/crowsnest/open
    module_docs/crowsnest/paths
    module_docs/crowsnest/registry

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; crowsnest 0.0.29 documentation</title>
+  <title>Index &mdash; crowsnest 0.0.30 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=828725f0"></script>
+      <script src="_static/documentation_options.js?v=61a342a2"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/links.html">crowsnest.links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/open.html">crowsnest.open</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -101,6 +102,7 @@
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
@@ -134,7 +136,11 @@
       <li><a href="module_docs/crowsnest/hook.html#crowsnest.hook.append_event">append_event() (in module crowsnest.hook)</a>
 </li>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SpawnEdge.as_dict">as_dict() (crowsnest.lineage.SpawnEdge method)</a>
+
+      <ul>
+        <li><a href="module_docs/crowsnest/links.html#crowsnest.links.Link.as_dict">(crowsnest.links.Link method)</a>
 </li>
+      </ul></li>
       <li><a href="module_docs/crowsnest/skills.html#crowsnest.skills.Asset">Asset (class in crowsnest.skills)</a>
 </li>
   </ul></td>
@@ -230,8 +236,6 @@
         <li><a href="module_docs/crowsnest/config.html#module-crowsnest.config">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     crowsnest.hook
 
@@ -239,6 +243,8 @@
         <li><a href="module_docs/crowsnest/hook.html#module-crowsnest.hook">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     crowsnest.init
 
@@ -258,6 +264,13 @@
 
       <ul>
         <li><a href="module_docs/crowsnest/lineage.html#module-crowsnest.lineage">module</a>
+</li>
+      </ul></li>
+      <li>
+    crowsnest.links
+
+      <ul>
+        <li><a href="module_docs/crowsnest/links.html#module-crowsnest.links">module</a>
 </li>
       </ul></li>
       <li>
@@ -334,13 +347,15 @@
 </li>
       <li><a href="module_docs/crowsnest/activity.html#crowsnest.activity.describe_tool">describe_tool() (in module crowsnest.activity)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/hook.html#crowsnest.hook.DETAIL_LIMIT">DETAIL_LIMIT (in module crowsnest.hook)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/config.html#crowsnest.config.DFLT_FRESH_SECONDS">DFLT_FRESH_SECONDS (in module crowsnest.config)</a>
 </li>
       <li><a href="module_docs/crowsnest/watch.html#crowsnest.watch.DFLT_INTERVAL">DFLT_INTERVAL (in module crowsnest.watch)</a>
+</li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.DFLT_RESOLVERS">DFLT_RESOLVERS (in module crowsnest.links)</a>
 </li>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.dflt_sources">dflt_sources() (in module crowsnest.lineage)</a>
 </li>
@@ -384,19 +399,33 @@
 </li>
       <li><a href="module_docs/crowsnest/registry.html#crowsnest.registry.fresh_within">fresh_within() (in module crowsnest.registry)</a>
 </li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.from_commits">from_commits() (in module crowsnest.links)</a>
+</li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.from_issue_refs">from_issue_refs() (in module crowsnest.links)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.from_markdown_links">from_markdown_links() (in module crowsnest.links)</a>
+</li>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_processes">from_processes() (in module crowsnest.lineage)</a>
 </li>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_records">from_records() (in module crowsnest.lineage)</a>
 </li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.from_repo_refs">from_repo_refs() (in module crowsnest.links)</a>
+</li>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_transcripts">from_transcripts() (in module crowsnest.lineage)</a>
+</li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.from_urls">from_urls() (in module crowsnest.links)</a>
 </li>
   </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.github_ref">github_ref() (in module crowsnest.links)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.graph">graph() (in module crowsnest.lineage)</a>
 </li>
@@ -428,11 +457,21 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="module_docs/crowsnest/init.html#crowsnest.init.init">init() (in module crowsnest.init)</a>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.identity">identity() (in module crowsnest.links)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/crowsnest/init.html#crowsnest.init.init">init() (in module crowsnest.init)</a>
+</li>
       <li><a href="module_docs/crowsnest/skills.html#crowsnest.skills.install_skills">install_skills() (in module crowsnest.skills)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.kind_of">kind_of() (in module crowsnest.links)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -446,6 +485,8 @@
         <li><a href="module_docs/crowsnest/registry.html#crowsnest.registry.LiveSession.label">(crowsnest.registry.LiveSession property)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.label_for">label_for() (in module crowsnest.links)</a>
+</li>
       <li><a href="module_docs/crowsnest/ledger.html#crowsnest.ledger.ledger_dir">ledger_dir() (in module crowsnest.ledger)</a>
 </li>
       <li><a href="module_docs/crowsnest/ledger.html#crowsnest.ledger.LEDGER_DIRNAME">LEDGER_DIRNAME (in module crowsnest.ledger)</a>
@@ -458,14 +499,16 @@
 </li>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.lineage_path">lineage_path() (in module crowsnest.lineage)</a>
 </li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.Link">Link (class in crowsnest.links)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest.html#crowsnest.list_ledgers">list_ledgers() (in module crowsnest)</a>
 
       <ul>
         <li><a href="module_docs/crowsnest/ledger.html#crowsnest.ledger.list_ledgers">(in module crowsnest.ledger)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest.html#crowsnest.live_sessions">live_sessions() (in module crowsnest)</a>
 
       <ul>
@@ -486,6 +529,8 @@
 </li>
       <li><a href="module_docs/crowsnest/hook.html#crowsnest.hook.log_path">log_path() (in module crowsnest.hook)</a>
 </li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.looks_like_a_secret">looks_like_a_secret() (in module crowsnest.links)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -495,6 +540,8 @@
       <li><a href="module_docs/crowsnest/__main__.html#crowsnest.__main__.main">main() (in module crowsnest.__main__)</a>
 </li>
       <li><a href="module_docs/crowsnest/hook.html#crowsnest.hook.MAX_EVENT_BYTES">MAX_EVENT_BYTES (in module crowsnest.hook)</a>
+</li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.MAX_LINKS">MAX_LINKS (in module crowsnest.links)</a>
 </li>
       <li><a href="module_docs/crowsnest/hook.html#crowsnest.hook.MAX_LOG_BYTES">MAX_LOG_BYTES (in module crowsnest.hook)</a>
 </li>
@@ -523,6 +570,8 @@
         <li><a href="module_docs/crowsnest/ledger.html#module-crowsnest.ledger">crowsnest.ledger</a>
 </li>
         <li><a href="module_docs/crowsnest/lineage.html#module-crowsnest.lineage">crowsnest.lineage</a>
+</li>
+        <li><a href="module_docs/crowsnest/links.html#module-crowsnest.links">crowsnest.links</a>
 </li>
         <li><a href="module_docs/crowsnest/open.html#module-crowsnest.open">crowsnest.open</a>
 </li>
@@ -621,10 +670,10 @@
       </ul></li>
       <li><a href="module_docs/crowsnest/activity.html#crowsnest.activity.RECENT_TOOLS">RECENT_TOOLS (in module crowsnest.activity)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.record_spawn">record_spawn() (in module crowsnest.lineage)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/report.html#crowsnest.report.render_report">render_report() (in module crowsnest.report)</a>
 </li>
       <li><a href="module_docs/crowsnest/tools.html#crowsnest.tools.repo_url">repo_url() (in module crowsnest.tools)</a>
@@ -634,6 +683,8 @@
       <li><a href="module_docs/crowsnest.html#crowsnest.resolve">resolve() (in module crowsnest)</a>
 
       <ul>
+        <li><a href="module_docs/crowsnest/links.html#crowsnest.links.resolve">(in module crowsnest.links)</a>
+</li>
         <li><a href="module_docs/crowsnest/tools.html#crowsnest.tools.resolve">(in module crowsnest.tools)</a>
 </li>
       </ul></li>
@@ -652,6 +703,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/ledger.html#crowsnest.ledger.safe_name">safe_name() (in module crowsnest.ledger)</a>
+</li>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.SECRET_URL_SHAPES">SECRET_URL_SHAPES (in module crowsnest.links)</a>
 </li>
       <li><a href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SESSION_ID_VAR">SESSION_ID_VAR (in module crowsnest.lineage)</a>
 </li>
@@ -756,6 +809,10 @@
 
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/crowsnest/links.html#crowsnest.links.without_written_out_links">without_written_out_links() (in module crowsnest.links)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/crowsnest/watch.html#crowsnest.watch.WORKING">WORKING (in module crowsnest.watch)</a>
 </li>

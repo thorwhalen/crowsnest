@@ -1,0 +1,450 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.links &mdash; crowsnest 0.0.30 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=61a342a2"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.open" href="open.html" />
+    <link rel="prev" title="crowsnest.lineage" href="lineage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="account.html">crowsnest.account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.links</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.DFLT_RESOLVERS"><code class="docutils literal notranslate"><span class="pre">DFLT_RESOLVERS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.Link"><code class="docutils literal notranslate"><span class="pre">Link</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#crowsnest.links.Link.as_dict"><code class="docutils literal notranslate"><span class="pre">Link.as_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.MAX_LINKS"><code class="docutils literal notranslate"><span class="pre">MAX_LINKS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.SECRET_URL_SHAPES"><code class="docutils literal notranslate"><span class="pre">SECRET_URL_SHAPES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.from_commits"><code class="docutils literal notranslate"><span class="pre">from_commits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.from_issue_refs"><code class="docutils literal notranslate"><span class="pre">from_issue_refs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.from_markdown_links"><code class="docutils literal notranslate"><span class="pre">from_markdown_links()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.from_repo_refs"><code class="docutils literal notranslate"><span class="pre">from_repo_refs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.from_urls"><code class="docutils literal notranslate"><span class="pre">from_urls()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.github_ref"><code class="docutils literal notranslate"><span class="pre">github_ref()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.identity"><code class="docutils literal notranslate"><span class="pre">identity()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.kind_of"><code class="docutils literal notranslate"><span class="pre">kind_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.label_for"><code class="docutils literal notranslate"><span class="pre">label_for()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.looks_like_a_secret"><code class="docutils literal notranslate"><span class="pre">looks_like_a_secret()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.links.without_written_out_links"><code class="docutils literal notranslate"><span class="pre">without_written_out_links()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="open.html">crowsnest.open</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.links</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/links.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.links">
+<span id="crowsnest-links"></span><h1>crowsnest.links<a class="headerlink" href="#module-crowsnest.links" title="Link to this heading"></a></h1>
+<p>References in a session’s own words, turned into links you can click.</p>
+<p>Sessions write references down constantly – <code class="docutils literal notranslate"><span class="pre">#17</span></code>, <code class="docutils literal notranslate"><span class="pre">i2mint/mergeset#12</span></code>, a commit
+sha, a CI run, an artifact URL – and a roster that prints them as text makes the reader
+reconstruct a URL by hand for every one. The user’s own convention says the opposite:
+<em>a reference is a full clickable link every time it appears, including the second time
+and inside a table.</em> This module is that convention, automated.</p>
+<p><strong>The non-obvious one is the bare ``#N``.</strong> A session working in <code class="docutils literal notranslate"><span class="pre">i2mint/mergeset</span></code> that
+writes <code class="docutils literal notranslate"><span class="pre">#17</span></code> means that repository’s issue 17, and nothing in the text says so – but
+crowsnest already knows the session’s working directory, and <a class="reference internal" href="tools.html#crowsnest.tools.repo_url" title="crowsnest.tools.repo_url"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.repo_url()</span></code></a>
+already turns that into a remote. So the cheapest, most common reference a session writes
+is resolvable exactly, and only here: a link resolver that did not know where the text was
+written could never do it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">resolvers=</span></code> is the seam. A resolver is a callable <code class="docutils literal notranslate"><span class="pre">(text,</span> <span class="pre">context)</span> <span class="pre">-&gt;</span> <span class="pre">Iterable[Link]</span></code>
+– it owns its own pattern, because what a reference <em>looks like</em> and what it <em>resolves
+to</em> are the same question, and splitting them into “find a token” and “map a token” makes
+the markdown-link case (which is not token-shaped) impossible to express. They run in
+order and the first link found for a given URL wins, so a better resolver put first
+overrides a worse one. <a class="reference internal" href="#crowsnest.links.DFLT_RESOLVERS" title="crowsnest.links.DFLT_RESOLVERS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DFLT_RESOLVERS</span></code></a> is what a caller gets by leaving it out, in
+the order they are worth:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>resolver</p></th>
+<th class="head"><p>what it reads</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.links.from_markdown_links" title="crowsnest.links.from_markdown_links"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_markdown_links()</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[label](url)</span></code> a session already wrote out in full. The
+highest-quality source there is, and it costs one parse.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.links.from_urls" title="crowsnest.links.from_urls"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_urls()</span></code></a></p></td>
+<td><p>a bare URL, typed by where it points (issue, pull request,
+discussion, commit, CI run, artifact, session, Slack).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.links.from_repo_refs" title="crowsnest.links.from_repo_refs"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_repo_refs()</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">owner/repo#N</span></code>, which names its own repository.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.links.from_issue_refs" title="crowsnest.links.from_issue_refs"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_issue_refs()</span></code></a></p></td>
+<td><p>a bare <code class="docutils literal notranslate"><span class="pre">#N</span></code>, against the repository the session is working
+in. The one that needs crowsnest to resolve at all.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.links.from_commits" title="crowsnest.links.from_commits"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_commits()</span></code></a></p></td>
+<td><p>a bare commit sha, against that same repository.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal notranslate"><span class="pre">context</span></code> is a plain mapping, not an object, so it crosses every surface the way
+everything else in crowsnest does: <code class="docutils literal notranslate"><span class="pre">{&quot;repo_url&quot;:</span> <span class="pre">&quot;https://github.com/owner/repo&quot;}</span></code> is
+the whole of it today.</p>
+<p>Nothing here fetches anything. A link is <em>constructed</em> from what the text says and what
+the session’s directory implies; whether the issue exists is GitHub’s business, and a
+resolver that checked would turn a report into a few hundred network calls.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">found</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="s1">'fixed in #17'</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s1">'repo_url'</span><span class="p">:</span> <span class="s1">'https://github.com/o/r'</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'type'</span><span class="p">],</span> <span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'url'</span><span class="p">],</span> <span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'text'</span><span class="p">]</span>
+<span class="go">('issue', 'https://github.com/o/r/issues/17', 'r#17')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve</span><span class="p">(</span><span class="s1">'fixed in #17'</span><span class="p">)</span>                       <span class="c1"># no repository, so no link</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.links.DFLT_RESOLVERS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">DFLT_RESOLVERS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.links.Link" title="crowsnest.links.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(&lt;function</span> <span class="pre">from_markdown_links&gt;,</span> <span class="pre">&lt;function</span> <span class="pre">from_urls&gt;,</span> <span class="pre">&lt;function</span> <span class="pre">from_repo_refs&gt;,</span> <span class="pre">&lt;function</span> <span class="pre">from_issue_refs&gt;,</span> <span class="pre">&lt;function</span> <span class="pre">from_commits&gt;)</span></span><a class="headerlink" href="#crowsnest.links.DFLT_RESOLVERS" title="Link to this definition"></a></dt>
+<dd><p>The resolvers <a class="reference internal" href="#crowsnest.links.resolve" title="crowsnest.links.resolve"><code class="xref py py-func docutils literal notranslate"><span class="pre">resolve()</span></code></a> uses when the caller names none, best first. Order is
+precedence: the first resolver to claim a URL is the one whose label it keeps, which is
+why the markdown one – the only source where a human named the link – comes first.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.links.Link">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">Link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/links.html#Link"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.Link" title="Link to this definition"></a></dt>
+<dd><p>One reference, resolved: what kind it is, where it goes, what to call it.</p>
+<p>Shaped like <code class="xref py py-class docutils literal notranslate"><span class="pre">openloops.transcripts.Locator</span></code> on purpose – <code class="docutils literal notranslate"><span class="pre">type</span></code>, <code class="docutils literal notranslate"><span class="pre">url</span></code>,
+<code class="docutils literal notranslate"><span class="pre">text</span></code> – because the report already renders those, and a second shape for the same
+idea would mean a second renderer.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Link</span><span class="p">(</span><span class="s1">'issue'</span><span class="p">,</span> <span class="s1">'https://github.com/o/r/issues/1'</span><span class="p">,</span> <span class="s1">'r#1'</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()[</span><span class="s1">'type'</span><span class="p">]</span>
+<span class="go">'issue'</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.links.Link.as_dict">
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#Link.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.Link.as_dict" title="Link to this definition"></a></dt>
+<dd><p>JSON-ready form.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.links.MAX_LINKS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">MAX_LINKS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></span><a class="headerlink" href="#crowsnest.links.MAX_LINKS" title="Link to this definition"></a></dt>
+<dd><p>How many links one piece of text yields. A session re-records the same reference on
+nearly every turn, so the cap is reached by breadth rather than by repetition – the
+de-duplication below happens first.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.links.SECRET_URL_SHAPES">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">SECRET_URL_SHAPES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(re.compile('^https?://hooks\\.slack\\.com/services/',</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">re.compile('^https?://[\\w.-]*discord(app)?\\.com/api/webhooks/',</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">re.compile('^https?://[\\w.-]+/[\\w/.-]*\\?[^#]*\\b(x-amz-signature|sig|signature|token|access_token|api[_-]?key|apikey|secret|password)=',</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">re.compile('^https?://[^/&#64;]*:[^/&#64;]*&#64;',</span> <span class="pre">re.IGNORECASE))</span></span><a class="headerlink" href="#crowsnest.links.SECRET_URL_SHAPES" title="Link to this definition"></a></dt>
+<dd><p>holding it is the whole of the
+permission, so printing it on a page is disclosing it. openloops’ scrubber catches
+credential-shaped <em>text</em> (an inline password, an API key) and these are not that –
+they are ordinary-looking https URLs whose path is the secret.</p>
+<p>Best effort by construction, and the report’s sanitiser is still the second line. What
+makes it worth having anyway is the direction of travel: before links were resolved,
+a webhook sitting in a ledger had no path to a page that gets published off the
+machine. Add a shape here when one is found; the cost of a false positive is one link
+that renders as text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>URL shapes where the URL <em>is</em> the credential</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.from_commits">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">from_commits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.links.Link" title="crowsnest.links.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#from_commits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.from_commits" title="Link to this definition"></a></dt>
+<dd><p>A bare commit sha, against the repository the session is working in.</p>
+<p>Held to a hexadecimal run of at least seven characters that is not part of a longer
+word, which is what git itself considers an abbreviated sha. A word that happens to be
+seven hex letters (<code class="docutils literal notranslate"><span class="pre">decade</span></code>, <code class="docutils literal notranslate"><span class="pre">defaced</span></code>) is the false positive this accepts; it
+costs a link nobody clicks, where the alternative – not linking shas at all – costs
+the one reference a person most often wants to look up.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_commits</span><span class="p">(</span><span class="s1">'fixed in 7d30838'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'repo_url'</span><span class="p">:</span> <span class="s1">'https://github.com/o/r'</span><span class="p">})[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+<span class="go">'r@7d30838'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.from_issue_refs">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">from_issue_refs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.links.Link" title="crowsnest.links.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#from_issue_refs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.from_issue_refs" title="Link to this definition"></a></dt>
+<dd><p>A bare <code class="docutils literal notranslate"><span class="pre">#N</span></code>, resolved against the repository the session is working in.</p>
+<p>This is the one that needs crowsnest. <code class="docutils literal notranslate"><span class="pre">#17</span></code> is the commonest reference a session
+writes and the least resolvable on its own; the session’s working directory says which
+repository it means, and the roster already knows the directory.</p>
+<p>Nothing is produced without a <code class="docutils literal notranslate"><span class="pre">repo_url</span></code> in the context – a wrong repository is
+worse than no link, because a link that goes somewhere plausible and wrong is one
+nobody checks.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_issue_refs</span><span class="p">(</span><span class="s1">'closes #17'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'repo_url'</span><span class="p">:</span> <span class="s1">'https://github.com/o/r'</span><span class="p">})[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">url</span>
+<span class="go">'https://github.com/o/r/issues/17'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">from_issue_refs</span><span class="p">(</span><span class="s1">'closes #17'</span><span class="p">,</span> <span class="p">{})</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.from_markdown_links">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">from_markdown_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.links.Link" title="crowsnest.links.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#from_markdown_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.from_markdown_links" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">[label](url)</span></code> a session already wrote out in full, keeping the label it chose.</p>
+<p>The best source available and the cheapest: a session that wrote a markdown link had
+the whole reference in hand and named it for a reader. Nothing is inferred.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_markdown_links</span><span class="p">(</span><span class="s1">'see [PR 27](https://github.com/o/r/pull/27)'</span><span class="p">,</span> <span class="p">{})[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+<span class="go">'PR 27'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.from_repo_refs">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">from_repo_refs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.links.Link" title="crowsnest.links.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#from_repo_refs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.from_repo_refs" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">owner/repo#N</span></code>, which names its own repository and needs no context.</p>
+<p>The issue-or-pull-request ambiguity is left as <code class="docutils literal notranslate"><span class="pre">issue</span></code>: GitHub redirects an issue
+URL to the pull request when that is what the number is, so the link works either
+way, and guessing would be a guess.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_repo_refs</span><span class="p">(</span><span class="s1">'see i2mint/mergeset#12'</span><span class="p">,</span> <span class="p">{})[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">url</span>
+<span class="go">'https://github.com/i2mint/mergeset/issues/12'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.from_urls">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">from_urls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.links.Link" title="crowsnest.links.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#from_urls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.from_urls" title="Link to this definition"></a></dt>
+<dd><p>A bare URL, typed by where it points and labelled the way a person would say it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">l</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">l</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">from_urls</span><span class="p">(</span><span class="s1">'see https://github.com/o/r/issues/3'</span><span class="p">,</span> <span class="p">{})]</span>
+<span class="go">[('issue', 'r#3')]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.github_ref">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">github_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#github_ref"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.github_ref" title="Link to this definition"></a></dt>
+<dd><p>A GitHub URL as <code class="docutils literal notranslate"><span class="pre">(kind,</span> <span class="pre">owner,</span> <span class="pre">repo,</span> <span class="pre">number)</span></code>; empty strings when it is not one.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">github_ref</span><span class="p">(</span><span class="s1">'https://github.com/i2mint/mergeset/pull/27'</span><span class="p">)</span>
+<span class="go">('pr', 'i2mint', 'mergeset', '27')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">github_ref</span><span class="p">(</span><span class="s1">'https://github.com/o/r'</span><span class="p">)</span>
+<span class="go">('repo', 'o', 'r', '')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">github_ref</span><span class="p">(</span><span class="s1">'https://example.org/x'</span><span class="p">)</span>
+<span class="go">('', '', '', '')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">github_ref</span><span class="p">(</span><span class="s1">'https://www.github.com/o/r/issues/3'</span><span class="p">)</span>
+<span class="go">('issue', 'o', 'r', '3')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.identity">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.identity" title="Link to this definition"></a></dt>
+<dd><p>What two links have in common when they are the same reference.</p>
+<p>A bare <code class="docutils literal notranslate"><span class="pre">#45</span></code> resolves to <code class="docutils literal notranslate"><span class="pre">.../issues/45</span></code> and a session that wrote the link out in
+full may have written <code class="docutils literal notranslate"><span class="pre">.../pull/45</span></code> – <strong>the same thing</strong>, because GitHub redirects
+an issue URL to the pull request when that is what the number is. Showing both is the
+noise this feature exists to remove, so they collapse to one identity and the better
+label wins. A discussion does <em>not</em> collapse into them: <code class="docutils literal notranslate"><span class="pre">discussions/45</span></code> is a
+different object that happens to share a number.</p>
+<p>Two spellings of one commit also collapse. A session writes <code class="docutils literal notranslate"><span class="pre">eb0774d0a</span></code> in one place
+and the full forty characters in another, and both are the same commit; the longer
+prefix wins on length, so they are compared on the shorter one’s length.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">identity</span><span class="p">(</span><span class="s1">'https://github.com/o/r/pull/45'</span><span class="p">)</span> <span class="o">==</span> <span class="n">identity</span><span class="p">(</span><span class="s1">'https://github.com/o/r/issues/45'</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identity</span><span class="p">(</span><span class="s1">'https://github.com/o/r/discussions/45'</span><span class="p">)</span> <span class="o">==</span> <span class="n">identity</span><span class="p">(</span><span class="s1">'https://github.com/o/r/issues/45'</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identity</span><span class="p">(</span><span class="s1">'https://WWW.github.com/O/R/issues/45'</span><span class="p">)</span> <span class="o">==</span> <span class="n">identity</span><span class="p">(</span><span class="s1">'https://github.com/o/r/issues/45'</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.kind_of">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">kind_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#kind_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.kind_of" title="Link to this definition"></a></dt>
+<dd><p>What a bare URL points at, as one word.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">kind_of</span><span class="p">(</span><span class="s1">'https://github.com/o/r/pull/1'</span><span class="p">),</span> <span class="n">kind_of</span><span class="p">(</span><span class="s1">'https://x.slack.com/archives/C1/p2'</span><span class="p">)</span>
+<span class="go">('pr', 'slack')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kind_of</span><span class="p">(</span><span class="s1">'https://claude.ai/code/artifact/abc'</span><span class="p">),</span> <span class="n">kind_of</span><span class="p">(</span><span class="s1">'https://example.org'</span><span class="p">)</span>
+<span class="go">('artifact', 'link')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.label_for">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">label_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#label_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.label_for" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">text</span></code> when it says something, else a name derived from the URL.</p>
+<p>The report calls this for references that reached it without a label – openloops’
+own locators carry a URL and nothing else – so that nothing renders as a bare,
+unclickable-looking blank.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">label_for</span><span class="p">(</span><span class="s1">'https://github.com/o/r/pull/27'</span><span class="p">)</span>
+<span class="go">'r#27'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">label_for</span><span class="p">(</span><span class="s1">'https://github.com/o/r/pull/27'</span><span class="p">,</span> <span class="s1">'the release PR'</span><span class="p">)</span>
+<span class="go">'the release PR'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.looks_like_a_secret">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">looks_like_a_secret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#looks_like_a_secret"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.looks_like_a_secret" title="Link to this definition"></a></dt>
+<dd><p>Is this a URL that <em>is</em> a credential, rather than one that merely needs one?</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">looks_like_a_secret</span><span class="p">(</span><span class="s1">'https://hooks.slack.com/services/T0/B0/XXXX'</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">looks_like_a_secret</span><span class="p">(</span><span class="s1">'https://github.com/o/r/issues/1'</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.resolve">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolvers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.links.Link" title="crowsnest.links.Link"><span class="pre">Link</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.resolve" title="Link to this definition"></a></dt>
+<dd><p>Every reference in <code class="docutils literal notranslate"><span class="pre">text</span></code>, as JSON-able links, best first and de-duplicated.</p>
+<p><code class="docutils literal notranslate"><span class="pre">context</span></code> is what the text cannot say for itself – today just <code class="docutils literal notranslate"><span class="pre">repo_url</span></code>, the
+repository the session writing it works in, which is what makes a bare <code class="docutils literal notranslate"><span class="pre">#17</span></code>
+resolvable. <code class="docutils literal notranslate"><span class="pre">resolvers</span></code> is the seam (see the module docstring); they run in order
+and the first to claim a URL keeps its label, so a resolver placed first overrides
+those after it.</p>
+<p>The same reference appears many times in a session’s text, so a URL is kept once, at
+the position it was first seen. Results come in <strong>resolver order, not text order</strong> –
+the markdown links a session wrote out in full first, the shas it happened to mention
+last – because a page shows the first few and those should be the best few.
+<code class="docutils literal notranslate"><span class="pre">limit</span></code> bounds the result because this feeds a page meant to be read.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">l</span><span class="p">[</span><span class="s1">'text'</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">resolve</span><span class="p">(</span><span class="s1">'see #1 and o/r#2'</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s1">'repo_url'</span><span class="p">:</span> <span class="s1">'https://github.com/o/r'</span><span class="p">})]</span>
+<span class="go">['r#2', 'r#1']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.links.without_written_out_links">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.links.</span></span><span class="sig-name descname"><span class="pre">without_written_out_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/links.html#without_written_out_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.links.without_written_out_links" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">text</span></code> with every markdown link and bare URL blanked, lengths preserved.</p>
+<p>The context-dependent resolvers – the ones that attach a loose <code class="docutils literal notranslate"><span class="pre">#17</span></code> or a loose
+sha to <em>this session’s</em> repository – must not fire inside a reference somebody
+already wrote out in full. A ledger saying
+<code class="docutils literal notranslate"><span class="pre">[#144](https://github.com/thorwhalen/priv/pull/144)</span></code> names priv’s 144; reading the
+<code class="docutils literal notranslate"><span class="pre">#144</span></code> out of its label and resolving it against the session’s own repository
+invents a link to a different project’s issue 144, which on a repository with six
+hundred issues is a page that exists and is about something else.</p>
+<p>Blanked rather than removed so that every offset in the string still means what it
+meant – lookbehinds on either side of a match keep working.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">without_written_out_links</span><span class="p">(</span><span class="s1">'see [#1](https://github.com/o/r/pull/1) and #2'</span><span class="p">)</span>
+<span class="go">'see                                     and #2'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lineage.html" class="btn btn-neutral float-left" title="crowsnest.lineage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="open.html" class="btn btn-neutral float-right" title="crowsnest.open" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

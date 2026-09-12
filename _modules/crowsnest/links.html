@@ -1,0 +1,773 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.links &mdash; crowsnest 0.0.30 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=61a342a2"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/account.html">crowsnest.account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/links.html">crowsnest.links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.links</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.links</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""References in a session's own words, turned into links you can click.</span>
+
+<span class="sd">Sessions write references down constantly -- ``#17``, ``i2mint/mergeset#12``, a commit</span>
+<span class="sd">sha, a CI run, an artifact URL -- and a roster that prints them as text makes the reader</span>
+<span class="sd">reconstruct a URL by hand for every one. The user's own convention says the opposite:</span>
+<span class="sd">*a reference is a full clickable link every time it appears, including the second time</span>
+<span class="sd">and inside a table.* This module is that convention, automated.</span>
+
+<span class="sd">**The non-obvious one is the bare ``#N``.** A session working in ``i2mint/mergeset`` that</span>
+<span class="sd">writes ``#17`` means that repository's issue 17, and nothing in the text says so -- but</span>
+<span class="sd">crowsnest already knows the session's working directory, and :func:`crowsnest.tools.repo_url`</span>
+<span class="sd">already turns that into a remote. So the cheapest, most common reference a session writes</span>
+<span class="sd">is resolvable exactly, and only here: a link resolver that did not know where the text was</span>
+<span class="sd">written could never do it.</span>
+
+<span class="sd">``resolvers=`` is the seam. A resolver is a callable ``(text, context) -&gt; Iterable[Link]``</span>
+<span class="sd">-- it owns its own pattern, because what a reference *looks like* and what it *resolves</span>
+<span class="sd">to* are the same question, and splitting them into "find a token" and "map a token" makes</span>
+<span class="sd">the markdown-link case (which is not token-shaped) impossible to express. They run in</span>
+<span class="sd">order and the first link found for a given URL wins, so a better resolver put first</span>
+<span class="sd">overrides a worse one. :data:`DFLT_RESOLVERS` is what a caller gets by leaving it out, in</span>
+<span class="sd">the order they are worth:</span>
+
+<span class="sd">===========================  ============================================================</span>
+<span class="sd">resolver                     what it reads</span>
+<span class="sd">===========================  ============================================================</span>
+<span class="sd">:func:`from_markdown_links`  ``[label](url)`` a session already wrote out in full. The</span>
+<span class="sd">                             highest-quality source there is, and it costs one parse.</span>
+<span class="sd">:func:`from_urls`            a bare URL, typed by where it points (issue, pull request,</span>
+<span class="sd">                             discussion, commit, CI run, artifact, session, Slack).</span>
+<span class="sd">:func:`from_repo_refs`       ``owner/repo#N``, which names its own repository.</span>
+<span class="sd">:func:`from_issue_refs`      a bare ``#N``, against the repository the session is working</span>
+<span class="sd">                             in. The one that needs crowsnest to resolve at all.</span>
+<span class="sd">:func:`from_commits`         a bare commit sha, against that same repository.</span>
+<span class="sd">===========================  ============================================================</span>
+
+<span class="sd">The ``context`` is a plain mapping, not an object, so it crosses every surface the way</span>
+<span class="sd">everything else in crowsnest does: ``{"repo_url": "https://github.com/owner/repo"}`` is</span>
+<span class="sd">the whole of it today.</span>
+
+<span class="sd">Nothing here fetches anything. A link is *constructed* from what the text says and what</span>
+<span class="sd">the session's directory implies; whether the issue exists is GitHub's business, and a</span>
+<span class="sd">resolver that checked would turn a report into a few hundred network calls.</span>
+
+<span class="sd">&gt;&gt;&gt; found = resolve('fixed in #17', context={'repo_url': 'https://github.com/o/r'})</span>
+<span class="sd">&gt;&gt;&gt; found[0]['type'], found[0]['url'], found[0]['text']</span>
+<span class="sd">('issue', 'https://github.com/o/r/issues/17', 'r#17')</span>
+<span class="sd">&gt;&gt;&gt; resolve('fixed in #17')                       # no repository, so no link</span>
+<span class="sd">[]</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"DFLT_RESOLVERS"</span><span class="p">,</span>
+    <span class="s2">"MAX_LINKS"</span><span class="p">,</span>
+    <span class="s2">"SECRET_URL_SHAPES"</span><span class="p">,</span>
+    <span class="s2">"Link"</span><span class="p">,</span>
+    <span class="s2">"from_commits"</span><span class="p">,</span>
+    <span class="s2">"from_issue_refs"</span><span class="p">,</span>
+    <span class="s2">"from_markdown_links"</span><span class="p">,</span>
+    <span class="s2">"from_repo_refs"</span><span class="p">,</span>
+    <span class="s2">"from_urls"</span><span class="p">,</span>
+    <span class="s2">"github_ref"</span><span class="p">,</span>
+    <span class="s2">"identity"</span><span class="p">,</span>
+    <span class="s2">"kind_of"</span><span class="p">,</span>
+    <span class="s2">"label_for"</span><span class="p">,</span>
+    <span class="s2">"looks_like_a_secret"</span><span class="p">,</span>
+    <span class="s2">"resolve"</span><span class="p">,</span>
+    <span class="s2">"without_written_out_links"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: How many links one piece of text yields. A session re-records the same reference on</span>
+<span class="c1">#: nearly every turn, so the cap is reached by breadth rather than by repetition -- the</span>
+<span class="c1">#: de-duplication below happens first.</span>
+<span class="n">MAX_LINKS</span> <span class="o">=</span> <span class="mi">12</span>
+
+<span class="c1">#: The schemes a link may use. Anything else is not a link for our purposes, and the</span>
+<span class="c1">#: page's own sanitiser refuses it a second time on the way out.</span>
+<span class="n">_SCHEMES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"https://"</span><span class="p">,</span> <span class="s2">"http://"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Link">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.Link">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Link</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One reference, resolved: what kind it is, where it goes, what to call it.</span>
+
+<span class="sd">    Shaped like :class:`openloops.transcripts.Locator` on purpose -- ``type``, ``url``,</span>
+<span class="sd">    ``text`` -- because the report already renders those, and a second shape for the same</span>
+<span class="sd">    idea would mean a second renderer.</span>
+
+<span class="sd">    &gt;&gt;&gt; Link('issue', 'https://github.com/o/r/issues/1', 'r#1').as_dict()['type']</span>
+<span class="sd">    'issue'</span>
+<span class="sd">    """</span>
+
+    <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+<div class="viewcode-block" id="Link.as_dict">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.Link.as_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""JSON-ready form."""</span>
+        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Reading a GitHub URL, which several resolvers need</span>
+
+
+<span class="n">_GITHUB</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"^https?://(?:www\.)?github\.com/([\w.-]+)/([\w.-]+)"</span>
+    <span class="sa">r</span><span class="s2">"(?:/(issues|pull|discussions|commit|actions/runs)/([\w.]+))?"</span><span class="p">,</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">#: What GitHub calls a thing in its URL, and what crowsnest calls it.</span>
+<span class="n">_GITHUB_KINDS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"issues"</span><span class="p">:</span> <span class="s2">"issue"</span><span class="p">,</span>
+    <span class="s2">"pull"</span><span class="p">:</span> <span class="s2">"pr"</span><span class="p">,</span>
+    <span class="s2">"discussions"</span><span class="p">:</span> <span class="s2">"discussion"</span><span class="p">,</span>
+    <span class="s2">"commit"</span><span class="p">:</span> <span class="s2">"commit"</span><span class="p">,</span>
+    <span class="s2">"actions/runs"</span><span class="p">:</span> <span class="s2">"run"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="github_ref">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.github_ref">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">github_ref</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A GitHub URL as ``(kind, owner, repo, number)``; empty strings when it is not one.</span>
+
+<span class="sd">    &gt;&gt;&gt; github_ref('https://github.com/i2mint/mergeset/pull/27')</span>
+<span class="sd">    ('pr', 'i2mint', 'mergeset', '27')</span>
+<span class="sd">    &gt;&gt;&gt; github_ref('https://github.com/o/r')</span>
+<span class="sd">    ('repo', 'o', 'r', '')</span>
+<span class="sd">    &gt;&gt;&gt; github_ref('https://example.org/x')</span>
+<span class="sd">    ('', '', '', '')</span>
+<span class="sd">    &gt;&gt;&gt; github_ref('https://www.github.com/o/r/issues/3')</span>
+<span class="sd">    ('issue', 'o', 'r', '3')</span>
+<span class="sd">    """</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">_GITHUB</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">url</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">number</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">"repo"</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">_GITHUB_KINDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">path</span><span class="p">),</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">number</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_label</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What to call a URL when the text around it gave it no name.</span>
+
+<span class="sd">    ``repo#27`` for anything numbered, a short sha for a commit, the host otherwise --</span>
+<span class="sd">    the spellings a person already reads in a terminal.</span>
+
+<span class="sd">    &gt;&gt;&gt; _label('https://github.com/o/r/issues/3')</span>
+<span class="sd">    'r#3'</span>
+<span class="sd">    &gt;&gt;&gt; _label('https://github.com/o/r/commit/abc1234def5678')</span>
+<span class="sd">    'r@abc1234'</span>
+<span class="sd">    &gt;&gt;&gt; _label('https://claude.ai/code/artifact/x')</span>
+<span class="sd">    'artifact'</span>
+<span class="sd">    """</span>
+    <span class="n">kind</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">number</span> <span class="o">=</span> <span class="n">github_ref</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"commit"</span> <span class="ow">and</span> <span class="n">number</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">number</span><span class="p">[:</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"run"</span> <span class="ow">and</span> <span class="n">number</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2"> run </span><span class="si">{</span><span class="n">number</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">number</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="n">number</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"repo"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">repo</span>
+    <span class="n">other</span> <span class="o">=</span> <span class="n">kind_of</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">other</span> <span class="o">!=</span> <span class="s2">"link"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">other</span>
+    <span class="k">return</span> <span class="n">_KNOWN_HOSTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_host</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="n">_host</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
+
+
+<span class="c1">#: URL shapes where the URL *is* the credential: holding it is the whole of the</span>
+<span class="c1">#: permission, so printing it on a page is disclosing it. openloops' scrubber catches</span>
+<span class="c1">#: credential-shaped *text* (an inline password, an API key) and these are not that --</span>
+<span class="c1">#: they are ordinary-looking https URLs whose path is the secret.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Best effort by construction, and the report's sanitiser is still the second line. What</span>
+<span class="c1">#: makes it worth having anyway is the direction of travel: before links were resolved,</span>
+<span class="c1">#: a webhook sitting in a ledger had no path to a page that gets published off the</span>
+<span class="c1">#: machine. Add a shape here when one is found; the cost of a false positive is one link</span>
+<span class="c1">#: that renders as text.</span>
+<span class="n">SECRET_URL_SHAPES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^https?://hooks\.slack\.com/services/"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^https?://[\w.-]*discord(app)?\.com/api/webhooks/"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+        <span class="sa">r</span><span class="s2">"^https?://[\w.-]+/[\w/.-]*\?[^#]*\b(x-amz-signature|sig|signature|token|access_token|api[_-]?key|apikey|secret|password)="</span><span class="p">,</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^https?://[^/@]*:[^/@]*@"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>  <span class="c1"># userinfo: user:password@host</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="looks_like_a_secret">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.looks_like_a_secret">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">looks_like_a_secret</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Is this a URL that *is* a credential, rather than one that merely needs one?</span>
+
+<span class="sd">    &gt;&gt;&gt; looks_like_a_secret('https://hooks.slack.com/services/T0/B0/XXXX')</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; looks_like_a_secret('https://github.com/o/r/issues/1')</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">url</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span> <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">SECRET_URL_SHAPES</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_host</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">rest</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">url</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"://"</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">rest</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"www."</span><span class="p">)</span>
+
+
+<span class="c1">#: Hosts worth naming by what they are rather than by their domain.</span>
+<span class="n">_KNOWN_HOSTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"claude.ai"</span><span class="p">:</span> <span class="s2">"claude"</span><span class="p">,</span>
+    <span class="s2">"github.com"</span><span class="p">:</span> <span class="s2">"github"</span><span class="p">,</span>
+    <span class="s2">"pypi.org"</span><span class="p">:</span> <span class="s2">"pypi"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="kind_of">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.kind_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kind_of</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What a bare URL points at, as one word.</span>
+
+<span class="sd">    &gt;&gt;&gt; kind_of('https://github.com/o/r/pull/1'), kind_of('https://x.slack.com/archives/C1/p2')</span>
+<span class="sd">    ('pr', 'slack')</span>
+<span class="sd">    &gt;&gt;&gt; kind_of('https://claude.ai/code/artifact/abc'), kind_of('https://example.org')</span>
+<span class="sd">    ('artifact', 'link')</span>
+<span class="sd">    """</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">github_ref</span><span class="p">(</span><span class="n">url</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">kind</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">kind</span>
+    <span class="n">host</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">_host</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">url</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"://"</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"slack.com"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"slack"</span>
+    <span class="k">if</span> <span class="n">host</span> <span class="o">==</span> <span class="s2">"claude.ai"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"/artifact"</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"artifact"</span>
+        <span class="k">return</span> <span class="s2">"session"</span> <span class="k">if</span> <span class="s2">"/code/"</span> <span class="ow">in</span> <span class="n">path</span> <span class="k">else</span> <span class="s2">"claude"</span>
+    <span class="k">return</span> <span class="s2">"link"</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The resolvers</span>
+
+
+<span class="n">_MARKDOWN_LINK</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\[([^\]\n]{1,120})\]\((https?://[^\s)]+)\)"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="without_written_out_links">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.without_written_out_links">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">without_written_out_links</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``text`` with every markdown link and bare URL blanked, lengths preserved.</span>
+
+<span class="sd">    The context-dependent resolvers -- the ones that attach a loose ``#17`` or a loose</span>
+<span class="sd">    sha to *this session's* repository -- must not fire inside a reference somebody</span>
+<span class="sd">    already wrote out in full. A ledger saying</span>
+<span class="sd">    ``[#144](https://github.com/thorwhalen/priv/pull/144)`` names priv's 144; reading the</span>
+<span class="sd">    ``#144`` out of its label and resolving it against the session's own repository</span>
+<span class="sd">    invents a link to a different project's issue 144, which on a repository with six</span>
+<span class="sd">    hundred issues is a page that exists and is about something else.</span>
+
+<span class="sd">    Blanked rather than removed so that every offset in the string still means what it</span>
+<span class="sd">    meant -- lookbehinds on either side of a match keep working.</span>
+
+<span class="sd">    &gt;&gt;&gt; without_written_out_links('see [#1](https://github.com/o/r/pull/1) and #2')</span>
+<span class="sd">    'see                                     and #2'</span>
+<span class="sd">    """</span>
+    <span class="n">masked</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_MARKDOWN_LINK</span><span class="p">,</span> <span class="n">_BARE_URL</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">pattern</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">(),</span> <span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()):</span>
+                <span class="n">masked</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s2">" "</span>
+    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">masked</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="from_markdown_links">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.from_markdown_links">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_markdown_links</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Link</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``[label](url)`` a session already wrote out in full, keeping the label it chose.</span>
+
+<span class="sd">    The best source available and the cheapest: a session that wrote a markdown link had</span>
+<span class="sd">    the whole reference in hand and named it for a reader. Nothing is inferred.</span>
+
+<span class="sd">    &gt;&gt;&gt; from_markdown_links('see [PR 27](https://github.com/o/r/pull/27)', {})[0].text</span>
+<span class="sd">    'PR 27'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Link</span><span class="p">(</span><span class="n">kind_of</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_MARKDOWN_LINK</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">looks_like_a_secret</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="c1">#: A URL in running text. The excluded characters are the ones markdown puts *around* a</span>
+<span class="c1">#: URL rather than in one -- backticks, asterisks and underscores for emphasis, the</span>
+<span class="c1">#: brackets of a link -- because a ledger is markdown and this project's own style is to</span>
+<span class="c1">#: bold URLs and wrap them in backticks. Getting this wrong does not produce a wrong</span>
+<span class="c1">#: link, it produces a dead one, on the reference most likely to be clicked.</span>
+<span class="n">_BARE_URL</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?&lt;![\(\]])\bhttps?://[^\s&lt;&gt;</span><span class="se">\"</span><span class="s2">'`*\[\]]+"</span><span class="p">)</span>
+
+<span class="c1">#: Trailing characters that end a sentence rather than a URL.</span>
+<span class="n">_URL_TAIL</span> <span class="o">=</span> <span class="s2">".,;:!?'</span><span class="se">\"</span><span class="s2">`*_)]}&gt;"</span>
+
+
+<div class="viewcode-block" id="from_urls">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.from_urls">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_urls</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Link</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A bare URL, typed by where it points and labelled the way a person would say it.</span>
+
+<span class="sd">    &gt;&gt;&gt; [(l.type, l.text) for l in from_urls('see https://github.com/o/r/issues/3', {})]</span>
+<span class="sd">    [('issue', 'r#3')]</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_BARE_URL</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">_trim</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">url</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">looks_like_a_secret</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Link</span><span class="p">(</span><span class="n">kind_of</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="n">url</span><span class="p">,</span> <span class="n">_label</span><span class="p">(</span><span class="n">url</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_trim</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Drop the punctuation that ended the sentence rather than the URL.</span>
+
+<span class="sd">    A closing parenthesis is kept when the URL opened one, so a Wikipedia article does</span>
+<span class="sd">    not lose its disambiguator.</span>
+
+<span class="sd">    &gt;&gt;&gt; _trim('https://example.org/x.')</span>
+<span class="sd">    'https://example.org/x'</span>
+<span class="sd">    &gt;&gt;&gt; _trim('https://en.wikipedia.org/wiki/Foo_(bar)')</span>
+<span class="sd">    'https://en.wikipedia.org/wiki/Foo_(bar)'</span>
+<span class="sd">    """</span>
+    <span class="k">while</span> <span class="n">url</span> <span class="ow">and</span> <span class="n">url</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">_URL_TAIL</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">url</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">")"</span> <span class="ow">and</span> <span class="n">url</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"("</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">url</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">")"</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="c1">#: ``owner/repo#N``. Both halves must look like GitHub names -- no dots in the owner, and</span>
+<span class="c1">#: a repo that is not a filename -- and neither may be preceded by anything that would</span>
+<span class="c1">#: make this the tail of a path or a URL. Without that, ``src/foo.py#12`` and the ``#``</span>
+<span class="c1">#: fragment of any URL become repositories.</span>
+<span class="n">_REPO_REF</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?&lt;![\w/#.:-])([A-Za-z0-9][\w-]{0,38})/([A-Za-z0-9][\w.-]{0,99})#(\d{1,6})\b"</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="from_repo_refs">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.from_repo_refs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_repo_refs</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Link</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``owner/repo#N``, which names its own repository and needs no context.</span>
+
+<span class="sd">    The issue-or-pull-request ambiguity is left as ``issue``: GitHub redirects an issue</span>
+<span class="sd">    URL to the pull request when that is what the number is, so the link works either</span>
+<span class="sd">    way, and guessing would be a guess.</span>
+
+<span class="sd">    &gt;&gt;&gt; from_repo_refs('see i2mint/mergeset#12', {})[0].url</span>
+<span class="sd">    'https://github.com/i2mint/mergeset/issues/12'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Link</span><span class="p">(</span>
+            <span class="s2">"issue"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"https://github.com/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">/issues/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_REPO_REF</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">without_written_out_links</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_looks_like_a_path</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="c1">#: Endings that make ``owner/repo`` a file path instead. A repository may contain a dot</span>
+<span class="c1">#: (``my.repo`` is legal), so the test is the extension rather than the dot: ``src/foo.py#12``</span>
+<span class="c1">#: is a line reference in a diff, not issue 12 of a repository called ``foo.py``.</span>
+<span class="n">_FILE_ENDINGS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">".py"</span><span class="p">,</span>
+    <span class="s2">".js"</span><span class="p">,</span>
+    <span class="s2">".ts"</span><span class="p">,</span>
+    <span class="s2">".tsx"</span><span class="p">,</span>
+    <span class="s2">".jsx"</span><span class="p">,</span>
+    <span class="s2">".md"</span><span class="p">,</span>
+    <span class="s2">".txt"</span><span class="p">,</span>
+    <span class="s2">".json"</span><span class="p">,</span>
+    <span class="s2">".toml"</span><span class="p">,</span>
+    <span class="s2">".yaml"</span><span class="p">,</span>
+    <span class="s2">".yml"</span><span class="p">,</span>
+    <span class="s2">".sh"</span><span class="p">,</span>
+    <span class="s2">".html"</span><span class="p">,</span>
+    <span class="s2">".css"</span><span class="p">,</span>
+    <span class="s2">".rs"</span><span class="p">,</span>
+    <span class="s2">".go"</span><span class="p">,</span>
+    <span class="s2">".java"</span><span class="p">,</span>
+    <span class="s2">".c"</span><span class="p">,</span>
+    <span class="s2">".h"</span><span class="p">,</span>
+    <span class="s2">".cpp"</span><span class="p">,</span>
+    <span class="s2">".rb"</span><span class="p">,</span>
+    <span class="s2">".ipynb"</span><span class="p">,</span>
+    <span class="s2">".cfg"</span><span class="p">,</span>
+    <span class="s2">".ini"</span><span class="p">,</span>
+    <span class="s2">".lock"</span><span class="p">,</span>
+    <span class="s2">".log"</span><span class="p">,</span>
+    <span class="s2">".csv"</span><span class="p">,</span>
+    <span class="s2">".sql"</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_looks_like_a_path</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Is this second half a filename rather than a repository name?</span>
+
+<span class="sd">    &gt;&gt;&gt; _looks_like_a_path('foo.py'), _looks_like_a_path('my.repo')</span>
+<span class="sd">    (True, False)</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">repo</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_FILE_ENDINGS</span><span class="p">)</span>
+
+
+<span class="c1">#: A loose ``#17``. Bounded to four digits because a longer run of digits behind a hash</span>
+<span class="c1">#: is far more often a colour (``#336699``) than an issue -- no repository this reports on</span>
+<span class="c1">#: has ten thousand issues, and the cost of the cap is a link that was never going to be</span>
+<span class="c1">#: right. The lookbehind excludes a word character, a slash, an ampersand (``&amp;#8212;``)</span>
+<span class="c1">#: and a hash, and the caller masks out anything already written out as a link.</span>
+<span class="n">_ISSUE_REF</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?&lt;![\w/&amp;#])#(\d{1,4})\b(?![\d-])"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="from_issue_refs">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.from_issue_refs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_issue_refs</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Link</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A bare ``#N``, resolved against the repository the session is working in.</span>
+
+<span class="sd">    This is the one that needs crowsnest. ``#17`` is the commonest reference a session</span>
+<span class="sd">    writes and the least resolvable on its own; the session's working directory says which</span>
+<span class="sd">    repository it means, and the roster already knows the directory.</span>
+
+<span class="sd">    Nothing is produced without a ``repo_url`` in the context -- a wrong repository is</span>
+<span class="sd">    worse than no link, because a link that goes somewhere plausible and wrong is one</span>
+<span class="sd">    nobody checks.</span>
+
+<span class="sd">    &gt;&gt;&gt; from_issue_refs('closes #17', {'repo_url': 'https://github.com/o/r'})[0].url</span>
+<span class="sd">    'https://github.com/o/r/issues/17'</span>
+<span class="sd">    &gt;&gt;&gt; from_issue_refs('closes #17', {})</span>
+<span class="sd">    []</span>
+<span class="sd">    """</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">_repo_of</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">repo</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Link</span><span class="p">(</span><span class="s2">"issue"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/issues/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_ISSUE_REF</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">without_written_out_links</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_repo_of</span><span class="p">(</span><span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The GitHub repository the text was written in, or ``''`` if there is not one."""</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"repo_url"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">repo</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_SCHEMES</span><span class="p">)</span> <span class="ow">or</span> <span class="n">github_ref</span><span class="p">(</span><span class="n">repo</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"repo"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="n">repo</span>
+
+
+<span class="c1">#: An abbreviated or full commit sha. The upper bound is deliberately *not* 40-anything:</span>
+<span class="c1">#: a 32-hex run is an md5 and a 64-hex run is a sha256, neither of which is a commit, and</span>
+<span class="c1">#: both appear in ordinary session text. A trailing ``-`` is excluded so the first group</span>
+<span class="c1">#: of a UUID is not read as a sha.</span>
+<span class="n">_COMMIT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?&lt;![\w/-])([0-9a-f]{7,12}|[0-9a-f]</span><span class="si">{40}</span><span class="s2">)(?![\w-])"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="from_commits">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.from_commits">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_commits</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Link</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""A bare commit sha, against the repository the session is working in.</span>
+
+<span class="sd">    Held to a hexadecimal run of at least seven characters that is not part of a longer</span>
+<span class="sd">    word, which is what git itself considers an abbreviated sha. A word that happens to be</span>
+<span class="sd">    seven hex letters (``decade``, ``defaced``) is the false positive this accepts; it</span>
+<span class="sd">    costs a link nobody clicks, where the alternative -- not linking shas at all -- costs</span>
+<span class="sd">    the one reference a person most often wants to look up.</span>
+
+<span class="sd">    &gt;&gt;&gt; from_commits('fixed in 7d30838', {'repo_url': 'https://github.com/o/r'})[0].text</span>
+<span class="sd">    'r@7d30838'</span>
+<span class="sd">    """</span>
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">_repo_of</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">repo</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Link</span><span class="p">(</span><span class="s2">"commit"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">/commit/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)[:</span><span class="mi">7</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_COMMIT</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">without_written_out_links</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span>  <span class="c1"># a long number is a number, not a sha</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="c1">#: The resolvers :func:`resolve` uses when the caller names none, best first. Order is</span>
+<span class="c1">#: precedence: the first resolver to claim a URL is the one whose label it keeps, which is</span>
+<span class="c1">#: why the markdown one -- the only source where a human named the link -- comes first.</span>
+<span class="n">DFLT_RESOLVERS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Link</span><span class="p">]],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">from_markdown_links</span><span class="p">,</span>
+    <span class="n">from_urls</span><span class="p">,</span>
+    <span class="n">from_repo_refs</span><span class="p">,</span>
+    <span class="n">from_issue_refs</span><span class="p">,</span>
+    <span class="n">from_commits</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The one entry point</span>
+
+
+<div class="viewcode-block" id="resolve">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.resolve">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolvers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Link</span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">MAX_LINKS</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every reference in ``text``, as JSON-able links, best first and de-duplicated.</span>
+
+<span class="sd">    ``context`` is what the text cannot say for itself -- today just ``repo_url``, the</span>
+<span class="sd">    repository the session writing it works in, which is what makes a bare ``#17``</span>
+<span class="sd">    resolvable. ``resolvers`` is the seam (see the module docstring); they run in order</span>
+<span class="sd">    and the first to claim a URL keeps its label, so a resolver placed first overrides</span>
+<span class="sd">    those after it.</span>
+
+<span class="sd">    The same reference appears many times in a session's text, so a URL is kept once, at</span>
+<span class="sd">    the position it was first seen. Results come in **resolver order, not text order** --</span>
+<span class="sd">    the markdown links a session wrote out in full first, the shas it happened to mention</span>
+<span class="sd">    last -- because a page shows the first few and those should be the best few.</span>
+<span class="sd">    ``limit`` bounds the result because this feeds a page meant to be read.</span>
+
+<span class="sd">    &gt;&gt;&gt; [l['text'] for l in resolve('see #1 and o/r#2', context={'repo_url': 'https://github.com/o/r'})]</span>
+<span class="sd">    ['r#2', 'r#1']</span>
+<span class="sd">    """</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">context</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">context</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Link</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">resolver</span> <span class="ow">in</span> <span class="n">DFLT_RESOLVERS</span> <span class="k">if</span> <span class="n">resolvers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resolvers</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">_whatever_it_found</span><span class="p">(</span><span class="n">resolver</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">url</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">looks_like_a_secret</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">url</span><span class="p">):</span>
+                <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">identity</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">url</span><span class="p">),</span> <span class="n">link</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">link</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">values</span><span class="p">())[:</span><span class="n">limit</span><span class="p">]]</span></div>
+
+
+
+<div class="viewcode-block" id="identity">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.identity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">identity</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What two links have in common when they are the same reference.</span>
+
+<span class="sd">    A bare ``#45`` resolves to ``.../issues/45`` and a session that wrote the link out in</span>
+<span class="sd">    full may have written ``.../pull/45`` -- **the same thing**, because GitHub redirects</span>
+<span class="sd">    an issue URL to the pull request when that is what the number is. Showing both is the</span>
+<span class="sd">    noise this feature exists to remove, so they collapse to one identity and the better</span>
+<span class="sd">    label wins. A discussion does *not* collapse into them: ``discussions/45`` is a</span>
+<span class="sd">    different object that happens to share a number.</span>
+
+<span class="sd">    Two spellings of one commit also collapse. A session writes ``eb0774d0a`` in one place</span>
+<span class="sd">    and the full forty characters in another, and both are the same commit; the longer</span>
+<span class="sd">    prefix wins on length, so they are compared on the shorter one's length.</span>
+
+<span class="sd">    &gt;&gt;&gt; identity('https://github.com/o/r/pull/45') == identity('https://github.com/o/r/issues/45')</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; identity('https://github.com/o/r/discussions/45') == identity('https://github.com/o/r/issues/45')</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; identity('https://WWW.github.com/O/R/issues/45') == identity('https://github.com/o/r/issues/45')</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">kind</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">number</span> <span class="o">=</span> <span class="n">github_ref</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">owner</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"issue"</span><span class="p">,</span> <span class="s2">"pr"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">number</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"github:</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">#</span><span class="si">{</span><span class="n">number</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"commit"</span> <span class="ow">and</span> <span class="n">number</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"github:</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">number</span><span class="p">[:</span><span class="n">_SHA_PREFIX</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">url</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
+
+
+
+<span class="c1">#: How much of a commit sha two spellings must share to be the same commit. Git's own</span>
+<span class="c1">#: abbreviation floor is seven; a shared seven-character prefix between two *different*</span>
+<span class="c1">#: commits of one repository is the collision git itself tolerates.</span>
+<span class="n">_SHA_PREFIX</span> <span class="o">=</span> <span class="mi">7</span>
+
+
+<div class="viewcode-block" id="label_for">
+<a class="viewcode-back" href="../../module_docs/crowsnest/links.html#crowsnest.links.label_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">label_for</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``text`` when it says something, else a name derived from the URL.</span>
+
+<span class="sd">    The report calls this for references that reached it without a label -- openloops'</span>
+<span class="sd">    own locators carry a URL and nothing else -- so that nothing renders as a bare,</span>
+<span class="sd">    unclickable-looking blank.</span>
+
+<span class="sd">    &gt;&gt;&gt; label_for('https://github.com/o/r/pull/27')</span>
+<span class="sd">    'r#27'</span>
+<span class="sd">    &gt;&gt;&gt; label_for('https://github.com/o/r/pull/27', 'the release PR')</span>
+<span class="sd">    'the release PR'</span>
+<span class="sd">    """</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">text</span> <span class="ow">or</span> <span class="n">_label</span><span class="p">(</span><span class="n">url</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_whatever_it_found</span><span class="p">(</span>
+    <span class="n">resolver</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Link</span><span class="p">]],</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Mapping</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Link</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""One resolver's links, or none: a resolver that raises may not lose the others.</span>
+
+<span class="sd">    A resolver may return :class:`Link` objects or the plain mappings every other</span>
+<span class="sd">    crowsnest boundary speaks in -- ``resolve`` itself returns dicts, so a caller writing</span>
+<span class="sd">    one against this seam will reasonably return dicts too, and crashing on the natural</span>
+<span class="sd">    guess is not a seam anyone can use.</span>
+
+<span class="sd">    Swallowed rather than raised because this runs once per session per render of a page</span>
+<span class="sd">    whose job is to be readable; a custom resolver with a bad pattern should cost its own</span>
+<span class="sd">    links and nothing else.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_as_link</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="k">for</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">resolver</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- any resolver, any failure; the others still count</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_link</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Link</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A resolver's result as a :class:`Link`, whichever of the two shapes it used."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">Link</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">found</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">found</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"type"</span><span class="p">,</span> <span class="s2">"url"</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">Link</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"link"</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">})</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.tools &mdash; crowsnest 0.0.29 documentation</title>
+  <title>crowsnest.tools &mdash; crowsnest 0.0.30 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=828725f0"></script>
+      <script src="../../_static/documentation_options.js?v=61a342a2"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/links.html">crowsnest.links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -104,6 +105,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
@@ -132,6 +134,11 @@
 <span class="c1">#: How many issue or PR references a roster row carries. The page shows them; ``show``</span>
 <span class="c1">#: carries them all.</span>
 <span class="n">ROSTER_LOCATORS</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="c1">#: How many resolved links a roster row carries. More than the locator cap because these</span>
+<span class="c1">#: are the row's whole reference list -- what it said, what it wrote down, what it is</span>
+<span class="c1">#: waiting on -- rather than the pull requests alone.</span>
+<span class="n">ROSTER_LINKS</span> <span class="o">=</span> <span class="mi">8</span>
 
 <span class="n">_SSH_REMOTE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^(?:ssh://)?(?:[\w.-]+@)?([\w.-]+)[:/](.+?)(?:\.git)?/?$"</span><span class="p">)</span>
 
@@ -265,6 +272,9 @@
     <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">activity</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">text_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">ROSTER_TEXT_LIMIT</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Every live session, most urgent first, each with a clipped view of its activity.</span>
@@ -272,7 +282,18 @@
 <span class="sd">    ``activity=False`` skips the transcript tails and answers from the registry alone --</span>
 <span class="sd">    instant, and enough to know who is waiting. ``all_homes`` reads every configured</span>
 <span class="sd">    home (see :mod:`crowsnest.config`) and stamps each row with its home's name.</span>
+
+<span class="sd">    ``links`` resolves the references each session wrote -- in its last words, in the</span>
+<span class="sd">    question it is waiting on, and in its ledger -- into URLs, so the page can render</span>
+<span class="sd">    every one of them as a link rather than as text a reader has to reconstruct</span>
+<span class="sd">    (:mod:`crowsnest.links`; ``resolvers`` is that module's seam, and ``ledger_dir`` says</span>
+<span class="sd">    where the ledgers are).</span>
+
+<span class="sd">    **It follows ``activity`` unless it is asked for.** Resolving costs a ledger read per</span>
+<span class="sd">    session, which is nothing next to a transcript tail and everything next to a registry</span>
+<span class="sd">    listing -- and ``activity=False`` promises "instant". Pass ``links=True`` to have both.</span>
 <span class="sd">    """</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="n">activity</span> <span class="k">if</span> <span class="n">links</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">links</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">):</span>
         <span class="n">row</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
@@ -293,11 +314,102 @@
                 <span class="s2">"tail_turns"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">tail_turns</span><span class="p">,</span>
                 <span class="s2">"locators"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">locators</span><span class="p">[</span><span class="o">-</span><span class="n">ROSTER_LOCATORS</span><span class="p">:]),</span>
             <span class="p">}</span>
+        <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
+            <span class="n">row</span><span class="p">[</span><span class="s2">"links"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_links_of</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span> <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">ROSTER_LINKS</span>
+            <span class="p">)</span>
         <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
     <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">status</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">==</span> <span class="n">status</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">STATUSES</span><span class="p">}</span>
     <span class="n">counts</span><span class="p">[</span><span class="s2">"other"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
     <span class="k">return</span> <span class="p">{</span><span class="s2">"sessions"</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">:</span> <span class="n">counts</span><span class="p">}</span></div>
 
+
+
+<span class="c1">#: The resolvers that attach a loose reference to *this* session's repository. They are</span>
+<span class="c1">#: the ones that must only be shown text the session wrote **about its own work**.</span>
+<span class="n">_NEEDS_THE_REPO</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"from_issue_refs"</span><span class="p">,</span> <span class="s2">"from_commits"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_links_of</span><span class="p">(</span>
+    <span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">ROSTER_LINKS</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every reference one session wrote, resolved as far as it can honestly be.</span>
+
+<span class="sd">    Three sources: the pull requests the transcript recorded for itself (openloops' own</span>
+<span class="sd">    locators, already typed and already URLs), the session's ledger, and its last words</span>
+<span class="sd">    plus the question it is waiting on.</span>
+
+<span class="sd">    **Two pools, not one, and this is the whole subtlety.** A loose ``#17`` or a loose sha</span>
+<span class="sd">    only means something against a repository, and the only repository crowsnest can</span>
+<span class="sd">    supply is the one the session's working directory names. That is right for what the</span>
+<span class="sd">    session says about its own work -- its last words, the question it is waiting on, the</span>
+<span class="sd">    ledger's mechanical ``last asked`` / ``last said``. It is *not* right for the ledger's</span>
+<span class="sd">    free part, which is prose where a session discusses whatever it likes: a ledger that</span>
+<span class="sd">    quotes another project's ``#573`` would otherwise produce a link to this project's</span>
+<span class="sd">    573, and on a repository with six hundred issues that is a page which exists and is</span>
+<span class="sd">    about something else. So the free part is shown only the resolvers that need no</span>
+<span class="sd">    context -- markdown links, bare URLs, ``owner/repo#N``, all of which name their own</span>
+<span class="sd">    repository -- and loses nothing except guesses.</span>
+
+<span class="sd">    ``limit=None`` keeps them all, which is what ``show`` wants; a roster row wants a few.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.links</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_RESOLVERS</span><span class="p">,</span> <span class="n">MAX_LINKS</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">label_for</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.links</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve</span> <span class="k">as</span> <span class="n">_resolve</span>
+
+    <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"repo_url"</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"repo_url"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">}</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"locators"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">):</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">loc</span><span class="p">[</span><span class="s2">"url"</span><span class="p">])</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+                <span class="n">identity</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="p">{</span><span class="o">**</span><span class="n">loc</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="n">label_for</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"text"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))}</span>
+            <span class="p">)</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="n">_ledger_page</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span> <span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="n">chosen</span> <span class="o">=</span> <span class="n">DFLT_RESOLVERS</span> <span class="k">if</span> <span class="n">resolvers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">resolvers</span><span class="p">)</span>
+    <span class="n">own_work</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">part</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_assistant_text"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="n">page</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_asked"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="n">page</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_said"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">part</span>
+    <span class="p">)</span>
+    <span class="n">pools</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">own_work</span><span class="p">,</span> <span class="n">chosen</span><span class="p">),</span>
+        <span class="p">(</span>
+            <span class="n">page</span><span class="p">[</span><span class="s2">"free"</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">chosen</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s2">"__name__"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_NEEDS_THE_REPO</span><span class="p">],</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">text</span><span class="p">,</span> <span class="n">pool</span> <span class="ow">in</span> <span class="n">pools</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">resolvers</span><span class="o">=</span><span class="n">pool</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">MAX_LINKS</span><span class="p">):</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">identity</span><span class="p">(</span><span class="n">link</span><span class="p">[</span><span class="s2">"url"</span><span class="p">]),</span> <span class="n">link</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">values</span> <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">values</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ledger_page</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One session's ledger, or an empty one -- never an exception.</span>
+
+<span class="sd">    A ledger is a file a human edits, so it may be half-written, may hold a byte that is</span>
+<span class="sd">    not UTF-8, may be anything. The roster is read every few seconds and by a page that</span>
+<span class="sd">    is published; one bad ledger out of two hundred may not take the whole fleet's roster</span>
+<span class="sd">    down with it.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.ledger</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_ledger</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">read_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a broken ledger costs its own links, nothing else</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"fields"</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">"free"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="show">
@@ -309,11 +421,28 @@
     <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">recent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">RECENT_TOOLS</span><span class="p">,</span>
+    <span class="n">links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""One session in full: its registry record and its activity, unclipped."""</span>
+<span class="w">    </span><span class="sd">"""One session in full: its registry record, its activity unclipped, and its links.</span>
+
+<span class="sd">    ``links`` resolves every reference the session wrote -- in its ledger and in its own</span>
+<span class="sd">    words -- into a URL, a bare ``#17`` included (:mod:`crowsnest.links`). Unlike the</span>
+<span class="sd">    roster's, this list is not cut short: a person asking about one session wants all of</span>
+<span class="sd">    them.</span>
+<span class="sd">    """</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
     <span class="n">act</span> <span class="o">=</span> <span class="n">read_activity</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">recent</span><span class="o">=</span><span class="n">recent</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"activity"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()}</span></div>
+    <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"activity"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
+        <span class="n">row</span><span class="p">[</span><span class="s2">"links"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_links_of</span><span class="p">(</span>
+            <span class="p">{</span><span class="o">**</span><span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"repo_url"</span><span class="p">:</span> <span class="n">repo_url</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">cwd</span><span class="p">),</span> <span class="s2">"activity"</span><span class="p">:</span> <span class="n">act</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()},</span>
+            <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+            <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+            <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">row</span></div>
 
 
 
@@ -328,6 +457,9 @@
     <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_TITLE</span><span class="p">,</span>
     <span class="n">fragment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`</span>
 <span class="sd">    over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host</span>
@@ -338,9 +470,22 @@
 <span class="sd">    crowsnest function that stamps a generation time. ``all_homes`` reads every</span>
 <span class="sd">    configured home, and each row's ``home`` field (present when it does) shows up in</span>
 <span class="sd">    the page.</span>
+
+<span class="sd">    ``links``, ``ledger_dir`` and ``resolvers`` reach :func:`roster` unchanged. This is</span>
+<span class="sd">    the surface the link resolution exists for, so it is the surface that has to be able</span>
+<span class="sd">    to turn it off, point it at another ledger directory, or hand it a resolver of its</span>
+<span class="sd">    own -- and ``ledger_dir`` is also what lets a test of this function not read the</span>
+<span class="sd">    ledgers of whoever is running it.</span>
 <span class="sd">    """</span>
     <span class="n">made_at</span> <span class="o">=</span> <span class="n">made_at</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">roster</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">roster</span><span class="p">(</span>
+        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">html</span> <span class="o">=</span> <span class="n">render_report</span><span class="p">(</span>
         <span class="n">data</span><span class="p">,</span> <span class="n">made_at</span><span class="o">=</span><span class="n">made_at</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="n">fragment</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span>
     <span class="p">)</span>
