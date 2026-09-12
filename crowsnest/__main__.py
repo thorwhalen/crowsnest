@@ -316,6 +316,58 @@ def lineage(
     return "\n".join([*head, *_lineage_lines(found), *tail])
 
 
+#: What each triage group is called on one line of a terminal, and in which order.
+_TRIAGE_HEADINGS = (
+    ("needs_you", "NEEDS YOU"),
+    ("safe_to_close", "SAFE TO CLOSE"),
+    ("working", "WORKING"),
+    ("unclassified", "UNCLASSIFIED — has not said where it stands"),
+)
+
+
+def triage(
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    quiet: bool = False,
+    json: bool = False,
+):
+    """What needs you, what is safe to close, what is still working.
+
+    The three-line answer to "where are we", read from each session's ledger and its live
+    status. A session that has not said where it stands is reported as `unclassified`
+    rather than guessed into "safe to close" -- closing a terminal on unfinished work is
+    the expensive mistake, and `--quiet` hides that group when you already know.
+    """
+    import json as _json
+
+    found = tools.triage(home=home, all_homes=all_homes)
+    if json:
+        return _json.dumps(found, indent=2)
+    out = []
+    for group, heading in _TRIAGE_HEADINGS:
+        rows = found["groups"][group]
+        if quiet and group == "unclassified":
+            out.append(f"\n{heading}: {len(rows)}")
+            continue
+        out.append(f"\n{heading} ({len(rows)})")
+        for row in rows:
+            verdict = row["verdict"]
+            why = f"[{verdict['why']}] " if verdict["why"] else ""
+            detail = _one_line(f"{why}{verdict['reason']}", 88)
+            out.append(f"  {row['label'][:26]:<27}{row['project'][:14]:<15}{detail}")
+        if not rows:
+            out.append("  (none)")
+    counts = found["counts"]
+    out.append(
+        f"\n-- {counts['needs_you']} need you "
+        f"({counts['needs_you_decision']} to decide, {counts['needs_you_action']} to do), "
+        f"{counts['safe_to_close']} safe to close, {counts['working']} working, "
+        f"{counts['unclassified']} unclassified"
+    )
+    return "\n".join(out).lstrip("\n")
+
+
 def report(
     *,
     out: str | None = None,
@@ -620,6 +672,7 @@ _commands = [
     turns,
     brief,
     lineage,
+    triage,
     report,
     watch,
     ledger,

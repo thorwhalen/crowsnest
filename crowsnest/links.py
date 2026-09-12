@@ -191,7 +191,9 @@ SECRET_URL_SHAPES = (
         r"^https?://[\w.-]+/[\w/.-]*\?[^#]*\b(x-amz-signature|sig|signature|token|access_token|api[_-]?key|apikey|secret|password)=",
         re.IGNORECASE,
     ),
-    re.compile(r"^https?://[^/@]*:[^/@]*@", re.IGNORECASE),  # userinfo: user:password@host
+    re.compile(
+        r"^https?://[^/@]*:[^/@]*@", re.IGNORECASE
+    ),  # userinfo: user:password@host
 )
 
 

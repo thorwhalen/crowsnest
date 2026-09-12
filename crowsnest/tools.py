@@ -35,6 +35,7 @@ __all__ = [
     "roster",
     "sessions",
     "show",
+    "triage",
     "turns",
 ]
 
@@ -307,6 +308,74 @@ def _ledger_page(name: str, ledger_dir) -> dict:
         return {"fields": {}, "free": "", "text": ""}
 
 
+def triage(
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    verdicts=None,
+    activity: bool = True,
+) -> dict:
+    """Every live session grouped by what it needs: the three-line answer to "where are we".
+
+    :func:`crowsnest.triage.classify` over the same rows :func:`roster` reports, with each
+    session's ledger read for what it wrote down. ``verdicts`` is that module's seam.
+
+    Four groups (see :data:`crowsnest.triage.GROUPS`), and the one that makes it honest is
+    ``unclassified``: a session that has not said where it stands is reported as not
+    having said, never guessed into ``safe_to_close``. A wrong "safe to close" is the
+    expensive error -- somebody closes a terminal on unfinished work and nothing tells
+    them.
+    """
+    from crowsnest.triage import classify
+
+    rows = roster(
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        activity=activity,
+        links=True,
+        ledger_dir=ledger_dir,
+    )["sessions"]
+    ledgers = _ledgers_for({str(r.get("label") or "") for r in rows}, ledger_dir)
+    return {**classify(rows, ledgers=ledgers, verdicts=verdicts), "made_at": _now()}
+
+
+def _verdicted(rows, ledger_dir, verdicts) -> list[dict]:
+    """``rows`` with each one's triage verdict attached, order untouched."""
+    from crowsnest.triage import classify_row
+
+    pages = _ledgers_for({str(r.get("label") or "") for r in rows}, ledger_dir)
+    return [
+        {
+            **row,
+            "verdict": classify_row(
+                row,
+                ledger=pages.get(str(row.get("label") or "")) or {},
+                verdicts=verdicts,
+            ),
+        }
+        for row in rows
+    ]
+
+
+def _ledgers_for(labels, ledger_dir) -> dict:
+    """The ledger page of each named session, skipping the ones with none."""
+    pages = {}
+    for label in labels:
+        if not label:
+            continue
+        page = _ledger_page(label, ledger_dir)
+        if page.get("text"):
+            pages[label] = page
+    return pages
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 def show(
     session: str,
     *,
@@ -350,6 +419,8 @@ def report(
     links: bool = True,
     ledger_dir: str | Path | None = None,
     resolvers=None,
+    triage: bool = True,
+    verdicts=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -360,6 +431,13 @@ def report(
     crowsnest function that stamps a generation time. ``all_homes`` reads every
     configured home, and each row's ``home`` field (present when it does) shows up in
     the page.
+
+    ``triage`` classifies every row (:mod:`crowsnest.triage`; ``verdicts`` is that
+    module's seam) and the page then organises itself by what each session *needs* --
+    "Needs you" and "Safe to close" -- rather than by what status it happens to be in,
+    which is the question a person actually has. ``triage=False`` renders the older
+    status-organised page; so does calling :func:`crowsnest.report.render_report` on a
+    roster whose rows carry no verdict.
 
     ``links``, ``ledger_dir`` and ``resolvers`` reach :func:`roster` unchanged. This is
     the surface the link resolution exists for, so it is the surface that has to be able
@@ -376,6 +454,8 @@ def report(
         ledger_dir=ledger_dir,
         resolvers=resolvers,
     )
+    if triage:
+        data = {**data, "sessions": _verdicted(data["sessions"], ledger_dir, verdicts)}
     html = render_report(
         data, made_at=made_at, title=title, fragment=fragment, interactive=interactive
     )

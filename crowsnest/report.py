@@ -388,6 +388,41 @@ def _line(safe: _Sanitizer, tag: str, value: Any) -> str:
 # --------------------------------------------------------------------------------
 
 
+#: What a row's chip says when triage classified it. A person scanning the page needs to
+#: know *which kind* of needing before they read a word of the reason: a decision is a
+#: minute of thought, an action is a trip to another window.
+_WHY_CHIPS = {"decision": "decide", "action": "do", "question": "answer"}
+
+
+def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -> str:
+    """A session holding for a person, with what it wants and in whose words."""
+    act = row.get("activity") or {}
+    verdict = row.get("verdict") or {}
+    figure, unit = _age(row, now_epoch)
+    lines = []
+    if row.get("waiting_for"):
+        lines.append(_line(safe, "for", row["waiting_for"]))
+    if act.get("pending_question"):
+        lines.append(_line(safe, "asks", act["pending_question"]))
+    reason = verdict.get("reason")
+    if reason and reason not in (row.get("waiting_for"), act.get("pending_question")):
+        lines.append(_line(safe, _WHY_CHIPS.get(verdict.get("why"), "needs"), reason))
+    chip = _WHY_CHIPS.get(verdict.get("why"), "waiting")
+    return _row(safe, row, chip=chip, tone="needs", figure=figure, unit=unit, lines=lines)
+
+
+def _safe_to_close_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -> str:
+    """A session that said, in its own words, that nothing is outstanding."""
+    verdict = row.get("verdict") or {}
+    figure, unit = _age(row, now_epoch)
+    lines = []
+    if verdict.get("reason"):
+        lines.append(_line(safe, "said", verdict["reason"]))
+    return _row(
+        safe, row, chip="clear", tone="free", figure=figure, unit=unit, lines=lines
+    )
+
+
 def _waiting_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -> str:
     act = row.get("activity") or {}
     figure, unit = _age(row, now_epoch)
@@ -642,6 +677,16 @@ def _render(
         "%Y-%m-%d %H:%M UTC"
     )
 
+    def group_of(row: Mapping[str, Any]) -> str:
+        return str((row.get("verdict") or {}).get("group") or "")
+
+    # A roster classified by `crowsnest.triage` organises the page by what each session
+    # *needs*, which is the question a person actually has. Without verdicts the page
+    # falls back to organising by status, which is what it always did -- so an older
+    # caller, and `render_report` called on a bare roster, render exactly as before.
+    triaged = any(group_of(s) for s in sessions)
+    needs_you = [s for s in sessions if group_of(s) == "needs_you"]
+    clear = [s for s in sessions if group_of(s) == "safe_to_close"]
     waiting = [s for s in sessions if s.get("status") == "waiting"]
     busy = [s for s in sessions if s.get("status") == "busy"]
     idle = [s for s in sessions if s.get("status") == "idle"]
@@ -649,14 +694,30 @@ def _render(
         s
         for s in idle
         if now_epoch - float(s.get("status_since") or 0) <= FINISHED_WINDOW
+        and s not in clear
     ]
     quiet = [
-        s for s in idle if now_epoch - float(s.get("status_since") or 0) > FINISHED_WINDOW
+        s
+        for s in idle
+        if now_epoch - float(s.get("status_since") or 0) > FINISHED_WINDOW
+        and s not in clear
     ] + [s for s in sessions if s.get("status") not in ("waiting", "busy", "idle")]
 
-    parts = [
-        _masthead(safe, counts, stamp, title),
+    head = (
         _register_from_rows(
+            safe,
+            needs_you,
+            now_epoch,
+            row_fn=_needs_you_row,
+            ident="needs-you",
+            name="Needs you",
+            tone="needs",
+            rule="Holding for a person: a question to answer, a decision to make, or "
+            "something only you can do.",
+            empty="Nothing needs you.",
+        )
+        if triaged
+        else _register_from_rows(
             safe,
             waiting,
             now_epoch,
@@ -666,7 +727,29 @@ def _render(
             tone="needs",
             rule="Holding for an answer, with the question it asked verbatim.",
             empty="Nothing is waiting on you.",
-        ),
+        )
+    )
+
+    parts = [
+        _masthead(safe, counts, stamp, title),
+        head,
+    ]
+    if triaged:
+        parts.append(
+            _register_from_rows(
+                safe,
+                clear,
+                now_epoch,
+                row_fn=_safe_to_close_row,
+                ident="safe-to-close",
+                name="Safe to close",
+                tone="free",
+                rule="Said in its own words that nothing is outstanding. Anything that "
+                "did not say so is below, not here.",
+                empty="No session has said it is finished.",
+            )
+        )
+    parts += [
         _register_from_rows(
             safe,
             finished,
