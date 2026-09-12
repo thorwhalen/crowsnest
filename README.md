@@ -84,6 +84,36 @@ idle     10m  monitor               proj         "The sweep landed. It's the rep
 -- 32 live: 1 waiting, 1 busy, 30 idle
 ```
 
+## What needs you, what is safe to close
+
+The roster is not the useful answer. Thirty sessions sorted by status is still thirty things to read; the question underneath it is always the same three.
+
+```
+crowsnest triage --quiet
+```
+
+```
+NEEDS YOU (5)
+  cn-mergeset          mergeset    [decision] The history rewrite and the PyPI deletions — awaiting go-ahead…
+  cosmo_3d_02          cosmograph  [action] attach the two GIFs to #604/#616 bodies (no API for that)…
+
+SAFE TO CLOSE (4)
+  cn-cosm-synth        cosm        Nothing outstanding
+
+WORKING (1)
+UNCLASSIFIED — has not said where it stands: 48
+
+-- 5 need you (1 to decide, 3 to do), 4 safe to close, 1 working, 48 unclassified
+```
+
+`[decision]` is a minute of thought; `[action]` is a trip to another window. The reason is the session's own words, so you can check the verdict without opening the session.
+
+**`unclassified` is the honest group, and it is the point.** A wrong "safe to close" is the expensive error — somebody closes a terminal on unfinished work and nothing ever tells them — so a verdict is only reached on *positive* evidence. A session that has not said where it stands is reported as not having said. Nothing infers "finished" from silence, because silence is also what an interrupted session leaves behind.
+
+To be reported well, a session writes the ledger's `open questions` field, or says "nothing outstanding" in its notes when it is done. The shipped `crowsnest-worker` skill teaches both, so the signal improves as sessions run.
+
+`crowsnest report` organises the page the same way: **Needs you** first, then **Safe to close**, then what is working and what is quiet.
+
 ## Every reference, as a link
 
 A session working in `i2mint/mergeset` that writes `#17` means that repository's issue 17. Nothing in the text says so — but crowsnest knows the session's working directory, and that is enough to resolve the commonest, least resolvable reference a session writes. So the report renders references as links rather than as text you have to reconstruct a URL from: markdown links the session already wrote out, bare URLs typed by where they point (issue, pull request, discussion, commit, CI run, artifact, Slack), `owner/repo#N`, bare `#N`, and bare commit shas.
