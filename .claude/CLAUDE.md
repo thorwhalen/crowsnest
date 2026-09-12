@@ -14,8 +14,8 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 | `binary=` in `spawn.spawn` / `claude_argv` | the bare `claude`; each *local* spawner substitutes `account.claude_bin()` via `spawn.local_argv`, so the command line a remote spawner is handed stays runnable there. `claude_bin()` itself takes `$CROWSNEST_CLAUDE_BIN`, else `claude_bin` in the config file, else `$CLAUDE_CODE_EXECPATH`, else an absolute `which claude`; a *stated* one that cannot run raises rather than falling back | another build, another version, a wrapper script |
 | `drop=` in `child_env` / `env_prefix` | `account.DROPPED_VARS` (`ANTHROPIC_API_KEY`) | anything else that would override the account the home selects |
 | `markers=` in `env_prefix` | `spawn.SESSION_VARS`, the session-identity markers derived from the `claude` binary's name table | another host's Claude Code, whose markers a remote `xa spawn` knows and this machine does not |
-| `sources=` in `lineage.graph`, ordered edge readers; most confident claim per child wins | `(from_events, from_processes)` — the `spawn` line crowsnest wrote, then `--spawned-by` and the ppid chain | `from_transcripts` (in-repo, the `--backfill` path); `xa`'s record of what it starts on other hosts |
-| `ledger_dir=` / `events_path=` in `ledger`, `hook`, `watch`, `lineage` | under `crowsnest.paths.data_dir()` | a test's `tmp_path`; a shared store later |
+| `sources=` in `lineage.graph`, ordered edge readers; **source position wins first**, then confidence, then recency. Carried through `tools.lineage(sources=)` so a surface never edits the core to add one | `(from_records, from_processes)` — the `spawn` line crowsnest wrote, then `--spawned-by` and the ppid chain | `from_transcripts` (in-repo, the `--backfill` path); `xa`'s record of what it starts on other hosts |
+| `ledger_dir=` / `events_path=` / `lineage_path=` in `ledger`, `hook`, `watch`, `lineage` | under `crowsnest.paths.data_dir()` | a test's `tmp_path`; a shared store later |
 | `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
 
 Surfaces built: the `cw` CLI (`__main__.py` renders, `tools.py` is the JSON core), the
@@ -27,6 +27,10 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
 
 - Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
 - Nothing in `tools.py` prints or exits. Every function takes and returns JSON-able values.
+- `lineage.jsonl` is append-only and **never rotated** — unlike `events.jsonl`, which rotates at
+  4 MiB. Provenance that can age out is not provenance. Do not "tidy" it into the event log.
+- Session names are not unique (across homes, or over time — #42). Anything keyed by a session
+  addresses it as `label` / `label@home` (`lineage.address`, `tools._tag`), never by bare name.
 - Tests use synthetic fixtures only (`tests/fixtures.py`); never a real transcript or registry record.
   `conftest.py` points `$CROWSNEST_DATA_DIR` at `tmp_path` and clears the runner's own session
   identity, so nothing a test forgets to redirect can reach the user's ledgers or event log.

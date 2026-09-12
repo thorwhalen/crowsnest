@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from dataclasses import replace
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
@@ -20,7 +21,6 @@ from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
 from crowsnest.config import homes
-from crowsnest.lineage import graph as _lineage_graph
 from crowsnest.registry import STATUSES, LiveSession, fresh_within, live_sessions
 from crowsnest.report import DFLT_TITLE, render_report
 
@@ -248,7 +248,9 @@ def lineage(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
-    events_path: str | Path | None = None,
+    lineage_path: str | Path | None = None,
+    sources=None,
+    extra_edges=(),
 ) -> dict:
     """Who started whom: the live sessions as a forest of ``parent -> child`` edges.
 
@@ -257,12 +259,27 @@ def lineage(
     table still shows). A fleet whose dispatcher has exited keeps its shape: the parent
     comes back as a node with ``alive`` false, and its children are listed in ``orphans``.
 
+    ``sources`` is :func:`crowsnest.lineage.graph`'s seam, carried through to here so that
+    a surface can reach it without anything in this module changing -- a reader for
+    another host's sessions is added by passing it, not by editing this function.
+    ``extra_edges`` are edges to consider alongside whatever the sources find, which is
+    how :func:`backfill_lineage` shows a forest including what it has not written yet.
+
     Run :func:`backfill_lineage` once on a machine that has been running sessions since
     before crowsnest recorded parents, or this answers with the edges of today only.
     """
-    return _lineage_graph(
-        home=home, all_homes=all_homes, config=config, events_path=events_path
+    from crowsnest.lineage import dflt_sources
+    from crowsnest.lineage import graph as _graph
+
+    rows = [s.as_dict() for s in sessions(home=home, all_homes=all_homes, config=config)]
+    readers = (
+        dflt_sources(home=home, lineage_path=lineage_path, sessions=rows)
+        if sources is None
+        else list(sources)
     )
+    if extra_edges:
+        readers = [lambda edges=tuple(extra_edges): list(edges), *readers]
+    return _graph(sessions=rows, sources=readers, lineage_path=lineage_path)
 
 
 def backfill_lineage(
@@ -270,31 +287,35 @@ def backfill_lineage(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
+    lineage_path: str | Path | None = None,
     events_path: str | Path | None = None,
     ledger_dir: str | Path | None = None,
     write: bool = True,
 ) -> dict:
-    """Recover parentage from transcripts, once, and write it into the event log.
+    """Recover parentage from transcripts, once, and write it into the lineage log.
 
-    Every ``crowsnest spawn <name>`` a session ever typed is still in that session's
+    Every ``crowsnest spawn <name>`` a session ever *ran* is still in that session's
     transcript, which is enough to give a machine that has been running for weeks a graph
-    on the first report instead of an empty one. It is *inference*: the command may have
-    failed or merely been quoted, so every edge is written back marked ``inferred`` and
-    is drawn as a guess, never as a record.
+    on the first report instead of an empty one. It is inference -- the command may have
+    failed -- so every edge is written marked ``inferred`` and is drawn as a guess, never
+    as a record.
 
-    Two guards keep it honest. A name is only taken when something else on the machine
-    also knows it -- a live session, a ledger, or a name the event log has used -- so
-    help text and prose do not become sessions. And a child that already has a *recorded*
-    edge is left alone: the backfill may fill gaps, never overwrite what was witnessed.
+    Three guards keep it honest. The command must be the head of a shell segment, so a
+    ``grep`` for the phrase or a commit message about it is not a spawn. A name is only
+    taken when something else on the machine also knows it -- a live session, a ledger, or
+    a name either log has used. And a child that already has a *recorded* edge is left
+    alone: the backfill may fill gaps, never overwrite what was witnessed.
 
-    ``write=False`` reports what it would add and writes nothing. Returns
+    ``write=False`` writes nothing, and the ``graph`` it returns then includes the edges it
+    would have added -- a dry run whose picture did not show them would be answering a
+    different question from the one that was asked. Returns
     ``{"found", "added", "skipped", "edges", "graph"}``.
     """
     from crowsnest.lineage import (
         append_edge as _append_edge,
     )
     from crowsnest.lineage import (
-        from_events as _from_events,
+        from_records as _from_records,
     )
     from crowsnest.lineage import (
         from_transcripts as _from_transcripts,
@@ -304,27 +325,34 @@ def backfill_lineage(
     )
 
     live = {s.label for s in sessions(home=home, all_homes=all_homes, config=config)}
-    by_id = _names_by_id(events_path=events_path)
+    by_id = _names_by_id(events_path=events_path, lineage_path=lineage_path)
     known = live | set(by_id.values()) | _ledger_names(ledger_dir)
-    recorded = {e.child for e in _from_events(events_path=events_path)}
+    recorded = {e.child for e in _from_records(lineage_path=lineage_path)}
     found = _from_transcripts(home=home, known=known)
-    added, skipped = [], []
+    added, pending, skipped = [], [], []
     for edge in found:
         parent = by_id.get(edge.parent_session_id, "")
         if not parent or parent == edge.child or edge.child in recorded:
             skipped.append(edge.as_dict())
             continue
         recorded.add(edge.child)
+        named = replace(edge, parent=parent)
         if write:
-            _append_edge(edge, parent=parent, events_path=events_path)
-        added.append({**edge.as_dict(), "parent": parent})
+            _append_edge(named, lineage_path=lineage_path)
+        else:
+            pending.append(named)
+        added.append(named.as_dict())
     return {
         "found": len(found),
         "added": len(added),
         "skipped": len(skipped),
         "edges": added,
         "graph": lineage(
-            home=home, all_homes=all_homes, config=config, events_path=events_path
+            home=home,
+            all_homes=all_homes,
+            config=config,
+            lineage_path=lineage_path,
+            extra_edges=tuple(pending),
         ),
     }
 

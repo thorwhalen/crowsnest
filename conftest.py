@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent / "tests"))
 
 from crowsnest.account import CLAUDE_BIN_ENV_VAR
 from crowsnest.config import CONFIG_ENV_VAR
@@ -27,9 +27,12 @@ def _no_ambient_configuration(_absent_config, monkeypatch):
     config at a file that is not there and unset the variable; a test that wants either
     says so itself.
 
-    This covers ``tests/`` only. The doctests under ``crowsnest/`` are collected from
-    another directory and reach no conftest, so each of those passes ``config=``
-    explicitly -- keep it that way when adding one.
+    This file lives at the repository root rather than in ``tests/`` on purpose:
+    ``testpaths`` is ``["tests", "crowsnest"]``, so the doctests in every module are
+    collected too, and a conftest under ``tests/`` would not reach them. A doctest is
+    exactly where the next accident happens -- this repo's house style is a runnable
+    example at the top of every module, and one that calls a writer would write the
+    reader's own data directory.
     """
     monkeypatch.setenv(CONFIG_ENV_VAR, _absent_config)
     monkeypatch.delenv(CLAUDE_BIN_ENV_VAR, raising=False)

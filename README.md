@@ -86,7 +86,7 @@ idle     10m  monitor               proj         "The sweep landed. It's the rep
 
 ## Who started whom
 
-A fleet of forty reads as a list of forty until you can see that six of them are one dispatcher's children. The registry does not record that, so `crowsnest spawn` writes it down itself, at the one moment it is free and certain — the session that ran the command is the parent, and one `spawn` line goes into the event log naming both ends.
+A fleet of forty reads as a list of forty until you can see that six of them are one dispatcher's children. The registry does not record that, so `crowsnest spawn` writes it down itself, at the one moment it is free and certain — the session that ran the command is the parent, and one `spawn` line goes into `lineage.jsonl` naming both ends. That file is deliberately not the hook's `events.jsonl`, which rotates at 4 MiB: a machine busy enough to have an interesting graph is exactly the machine whose graph would vanish.
 
 ```
 crowsnest lineage
@@ -107,7 +107,7 @@ crowsnest                         x gone
 
 A parent that has exited stays in the picture (`x gone`) so its children stay a fleet rather than becoming unrelated roots.
 
-Recording only works forwards. For a machine that has been running sessions since before this shipped, `crowsnest lineage --backfill` recovers what it can, once, by scanning every transcript for the `crowsnest spawn` commands that created today's sessions, and writes what it finds into the event log so the cheap reader has it from then on. That is *inference* — the command may have failed, or merely been quoted — so those edges are marked `~` wherever they are shown, and a recorded edge is never overwritten by a guessed one. `--dry-run` says what it would add and writes nothing.
+Recording only works forwards. For a machine that has been running sessions since before this shipped, `crowsnest lineage --backfill` recovers what it can, once, by scanning every transcript for the `crowsnest spawn` commands that created today's sessions, and writes what it finds into `lineage.jsonl` so the cheap reader has it from then on. That is *inference* — the command may have failed — so those edges are marked `~` wherever they are shown, and a recorded edge is never overwritten by a guessed one. A *mention* is not a spawn: the command has to be the head of a shell segment, so grepping for the phrase or writing a commit message about it does not invent a parent. `--dry-run` says what it would add and writes nothing.
 
 ## Several accounts and machines in one roster
 

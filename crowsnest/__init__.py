@@ -48,8 +48,9 @@ the sessions it will then watch: :func:`crowsnest.spawn.spawn` starts one, named
 directory, and waits for the registry to see it.
 
 Those are the writes, and they are all of them: a session started, and files that are
-crowsnest's own and live outside any repository -- the ledgers, the hook event log (both
-under :func:`crowsnest.paths.data_dir`), and the symlinks the skill installer makes.
+crowsnest's own and live outside any repository -- the ledgers, the hook event log, the
+spawn records (all three under :func:`crowsnest.paths.data_dir`), and the symlinks the
+skill installer makes.
 crowsnest never sends into, kills, or writes into a session that already exists.
 
 >>> from crowsnest import live_sessions, roster
@@ -59,20 +60,21 @@ crowsnest never sends into, kills, or writes into a session that already exists.
 
 from crowsnest.activity import Activity, Turn, read_activity, read_turns
 from crowsnest.ledger import list_ledgers, read_ledger, update_ledger
-from crowsnest.lineage import Edge
-from crowsnest.lineage import graph as spawn_graph
 from crowsnest.registry import LiveSession, live_sessions
 from crowsnest.spawn import spawn
 
-# `lineage` is deliberately absent from this namespace: it is the name of a *module*
-# here, and `crowsnest.tools.lineage` is the verb over it. (`spawn` is the one place
-# where a verb already shadows its module -- do not add a second.)
+# `crowsnest.lineage` stays a *module* in this namespace, reached as
+# `crowsnest.lineage.graph` / `.SpawnEdge`. It is not re-exported as a function, because
+# the verb a surface calls is `crowsnest.tools.lineage` and two names at two altitudes
+# for one feature is one too many. (`spawn` is the one place where a verb already shadows
+# its module -- do not add a second.) It is also not imported here: `crowsnest hook`
+# pays this module's import on every turn of every session and never uses it, so
+# `spawn.spawn` and `tools.lineage` import it when they are called.
 from crowsnest.tools import backfill_lineage, brief, resolve, roster, show, turns
 from crowsnest.watch import events
 
 __all__ = [
     "Activity",
-    "Edge",
     "LiveSession",
     "Turn",
     "backfill_lineage",
@@ -87,7 +89,6 @@ __all__ = [
     "roster",
     "show",
     "spawn",
-    "spawn_graph",
     "turns",
     "update_ledger",
 ]

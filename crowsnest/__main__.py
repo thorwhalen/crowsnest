@@ -217,9 +217,13 @@ def turns(
 
 #: What a node's status looks like in the text tree. The page has colour; a terminal has
 #: eight characters, and they have to survive being read on a phone over ssh.
-#: How wide the name column is in the text tree, stem included.
+#: How wide the name column is in the text tree, stem included. A deep tree eats into it,
+#: so it is a floor rather than a width: the name is the address you type into
+#: `crowsnest show`, and truncating it would cost more than a ragged column.
 _LINEAGE_NAME_COLUMN = 34
 
+#: What a node's status looks like in the text tree. The page has colour; a terminal has
+#: eight characters, and they have to survive being read on a phone over ssh.
 _LINEAGE_MARKS = {
     "waiting": "! waiting",
     "busy": "> busy",
@@ -229,7 +233,7 @@ _LINEAGE_MARKS = {
 }
 
 
-def _lineage_lines(found: dict, *, name: str = "", prefix: str = "") -> list[str]:
+def _lineage_lines(found: dict) -> list[str]:
     """One indented line per node, depth-first, children in name order."""
     by_name = {n["name"]: n for n in found["nodes"]}
     out: list[str] = []
@@ -241,21 +245,16 @@ def _lineage_lines(found: dict, *, name: str = "", prefix: str = "") -> list[str
         stem = "" if top else f"{pad}{'`-- ' if last else '|-- '}"
         mark = _LINEAGE_MARKS.get(node["status"], f"? {node['status']}")
         guess = " ~" if node["confidence"] == "inferred" else ""
+        room = max(0, _LINEAGE_NAME_COLUMN - len(stem) - len(node["name"]))
         where = node["project"] or ""
-        # The stem eats into the name column, so the status column stays put however
-        # deep the tree goes -- which is the whole reason a tree is readable at all.
-        room = max(8, _LINEAGE_NAME_COLUMN - len(stem))
-        out.append(
-            f"{stem}{node['name'][:room]:<{room}}{mark:<10}{where}{guess}".rstrip()
-        )
+        out.append(f"{stem}{node['name']}{' ' * room} {mark:<10}{where}{guess}".rstrip())
         kids = node["children"]
         below = pad if top else pad + ("    " if last else "|   ")
         for i, kid in enumerate(kids):
             walk(kid, below, i == len(kids) - 1, False)
 
-    tops = [name] if name else found["roots"]
-    for i, root in enumerate(tops):
-        walk(root, prefix, i == len(tops) - 1, True)
+    for i, root in enumerate(found["roots"]):
+        walk(root, "", i == len(found["roots"]) - 1, True)
     return out
 
 
@@ -280,6 +279,8 @@ def lineage(
 
     if backfill:
         done = tools.backfill_lineage(home=home, all_homes=all_homes, write=not dry_run)
+        if json:
+            return _json.dumps(done, indent=2)
         found = done["graph"]
         verb = "would add" if dry_run else "added"
         head = [
@@ -290,8 +291,8 @@ def lineage(
         ]
     else:
         found, head = tools.lineage(home=home, all_homes=all_homes), []
-    if json:
-        return _json.dumps(found, indent=2)
+        if json:
+            return _json.dumps(found, indent=2)
     counts = found["counts"]
     tail = [
         "",

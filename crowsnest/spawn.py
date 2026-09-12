@@ -35,7 +35,6 @@ from functools import partial
 from pathlib import Path
 
 from crowsnest.account import CLAUDE_BIN, DROPPED_VARS, account_home, claude_bin
-from crowsnest.lineage import record_spawn
 from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessions
 
 __all__ = [
@@ -445,7 +444,7 @@ def spawn(
     wait: float = DFLT_WAIT,
     add_dirs: Sequence[str] = (),
     binary: str = "",
-    events_path: str | Path | None = None,
+    lineage_path: str | Path | None = None,
 ) -> dict:
     """Start a session named ``name`` in ``cwd``, and wait for the registry to see it.
 
@@ -477,10 +476,11 @@ def spawn(
     ``parent`` is the session that asked for this one, and the reason it is here is that
     **this is the only moment anyone knows it for free**. Everything downstream -- the
     spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --
-    is recovery work if it is not written down now, so one ``spawn`` line goes into the
-    event log (:func:`crowsnest.lineage.record_spawn`; ``events_path`` is where, a test's
-    ``tmp_path`` being why it is an argument). It is ``{}`` when this command was not run
-    from inside a session, which is the honest answer for a person at a shell prompt.
+    is recovery work if it is not written down now, so one ``spawn`` line goes into
+    ``lineage.jsonl`` (:func:`crowsnest.lineage.record_spawn`; ``lineage_path`` is where,
+    a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this
+    command was not run from inside a session -- the honest answer for a person at a shell
+    prompt -- and the whole dict is ``{}`` only when the record could not be written.
 
     A name that a live session already carries is refused (``ValueError``): the name is
     the address for everything after -- ``show``, ``open``, a message -- and two sessions
@@ -516,12 +516,16 @@ def spawn(
     found = _find_by_name(name, home=home, wait=wait)
     # Recorded whether or not the registry saw it: a session that started slowly still
     # has a parent, and the name is the key the edge is kept under either way.
+    # `home` is the *new* session's account; the caller is registered in its own, so
+    # `record_spawn` is deliberately not told one. Passing the target's would make
+    # `--profile` record an 8-character session-id prefix as the parent.
+    from crowsnest.lineage import record_spawn
+
     record = record_spawn(
         name,
         child_session_id=found.session_id if found else "",
         project=Path(cwd).name if cwd else "",
-        home=home,
-        events_path=events_path,
+        lineage_path=lineage_path,
     )
     parent = record.get("parent", {}) if record else {}
     if found is None:
