@@ -47,9 +47,7 @@ def tool_use(name: str, inputs: dict, *, call_id: str) -> dict:
     return {"type": "tool_use", "id": call_id, "name": name, "input": inputs}
 
 
-def tool_result(
-    call_id: str, *, at: str, session: str = "s1", text: str = "ok"
-) -> dict:
+def tool_result(call_id: str, *, at: str, session: str = "s1", text: str = "ok") -> dict:
     return {
         "type": "user",
         "sessionId": session,
@@ -57,9 +55,7 @@ def tool_result(
         "timestamp": at,
         "message": {
             "role": "user",
-            "content": [
-                {"type": "tool_result", "tool_use_id": call_id, "content": text}
-            ],
+            "content": [{"type": "tool_result", "tool_use_id": call_id, "content": text}],
         },
     }
 
@@ -185,9 +181,7 @@ def demo_home(tmp_path: Path) -> Path:
     )
     write_registry(
         home,
-        registry_record(
-            102, "s2", name="parser", status="busy", status_at_ms=2_000_000
-        ),
+        registry_record(102, "s2", name="parser", status="busy", status_at_ms=2_000_000),
     )
     write_registry(
         home,

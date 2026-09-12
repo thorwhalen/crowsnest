@@ -64,14 +64,10 @@ def test_a_stop_writes_an_event_and_the_two_mechanical_ledger_fields(data, home)
         "2026-01-01T09:00:00.000Z",
         "fix the widget",
     )
-    assert (
-        split_stamp(fields["last_said"])[1] == "Fixed and merged. Nothing is pending."
-    )
+    assert split_stamp(fields["last_said"])[1] == "Fixed and merged. Nothing is pending."
 
 
-def test_a_stop_never_writes_the_fields_that_are_the_session_s_own_judgement(
-    data, home
-):
+def test_a_stop_never_writes_the_fields_that_are_the_session_s_own_judgement(data, home):
     from crowsnest.ledger import update_ledger
 
     update_ledger(
@@ -85,9 +81,7 @@ def test_a_stop_never_writes_the_fields_that_are_the_session_s_own_judgement(
     assert fields["decisions"] == "- squash"
 
 
-def test_last_assistant_message_is_used_verbatim_when_the_hook_hands_it_over(
-    data, home
-):
+def test_last_assistant_message_is_used_verbatim_when_the_hook_hands_it_over(data, home):
     transcript = str(home / "projects" / "-w-demo" / "s1.jsonl")
     done = hook.handle(
         "stop",
@@ -176,12 +170,8 @@ def test_rotation_leaves_a_small_log_alone(data):
     assert sorted(p.name for p in data.iterdir()) == ["events.jsonl"]
 
 
-def test_a_stop_on_a_real_sized_transcript_is_well_under_a_tenth_of_a_second(
-    data, home
-):
-    transcript = big_transcript(
-        home / "projects" / "-w-demo" / "big.jsonl", session="s1"
-    )
+def test_a_stop_on_a_real_sized_transcript_is_well_under_a_tenth_of_a_second(data, home):
+    transcript = big_transcript(home / "projects" / "-w-demo" / "big.jsonl", session="s1")
     assert transcript.stat().st_size > 1_000_000, "not a real-sized transcript"
     payload = hook_payload(session="s1", transcript=str(transcript))
     hook.handle("stop", payload, home=home)  # warm the import and the page cache

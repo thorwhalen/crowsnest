@@ -292,8 +292,14 @@ def backfill_lineage(
     """
     from crowsnest.lineage import (
         append_edge as _append_edge,
+    )
+    from crowsnest.lineage import (
         from_events as _from_events,
+    )
+    from crowsnest.lineage import (
         from_transcripts as _from_transcripts,
+    )
+    from crowsnest.lineage import (
         names_by_session_id as _names_by_id,
     )
 

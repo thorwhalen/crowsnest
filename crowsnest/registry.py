@@ -82,9 +82,7 @@ def project_slug(cwd: str) -> str:
     return _SLUG_RE.sub("-", cwd)
 
 
-def transcript_path(
-    cwd: str, session_id: str, *, home: str | Path | None = None
-) -> Path:
+def transcript_path(cwd: str, session_id: str, *, home: str | Path | None = None) -> Path:
     """Where the transcript for ``(cwd, session_id)`` is, or should be.
 
     The slug guess is tried first; when it misses -- an encoding edge, a session that

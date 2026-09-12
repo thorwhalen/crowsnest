@@ -10,6 +10,14 @@ from __future__ import annotations
 import json
 
 import pytest
+from fixtures import (
+    assistant,
+    registry_record,
+    stamp,
+    tool_use,
+    write_registry,
+    write_transcript,
+)
 
 from crowsnest import lineage, registry, tools
 from crowsnest.lineage import (
@@ -23,15 +31,6 @@ from crowsnest.lineage import (
     names_by_session_id,
     record_spawn,
     spawn_event,
-)
-
-from fixtures import (
-    assistant,
-    registry_record,
-    stamp,
-    tool_use,
-    write_registry,
-    write_transcript,
 )
 
 
@@ -96,9 +95,7 @@ def test_from_events_skips_a_spawn_line_that_names_no_parent(tmp_path):
 def test_from_events_survives_a_malformed_line(tmp_path):
     path = tmp_path / "events.jsonl"
     path.write_text(
-        "{not json but mentions spawn\n"
-        + json.dumps(_spawn_line("kid", "boss"))
-        + "\n",
+        "{not json but mentions spawn\n" + json.dumps(_spawn_line("kid", "boss")) + "\n",
         encoding="utf-8",
     )
     assert [e.child for e in from_events(events_path=path)] == ["kid"]
@@ -132,9 +129,7 @@ def test_from_processes_follows_the_parent_pid_chain_through_a_shell():
     ps = _Ps(
         [(100, 1, "claude -n boss"), (200, 100, "-zsh"), (300, 200, "claude -n kid")]
     )
-    edges = from_processes(
-        sessions=[_session(100, "boss"), _session(300, "kid")], run=ps
-    )
+    edges = from_processes(sessions=[_session(100, "boss"), _session(300, "kid")], run=ps)
     assert [(e.parent, e.child, e.source) for e in edges] == [("boss", "kid", "ppid")]
     assert edges[0].confidence == "observed"
 
@@ -147,9 +142,7 @@ def test_from_processes_prefers_the_spawned_by_claim_over_the_pid_chain():
             (300, 1, f"claude -n kid --spawned-by {claim} --origin transient"),
         ]
     )
-    edges = from_processes(
-        sessions=[_session(100, "boss"), _session(300, "kid")], run=ps
-    )
+    edges = from_processes(sessions=[_session(100, "boss"), _session(300, "kid")], run=ps)
     assert [(e.parent, e.child, e.source) for e in edges] == [
         ("boss", "kid", "spawned-by")
     ]
@@ -159,9 +152,7 @@ def test_from_processes_finds_nothing_when_tmux_reparented_the_child_to_init():
     # The case the recorded event exists for: tmux detaches the child, so no chain leads
     # back to the session that asked for it.
     ps = _Ps([(100, 1, "claude -n boss"), (300, 1, "claude -n kid")])
-    edges = from_processes(
-        sessions=[_session(100, "boss"), _session(300, "kid")], run=ps
-    )
+    edges = from_processes(sessions=[_session(100, "boss"), _session(300, "kid")], run=ps)
     assert edges == []
 
 
@@ -206,9 +197,7 @@ def test_from_transcripts_reads_past_flags_that_come_before_the_name(tmp_path):
     _spawning_transcript(
         home, session="p", commands=["cw spawn --profile iq --model opus cn-kid"]
     )
-    assert [e.child for e in from_transcripts(home=home, known={"cn-kid"})] == [
-        "cn-kid"
-    ]
+    assert [e.child for e in from_transcripts(home=home, known={"cn-kid"})] == ["cn-kid"]
 
 
 def test_from_transcripts_does_not_mistake_help_text_for_a_session(tmp_path):
@@ -259,9 +248,7 @@ def test_the_most_confident_claim_about_a_child_wins():
         sessions=_rows("kid", "wrong", "right"), sources=[lambda: [weak, strong]]
     )
     assert [e["parent"] for e in found["edges"]] == ["right"]
-    assert [n["confidence"] for n in found["nodes"] if n["name"] == "kid"] == [
-        "recorded"
-    ]
+    assert [n["confidence"] for n in found["nodes"] if n["name"] == "kid"] == ["recorded"]
 
 
 def test_sources_are_tried_in_order_and_an_earlier_one_may_be_overridden_only_by_confidence():

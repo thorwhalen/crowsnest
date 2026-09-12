@@ -283,8 +283,10 @@ def lineage(
         found = done["graph"]
         verb = "would add" if dry_run else "added"
         head = [
-            f"backfill: {done['found']} spawn command(s) in transcripts, "
-            f"{verb} {done['added']}, skipped {done['skipped']}"
+            (
+                f"backfill: {done['found']} spawn command(s) in transcripts, "
+                f"{verb} {done['added']}, skipped {done['skipped']}"
+            )
         ]
     else:
         found, head = tools.lineage(home=home, all_homes=all_homes), []
@@ -293,9 +295,11 @@ def lineage(
     counts = found["counts"]
     tail = [
         "",
-        f"{counts['nodes']} session(s), {counts['edges']} edge(s), "
-        f"{counts['roots']} root(s), {counts['orphans']} orphan(s), "
-        f"{counts['gone']} parent(s) no longer alive",
+        (
+            f"{counts['nodes']} session(s), {counts['edges']} edge(s), "
+            f"{counts['roots']} root(s), {counts['orphans']} orphan(s), "
+            f"{counts['gone']} parent(s) no longer alive"
+        ),
     ]
     if not found["nodes"]:
         return "\n".join([*head, "nothing alive"])
@@ -407,9 +411,7 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
     pages = [_ledger.read_ledger(one, ledger_dir=ledger_dir) for one in name]
     if json:
         return _json.dumps(pages if len(pages) > 1 else pages[0], indent=2)
-    known = ", ".join(
-        row["name"] for row in _ledger.list_ledgers(ledger_dir=ledger_dir)
-    )
+    known = ", ".join(row["name"] for row in _ledger.list_ledgers(ledger_dir=ledger_dir))
     return "\n\n".join(
         (
             page["text"].rstrip()
@@ -512,9 +514,7 @@ def install_skills(
 ):
     """Link the bundled skills and the subagent into ~/.claude (or `--target`). Idempotent."""
     names = [n for n in (only or "").split(",") if n.strip()] or None
-    plan = _skills.install_skills(
-        target=target, only=names, force=force, dry_run=dry_run
-    )
+    plan = _skills.install_skills(target=target, only=names, force=force, dry_run=dry_run)
     lines = [f"{'would install' if dry_run else 'installed'} into {plan['target']}"]
     for row in plan["actions"]:
         how = f" ({row['method']})" if row["method"] else ""

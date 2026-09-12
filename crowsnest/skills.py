@@ -144,10 +144,7 @@ def install_skills(
         elif force:
             action, reason = "install", "replacing what was there"
         else:
-            action, reason = (
-                "conflict",
-                "something else with this name is already there",
-            )
+            action, reason = "conflict", "something else with this name is already there"
         method = ""
         if action == "install" and not dry_run:
             method = _place(asset.source, destination, link=link)

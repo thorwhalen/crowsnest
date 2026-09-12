@@ -92,9 +92,7 @@ def test_child_env_home_is_resolved_so_the_child_and_the_poll_agree(
     link.symlink_to(real)
     monkeypatch.chdir(tmp_path)
     given = {"PATH": "/b"}
-    assert child_env(given, home="real-home")["CLAUDE_CONFIG_DIR"] == str(
-        real.resolve()
-    )
+    assert child_env(given, home="real-home")["CLAUDE_CONFIG_DIR"] == str(real.resolve())
     assert child_env(given, home=link)["CLAUDE_CONFIG_DIR"] == str(real.resolve())
 
 
@@ -452,9 +450,7 @@ def test_subprocess_spawner_runs_under_the_env_it_is_given(monkeypatch):
 
     monkeypatch.setattr(spawn_module.subprocess, "Popen", fake_popen)
     monkeypatch.setattr(spawn_module, "claude_bin", lambda **_: "/v/claude")
-    spawn_module._subprocess_spawner(
-        ["claude"], cwd="/some/repo", name="demo", home=None
-    )
+    spawn_module._subprocess_spawner(["claude"], cwd="/some/repo", name="demo", home=None)
     assert captured_argv == [["/v/claude"]]
 
     assert captured["env"] == child_env()
@@ -472,18 +468,14 @@ def test_spawn_reports_when_the_registry_never_sees_it(tmp_path, monkeypatch):
     def silent_spawner(argv, *, cwd, name, home):
         pass
 
-    result = spawn(
-        "ghost", cwd="/some/repo", spawner=silent_spawner, home=home, wait=0.2
-    )
+    result = spawn("ghost", cwd="/some/repo", spawner=silent_spawner, home=home, wait=0.2)
 
     assert result["pid"] == 0
     assert result["session_id"] == ""
     assert "ghost" in result["how"]
 
 
-def test_spawn_refuses_a_name_that_a_live_session_already_carries(
-    tmp_path, monkeypatch
-):
+def test_spawn_refuses_a_name_that_a_live_session_already_carries(tmp_path, monkeypatch):
     import pytest
 
     monkeypatch.setattr(
@@ -699,9 +691,7 @@ def test_a_named_binary_survives_a_configured_one(tmp_path, monkeypatch):
     assert local_argv(["claude", "-n", "demo"])[0] == str(exe)
 
 
-def test_spawn_config_selects_the_launcher_too_not_only_the_homes(
-    tmp_path, monkeypatch
-):
+def test_spawn_config_selects_the_launcher_too_not_only_the_homes(tmp_path, monkeypatch):
     """`config=` names one file; it should not name half of one.
 
     The ambient config must lose to the explicit one, or a caller pinning a config file
@@ -710,9 +700,7 @@ def test_spawn_config_selects_the_launcher_too_not_only_the_homes(
     """
 
     ambient = tmp_path / "ambient.toml"
-    ambient.write_text(
-        f'claude_bin = "{_runnable_file(tmp_path / "amb").as_posix()}"\n'
-    )
+    ambient.write_text(f'claude_bin = "{_runnable_file(tmp_path / "amb").as_posix()}"\n')
     monkeypatch.setenv("CROWSNEST_CONFIG", str(ambient))
     chosen = _runnable_file(tmp_path / "chosen")
     explicit = tmp_path / "explicit.toml"

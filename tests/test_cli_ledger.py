@@ -32,9 +32,7 @@ def test_ledger_with_no_name_lists_them_with_ages(data, tmp_path, capsys):
     update_ledger("shipper", state="waiting on you")
     main(["ledger"])
     lines = capsys.readouterr().out.splitlines()
-    assert any(
-        "lookout" in ln and "working" in ln and "all green" in ln for ln in lines
-    )
+    assert any("lookout" in ln and "working" in ln and "all green" in ln for ln in lines)
     assert any("shipper" in ln and "waiting on you" in ln for ln in lines)
     assert lines[-1].startswith("-- 2 in ")
 

@@ -36,9 +36,7 @@ def test_status_changes_and_arrivals_become_events(tmp_path):
     )
     write_registry(
         home,
-        registry_record(
-            102, "s2", name="parser", status="idle", status_at_ms=5_000_000
-        ),
+        registry_record(102, "s2", name="parser", status="idle", status_at_ms=5_000_000),
     )
     write_registry(
         home,
@@ -121,6 +119,4 @@ def test_all_homes_snapshot_covers_every_configured_home_and_tags_events(
     )
     after = snapshot(all_homes=True, config=cfg)
     [event] = diff(before, after)
-    assert (
-        event["kind"] == "idle" and event["name"] == "fixer" and event["home"] == "two"
-    )
+    assert event["kind"] == "idle" and event["name"] == "fixer" and event["home"] == "two"

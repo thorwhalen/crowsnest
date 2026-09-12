@@ -699,6 +699,19 @@ def _depths(parent_of: Mapping[str, Edge]) -> dict[str, int]:
     return depths
 
 
+def _whatever_it_found(read: Callable[[], Iterable[Edge]]) -> list[Edge]:
+    """One source's edges, or none of them: an unreadable source may not cost the others.
+
+    Swallowed rather than logged because :func:`graph` is called on every render of the
+    report and has nowhere to log to; a source that cannot read says so by returning
+    nothing, which the counts on the page then reflect.
+    """
+    try:
+        return list(read())
+    except Exception:  # noqa: BLE001 -- any reader, any failure; the others still count
+        return []
+
+
 def graph(
     *,
     sessions: Sequence[Mapping] | None = None,
@@ -729,8 +742,7 @@ def graph(
         )  # circular at import time only
 
         sessions = [
-            s.as_dict()
-            for s in _sessions(home=home, all_homes=all_homes, config=config)
+            s.as_dict() for s in _sessions(home=home, all_homes=all_homes, config=config)
         ]
     alive = _named(sessions)
     by_id = {
@@ -745,12 +757,7 @@ def graph(
     )
     collected: list[Edge] = []
     for read in readers:
-        try:
-            collected.extend(read())
-        except (
-            Exception
-        ):  # noqa: BLE001 -- one unreadable source may not lose the others
-            continue
+        collected.extend(_whatever_it_found(read))
     parent_of = _uncycle(_pick(_resolve_names(collected, by_id)))
     parent_of = {c: e for c, e in parent_of.items() if c in alive or e.parent in alive}
     names = set(alive) | {e.parent for e in parent_of.values()} | set(parent_of)
