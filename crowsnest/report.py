@@ -251,9 +251,34 @@ def _empty(message: str) -> str:
 
 
 def _link(safe: _Sanitizer, url: Any, label: str) -> str:
-    """An anchor, or ``''`` when the sanitizer will not follow the URL."""
-    href = safe.url(url)
-    return f'<a href="{href}">{safe.text(label)}</a>' if href else ""
+    """An anchor, or the label as plain text when the URL cannot be published as one.
+
+    Two ways a URL fails to be a link, and both used to render as an anchor pointing
+    somewhere useless:
+
+    The sanitizer **refused** it -- a scheme it will not follow, or text it judged
+    credential-shaped, which comes back as a ``[withheld: ...]`` notice. That notice is a
+    truthy string, so it made a perfectly good-looking anchor whose target was an error
+    message.
+
+    The sanitizer **rewrote** it. ``scrub`` replaces a home path anywhere it appears,
+    including inside a URL, so ``https://x.example/Users/someone/p`` becomes
+    ``https://x.example~/p`` -- a link that is no longer the link, and 404s silently. It
+    is right that the path does not reach the page; it is not right to publish the
+    remains as something to click.
+
+    A refused URL renders nothing at all: the label of a ``javascript:`` link is text
+    whoever wrote it chose, and it has nothing to tell a reader. A rewritten one keeps its
+    label as plain text, because there the *reference* is real and only its address had to
+    go -- the reader should learn it exists without being handed a link that lies.
+    """
+    raw = "" if url is None else str(url).strip()
+    href = safe.url(raw)
+    if not href or href.startswith("["):
+        return ""
+    if "~" in href and "~" not in raw:  # `scrub` rewrote a home path inside the URL
+        return f"<span>{safe.text(label)}</span>" if label else ""
+    return f'<a href="{href}">{safe.text(label)}</a>'
 
 
 def _where(safe: _Sanitizer, row: Mapping[str, Any]) -> str:

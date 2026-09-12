@@ -262,7 +262,12 @@ def read_ledger(name: str, *, ledger_dir: str | Path | None = None) -> dict:
     """
     path = ledger_path(name, ledger_dir=ledger_dir)
     try:
-        text = path.read_text(encoding="utf-8")
+        # `errors="replace"`, not strict: a ledger is a file a human edits, and one byte
+        # that is not UTF-8 in one of two hundred of them must not raise out of a reader
+        # that a roster calls in a loop. A replacement character is a visible, harmless
+        # answer; `UnicodeDecodeError` is a `ValueError`, so it would also slip past every
+        # `except OSError` written around this.
+        text = path.read_text(encoding="utf-8", errors="replace")
         updated_at = path.stat().st_mtime
         exists = True
     except OSError:

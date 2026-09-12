@@ -58,8 +58,8 @@ from dataclasses import asdict, dataclass
 __all__ = [
     "DFLT_RESOLVERS",
     "MAX_LINKS",
+    "SECRET_URL_SHAPES",
     "Link",
-    "dflt_resolvers",
     "from_commits",
     "from_issue_refs",
     "from_markdown_links",
@@ -67,8 +67,11 @@ __all__ = [
     "from_urls",
     "github_ref",
     "identity",
+    "kind_of",
     "label_for",
+    "looks_like_a_secret",
     "resolve",
+    "without_written_out_links",
 ]
 
 #: How many links one piece of text yields. A session re-records the same reference on
@@ -96,7 +99,6 @@ class Link:
     type: str
     url: str
     text: str = ""
-    at: str = ""
 
     def as_dict(self) -> dict[str, str]:
         """JSON-ready form."""
@@ -108,8 +110,9 @@ class Link:
 
 
 _GITHUB = re.compile(
-    r"^https?://github\.com/([\w.-]+)/([\w.-]+)"
-    r"(?:/(issues|pull|discussions|commit|actions/runs)/([\w.]+))?"
+    r"^https?://(?:www\.)?github\.com/([\w.-]+)/([\w.-]+)"
+    r"(?:/(issues|pull|discussions|commit|actions/runs)/([\w.]+))?",
+    re.IGNORECASE,
 )
 
 #: What GitHub calls a thing in its URL, and what crowsnest calls it.
@@ -131,6 +134,8 @@ def github_ref(url: str) -> tuple[str, str, str, str]:
     ('repo', 'o', 'r', '')
     >>> github_ref('https://example.org/x')
     ('', '', '', '')
+    >>> github_ref('https://www.github.com/o/r/issues/3')
+    ('issue', 'o', 'r', '3')
     """
     m = _GITHUB.match(str(url or "").rstrip("/"))
     if not m:
@@ -138,7 +143,7 @@ def github_ref(url: str) -> tuple[str, str, str, str]:
     owner, repo, path, number = m.group(1), m.group(2), m.group(3), m.group(4)
     if not path:
         return ("repo", owner, repo, "")
-    return (_GITHUB_KINDS.get(path, path), owner, repo, number or "")
+    return (_GITHUB_KINDS.get(path.lower(), path), owner, repo, number or "")
 
 
 def _label(url: str) -> str:
@@ -163,15 +168,47 @@ def _label(url: str) -> str:
         return f"{repo}#{number}"
     if kind == "repo":
         return repo
-    other = _kind_of(url)
+    other = kind_of(url)
     if other != "link":
         return other
     return _KNOWN_HOSTS.get(_host(url), _host(url))
 
 
+#: URL shapes where the URL *is* the credential: holding it is the whole of the
+#: permission, so printing it on a page is disclosing it. openloops' scrubber catches
+#: credential-shaped *text* (an inline password, an API key) and these are not that --
+#: they are ordinary-looking https URLs whose path is the secret.
+#:
+#: Best effort by construction, and the report's sanitiser is still the second line. What
+#: makes it worth having anyway is the direction of travel: before links were resolved,
+#: a webhook sitting in a ledger had no path to a page that gets published off the
+#: machine. Add a shape here when one is found; the cost of a false positive is one link
+#: that renders as text.
+SECRET_URL_SHAPES = (
+    re.compile(r"^https?://hooks\.slack\.com/services/", re.IGNORECASE),
+    re.compile(r"^https?://[\w.-]*discord(app)?\.com/api/webhooks/", re.IGNORECASE),
+    re.compile(
+        r"^https?://[\w.-]+/[\w/.-]*\?[^#]*\b(x-amz-signature|sig|signature|token|access_token|api[_-]?key|apikey|secret|password)=",
+        re.IGNORECASE,
+    ),
+    re.compile(r"^https?://[^/@]*:[^/@]*@", re.IGNORECASE),  # userinfo: user:password@host
+)
+
+
+def looks_like_a_secret(url: str) -> bool:
+    """Is this a URL that *is* a credential, rather than one that merely needs one?
+
+    >>> looks_like_a_secret('https://hooks.slack.com/services/T0/B0/XXXX')
+    True
+    >>> looks_like_a_secret('https://github.com/o/r/issues/1')
+    False
+    """
+    return any(shape.search(str(url or "")) for shape in SECRET_URL_SHAPES)
+
+
 def _host(url: str) -> str:
     rest = str(url or "").partition("://")[2]
-    return rest.partition("/")[0].removeprefix("www.")
+    return rest.partition("/")[0].lower().removeprefix("www.")
 
 
 #: Hosts worth naming by what they are rather than by their domain.
@@ -182,12 +219,12 @@ _KNOWN_HOSTS = {
 }
 
 
-def _kind_of(url: str) -> str:
+def kind_of(url: str) -> str:
     """What a bare URL points at, as one word.
 
-    >>> _kind_of('https://github.com/o/r/pull/1'), _kind_of('https://x.slack.com/archives/C1/p2')
+    >>> kind_of('https://github.com/o/r/pull/1'), kind_of('https://x.slack.com/archives/C1/p2')
     ('pr', 'slack')
-    >>> _kind_of('https://claude.ai/code/artifact/abc'), _kind_of('https://example.org')
+    >>> kind_of('https://claude.ai/code/artifact/abc'), kind_of('https://example.org')
     ('artifact', 'link')
     """
     kind = github_ref(url)[0]
@@ -210,6 +247,31 @@ def _kind_of(url: str) -> str:
 _MARKDOWN_LINK = re.compile(r"\[([^\]\n]{1,120})\]\((https?://[^\s)]+)\)")
 
 
+def without_written_out_links(text: str) -> str:
+    """``text`` with every markdown link and bare URL blanked, lengths preserved.
+
+    The context-dependent resolvers -- the ones that attach a loose ``#17`` or a loose
+    sha to *this session's* repository -- must not fire inside a reference somebody
+    already wrote out in full. A ledger saying
+    ``[#144](https://github.com/thorwhalen/priv/pull/144)`` names priv's 144; reading the
+    ``#144`` out of its label and resolving it against the session's own repository
+    invents a link to a different project's issue 144, which on a repository with six
+    hundred issues is a page that exists and is about something else.
+
+    Blanked rather than removed so that every offset in the string still means what it
+    meant -- lookbehinds on either side of a match keep working.
+
+    >>> without_written_out_links('see [#1](https://github.com/o/r/pull/1) and #2')
+    'see                                     and #2'
+    """
+    masked = list(text or "")
+    for pattern in (_MARKDOWN_LINK, _BARE_URL):
+        for m in pattern.finditer(text or ""):
+            for i in range(m.start(), m.end()):
+                masked[i] = " "
+    return "".join(masked)
+
+
 def from_markdown_links(text: str, context: Mapping) -> list[Link]:
     """``[label](url)`` a session already wrote out in full, keeping the label it chose.
 
@@ -220,12 +282,21 @@ def from_markdown_links(text: str, context: Mapping) -> list[Link]:
     'PR 27'
     """
     return [
-        Link(_kind_of(m.group(2)), m.group(2), m.group(1).strip())
+        Link(kind_of(m.group(2)), m.group(2), m.group(1).strip())
         for m in _MARKDOWN_LINK.finditer(text or "")
+        if not looks_like_a_secret(m.group(2))
     ]
 
 
-_BARE_URL = re.compile(r"(?<![\(\]])\bhttps?://[^\s<>\"'\)\]]+")
+#: A URL in running text. The excluded characters are the ones markdown puts *around* a
+#: URL rather than in one -- backticks, asterisks and underscores for emphasis, the
+#: brackets of a link -- because a ledger is markdown and this project's own style is to
+#: bold URLs and wrap them in backticks. Getting this wrong does not produce a wrong
+#: link, it produces a dead one, on the reference most likely to be clicked.
+_BARE_URL = re.compile(r"(?<![\(\]])\bhttps?://[^\s<>\"'`*\[\]]+")
+
+#: Trailing characters that end a sentence rather than a URL.
+_URL_TAIL = ".,;:!?'\"`*_)]}>"
 
 
 def from_urls(text: str, context: Mapping) -> list[Link]:
@@ -236,12 +307,37 @@ def from_urls(text: str, context: Mapping) -> list[Link]:
     """
     found = []
     for m in _BARE_URL.finditer(text or ""):
-        url = m.group(0).rstrip(".,;:")
-        found.append(Link(_kind_of(url), url, _label(url)))
+        url = _trim(m.group(0))
+        if url and not looks_like_a_secret(url):
+            found.append(Link(kind_of(url), url, _label(url)))
     return found
 
 
-_REPO_REF = re.compile(r"(?<![\w/#])([\w.-]+)/([\w.-]+)#(\d+)\b")
+def _trim(url: str) -> str:
+    """Drop the punctuation that ended the sentence rather than the URL.
+
+    A closing parenthesis is kept when the URL opened one, so a Wikipedia article does
+    not lose its disambiguator.
+
+    >>> _trim('https://example.org/x.')
+    'https://example.org/x'
+    >>> _trim('https://en.wikipedia.org/wiki/Foo_(bar)')
+    'https://en.wikipedia.org/wiki/Foo_(bar)'
+    """
+    while url and url[-1] in _URL_TAIL:
+        if url[-1] == ")" and url.count("(") > url.count(")") - 1:
+            break
+        url = url[:-1]
+    return url
+
+
+#: ``owner/repo#N``. Both halves must look like GitHub names -- no dots in the owner, and
+#: a repo that is not a filename -- and neither may be preceded by anything that would
+#: make this the tail of a path or a URL. Without that, ``src/foo.py#12`` and the ``#``
+#: fragment of any URL become repositories.
+_REPO_REF = re.compile(
+    r"(?<![\w/#.:-])([A-Za-z0-9][\w-]{0,38})/([A-Za-z0-9][\w.-]{0,99})#(\d{1,6})\b"
+)
 
 
 def from_repo_refs(text: str, context: Mapping) -> list[Link]:
@@ -260,11 +356,61 @@ def from_repo_refs(text: str, context: Mapping) -> list[Link]:
             f"https://github.com/{m.group(1)}/{m.group(2)}/issues/{m.group(3)}",
             f"{m.group(2)}#{m.group(3)}",
         )
-        for m in _REPO_REF.finditer(text or "")
+        for m in _REPO_REF.finditer(without_written_out_links(text))
+        if not _looks_like_a_path(m.group(2))
     ]
 
 
-_ISSUE_REF = re.compile(r"(?<![\w/&#])#(\d{1,6})\b")
+#: Endings that make ``owner/repo`` a file path instead. A repository may contain a dot
+#: (``my.repo`` is legal), so the test is the extension rather than the dot: ``src/foo.py#12``
+#: is a line reference in a diff, not issue 12 of a repository called ``foo.py``.
+_FILE_ENDINGS = (
+    ".py",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".md",
+    ".txt",
+    ".json",
+    ".toml",
+    ".yaml",
+    ".yml",
+    ".sh",
+    ".html",
+    ".css",
+    ".rs",
+    ".go",
+    ".java",
+    ".c",
+    ".h",
+    ".cpp",
+    ".rb",
+    ".ipynb",
+    ".cfg",
+    ".ini",
+    ".lock",
+    ".log",
+    ".csv",
+    ".sql",
+)
+
+
+def _looks_like_a_path(repo: str) -> bool:
+    """Is this second half a filename rather than a repository name?
+
+    >>> _looks_like_a_path('foo.py'), _looks_like_a_path('my.repo')
+    (True, False)
+    """
+    return repo.lower().endswith(_FILE_ENDINGS)
+
+
+#: A loose ``#17``. Bounded to four digits because a longer run of digits behind a hash
+#: is far more often a colour (``#336699``) than an issue -- no repository this reports on
+#: has ten thousand issues, and the cost of the cap is a link that was never going to be
+#: right. The lookbehind excludes a word character, a slash, an ampersand (``&#8212;``)
+#: and a hash, and the caller masks out anything already written out as a link.
+_ISSUE_REF = re.compile(r"(?<![\w/&#])#(\d{1,4})\b(?![\d-])")
 
 
 def from_issue_refs(text: str, context: Mapping) -> list[Link]:
@@ -283,17 +429,29 @@ def from_issue_refs(text: str, context: Mapping) -> list[Link]:
     >>> from_issue_refs('closes #17', {})
     []
     """
-    repo = str(context.get("repo_url") or "").rstrip("/")
-    if not repo.startswith(_SCHEMES) or github_ref(repo)[0] != "repo":
+    repo = _repo_of(context)
+    if not repo:
         return []
     name = repo.rpartition("/")[2]
     return [
         Link("issue", f"{repo}/issues/{m.group(1)}", f"{name}#{m.group(1)}")
-        for m in _ISSUE_REF.finditer(text or "")
+        for m in _ISSUE_REF.finditer(without_written_out_links(text))
     ]
 
 
-_COMMIT = re.compile(r"(?<![\w/])([0-9a-f]{7,40})(?![\w])")
+def _repo_of(context: Mapping) -> str:
+    """The GitHub repository the text was written in, or ``''`` if there is not one."""
+    repo = str(context.get("repo_url") or "").rstrip("/")
+    if not repo.startswith(_SCHEMES) or github_ref(repo)[0] != "repo":
+        return ""
+    return repo
+
+
+#: An abbreviated or full commit sha. The upper bound is deliberately *not* 40-anything:
+#: a 32-hex run is an md5 and a 64-hex run is a sha256, neither of which is a commit, and
+#: both appear in ordinary session text. A trailing ``-`` is excluded so the first group
+#: of a UUID is not read as a sha.
+_COMMIT = re.compile(r"(?<![\w/-])([0-9a-f]{7,12}|[0-9a-f]{40})(?![\w-])")
 
 
 def from_commits(text: str, context: Mapping) -> list[Link]:
@@ -308,13 +466,13 @@ def from_commits(text: str, context: Mapping) -> list[Link]:
     >>> from_commits('fixed in 7d30838', {'repo_url': 'https://github.com/o/r'})[0].text
     'r@7d30838'
     """
-    repo = str(context.get("repo_url") or "").rstrip("/")
-    if not repo.startswith(_SCHEMES) or github_ref(repo)[0] != "repo":
+    repo = _repo_of(context)
+    if not repo:
         return []
     name = repo.rpartition("/")[2]
     return [
         Link("commit", f"{repo}/commit/{m.group(1)}", f"{name}@{m.group(1)[:7]}")
-        for m in _COMMIT.finditer(text or "")
+        for m in _COMMIT.finditer(without_written_out_links(text))
         if not m.group(1).isdigit()  # a long number is a number, not a sha
     ]
 
@@ -329,11 +487,6 @@ DFLT_RESOLVERS: tuple[Callable[[str, Mapping], Iterable[Link]], ...] = (
     from_issue_refs,
     from_commits,
 )
-
-
-def dflt_resolvers() -> tuple[Callable[[str, Mapping], Iterable[Link]], ...]:
-    """The default resolver order, as a function for callers that prefer one."""
-    return DFLT_RESOLVERS
 
 
 # --------------------------------------------------------------------------------------
@@ -368,7 +521,7 @@ def resolve(
     found: dict[str, Link] = {}
     for resolver in DFLT_RESOLVERS if resolvers is None else resolvers:
         for link in _whatever_it_found(resolver, text, context):
-            if link.url:
+            if link.url and not looks_like_a_secret(link.url):
                 found.setdefault(identity(link.url), link)
     return [link.as_dict() for link in list(found.values())[:limit]]
 
@@ -380,20 +533,33 @@ def identity(url: str) -> str:
     full may have written ``.../pull/45`` -- **the same thing**, because GitHub redirects
     an issue URL to the pull request when that is what the number is. Showing both is the
     noise this feature exists to remove, so they collapse to one identity and the better
-    label wins.
+    label wins. A discussion does *not* collapse into them: ``discussions/45`` is a
+    different object that happens to share a number.
 
-    A discussion does *not* collapse into them: ``discussions/45`` is a different object
-    that happens to share a number.
+    Two spellings of one commit also collapse. A session writes ``eb0774d0a`` in one place
+    and the full forty characters in another, and both are the same commit; the longer
+    prefix wins on length, so they are compared on the shorter one's length.
 
     >>> identity('https://github.com/o/r/pull/45') == identity('https://github.com/o/r/issues/45')
     True
     >>> identity('https://github.com/o/r/discussions/45') == identity('https://github.com/o/r/issues/45')
     False
+    >>> identity('https://WWW.github.com/O/R/issues/45') == identity('https://github.com/o/r/issues/45')
+    True
     """
     kind, owner, repo, number = github_ref(url)
+    where = f"{owner}/{repo}".lower()
     if kind in ("issue", "pr") and number:
-        return f"github:{owner}/{repo}#{number}"
-    return url
+        return f"github:{where}#{number}"
+    if kind == "commit" and number:
+        return f"github:{where}@{number[:_SHA_PREFIX].lower()}"
+    return str(url or "").rstrip("/").lower()
+
+
+#: How much of a commit sha two spellings must share to be the same commit. Git's own
+#: abbreviation floor is seven; a shared seven-character prefix between two *different*
+#: commits of one repository is the collision git itself tolerates.
+_SHA_PREFIX = 7
 
 
 def label_for(url: str, text: str = "") -> str:
@@ -417,11 +583,26 @@ def _whatever_it_found(
 ) -> list[Link]:
     """One resolver's links, or none: a resolver that raises may not lose the others.
 
+    A resolver may return :class:`Link` objects or the plain mappings every other
+    crowsnest boundary speaks in -- ``resolve`` itself returns dicts, so a caller writing
+    one against this seam will reasonably return dicts too, and crashing on the natural
+    guess is not a seam anyone can use.
+
     Swallowed rather than raised because this runs once per session per render of a page
     whose job is to be readable; a custom resolver with a bad pattern should cost its own
     links and nothing else.
     """
     try:
-        return list(resolver(text, context))
+        return [_as_link(found) for found in resolver(text, context) or ()]
     except Exception:  # noqa: BLE001 -- any resolver, any failure; the others still count
         return []
+
+
+def _as_link(found) -> Link:
+    """A resolver's result as a :class:`Link`, whichever of the two shapes it used."""
+    if isinstance(found, Link):
+        return found
+    fields = {
+        k: str(v or "") for k, v in dict(found).items() if k in ("type", "url", "text")
+    }
+    return Link(**{"type": "link", **fields})

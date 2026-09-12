@@ -227,7 +227,8 @@ def test_the_roster_resolves_a_sessions_references_against_its_own_repository(tm
     ledger = tmp_path / "ledger"
     ledger.mkdir()
     (ledger / "fixer.md").write_text(
-        "# fixer\n\n## Notes\n\nBlocked on #17 until [the PR](https://github.com/o/r/pull/2) lands.\n",
+        "# fixer\n\nlast said: 2026-01-01 \u00b7 blocked on #17\n\n## Notes\n\n"
+        "Waiting on [the PR](https://github.com/o/r/pull/2).\n",
         encoding="utf-8",
     )
     row = {
@@ -291,3 +292,159 @@ def test_a_reference_that_reached_the_page_unlabelled_still_gets_a_name():
         "counts": {},
     }
     assert ">r#27</a>" in render_report(roster, made_at="2026-01-01T00:00:00Z")
+
+
+# --------------------------------------------------------------------------------------
+# What an adversarial review proved wrong about the first draft.
+#
+# Every test below failed before its fix. Several were live on the real fleet at the time:
+# `crowsnest show cn-ai-mo` was returning five links to real, unrelated issues.
+
+
+def test_a_reference_already_written_out_in_full_is_not_re_resolved_wrongly():
+    """The `#144` inside a markdown link's LABEL is priv's, not this session's."""
+    text = "Group tooling in priv: [#144](https://github.com/thorwhalen/priv/pull/144)"
+    context = {"repo_url": "https://github.com/thorwhalen/cosm"}
+    assert {link["url"] for link in resolve(text, context=context)} == {
+        "https://github.com/thorwhalen/priv/pull/144"
+    }
+
+
+@pytest.mark.parametrize(
+    "text, why",
+    [
+        ("the badge is #336699", "an all-digit CSS colour"),
+        ("see src/foo.py#12", "a line reference in a diff"),
+        ("checksum 5d41402abc4b2a76b9719d911017c592", "an md5"),
+        ("id 123e4567-e89b-12d3-a456-426614174000", "a UUID"),
+        ("sha256:" + "a" * 64, "a sha256"),
+    ],
+)
+def test_things_that_are_not_references(text, why):
+    assert resolve(text, context=REPO) == [], why
+
+
+def test_a_url_fragment_is_part_of_the_url_and_not_a_repository():
+    found = resolve("https://example.org/doc#12345", context=REPO)
+    assert [link["url"] for link in found] == ["https://example.org/doc#12345"]
+
+
+def test_markdown_emphasis_and_backticks_do_not_end_up_inside_the_href():
+    """The ledger is markdown, and this project's style bolds URLs and backticks them."""
+    text = "page is **https://claude.ai/code/artifact/abc-123** and `https://github.com`"
+    assert [link["url"] for link in resolve(text, context=REPO)] == [
+        "https://claude.ai/code/artifact/abc-123",
+        "https://github.com",
+    ]
+
+
+def test_a_parenthesis_the_url_opened_is_part_of_the_url():
+    found = resolve("https://en.wikipedia.org/wiki/Foo_(bar)", context=REPO)
+    assert found[0]["url"] == "https://en.wikipedia.org/wiki/Foo_(bar)"
+
+
+def test_two_spellings_of_one_commit_are_one_reference():
+    short = "https://github.com/o/r/commit/eb0774d0a"
+    full = "https://github.com/o/r/commit/eb0774d0a3b31f6a38edd2cfafec8f2b0d7376c6"
+    assert identity(short) == identity(full)
+    assert len(resolve(f"{short} and {full}", context=REPO)) == 1
+
+
+def test_www_and_uppercase_github_are_still_github():
+    assert identity("https://www.github.com/o/r/issues/45") == identity(
+        "https://github.com/o/r/issues/45"
+    )
+    assert github_ref("https://www.github.com/o/r/issues/45")[0] == "issue"
+
+
+def test_a_trailing_slash_does_not_make_a_second_reference():
+    assert identity("https://example.org/x/") == identity("https://example.org/x")
+
+
+def test_a_resolver_that_returns_plain_dicts_works():
+    """`resolve` returns dicts, so a caller writing one will reasonably return dicts."""
+
+    def as_dicts(text, context):
+        return [
+            {"type": "issue", "url": "https://github.com/o/r/issues/1", "text": "r#1"}
+        ]
+
+    found = resolve("#1", context=REPO, resolvers=[as_dicts])
+    assert [link["text"] for link in found] == ["r#1"]
+
+
+def test_a_url_that_is_itself_a_credential_never_reaches_the_page():
+    """A Slack webhook URL *is* the permission; the page is published off the machine."""
+    for url in (
+        "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX",
+        "https://example.com/d?token=abcdef123456",
+        "https://user:password@example.com/x",
+    ):
+        assert resolve(f"see {url}", context=REPO) == [], url
+        assert resolve(f"see [hook]({url})", context=REPO) == [], url
+
+
+def test_a_bad_byte_in_one_ledger_does_not_kill_the_whole_roster(tmp_path):
+    """UnicodeDecodeError is a ValueError; `except OSError` never saw it."""
+    from crowsnest import tools
+
+    (tmp_path / "bad.md").write_bytes(b"# bad\n\nstate: working\n\n## Notes\n\xff\n")
+    row = {"label": "bad", "repo_url": "https://github.com/o/r", "activity": {}}
+    assert tools._links_of(row, ledger_dir=tmp_path) == []
+
+
+def test_a_ledgers_free_prose_does_not_resolve_another_projects_issue_number(tmp_path):
+    """The free part is prose about anything; `repo_url` is one repository."""
+    from crowsnest import tools
+
+    (tmp_path / "s.md").write_text(
+        "# s\n\nlast said: 2026-01-01 \u00b7 closes #17\n\n## Notes\n\n"
+        "cosmograph's #573 claim was false, see i2mint/mergeset#12\n",
+        encoding="utf-8",
+    )
+    row = {"label": "s", "repo_url": "https://github.com/i2mint/mergeset", "activity": {}}
+    urls = {link["url"] for link in tools._links_of(row, ledger_dir=tmp_path)}
+    assert "https://github.com/i2mint/mergeset/issues/17" in urls  # its own words
+    assert "https://github.com/i2mint/mergeset/issues/12" in urls  # names its own repo
+    assert "https://github.com/i2mint/mergeset/issues/573" not in urls  # someone else's
+
+
+def test_the_registry_only_roster_stays_instant():
+    """`activity=False` promises instant; links follow it unless asked for."""
+    from crowsnest import tools
+
+    rows = tools.roster(home="/nonexistent", activity=False)
+    assert rows["sessions"] == []
+    assert tools.roster(home="/nonexistent", activity=False, links=True)["sessions"] == []
+
+
+def test_report_can_reach_the_resolver_seam(tmp_path):
+    """The surface the feature exists for must be able to reach the seam it renders."""
+    from crowsnest import tools
+
+    done = tools.report(
+        home="/nonexistent",
+        made_at="2026-01-01T00:00:00Z",
+        ledger_dir=tmp_path,
+        resolvers=[],
+        links=False,
+    )
+    assert "<title>" in done["html"]
+
+
+def test_a_withheld_or_rewritten_url_is_shown_as_text_not_as_a_link():
+    from crowsnest.report import render_report
+
+    roster = {
+        "sessions": [
+            {
+                "label": "s",
+                "status": "waiting",
+                "status_since": 0,
+                "links": [{"type": "link", "url": "javascript:alert(1)", "text": "ref"}],
+            }
+        ],
+        "counts": {},
+    }
+    html = render_report(roster, made_at="2026-01-01T00:00:00Z")
+    assert "javascript:" not in html and ">ref<" not in html
