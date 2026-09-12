@@ -200,12 +200,16 @@ def test_every_open_tag_is_closed():
     html = render_report(roster(*rows), made_at=STAMP)
     body = re.search(r"<main\b.*</main>", html, re.DOTALL).group(0)
     void = {"br", "hr", "img", "input", "meta", "link"}
+    # SVG's self-closing shapes are legal foreign content and never "open" a tag. Without
+    # them this invariant silently stopped covering the largest block of markup on the
+    # page the moment the spawn figure was added.
+    void = void | {"path", "circle", "rect", "line", "polyline", "polygon", "use"}
     stack: list[str] = []
     for closing, name in re.findall(r"<(/?)([a-z0-9]+)", body):
         if closing:
-            assert stack and stack[-1] == name, (
-                f"{name} closed out of order: {stack[-3:]}"
-            )
+            assert (
+                stack and stack[-1] == name
+            ), f"{name} closed out of order: {stack[-3:]}"
             stack.pop()
         elif name not in void:
             stack.append(name)

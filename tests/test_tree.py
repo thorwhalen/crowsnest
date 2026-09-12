@@ -228,7 +228,9 @@ def test_an_exited_session_is_hollow_and_a_live_one_is_filled():
 def test_a_long_name_does_not_run_into_the_status_column():
     long = "cn-" + "x" * 80
     svg = _drawn([_node(long, children=["b"]), _node("b", depth=1)], [long])
-    assert long not in svg and "…" in svg
+    drawn = re.findall(r"<text[^>]*>([^<]*)</text>", svg)
+    assert long not in drawn and any(s.endswith("…") for s in drawn)
+    assert long in svg, "the full name is still in the list a screen reader reads"
 
 
 @pytest.mark.parametrize("status", ["waiting", "busy", "idle", "gone"])

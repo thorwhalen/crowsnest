@@ -54,15 +54,21 @@ True
 
 from __future__ import annotations
 
+import unicodedata
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 
 __all__ = [
+    "CHAR",
     "FLEET_MIN",
     "FLEET_SHOWN",
+    "MAX_INDENT_DEPTH",
     "MAX_ROWS",
+    "RIGHT_COLUMN",
     "TREE_CSS",
+    "WIDTH",
     "Placed",
+    "escape",
     "layout",
     "render",
 ]
@@ -84,15 +90,28 @@ MAX_ROWS = 120
 #: near 12px when the figure is scaled to a phone's width.
 ROW_HEIGHT = 22
 INDENT = 14
+
+#: How far right the drawing indents, however deep the tree goes. Past this, depth stops
+#: buying indentation: a row at depth 24 would otherwise start beyond the figure's own
+#: width and be drawn off the canvas entirely. Real lineage is a handful deep; this is for
+#: a cycle or a custom layout, where silently drawing nothing is the worst answer.
+MAX_INDENT_DEPTH = 8
 PAD = 8
 DOT_X = 10
 WIDTH = 360
 FONT = 12
 
-#: Roughly how wide one character of the label font is, in user units. Used to keep a long
-#: name out of the status column; approximate on purpose, because measuring text properly
-#: means a font metric this module has no business carrying.
+#: Roughly how wide one narrow character of the label font is, in user units. Approximate
+#: on purpose -- measuring text properly means a font metric this module has no business
+#: carrying -- but wide enough to be safe rather than tight, because the failure it guards
+#: against is two strings drawn on top of each other.
 CHAR = 6.3
+
+#: How many units the status column is allowed. Both columns are clipped to their budget:
+#: clipping only the label was the first draft's bug, and it showed up on the *default*
+#: path, because a mixed fleet summarises as "2 waiting, 10 busy, 7 shell, 30 idle" -- 40
+#: characters against a 60-unit budget, drawn right-to-left across every name.
+RIGHT_COLUMN = 92
 
 #: The figure's own styles. The SVG is drawn at a **fixed** size rather than stretched:
 #: scaling it to the column would render the labels at whatever size the column happened
@@ -105,6 +124,8 @@ TREE_CSS = """
 .spawn-tree svg{display:block}
 .spawn-tree figcaption{margin-top:0.55rem;color:var(--ink-soft);font-size:0.82rem;
   max-width:34rem}
+.spawn-tree-alt{position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 """
 
 #: Which stylesheet token colours which status. These are the page's own tokens (they are
@@ -118,6 +139,17 @@ _TONES = {
     "idle": "--free",
     "gone": "--ink-soft",
 }
+
+
+def _column(depth: int) -> float:
+    """Where a row at this depth puts its mark, never past :data:`MAX_INDENT_DEPTH`.
+
+    >>> _column(0) < _column(3) == _column(3)
+    True
+    >>> _column(24) == _column(MAX_INDENT_DEPTH)
+    True
+    """
+    return PAD + DOT_X + min(max(depth, 0), MAX_INDENT_DEPTH) * INDENT
 
 
 def _tone(status: str) -> str:
@@ -159,6 +191,8 @@ def _fleet_detail(rows: Sequence[Mapping]) -> str:
 
     >>> _fleet_detail([{'status': 'idle'}] * 3 + [{'status': 'waiting'}])
     '1 waiting, 3 idle'
+    >>> _fleet_detail([{'status': s} for s in ('waiting', 'busy', 'shell', 'idle', 'gone')])
+    '1 waiting, 1 busy +3'
     """
     order = ("waiting", "busy", "shell", "idle", "gone")
     counts = {}
@@ -169,7 +203,12 @@ def _fleet_detail(rows: Sequence[Mapping]) -> str:
     ranked = sorted(
         counts.items(), key=lambda kv: (order.index(kv[0]) if kv[0] in order else 9)
     )
-    return ", ".join(f"{n} {status}" for status, n in ranked)
+    # Two statuses and a tally, not five: the column is 92 units wide, and "2 waiting,
+    # 10 busy, 7 shell, 30 idle, 8 gone" is 40 characters drawn across every name beside
+    # it. The two kept are the two that need a person soonest.
+    shown = ", ".join(f"{n} {status}" for status, n in ranked[:2])
+    rest = sum(n for _, n in ranked[2:])
+    return f"{shown} +{rest}" if rest else shown
 
 
 #: The order a fleet's children are kept in when only a few can be drawn: what needs a
@@ -204,6 +243,11 @@ def layout(
     """
     by_name = {str(n.get("name")): n for n in found.get("nodes") or ()}
     placed: list[Placed] = []
+    # `lineage.graph` returns a forest, so this never fires on the default path. It fires
+    # the moment anything else builds the mapping: a node listing itself as its own child,
+    # two parents claiming one child, A and B claiming each other. Without it the walk
+    # draws the same session over and over until it hits `max_rows`.
+    seen: set[str] = set()
 
     def emit(node: Mapping, depth: int, parent_row: int) -> int:
         row = len(placed)
@@ -224,8 +268,9 @@ def layout(
 
     def walk(name: str, depth: int, parent_row: int) -> None:
         node = by_name.get(name)
-        if node is None or len(placed) >= max_rows:
+        if node is None or name in seen or len(placed) >= max_rows:
             return
+        seen.add(name)
         row = emit(node, depth, parent_row)
         kids = [by_name[k] for k in node.get("children") or () if k in by_name]
         branches = [k for k in kids if k.get("children")]
@@ -264,8 +309,13 @@ def layout(
 # The drawing
 
 
-def _escape(text: str) -> str:
-    """XML-escape. The caller has already scrubbed; this stops a name closing a tag."""
+def escape(text: str) -> str:
+    """XML-escape: the default ``text=`` for :func:`render`, and the floor under any other.
+
+    A drawing that trusts its input is one edit away from being the hole, so this runs
+    even when a caller has already sanitised -- and a caller that sanitises passes its own
+    function as ``text=``, which escapes as well as scrubbing. See :func:`render`.
+    """
     return (
         str(text or "")
         .replace("&", "&amp;")
@@ -280,10 +330,10 @@ def _elbow(row: Placed, rows: Mapping[int, Placed]) -> str:
     if row.parent_row < 0 or row.parent_row not in rows:
         return ""
     parent = rows[row.parent_row]
-    x = PAD + DOT_X + parent.depth * INDENT
+    x = _column(parent.depth)
     y0 = PAD + parent.row * ROW_HEIGHT + ROW_HEIGHT / 2 + 4
     y1 = PAD + row.row * ROW_HEIGHT + ROW_HEIGHT / 2
-    x1 = PAD + DOT_X + row.depth * INDENT - 4
+    x1 = _column(row.depth) - 4
     dash = ' stroke-dasharray="2 2"' if row.confidence == "inferred" else ""
     return (
         f'<path d="M{x:.0f} {y0:.0f} V{y1:.0f} H{x1:.0f}" fill="none" '
@@ -293,7 +343,7 @@ def _elbow(row: Placed, rows: Mapping[int, Placed]) -> str:
 
 def _dot(row: Placed) -> str:
     """A session's mark: filled while it is alive, hollow once it has exited."""
-    x = PAD + DOT_X + row.depth * INDENT
+    x = _column(row.depth)
     y = PAD + row.row * ROW_HEIGHT + ROW_HEIGHT / 2
     tone = _tone(row.status)
     if row.kind == "fleet":
@@ -306,18 +356,18 @@ def _dot(row: Placed) -> str:
     return f'<circle cx="{x:.0f}" cy="{y:.0f}" r="3.5" fill="{tone}"/>'
 
 
-def _label(row: Placed) -> str:
+def _label(row: Placed, text: Callable[[str], str]) -> str:
     """The name, then what it is doing, in the page's own type colours."""
-    x = PAD + DOT_X + row.depth * INDENT + 9
+    x = _column(row.depth) + 9
     y = PAD + row.row * ROW_HEIGHT + ROW_HEIGHT / 2 + 4
-    room = WIDTH - PAD - 60 - x  # keep a long name out of the status column
-    name = _escape(_clip(row.label, max(6, int(room / CHAR))))
+    room = max(4 * CHAR, WIDTH - PAD - RIGHT_COLUMN - x)
+    name = text(_clip(row.label, room))
     weight = ' font-weight="500"' if row.status == "waiting" else ""
     # The right-hand column says whatever is *not* already obvious. A dot's colour carries
     # the status, and colour alone is not a signal every reader has -- so a session that
     # is doing something says so in words, and only a resting one spends the column on
     # where it is working.
-    said = _escape(_right_column(row))
+    said = text(_clip(_right_column(row), RIGHT_COLUMN - CHAR))
     mark = " ~" if row.confidence == "inferred" else ""
     return (
         f'<text x="{x:.0f}" y="{y:.0f}" font-size="{FONT}" '
@@ -327,13 +377,35 @@ def _label(row: Placed) -> str:
     )
 
 
-def _clip(text: str, limit: int) -> str:
-    """A label short enough to leave the status column alone.
+def _units(text: str) -> float:
+    """About how wide ``text`` draws, counting a double-width character as two.
 
-    >>> _clip('cn-a-very-long-session-name', 12)
-    'cn-a-very-l\u2026'
+    A CJK name passes a codepoint-count check and draws twice as wide as the check
+    believed, which is the same overlap by another route.
+
+    >>> _units('abc') < _units('\u4e00\u4e8c\u4e09')
+    True
     """
-    return text if len(text) <= limit else text[: limit - 1].rstrip("-_ ") + "\u2026"
+    wide = sum(1 for ch in text if unicodedata.east_asian_width(ch) in ("W", "F"))
+    return (len(text) + wide) * CHAR
+
+
+def _clip(text: str, room: float) -> str:
+    """``text`` cut, with an ellipsis, to about ``room`` user units.
+
+    >>> _clip('cn-a-very-long-session-name', 12 * CHAR)
+    'cn-a-very-l\u2026'
+    >>> _clip('short', 999)
+    'short'
+    """
+    if _units(text) <= room:
+        return text
+    out = ""
+    for ch in text:
+        if _units(out + ch) > room - CHAR:
+            break
+        out += ch
+    return out.rstrip("-_ ") + "\u2026"
 
 
 def _right_column(row: Placed) -> str:
@@ -357,13 +429,24 @@ def render(
     found: Mapping,
     *,
     layout: Callable[[Mapping], Sequence[Placed]] = layout,
+    text: Callable[[str], str] = escape,
     title: str = "Who started whom",
 ) -> str:
     """The forest as one ``<figure>`` holding inline SVG. Loads nothing from anywhere.
 
     ``layout`` is the seam: anything returning :class:`Placed` rows draws through the same
-    marks. Returns ``''`` when there is nothing worth drawing -- a forest with no edges is
-    a list, and the roster above it is already that list.
+    marks. Rows are placed by their ``row`` index, so a layout numbers them contiguously
+    from zero or the figure is taller or shorter than what it drew.
+
+    ``text`` is what every string passes through on its way onto the canvas. It must both
+    **scrub and escape** -- the default :func:`escape` only escapes, which is right for a
+    caller with nothing to hide, and :mod:`crowsnest.report` passes its page sanitiser so
+    that a home path or a credential in a session's name is treated here exactly as it is
+    everywhere else on the page. A figure that skipped the sanitiser would be the one
+    region of a published page that did.
+
+    Returns ``''`` when there is nothing worth drawing -- a forest with no edges is a list,
+    and the roster above it is already that list.
 
     Colours come from the page's own stylesheet tokens, which are defined for light and
     dark alike, so the figure follows the reader's theme without a second palette; outside
@@ -373,30 +456,74 @@ def render(
     if not rows or not (found.get("edges") or ()):
         return ""
     by_row = {row.row: row for row in rows}
-    height = PAD * 2 + len(rows) * ROW_HEIGHT
-    marks = "".join(_elbow(row, by_row) + _dot(row) + _label(row) for row in rows)
-    counts = found.get("counts") or {}
-    claim = (
-        f"{counts.get('edges', 0)} session(s) were started by another; "
-        f"{counts.get('roots', 0)} by nobody"
+    height = PAD * 2 + (max(row.row for row in rows) + 1) * ROW_HEIGHT
+    marks = "".join(_elbow(row, by_row) + _dot(row) + _label(row, text) for row in rows)
+    claim, caption = _what_it_shows(found, rows)
+    return (
+        '<figure class="spawn-tree">'
+        f'<svg role="img" aria-label="{escape(title)}: {escape(claim)}" '
+        f'viewBox="0 0 {WIDTH} {height}" width="{WIDTH}" height="{height}">{marks}</svg>'
+        f"{_as_a_list(rows, text)}"
+        f"<figcaption>{caption}</figcaption>"
+        "</figure>"
     )
-    fleets = sum(1 for row in rows if row.kind == "fleet")
+
+
+def _what_it_shows(found: Mapping, rows: Sequence[Placed]) -> tuple[str, str]:
+    """The figure's claim and its caption -- **about the picture, not about the data**.
+
+    The first draft took both from the forest's counts, so a figure showing two roots and
+    nine connectors announced "15 started by another; 44 by nobody", and a caption said
+    fifty orphans were "still drawn under it" above three of them. A caption that
+    describes something other than what is on the canvas is worse than none: it is the
+    part a reader trusts when they cannot count the rows themselves.
+    """
+    drawn = [row for row in rows if row.kind == "session"]
+    fleets = [row for row in rows if row.kind == "fleet"]
+    linked = sum(1 for row in rows if row.parent_row >= 0)
+    hidden = sum(row.count for row in fleets)
+    claim = (
+        f"{linked} session(s) drawn under the one that started them, "
+        f"in {sum(1 for r in drawn if r.parent_row < 0)} tree(s)"
+    )
     caption = (
         f"{claim}. A hollow mark is a session that has exited but whose children are "
         "still running; a dashed line and <code>~</code> mark a link recovered from a "
         "transcript rather than recorded."
     )
     if fleets:
-        caption += " A square stands for several sessions of one parent, collapsed."
+        caption += (
+            f" A square stands for a parent's remaining children, collapsed: "
+            f"{hidden} more session(s) are counted but not drawn, the ones needing you "
+            "kept above it."
+        )
+    lonely = len(found.get("roots") or ()) - sum(1 for r in drawn if r.parent_row < 0)
+    if lonely > 0:
+        caption += (
+            f" {lonely} session(s) started nobody and were started by nobody, and are "
+            "left out; every one of them is in the registers above."
+        )
     if len(rows) >= MAX_ROWS:
         caption += (
-            f" Only the first {MAX_ROWS} rows are drawn; <code>crowsnest lineage</code> "
-            "prints the whole forest."
+            f" The figure stops at {MAX_ROWS} rows; <code>crowsnest lineage</code> prints "
+            "the whole forest."
         )
-    return (
-        '<figure class="spawn-tree">'
-        f'<svg role="img" aria-label="{_escape(title)}: {_escape(claim)}" '
-        f'viewBox="0 0 {WIDTH} {height}" width="{WIDTH}" height="{height}">{marks}</svg>'
-        f"<figcaption>{caption}</figcaption>"
-        "</figure>"
-    )
+    return claim, caption
+
+
+def _as_a_list(rows: Sequence[Placed], text: Callable[[str], str]) -> str:
+    """The same rows as a nested list, for a reader who cannot see the figure.
+
+    An ``aria-label`` can carry the figure's *claim*; it cannot carry who started whom,
+    which is the only thing the figure exists to say -- and that parentage appears nowhere
+    else in the document. The drawing is already an ordered, indented list, so saying it
+    as one costs a few hundred bytes and is the difference between the figure being
+    readable and being decorative.
+    """
+    items = []
+    for row in rows:
+        said = text(_right_column(row))
+        items.append(
+            f'<li style="margin-left:{row.depth}rem">{text(row.label)} &mdash; {said}</li>'
+        )
+    return f'<ul class="spawn-tree-alt">{"".join(items)}</ul>'

@@ -579,20 +579,28 @@ def _lineage_register(safe: _Sanitizer, found: Any) -> str:
     """
     if not isinstance(found, Mapping):
         return ""
+    from crowsnest.tree import layout as _layout
     from crowsnest.tree import render as _draw
 
-    figure = _draw(found)
+    # Every string in the figure goes through the page's sanitiser, exactly as in every
+    # other register. Without this the drawing would be the one region of a published page
+    # that skipped it -- and this page is published.
+    rows = _layout(found)
+    figure = _draw(found, layout=lambda _found: rows, text=safe.text)
     if not figure:
         return ""
-    counts = found.get("counts") or {}
-    orphans = counts.get("orphans", 0)
+    gone = sum(1 for row in rows if not row.alive)
     rule = "Each session under the one that started it."
-    if orphans:
-        rule += f" {orphans} whose parent has since exited, still drawn under it."
+    if gone:
+        rule += (
+            f" {gone} of them has exited, drawn hollow, with its children still under it."
+        )
+    # The number counts what the figure *draws*. A big "15" over a picture of nine
+    # connectors is the register lying about its own contents.
     return _register(
         ident="lineage",
         name="Who started whom",
-        figure=str(counts.get("edges", 0)),
+        figure=str(sum(1 for row in rows if row.parent_row >= 0)),
         tone="done",
         rule=rule,
         body=figure,
