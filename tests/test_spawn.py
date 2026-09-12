@@ -351,6 +351,8 @@ def test_spawn_returns_pid_and_session_id_once_the_registry_sees_it(
         "session_id": "sess-abcdef",
         "how": "custom",
         "home": str(home),
+        # `spawn` records who asked for the session; the environment above is the caller.
+        "parent": {"name": "parent-s", "session_id": "parent-session", "pid": 0},
     }
     assert calls and calls[0][1] == "/some/repo" and calls[0][2] == "demo"
     assert calls[0][3] == home
