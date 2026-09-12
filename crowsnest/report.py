@@ -45,6 +45,7 @@ from openloops.dashboard import CSS as _CSS
 from openloops.dashboard import Sanitizer as _Sanitizer
 
 from crowsnest.links import label_for as _label_for
+from crowsnest.tree import TREE_CSS as _TREE_CSS
 
 __all__ = ["CONSOLE_CSS", "CONSOLE_SCRIPT", "render_report"]
 
@@ -568,6 +569,36 @@ def _quiet_register(
     )
 
 
+def _lineage_register(safe: _Sanitizer, found: Any) -> str:
+    """The spawn forest, drawn, when the roster carries one and it has a shape.
+
+    Left out entirely when no session was started by another: the figure would be a list
+    of everything, and the registers above are already that list. The drawing is
+    :func:`crowsnest.tree.render`'s -- inline SVG with the layout computed in Python, so
+    the page still loads nothing from anywhere.
+    """
+    if not isinstance(found, Mapping):
+        return ""
+    from crowsnest.tree import render as _draw
+
+    figure = _draw(found)
+    if not figure:
+        return ""
+    counts = found.get("counts") or {}
+    orphans = counts.get("orphans", 0)
+    rule = "Each session under the one that started it."
+    if orphans:
+        rule += f" {orphans} whose parent has since exited, still drawn under it."
+    return _register(
+        ident="lineage",
+        name="Who started whom",
+        figure=str(counts.get("edges", 0)),
+        tone="done",
+        rule=rule,
+        body=figure,
+    )
+
+
 def _masthead(safe: _Sanitizer, counts: Mapping[str, Any], stamp: str, title: str) -> str:
     tally = [
         ("Waiting", counts.get("waiting", 0), "needs"),
@@ -791,11 +822,14 @@ def _render(
             rule="Busy, with the tool call in flight.",
             empty="No session is running a tool right now.",
         ),
+        _lineage_register(safe, roster.get("lineage")),
         _quiet_register(safe, quiet, now_epoch),
         _footer(safe, stamp),
     ]
     title_tag = f"<title>{safe.text(title)}</title>"
-    style_tag = f"<style>{_CSS}</style>"
+    # One <style>, not two: the figure's rules belong with the page's rules, and the
+    # interactive mode's own block is the only thing that earns a second tag.
+    style_tag = f"<style>{_CSS}{_TREE_CSS}</style>"
     if _interactive.get():
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'

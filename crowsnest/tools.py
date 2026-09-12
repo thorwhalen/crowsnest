@@ -440,6 +440,7 @@ def report(
     triage: bool = True,
     verdicts=None,
     owner: str = "",
+    lineage_of_sessions: bool = True,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -487,6 +488,8 @@ def report(
                 data["sessions"], ledger_dir, verdicts, owner, pages=pages
             ),
         }
+    if lineage_of_sessions:
+        data = {**data, "lineage": lineage(home=home, all_homes=all_homes, config=config)}
     html = render_report(
         data, made_at=made_at, title=title, fragment=fragment, interactive=interactive
     )
