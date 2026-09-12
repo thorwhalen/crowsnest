@@ -22,6 +22,7 @@ from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
 from crowsnest.config import homes
+from crowsnest.lineage import from_records as _from_records
 from crowsnest.registry import STATUSES, LiveSession, fresh_within, live_sessions
 from crowsnest.report import DFLT_TITLE, render_report
 
@@ -436,10 +437,12 @@ def report(
     interactive: bool = False,
     links: bool = True,
     ledger_dir: str | Path | None = None,
+    lineage_path: str | Path | None = None,
     resolvers=None,
     triage: bool = True,
     verdicts=None,
     owner: str = "",
+    with_lineage: bool = True,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -487,6 +490,27 @@ def report(
                 data["sessions"], ledger_dir, verdicts, owner, pages=pages
             ),
         }
+    if with_lineage:
+        # The rows the roster already read, not a second sweep of the registry: reading
+        # twice costs a `ps` and a registry listing, and lets the two halves of one
+        # snapshot disagree about who is alive.
+        data = {
+            **data,
+            # Recorded edges only. `from_processes` runs a `ps`, and a page render is
+            # the wrong place for a subprocess: it is paid on every refresh, it makes a
+            # test of this function read the machine it runs on, and on a fleet started
+            # through tmux it finds nothing anyway (tmux reparents to init -- see
+            # `crowsnest.lineage.from_processes`). `crowsnest lineage` is where a person
+            # goes to ask, and it still asks.
+            "lineage": lineage(
+                home=home,
+                all_homes=all_homes,
+                config=config,
+                lineage_path=lineage_path,
+                sessions_read=data["sessions"],
+                sources=[lambda: _from_records(lineage_path=lineage_path)],
+            ),
+        }
     html = render_report(
         data, made_at=made_at, title=title, fragment=fragment, interactive=interactive
     )
@@ -506,6 +530,7 @@ def lineage(
     lineage_path: str | Path | None = None,
     sources=None,
     extra_edges=(),
+    sessions_read=None,
 ) -> dict:
     """Who started whom: the live sessions as a forest of ``parent -> child`` edges.
 
@@ -526,7 +551,13 @@ def lineage(
     from crowsnest.lineage import dflt_sources
     from crowsnest.lineage import graph as _graph
 
-    rows = [s.as_dict() for s in sessions(home=home, all_homes=all_homes, config=config)]
+    rows = (
+        list(sessions_read)
+        if sessions_read is not None
+        else [
+            s.as_dict() for s in sessions(home=home, all_homes=all_homes, config=config)
+        ]
+    )
     readers = (
         dflt_sources(home=home, lineage_path=lineage_path, sessions=rows)
         if sources is None

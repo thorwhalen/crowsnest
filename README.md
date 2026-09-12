@@ -148,6 +148,8 @@ crowsnest                         x gone
 
 A parent that has exited stays in the picture (`x gone`) so its children stay a fleet rather than becoming unrelated roots.
 
+`crowsnest report` draws the same forest as **inline SVG**, laid out in Python — no graph library, no script, nothing fetched, which is what lets the page keep its offline promise. Sessions that started nobody and were started by nobody are left out (the roster above is already that list), a parent's childless children collapse once there are more than a handful — **the ones that need you kept, the rest summarised as "7 more · 7 idle"** — and the figure is drawn at a fixed size so its labels are 12px whatever the screen, scrolling sideways inside its own box rather than shrinking.
+
 Recording only works forwards. For a machine that has been running sessions since before this shipped, `crowsnest lineage --backfill` recovers what it can, once, by scanning every transcript for the `crowsnest spawn` commands that created today's sessions, and writes what it finds into `lineage.jsonl` so the cheap reader has it from then on. That is *inference* — the command may have failed — so those edges are marked `~` wherever they are shown, and a recorded edge is never overwritten by a guessed one. A *mention* is not a spawn: the command has to be the head of a shell segment, so grepping for the phrase or writing a commit message about it does not invent a parent. `--dry-run` says what it would add and writes nothing.
 
 ## Several accounts and machines in one roster

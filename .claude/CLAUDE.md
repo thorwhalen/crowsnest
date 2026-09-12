@@ -18,6 +18,7 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 | `ledger_dir=` / `events_path=` / `lineage_path=` in `ledger`, `hook`, `watch`, `lineage` | under `crowsnest.paths.data_dir()` | a test's `tmp_path`; a shared store later |
 | `resolvers=` in `links.resolve`, ordered `(text, context) -> Iterable[Link]`; first to claim a URL keeps its label. Reachable from `tools.roster(resolvers=)` and `tools.show(resolvers=)` | markdown links, bare URLs, `owner/repo#N`, bare `#N` against the session's cwd remote, bare shas | a `[links]` table in `~/.config/crowsnest/config.toml`; a repo-alias map |
 | `verdicts=` in `triage.classify`, ordered `(row, ledger) -> Verdict \| None`; first non-`None` wins. Reachable from `tools.triage(verdicts=)` and `tools.report(verdicts=)` | `(from_registry, from_ledger)` — the live waiting signal, then the ledger's field and its "for <person>" prose | `from_digest` over openloops' digest, whose store is already the `store=` seam below |
+| `layout=` in `tree.render`, `(graph) -> [Placed]` | the indented depth-first walk, fleets collapsed, childless roots dropped | a real graph library behind `--interactive`, which already permits script |
 | `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
 
 Surfaces built: the `cw` CLI (`__main__.py` renders, `tools.py` is the JSON core), the
@@ -30,6 +31,10 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
 - Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
 - `links.py` never fetches. A link is constructed from the text plus the session's cwd remote;
   a resolver that checked GitHub would turn one report into hundreds of network calls.
+- The report's figure is inline SVG with the layout computed in Python. Never a graph library,
+  never a CDN: `render`'s docstring promises "no stylesheet, script, or request to anywhere",
+  and `tests/test_tree.py` asserts it. Colours are the page's own `--ink`/`--needs`/… tokens
+  with a `currentColor` fallback, so it is theme-aware without a second palette.
 - `triage` never guesses. Silence is `unclassified`, never `safe_to_close` — a person who
   trusts a wrong "safe to close" closes a terminal on live work and nothing tells them.
   Measured 2026-09: 180 of 181 ledgers had an empty `state:` and none had `open questions:`,

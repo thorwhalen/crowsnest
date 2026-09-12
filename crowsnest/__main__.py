@@ -385,6 +385,7 @@ def report(
     fragment: bool = False,
     interactive: bool = False,
     triage: bool = True,
+    lineage: bool = True,
     ledger_dir: str | None = None,
 ):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
@@ -401,11 +402,16 @@ def report(
     The page leads with what needs you and what is safe to close, read from each session's
     ledger. `--no-triage` renders the older page, organised by status alone, which is also
     what you get from a session that keeps no ledger. `--ledger-dir` reads them elsewhere.
+
+    It ends with the spawn forest, drawn: who started whom, as inline SVG with the layout
+    computed here rather than by a script. `--no-lineage` leaves it out, which also skips
+    the one `ps` the page runs.
     """
     result = tools.report(
         home=home,
         all_homes=all_homes,
         triage=triage,
+        with_lineage=lineage,
         ledger_dir=ledger_dir,
         fragment=fragment,
         interactive=interactive,
