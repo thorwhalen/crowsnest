@@ -136,9 +136,9 @@ def test_every_open_tag_is_closed_with_the_figure_on_the_page():
     stack: list[str] = []
     for closing, name in re.findall(r"<(/?)([a-z0-9]+)", body):
         if closing:
-            assert (
-                stack and stack[-1] == name
-            ), f"{name} closed out of order: {stack[-3:]}"
+            assert stack and stack[-1] == name, (
+                f"{name} closed out of order: {stack[-3:]}"
+            )
             stack.pop()
         elif name not in void:
             stack.append(name)
@@ -204,9 +204,9 @@ def test_the_layout_seam_may_number_its_rows_however_it_likes():
     )
     height = float(re.search(r'viewBox="0 0 \d+ ([\d.]+)"', svg).group(1))
     for x, y, anchor, size, body in _texts(svg):
-        assert (
-            0 <= y <= height
-        ), f"row {body!r} drawn at y={y} outside a {height}-tall figure"
+        assert 0 <= y <= height, (
+            f"row {body!r} drawn at y={y} outside a {height}-tall figure"
+        )
 
 
 # ---------------------------------------------------------------- 5
@@ -217,9 +217,9 @@ def test_a_cycle_is_not_drawn_as_a_hundred_and_twenty_rows():
         [_node("A", children=["B"]), _node("B", children=["A"], depth=1)], ["A"]
     )
     rows = layout(found)
-    assert len({r.name for r in rows}) == len(
-        rows
-    ), f"{len(rows)} rows for 2 nodes; labels {[r.label for r in rows][:6]}"
+    assert len({r.name for r in rows}) == len(rows), (
+        f"{len(rows)} rows for 2 nodes; labels {[r.label for r in rows][:6]}"
+    )
 
 
 def test_a_node_is_drawn_once_even_when_two_parents_claim_it():
@@ -237,7 +237,7 @@ def test_a_deep_chain_stays_inside_the_viewbox():
     WIDTH at depth 24: the row is simply not on the canvas any more."""
     n = 30
     nodes = [
-        _node(f"d{i}", children=[f"d{i+1}"] if i < n - 1 else [], depth=i)
+        _node(f"d{i}", children=[f"d{i + 1}"] if i < n - 1 else [], depth=i)
         for i in range(n)
     ]
     svg = render(_forest(nodes, ["d0"]))

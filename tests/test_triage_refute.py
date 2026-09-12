@@ -82,9 +82,9 @@ def test_an_all_clear_about_a_different_thing_does_not_close_the_session():
         "Adversarial review: no blockers, 3 should-fix. Waiting on Thor to approve.",
         "PR #12 is all landed, but the migration is still open.",
     ):
-        assert (
-            classify_row(_row(), ledger=_ledger(free))["group"] != "safe_to_close"
-        ), free
+        assert classify_row(_row(), ledger=_ledger(free))["group"] != "safe_to_close", (
+            free
+        )
 
 
 def test_a_quoted_or_fenced_all_clear_is_not_the_session_speaking():

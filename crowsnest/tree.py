@@ -201,7 +201,7 @@ def _fleet_detail(rows: Sequence[Mapping]) -> str:
             counts.get(str(row.get("status") or "gone"), 0) + 1
         )
     ranked = sorted(
-        counts.items(), key=lambda kv: (order.index(kv[0]) if kv[0] in order else 9)
+        counts.items(), key=lambda kv: order.index(kv[0]) if kv[0] in order else 9
     )
     # Two statuses and a tally, not five: the column is 92 units wide, and "2 waiting,
     # 10 busy, 7 shell, 30 idle, 8 gone" is 40 characters drawn across every name beside
