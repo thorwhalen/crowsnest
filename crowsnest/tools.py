@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from collections.abc import Mapping
 from dataclasses import replace
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -40,6 +41,11 @@ __all__ = [
 #: How many issue or PR references a roster row carries. The page shows them; ``show``
 #: carries them all.
 ROSTER_LOCATORS = 4
+
+#: How many resolved links a roster row carries. More than the locator cap because these
+#: are the row's whole reference list -- what it said, what it wrote down, what it is
+#: waiting on -- rather than the pull requests alone.
+ROSTER_LINKS = 8
 
 _SSH_REMOTE = re.compile(r"^(?:ssh://)?(?:[\w.-]+@)?([\w.-]+)[:/](.+?)(?:\.git)?/?$")
 
@@ -162,6 +168,9 @@ def roster(
     all_homes: bool = False,
     config: str | Path | None = None,
     activity: bool = True,
+    links: bool | None = None,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
     text_limit: int = ROSTER_TEXT_LIMIT,
 ) -> dict:
     """Every live session, most urgent first, each with a clipped view of its activity.
@@ -169,7 +178,18 @@ def roster(
     ``activity=False`` skips the transcript tails and answers from the registry alone --
     instant, and enough to know who is waiting. ``all_homes`` reads every configured
     home (see :mod:`crowsnest.config`) and stamps each row with its home's name.
+
+    ``links`` resolves the references each session wrote -- in its last words, in the
+    question it is waiting on, and in its ledger -- into URLs, so the page can render
+    every one of them as a link rather than as text a reader has to reconstruct
+    (:mod:`crowsnest.links`; ``resolvers`` is that module's seam, and ``ledger_dir`` says
+    where the ledgers are).
+
+    **It follows ``activity`` unless it is asked for.** Resolving costs a ledger read per
+    session, which is nothing next to a transcript tail and everything next to a registry
+    listing -- and ``activity=False`` promises "instant". Pass ``links=True`` to have both.
     """
+    links = activity if links is None else links
     rows = []
     for s in sessions(home=home, all_homes=all_homes, config=config):
         row = s.as_dict()
@@ -190,10 +210,101 @@ def roster(
                 "tail_turns": act.tail_turns,
                 "locators": list(act.locators[-ROSTER_LOCATORS:]),
             }
+        if links:
+            row["links"] = _links_of(
+                row, ledger_dir=ledger_dir, resolvers=resolvers, limit=ROSTER_LINKS
+            )
         rows.append(row)
     counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}
     counts["other"] = len(rows) - sum(counts.values())
     return {"sessions": rows, "counts": counts}
+
+
+#: The resolvers that attach a loose reference to *this* session's repository. They are
+#: the ones that must only be shown text the session wrote **about its own work**.
+_NEEDS_THE_REPO = ("from_issue_refs", "from_commits")
+
+
+def _links_of(
+    row: dict,
+    *,
+    ledger_dir=None,
+    resolvers=None,
+    limit: int | None = ROSTER_LINKS,
+) -> list[dict]:
+    """Every reference one session wrote, resolved as far as it can honestly be.
+
+    Three sources: the pull requests the transcript recorded for itself (openloops' own
+    locators, already typed and already URLs), the session's ledger, and its last words
+    plus the question it is waiting on.
+
+    **Two pools, not one, and this is the whole subtlety.** A loose ``#17`` or a loose sha
+    only means something against a repository, and the only repository crowsnest can
+    supply is the one the session's working directory names. That is right for what the
+    session says about its own work -- its last words, the question it is waiting on, the
+    ledger's mechanical ``last asked`` / ``last said``. It is *not* right for the ledger's
+    free part, which is prose where a session discusses whatever it likes: a ledger that
+    quotes another project's ``#573`` would otherwise produce a link to this project's
+    573, and on a repository with six hundred issues that is a page which exists and is
+    about something else. So the free part is shown only the resolvers that need no
+    context -- markdown links, bare URLs, ``owner/repo#N``, all of which name their own
+    repository -- and loses nothing except guesses.
+
+    ``limit=None`` keeps them all, which is what ``show`` wants; a roster row wants a few.
+    """
+    from crowsnest.links import DFLT_RESOLVERS, MAX_LINKS, identity, label_for
+    from crowsnest.links import resolve as _resolve
+
+    act = row.get("activity") or {}
+    context = {"repo_url": row.get("repo_url") or ""}
+    found: dict[str, dict] = {}
+    for loc in act.get("locators") or ():
+        if isinstance(loc, Mapping) and loc.get("url"):
+            url = str(loc["url"])
+            found.setdefault(
+                identity(url), {**loc, "text": label_for(url, loc.get("text", ""))}
+            )
+    page = _ledger_page(str(row.get("label") or ""), ledger_dir)
+    chosen = DFLT_RESOLVERS if resolvers is None else tuple(resolvers)
+    own_work = "\n".join(
+        part
+        for part in (
+            str(act.get("last_assistant_text") or ""),
+            str(act.get("pending_question") or ""),
+            str(row.get("waiting_for") or ""),
+            page["fields"].get("last_asked", ""),
+            page["fields"].get("last_said", ""),
+        )
+        if part
+    )
+    pools = (
+        (own_work, chosen),
+        (
+            page["free"],
+            [r for r in chosen if getattr(r, "__name__", "") not in _NEEDS_THE_REPO],
+        ),
+    )
+    for text, pool in pools:
+        for link in _resolve(text, context=context, resolvers=pool, limit=MAX_LINKS):
+            found.setdefault(identity(link["url"]), link)
+    values = list(found.values())
+    return values if limit is None else values[:limit]
+
+
+def _ledger_page(name: str, ledger_dir) -> dict:
+    """One session's ledger, or an empty one -- never an exception.
+
+    A ledger is a file a human edits, so it may be half-written, may hold a byte that is
+    not UTF-8, may be anything. The roster is read every few seconds and by a page that
+    is published; one bad ledger out of two hundred may not take the whole fleet's roster
+    down with it.
+    """
+    from crowsnest.ledger import read_ledger
+
+    try:
+        return read_ledger(name, ledger_dir=ledger_dir)
+    except Exception:  # noqa: BLE001 -- a broken ledger costs its own links, nothing else
+        return {"fields": {}, "free": "", "text": ""}
 
 
 def show(
@@ -203,11 +314,28 @@ def show(
     all_homes: bool = False,
     config: str | Path | None = None,
     recent: int = RECENT_TOOLS,
+    links: bool = True,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
 ) -> dict:
-    """One session in full: its registry record and its activity, unclipped."""
+    """One session in full: its registry record, its activity unclipped, and its links.
+
+    ``links`` resolves every reference the session wrote -- in its ledger and in its own
+    words -- into a URL, a bare ``#17`` included (:mod:`crowsnest.links`). Unlike the
+    roster's, this list is not cut short: a person asking about one session wants all of
+    them.
+    """
     s = resolve(session, home=home, all_homes=all_homes, config=config)
     act = read_activity(s.transcript, session_id=s.session_id, recent=recent)
-    return {"session": s.as_dict(), "activity": act.as_dict()}
+    row = {"session": s.as_dict(), "activity": act.as_dict()}
+    if links:
+        row["links"] = _links_of(
+            {**s.as_dict(), "repo_url": repo_url(s.cwd), "activity": act.as_dict()},
+            ledger_dir=ledger_dir,
+            resolvers=resolvers,
+            limit=None,
+        )
+    return row
 
 
 def report(
@@ -219,6 +347,9 @@ def report(
     title: str = DFLT_TITLE,
     fragment: bool = False,
     interactive: bool = False,
+    links: bool = True,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -229,9 +360,22 @@ def report(
     crowsnest function that stamps a generation time. ``all_homes`` reads every
     configured home, and each row's ``home`` field (present when it does) shows up in
     the page.
+
+    ``links``, ``ledger_dir`` and ``resolvers`` reach :func:`roster` unchanged. This is
+    the surface the link resolution exists for, so it is the surface that has to be able
+    to turn it off, point it at another ledger directory, or hand it a resolver of its
+    own -- and ``ledger_dir`` is also what lets a test of this function not read the
+    ledgers of whoever is running it.
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
-    data = roster(home=home, all_homes=all_homes, config=config)
+    data = roster(
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        links=links,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+    )
     html = render_report(
         data, made_at=made_at, title=title, fragment=fragment, interactive=interactive
     )

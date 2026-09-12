@@ -84,6 +84,17 @@ idle     10m  monitor               proj         "The sweep landed. It's the rep
 -- 32 live: 1 waiting, 1 busy, 30 idle
 ```
 
+## Every reference, as a link
+
+A session working in `i2mint/mergeset` that writes `#17` means that repository's issue 17. Nothing in the text says so — but crowsnest knows the session's working directory, and that is enough to resolve the commonest, least resolvable reference a session writes. So the report renders references as links rather than as text you have to reconstruct a URL from: markdown links the session already wrote out, bare URLs typed by where they point (issue, pull request, discussion, commit, CI run, artifact, Slack), `owner/repo#N`, bare `#N`, and bare commit shas.
+
+`#45` and a link to `pull/45` are one reference, not two, and collapse to the label its author chose. A discussion of the same number does not — it is a different object that happens to share a number. Nothing is fetched: a link is constructed from what the text says and what the directory implies, so a page of two hundred references still costs no network calls.
+
+```
+crowsnest show <session>       # ends with a References section
+crowsnest report               # every row's references, linked
+```
+
 ## Who started whom
 
 A fleet of forty reads as a list of forty until you can see that six of them are one dispatcher's children. The registry does not record that, so `crowsnest spawn` writes it down itself, at the one moment it is free and certain — the session that ran the command is the parent, and one `spawn` line goes into `lineage.jsonl` naming both ends. That file is deliberately not the hook's `events.jsonl`, which rotates at 4 MiB: a machine busy enough to have an interesting graph is exactly the machine whose graph would vanish.

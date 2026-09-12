@@ -169,6 +169,15 @@ def show(
     ]
     if act["recent_tools"]:
         out += ["", "## Recent tools", *[f"- {t}" for t in act["recent_tools"]]]
+    if result.get("links"):
+        out += [
+            "",
+            "## References",
+            *[
+                f"- [{link['text'] or link['url']}]({link['url']})  ({link['type']})"
+                for link in result["links"]
+            ],
+        ]
     flags = [k for k in ("turn_open", "errored") if act[k]]
     if flags or not act["tail_complete"]:
         out += [

@@ -44,6 +44,8 @@ from typing import Any
 from openloops.dashboard import CSS as _CSS
 from openloops.dashboard import Sanitizer as _Sanitizer
 
+from crowsnest.links import label_for as _label_for
+
 __all__ = ["CONSOLE_CSS", "CONSOLE_SCRIPT", "render_report"]
 
 #: Set for the duration of one :func:`render_report` call in interactive mode, so the row
@@ -249,9 +251,34 @@ def _empty(message: str) -> str:
 
 
 def _link(safe: _Sanitizer, url: Any, label: str) -> str:
-    """An anchor, or ``''`` when the sanitizer will not follow the URL."""
-    href = safe.url(url)
-    return f'<a href="{href}">{safe.text(label)}</a>' if href else ""
+    """An anchor, or the label as plain text when the URL cannot be published as one.
+
+    Two ways a URL fails to be a link, and both used to render as an anchor pointing
+    somewhere useless:
+
+    The sanitizer **refused** it -- a scheme it will not follow, or text it judged
+    credential-shaped, which comes back as a ``[withheld: ...]`` notice. That notice is a
+    truthy string, so it made a perfectly good-looking anchor whose target was an error
+    message.
+
+    The sanitizer **rewrote** it. ``scrub`` replaces a home path anywhere it appears,
+    including inside a URL, so ``https://x.example/Users/someone/p`` becomes
+    ``https://x.example~/p`` -- a link that is no longer the link, and 404s silently. It
+    is right that the path does not reach the page; it is not right to publish the
+    remains as something to click.
+
+    A refused URL renders nothing at all: the label of a ``javascript:`` link is text
+    whoever wrote it chose, and it has nothing to tell a reader. A rewritten one keeps its
+    label as plain text, because there the *reference* is real and only its address had to
+    go -- the reader should learn it exists without being handed a link that lies.
+    """
+    raw = "" if url is None else str(url).strip()
+    href = safe.url(raw)
+    if not href or href.startswith("["):
+        return ""
+    if "~" in href and "~" not in raw:  # `scrub` rewrote a home path inside the URL
+        return f"<span>{safe.text(label)}</span>" if label else ""
+    return f'<a href="{href}">{safe.text(label)}</a>'
 
 
 def _where(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
@@ -271,38 +298,32 @@ def _where(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     return '<p class="where">' + ' <span class="sep">·</span> '.join(parts) + "</p>"
 
 
-_GITHUB_REF = re.compile(
-    r"^https?://github\.com/([^/]+)/([^/]+)/(?:issues|pull|discussions)/(\d+)"
-)
-
-
-def _ref_label(loc: Mapping[str, Any]) -> str:
-    """What to call a reference: its text, else ``repo#N`` for a GitHub one, else its type.
-
-    >>> _ref_label({'type': 'pr', 'url': 'https://github.com/o/r/pull/27', 'text': ''})
-    'r#27'
-    >>> _ref_label({'type': 'issue', 'url': 'https://example.org/x', 'text': ''})
-    'issue'
-    """
-    text = str(loc.get("text") or "").strip()
-    if text:
-        return text
-    m = _GITHUB_REF.match(str(loc.get("url") or ""))
-    if m:
-        return f"{m.group(2)}#{m.group(3)}"
-    return str(loc.get("type") or "ref")
-
-
 def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
-    """The issues and pull requests the session mentioned, as links; ``''`` when none."""
-    act = row.get("activity") or {}
+    """Every reference the session wrote, as links; ``''`` when it wrote none.
+
+    ``links`` is what :func:`crowsnest.tools.roster` resolved (:mod:`crowsnest.links`):
+    the pull requests the transcript recorded, plus every reference in the session's
+    ledger and its last words -- a bare ``#17`` included, resolved against the repository
+    the session is working in. A roster built with ``links=False`` falls back to the
+    transcript's own locators, so the page renders either way.
+
+    Each is named the way a person says it (``mergeset#12``, ``crowsnest@7d30838``)
+    rather than shown as a URL, and the label is escaped like everything else.
+    """
+    found = row.get("links")
+    if not found:
+        act = row.get("activity") or {}
+        found = act.get("locators") or ()
     anchors = []
     seen: set[str] = set()
-    for loc in act.get("locators") or ():
-        if not isinstance(loc, Mapping) or loc.get("url") in seen:
+    for loc in found:
+        if not isinstance(loc, Mapping):
             continue
-        seen.add(str(loc.get("url")))
-        anchor = _link(safe, loc.get("url"), _ref_label(loc))
+        url = str(loc.get("url") or "")
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        anchor = _link(safe, url, _label_for(url, loc.get("text", "")))
         if anchor:
             anchors.append(anchor)
     if not anchors:
@@ -412,6 +433,37 @@ def _by_project(
     return sorted(groups.items())
 
 
+#: How many references a quiet row shows. A quiet session is one line, and the point of
+#: the line is to be scannable; its whole reference list is in ``crowsnest show``.
+QUIET_REFS = 3
+
+
+def _thin_refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """The first few of a quiet row's references, inline.
+
+    Quiet is where nearly every session ends up on a busy machine, so a page that linked
+    only the loud ones would leave most of its references unclickable -- which is the
+    whole thing this is for.
+    """
+    anchors = []
+    seen: set[str] = set()
+    for loc in row.get("links") or ():
+        if not isinstance(loc, Mapping):
+            continue
+        url = str(loc.get("url") or "")
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        anchor = _link(safe, url, _label_for(url, loc.get("text", "")))
+        if anchor:
+            anchors.append(anchor)
+        if len(anchors) >= QUIET_REFS:
+            break
+    if not anchors:
+        return ""
+    return ' <span class="sep">·</span> ' + " ".join(anchors)
+
+
 def _quiet_group(
     safe: _Sanitizer, project: str, rows: Sequence[Mapping[str, Any]], now_epoch: float
 ) -> str:
@@ -424,6 +476,7 @@ def _quiet_group(
         opener = _link(safe, row.get("session_url"), "open")
         if opener:
             tail += f' <span class="sep">·</span> {opener}'
+        tail += _thin_refs(safe, row)
         items.append(
             f'<li class="thin" id="session-{ident}">'
             f'<span class="thin-age">{figure}{unit}</span>'
