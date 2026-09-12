@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from collections.abc import Mapping
 from dataclasses import replace
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -21,6 +22,7 @@ from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
 from crowsnest.config import homes
+from crowsnest.links import MAX_LINKS
 from crowsnest.registry import STATUSES, LiveSession, fresh_within, live_sessions
 from crowsnest.report import DFLT_TITLE, render_report
 
@@ -40,6 +42,11 @@ __all__ = [
 #: How many issue or PR references a roster row carries. The page shows them; ``show``
 #: carries them all.
 ROSTER_LOCATORS = 4
+
+#: How many resolved links a roster row carries. More than the locator cap because these
+#: are the row's whole reference list -- what it said, what it wrote down, what it is
+#: waiting on -- rather than the pull requests alone.
+ROSTER_LINKS = 8
 
 _SSH_REMOTE = re.compile(r"^(?:ssh://)?(?:[\w.-]+@)?([\w.-]+)[:/](.+?)(?:\.git)?/?$")
 
@@ -162,6 +169,9 @@ def roster(
     all_homes: bool = False,
     config: str | Path | None = None,
     activity: bool = True,
+    links: bool = True,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
     text_limit: int = ROSTER_TEXT_LIMIT,
 ) -> dict:
     """Every live session, most urgent first, each with a clipped view of its activity.
@@ -169,6 +179,13 @@ def roster(
     ``activity=False`` skips the transcript tails and answers from the registry alone --
     instant, and enough to know who is waiting. ``all_homes`` reads every configured
     home (see :mod:`crowsnest.config`) and stamps each row with its home's name.
+
+    ``links`` resolves the references each session wrote -- in its last words, in the
+    question it is waiting on, and in its ledger -- into URLs, so the page can render
+    every one of them as a link rather than as text a reader has to reconstruct
+    (:mod:`crowsnest.links`; ``resolvers`` is that module's seam, and ``ledger_dir`` says
+    where the ledgers are). It needs ``activity`` to have anything to read from the
+    transcript, and falls back to the ledger alone without it.
     """
     rows = []
     for s in sessions(home=home, all_homes=all_homes, config=config):
@@ -190,10 +207,56 @@ def roster(
                 "tail_turns": act.tail_turns,
                 "locators": list(act.locators[-ROSTER_LOCATORS:]),
             }
+        if links:
+            row["links"] = _links_of(
+                row, ledger_dir=ledger_dir, resolvers=resolvers, limit=ROSTER_LINKS
+            )
         rows.append(row)
     counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}
     counts["other"] = len(rows) - sum(counts.values())
     return {"sessions": rows, "counts": counts}
+
+
+def _links_of(row: dict, *, ledger_dir=None, resolvers=None, limit: int = ROSTER_LINKS):
+    """Every reference one session wrote, resolved against the repository it works in.
+
+    Three sources, in the order a reader wants them: the pull requests the transcript
+    recorded for itself (openloops' own locators, already typed and already URLs), then
+    the session's ledger -- the durable page it writes for a human, and where a markdown
+    link it took the trouble to spell out will be -- then its last words and the question
+    it is waiting on.
+
+    The ledger comes before the transcript tail because a session writes its ledger
+    deliberately and its last paragraph in passing.
+    """
+    from crowsnest.ledger import read_ledger
+    from crowsnest.links import identity, label_for
+    from crowsnest.links import resolve as _resolve
+
+    act = row.get("activity") or {}
+    context = {"repo_url": row.get("repo_url") or ""}
+    found: dict[str, dict] = {}
+    for loc in act.get("locators") or ():
+        if isinstance(loc, Mapping) and loc.get("url"):
+            url = str(loc["url"])
+            found.setdefault(
+                identity(url), {**loc, "text": label_for(url, loc.get("text", ""))}
+            )
+    try:
+        page = read_ledger(str(row.get("label") or ""), ledger_dir=ledger_dir)
+    except OSError:
+        page = {"text": ""}
+    parts = [
+        page.get("text") or "",
+        str(act.get("last_assistant_text") or ""),
+        str(act.get("pending_question") or ""),
+        str(row.get("waiting_for") or ""),
+    ]
+    for link in _resolve(
+        "\n".join(p for p in parts if p), context=context, resolvers=resolvers
+    ):
+        found.setdefault(identity(link["url"]), link)
+    return list(found.values())[:limit]
 
 
 def show(
@@ -203,11 +266,28 @@ def show(
     all_homes: bool = False,
     config: str | Path | None = None,
     recent: int = RECENT_TOOLS,
+    links: bool = True,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
 ) -> dict:
-    """One session in full: its registry record and its activity, unclipped."""
+    """One session in full: its registry record, its activity unclipped, and its links.
+
+    ``links`` resolves every reference the session wrote -- in its ledger and in its own
+    words -- into a URL, a bare ``#17`` included (:mod:`crowsnest.links`). Unlike the
+    roster's, this list is not cut short: a person asking about one session wants all of
+    them.
+    """
     s = resolve(session, home=home, all_homes=all_homes, config=config)
     act = read_activity(s.transcript, session_id=s.session_id, recent=recent)
-    return {"session": s.as_dict(), "activity": act.as_dict()}
+    row = {"session": s.as_dict(), "activity": act.as_dict()}
+    if links:
+        row["links"] = _links_of(
+            {**s.as_dict(), "repo_url": repo_url(s.cwd), "activity": act.as_dict()},
+            ledger_dir=ledger_dir,
+            resolvers=resolvers,
+            limit=MAX_LINKS,
+        )
+    return row
 
 
 def report(

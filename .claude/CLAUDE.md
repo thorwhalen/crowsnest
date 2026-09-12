@@ -16,6 +16,7 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 | `markers=` in `env_prefix` | `spawn.SESSION_VARS`, the session-identity markers derived from the `claude` binary's name table | another host's Claude Code, whose markers a remote `xa spawn` knows and this machine does not |
 | `sources=` in `lineage.graph`, ordered edge readers; **source position wins first**, then confidence, then recency. Carried through `tools.lineage(sources=)` so a surface never edits the core to add one | `(from_records, from_processes)` — the `spawn` line crowsnest wrote, then `--spawned-by` and the ppid chain | `from_transcripts` (in-repo, the `--backfill` path); `xa`'s record of what it starts on other hosts |
 | `ledger_dir=` / `events_path=` / `lineage_path=` in `ledger`, `hook`, `watch`, `lineage` | under `crowsnest.paths.data_dir()` | a test's `tmp_path`; a shared store later |
+| `resolvers=` in `links.resolve`, ordered `(text, context) -> Iterable[Link]`; first to claim a URL keeps its label. Reachable from `tools.roster(resolvers=)` and `tools.show(resolvers=)` | markdown links, bare URLs, `owner/repo#N`, bare `#N` against the session's cwd remote, bare shas | a `[links]` table in `~/.config/crowsnest/config.toml`; a repo-alias map |
 | `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
 
 Surfaces built: the `cw` CLI (`__main__.py` renders, `tools.py` is the JSON core), the
@@ -26,6 +27,8 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
 ## Rules of the repo
 
 - Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
+- `links.py` never fetches. A link is constructed from the text plus the session's cwd remote;
+  a resolver that checked GitHub would turn one report into hundreds of network calls.
 - Nothing in `tools.py` prints or exits. Every function takes and returns JSON-able values.
 - `lineage.jsonl` is append-only and **never rotated** — unlike `events.jsonl`, which rotates at
   4 MiB. Provenance that can age out is not provenance. Do not "tidy" it into the event log.
