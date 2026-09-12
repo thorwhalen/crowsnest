@@ -70,7 +70,8 @@ def test_claude_bin_falls_back_to_an_absolute_path_from_path(tmp_path):
 
 def test_profile_home_reads_the_configured_homes_first(tmp_path):
     assert (
-        profile_home("iq", config=_config(tmp_path)) == Path("~/.claude-iq").expanduser()
+        profile_home("iq", config=_config(tmp_path))
+        == Path("~/.claude-iq").expanduser()
     )
 
 

@@ -57,6 +57,7 @@ crowsnest                          who is alive: waiting on you first, then busy
 crowsnest show <session>           one session: last asked, last said, running now, pending question
 crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
 crowsnest brief <session>          openloops' dated digest for one session; reads no transcript
+crowsnest lineage                  who started whom, as a tree; --backfill recovers it from transcripts once
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
                                    (--fragment: without the document wrapper, for publishing as an artifact;
                                     --interactive: buttons per row and a Refresh, live when published with the db capability)
@@ -82,6 +83,31 @@ busy     14m  session_monitor       openloops    → Bash: Run the one-command t
 idle     10m  monitor               proj         "The sweep landed. It's the repo-side view…"
 -- 32 live: 1 waiting, 1 busy, 30 idle
 ```
+
+## Who started whom
+
+A fleet of forty reads as a list of forty until you can see that six of them are one dispatcher's children. The registry does not record that, so `crowsnest spawn` writes it down itself, at the one moment it is free and certain — the session that ran the command is the parent, and one `spawn` line goes into the event log naming both ends.
+
+```
+crowsnest lineage
+```
+
+```
+cn                                . idle    cn
+|-- cn-mergeset                   . idle    mergeset
+|-- cn-priv-manifest              . idle    priv
+`-- cn-cosm-align                 . idle    cosm
+    |-- cn-cosm-supply            . idle    cosm
+    `-- cn-cosm-synth             . idle    cosm
+crowsnest                         x gone
+`-- cn-c                          . idle    c ~
+    |-- c-surfaces                x gone     ~
+    `-- c-traversal               x gone     ~
+```
+
+A parent that has exited stays in the picture (`x gone`) so its children stay a fleet rather than becoming unrelated roots.
+
+Recording only works forwards. For a machine that has been running sessions since before this shipped, `crowsnest lineage --backfill` recovers what it can, once, by scanning every transcript for the `crowsnest spawn` commands that created today's sessions, and writes what it finds into the event log so the cheap reader has it from then on. That is *inference* — the command may have failed, or merely been quoted — so those edges are marked `~` wherever they are shown, and a recorded edge is never overwritten by a guessed one. `--dry-run` says what it would add and writes nothing.
 
 ## Several accounts and machines in one roster
 

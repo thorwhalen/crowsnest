@@ -63,7 +63,9 @@ def test_tail_window_widens_until_it_holds_a_human_prompt(tmp_path):
     records += [tool_result(f"c{m}", at=stamp(1, 8, m)) for m in range(1, 30)]
     path = write_transcript(tmp_path, "/w/demo", "s1", records)
     tail, _ = tail_records(path, tail_bytes=600)
-    assert any(r.get("type") == "user" and "real question" in json.dumps(r) for r in tail)
+    assert any(
+        r.get("type") == "user" and "real question" in json.dumps(r) for r in tail
+    )
     act = read_activity(path, tail_bytes=600)
     assert act.last_user_prompt == "the real question"
 
@@ -81,7 +83,8 @@ def test_sidechain_records_are_ignored(tmp_path):
     ]
     path = write_transcript(tmp_path, "/w/demo", "s1", records)
     assert (
-        read_activity(path).last_assistant_text == "Fixed and merged. Nothing is pending."
+        read_activity(path).last_assistant_text
+        == "Fixed and merged. Nothing is pending."
     )
 
 

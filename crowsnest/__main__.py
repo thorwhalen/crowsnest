@@ -215,6 +215,93 @@ def turns(
     return "\n".join(out)
 
 
+#: What a node's status looks like in the text tree. The page has colour; a terminal has
+#: eight characters, and they have to survive being read on a phone over ssh.
+#: How wide the name column is in the text tree, stem included.
+_LINEAGE_NAME_COLUMN = 34
+
+_LINEAGE_MARKS = {
+    "waiting": "! waiting",
+    "busy": "> busy",
+    "shell": "> shell",
+    "idle": ". idle",
+    "gone": "x gone",
+}
+
+
+def _lineage_lines(found: dict, *, name: str = "", prefix: str = "") -> list[str]:
+    """One indented line per node, depth-first, children in name order."""
+    by_name = {n["name"]: n for n in found["nodes"]}
+    out: list[str] = []
+
+    def walk(node_name: str, pad: str, last: bool, top: bool) -> None:
+        node = by_name.get(node_name)
+        if node is None:
+            return
+        stem = "" if top else f"{pad}{'`-- ' if last else '|-- '}"
+        mark = _LINEAGE_MARKS.get(node["status"], f"? {node['status']}")
+        guess = " ~" if node["confidence"] == "inferred" else ""
+        where = node["project"] or ""
+        # The stem eats into the name column, so the status column stays put however
+        # deep the tree goes -- which is the whole reason a tree is readable at all.
+        room = max(8, _LINEAGE_NAME_COLUMN - len(stem))
+        out.append(
+            f"{stem}{node['name'][:room]:<{room}}{mark:<10}{where}{guess}".rstrip()
+        )
+        kids = node["children"]
+        below = pad if top else pad + ("    " if last else "|   ")
+        for i, kid in enumerate(kids):
+            walk(kid, below, i == len(kids) - 1, False)
+
+    tops = [name] if name else found["roots"]
+    for i, root in enumerate(tops):
+        walk(root, prefix, i == len(tops) - 1, True)
+    return out
+
+
+def lineage(
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    backfill: bool = False,
+    dry_run: bool = False,
+    json: bool = False,
+):
+    """Who started whom: the live sessions as a spawn tree, roots first.
+
+    A session records its own children from now on, so the tree fills in as sessions are
+    spawned. `--backfill` recovers what older sessions left behind, by scanning every
+    transcript on this machine for the `crowsnest spawn` commands that created them, and
+    writes what it finds into the event log so it is there next time. That is inference,
+    marked `~` in the tree; run it once. `--dry-run` says what it would add and writes
+    nothing.
+    """
+    import json as _json
+
+    if backfill:
+        done = tools.backfill_lineage(home=home, all_homes=all_homes, write=not dry_run)
+        found = done["graph"]
+        verb = "would add" if dry_run else "added"
+        head = [
+            f"backfill: {done['found']} spawn command(s) in transcripts, "
+            f"{verb} {done['added']}, skipped {done['skipped']}"
+        ]
+    else:
+        found, head = tools.lineage(home=home, all_homes=all_homes), []
+    if json:
+        return _json.dumps(found, indent=2)
+    counts = found["counts"]
+    tail = [
+        "",
+        f"{counts['nodes']} session(s), {counts['edges']} edge(s), "
+        f"{counts['roots']} root(s), {counts['orphans']} orphan(s), "
+        f"{counts['gone']} parent(s) no longer alive",
+    ]
+    if not found["nodes"]:
+        return "\n".join([*head, "nothing alive"])
+    return "\n".join([*head, *_lineage_lines(found), *tail])
+
+
 def report(
     *,
     out: str | None = None,
@@ -320,11 +407,15 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
     pages = [_ledger.read_ledger(one, ledger_dir=ledger_dir) for one in name]
     if json:
         return _json.dumps(pages if len(pages) > 1 else pages[0], indent=2)
-    known = ", ".join(row["name"] for row in _ledger.list_ledgers(ledger_dir=ledger_dir))
+    known = ", ".join(
+        row["name"] for row in _ledger.list_ledgers(ledger_dir=ledger_dir)
+    )
     return "\n\n".join(
-        page["text"].rstrip()
-        if page["exists"]
-        else f"(no ledger for {page['name']!r}; known: {known or 'none'})"
+        (
+            page["text"].rstrip()
+            if page["exists"]
+            else f"(no ledger for {page['name']!r}; known: {known or 'none'})"
+        )
         for page in pages
     )
 
@@ -347,7 +438,11 @@ def brief(
     s = result["session"]
     out = [f"# {s['label']} — digest  ({s['status']}, {s['cwd']})"]
     if result["digest"] is None:
-        out += ["", f"(no openloops digest yet: {result['why']})", "Run `ol sync` first."]
+        out += [
+            "",
+            f"(no openloops digest yet: {result['why']})",
+            "Run `ol sync` first.",
+        ]
     else:
         out += ["", result["digest"]["text"].strip()]
     return "\n".join(out)
@@ -379,7 +474,10 @@ def init(
         ("proj hooks", plan["project_settings"]),
     ):
         lines.append(f"{row['action']:<9}{label:<11}{row['path']}  ({row['reason']})")
-    for label, row in (("user", plan["settings"]), ("project", plan["project_settings"])):
+    for label, row in (
+        ("user", plan["settings"]),
+        ("project", plan["project_settings"]),
+    ):
         if row["backup"]:
             lines.append(f"backup    {label:<11}{row['backup']}")
     if plan["settings"]["action"] == "skipped":
@@ -414,7 +512,9 @@ def install_skills(
 ):
     """Link the bundled skills and the subagent into ~/.claude (or `--target`). Idempotent."""
     names = [n for n in (only or "").split(",") if n.strip()] or None
-    plan = _skills.install_skills(target=target, only=names, force=force, dry_run=dry_run)
+    plan = _skills.install_skills(
+        target=target, only=names, force=force, dry_run=dry_run
+    )
     lines = [f"{'would install' if dry_run else 'installed'} into {plan['target']}"]
     for row in plan["actions"]:
         how = f" ({row['method']})" if row["method"] else ""
@@ -509,6 +609,7 @@ _commands = [
     show,
     turns,
     brief,
+    lineage,
     report,
     watch,
     ledger,

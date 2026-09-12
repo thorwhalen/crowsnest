@@ -18,7 +18,9 @@ def _settings(home):
 
 def _commands(settings, event):
     return [
-        entry["command"] for group in settings["hooks"][event] for entry in group["hooks"]
+        entry["command"]
+        for group in settings["hooks"][event]
+        for entry in group["hooks"]
     ]
 
 
@@ -56,13 +58,17 @@ def test_a_hand_edited_claude_md_is_a_conflict_until_forced(tmp_path):
 def test_dry_run_writes_nothing(tmp_path):
     where, store, home = tmp_path / "cn", tmp_path / "data", tmp_path / "claude"
     plan = init(directory=where, home=home, store=store, hooks=True, dry_run=True)
-    assert plan["claude_md"]["action"] == "write" and plan["settings"]["action"] == "add"
+    assert (
+        plan["claude_md"]["action"] == "write" and plan["settings"]["action"] == "add"
+    )
     assert not where.exists() and not store.exists() and not home.exists()
 
 
 def test_hooks_are_added_to_a_fresh_settings_file(tmp_path):
     home = tmp_path / "claude"
-    plan = init(directory=tmp_path / "cn", home=home, store=tmp_path / "data", hooks=True)
+    plan = init(
+        directory=tmp_path / "cn", home=home, store=tmp_path / "data", hooks=True
+    )
     assert plan["settings"]["action"] == "add"
     assert plan["settings"]["backup"] == ""  # nothing was there to back up
     settings = _settings(home)
@@ -124,7 +130,9 @@ def test_an_existing_hook_is_kept_and_a_backup_is_written(tmp_path):
             }
         )
     )
-    plan = init(directory=tmp_path / "cn", home=home, store=tmp_path / "data", hooks=True)
+    plan = init(
+        directory=tmp_path / "cn", home=home, store=tmp_path / "data", hooks=True
+    )
     settings = _settings(home)
     assert _commands(settings, "Stop") == ["notify", "crowsnest hook stop"]
     assert settings["model"] == "opus"

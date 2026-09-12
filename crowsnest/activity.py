@@ -258,7 +258,9 @@ def read_activity(
     in_flight = [
         (name, inputs) for call_id, name, inputs in calls if call_id not in answered
     ]
-    question = next((describe_tool(n, i) for n, i in in_flight if n == QUESTION_TOOL), "")
+    question = next(
+        (describe_tool(n, i) for n, i in in_flight if n == QUESTION_TOOL), ""
+    )
     stamps = [_stamp(r) for r in main if _stamp(r)]
     return Activity(
         session_id=session.key or session_id,
@@ -267,9 +269,9 @@ def read_activity(
         last_prompt_at=session.last_prompt_at,
         last_assistant_text=session.last_assistant_text,
         last_text_at=session.last_turn_at,
-        recent_tools=tuple(describe_tool(n, i) for _, n, i in calls[-recent:])
-        if recent
-        else (),
+        recent_tools=(
+            tuple(describe_tool(n, i) for _, n, i in calls[-recent:]) if recent else ()
+        ),
         in_flight=tuple(describe_tool(n, i) for n, i in in_flight),
         pending_question=question.partition(": ")[2] if question else "",
         turn_open=session.ended_mid_turn,

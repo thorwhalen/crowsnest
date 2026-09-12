@@ -196,7 +196,9 @@ def _runnable(path: str, environ: dict[str, str]) -> bool:
     if os.name != "nt":
         return os.access(path, os.X_OK)
     suffixes = (environ.get("PATHEXT") or _DFLT_PATHEXT).split(os.pathsep)
-    return os.path.splitext(path)[1].lower() in {s.strip().lower() for s in suffixes if s}
+    return os.path.splitext(path)[1].lower() in {
+        s.strip().lower() for s in suffixes if s
+    }
 
 
 def _asked(exe: str, *argv: str) -> str | None:

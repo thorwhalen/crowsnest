@@ -35,6 +35,7 @@ from functools import partial
 from pathlib import Path
 
 from crowsnest.account import CLAUDE_BIN, DROPPED_VARS, account_home, claude_bin
+from crowsnest.lineage import record_spawn
 from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessions
 
 __all__ = [
@@ -444,6 +445,7 @@ def spawn(
     wait: float = DFLT_WAIT,
     add_dirs: Sequence[str] = (),
     binary: str = "",
+    events_path: str | Path | None = None,
 ) -> dict:
     """Start a session named ``name`` in ``cwd``, and wait for the registry to see it.
 
@@ -466,10 +468,19 @@ def spawn(
     reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``
     to run; left out, each local spawner runs the one this session runs.
 
-    Returns ``{"name", "pid", "session_id", "how", "home"}``, ``home`` being the account
-    the session was started under (``""``: the spawning session's own). When the registry
-    file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so --
-    the session may still be starting, or may have failed before it could register.
+    Returns ``{"name", "pid", "session_id", "how", "home", "parent"}``, ``home`` being the
+    account the session was started under (``""``: the spawning session's own). When the
+    registry file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how``
+    says so -- the session may still be starting, or may have failed before it could
+    register.
+
+    ``parent`` is the session that asked for this one, and the reason it is here is that
+    **this is the only moment anyone knows it for free**. Everything downstream -- the
+    spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --
+    is recovery work if it is not written down now, so one ``spawn`` line goes into the
+    event log (:func:`crowsnest.lineage.record_spawn`; ``events_path`` is where, a test's
+    ``tmp_path`` being why it is an argument). It is ``{}`` when this command was not run
+    from inside a session, which is the honest answer for a person at a shell prompt.
 
     A name that a live session already carries is refused (``ValueError``): the name is
     the address for everything after -- ``show``, ``open``, a message -- and two sessions
@@ -503,6 +514,16 @@ def spawn(
     spawner(argv, cwd=cwd, name=name, home=home)
     where = str(home) if home is not None else ""
     found = _find_by_name(name, home=home, wait=wait)
+    # Recorded whether or not the registry saw it: a session that started slowly still
+    # has a parent, and the name is the key the edge is kept under either way.
+    record = record_spawn(
+        name,
+        child_session_id=found.session_id if found else "",
+        project=Path(cwd).name if cwd else "",
+        home=home,
+        events_path=events_path,
+    )
+    parent = record.get("parent", {}) if record else {}
     if found is None:
         return {
             "name": name,
@@ -510,6 +531,7 @@ def spawn(
             "session_id": "",
             "how": f"{how}: no registry file for {name!r} within {wait:.0f}s",
             "home": where,
+            "parent": parent,
         }
     return {
         "name": name,
@@ -517,4 +539,5 @@ def spawn(
         "session_id": found.session_id,
         "how": how,
         "home": where,
+        "parent": parent,
     }

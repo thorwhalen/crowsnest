@@ -125,7 +125,9 @@ def _status_detail(session: LiveSession, activity: Activity) -> str:
             return "ended with an error: " + activity.last_assistant_text
         return activity.last_assistant_text or "(no final text in the tail)"
     if session.status == "busy":
-        return "asked: " + activity.last_user_prompt if activity.last_user_prompt else ""
+        return (
+            "asked: " + activity.last_user_prompt if activity.last_user_prompt else ""
+        )
     return ""
 
 
@@ -163,7 +165,9 @@ def diff(
     for sid, cur in after.items():
         prev = before.get(sid)
         if prev is None:
-            found.append(_event("started", cur, f"{cur.kind or 'session'} in {cur.cwd}"))
+            found.append(
+                _event("started", cur, f"{cur.kind or 'session'} in {cur.cwd}")
+            )
             continue
         if _same_state(prev.status, cur.status):
             continue
@@ -303,7 +307,9 @@ def events(
         pushed = [event for event in map(hook_event, records) if event]
         yield from pushed
         stopped = {e["session_id"] for e in pushed if e["kind"] == "stopped"}
-        after = snapshot(home=home, is_alive=is_alive, all_homes=all_homes, config=config)
+        after = snapshot(
+            home=home, is_alive=is_alive, all_homes=all_homes, config=config
+        )
         for event in diff(before, after):
             # A hook already said this turn ended, and said why. One line, not two.
             if event["kind"] == "idle" and event["session_id"] in stopped:

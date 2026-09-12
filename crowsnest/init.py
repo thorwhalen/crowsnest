@@ -184,7 +184,8 @@ def merged_hooks(settings: dict, hooks=HOOKS) -> tuple[dict, list[dict]]:
             (
                 group
                 for group in groups
-                if isinstance(group, dict) and group.get("matcher", "") == spec["matcher"]
+                if isinstance(group, dict)
+                and group.get("matcher", "") == spec["matcher"]
             ),
             None,
         )

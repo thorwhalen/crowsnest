@@ -190,7 +190,9 @@ def _log(message: str, *, path: str | Path | None = None) -> None:
         rotate(target, max_bytes=MAX_LOG_BYTES)
         with target.open("a", encoding="utf-8") as stream:
             stream.write(f"{_now()} {message}\n")
-    except Exception:  # noqa: BLE001, S110 -- the logger is the last thing that may fail
+    except (
+        Exception
+    ):  # noqa: BLE001, S110 -- the logger is the last thing that may fail
         pass
 
 
@@ -212,7 +214,9 @@ def _identify(
             for session in live_sessions(home=home):
                 if session.session_id == session_id:
                     return session.label, session.project
-        except Exception as exc:  # noqa: BLE001 -- an unreadable registry is not fatal here
+        except (
+            Exception
+        ) as exc:  # noqa: BLE001 -- an unreadable registry is not fatal here
             _log(f"registry: {exc!r}")
     return session_id[:8], (Path(cwd).name if cwd else "")
 
@@ -221,7 +225,9 @@ def _activity(kind: str, payload: dict, session_id: str) -> Activity:
     """The transcript tail, read once per stop and not at all for anything else."""
     if kind != "stop":
         return Activity()
-    return read_activity(str(payload.get("transcript_path") or ""), session_id=session_id)
+    return read_activity(
+        str(payload.get("transcript_path") or ""), session_id=session_id
+    )
 
 
 def _detail(kind: str, payload: dict, activity: Activity) -> str:
@@ -304,6 +310,8 @@ def handle(
         if kind == "stop" and name:
             ledger = _write_ledger(name, record, activity, ledger_dir=ledger_dir)
         return {"ok": True, "record": record, "events": str(written), "ledger": ledger}
-    except Exception as exc:  # noqa: BLE001 -- a broken crowsnest may not break a session
+    except (
+        Exception
+    ) as exc:  # noqa: BLE001 -- a broken crowsnest may not break a session
         _log(f"{event!r}: {exc!r}")
         return {"ok": False, "event": str(event), "error": repr(exc)}

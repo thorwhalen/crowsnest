@@ -480,7 +480,9 @@ def _quiet_register(
     )
 
 
-def _masthead(safe: _Sanitizer, counts: Mapping[str, Any], stamp: str, title: str) -> str:
+def _masthead(
+    safe: _Sanitizer, counts: Mapping[str, Any], stamp: str, title: str
+) -> str:
     tally = [
         ("Waiting", counts.get("waiting", 0), "needs"),
         ("Busy", counts.get("busy", 0), "flight"),
@@ -598,7 +600,9 @@ def _render(
         if now_epoch - float(s.get("status_since") or 0) <= FINISHED_WINDOW
     ]
     quiet = [
-        s for s in idle if now_epoch - float(s.get("status_since") or 0) > FINISHED_WINDOW
+        s
+        for s in idle
+        if now_epoch - float(s.get("status_since") or 0) > FINISHED_WINDOW
     ] + [s for s in sessions if s.get("status") not in ("waiting", "busy", "idle")]
 
     parts = [

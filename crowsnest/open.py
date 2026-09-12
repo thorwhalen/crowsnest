@@ -58,7 +58,10 @@ def _iterm_tab_opener(session: LiveSession) -> dict | None:
         ["osascript", "-e", script], capture_output=True, text=True, check=False
     )
     if result.returncode == 0 and result.stdout.strip() == "found":
-        return {"how": "iterm", "detail": f"activated the iTerm tab for {session.name!r}"}
+        return {
+            "how": "iterm",
+            "detail": f"activated the iTerm tab for {session.name!r}",
+        }
     return None
 
 

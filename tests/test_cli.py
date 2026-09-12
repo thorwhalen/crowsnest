@@ -50,7 +50,9 @@ def test_show_json_is_the_tools_dict(home, capsys):
 def test_turns_prints_prompts_and_replies(home, capsys):
     main(["turns", "fixer", "--home", str(home)])
     out = capsys.readouterr().out
-    assert "## turn 1" in out and "> fix the widget" in out and "Fixed and merged" in out
+    assert (
+        "## turn 1" in out and "> fix the widget" in out and "Fixed and merged" in out
+    )
 
 
 def test_unknown_session_is_a_clean_error(home, capsys):
@@ -249,7 +251,9 @@ def test_all_homes_reads_every_configured_home_with_a_column(
     out = capsys.readouterr().out
     rows = [ln for ln in out.splitlines() if ln.strip() and not ln.startswith("--")]
     assert len(rows) == 4
-    assert sum("one " in ln for ln in rows) == 3 and sum("two " in ln for ln in rows) == 1
+    assert (
+        sum("one " in ln for ln in rows) == 3 and sum("two " in ln for ln in rows) == 1
+    )
     # the same name in two homes is ambiguous without a home, and picked with one
     with pytest.raises(SystemExit):
         main(["show", "fixer", "--all-homes"])
@@ -278,7 +282,9 @@ def test_spawn_profile_picks_the_home_and_says_which(tmp_path, monkeypatch, caps
         "default_spawner",
         lambda: ((lambda argv, *, cwd, name, home: seen.append(home)), "fake"),
     )
-    main(["spawn", "demo", "--cwd", "/some/repo", "--profile", "other", "--wait", "0.1"])
+    main(
+        ["spawn", "demo", "--cwd", "/some/repo", "--profile", "other", "--wait", "0.1"]
+    )
     out = capsys.readouterr().out
     assert seen == [other]
     assert "not confirmed" in out and str(other) in out

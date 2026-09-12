@@ -20,11 +20,14 @@ from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
 from crowsnest.config import homes
+from crowsnest.lineage import graph as _lineage_graph
 from crowsnest.registry import STATUSES, LiveSession, fresh_within, live_sessions
 from crowsnest.report import DFLT_TITLE, render_report
 
 __all__ = [
+    "backfill_lineage",
     "brief",
+    "lineage",
     "repo_url",
     "report",
     "resolve",
@@ -238,6 +241,96 @@ def report(
         "fragment": fragment,
         "interactive": interactive,
     }
+
+
+def lineage(
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    events_path: str | Path | None = None,
+) -> dict:
+    """Who started whom: the live sessions as a forest of ``parent -> child`` edges.
+
+    :func:`crowsnest.lineage.graph` over the same sessions :func:`roster` reports, read
+    from the cheap sources only (the ``spawn`` lines crowsnest wrote, and what the process
+    table still shows). A fleet whose dispatcher has exited keeps its shape: the parent
+    comes back as a node with ``alive`` false, and its children are listed in ``orphans``.
+
+    Run :func:`backfill_lineage` once on a machine that has been running sessions since
+    before crowsnest recorded parents, or this answers with the edges of today only.
+    """
+    return _lineage_graph(
+        home=home, all_homes=all_homes, config=config, events_path=events_path
+    )
+
+
+def backfill_lineage(
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    events_path: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    write: bool = True,
+) -> dict:
+    """Recover parentage from transcripts, once, and write it into the event log.
+
+    Every ``crowsnest spawn <name>`` a session ever typed is still in that session's
+    transcript, which is enough to give a machine that has been running for weeks a graph
+    on the first report instead of an empty one. It is *inference*: the command may have
+    failed or merely been quoted, so every edge is written back marked ``inferred`` and
+    is drawn as a guess, never as a record.
+
+    Two guards keep it honest. A name is only taken when something else on the machine
+    also knows it -- a live session, a ledger, or a name the event log has used -- so
+    help text and prose do not become sessions. And a child that already has a *recorded*
+    edge is left alone: the backfill may fill gaps, never overwrite what was witnessed.
+
+    ``write=False`` reports what it would add and writes nothing. Returns
+    ``{"found", "added", "skipped", "edges", "graph"}``.
+    """
+    from crowsnest.lineage import (
+        append_edge as _append_edge,
+        from_events as _from_events,
+        from_transcripts as _from_transcripts,
+        names_by_session_id as _names_by_id,
+    )
+
+    live = {s.label for s in sessions(home=home, all_homes=all_homes, config=config)}
+    by_id = _names_by_id(events_path=events_path)
+    known = live | set(by_id.values()) | _ledger_names(ledger_dir)
+    recorded = {e.child for e in _from_events(events_path=events_path)}
+    found = _from_transcripts(home=home, known=known)
+    added, skipped = [], []
+    for edge in found:
+        parent = by_id.get(edge.parent_session_id, "")
+        if not parent or parent == edge.child or edge.child in recorded:
+            skipped.append(edge.as_dict())
+            continue
+        recorded.add(edge.child)
+        if write:
+            _append_edge(edge, parent=parent, events_path=events_path)
+        added.append({**edge.as_dict(), "parent": parent})
+    return {
+        "found": len(found),
+        "added": len(added),
+        "skipped": len(skipped),
+        "edges": added,
+        "graph": lineage(
+            home=home, all_homes=all_homes, config=config, events_path=events_path
+        ),
+    }
+
+
+def _ledger_names(ledger_dir: str | Path | None = None) -> set[str]:
+    """Every name that has a ledger -- the machine's memory of sessions that have exited."""
+    from crowsnest.ledger import list_ledgers
+
+    try:
+        return {str(row["name"]) for row in list_ledgers(ledger_dir=ledger_dir)}
+    except OSError:
+        return set()
 
 
 def turns(

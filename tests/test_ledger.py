@@ -79,7 +79,9 @@ def test_a_sequence_becomes_bullets_and_a_paragraph_stays_one_line(tmp_path):
     )
     assert "open questions:\n- squash or rebase?\n- ship 0.0.3 today?" in page["text"]
     assert "state: waiting on you" in page["text"]
-    assert page["fields"]["open_questions"] == "- squash or rebase?\n- ship 0.0.3 today?"
+    assert (
+        page["fields"]["open_questions"] == "- squash or rebase?\n- ship 0.0.3 today?"
+    )
 
 
 def test_none_leaves_a_field_alone_and_empty_string_clears_it(tmp_path):

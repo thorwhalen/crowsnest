@@ -20,7 +20,9 @@ STAMP = "2026-02-01T12:00:00Z"
 
 def since(seconds_ago: float) -> float:
     """A `status_since` this many seconds before STAMP."""
-    return datetime.fromisoformat(STAMP.replace("Z", "+00:00")).timestamp() - seconds_ago
+    return (
+        datetime.fromisoformat(STAMP.replace("Z", "+00:00")).timestamp() - seconds_ago
+    )
 
 
 def row(
@@ -55,7 +57,9 @@ def roster(*rows, counts=None):
 
 def test_the_four_registers_appear_in_this_order():
     html = render_report(roster(), made_at=STAMP)
-    order = [html.index(f'id="{r}"') for r in ("waiting", "finished", "working", "quiet")]
+    order = [
+        html.index(f'id="{r}"') for r in ("waiting", "finished", "working", "quiet")
+    ]
     assert order == sorted(order)
 
 
@@ -177,7 +181,9 @@ def test_the_page_says_it_is_a_snapshot_and_when_it_was_made():
 
 def test_the_title_is_the_page_name():
     assert "<title>crowsnest</title>" in render_report(roster(), made_at=STAMP)
-    assert "<title>fleet</title>" in render_report(roster(), made_at=STAMP, title="fleet")
+    assert "<title>fleet</title>" in render_report(
+        roster(), made_at=STAMP, title="fleet"
+    )
 
 
 def test_every_open_tag_is_closed():
@@ -203,9 +209,9 @@ def test_every_open_tag_is_closed():
     stack: list[str] = []
     for closing, name in re.findall(r"<(/?)([a-z0-9]+)", body):
         if closing:
-            assert stack and stack[-1] == name, (
-                f"{name} closed out of order: {stack[-3:]}"
-            )
+            assert (
+                stack and stack[-1] == name
+            ), f"{name} closed out of order: {stack[-3:]}"
             stack.pop()
         elif name not in void:
             stack.append(name)
@@ -269,7 +275,11 @@ def test_a_row_with_a_remote_control_session_links_to_it_and_its_repository():
 
 def test_a_row_without_remote_control_has_no_open_link():
     r = row(
-        label="fixer", status="busy", status_since=since(10), session_url="", repo_url=""
+        label="fixer",
+        status="busy",
+        status_since=since(10),
+        session_url="",
+        repo_url="",
     )
     html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
     assert ">open</a>" not in html and ">repo</a>" not in html
@@ -310,7 +320,9 @@ def test_a_quiet_row_with_remote_control_links_too():
 
 def _interactive_page():
     r = row(label="fixer", status="busy", status_since=since(10), home="one")
-    return render_report({"sessions": [r], "counts": {}}, made_at=STAMP, interactive=True)
+    return render_report(
+        {"sessions": [r], "counts": {}}, made_at=STAMP, interactive=True
+    )
 
 
 def test_the_static_page_carries_no_script_and_the_interactive_one_exactly_one():
@@ -348,4 +360,6 @@ def test_the_interactive_fragment_keeps_the_script_and_the_extra_style():
 def test_interactive_rendering_does_not_leak_into_the_next_static_render():
     _interactive_page()
     r = row(label="fixer", status="busy", status_since=since(10))
-    assert "<script" not in render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
+    assert "<script" not in render_report(
+        {"sessions": [r], "counts": {}}, made_at=STAMP
+    )
