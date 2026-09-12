@@ -1,0 +1,789 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.triage &mdash; crowsnest 0.0.31 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c5dbc6bb"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/account.html">crowsnest.account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/links.html">crowsnest.links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tree.html">crowsnest.tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/triage.html">crowsnest.triage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.triage</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.triage</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Which sessions need you, which are safe to close, and which are still going.</span>
+
+<span class="sd">The roster is not the useful answer. Thirty sessions sorted by status is still thirty</span>
+<span class="sd">things to read, and the question underneath it is always the same three: *what needs me,</span>
+<span class="sd">what can I stop thinking about, and what is still running?* This module answers that one.</span>
+
+<span class="sd">**Four groups, and the fourth is the point.**</span>
+
+<span class="sd">===================  =========================================================</span>
+<span class="sd">group                what it means</span>
+<span class="sd">===================  =========================================================</span>
+<span class="sd">``needs_you``        holding for a person. ``why`` says which kind: a</span>
+<span class="sd">                     ``question`` it has actually asked, a ``decision`` only a</span>
+<span class="sd">                     person can make, or an ``action`` only a person can take</span>
+<span class="sd">                     (attach a file, run a command, approve a purchase).</span>
+<span class="sd">``safe_to_close``    it said, in its own words, that nothing is outstanding.</span>
+<span class="sd">``working``          busy, or waiting on something that is not a person.</span>
+<span class="sd">``unclassified``     **it did not say.** Not a guess, not a default.</span>
+<span class="sd">===================  =========================================================</span>
+
+<span class="sd">``unclassified`` exists because the expensive error here is a wrong</span>
+<span class="sd">``safe_to_close``: a person who trusts it closes a terminal on work that was not</span>
+<span class="sd">finished, and nothing ever tells them. So a verdict is only reached on *positive*</span>
+<span class="sd">evidence -- a session that says nothing lands in ``unclassified``, and the honest</span>
+<span class="sd">report of a machine whose sessions keep no ledgers is that most of them are unclassified.</span>
+
+<span class="sd">**A ledger is append-only prose, and append-only prose cannot express current state.**</span>
+<span class="sd">That is the fact the whole design turns on. A session that wrote "nothing outstanding" on</span>
+<span class="sd">Monday and described a blocker on Wednesday has a file that says both, and the file has no</span>
+<span class="sd">way of saying which is now true. The two directions are therefore treated *differently*,</span>
+<span class="sd">because their costs are different:</span>
+
+<span class="sd">*Needing a person is read from the whole file.* A request written on Monday and never</span>
+<span class="sd">withdrawn is still open on Wednesday; a stale one costs a person a glance. Cheap to be</span>
+<span class="sd">wrong.</span>
+
+<span class="sd">*Being finished is read only from what the session said **last*** -- the ``state`` field,</span>
+<span class="sd">which :func:`crowsnest.ledger.update_ledger` overwrites, or the final section of the free</span>
+<span class="sd">part with nothing asking for a person after it. An all-clear buried in the middle of a</span>
+<span class="sd">46 KB ledger is a report about Monday, and reading it as today's verdict is how somebody</span>
+<span class="sd">closes a terminal on live work. Expensive to be wrong, so it is made hard.</span>
+
+<span class="sd">**The signals, measured rather than assumed.** Of 181 ledgers on the machine this was</span>
+<span class="sd">written for, 180 had an empty ``state:`` field and **none** had a non-empty ``open</span>
+<span class="sd">questions:``. Everything sessions actually write goes into the ledger's free part as</span>
+<span class="sd">prose, under whatever heading they chose -- ``## For Thor``, ``FOR THOR:``, ``Open for</span>
+<span class="sd">Thor:``, ``Outstanding for Thor:``, ``**Open for Thor:**``, ``DECISION FOR THOR:`` -- and</span>
+<span class="sd">only fifteen of the 181 contained any of them. A classifier that read only the structured</span>
+<span class="sd">fields would have called every session unclassified; one that required an exact heading</span>
+<span class="sd">would have found eight per cent of them. So :func:`from_ledger` reads the prose *and* the</span>
+<span class="sd">fields, and the shipped ``crowsnest-worker`` skill now teaches the field, so the signal</span>
+<span class="sd">gets better going forward rather than staying where it is.</span>
+
+<span class="sd">``verdicts=`` is the seam: an ordered sequence of ``(row, ledger) -&gt; Verdict | None``,</span>
+<span class="sd">first non-``None`` winning. The default pair is the live registry signal -- which is</span>
+<span class="sd">authoritative for *right now*, because a session that is `waiting` is waiting whatever its</span>
+<span class="sd">ledger last said -- and then the ledger. openloops' digest (:func:`crowsnest.tools.brief`,</span>
+<span class="sd">whose own store is already a seam) is the reader this exists to make room for.</span>
+
+<span class="sd">&gt;&gt;&gt; row = {'label': 's', 'status': 'waiting', 'waiting_for': 'input needed'}</span>
+<span class="sd">&gt;&gt;&gt; verdict = classify_row(row, ledger={})</span>
+<span class="sd">&gt;&gt;&gt; verdict['group'], verdict['why']</span>
+<span class="sd">('needs_you', 'question')</span>
+<span class="sd">&gt;&gt;&gt; classify_row({'label': 's', 'status': 'idle'}, ledger={})['group']</span>
+<span class="sd">'unclassified'</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"DFLT_OWNER"</span><span class="p">,</span>
+    <span class="s2">"GROUPS"</span><span class="p">,</span>
+    <span class="s2">"REASON_LIMIT"</span><span class="p">,</span>
+    <span class="s2">"WHYS"</span><span class="p">,</span>
+    <span class="s2">"Verdict"</span><span class="p">,</span>
+    <span class="s2">"classify"</span><span class="p">,</span>
+    <span class="s2">"classify_row"</span><span class="p">,</span>
+    <span class="s2">"dflt_verdicts"</span><span class="p">,</span>
+    <span class="s2">"from_ledger"</span><span class="p">,</span>
+    <span class="s2">"from_registry"</span><span class="p">,</span>
+    <span class="s2">"latest_section"</span><span class="p">,</span>
+    <span class="s2">"without_code"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: The groups, in the order a person needs them. ``unclassified`` is last because it is</span>
+<span class="c1">#: the residue, not a finding.</span>
+<span class="n">GROUPS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"needs_you"</span><span class="p">,</span> <span class="s2">"safe_to_close"</span><span class="p">,</span> <span class="s2">"working"</span><span class="p">,</span> <span class="s2">"unclassified"</span><span class="p">)</span>
+
+<span class="c1">#: Why a session needs a person, when it does. ``question`` is one it actually asked;</span>
+<span class="c1">#: ``decision`` is a choice only a person can make; ``action`` is something only a person</span>
+<span class="c1">#: can do -- attach a file to an issue, run a command, approve a spend.</span>
+<span class="n">WHYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"question"</span><span class="p">,</span> <span class="s2">"decision"</span><span class="p">,</span> <span class="s2">"action"</span><span class="p">)</span>
+
+<span class="c1">#: How much of the sentence that decided a verdict is quoted back. Enough to recognise</span>
+<span class="c1">#: the thing, not enough to make the report into the ledger.</span>
+<span class="n">REASON_LIMIT</span> <span class="o">=</span> <span class="mi">200</span>
+
+
+<div class="viewcode-block" id="Verdict">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.Verdict">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Verdict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One session's classification, and the evidence for it.</span>
+
+<span class="sd">    ``reason`` is the session's own words wherever possible: a triage a person cannot</span>
+<span class="sd">    check is one they end up re-deriving by opening every session, which is the work this</span>
+<span class="sd">    was meant to remove. ``source`` says which reader decided, so a surprising verdict can</span>
+<span class="sd">    be traced to the thing that produced it.</span>
+
+<span class="sd">    &gt;&gt;&gt; Verdict('needs_you', why='decision', reason='squash or rebase?').as_dict()['group']</span>
+<span class="sd">    'needs_you'</span>
+<span class="sd">    """</span>
+
+    <span class="n">group</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">why</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+<div class="viewcode-block" id="Verdict.as_dict">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.Verdict.as_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""JSON-ready form."""</span>
+        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">REASON_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">text</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">text</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># What a ledger says, in the shapes sessions actually write</span>
+
+
+<span class="c1">#: The words that may open a "for &lt;person&gt;" heading. The person's name is not hardcoded:</span>
+<span class="c1">#: ``owner=`` names them, and "you" and "the user" are matched either way, which is what a</span>
+<span class="c1">#: session writes when it does not know the name.</span>
+<span class="n">_OPENERS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"open|outstanding|left|remaining|needs?|decision|question|blocked|waiting|todo|to do"</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_person_patterns</span><span class="p">(</span><span class="n">owner</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Pattern</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Every way the real ledger directory says "this one needs a person".</span>
+
+<span class="sd">    Derived by reading the 182 ledgers on the machine this was written for, rather than</span>
+<span class="sd">    from a convention someone imagined. ``for the user`` turned out to be the *commonest*</span>
+<span class="sd">    variant and was missing from the first draft, which silently dropped nine sessions</span>
+<span class="sd">    that were genuinely blocked; ``manual-task`` is the user's own tracked keyword for a</span>
+<span class="sd">    hand-back and was not consulted at all.</span>
+
+<span class="sd">    &gt;&gt;&gt; p = _person_patterns('thor')</span>
+<span class="sd">    &gt;&gt;&gt; any(x.search('## Open, for Thor') for x in p)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; any(x.search('**Decisions for the user (nothing done):**') for x in p)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; any(x.search('manual-task, needs Thor: add the connector') for x in p)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; any(x.search('Blocked on Thor (priv#145)') for x in p)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; any(x.search('for thorough testing, run the suite') for x in p)</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="n">who</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span>
+    <span class="n">person</span> <span class="o">=</span> <span class="sa">rf</span><span class="s2">"(?:</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2">|you|the user|a human|the human)"</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="c1"># A heading or lead-in that opens a section: "## Open, for Thor",</span>
+        <span class="c1"># "**Decisions for the user (nothing done):**", "Outstanding for Thor:"</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="sa">rf</span><span class="s2">"(?im)^[\s&gt;*#_-]*(?:(?:</span><span class="si">{</span><span class="n">_OPENERS</span><span class="si">}</span><span class="s2">)[^\n:]</span><span class="se">{{</span><span class="s2">0,40</span><span class="se">}}</span><span class="s2">)?\bfor\s+</span><span class="si">{</span><span class="n">person</span><span class="si">}</span><span class="s2">\b(?![\w-])"</span>
+        <span class="p">),</span>
+        <span class="c1"># A statement anywhere: "needs Thor", "blocked on the user", "only you can"</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="sa">rf</span><span class="s2">"(?i)\b(?:needs?|blocked on|waiting on|pending on|only)\s+</span><span class="si">{</span><span class="n">person</span><span class="si">}</span><span class="s2">\b(?![\w-])"</span>
+        <span class="p">),</span>
+        <span class="c1"># The user's own keyword for something handed back to them</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?i)\bmanual-task\b"</span><span class="p">),</span>
+        <span class="c1"># "it needs a human to sign in", "I cannot do this from here"</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?i)\b(?:it )?needs a human\b"</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_for_person</span><span class="p">(</span><span class="n">owner</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The heading form alone -- the one that opens a *section* a reason can be read from."""</span>
+    <span class="k">return</span> <span class="n">_person_patterns</span><span class="p">(</span><span class="n">owner</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="c1">#: A session saying, in its own words, that nothing is outstanding. Deliberately narrow:</span>
+<span class="c1">#: each alternative names *the work* or *a person*, never a bare adjective, because</span>
+<span class="c1">#: "all green" is about a test suite, "nothing is faster" is about speed, and "no</span>
+<span class="c1">#: blockers" is what an adversarial review says about a diff.</span>
+<span class="n">_ALL_CLEAR</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?i)\b("</span>
+    <span class="sa">r</span><span class="s2">"nothing (?:else |further )?(?:is )?(?:outstanding|open|left|blocked|blocking|pending)"</span>
+    <span class="c1"># The person, named or pronouned -- never `\w+`: "Nothing needs recomputing" is not</span>
+    <span class="c1"># a session telling you it is finished, and reading it as one closes live work.</span>
+    <span class="sa">r</span><span class="s2">"|nothing (?:needs|blocking|waiting on|for) (?:you|your|me|him|her|them|anyone|anybody)"</span>
+    <span class="sa">r</span><span class="s2">"|no (?:open|outstanding|remaining) (?:questions?|items?|blockers?|work)"</span>
+    <span class="sa">r</span><span class="s2">"|(?:all|everything) (?:is )?(?:landed|merged|done|handled|closed out|complete)"</span>
+    <span class="sa">r</span><span class="s2">"|(?:the )?work is (?:done|complete|finished)"</span>
+    <span class="sa">r</span><span class="s2">"|closed out"</span>
+    <span class="sa">r</span><span class="s2">")\b"</span>
+<span class="p">)</span>
+
+<span class="c1">#: What turns an all-clear into its opposite, or into a report about something else, when</span>
+<span class="c1">#: it sits just before the phrase. Every one of these was found in a real ledger that the</span>
+<span class="c1">#: first draft called ``safe_to_close``.</span>
+<span class="n">_NOT_REALLY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?i)("</span>
+    <span class="sa">r</span><span class="s2">"\b(?:not|never|cannot|can't|isn't|aren't|wasn't|won't|don't|doesn't"</span>
+    <span class="sa">r</span><span class="s2">"|nothing|none|no one|nobody)\b"</span>  <span class="c1"># negation, including "nothing is blocked on you"</span>
+    <span class="sa">r</span><span class="s2">"|\b(?:said|says|claimed|wrote|asked|told|per|quote)\b"</span>  <span class="c1"># somebody else's words</span>
+    <span class="sa">r</span><span class="s2">"|[</span><span class="se">\"</span><span class="s2">\u201c\u2018']\s*$"</span>  <span class="c1"># an opening quotation mark</span>
+    <span class="sa">r</span><span class="s2">"|\b(?:review|verdict|audit|lint|ci|tests?|suite|scan|diff)\b"</span>  <span class="c1"># about the code, not the work</span>
+    <span class="sa">r</span><span class="s2">"|\b\w+-wise\b"</span>  <span class="c1"># "unmerged-branch-wise nothing outstanding"</span>
+    <span class="sa">r</span><span class="s2">")[^.!?\n]{0,40}$"</span>
+<span class="p">)</span>
+
+<span class="c1">#: Words that may follow an all-clear without qualifying it. Anything *else* that follows</span>
+<span class="c1">#: turns it into a claim about something narrower -- "nothing open **in the editor**",</span>
+<span class="c1">#: "nothing outstanding **on the parser**" -- and a claim about something narrower is not</span>
+<span class="c1">#: a session saying it is finished.</span>
+<span class="n">_HARMLESS_TAIL</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?i)^(?:here|now|any ?more|either|yet|at all|so far)\b"</span><span class="p">)</span>
+
+<span class="c1">#: What turns an all-clear into a report about *part* of the work when it follows. Real</span>
+<span class="c1">#: examples: "all landed by other sessions before I started", "nothing outstanding on my</span>
+<span class="c1">#: side", "unmerged-branch-wise nothing outstanding".</span>
+<span class="n">_ONLY_PARTLY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?i)^[^.!?\n]{0,40}\b(?:by (?:other|another)|on (?:my|their|his|her) (?:side|half|end)"</span>
+    <span class="sa">r</span><span class="s2">"|but|except|apart from|other than|aside from|besides)\b"</span>
+<span class="p">)</span>
+
+<span class="n">_FENCE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"```.*?```|~~~.*?~~~"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+<span class="n">_SECTION</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?m)^[ \t]{0,3}#{1,6}[ \t]"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="without_code">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.without_code">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">without_code</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``text`` with fenced code blocks blanked, lengths preserved.</span>
+
+<span class="sd">    A comment inside a shell block is not the session speaking.</span>
+
+<span class="sd">    &gt;&gt;&gt; without_code('a\\n```\\nnothing outstanding\\n```\\nb').split()</span>
+<span class="sd">    ['a', 'b']</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_FENCE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="s2">" "</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="latest_section">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.latest_section">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">latest_section</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The last section of a ledger's free part -- the most recent thing it appended.</span>
+
+<span class="sd">    A ledger is append-only by instruction, so the newest heading opens the only part that</span>
+<span class="sd">    describes *now*. Everything above it is a record of what was true earlier, and reading</span>
+<span class="sd">    an old all-clear as today's verdict is exactly the mistake this module exists to avoid.</span>
+
+<span class="sd">    With no headings at all the whole thing is the latest section, which is right for a</span>
+<span class="sd">    short ledger and harmless for a long one that never structured itself.</span>
+
+<span class="sd">    &gt;&gt;&gt; latest_section('## Mon\\n\\nall landed\\n\\n## Wed\\n\\nblocked on the key').strip()</span>
+<span class="sd">    '## Wed\\n\\nblocked on the key'</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_SECTION</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">text</span><span class="p">[</span><span class="n">found</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="p">:]</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_a_real_all_clear</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">re</span><span class="o">.</span><span class="n">Match</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The first all-clear in ``text`` that is not negated, quoted, or partial.</span>
+
+<span class="sd">    &gt;&gt;&gt; bool(_is_a_real_all_clear('Nothing outstanding.'))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; bool(_is_a_real_all_clear('This is NOT closed out.'))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; bool(_is_a_real_all_clear('all landed by other sessions before I started'))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; bool(_is_a_real_all_clear('There is nothing open in the editor.'))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; bool(_is_a_real_all_clear('the review said no blockers'))</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">_ALL_CLEAR</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="n">text</span><span class="p">[:</span> <span class="n">found</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="n">found</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">_NOT_REALLY</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">before</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_ONLY_PARTLY</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">after</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="c1"># The phrase has to *end the clause*. A word continuing it makes the claim about</span>
+        <span class="c1"># something narrower than the work: "nothing open in the editor" is about an</span>
+        <span class="c1"># editor, and no reading of it means this session is finished.</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="n">after</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">" </span><span class="se">\t</span><span class="s2">)*_</span><span class="se">\u2019</span><span class="s2">'</span><span class="se">\"</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tail</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="s2">".,;:!?</span><span class="se">\u2014</span><span class="s2">-"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_HARMLESS_TAIL</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">tail</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">return</span> <span class="n">found</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="c1">#: Words that make a request a *decision* rather than an errand -- a choice between named</span>
+<span class="c1">#: alternatives, or a question put to a person.</span>
+<span class="c1">#: A choice only a person can make. Deliberately *without* a bare ``?``: a ledger is full</span>
+<span class="c1">#: of URLs with query strings and rhetorical asides, and under the earliest-match rule</span>
+<span class="c1">#: below a stray question mark beat every real signal after it. A question mark only</span>
+<span class="c1">#: counts when it ends a clause.</span>
+<span class="n">_DECISION</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?i)\b(decide|decision|which|whether|should (?:i|we)|or\s+(?:rebase|squash|not)"</span>
+    <span class="sa">r</span><span class="s2">"|prefer|choose|sign off|your call|up to you)\b|\?(?=\s|$)"</span>
+<span class="p">)</span>
+
+<span class="c1">#: Words that make it an errand only a person can run.</span>
+<span class="c1">#: An errand only a person can run. ``approve`` lives here rather than in ``_DECISION``</span>
+<span class="c1">#: because the module's own taxonomy says so -- "approve a purchase" is the worked example</span>
+<span class="c1">#: of an action -- and the verbs are spelled as verbs: bare ``run`` matched "the analysis</span>
+<span class="c1">#: **run is** finished" and "has not **run in** a live notebook" on the real fleet, and</span>
+<span class="c1">#: chipped two sessions "do" that had no errand in them at all.</span>
+<span class="n">_ACTION</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?i)\b(attach|upload|paste|install|purchase|buy|pay|grant|rotate|approve"</span>
+    <span class="sa">r</span><span class="s2">"|credential|token|secret|api key|log ?in|authorise|authorize|permission"</span>
+    <span class="sa">r</span><span class="s2">"|click|download|reboot|restart|plug|screenshot|gif)\b"</span>
+    <span class="sa">r</span><span class="s2">"|\b(?:please |you (?:can|could|need to|have to) |can you )?run\s+(?:the |this |it\b|`)"</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_section_after</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">match</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The block of prose a "for &lt;person&gt;" heading opens: up to the next heading or gap."""</span>
+    <span class="n">rest</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="p">:]</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">stop</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\n[\s&gt;*#_-]*#{1,6}\s"</span><span class="p">,</span> <span class="n">rest</span><span class="p">),</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\n\s*\n\s*\n"</span><span class="p">,</span> <span class="n">rest</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">stop</span> <span class="ow">and</span> <span class="n">stop</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">stop</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="c1"># The heading's own trailing punctuation and decoration is not the section:</span>
+    <span class="c1"># `**Open for Thor:** attach the GIF` should read back as `attach the GIF`.</span>
+    <span class="k">return</span> <span class="n">rest</span><span class="p">[:</span><span class="n">end</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">":*_)-— </span><span class="se">\t\r\n</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sentence_at</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">match</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The sentence a mid-paragraph statement sits in, so the reason reads as one.</span>
+
+<span class="sd">    A heading opens a section; "blocked on Thor (priv#145)" opens nothing, and quoting</span>
+<span class="sd">    from the match forward gives a reason beginning mid-clause.</span>
+<span class="sd">    """</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="n">text</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">stop</span> <span class="ow">in</span> <span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">". "</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()),</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">())):</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">stop</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">stop</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">text</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_why</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Which kind of needing this is: whichever the session asked for **first**.</span>
+
+<span class="sd">    Earliest match rather than a fixed precedence, because a section that opens *"attach</span>
+<span class="sd">    the two GIFs to #604"* and mentions a question three paragraphs later is an errand</span>
+<span class="sd">    with a question in it, not a decision -- and calling it a decision sends a person</span>
+<span class="sd">    looking for a choice that is not there.</span>
+
+<span class="sd">    &gt;&gt;&gt; _why('squash or rebase for the release?')</span>
+<span class="sd">    'decision'</span>
+<span class="sd">    &gt;&gt;&gt; _why('attach the GIF to the issue')</span>
+<span class="sd">    'action'</span>
+<span class="sd">    &gt;&gt;&gt; _why('attach the GIF to #604. Separately, which base branch?')</span>
+<span class="sd">    'action'</span>
+<span class="sd">    &gt;&gt;&gt; _why('have a look when you can')</span>
+<span class="sd">    'question'</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">(),</span> <span class="n">kind</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"decision"</span><span class="p">,</span> <span class="n">_DECISION</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">"action"</span><span class="p">,</span> <span class="n">_ACTION</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">found</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">"question"</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The readers</span>
+
+
+<div class="viewcode-block" id="from_registry">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.from_registry">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_registry</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What the registry says *right now*, which outranks anything written earlier.</span>
+
+<span class="sd">    A session whose status is ``waiting`` is holding for its human at this moment,</span>
+<span class="sd">    whatever its ledger last said -- the registry is live and the ledger is a memory. When</span>
+<span class="sd">    the transcript caught the question it asked, that question is the reason, verbatim.</span>
+
+<span class="sd">    Everything else running is ``working``: busy is busy. Idle says nothing here, and is</span>
+<span class="sd">    left to the ledger.</span>
+<span class="sd">    """</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
+        <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">asked</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="n">asked</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"waiting for input"</span>
+        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+            <span class="s2">"needs_you"</span><span class="p">,</span>
+            <span class="n">_why</span><span class="p">(</span><span class="n">reason</span><span class="p">)</span> <span class="k">if</span> <span class="n">asked</span> <span class="k">else</span> <span class="s2">"question"</span><span class="p">,</span>
+            <span class="n">_one_line</span><span class="p">(</span><span class="n">reason</span><span class="p">),</span>
+            <span class="s2">"registry"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">):</span>
+        <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">running</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_flight"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span><span class="s2">"working"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">running</span><span class="p">),</span> <span class="n">source</span><span class="o">=</span><span class="s2">"registry"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="from_ledger">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.from_ledger">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_ledger</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What the session wrote down for a person to read.</span>
+
+<span class="sd">    Read in the order the evidence is worth: the structured ``open questions`` field</span>
+<span class="sd">    first, because a session that filled it in meant to; then a "for &lt;person&gt;" section in</span>
+<span class="sd">    the free part, which is how sessions actually write today; then an all-clear</span>
+<span class="sd">    statement, which is the only thing that produces ``safe_to_close``.</span>
+
+<span class="sd">    Returns ``None`` when the ledger says none of those -- and that ``None`` is the whole</span>
+<span class="sd">    reason this is honest. Inferring "finished" from silence would be inferring it from</span>
+<span class="sd">    exactly what an interrupted session leaves behind.</span>
+<span class="sd">    """</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="n">ledger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fields"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">free</span> <span class="o">=</span> <span class="n">without_code</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"free"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span> <span class="ow">or</span> <span class="n">DFLT_OWNER</span>
+
+    <span class="n">asked</span> <span class="o">=</span> <span class="n">_substantive</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"open_questions"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">asked</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+            <span class="s2">"needs_you"</span><span class="p">,</span> <span class="n">_why</span><span class="p">(</span><span class="n">asked</span><span class="p">),</span> <span class="n">_one_line</span><span class="p">(</span><span class="n">asked</span><span class="p">),</span> <span class="s2">"ledger:open questions"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Needing a person is read from the WHOLE file: a request written on Monday and never</span>
+    <span class="c1"># withdrawn is still open on Wednesday, and a stale one costs a glance.</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_person_patterns</span><span class="p">(</span><span class="n">owner</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">opened</span> <span class="ow">in</span> <span class="n">pattern</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">free</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">_NOT_REALLY</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">free</span><span class="p">[:</span> <span class="n">opened</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">continue</span>  <span class="c1"># "so no manual-task issue" is the absence of one</span>
+            <span class="c1"># A heading opens a section; a statement mid-paragraph opens a sentence.</span>
+            <span class="n">wanted</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">_section_after</span><span class="p">(</span><span class="n">free</span><span class="p">,</span> <span class="n">opened</span><span class="p">)</span> <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">_sentence_at</span><span class="p">(</span><span class="n">free</span><span class="p">,</span> <span class="n">opened</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="c1"># A section headed "For Thor" whose content is itself an all-clear is a</span>
+            <span class="c1"># session reporting that it needs nothing, in the place it would have said</span>
+            <span class="c1"># what it needed. Reading that as a request is the same error as reading</span>
+            <span class="c1"># silence as completion, pointing the other way.</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">_substantive</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">_opens_with_nothing</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+                    <span class="s2">"needs_you"</span><span class="p">,</span> <span class="n">_why</span><span class="p">(</span><span class="n">wanted</span><span class="p">),</span> <span class="n">_one_line</span><span class="p">(</span><span class="n">wanted</span><span class="p">),</span> <span class="s2">"ledger:for a person"</span>
+                <span class="p">)</span>
+
+    <span class="c1"># Being finished is read only from what the session said LAST. See the module</span>
+    <span class="c1"># docstring: an all-clear in the middle of an append-only file is a report about</span>
+    <span class="c1"># Monday, and today is not Monday.</span>
+    <span class="n">stated</span> <span class="o">=</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">stated</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+            <span class="s2">"safe_to_close"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">stated</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="n">source</span><span class="o">=</span><span class="s2">"ledger:state"</span>
+        <span class="p">)</span>
+    <span class="n">latest</span> <span class="o">=</span> <span class="n">latest_section</span><span class="p">(</span><span class="n">free</span><span class="p">)</span>
+    <span class="n">ending</span> <span class="o">=</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="n">latest</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ending</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+            <span class="s2">"safe_to_close"</span><span class="p">,</span>
+            <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">ending</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+            <span class="n">source</span><span class="o">=</span><span class="s2">"ledger:last section"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<span class="c1">#: Answers that fill a field without saying anything. A session told to write</span>
+<span class="c1">#: ``open questions`` and having none writes one of these, and treating that as a request</span>
+<span class="c1">#: puts it in front of a person forever -- which is the habit that teaches people to stop</span>
+<span class="c1">#: looking at the list at all.</span>
+<span class="n">_NOTHING_REALLY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?i)^[\s\u2014*_&gt;-]*(?:none|n/?a|nothing|no)"</span>
+    <span class="sa">r</span><span class="s2">"(?:\s+(?:blocking|outstanding|open|pending|left|for now|yet|right now))?"</span>
+    <span class="sa">r</span><span class="s2">"[\s.!\u2014-]*$|^[\s*_&gt;-]{1,4}$"</span>
+<span class="p">)</span>
+
+
+<span class="c1">#: A request that opens by saying there is none. "Nothing -- all handled" under a</span>
+<span class="c1">#: "For Thor" heading is a session reporting that it needs nothing, in the place it would</span>
+<span class="c1">#: have written what it needed; the opening word is the answer and the rest is the</span>
+<span class="c1">#: explanation.</span>
+<span class="n">_OPENS_WITH_NOTHING</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?i)^[\s&gt;*#_\u2014-]*(?:none|nothing|n/?a)\b[ \t]*(?:[\u2014\u2013:,.;!)\-]|$)"</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_opens_with_nothing</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Does this section answer "nothing" before it says anything else?</span>
+
+<span class="sd">    The word has to *be* the answer, not begin a sentence: "Nothing -- all handled" is a</span>
+<span class="sd">    session reporting it needs nothing, and "Nothing works until the key is rotated" is a</span>
+<span class="sd">    session that very much needs something.</span>
+
+<span class="sd">    &gt;&gt;&gt; _opens_with_nothing('Nothing \u2014 all handled, no blockers.')</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _opens_with_nothing('Nothing works until the key is rotated.')</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; _opens_with_nothing('attach the GIF to #604')</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_OPENS_WITH_NOTHING</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_substantive</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``value`` as text when it says something, else ``''``.</span>
+
+<span class="sd">    &gt;&gt;&gt; _substantive('- squash or rebase?')</span>
+<span class="sd">    '- squash or rebase?'</span>
+<span class="sd">    &gt;&gt;&gt; _substantive('- none'), _substantive('n/a'), _substantive('  ')</span>
+<span class="sd">    ('', '', '')</span>
+<span class="sd">    """</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">_NOTHING_REALLY</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="n">text</span>
+
+
+<span class="c1">#: Whose attention the "for &lt;person&gt;" family is about, when a caller does not say. "you"</span>
+<span class="c1">#: is matched either way, so a session that does not know the name still classifies.</span>
+<span class="n">DFLT_OWNER</span> <span class="o">=</span> <span class="s2">"thor"</span>
+
+
+<div class="viewcode-block" id="dflt_verdicts">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.dflt_verdicts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dflt_verdicts</span><span class="p">(</span>
+    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The readers :func:`classify` uses when a caller names none, strongest first.</span>
+
+<span class="sd">    The registry is first because it is the only one that is true *now*:</span>
+<span class="sd">    :func:`crowsnest.tools.brief`'s openloops digest is the reader this order leaves room</span>
+<span class="sd">    for, and it belongs after both.</span>
+
+<span class="sd">    ``owner`` is whose attention "for &lt;person&gt;" is about, for a machine whose sessions</span>
+<span class="sd">    write a different name. It reaches :func:`from_ledger` by binding rather than by</span>
+<span class="sd">    another parameter on the reader signature, so the seam stays ``(row, ledger)``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">owner</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">from_registry</span><span class="p">,</span> <span class="n">from_ledger</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">from_registry</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">from_ledger</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The classification</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_whatever_it_said</span><span class="p">(</span>
+    <span class="n">reader</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One reader's verdict, or none of it: a reader that raises is a reader that declines.</span>
+
+<span class="sd">    Swallowed rather than raised because this runs once per session on a page whose job is</span>
+<span class="sd">    to be readable, and because the fallback is honest: a reader that cannot answer leaves</span>
+<span class="sd">    the session to the next one, and then to ``unclassified``, which is exactly what "we</span>
+<span class="sd">    do not know" is supposed to look like here.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">reader</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- any reader, any failure; the others still count</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="classify_row">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.classify_row">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">classify_row</span><span class="p">(</span>
+    <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verdicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One session's verdict, as a JSON-able dict. Never guesses.</span>
+
+<span class="sd">    ``verdicts`` is the seam (see the module docstring): readers in order, the first</span>
+<span class="sd">    non-``None`` winning. When none of them reaches a verdict the answer is</span>
+<span class="sd">    ``unclassified``, which is a finding rather than a failure -- it says *this session</span>
+<span class="sd">    has not told anyone where it stands*, and that is actionable in a way a guess is not.</span>
+<span class="sd">    """</span>
+    <span class="n">ledger</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">ledger</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ledger</span>
+    <span class="k">for</span> <span class="n">reader</span> <span class="ow">in</span> <span class="n">dflt_verdicts</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="k">if</span> <span class="n">verdicts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">verdicts</span><span class="p">:</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="n">_whatever_it_said</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+        <span class="s2">"unclassified"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"nothing said where it stands"</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">""</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="classify">
+<a class="viewcode-back" href="../../module_docs/crowsnest/triage.html#crowsnest.triage.classify">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">classify</span><span class="p">(</span>
+    <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">ledgers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verdicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Every session, grouped by what it needs. The three-line answer to "where are we".</span>
+
+<span class="sd">    ``ledgers`` maps a session's label to its ledger page</span>
+<span class="sd">    (:func:`crowsnest.ledger.read_ledger`'s shape); a session with no entry is classified</span>
+<span class="sd">    from the registry alone, which is right for one that is waiting and honestly</span>
+<span class="sd">    ``unclassified`` for one that is idle.</span>
+
+<span class="sd">    Returns ``{"groups": {...}, "counts": {...}}`` where each group holds the rows that</span>
+<span class="sd">    fell into it, each with a ``verdict``. Rows keep the order they arrived in, which is</span>
+<span class="sd">    the roster's own -- most urgent first.</span>
+<span class="sd">    """</span>
+    <span class="n">ledgers</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">ledgers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ledgers</span>
+    <span class="n">groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">group</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">GROUPS</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">verdict</span> <span class="o">=</span> <span class="n">classify_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="o">=</span><span class="n">ledgers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span> <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">)</span>
+        <span class="n">groups</span><span class="p">[</span><span class="n">verdict</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span> <span class="k">if</span> <span class="n">verdict</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">else</span> <span class="s2">"unclassified"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span><span class="o">**</span><span class="n">row</span><span class="p">,</span> <span class="s2">"verdict"</span><span class="p">:</span> <span class="n">verdict</span><span class="p">}</span>
+        <span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">group</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">counts</span><span class="p">[</span><span class="s2">"needs_you_decision"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="s2">"needs_you"</span><span class="p">]</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">][</span><span class="s2">"why"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"decision"</span>
+    <span class="p">)</span>
+    <span class="c1"># One counter per `why`, so the summary line adds up. It said "5 need you (1 to</span>
+    <span class="c1"># decide, 3 to do)" and 1 + 3 is not 5: the questions had nowhere to be counted.</span>
+    <span class="k">for</span> <span class="n">why</span> <span class="ow">in</span> <span class="n">WHYS</span><span class="p">:</span>
+        <span class="n">counts</span><span class="p">[</span><span class="sa">f</span><span class="s2">"needs_you_</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="s2">"needs_you"</span><span class="p">]</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">][</span><span class="s2">"why"</span><span class="p">]</span> <span class="o">==</span> <span class="n">why</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"groups"</span><span class="p">:</span> <span class="n">groups</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">:</span> <span class="n">counts</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

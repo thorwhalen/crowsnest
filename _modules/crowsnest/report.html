@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.report &mdash; crowsnest 0.0.30 documentation</title>
+  <title>crowsnest.report &mdash; crowsnest 0.0.31 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=61a342a2"></script>
+      <script src="../../_static/documentation_options.js?v=c5dbc6bb"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -63,6 +63,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tree.html">crowsnest.tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/triage.html">crowsnest.triage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
 </ul>
 
@@ -138,6 +140,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">openloops.dashboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sanitizer</span> <span class="k">as</span> <span class="n">_Sanitizer</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.links</span><span class="w"> </span><span class="kn">import</span> <span class="n">label_for</span> <span class="k">as</span> <span class="n">_label_for</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.tree</span><span class="w"> </span><span class="kn">import</span> <span class="n">TREE_CSS</span> <span class="k">as</span> <span class="n">_TREE_CSS</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"CONSOLE_CSS"</span><span class="p">,</span> <span class="s2">"CONSOLE_SCRIPT"</span><span class="p">,</span> <span class="s2">"render_report"</span><span class="p">]</span>
 
@@ -481,6 +484,41 @@
 <span class="c1"># --------------------------------------------------------------------------------</span>
 
 
+<span class="c1">#: What a row's chip says when triage classified it. A person scanning the page needs to</span>
+<span class="c1">#: know *which kind* of needing before they read a word of the reason: a decision is a</span>
+<span class="c1">#: minute of thought, an action is a trip to another window.</span>
+<span class="n">_WHY_CHIPS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"decision"</span><span class="p">:</span> <span class="s2">"decide"</span><span class="p">,</span> <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"do"</span><span class="p">,</span> <span class="s2">"question"</span><span class="p">:</span> <span class="s2">"answer"</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_needs_you_row</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A session holding for a person, with what it wants and in whose words."""</span>
+    <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">verdict</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"verdict"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">figure</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="s2">"for"</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">"waiting_for"</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="s2">"asks"</span><span class="p">,</span> <span class="n">act</span><span class="p">[</span><span class="s2">"pending_question"</span><span class="p">]))</span>
+    <span class="n">reason</span> <span class="o">=</span> <span class="n">verdict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reason"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reason</span> <span class="ow">and</span> <span class="n">reason</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">),</span> <span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">)):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">_WHY_CHIPS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">verdict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"why"</span><span class="p">),</span> <span class="s2">"needs"</span><span class="p">),</span> <span class="n">reason</span><span class="p">))</span>
+    <span class="n">chip</span> <span class="o">=</span> <span class="n">_WHY_CHIPS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">verdict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"why"</span><span class="p">),</span> <span class="s2">"waiting"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_row</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">chip</span><span class="o">=</span><span class="n">chip</span><span class="p">,</span> <span class="n">tone</span><span class="o">=</span><span class="s2">"needs"</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">figure</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="n">lines</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_safe_to_close_row</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A session that said, in its own words, that nothing is outstanding."""</span>
+    <span class="n">verdict</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"verdict"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">figure</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">verdict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reason"</span><span class="p">):</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_line</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="s2">"said"</span><span class="p">,</span> <span class="n">verdict</span><span class="p">[</span><span class="s2">"reason"</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">_row</span><span class="p">(</span>
+        <span class="n">safe</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">chip</span><span class="o">=</span><span class="s2">"clear"</span><span class="p">,</span> <span class="n">tone</span><span class="o">=</span><span class="s2">"free"</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">figure</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="n">lines</span>
+    <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_waiting_row</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">now_epoch</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">figure</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">_age</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">)</span>
@@ -626,6 +664,44 @@
     <span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_lineage_register</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">found</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The spawn forest, drawn, when the roster carries one and it has a shape.</span>
+
+<span class="sd">    Left out entirely when no session was started by another: the figure would be a list</span>
+<span class="sd">    of everything, and the registers above are already that list. The drawing is</span>
+<span class="sd">    :func:`crowsnest.tree.render`'s -- inline SVG with the layout computed in Python, so</span>
+<span class="sd">    the page still loads nothing from anywhere.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.tree</span><span class="w"> </span><span class="kn">import</span> <span class="n">layout</span> <span class="k">as</span> <span class="n">_layout</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.tree</span><span class="w"> </span><span class="kn">import</span> <span class="n">render</span> <span class="k">as</span> <span class="n">_draw</span>
+
+    <span class="c1"># Every string in the figure goes through the page's sanitiser, exactly as in every</span>
+    <span class="c1"># other register. Without this the drawing would be the one region of a published page</span>
+    <span class="c1"># that skipped it -- and this page is published.</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">_layout</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+    <span class="n">figure</span> <span class="o">=</span> <span class="n">_draw</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_found</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">figure</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="n">gone</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">alive</span><span class="p">)</span>
+    <span class="n">rule</span> <span class="o">=</span> <span class="s2">"Each session under the one that started it."</span>
+    <span class="k">if</span> <span class="n">gone</span><span class="p">:</span>
+        <span class="n">rule</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">gone</span><span class="si">}</span><span class="s2"> of them has exited, drawn hollow, with its children still under it."</span>
+        <span class="p">)</span>
+    <span class="c1"># The number counts what the figure *draws*. A big "15" over a picture of nine</span>
+    <span class="c1"># connectors is the register lying about its own contents.</span>
+    <span class="k">return</span> <span class="n">_register</span><span class="p">(</span>
+        <span class="n">ident</span><span class="o">=</span><span class="s2">"lineage"</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"Who started whom"</span><span class="p">,</span>
+        <span class="n">figure</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">parent_row</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)),</span>
+        <span class="n">tone</span><span class="o">=</span><span class="s2">"done"</span><span class="p">,</span>
+        <span class="n">rule</span><span class="o">=</span><span class="n">rule</span><span class="p">,</span>
+        <span class="n">body</span><span class="o">=</span><span class="n">figure</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_masthead</span><span class="p">(</span><span class="n">safe</span><span class="p">:</span> <span class="n">_Sanitizer</span><span class="p">,</span> <span class="n">counts</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">stamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">tally</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">(</span><span class="s2">"Waiting"</span><span class="p">,</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">"needs"</span><span class="p">),</span>
@@ -738,21 +814,66 @@
         <span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M UTC"</span>
     <span class="p">)</span>
 
-    <span class="n">waiting</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">]</span>
-    <span class="n">busy</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"busy"</span><span class="p">]</span>
-    <span class="n">idle</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"idle"</span><span class="p">]</span>
-    <span class="n">finished</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">s</span>
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">idle</span>
-        <span class="k">if</span> <span class="n">now_epoch</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status_since"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">FINISHED_WINDOW</span>
-    <span class="p">]</span>
-    <span class="n">quiet</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">idle</span> <span class="k">if</span> <span class="n">now_epoch</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status_since"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">FINISHED_WINDOW</span>
-    <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">)]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">group_of</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">((</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"verdict"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"group"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
 
-    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">_masthead</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">title</span><span class="p">),</span>
+    <span class="c1"># A roster classified by `crowsnest.triage` organises the page by what each session</span>
+    <span class="c1"># *needs*, which is the question a person actually has. Without verdicts the page</span>
+    <span class="c1"># falls back to organising by status, which is what it always did -- so an older</span>
+    <span class="c1"># caller, and `render_report` called on a bare roster, render exactly as before.</span>
+    <span class="n">triaged</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">group_of</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">)</span>
+    <span class="n">needs_you</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">group_of</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"needs_you"</span><span class="p">]</span>
+    <span class="n">clear</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">group_of</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"safe_to_close"</span><span class="p">]</span>
+
+    <span class="c1"># **Every session appears exactly once.** A row is claimed by the first register that</span>
+    <span class="c1"># takes it, and whatever no register claimed falls to Quiet at the end. Both halves</span>
+    <span class="c1"># matter and both were got wrong first time: a session classified `needs_you` from its</span>
+    <span class="c1"># ledger while its registry status is `idle` was rendered twice, with a duplicate</span>
+    <span class="c1"># `id="session-..."` that breaks the page's own deep links; and a custom `verdicts=`</span>
+    <span class="c1"># reader returning a group the page has no register for made its session vanish</span>
+    <span class="c1"># silently, which is the worst thing a page about what needs you can do.</span>
+    <span class="n">claimed</span> <span class="o">=</span> <span class="p">{</span><span class="nb">id</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="n">needs_you</span> <span class="o">+</span> <span class="n">clear</span> <span class="k">if</span> <span class="n">triaged</span> <span class="k">else</span> <span class="p">[])}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">unclaimed</span><span class="p">(</span><span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="n">taken</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">claimed</span><span class="p">]</span>
+        <span class="n">claimed</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">taken</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">taken</span>
+
+    <span class="c1"># Only a register that is actually rendered may claim a row. When the page is</span>
+    <span class="c1"># triaged the "Waiting on you" register is replaced by "Needs you", so claiming for</span>
+    <span class="c1"># it would strand any waiting session a custom `verdicts=` reader classified</span>
+    <span class="c1"># otherwise -- which is how the seam made a session disappear.</span>
+    <span class="n">waiting</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">triaged</span>
+        <span class="k">else</span> <span class="n">unclaimed</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="n">busy</span> <span class="o">=</span> <span class="n">unclaimed</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"busy"</span><span class="p">])</span>
+    <span class="n">idle</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"idle"</span><span class="p">]</span>
+    <span class="n">finished</span> <span class="o">=</span> <span class="n">unclaimed</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">s</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">idle</span>
+            <span class="k">if</span> <span class="n">now_epoch</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status_since"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">FINISHED_WINDOW</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">quiet</span> <span class="o">=</span> <span class="n">unclaimed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sessions</span><span class="p">))</span>  <span class="c1"># everything no register above took</span>
+
+    <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">_register_from_rows</span><span class="p">(</span>
+            <span class="n">safe</span><span class="p">,</span>
+            <span class="n">needs_you</span><span class="p">,</span>
+            <span class="n">now_epoch</span><span class="p">,</span>
+            <span class="n">row_fn</span><span class="o">=</span><span class="n">_needs_you_row</span><span class="p">,</span>
+            <span class="n">ident</span><span class="o">=</span><span class="s2">"needs-you"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"Needs you"</span><span class="p">,</span>
+            <span class="n">tone</span><span class="o">=</span><span class="s2">"needs"</span><span class="p">,</span>
+            <span class="n">rule</span><span class="o">=</span><span class="s2">"Holding for a person: a question to answer, a decision to make, or "</span>
+            <span class="s2">"something only you can do."</span><span class="p">,</span>
+            <span class="n">empty</span><span class="o">=</span><span class="s2">"Nothing needs you."</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">triaged</span>
+        <span class="k">else</span> <span class="n">_register_from_rows</span><span class="p">(</span>
             <span class="n">safe</span><span class="p">,</span>
             <span class="n">waiting</span><span class="p">,</span>
             <span class="n">now_epoch</span><span class="p">,</span>
@@ -762,7 +883,29 @@
             <span class="n">tone</span><span class="o">=</span><span class="s2">"needs"</span><span class="p">,</span>
             <span class="n">rule</span><span class="o">=</span><span class="s2">"Holding for an answer, with the question it asked verbatim."</span><span class="p">,</span>
             <span class="n">empty</span><span class="o">=</span><span class="s2">"Nothing is waiting on you."</span><span class="p">,</span>
-        <span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_masthead</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">title</span><span class="p">),</span>
+        <span class="n">head</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">triaged</span><span class="p">:</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">_register_from_rows</span><span class="p">(</span>
+                <span class="n">safe</span><span class="p">,</span>
+                <span class="n">clear</span><span class="p">,</span>
+                <span class="n">now_epoch</span><span class="p">,</span>
+                <span class="n">row_fn</span><span class="o">=</span><span class="n">_safe_to_close_row</span><span class="p">,</span>
+                <span class="n">ident</span><span class="o">=</span><span class="s2">"safe-to-close"</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"Safe to close"</span><span class="p">,</span>
+                <span class="n">tone</span><span class="o">=</span><span class="s2">"free"</span><span class="p">,</span>
+                <span class="n">rule</span><span class="o">=</span><span class="s2">"Said in its own words that nothing is outstanding. Anything that "</span>
+                <span class="s2">"did not say so is below, not here."</span><span class="p">,</span>
+                <span class="n">empty</span><span class="o">=</span><span class="s2">"No session has said it is finished."</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">parts</span> <span class="o">+=</span> <span class="p">[</span>
         <span class="n">_register_from_rows</span><span class="p">(</span>
             <span class="n">safe</span><span class="p">,</span>
             <span class="n">finished</span><span class="p">,</span>
@@ -785,11 +928,14 @@
             <span class="n">rule</span><span class="o">=</span><span class="s2">"Busy, with the tool call in flight."</span><span class="p">,</span>
             <span class="n">empty</span><span class="o">=</span><span class="s2">"No session is running a tool right now."</span><span class="p">,</span>
         <span class="p">),</span>
+        <span class="n">_lineage_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">roster</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lineage"</span><span class="p">)),</span>
         <span class="n">_quiet_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">quiet</span><span class="p">,</span> <span class="n">now_epoch</span><span class="p">),</span>
         <span class="n">_footer</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">stamp</span><span class="p">),</span>
     <span class="p">]</span>
     <span class="n">title_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;title&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;"</span>
-    <span class="n">style_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
+    <span class="c1"># One &lt;style&gt;, not two: the figure's rules belong with the page's rules, and the</span>
+    <span class="c1"># interactive mode's own block is the only thing that earns a second tag.</span>
+    <span class="n">style_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}{</span><span class="n">_TREE_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
     <span class="k">if</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
         <span class="n">style_tag</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">CONSOLE_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
     <span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;main class="sheet"&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/main&gt;'</span>

@@ -1,0 +1,354 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.triage &mdash; crowsnest 0.0.31 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c5dbc6bb"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.watch" href="watch.html" />
+    <link rel="prev" title="crowsnest.tree" href="tree.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="account.html">crowsnest.account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="links.html">crowsnest.links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="open.html">crowsnest.open</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tree.html">crowsnest.tree</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.triage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.DFLT_OWNER"><code class="docutils literal notranslate"><span class="pre">DFLT_OWNER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.GROUPS"><code class="docutils literal notranslate"><span class="pre">GROUPS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.REASON_LIMIT"><code class="docutils literal notranslate"><span class="pre">REASON_LIMIT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.Verdict"><code class="docutils literal notranslate"><span class="pre">Verdict</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#crowsnest.triage.Verdict.as_dict"><code class="docutils literal notranslate"><span class="pre">Verdict.as_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.WHYS"><code class="docutils literal notranslate"><span class="pre">WHYS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.classify"><code class="docutils literal notranslate"><span class="pre">classify()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.classify_row"><code class="docutils literal notranslate"><span class="pre">classify_row()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.dflt_verdicts"><code class="docutils literal notranslate"><span class="pre">dflt_verdicts()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.from_ledger"><code class="docutils literal notranslate"><span class="pre">from_ledger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.from_registry"><code class="docutils literal notranslate"><span class="pre">from_registry()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.latest_section"><code class="docutils literal notranslate"><span class="pre">latest_section()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.triage.without_code"><code class="docutils literal notranslate"><span class="pre">without_code()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.triage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/triage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.triage">
+<span id="crowsnest-triage"></span><h1>crowsnest.triage<a class="headerlink" href="#module-crowsnest.triage" title="Link to this heading"></a></h1>
+<p>Which sessions need you, which are safe to close, and which are still going.</p>
+<p>The roster is not the useful answer. Thirty sessions sorted by status is still thirty
+things to read, and the question underneath it is always the same three: <em>what needs me,
+what can I stop thinking about, and what is still running?</em> This module answers that one.</p>
+<p><strong>Four groups, and the fourth is the point.</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>group</p></th>
+<th class="head"><p>what it means</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">needs_you</span></code></p></td>
+<td><p>holding for a person. <code class="docutils literal notranslate"><span class="pre">why</span></code> says which kind: a
+<code class="docutils literal notranslate"><span class="pre">question</span></code> it has actually asked, a <code class="docutils literal notranslate"><span class="pre">decision</span></code> only a
+person can make, or an <code class="docutils literal notranslate"><span class="pre">action</span></code> only a person can take
+(attach a file, run a command, approve a purchase).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">safe_to_close</span></code></p></td>
+<td><p>it said, in its own words, that nothing is outstanding.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">working</span></code></p></td>
+<td><p>busy, or waiting on something that is not a person.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unclassified</span></code></p></td>
+<td><p><strong>it did not say.</strong> Not a guess, not a default.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">unclassified</span></code> exists because the expensive error here is a wrong
+<code class="docutils literal notranslate"><span class="pre">safe_to_close</span></code>: a person who trusts it closes a terminal on work that was not
+finished, and nothing ever tells them. So a verdict is only reached on <em>positive</em>
+evidence – a session that says nothing lands in <code class="docutils literal notranslate"><span class="pre">unclassified</span></code>, and the honest
+report of a machine whose sessions keep no ledgers is that most of them are unclassified.</p>
+<p><strong>A ledger is append-only prose, and append-only prose cannot express current state.</strong>
+That is the fact the whole design turns on. A session that wrote “nothing outstanding” on
+Monday and described a blocker on Wednesday has a file that says both, and the file has no
+way of saying which is now true. The two directions are therefore treated <em>differently</em>,
+because their costs are different:</p>
+<p><em>Needing a person is read from the whole file.</em> A request written on Monday and never
+withdrawn is still open on Wednesday; a stale one costs a person a glance. Cheap to be
+wrong.</p>
+<p><em>Being finished is read only from what the session said **last**</em> – the <code class="docutils literal notranslate"><span class="pre">state</span></code> field,
+which <a class="reference internal" href="ledger.html#crowsnest.ledger.update_ledger" title="crowsnest.ledger.update_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.ledger.update_ledger()</span></code></a> overwrites, or the final section of the free
+part with nothing asking for a person after it. An all-clear buried in the middle of a
+46 KB ledger is a report about Monday, and reading it as today’s verdict is how somebody
+closes a terminal on live work. Expensive to be wrong, so it is made hard.</p>
+<p><strong>The signals, measured rather than assumed.</strong> Of 181 ledgers on the machine this was
+written for, 180 had an empty <code class="docutils literal notranslate"><span class="pre">state:</span></code> field and <strong>none</strong> had a non-empty <code class="docutils literal notranslate"><span class="pre">open</span>
+<span class="pre">questions:</span></code>. Everything sessions actually write goes into the ledger’s free part as
+prose, under whatever heading they chose – <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">For</span> <span class="pre">Thor</span></code>, <code class="docutils literal notranslate"><span class="pre">FOR</span> <span class="pre">THOR:</span></code>, <code class="docutils literal notranslate"><span class="pre">Open</span> <span class="pre">for</span>
+<span class="pre">Thor:</span></code>, <code class="docutils literal notranslate"><span class="pre">Outstanding</span> <span class="pre">for</span> <span class="pre">Thor:</span></code>, <code class="docutils literal notranslate"><span class="pre">**Open</span> <span class="pre">for</span> <span class="pre">Thor:**</span></code>, <code class="docutils literal notranslate"><span class="pre">DECISION</span> <span class="pre">FOR</span> <span class="pre">THOR:</span></code> – and
+only fifteen of the 181 contained any of them. A classifier that read only the structured
+fields would have called every session unclassified; one that required an exact heading
+would have found eight per cent of them. So <a class="reference internal" href="#crowsnest.triage.from_ledger" title="crowsnest.triage.from_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_ledger()</span></code></a> reads the prose <em>and</em> the
+fields, and the shipped <code class="docutils literal notranslate"><span class="pre">crowsnest-worker</span></code> skill now teaches the field, so the signal
+gets better going forward rather than staying where it is.</p>
+<p><code class="docutils literal notranslate"><span class="pre">verdicts=</span></code> is the seam: an ordered sequence of <code class="docutils literal notranslate"><span class="pre">(row,</span> <span class="pre">ledger)</span> <span class="pre">-&gt;</span> <span class="pre">Verdict</span> <span class="pre">|</span> <span class="pre">None</span></code>,
+first non-<code class="docutils literal notranslate"><span class="pre">None</span></code> winning. The default pair is the live registry signal – which is
+authoritative for <em>right now</em>, because a session that is <cite>waiting</cite> is waiting whatever its
+ledger last said – and then the ledger. openloops’ digest (<a class="reference internal" href="tools.html#crowsnest.tools.brief" title="crowsnest.tools.brief"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.brief()</span></code></a>,
+whose own store is already a seam) is the reader this exists to make room for.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'s'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">:</span> <span class="s1">'waiting'</span><span class="p">,</span> <span class="s1">'waiting_for'</span><span class="p">:</span> <span class="s1">'input needed'</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">verdict</span> <span class="o">=</span> <span class="n">classify_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="o">=</span><span class="p">{})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">verdict</span><span class="p">[</span><span class="s1">'group'</span><span class="p">],</span> <span class="n">verdict</span><span class="p">[</span><span class="s1">'why'</span><span class="p">]</span>
+<span class="go">('needs_you', 'question')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_row</span><span class="p">({</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'s'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">},</span> <span class="n">ledger</span><span class="o">=</span><span class="p">{})[</span><span class="s1">'group'</span><span class="p">]</span>
+<span class="go">'unclassified'</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.triage.DFLT_OWNER">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">DFLT_OWNER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'thor'</span></span><a class="headerlink" href="#crowsnest.triage.DFLT_OWNER" title="Link to this definition"></a></dt>
+<dd><p>Whose attention the “for &lt;person&gt;” family is about, when a caller does not say. “you”
+is matched either way, so a session that does not know the name still classifies.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.triage.GROUPS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">GROUPS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('needs_you',</span> <span class="pre">'safe_to_close',</span> <span class="pre">'working',</span> <span class="pre">'unclassified')</span></span><a class="headerlink" href="#crowsnest.triage.GROUPS" title="Link to this definition"></a></dt>
+<dd><p>The groups, in the order a person needs them. <code class="docutils literal notranslate"><span class="pre">unclassified</span></code> is last because it is
+the residue, not a finding.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.triage.REASON_LIMIT">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">REASON_LIMIT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">200</span></span><a class="headerlink" href="#crowsnest.triage.REASON_LIMIT" title="Link to this definition"></a></dt>
+<dd><p>How much of the sentence that decided a verdict is quoted back. Enough to recognise
+the thing, not enough to make the report into the ledger.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.triage.Verdict">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">Verdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">why</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/triage.html#Verdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.Verdict" title="Link to this definition"></a></dt>
+<dd><p>One session’s classification, and the evidence for it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reason</span></code> is the session’s own words wherever possible: a triage a person cannot
+check is one they end up re-deriving by opening every session, which is the work this
+was meant to remove. <code class="docutils literal notranslate"><span class="pre">source</span></code> says which reader decided, so a surprising verdict can
+be traced to the thing that produced it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Verdict</span><span class="p">(</span><span class="s1">'needs_you'</span><span class="p">,</span> <span class="n">why</span><span class="o">=</span><span class="s1">'decision'</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s1">'squash or rebase?'</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()[</span><span class="s1">'group'</span><span class="p">]</span>
+<span class="go">'needs_you'</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.triage.Verdict.as_dict">
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/triage.html#Verdict.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.Verdict.as_dict" title="Link to this definition"></a></dt>
+<dd><p>JSON-ready form.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.triage.WHYS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">WHYS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('question',</span> <span class="pre">'decision',</span> <span class="pre">'action')</span></span><a class="headerlink" href="#crowsnest.triage.WHYS" title="Link to this definition"></a></dt>
+<dd><p>Why a session needs a person, when it does. <code class="docutils literal notranslate"><span class="pre">question</span></code> is one it actually asked;
+<code class="docutils literal notranslate"><span class="pre">decision</span></code> is a choice only a person can make; <code class="docutils literal notranslate"><span class="pre">action</span></code> is something only a person
+can do – attach a file to an issue, run a command, approve a spend.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.triage.classify">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">classify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledgers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><span class="pre">Verdict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/triage.html#classify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.classify" title="Link to this definition"></a></dt>
+<dd><p>Every session, grouped by what it needs. The three-line answer to “where are we”.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ledgers</span></code> maps a session’s label to its ledger page
+(<a class="reference internal" href="ledger.html#crowsnest.ledger.read_ledger" title="crowsnest.ledger.read_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.ledger.read_ledger()</span></code></a>’s shape); a session with no entry is classified
+from the registry alone, which is right for one that is waiting and honestly
+<code class="docutils literal notranslate"><span class="pre">unclassified</span></code> for one that is idle.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">{&quot;groups&quot;:</span> <span class="pre">{...},</span> <span class="pre">&quot;counts&quot;:</span> <span class="pre">{...}}</span></code> where each group holds the rows that
+fell into it, each with a <code class="docutils literal notranslate"><span class="pre">verdict</span></code>. Rows keep the order they arrived in, which is
+the roster’s own – most urgent first.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.triage.classify_row">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">classify_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><span class="pre">Verdict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/triage.html#classify_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.classify_row" title="Link to this definition"></a></dt>
+<dd><p>One session’s verdict, as a JSON-able dict. Never guesses.</p>
+<p><code class="docutils literal notranslate"><span class="pre">verdicts</span></code> is the seam (see the module docstring): readers in order, the first
+non-<code class="docutils literal notranslate"><span class="pre">None</span></code> winning. When none of them reaches a verdict the answer is
+<code class="docutils literal notranslate"><span class="pre">unclassified</span></code>, which is a finding rather than a failure – it says <em>this session
+has not told anyone where it stands</em>, and that is actionable in a way a guess is not.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.triage.dflt_verdicts">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">dflt_verdicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><span class="pre">Verdict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/triage.html#dflt_verdicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.dflt_verdicts" title="Link to this definition"></a></dt>
+<dd><p>The readers <a class="reference internal" href="#crowsnest.triage.classify" title="crowsnest.triage.classify"><code class="xref py py-func docutils literal notranslate"><span class="pre">classify()</span></code></a> uses when a caller names none, strongest first.</p>
+<p>The registry is first because it is the only one that is true <em>now</em>:
+<a class="reference internal" href="tools.html#crowsnest.tools.brief" title="crowsnest.tools.brief"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.brief()</span></code></a>’s openloops digest is the reader this order leaves room
+for, and it belongs after both.</p>
+<p><code class="docutils literal notranslate"><span class="pre">owner</span></code> is whose attention “for &lt;person&gt;” is about, for a machine whose sessions
+write a different name. It reaches <a class="reference internal" href="#crowsnest.triage.from_ledger" title="crowsnest.triage.from_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_ledger()</span></code></a> by binding rather than by
+another parameter on the reader signature, so the seam stays <code class="docutils literal notranslate"><span class="pre">(row,</span> <span class="pre">ledger)</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.triage.from_ledger">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">from_ledger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><span class="pre">Verdict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/crowsnest/triage.html#from_ledger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.from_ledger" title="Link to this definition"></a></dt>
+<dd><p>What the session wrote down for a person to read.</p>
+<p>Read in the order the evidence is worth: the structured <code class="docutils literal notranslate"><span class="pre">open</span> <span class="pre">questions</span></code> field
+first, because a session that filled it in meant to; then a “for &lt;person&gt;” section in
+the free part, which is how sessions actually write today; then an all-clear
+statement, which is the only thing that produces <code class="docutils literal notranslate"><span class="pre">safe_to_close</span></code>.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> when the ledger says none of those – and that <code class="docutils literal notranslate"><span class="pre">None</span></code> is the whole
+reason this is honest. Inferring “finished” from silence would be inferring it from
+exactly what an interrupted session leaves behind.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.triage.from_registry">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">from_registry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><span class="pre">Verdict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/crowsnest/triage.html#from_registry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.from_registry" title="Link to this definition"></a></dt>
+<dd><p>What the registry says <em>right now</em>, which outranks anything written earlier.</p>
+<p>A session whose status is <code class="docutils literal notranslate"><span class="pre">waiting</span></code> is holding for its human at this moment,
+whatever its ledger last said – the registry is live and the ledger is a memory. When
+the transcript caught the question it asked, that question is the reason, verbatim.</p>
+<p>Everything else running is <code class="docutils literal notranslate"><span class="pre">working</span></code>: busy is busy. Idle says nothing here, and is
+left to the ledger.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.triage.latest_section">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">latest_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/triage.html#latest_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.latest_section" title="Link to this definition"></a></dt>
+<dd><p>The last section of a ledger’s free part – the most recent thing it appended.</p>
+<p>A ledger is append-only by instruction, so the newest heading opens the only part that
+describes <em>now</em>. Everything above it is a record of what was true earlier, and reading
+an old all-clear as today’s verdict is exactly the mistake this module exists to avoid.</p>
+<p>With no headings at all the whole thing is the latest section, which is right for a
+short ledger and harmless for a long one that never structured itself.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">latest_section</span><span class="p">(</span><span class="s1">'## Mon</span><span class="se">\n\n</span><span class="s1">all landed</span><span class="se">\n\n</span><span class="s1">## Wed</span><span class="se">\n\n</span><span class="s1">blocked on the key'</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<span class="go">'## Wed\n\nblocked on the key'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.triage.without_code">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">without_code</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/crowsnest/triage.html#without_code"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.without_code" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">text</span></code> with fenced code blocks blanked, lengths preserved.</p>
+<p>A comment inside a shell block is not the session speaking.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">without_code</span><span class="p">(</span><span class="s1">'a</span><span class="se">\n</span><span class="s1">```</span><span class="se">\n</span><span class="s1">nothing outstanding</span><span class="se">\n</span><span class="s1">```</span><span class="se">\n</span><span class="s1">b'</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="go">['a', 'b']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tree.html" class="btn btn-neutral float-left" title="crowsnest.tree" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="watch.html" class="btn btn-neutral float-right" title="crowsnest.watch" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

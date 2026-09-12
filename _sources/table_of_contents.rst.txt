@@ -19,4 +19,6 @@
    module_docs/crowsnest/skills
    module_docs/crowsnest/spawn
    module_docs/crowsnest/tools
+   module_docs/crowsnest/tree
+   module_docs/crowsnest/triage
    module_docs/crowsnest/watch

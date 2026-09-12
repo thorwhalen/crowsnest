@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.30 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.31 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=61a342a2"></script>
+      <script src="../../_static/documentation_options.js?v=c5dbc6bb"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -63,6 +63,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tree.html">crowsnest.tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/triage.html">crowsnest.triage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
 </ul>
 
@@ -409,6 +411,67 @@
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="o">*</span><span class="n">head</span><span class="p">,</span> <span class="o">*</span><span class="n">_lineage_lines</span><span class="p">(</span><span class="n">found</span><span class="p">),</span> <span class="o">*</span><span class="n">tail</span><span class="p">])</span>
 
 
+<span class="c1">#: What each triage group is called on one line of a terminal, and in which order.</span>
+<span class="n">_TRIAGE_HEADINGS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">"needs_you"</span><span class="p">,</span> <span class="s2">"NEEDS YOU"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"safe_to_close"</span><span class="p">,</span> <span class="s2">"SAFE TO CLOSE"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"working"</span><span class="p">,</span> <span class="s2">"WORKING"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"unclassified"</span><span class="p">,</span> <span class="s2">"UNCLASSIFIED — has not said where it stands"</span><span class="p">),</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">triage</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">quiet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What needs you, what is safe to close, what is still working.</span>
+
+<span class="sd">    The three-line answer to "where are we", read from each session's ledger and its live</span>
+<span class="sd">    status. A session that has not said where it stands is reported as `unclassified`</span>
+<span class="sd">    rather than guessed into "safe to close" -- closing a terminal on unfinished work is</span>
+<span class="sd">    the expensive mistake, and `--quiet` hides that group when you already know.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_json</span>
+
+    <span class="n">found</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">triage</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">heading</span> <span class="ow">in</span> <span class="n">_TRIAGE_HEADINGS</span><span class="p">:</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">found</span><span class="p">[</span><span class="s2">"groups"</span><span class="p">][</span><span class="n">group</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">quiet</span> <span class="ow">and</span> <span class="n">group</span> <span class="o">==</span> <span class="s2">"unclassified"</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">heading</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">heading</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">verdict</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">]</span>
+            <span class="n">why</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">verdict</span><span class="p">[</span><span class="s1">'why'</span><span class="p">]</span><span class="si">}</span><span class="s2">] "</span> <span class="k">if</span> <span class="n">verdict</span><span class="p">[</span><span class="s2">"why"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">""</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="n">_one_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">why</span><span class="si">}{</span><span class="n">verdict</span><span class="p">[</span><span class="s1">'reason'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="mi">88</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'label'</span><span class="p">][:</span><span class="mi">26</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;27</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'project'</span><span class="p">][:</span><span class="mi">14</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;15</span><span class="si">}{</span><span class="n">detail</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"  (none)"</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">found</span><span class="p">[</span><span class="s2">"counts"</span><span class="p">]</span>
+    <span class="n">wants</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="sa">f</span><span class="s1">'needs_you_</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">verb</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">why</span><span class="p">,</span> <span class="n">verb</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"decision"</span><span class="p">,</span> <span class="s2">"decide"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"action"</span><span class="p">,</span> <span class="s2">"do"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"question"</span><span class="p">,</span> <span class="s2">"answer"</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"needs_you_</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">-- </span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'needs_you'</span><span class="p">]</span><span class="si">}</span><span class="s2"> need you"</span>
+        <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">wants</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">wants</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="o">+</span> <span class="sa">f</span><span class="s2">", </span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'safe_to_close'</span><span class="p">]</span><span class="si">}</span><span class="s2"> safe to close, </span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'working'</span><span class="p">]</span><span class="si">}</span><span class="s2"> working, "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'unclassified'</span><span class="p">]</span><span class="si">}</span><span class="s2"> unclassified"</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -416,6 +479,9 @@
     <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">fragment</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">triage</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">lineage</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Render the roster as one phone-readable HTML page: no stylesheet, script, or</span>
 <span class="sd">    request to anywhere.</span>
@@ -427,10 +493,21 @@
 <span class="sd">    a claude.ai artifact wants (the publisher wraps it itself). `--interactive` adds the</span>
 <span class="sd">    console (buttons per row and a Refresh) that works when the page is published with</span>
 <span class="sd">    the `db` capability; without it the page is the static one.</span>
+
+<span class="sd">    The page leads with what needs you and what is safe to close, read from each session's</span>
+<span class="sd">    ledger. `--no-triage` renders the older page, organised by status alone, which is also</span>
+<span class="sd">    what you get from a session that keeps no ledger. `--ledger-dir` reads them elsewhere.</span>
+
+<span class="sd">    It ends with the spawn forest, drawn: who started whom, as inline SVG with the layout</span>
+<span class="sd">    computed here rather than by a script. `--no-lineage` leaves it out, which also skips</span>
+<span class="sd">    the one `ps` the page runs.</span>
 <span class="sd">    """</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
         <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
         <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+        <span class="n">triage</span><span class="o">=</span><span class="n">triage</span><span class="p">,</span>
+        <span class="n">with_lineage</span><span class="o">=</span><span class="n">lineage</span><span class="p">,</span>
+        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
         <span class="n">fragment</span><span class="o">=</span><span class="n">fragment</span><span class="p">,</span>
         <span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span><span class="p">,</span>
     <span class="p">)</span>
@@ -713,6 +790,7 @@
     <span class="n">turns</span><span class="p">,</span>
     <span class="n">brief</span><span class="p">,</span>
     <span class="n">lineage</span><span class="p">,</span>
+    <span class="n">triage</span><span class="p">,</span>
     <span class="n">report</span><span class="p">,</span>
     <span class="n">watch</span><span class="p">,</span>
     <span class="n">ledger</span><span class="p">,</span>

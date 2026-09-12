@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.tools &mdash; crowsnest 0.0.30 documentation</title>
+  <title>crowsnest.tools &mdash; crowsnest 0.0.31 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=61a342a2"></script>
+      <script src="../../_static/documentation_options.js?v=c5dbc6bb"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -63,6 +63,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tree.html">crowsnest.tree</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/triage.html">crowsnest.triage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
 </ul>
 
@@ -115,6 +117,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.activity</span><span class="w"> </span><span class="kn">import</span> <span class="n">RECENT_TOOLS</span><span class="p">,</span> <span class="n">read_activity</span><span class="p">,</span> <span class="n">read_turns</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">homes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">from_records</span> <span class="k">as</span> <span class="n">_from_records</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">STATUSES</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">fresh_within</span><span class="p">,</span> <span class="n">live_sessions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.report</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_TITLE</span><span class="p">,</span> <span class="n">render_report</span>
 
@@ -128,6 +131,7 @@
     <span class="s2">"roster"</span><span class="p">,</span>
     <span class="s2">"sessions"</span><span class="p">,</span>
     <span class="s2">"show"</span><span class="p">,</span>
+    <span class="s2">"triage"</span><span class="p">,</span>
     <span class="s2">"turns"</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -276,6 +280,7 @@
     <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">text_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">ROSTER_TEXT_LIMIT</span><span class="p">,</span>
+    <span class="n">_pages</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Every live session, most urgent first, each with a clipped view of its activity.</span>
 
@@ -294,8 +299,17 @@
 <span class="sd">    listing -- and ``activity=False`` promises "instant". Pass ``links=True`` to have both.</span>
 <span class="sd">    """</span>
     <span class="n">links</span> <span class="o">=</span> <span class="n">activity</span> <span class="k">if</span> <span class="n">links</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">links</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+    <span class="c1"># One read per ledger for the whole roster. `links` and `triage` both want the same</span>
+    <span class="c1"># file, and reading it twice is the kind of waste that only shows up when `ledger_dir`</span>
+    <span class="c1"># points at a synced home, which is what that seam is for.</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_pages</span>
+        <span class="k">if</span> <span class="n">_pages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="p">(</span><span class="n">_ledgers_for</span><span class="p">({</span><span class="n">s</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">found</span><span class="p">},</span> <span class="n">ledger_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">links</span> <span class="k">else</span> <span class="p">{})</span>
+    <span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
         <span class="n">row</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
         <span class="n">row</span><span class="p">[</span><span class="s2">"repo_url"</span><span class="p">]</span> <span class="o">=</span> <span class="n">repo_url</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">cwd</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">activity</span><span class="p">:</span>
@@ -316,7 +330,11 @@
             <span class="p">}</span>
         <span class="k">if</span> <span class="n">links</span><span class="p">:</span>
             <span class="n">row</span><span class="p">[</span><span class="s2">"links"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_links_of</span><span class="p">(</span>
-                <span class="n">row</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span> <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">ROSTER_LINKS</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+                <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+                <span class="n">limit</span><span class="o">=</span><span class="n">ROSTER_LINKS</span><span class="p">,</span>
+                <span class="n">page</span><span class="o">=</span><span class="n">pages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">label</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
     <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">status</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">==</span> <span class="n">status</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">STATUSES</span><span class="p">}</span>
@@ -336,6 +354,7 @@
     <span class="n">ledger_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">ROSTER_LINKS</span><span class="p">,</span>
+    <span class="n">page</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Every reference one session wrote, resolved as far as it can honestly be.</span>
 
@@ -369,7 +388,11 @@
             <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
                 <span class="n">identity</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="p">{</span><span class="o">**</span><span class="n">loc</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="n">label_for</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">loc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"text"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))}</span>
             <span class="p">)</span>
-    <span class="n">page</span> <span class="o">=</span> <span class="n">_ledger_page</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span> <span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">page</span>
+        <span class="k">if</span> <span class="n">page</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">_ledger_page</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span> <span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="n">chosen</span> <span class="o">=</span> <span class="n">DFLT_RESOLVERS</span> <span class="k">if</span> <span class="n">resolvers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">resolvers</span><span class="p">)</span>
     <span class="n">own_work</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
         <span class="n">part</span>
@@ -410,6 +433,76 @@
         <span class="k">return</span> <span class="n">read_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a broken ledger costs its own links, nothing else</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"fields"</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">"free"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="triage">
+<a class="viewcode-back" href="../../module_docs/crowsnest/tools.html#crowsnest.triage">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">triage</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">activity</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Every live session grouped by what it needs: the three-line answer to "where are we".</span>
+
+<span class="sd">    :func:`crowsnest.triage.classify` over the same rows :func:`roster` reports, with each</span>
+<span class="sd">    session's ledger read for what it wrote down. ``verdicts`` is that module's seam.</span>
+
+<span class="sd">    Four groups (see :data:`crowsnest.triage.GROUPS`), and the one that makes it honest is</span>
+<span class="sd">    ``unclassified``: a session that has not said where it stands is reported as not</span>
+<span class="sd">    having said, never guessed into ``safe_to_close``. A wrong "safe to close" is the</span>
+<span class="sd">    expensive error -- somebody closes a terminal on unfinished work and nothing tells</span>
+<span class="sd">    them.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.triage</span><span class="w"> </span><span class="kn">import</span> <span class="n">classify</span>
+
+    <span class="c1"># `links=False`: this verb reports what needs a person, and never renders a link.</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">roster</span><span class="p">(</span>
+        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">activity</span><span class="o">=</span><span class="n">activity</span><span class="p">,</span>
+        <span class="n">links</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+    <span class="p">)[</span><span class="s2">"sessions"</span><span class="p">]</span>
+    <span class="n">ledgers</span> <span class="o">=</span> <span class="n">_ledgers_for</span><span class="p">({</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">},</span> <span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">classify</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">ledgers</span><span class="o">=</span><span class="n">ledgers</span><span class="p">,</span> <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">found</span><span class="p">,</span> <span class="s2">"made_at"</span><span class="p">:</span> <span class="n">_now</span><span class="p">()}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_verdicted</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">,</span> <span class="n">verdicts</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">pages</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``rows`` with each one's triage verdict attached, order untouched."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.triage</span><span class="w"> </span><span class="kn">import</span> <span class="n">classify_row</span>
+
+    <span class="k">if</span> <span class="n">pages</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pages</span> <span class="o">=</span> <span class="n">_ledgers_for</span><span class="p">({</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">},</span> <span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="o">**</span><span class="n">row</span><span class="p">,</span>
+            <span class="s2">"verdict"</span><span class="p">:</span> <span class="n">classify_row</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">ledger</span><span class="o">=</span><span class="n">pages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span> <span class="ow">or</span> <span class="p">{},</span>
+                <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ledgers_for</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ledger page of each named session, read once. A session with no ledger gets an</span>
+<span class="sd">    empty page rather than no entry, so a caller can tell "read it, there was nothing"</span>
+<span class="sd">    from "not read yet" and does not go back to disk to find out."""</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">_ledger_page</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span> <span class="k">if</span> <span class="n">label</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="show">
@@ -459,7 +552,12 @@
     <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">triage</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">with_lineage</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`</span>
 <span class="sd">    over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host</span>
@@ -471,6 +569,13 @@
 <span class="sd">    configured home, and each row's ``home`` field (present when it does) shows up in</span>
 <span class="sd">    the page.</span>
 
+<span class="sd">    ``triage`` classifies every row (:mod:`crowsnest.triage`; ``verdicts`` is that</span>
+<span class="sd">    module's seam) and the page then organises itself by what each session *needs* --</span>
+<span class="sd">    "Needs you" and "Safe to close" -- rather than by what status it happens to be in,</span>
+<span class="sd">    which is the question a person actually has. ``triage=False`` renders the older</span>
+<span class="sd">    status-organised page; so does calling :func:`crowsnest.report.render_report` on a</span>
+<span class="sd">    roster whose rows carry no verdict.</span>
+
 <span class="sd">    ``links``, ``ledger_dir`` and ``resolvers`` reach :func:`roster` unchanged. This is</span>
 <span class="sd">    the surface the link resolution exists for, so it is the surface that has to be able</span>
 <span class="sd">    to turn it off, point it at another ledger directory, or hand it a resolver of its</span>
@@ -478,6 +583,12 @@
 <span class="sd">    ledgers of whoever is running it.</span>
 <span class="sd">    """</span>
     <span class="n">made_at</span> <span class="o">=</span> <span class="n">made_at</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+    <span class="c1"># One read per ledger for the whole page: `links` and `triage` both want the same</span>
+    <span class="c1"># file, and the roster is built before either of them asks for it.</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="n">_ledgers_for</span><span class="p">(</span>
+        <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)},</span>
+        <span class="n">ledger_dir</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">roster</span><span class="p">(</span>
         <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
         <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
@@ -485,7 +596,36 @@
         <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
         <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
         <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+        <span class="n">_pages</span><span class="o">=</span><span class="n">pages</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="k">if</span> <span class="n">triage</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">data</span><span class="p">,</span>
+            <span class="s2">"sessions"</span><span class="p">:</span> <span class="n">_verdicted</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">[</span><span class="s2">"sessions"</span><span class="p">],</span> <span class="n">ledger_dir</span><span class="p">,</span> <span class="n">verdicts</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">pages</span><span class="o">=</span><span class="n">pages</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+    <span class="k">if</span> <span class="n">with_lineage</span><span class="p">:</span>
+        <span class="c1"># The rows the roster already read, not a second sweep of the registry: reading</span>
+        <span class="c1"># twice costs a `ps` and a registry listing, and lets the two halves of one</span>
+        <span class="c1"># snapshot disagree about who is alive.</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">data</span><span class="p">,</span>
+            <span class="c1"># Recorded edges only. `from_processes` runs a `ps`, and a page render is</span>
+            <span class="c1"># the wrong place for a subprocess: it is paid on every refresh, it makes a</span>
+            <span class="c1"># test of this function read the machine it runs on, and on a fleet started</span>
+            <span class="c1"># through tmux it finds nothing anyway (tmux reparents to init -- see</span>
+            <span class="c1"># `crowsnest.lineage.from_processes`). `crowsnest lineage` is where a person</span>
+            <span class="c1"># goes to ask, and it still asks.</span>
+            <span class="s2">"lineage"</span><span class="p">:</span> <span class="n">lineage</span><span class="p">(</span>
+                <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+                <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
+                <span class="n">sessions_read</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">"sessions"</span><span class="p">],</span>
+                <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">_from_records</span><span class="p">(</span><span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)],</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
     <span class="n">html</span> <span class="o">=</span> <span class="n">render_report</span><span class="p">(</span>
         <span class="n">data</span><span class="p">,</span> <span class="n">made_at</span><span class="o">=</span><span class="n">made_at</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">fragment</span><span class="o">=</span><span class="n">fragment</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span>
     <span class="p">)</span>
@@ -508,6 +648,7 @@
     <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">sources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">extra_edges</span><span class="o">=</span><span class="p">(),</span>
+    <span class="n">sessions_read</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Who started whom: the live sessions as a forest of ``parent -&gt; child`` edges.</span>
 
@@ -528,7 +669,13 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">dflt_sources</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph</span> <span class="k">as</span> <span class="n">_graph</span>
 
-    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">list</span><span class="p">(</span><span class="n">sessions_read</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sessions_read</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="p">[</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
     <span class="n">readers</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">dflt_sources</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span> <span class="n">sessions</span><span class="o">=</span><span class="n">rows</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span>
