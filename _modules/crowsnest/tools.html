@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.tools &mdash; crowsnest 0.0.28 documentation</title>
+  <title>crowsnest.tools &mdash; crowsnest 0.0.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
+      <script src="../../_static/documentation_options.js?v=828725f0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -103,6 +104,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -115,7 +117,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.report</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_TITLE</span><span class="p">,</span> <span class="n">render_report</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"backfill_lineage"</span><span class="p">,</span>
     <span class="s2">"brief"</span><span class="p">,</span>
+    <span class="s2">"lineage"</span><span class="p">,</span>
     <span class="s2">"repo_url"</span><span class="p">,</span>
     <span class="s2">"report"</span><span class="p">,</span>
     <span class="s2">"resolve"</span><span class="p">,</span>
@@ -347,6 +351,136 @@
         <span class="s2">"interactive"</span><span class="p">:</span> <span class="n">interactive</span><span class="p">,</span>
     <span class="p">}</span></div>
 
+
+
+<div class="viewcode-block" id="lineage">
+<a class="viewcode-back" href="../../module_docs/crowsnest/tools.html#crowsnest.lineage">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">lineage</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">extra_edges</span><span class="o">=</span><span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Who started whom: the live sessions as a forest of ``parent -&gt; child`` edges.</span>
+
+<span class="sd">    :func:`crowsnest.lineage.graph` over the same sessions :func:`roster` reports, read</span>
+<span class="sd">    from the cheap sources only (the ``spawn`` lines crowsnest wrote, and what the process</span>
+<span class="sd">    table still shows). A fleet whose dispatcher has exited keeps its shape: the parent</span>
+<span class="sd">    comes back as a node with ``alive`` false, and its children are listed in ``orphans``.</span>
+
+<span class="sd">    ``sources`` is :func:`crowsnest.lineage.graph`'s seam, carried through to here so that</span>
+<span class="sd">    a surface can reach it without anything in this module changing -- a reader for</span>
+<span class="sd">    another host's sessions is added by passing it, not by editing this function.</span>
+<span class="sd">    ``extra_edges`` are edges to consider alongside whatever the sources find, which is</span>
+<span class="sd">    how :func:`backfill_lineage` shows a forest including what it has not written yet.</span>
+
+<span class="sd">    Run :func:`backfill_lineage` once on a machine that has been running sessions since</span>
+<span class="sd">    before crowsnest recorded parents, or this answers with the edges of today only.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">dflt_sources</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph</span> <span class="k">as</span> <span class="n">_graph</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)]</span>
+    <span class="n">readers</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">dflt_sources</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span> <span class="n">sessions</span><span class="o">=</span><span class="n">rows</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">extra_edges</span><span class="p">:</span>
+        <span class="n">readers</span> <span class="o">=</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">edges</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">extra_edges</span><span class="p">):</span> <span class="nb">list</span><span class="p">(</span><span class="n">edges</span><span class="p">),</span> <span class="o">*</span><span class="n">readers</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_graph</span><span class="p">(</span><span class="n">sessions</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="n">readers</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="backfill_lineage">
+<a class="viewcode-back" href="../../module_docs/crowsnest/tools.html#crowsnest.backfill_lineage">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">backfill_lineage</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">write</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Recover parentage from transcripts, once, and write it into the lineage log.</span>
+
+<span class="sd">    Every ``crowsnest spawn &lt;name&gt;`` a session ever *ran* is still in that session's</span>
+<span class="sd">    transcript, which is enough to give a machine that has been running for weeks a graph</span>
+<span class="sd">    on the first report instead of an empty one. It is inference -- the command may have</span>
+<span class="sd">    failed -- so every edge is written marked ``inferred`` and is drawn as a guess, never</span>
+<span class="sd">    as a record.</span>
+
+<span class="sd">    Three guards keep it honest. The command must be the head of a shell segment, so a</span>
+<span class="sd">    ``grep`` for the phrase or a commit message about it is not a spawn. A name is only</span>
+<span class="sd">    taken when something else on the machine also knows it -- a live session, a ledger, or</span>
+<span class="sd">    a name either log has used. And a child that already has a *recorded* edge is left</span>
+<span class="sd">    alone: the backfill may fill gaps, never overwrite what was witnessed.</span>
+
+<span class="sd">    ``write=False`` writes nothing, and the ``graph`` it returns then includes the edges it</span>
+<span class="sd">    would have added -- a dry run whose picture did not show them would be answering a</span>
+<span class="sd">    different question from the one that was asked. Returns</span>
+<span class="sd">    ``{"found", "added", "skipped", "edges", "graph"}``.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">append_edge</span> <span class="k">as</span> <span class="n">_append_edge</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">from_records</span> <span class="k">as</span> <span class="n">_from_records</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">from_transcripts</span> <span class="k">as</span> <span class="n">_from_transcripts</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">names_by_session_id</span> <span class="k">as</span> <span class="n">_names_by_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">live</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)}</span>
+    <span class="n">by_id</span> <span class="o">=</span> <span class="n">_names_by_id</span><span class="p">(</span><span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="n">live</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">by_id</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">|</span> <span class="n">_ledger_names</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">)</span>
+    <span class="n">recorded</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">child</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">_from_records</span><span class="p">(</span><span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)}</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_from_transcripts</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">known</span><span class="o">=</span><span class="n">known</span><span class="p">)</span>
+    <span class="n">added</span><span class="p">,</span> <span class="n">pending</span><span class="p">,</span> <span class="n">skipped</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">parent_session_id</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span> <span class="ow">or</span> <span class="n">parent</span> <span class="o">==</span> <span class="n">edge</span><span class="o">.</span><span class="n">child</span> <span class="ow">or</span> <span class="n">edge</span><span class="o">.</span><span class="n">child</span> <span class="ow">in</span> <span class="n">recorded</span><span class="p">:</span>
+            <span class="n">skipped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
+            <span class="k">continue</span>
+        <span class="n">recorded</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">child</span><span class="p">)</span>
+        <span class="n">named</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">write</span><span class="p">:</span>
+            <span class="n">_append_edge</span><span class="p">(</span><span class="n">named</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pending</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">named</span><span class="p">)</span>
+        <span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">named</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"found"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">),</span>
+        <span class="s2">"added"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">added</span><span class="p">),</span>
+        <span class="s2">"skipped"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">skipped</span><span class="p">),</span>
+        <span class="s2">"edges"</span><span class="p">:</span> <span class="n">added</span><span class="p">,</span>
+        <span class="s2">"graph"</span><span class="p">:</span> <span class="n">lineage</span><span class="p">(</span>
+            <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+            <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
+            <span class="n">extra_edges</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ledger_names</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every name that has a ledger -- the machine's memory of sessions that have exited."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.ledger</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_ledgers</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"name"</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">list_ledgers</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)}</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="turns">

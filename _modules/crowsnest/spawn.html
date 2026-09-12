@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.spawn &mdash; crowsnest 0.0.28 documentation</title>
+  <title>crowsnest.spawn &mdash; crowsnest 0.0.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
+      <script src="../../_static/documentation_options.js?v=828725f0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -552,6 +553,7 @@
     <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_WAIT</span><span class="p">,</span>
     <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
     <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Start a session named ``name`` in ``cwd``, and wait for the registry to see it.</span>
 
@@ -574,10 +576,20 @@
 <span class="sd">    reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``</span>
 <span class="sd">    to run; left out, each local spawner runs the one this session runs.</span>
 
-<span class="sd">    Returns ``{"name", "pid", "session_id", "how", "home"}``, ``home`` being the account</span>
-<span class="sd">    the session was started under (``""``: the spawning session's own). When the registry</span>
-<span class="sd">    file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how`` says so --</span>
-<span class="sd">    the session may still be starting, or may have failed before it could register.</span>
+<span class="sd">    Returns ``{"name", "pid", "session_id", "how", "home", "parent"}``, ``home`` being the</span>
+<span class="sd">    account the session was started under (``""``: the spawning session's own). When the</span>
+<span class="sd">    registry file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how``</span>
+<span class="sd">    says so -- the session may still be starting, or may have failed before it could</span>
+<span class="sd">    register.</span>
+
+<span class="sd">    ``parent`` is the session that asked for this one, and the reason it is here is that</span>
+<span class="sd">    **this is the only moment anyone knows it for free**. Everything downstream -- the</span>
+<span class="sd">    spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --</span>
+<span class="sd">    is recovery work if it is not written down now, so one ``spawn`` line goes into</span>
+<span class="sd">    ``lineage.jsonl`` (:func:`crowsnest.lineage.record_spawn`; ``lineage_path`` is where,</span>
+<span class="sd">    a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this</span>
+<span class="sd">    command was not run from inside a session -- the honest answer for a person at a shell</span>
+<span class="sd">    prompt -- and the whole dict is ``{}`` only when the record could not be written.</span>
 
 <span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
 <span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
@@ -611,6 +623,20 @@
     <span class="n">spawner</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
     <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">_find_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span>
+    <span class="c1"># Recorded whether or not the registry saw it: a session that started slowly still</span>
+    <span class="c1"># has a parent, and the name is the key the edge is kept under either way.</span>
+    <span class="c1"># `home` is the *new* session's account; the caller is registered in its own, so</span>
+    <span class="c1"># `record_spawn` is deliberately not told one. Passing the target's would make</span>
+    <span class="c1"># `--profile` record an 8-character session-id prefix as the parent.</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_spawn</span>
+
+    <span class="n">record</span> <span class="o">=</span> <span class="n">record_spawn</span><span class="p">(</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="n">child_session_id</span><span class="o">=</span><span class="n">found</span><span class="o">.</span><span class="n">session_id</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">project</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">record</span> <span class="k">else</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
@@ -618,6 +644,7 @@
             <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
             <span class="s2">"how"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">: no registry file for </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> within </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span><span class="p">,</span>
             <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+            <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
         <span class="p">}</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
@@ -625,6 +652,7 @@
         <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
         <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
         <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+        <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
     <span class="p">}</span></div>
 
 </pre></div>

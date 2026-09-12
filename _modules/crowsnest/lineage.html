@@ -1,0 +1,1359 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.lineage &mdash; crowsnest 0.0.29 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=828725f0"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/account.html">crowsnest.account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">crowsnest.lineage</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for crowsnest.lineage</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Who started whom: the spawn graph, as data.</span>
+
+<span class="sd">The roster says which sessions are alive and what each is doing. It does not say that</span>
+<span class="sd">six of them are one dispatcher's children and that the dispatcher exited an hour ago --</span>
+<span class="sd">and that is most of what a person needs in order to read a fleet of forty rather than a</span>
+<span class="sd">list of forty. This module is the missing half: an edge ``parent -&gt; child`` per session,</span>
+<span class="sd">collected from whatever recorded it, so that :mod:`crowsnest.graph` has something to draw</span>
+<span class="sd">and ``crowsnest lineage`` has something to print.</span>
+
+<span class="sd">**The record is the fix; the rest is recovery.** :func:`crowsnest.spawn.spawn` knows its</span>
+<span class="sd">own caller at the moment it creates a session, so it writes one ``spawn`` line into</span>
+<span class="sd">``lineage.jsonl`` (:data:`LINEAGE_FILENAME`, and see it for why that is *not* the hook's</span>
+<span class="sd">``events.jsonl``) naming both ends. That costs nothing, cannot be wrong, and is the only</span>
+<span class="sd">source that needs no guessing -- but it only works forwards, from the version that ships</span>
+<span class="sd">it. The other two readers exist because a fleet already running was started by a version</span>
+<span class="sd">that did not:</span>
+
+<span class="sd">======================  ==============  =========================================</span>
+<span class="sd">reader                  confidence      what it reads</span>
+<span class="sd">======================  ==============  =========================================</span>
+<span class="sd">:func:`from_records`     ``recorded``    the ``spawn`` line crowsnest wrote itself</span>
+<span class="sd">:func:`from_processes`  ``observed``    Claude Code's ``--spawned-by`` JSON on a</span>
+<span class="sd">                                        daemon or background session's command</span>
+<span class="sd">                                        line, and the parent-pid chain</span>
+<span class="sd">:func:`from_transcripts` ``inferred``   the literal ``crowsnest spawn &lt;name&gt;``</span>
+<span class="sd">                                        commands still sitting in transcripts</span>
+<span class="sd">======================  ==============  =========================================</span>
+
+<span class="sd">The first two are cheap enough to run on every report and are the default ``sources``.</span>
+<span class="sd">The third reads every transcript on the machine, so it is the ``crowsnest lineage</span>
+<span class="sd">--backfill`` path instead: run once, it writes what it found back into the event log as</span>
+<span class="sd">``spawn`` lines marked ``inferred``, and from then on the cheap reader has them. An edge</span>
+<span class="sd">never loses its provenance -- ``source`` and ``confidence`` travel with it, and the graph</span>
+<span class="sd">draws an inferred edge differently from a recorded one, because a guess that looks like a</span>
+<span class="sd">record is worse than no guess at all.</span>
+
+<span class="sd">``sources=`` is the seam: an ordered sequence of callables taking no positional argument</span>
+<span class="sd">and returning edges. A child claimed by more than one is settled by **source position</span>
+<span class="sd">first** -- putting a better reader first is all it takes to override a worse one, which is</span>
+<span class="sd">the whole point of ordering them -- then by confidence, then by recency. ``xa``'s own</span>
+<span class="sd">record of the sessions it starts on other hosts is the replacement this exists for, and</span>
+<span class="sd">it is reachable without editing anything: :func:`crowsnest.tools.lineage` carries</span>
+<span class="sd">``sources=`` through to here, so a surface adds a reader by passing one.</span>
+
+<span class="sd">Two properties that are not obvious and are load-bearing. Nodes are keyed by</span>
+<span class="sd">:func:`address` -- ``label``, or ``label@home`` when several homes are read -- because</span>
+<span class="sd">**a session name is not unique**, neither across machines nor over time (crowsnest issue</span>
+<span class="sd">#42); an edge whose recorded child id does not match the session now holding that name is</span>
+<span class="sd">about a session that has exited, and is dropped rather than drawn onto today's. And the</span>
+<span class="sd">forest keeps only live sessions and their *ancestors*: a parent that has exited stays, so</span>
+<span class="sd">an orphaned fleet still reads as a fleet, but a dead child does not, or every session a</span>
+<span class="sd">long-lived dispatcher ever started would sit on the graph forever.</span>
+
+<span class="sd">&gt;&gt;&gt; edges = [SpawnEdge(child='b', parent='a'), SpawnEdge(child='c', parent='b')]</span>
+<span class="sd">&gt;&gt;&gt; found = graph(sessions=[{'label': n} for n in 'abc'], sources=[lambda: edges])</span>
+<span class="sd">&gt;&gt;&gt; found['roots'], [(e['parent'], e['child']) for e in found['edges']]</span>
+<span class="sd">(['a'], [('a', 'b'), ('b', 'c')])</span>
+<span class="sd">&gt;&gt;&gt; [(n['name'], n['depth']) for n in found['nodes']]</span>
+<span class="sd">[('a', 0), ('b', 1), ('c', 2)]</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PurePosixPath</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">events_path</span> <span class="k">as</span> <span class="n">_events_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_home</span><span class="p">,</span> <span class="n">live_sessions</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"CONFIDENCE"</span><span class="p">,</span>
+    <span class="s2">"LINEAGE_FILENAME"</span><span class="p">,</span>
+    <span class="s2">"MAX_PPID_HOPS"</span><span class="p">,</span>
+    <span class="s2">"SESSION_ID_VAR"</span><span class="p">,</span>
+    <span class="s2">"SESSION_PID_VAR"</span><span class="p">,</span>
+    <span class="s2">"SPAWN_COMMANDS"</span><span class="p">,</span>
+    <span class="s2">"SPAWN_EVENT"</span><span class="p">,</span>
+    <span class="s2">"SPAWN_VALUE_FLAGS"</span><span class="p">,</span>
+    <span class="s2">"SpawnEdge"</span><span class="p">,</span>
+    <span class="s2">"append_edge"</span><span class="p">,</span>
+    <span class="s2">"current_session"</span><span class="p">,</span>
+    <span class="s2">"dflt_sources"</span><span class="p">,</span>
+    <span class="s2">"from_processes"</span><span class="p">,</span>
+    <span class="s2">"from_records"</span><span class="p">,</span>
+    <span class="s2">"from_transcripts"</span><span class="p">,</span>
+    <span class="s2">"graph"</span><span class="p">,</span>
+    <span class="s2">"lineage_path"</span><span class="p">,</span>
+    <span class="s2">"names_by_session_id"</span><span class="p">,</span>
+    <span class="s2">"record_spawn"</span><span class="p">,</span>
+    <span class="s2">"spawn_event"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: The event name a spawn record carries in ``events.jsonl``. Chosen so that</span>
+<span class="c1">#: :func:`crowsnest.watch.hook_event` and every existing reader skip it unchanged: an</span>
+<span class="c1">#: event kind nobody knows is already specified to be logged and ignored.</span>
+<span class="n">SPAWN_EVENT</span> <span class="o">=</span> <span class="s2">"spawn"</span>
+
+<span class="c1">#: The file the recorded edges live in, under the data directory. **Deliberately not**</span>
+<span class="c1">#: ``events.jsonl``: that log rotates at 4 MiB (:data:`crowsnest.hook.MAX_EVENT_BYTES`)</span>
+<span class="c1">#: and nothing reads a retired one, so a machine busy enough to have an interesting graph</span>
+<span class="c1">#: is exactly the machine whose graph would vanish -- for sessions still running, with the</span>
+<span class="c1">#: id-to-name history the backfill needs, and with the "re-running adds nothing"</span>
+<span class="c1">#: guarantee. Provenance is permanent or it is not provenance. One JSON object per line,</span>
+<span class="c1">#: append-only, never rotated: an edge is about 200 bytes and a busy week is a few</span>
+<span class="c1">#: thousand of them.</span>
+<span class="n">LINEAGE_FILENAME</span> <span class="o">=</span> <span class="s2">"lineage.jsonl"</span>
+
+<span class="c1">#: How much an edge is worth, strongest first. ``recorded`` was written by the thing that</span>
+<span class="c1">#: did the spawning; ``observed`` was read off a running process; ``inferred`` was read</span>
+<span class="c1">#: out of prose or a command line that merely *mentions* a spawn.</span>
+<span class="n">CONFIDENCE</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"recorded"</span><span class="p">,</span> <span class="s2">"observed"</span><span class="p">,</span> <span class="s2">"inferred"</span><span class="p">)</span>
+
+<span class="c1">#: The variable Claude Code exports into every session, naming that session. It is how a</span>
+<span class="c1">#: ``crowsnest spawn`` running inside a session knows whose child it is about to create.</span>
+<span class="n">SESSION_ID_VAR</span> <span class="o">=</span> <span class="s2">"CLAUDE_CODE_SESSION_ID"</span>
+
+<span class="c1">#: The spawning session's pid, when Claude Code exported it. A fallback for</span>
+<span class="c1">#: :func:`current_session` when the id variable is absent but the pid is not.</span>
+<span class="n">SESSION_PID_VAR</span> <span class="o">=</span> <span class="s2">"CLAUDE_PID"</span>
+
+<span class="c1">#: The characters that separate one command from the next. A token made only of these is</span>
+<span class="c1">#: where a segment ends -- and the splitting is done *by* :mod:`shlex`, so a ``;`` or a</span>
+<span class="c1">#: ``|`` inside a quoted ``--prompt`` is part of the prompt rather than a new command.</span>
+<span class="c1">#: (Getting that wrong is not a corner case: a dispatch prompt is a paragraph of prose,</span>
+<span class="c1">#: and prose has semicolons in it.)</span>
+<span class="n">_OPERATORS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="s2">"();&lt;&gt;|&amp;"</span><span class="p">)</span>
+
+<span class="c1">#: The commands that are ``crowsnest``. A path is allowed (``/usr/local/bin/crowsnest``);</span>
+<span class="c1">#: only the last component is compared.</span>
+<span class="n">SPAWN_COMMANDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"crowsnest"</span><span class="p">,</span> <span class="s2">"cw"</span><span class="p">)</span>
+
+<span class="c1">#: Ways of running it that put another program's name at the head of the line. Real, and</span>
+<span class="c1">#: found by comparing this reader against a looser one over every transcript on a</span>
+<span class="c1">#: developer's machine: ``python -m crowsnest spawn ...`` is how the package's own tests</span>
+<span class="c1">#: and any checkout-without-install invoke it, and dropping those would lose true edges</span>
+<span class="c1">#: while the head-anchoring exists to drop false ones.</span>
+<span class="n">_LAUNCHERS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">((</span><span class="s2">"python"</span><span class="p">,</span> <span class="s2">"python3"</span><span class="p">,</span> <span class="s2">"python3.10"</span><span class="p">,</span> <span class="s2">"python3.11"</span><span class="p">,</span> <span class="s2">"python3.12"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"-m"</span><span class="p">,)),</span>
+    <span class="p">((</span><span class="s2">"uv"</span><span class="p">,</span> <span class="s2">"poetry"</span><span class="p">,</span> <span class="s2">"pipx"</span><span class="p">,</span> <span class="s2">"hatch"</span><span class="p">,</span> <span class="s2">"pdm"</span><span class="p">,</span> <span class="s2">"rye"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"run"</span><span class="p">,)),</span>
+<span class="p">)</span>
+
+<span class="c1">#: The ``crowsnest spawn`` flags that take a separate value, so the backfill knows which</span>
+<span class="c1">#: token after a flag is that flag's and which is the session name.</span>
+<span class="c1">#:</span>
+<span class="c1">#: SSOT is ``crowsnest.__main__.spawn``: every keyword-only parameter of it that is not a</span>
+<span class="c1">#: ``bool`` takes a value. Stated here rather than introspected because ``lineage`` must</span>
+<span class="c1">#: not import the CLI, and kept honest by</span>
+<span class="c1">#: ``test_spawn_value_flags_matches_the_cli`` rather than by hope.</span>
+<span class="n">SPAWN_VALUE_FLAGS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"--cwd"</span><span class="p">,</span>
+        <span class="s2">"-p"</span><span class="p">,</span>
+        <span class="s2">"--prompt"</span><span class="p">,</span>
+        <span class="s2">"--model"</span><span class="p">,</span>
+        <span class="s2">"--effort"</span><span class="p">,</span>
+        <span class="s2">"--home"</span><span class="p">,</span>
+        <span class="s2">"--profile"</span><span class="p">,</span>
+        <span class="s2">"--binary"</span><span class="p">,</span>
+        <span class="s2">"--add-dirs"</span><span class="p">,</span>
+        <span class="s2">"--wait"</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1">#: ``--spawned-by`` carries a JSON object naming the process that asked for the session.</span>
+<span class="n">_SPAWNED_BY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"--spawned-by\s+(\{.*?\})(?:\s|$)"</span><span class="p">)</span>
+
+<span class="n">_PS_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s*(\d+)\s+(\d+)\s+(.*)$"</span><span class="p">)</span>
+
+<span class="c1">#: What a session name may look like. The same character set</span>
+<span class="c1">#: :func:`crowsnest.ledger.safe_name` keeps, so anything the backfill accepts is</span>
+<span class="c1">#: addressable by every other verb. It is also the last guard against a stray shell token</span>
+<span class="c1">#: -- a redirection left over from splitting ``2&gt;&amp;1`` -- being read as a name.</span>
+<span class="n">_NAME_SHAPE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[A-Za-z0-9][A-Za-z0-9._-]*$"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_store</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="n">LINEAGE_FILENAME</span>
+
+
+<div class="viewcode-block" id="lineage_path">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.lineage_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">lineage_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Where recorded edges live: ``path`` when given, else ``&lt;data dir&gt;/lineage.jsonl``.</span>
+
+<span class="sd">    Spelled out here rather than in :mod:`crowsnest.paths` because the module that writes</span>
+<span class="sd">    a kind of data owns where that kind of data goes; ``paths`` owns only the root.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_store</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_append</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Append one JSON line. No rotation: see :data:`LINEAGE_FILENAME` for why."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">lineage_path</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+        <span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<div class="viewcode-block" id="SpawnEdge">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.SpawnEdge">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpawnEdge</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One ``parent -&gt; child`` link, with where it came from and how much it is worth.</span>
+
+<span class="sd">    Both ends are session *names*, because a name is the address every other crowsnest</span>
+<span class="sd">    verb takes. Session ids travel alongside when the source knew them, so a reader that</span>
+<span class="sd">    cares more about identity than about addressing can prefer them.</span>
+
+<span class="sd">    &gt;&gt;&gt; SpawnEdge(child='c', parent='p').as_dict()['confidence']</span>
+<span class="sd">    'recorded'</span>
+<span class="sd">    """</span>
+
+    <span class="n">child</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">parent</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"event"</span>
+    <span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"recorded"</span>
+    <span class="n">child_session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">parent_session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rank</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Position in :data:`CONFIDENCE`; anything unknown sorts last."""</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CONFIDENCE</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">CONFIDENCE</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SpawnEdge.as_dict">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.SpawnEdge.as_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""JSON-ready form."""</span>
+        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># Who is asking</span>
+
+
+<div class="viewcode-block" id="current_session">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.current_session">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">current_session</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">environ</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The session this process is running inside: ``{'name', 'session_id', 'pid'}``.</span>
+
+<span class="sd">    Claude Code exports the session id into every session it runs, which is the whole</span>
+<span class="sd">    trick: a ``crowsnest spawn`` typed by a session is a subprocess of that session and</span>
+<span class="sd">    inherits the variable. The *name* is not exported, so it is looked up in the registry</span>
+<span class="sd">    -- one directory of small files, the same read :func:`crowsnest.hook._identify` does.</span>
+
+<span class="sd">    Every field is ``''`` (and ``pid`` is ``0``) when the command was not run from inside</span>
+<span class="sd">    a session at all, which is the honest answer for a person at a shell prompt.</span>
+<span class="sd">    """</span>
+    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+    <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_ID_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_PID_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">pid</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">session_id</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pid</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">session_id</span> <span class="ow">and</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span> <span class="o">==</span> <span class="n">session_id</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="n">pid</span> <span class="ow">and</span> <span class="n">session</span><span class="o">.</span><span class="n">pid</span> <span class="o">==</span> <span class="n">pid</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="p">{</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                    <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                    <span class="s2">"pid"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
+                <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">[:</span><span class="mi">8</span><span class="p">],</span> <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">,</span> <span class="s2">"pid"</span><span class="p">:</span> <span class="n">pid</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="spawn_event">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.spawn_event">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spawn_event</span><span class="p">(</span>
+    <span class="n">child</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">child_session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">project</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">parent</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"event"</span><span class="p">,</span>
+    <span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"recorded"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One ``spawn`` line for the event log, shaped like every other line in it.</span>
+
+<span class="sd">    The extra field is ``parent``, a small object rather than a flat ``parent_name`` so</span>
+<span class="sd">    that a reader can tell "spawned by nobody we could name" (``parent`` present, its</span>
+<span class="sd">    ``name`` empty) from "written by a version that did not record parents" (no</span>
+<span class="sd">    ``parent`` at all).</span>
+
+<span class="sd">    &gt;&gt;&gt; line = spawn_event('kid', parent={'name': 'boss'}, at='2026-01-01T00:00:00+00:00')</span>
+<span class="sd">    &gt;&gt;&gt; line['event'], line['name'], line['parent']['name']</span>
+<span class="sd">    ('spawn', 'kid', 'boss')</span>
+<span class="sd">    """</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parent</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"at"</span><span class="p">:</span> <span class="n">at</span><span class="p">,</span>
+        <span class="s2">"event"</span><span class="p">:</span> <span class="n">SPAWN_EVENT</span><span class="p">,</span>
+        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">child_session_id</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">child</span><span class="p">,</span>
+        <span class="s2">"project"</span><span class="p">:</span> <span class="n">project</span><span class="p">,</span>
+        <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"spawned by </span><span class="si">{</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'name'</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'nobody named'</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"parent"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="s2">"session_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="s2">"pid"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pid"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">"source"</span><span class="p">:</span> <span class="n">source</span><span class="p">,</span>
+        <span class="s2">"confidence"</span><span class="p">:</span> <span class="n">confidence</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="record_spawn">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.record_spawn">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">record_spawn</span><span class="p">(</span>
+    <span class="n">child</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">child_session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">project</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">environ</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write the ``spawn`` line for a session just created. **Never raises.**</span>
+
+<span class="sd">    Called by :func:`crowsnest.spawn.spawn` at the one moment the answer is free and</span>
+<span class="sd">    certain. A failure here -- an unwritable data directory, a registry that will not</span>
+<span class="sd">    read -- must not fail the spawn itself: the session exists either way, and a graph</span>
+<span class="sd">    missing one edge is a smaller loss than a session that did not start.</span>
+
+<span class="sd">    ``home`` is **the caller's** home, not the new session's. The two differ exactly when</span>
+<span class="sd">    ``crowsnest spawn --profile`` starts a session on another account, and looking the</span>
+<span class="sd">    caller up in the *target* registry finds nothing -- leaving an 8-character session-id</span>
+<span class="sd">    prefix as the parent's name, which is not a name any crowsnest verb accepts and cannot</span>
+<span class="sd">    be repaired afterwards. Left out, it is this process's own account, which is right for</span>
+<span class="sd">    every caller that is a session.</span>
+
+<span class="sd">    Returns the record written, or ``{}`` when nothing could be written.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">(</span><span class="n">environ</span><span class="o">=</span><span class="n">environ</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">spawn_event</span><span class="p">(</span>
+            <span class="n">child</span><span class="p">,</span>
+            <span class="n">child_session_id</span><span class="o">=</span><span class="n">child_session_id</span><span class="p">,</span>
+            <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
+            <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span>
+            <span class="n">at</span><span class="o">=</span><span class="n">at</span> <span class="ow">or</span> <span class="n">_now</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="n">_append</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">record</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a lost edge may not cost a session</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The readers</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_edge_from_record</span><span class="p">(</span><span class="n">rec</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpawnEdge</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One ``spawn`` event line as an :class:`SpawnEdge`, or ``None`` when it names no parent."""</span>
+    <span class="k">if</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"event"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">SPAWN_EVENT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">child</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">child</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">parent_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parent_name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">confidence</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"confidence"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"recorded"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SpawnEdge</span><span class="p">(</span>
+        <span class="n">child</span><span class="o">=</span><span class="n">child</span><span class="p">,</span>
+        <span class="n">parent</span><span class="o">=</span><span class="n">parent_name</span><span class="p">,</span>
+        <span class="n">at</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"at"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="n">source</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"event"</span><span class="p">),</span>
+        <span class="n">confidence</span><span class="o">=</span><span class="n">confidence</span> <span class="k">if</span> <span class="n">confidence</span> <span class="ow">in</span> <span class="n">CONFIDENCE</span> <span class="k">else</span> <span class="s2">"inferred"</span><span class="p">,</span>
+        <span class="n">child_session_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="n">parent_session_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="from_records">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.from_records">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_records</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every edge crowsnest recorded for itself, oldest first.</span>
+
+<span class="sd">    The cheap, authoritative reader: one pass over ``events.jsonl``, keeping only the</span>
+<span class="sd">    ``spawn`` lines. A malformed line is skipped rather than raising -- the log is</span>
+<span class="sd">    appended to by a hook that runs inside other people's sessions, and a reader that</span>
+<span class="sd">    dies on one bad byte would take the whole report with it.</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">_store</span><span class="p">(</span><span class="n">lineage_path</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">SPAWN_EVENT</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rec</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">edge</span> <span class="o">=</span> <span class="n">_edge_from_record</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_table</span><span class="p">(</span>
+    <span class="n">run</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""``(pid, ppid, command)`` for every process, or ``[]`` where that cannot be asked."""</span>
+    <span class="n">runner</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span> <span class="k">if</span> <span class="n">run</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">run</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">runner</span><span class="p">(</span>  <span class="c1"># type: ignore[operator]</span>
+            <span class="p">[</span><span class="s2">"ps"</span><span class="p">,</span> <span class="s2">"-Ao"</span><span class="p">,</span> <span class="s2">"pid,ppid,command"</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">"returncode"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">"stdout"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">_PS_LINE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">rows</span>
+
+
+<div class="viewcode-block" id="from_processes">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.from_processes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_processes</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sessions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">run</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Edges visible in the process table right now, for sessions crowsnest did not start.</span>
+
+<span class="sd">    Two things are read, and neither is a guess about *meaning* -- both are the operating</span>
+<span class="sd">    system answering a question about parentage:</span>
+
+<span class="sd">    ``--spawned-by`` -- Claude Code puts a small JSON object (``label``, ``cwd``, ``pid``)</span>
+<span class="sd">    on the command line of a daemon or background session, naming the process that asked</span>
+<span class="sd">    for it. When that pid is a live session, it is the parent.</span>
+
+<span class="sd">    The parent-pid chain -- a session started as a plain subprocess of another session is</span>
+<span class="sd">    that session's descendant in the process tree, so walking up ``ppid`` until a live</span>
+<span class="sd">    session's pid appears finds it. A session started through ``tmux`` is deliberately</span>
+<span class="sd">    *not* found this way: tmux reparents it to init, which is exactly why the recorded</span>
+<span class="sd">    event exists.</span>
+
+<span class="sd">    **Only sessions of this machine are considered.** A roster read with ``all_homes``</span>
+<span class="sd">    carries rows from other accounts and other hosts, whose pids belong to those machines;</span>
+<span class="sd">    matching them against a local ``ps`` would invent a parent out of a pid collision,</span>
+<span class="sd">    which across two machines running thirty sessions each is a near-certainty rather than</span>
+<span class="sd">    a corner case. A row is local when it carries no ``home`` tag -- which is how</span>
+<span class="sd">    :func:`crowsnest.tools.sessions` marks the home it was asked for.</span>
+
+<span class="sd">    ``sessions`` is the roster to match pids against; it defaults to this home's live</span>
+<span class="sd">    sessions. Returns ``[]`` on a machine with no usable ``ps``, which is not an error.</span>
+<span class="sd">    """</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">_process_table</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">sessions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sessions</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)]</span>
+    <span class="n">local</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)]</span>
+    <span class="n">by_pid</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pid"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">):</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">local</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pid"</span><span class="p">)}</span>
+    <span class="n">parent_of</span> <span class="o">=</span> <span class="p">{</span><span class="n">pid</span><span class="p">:</span> <span class="n">ppid</span> <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">ppid</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">}</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">ppid</span><span class="p">,</span> <span class="n">command</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">child</span> <span class="o">=</span> <span class="n">by_pid</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">child</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">claimed</span> <span class="o">=</span> <span class="n">_spawned_by_pid</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+        <span class="n">ancestor</span> <span class="o">=</span> <span class="n">_nearest_session</span><span class="p">(</span>
+            <span class="n">claimed</span> <span class="k">if</span> <span class="n">claimed</span> <span class="k">else</span> <span class="n">ppid</span><span class="p">,</span> <span class="n">parent_of</span><span class="p">,</span> <span class="n">by_pid</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">pid</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">ancestor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ancestor</span> <span class="ow">is</span> <span class="n">child</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">SpawnEdge</span><span class="p">(</span>
+                <span class="n">child</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+                <span class="n">parent</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ancestor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+                <span class="n">source</span><span class="o">=</span><span class="s2">"spawned-by"</span> <span class="k">if</span> <span class="n">claimed</span> <span class="k">else</span> <span class="s2">"ppid"</span><span class="p">,</span>
+                <span class="n">confidence</span><span class="o">=</span><span class="s2">"observed"</span><span class="p">,</span>
+                <span class="n">child_session_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+                <span class="n">parent_session_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ancestor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">found</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">child</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">parent</span><span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spawned_by_pid</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The pid inside a ``--spawned-by`` JSON object on a command line, else ``0``."""</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">_SPAWNED_BY</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">claim</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">claim</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pid"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="c1">#: How far up a process chain a session's ancestor is looked for. A shell, a login shell</span>
+<span class="c1">#: and a terminal between two sessions is three; beyond a handful the relationship is not</span>
+<span class="c1">#: one a person would call "spawned by" anyway.</span>
+<span class="n">MAX_PPID_HOPS</span> <span class="o">=</span> <span class="mi">12</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_nearest_session</span><span class="p">(</span>
+    <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">parent_of</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">by_pid</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">stop</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Walk up from ``start`` to the first pid that is a live session, or ``None``."""</span>
+    <span class="n">pid</span><span class="p">,</span> <span class="n">seen</span> <span class="o">=</span> <span class="n">start</span><span class="p">,</span> <span class="p">{</span><span class="n">stop</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MAX_PPID_HOPS</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pid</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">by_pid</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">by_pid</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span>
+        <span class="n">pid</span> <span class="o">=</span> <span class="n">parent_of</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unquoted_newlines_end_commands</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Turn each newline *outside* quotes into a ``;``, so a script becomes one line.</span>
+
+<span class="sd">    :mod:`shlex` treats a newline as ordinary whitespace, which would run ``cd /w`` and</span>
+<span class="sd">    the command on the next line together into one segment. Quoted newlines are left</span>
+<span class="sd">    alone: a multi-line ``--prompt`` is one argument, not several commands.</span>
+
+<span class="sd">    &gt;&gt;&gt; _unquoted_newlines_end_commands('cd /w\ncw spawn x')</span>
+<span class="sd">    'cd /w;cw spawn x'</span>
+<span class="sd">    &gt;&gt;&gt; _unquoted_newlines_end_commands("echo 'two\nlines'")</span>
+<span class="sd">    "echo 'two\nlines'"</span>
+<span class="sd">    """</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">quote</span><span class="p">,</span> <span class="n">escaped</span> <span class="o">=</span> <span class="p">[],</span> <span class="s2">""</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">command</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">escaped</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+            <span class="n">escaped</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">"</span> <span class="ow">and</span> <span class="n">quote</span> <span class="o">!=</span> <span class="s2">"'"</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+            <span class="n">escaped</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">quote</span><span class="p">:</span>
+            <span class="n">quote</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="n">quote</span> <span class="k">else</span> <span class="n">quote</span>
+        <span class="k">elif</span> <span class="n">char</span> <span class="ow">in</span> <span class="s2">"</span><span class="se">\"</span><span class="s2">'"</span><span class="p">:</span>
+            <span class="n">quote</span> <span class="o">=</span> <span class="n">char</span>
+        <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">";"</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_segments</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""A shell line as the list of commands it runs, each already tokenised.</span>
+
+<span class="sd">    Two kinds of punctuation are told apart, because they mean opposite things here. A</span>
+<span class="sd">    **separator** (``;`` ``&amp;`` ``&amp;&amp;`` ``|`` ``||`` and the parentheses) ends one command</span>
+<span class="sd">    and begins another. A **redirection** (anything with ``&lt;`` or ``&gt;``) does not: it</span>
+<span class="sd">    belongs to the command it is attached to, along with the file descriptor that may</span>
+<span class="sd">    precede it and the target that follows. Treating ``2&gt;&amp;1`` as a separator is how a</span>
+<span class="sd">    session called ``2`` gets invented.</span>
+
+<span class="sd">    &gt;&gt;&gt; _segments('cd /w &amp;&amp; cw spawn x')</span>
+<span class="sd">    [['cd', '/w'], ['cw', 'spawn', 'x']]</span>
+<span class="sd">    &gt;&gt;&gt; _segments("cw spawn x --prompt 'a; b | c'")</span>
+<span class="sd">    [['cw', 'spawn', 'x', '--prompt', 'a; b | c']]</span>
+<span class="sd">    &gt;&gt;&gt; _segments('cw spawn x 2&gt;&amp;1 | tail')</span>
+<span class="sd">    [['cw', 'spawn', 'x'], ['tail']]</span>
+<span class="sd">    """</span>
+    <span class="n">lexer</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">shlex</span><span class="p">(</span>
+        <span class="n">_unquoted_newlines_end_commands</span><span class="p">(</span><span class="n">command</span><span class="p">),</span> <span class="n">posix</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">punctuation_chars</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">lexer</span><span class="o">.</span><span class="n">whitespace_split</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]]</span>
+    <span class="n">swallow</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">lexer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">swallow</span><span class="p">:</span>  <span class="c1"># the redirection's target</span>
+                <span class="n">swallow</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">token</span> <span class="ow">or</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_OPERATORS</span><span class="p">)):</span>
+                <span class="n">found</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s2">"&lt;"</span> <span class="ow">in</span> <span class="n">token</span> <span class="ow">or</span> <span class="s2">"&gt;"</span> <span class="ow">in</span> <span class="n">token</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">found</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">found</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                    <span class="n">found</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>  <span class="c1"># the file descriptor, as in `2&gt;&amp;1`</span>
+                <span class="n">swallow</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># an unbalanced quote: not a command line we can read</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">segment</span> <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">found</span> <span class="k">if</span> <span class="n">segment</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spawn_names</span><span class="p">(</span><span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The session names a shell command actually asks ``crowsnest spawn`` to create.</span>
+
+<span class="sd">    The command is split into segments and ``crowsnest spawn`` must be the *head* of one.</span>
+<span class="sd">    Anything that merely contains the phrase -- a ``grep`` for it, a commit message about</span>
+<span class="sd">    it, a line of prose being echoed -- is not a spawn, and this is the only guard that</span>
+<span class="sd">    catches those: the name inside such a mention is usually a real session, so neither</span>
+<span class="sd">    ``known=`` nor the confidence marking would save the edge from being wrong.</span>
+
+<span class="sd">    &gt;&gt;&gt; _spawn_names('crowsnest spawn cn-x --cwd /w')</span>
+<span class="sd">    ['cn-x']</span>
+<span class="sd">    &gt;&gt;&gt; _spawn_names('cd /w &amp;&amp; cw spawn --profile iq cn-y')</span>
+<span class="sd">    ['cn-y']</span>
+<span class="sd">    &gt;&gt;&gt; _spawn_names('crowsnest spawn -p "do the thing" cn-z')</span>
+<span class="sd">    ['cn-z']</span>
+<span class="sd">    &gt;&gt;&gt; _spawn_names("crowsnest spawn cn-w --prompt 'First; then this | and that.'")</span>
+<span class="sd">    ['cn-w']</span>
+<span class="sd">    &gt;&gt;&gt; _spawn_names('python3 -m crowsnest spawn cn-probe --cwd /tmp 2&gt;&amp;1')</span>
+<span class="sd">    ['cn-probe']</span>
+<span class="sd">    &gt;&gt;&gt; _spawn_names('grep -r "crowsnest spawn cn-parser" .')</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; _spawn_names('crowsnest spawn --help')</span>
+<span class="sd">    []</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">tokens</span> <span class="ow">in</span> <span class="n">_segments</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+        <span class="k">while</span> <span class="n">tokens</span> <span class="ow">and</span> <span class="s2">"="</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
+            <span class="n">tokens</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># leading VAR=value assignments</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">_past_the_launcher</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"spawn"</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SPAWN_COMMANDS</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">_first_positional</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">_NAME_SHAPE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">):</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_past_the_launcher</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Drop a ``python -m`` or ``uv run`` prefix, so what is left starts with the command.</span>
+
+<span class="sd">    &gt;&gt;&gt; _past_the_launcher(['python3', '-m', 'crowsnest', 'spawn', 'cn-x'])[0]</span>
+<span class="sd">    'crowsnest'</span>
+<span class="sd">    &gt;&gt;&gt; _past_the_launcher(['python3', 'other_script.py'])[0]</span>
+<span class="sd">    'python3'</span>
+<span class="sd">    """</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">names</span><span class="p">,</span> <span class="n">verbs</span> <span class="ow">in</span> <span class="n">_LAUNCHERS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">verbs</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="ow">and</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">names</span>
+            <span class="ow">and</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">1</span> <span class="p">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">verbs</span><span class="p">)])</span> <span class="o">==</span> <span class="n">verbs</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">verbs</span><span class="p">)</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="n">tokens</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_first_positional</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The first token that is a value rather than a flag or a flag's value.</span>
+
+<span class="sd">    &gt;&gt;&gt; _first_positional(['--profile', 'iq', 'cn-y'])</span>
+<span class="sd">    'cn-y'</span>
+<span class="sd">    &gt;&gt;&gt; _first_positional(['--cwd=/w', 'cn-y'])</span>
+<span class="sd">    'cn-y'</span>
+<span class="sd">    """</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">SPAWN_VALUE_FLAGS</span>
+            <span class="k">continue</span>
+        <span class="k">return</span> <span class="n">token</span>
+    <span class="k">return</span> <span class="s2">""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bash_commands</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every shell command a transcript record asks for."""</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"message"</span><span class="p">)</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">()</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"tool_use"</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"input"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"command"</span><span class="p">):</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="s2">"command"</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<div class="viewcode-block" id="from_transcripts">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.from_transcripts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_transcripts</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">known</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The backfill: every ``crowsnest spawn &lt;name&gt;`` still recorded in a transcript.</span>
+
+<span class="sd">    A session that spawned another typed the command, and the command is in that</span>
+<span class="sd">    session's own transcript along with the session id that owns it. That is enough to</span>
+<span class="sd">    recover most of a fleet's parentage from a machine that has been running for weeks --</span>
+<span class="sd">    but it is *inference*, not record: the command may have failed, may have been shown</span>
+<span class="sd">    in help output, may have been quoted in prose about spawning. So every edge it</span>
+<span class="sd">    returns is ``inferred``, and the graph says so.</span>
+
+<span class="sd">    ``known`` narrows the result to names that exist somewhere a caller trusts (the</span>
+<span class="sd">    registry, the ledger directory); without it every token that parses as a name is</span>
+<span class="sd">    taken. :func:`crowsnest.tools.backfill_lineage` passes one.</span>
+
+<span class="sd">    **What it can still get wrong**, stated rather than hidden: a heredoc whose *body*</span>
+<span class="sd">    contains a line beginning ``crowsnest spawn &lt;name&gt;`` -- a session pasting a dispatch</span>
+<span class="sd">    into its own ledger -- reads as a command, because a shell tokeniser cannot tell a</span>
+<span class="sd">    heredoc body from the script around it. The edge that produces is usually true anyway</span>
+<span class="sd">    (a session that documents a dispatch is generally the session that made it), it must</span>
+<span class="sd">    still name a session something else knows, and it is marked ``inferred``. That is the</span>
+<span class="sd">    trade: the guard that matters is the one against a ``grep`` or a commit message, and</span>
+<span class="sd">    that one holds.</span>
+
+<span class="sd">    This reads **every transcript on the machine** -- seconds, not milliseconds. It is</span>
+<span class="sd">    the ``--backfill`` path for that reason, and what it finds is written back into the</span>
+<span class="sd">    event log so the cheap reader has it from then on.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">claude_home</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"projects"</span>
+    <span class="n">allowed</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">known</span><span class="p">}</span> <span class="k">if</span> <span class="n">known</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">transcripts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*/*.jsonl"</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">transcripts</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="s2">"spawn"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">parent_id</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stem</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">"spawn"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="s2">"tool_use"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">parent_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sessionId"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">parent_id</span><span class="p">)</span>
+            <span class="n">at</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="n">_bash_commands</span><span class="p">(</span><span class="n">rec</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">_spawn_names</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">allowed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">child</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">parent_id</span><span class="p">,</span> <span class="n">child</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                    <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">SpawnEdge</span><span class="p">(</span>
+                            <span class="n">child</span><span class="o">=</span><span class="n">child</span><span class="p">,</span>
+                            <span class="n">parent</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
+                            <span class="n">at</span><span class="o">=</span><span class="n">at</span><span class="p">,</span>
+                            <span class="n">source</span><span class="o">=</span><span class="s2">"transcript"</span><span class="p">,</span>
+                            <span class="n">confidence</span><span class="o">=</span><span class="s2">"inferred"</span><span class="p">,</span>
+                            <span class="n">parent_session_id</span><span class="o">=</span><span class="n">parent_id</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="append_edge">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.append_edge">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">append_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">:</span> <span class="n">SpawnEdge</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write one recovered edge into the lineage log, keeping its provenance.</span>
+
+<span class="sd">    The backfill's other half: what a transcript scan found becomes a ``spawn`` line like</span>
+<span class="sd">    any other, so the cheap reader picks it up on every run afterwards and the expensive</span>
+<span class="sd">    scan is never repeated. ``source`` and ``confidence`` are the edge's own, which is</span>
+<span class="sd">    what stops a recovered guess from ageing into an apparent record.</span>
+<span class="sd">    """</span>
+    <span class="n">record</span> <span class="o">=</span> <span class="n">spawn_event</span><span class="p">(</span>
+        <span class="n">edge</span><span class="o">.</span><span class="n">child</span><span class="p">,</span>
+        <span class="n">child_session_id</span><span class="o">=</span><span class="n">edge</span><span class="o">.</span><span class="n">child_session_id</span><span class="p">,</span>
+        <span class="n">parent</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">edge</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">edge</span><span class="o">.</span><span class="n">parent_session_id</span><span class="p">},</span>
+        <span class="n">at</span><span class="o">=</span><span class="n">edge</span><span class="o">.</span><span class="n">at</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">edge</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+        <span class="n">confidence</span><span class="o">=</span><span class="n">edge</span><span class="o">.</span><span class="n">confidence</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">_append</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">record</span></div>
+
+
+
+<div class="viewcode-block" id="names_by_session_id">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.names_by_session_id">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">names_by_session_id</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every session id these two logs have ever named, mapped to that name.</span>
+
+<span class="sd">    The event log has one line per turn ending and per notification, each carrying both</span>
+<span class="sd">    the id and the name the registry gave at the time, so it is a *history* of names where</span>
+<span class="sd">    the registry is only a census of the living. That is what the backfill needs: a</span>
+<span class="sd">    transcript identifies a parent by session id, and the parent exited last Tuesday.</span>
+
+<span class="sd">    Both files are read because they have opposite properties. ``events.jsonl`` is rich</span>
+<span class="sd">    but rotates (:data:`crowsnest.hook.MAX_EVENT_BYTES`), so old names fall off the end;</span>
+<span class="sd">    ``lineage.jsonl`` never rotates but only names sessions that spawned or were spawned.</span>
+<span class="sd">    Between them a name usually survives, and when one does not the caller sees a missing</span>
+<span class="sd">    key rather than a wrong answer.</span>
+
+<span class="sd">    The newest name for an id wins, so a session renamed mid-life is remembered as what it</span>
+<span class="sd">    was last called -- which is what a person reading a graph today expects to see.</span>
+<span class="sd">    """</span>
+    <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_events_path</span><span class="p">(</span><span class="n">events_path</span><span class="p">),</span> <span class="n">_store</span><span class="p">(</span><span class="n">lineage_path</span><span class="p">)):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">rec</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">session_id</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">name</span> <span class="o">!=</span> <span class="n">session_id</span><span class="p">[:</span><span class="mi">8</span><span class="p">]:</span>
+                <span class="n">found</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+                <span class="n">pid_</span><span class="p">,</span> <span class="n">pname</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">pid_</span> <span class="ow">and</span> <span class="n">pname</span> <span class="ow">and</span> <span class="n">pname</span> <span class="o">!=</span> <span class="n">pid_</span><span class="p">[:</span><span class="mi">8</span><span class="p">]:</span>
+                    <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">pid_</span><span class="p">,</span> <span class="n">pname</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="dflt_sources">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.dflt_sources">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dflt_sources</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sessions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="nb">list</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">"""The readers :func:`graph` uses when the caller names none, strongest first.</span>
+
+<span class="sd">    Both are cheap enough for every report: one file read, and one ``ps``. The transcript</span>
+<span class="sd">    scan is deliberately absent -- it belongs to ``--backfill``, which writes its findings</span>
+<span class="sd">    into the event log so that this list picks them up on the next run.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">from_records</span><span class="p">(</span><span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">),</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">from_processes</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">sessions</span><span class="o">=</span><span class="n">sessions</span><span class="p">),</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------------------</span>
+<span class="c1"># The graph</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">address</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How the rest of crowsnest names one session: ``label``, or ``label@home``.</span>
+
+<span class="sd">    The same spelling :func:`crowsnest.tools.resolve` accepts, so a name read off the</span>
+<span class="sd">    graph can be typed straight into ``crowsnest show``. It is also what makes the graph</span>
+<span class="sd">    correct across homes: two machines each running a session called ``cn`` are two nodes,</span>
+<span class="sd">    not one, and ``cn@server`` says which is which.</span>
+
+<span class="sd">    &gt;&gt;&gt; address({'label': 'cn'}), address({'label': 'cn', 'home': 'server'})</span>
+<span class="sd">    ('cn', 'cn@server')</span>
+<span class="sd">    """</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">home</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">home</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">and</span> <span class="n">label</span> <span class="k">else</span> <span class="n">label</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_addressed</span><span class="p">(</span><span class="n">sessions</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Live sessions keyed by :func:`address`, newest registration winning a collision."""</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">address</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">held</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">held</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"started_at"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">held</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"started_at"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_names</span><span class="p">(</span>
+    <span class="n">edges</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">]],</span>
+    <span class="n">by_id</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">alive</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Turn each end of an edge into an address, and drop the edges that cannot be.</span>
+
+<span class="sd">    Three things happen here, and the third is the one that matters:</span>
+
+<span class="sd">    *Naming.* A source that knew only a session id (the transcript scan knows the parent</span>
+<span class="sd">    that way) gets the name history's answer.</span>
+
+<span class="sd">    *Addressing.* A bare name is matched against the live sessions so that ``cn`` becomes</span>
+<span class="sd">    ``cn@server`` when that is the only ``cn`` alive. An unambiguous match is required:</span>
+<span class="sd">    with a ``cn`` alive on two homes, a bare ``cn`` names neither.</span>
+
+<span class="sd">    *Expiry.* **Session names are reused.** An edge carrying a ``child_session_id`` that</span>
+<span class="sd">    does not match the live session now holding that name is about a session that has</span>
+<span class="sd">    exited, so it is dropped rather than drawn onto today's session (crowsnest issue #42).</span>
+<span class="sd">    That is what stops a ``worker`` spawned in January from re-parenting the ``worker``</span>
+<span class="sd">    running now, and it is why ids are recorded alongside names at all.</span>
+<span class="sd">    """</span>
+    <span class="n">by_label</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">alive</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">by_label</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_address</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">session_id</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">alive</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">session_id</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">key</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">alive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">name</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="n">by_label</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">())</span>
+        <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">name</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+        <span class="n">child</span> <span class="o">=</span> <span class="n">to_address</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">child</span><span class="p">,</span> <span class="n">edge</span><span class="o">.</span><span class="n">child_session_id</span><span class="p">)</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">to_address</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">edge</span><span class="o">.</span><span class="n">parent_session_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">child</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">parent</span> <span class="ow">or</span> <span class="n">child</span> <span class="o">==</span> <span class="n">parent</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">_is_about_a_former_session</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">alive</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">rank</span><span class="p">,</span> <span class="n">replace</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">child</span><span class="o">=</span><span class="n">child</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_about_a_former_session</span><span class="p">(</span>
+    <span class="n">edge</span><span class="p">:</span> <span class="n">SpawnEdge</span><span class="p">,</span> <span class="n">child</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">alive</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Does this edge name a *different* session that once had the child's name?"""</span>
+    <span class="n">living</span> <span class="o">=</span> <span class="n">alive</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">living</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">edge</span><span class="o">.</span><span class="n">child_session_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">living</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">known</span><span class="p">)</span> <span class="ow">and</span> <span class="n">known</span> <span class="o">!=</span> <span class="n">edge</span><span class="o">.</span><span class="n">child_session_id</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pick</span><span class="p">(</span><span class="n">edges</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""One parent per child, by the order the seam documents.</span>
+
+<span class="sd">    Ordered by, in this precedence: **the position of the source that claimed it** (so</span>
+<span class="sd">    putting a better reader first in ``sources=`` really does override a worse one --</span>
+<span class="sd">    which is the whole point of the seam), then :data:`CONFIDENCE`, then **the most recent</span>
+<span class="sd">    claim**. Recency last and *descending*: when one session spawns another twice under</span>
+<span class="sd">    the same name, the live one is the later of the two.</span>
+<span class="sd">    """</span>
+    <span class="n">best</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">edge</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="n">_descending</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">at</span><span class="p">))</span>
+        <span class="n">held</span> <span class="o">=</span> <span class="n">best</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">child</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">held</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">&lt;</span> <span class="n">held</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">best</span><span class="p">[</span><span class="n">edge</span><span class="o">.</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">edge</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">child</span><span class="p">:</span> <span class="n">held</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">held</span> <span class="ow">in</span> <span class="n">best</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_descending</span><span class="p">(</span><span class="n">at</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A sort key that puts the *latest* timestamp first, empty ones last."""</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">at</span><span class="p">])</span> <span class="k">if</span> <span class="n">at</span> <span class="k">else</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">[])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_uncycle</span><span class="p">(</span><span class="n">parent_of</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Break every cycle by dropping its weakest edge, and touch nothing else.</span>
+
+<span class="sd">    Two sources disagreeing can make A the parent of B and B the parent of A. A forest</span>
+<span class="sd">    containing a cycle is not a forest and a renderer that walks one never returns, so a</span>
+<span class="sd">    cycle is broken here rather than defended against everywhere downstream.</span>
+
+<span class="sd">    *Which* edge goes matters. The edge dropped is the least confident in the cycle (ties</span>
+<span class="sd">    to the oldest), so a recorded edge survives a guess that contradicts it -- and only</span>
+<span class="sd">    edges **in** the cycle are considered, so the six innocent children hanging off a</span>
+<span class="sd">    node that happens to sit in one keep their parent.</span>
+<span class="sd">    """</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">parent_of</span><span class="p">)</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">cycle</span> <span class="o">=</span> <span class="n">_find_cycle</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cycle</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="n">weakest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="n">cycle</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">child</span><span class="p">:</span> <span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="n">_descending</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">at</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">weakest</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_cycle</span><span class="p">(</span><span class="n">parent_of</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The children forming one cycle, or ``[]`` when the graph is already a forest."""</span>
+    <span class="n">settled</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">parent_of</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">settled</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="k">while</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">parent_of</span> <span class="ow">and</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">settled</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">path</span><span class="p">[</span><span class="n">seen</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="p">:]</span>
+            <span class="n">seen</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">parent_of</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">settled</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_depths</span><span class="p">(</span><span class="n">parent_of</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""How far each child sits below its root. Iterative, and exact at any depth.</span>
+
+<span class="sd">    Called only on a forest (:func:`_uncycle` has run), so walking to the root always</span>
+<span class="sd">    terminates. No cap: a truncated depth is not a smaller answer, it is a wrong one --</span>
+<span class="sd">    a node whose depth is capped to 0 sorts and draws as a root with an edge running out</span>
+<span class="sd">    of the top of it.</span>
+<span class="sd">    """</span>
+    <span class="n">depths</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">parent_of</span><span class="p">:</span>
+        <span class="n">chain</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="k">while</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">parent_of</span> <span class="ow">and</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">depths</span><span class="p">:</span>
+            <span class="n">chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">parent_of</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">depths</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">depths</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">chain</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">depths</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="n">step</span>
+    <span class="k">return</span> <span class="n">depths</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_whatever_it_found</span><span class="p">(</span><span class="n">read</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""One source's edges, or none of them: an unreadable source may not cost the others.</span>
+
+<span class="sd">    Swallowed rather than logged because :func:`graph` is called on every render of the</span>
+<span class="sd">    report and has nowhere to log to; a source that cannot read says so by returning</span>
+<span class="sd">    nothing, which the counts on the page then reflect.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- any reader, any failure; the others still count</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_keep_ancestry</span><span class="p">(</span><span class="n">parent_of</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">],</span> <span class="n">alive</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Only the edges on a path from a live session up to its root.</span>
+
+<span class="sd">    Without this the forest grows forever: a dispatcher that has run for a week has</span>
+<span class="sd">    spawned a hundred sessions, ninety-eight of which exited, and every one of them would</span>
+<span class="sd">    stay a node for as long as the dispatcher lives. A *parent* that has exited is kept --</span>
+<span class="sd">    that is the case the feature exists for, a fleet whose dispatcher is gone -- but a</span>
+<span class="sd">    dead **child** of a live session is simply over, and belongs in the ledger rather than</span>
+<span class="sd">    on the roster's graph.</span>
+<span class="sd">    """</span>
+    <span class="n">keep</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">alive</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="k">while</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">parent_of</span> <span class="ow">and</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keep</span><span class="p">:</span>
+            <span class="n">keep</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">parent_of</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">parent_of</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span>
+    <span class="k">return</span> <span class="n">keep</span>
+
+
+<div class="viewcode-block" id="graph">
+<a class="viewcode-back" href="../../module_docs/crowsnest/lineage.html#crowsnest.lineage.graph">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">graph</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">sessions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sources</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SpawnEdge</span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The spawn forest: every live session as a node, every parent link as an edge.</span>
+
+<span class="sd">    ``sources`` is the seam -- an ordered sequence of zero-argument callables returning</span>
+<span class="sd">    edges. A child claimed by more than one is settled by, in order: **which source</span>
+<span class="sd">    claimed it** (earlier wins, so putting a better reader first overrides a worse one),</span>
+<span class="sd">    then :data:`CONFIDENCE`, then recency. ``dflt_sources`` is what a caller gets by</span>
+<span class="sd">    leaving it out.</span>
+
+<span class="sd">    A node is every live session, plus every ancestor of one that has since exited: those</span>
+<span class="sd">    come back with ``alive`` false and ``status`` ``"gone"``, so a fleet whose dispatcher</span>
+<span class="sd">    left an hour ago still draws as a fleet instead of as six unrelated roots. A dead</span>
+<span class="sd">    *child* is not kept -- otherwise every session a long-lived dispatcher ever started</span>
+<span class="sd">    would stay on the graph forever.</span>
+
+<span class="sd">    Nodes are keyed by :func:`address` (``label``, or ``label@home`` when several homes</span>
+<span class="sd">    are read), which is the spelling ``crowsnest show`` accepts, and is what keeps two</span>
+<span class="sd">    machines' identically-named sessions apart.</span>
+
+<span class="sd">    Returns ``{"nodes", "edges", "roots", "orphans", "counts"}``, all JSON-able. Each node</span>
+<span class="sd">    carries ``name``, ``label``, ``session_id``, ``project``, ``home``, ``status``,</span>
+<span class="sd">    ``status_since``, ``alive``, ``parent``, ``confidence``, ``depth``, ``children`` and</span>
+<span class="sd">    ``at`` (when its parent link was recorded) -- enough for a renderer to lay out, group</span>
+<span class="sd">    and age the tree without going back to the roster.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">sessions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">sessions</span> <span class="k">as</span> <span class="n">_sessions</span>  <span class="c1"># circular at import time only</span>
+
+        <span class="n">sessions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="n">alive</span> <span class="o">=</span> <span class="n">_addressed</span><span class="p">(</span><span class="n">sessions</span><span class="p">)</span>
+    <span class="n">by_id</span> <span class="o">=</span> <span class="n">names_by_session_id</span><span class="p">(</span><span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
+    <span class="n">readers</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">dflt_sources</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span> <span class="n">sessions</span><span class="o">=</span><span class="n">sessions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">sources</span>
+    <span class="p">)</span>
+    <span class="n">collected</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">SpawnEdge</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">read</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">readers</span><span class="p">):</span>
+        <span class="n">collected</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">position</span><span class="p">,</span> <span class="n">edge</span><span class="p">)</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">_whatever_it_found</span><span class="p">(</span><span class="n">read</span><span class="p">)]</span>
+    <span class="n">parent_of</span> <span class="o">=</span> <span class="n">_keep_ancestry</span><span class="p">(</span>
+        <span class="n">_uncycle</span><span class="p">(</span><span class="n">_pick</span><span class="p">(</span><span class="n">_resolve_names</span><span class="p">(</span><span class="n">collected</span><span class="p">,</span> <span class="n">by_id</span><span class="p">,</span> <span class="n">alive</span><span class="p">))),</span> <span class="n">alive</span>
+    <span class="p">)</span>
+    <span class="n">depths</span> <span class="o">=</span> <span class="n">_depths</span><span class="p">(</span><span class="n">parent_of</span><span class="p">)</span>
+    <span class="n">children</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">parent_of</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">children</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">alive</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">parent</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">parent_of</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">parent_of</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">alive</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">edge</span> <span class="o">=</span> <span class="n">parent_of</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                <span class="s2">"label"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"@"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">"session_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+                <span class="s2">"project"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+                <span class="s2">"home"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"@"</span><span class="p">)[</span><span class="mi">2</span><span class="p">]),</span>
+                <span class="s2">"status"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">),</span>
+                <span class="s2">"status_since"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status_since"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="s2">"alive"</span><span class="p">:</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">alive</span><span class="p">,</span>
+                <span class="s2">"parent"</span><span class="p">:</span> <span class="n">edge</span><span class="o">.</span><span class="n">parent</span> <span class="k">if</span> <span class="n">edge</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="s2">"confidence"</span><span class="p">:</span> <span class="n">edge</span><span class="o">.</span><span class="n">confidence</span> <span class="k">if</span> <span class="n">edge</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="s2">"at"</span><span class="p">:</span> <span class="n">edge</span><span class="o">.</span><span class="n">at</span> <span class="k">if</span> <span class="n">edge</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="s2">"depth"</span><span class="p">:</span> <span class="n">depths</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="s2">"children"</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">children</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">())),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="n">nodes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="s2">"depth"</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]))</span>
+    <span class="n">roots</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">[</span><span class="s2">"parent"</span><span class="p">]]</span>
+    <span class="n">orphans</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">n</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span>
+        <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="s2">"parent"</span><span class="p">]</span> <span class="ow">and</span> <span class="n">n</span><span class="p">[</span><span class="s2">"parent"</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">alive</span> <span class="ow">and</span> <span class="n">n</span><span class="p">[</span><span class="s2">"alive"</span><span class="p">]</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"nodes"</span><span class="p">:</span> <span class="n">nodes</span><span class="p">,</span>
+        <span class="s2">"edges"</span><span class="p">:</span> <span class="p">[</span><span class="n">parent_of</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">parent_of</span><span class="p">)],</span>
+        <span class="s2">"roots"</span><span class="p">:</span> <span class="n">roots</span><span class="p">,</span>
+        <span class="s2">"orphans"</span><span class="p">:</span> <span class="n">orphans</span><span class="p">,</span>
+        <span class="s2">"counts"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"nodes"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">),</span>
+            <span class="s2">"edges"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent_of</span><span class="p">),</span>
+            <span class="s2">"roots"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">roots</span><span class="p">),</span>
+            <span class="s2">"orphans"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">orphans</span><span class="p">),</span>
+            <span class="s2">"gone"</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">[</span><span class="s2">"alive"</span><span class="p">]),</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

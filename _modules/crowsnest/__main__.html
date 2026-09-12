@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.__main__ &mdash; crowsnest 0.0.28 documentation</title>
+  <title>crowsnest.__main__ &mdash; crowsnest 0.0.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
+      <script src="../../_static/documentation_options.js?v=828725f0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -306,6 +307,98 @@
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 
 
+<span class="c1">#: What a node's status looks like in the text tree. The page has colour; a terminal has</span>
+<span class="c1">#: eight characters, and they have to survive being read on a phone over ssh.</span>
+<span class="c1">#: How wide the name column is in the text tree, stem included. A deep tree eats into it,</span>
+<span class="c1">#: so it is a floor rather than a width: the name is the address you type into</span>
+<span class="c1">#: `crowsnest show`, and truncating it would cost more than a ragged column.</span>
+<span class="n">_LINEAGE_NAME_COLUMN</span> <span class="o">=</span> <span class="mi">34</span>
+
+<span class="c1">#: What a node's status looks like in the text tree. The page has colour; a terminal has</span>
+<span class="c1">#: eight characters, and they have to survive being read on a phone over ssh.</span>
+<span class="n">_LINEAGE_MARKS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"waiting"</span><span class="p">:</span> <span class="s2">"! waiting"</span><span class="p">,</span>
+    <span class="s2">"busy"</span><span class="p">:</span> <span class="s2">"&gt; busy"</span><span class="p">,</span>
+    <span class="s2">"shell"</span><span class="p">:</span> <span class="s2">"&gt; shell"</span><span class="p">,</span>
+    <span class="s2">"idle"</span><span class="p">:</span> <span class="s2">". idle"</span><span class="p">,</span>
+    <span class="s2">"gone"</span><span class="p">:</span> <span class="s2">"x gone"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lineage_lines</span><span class="p">(</span><span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""One indented line per node, depth-first, children in name order."""</span>
+    <span class="n">by_name</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]:</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s2">"nodes"</span><span class="p">]}</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">walk</span><span class="p">(</span><span class="n">node_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pad</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">last</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">stem</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">top</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pad</span><span class="si">}{</span><span class="s1">'`-- '</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">last</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'|-- '</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">mark</span> <span class="o">=</span> <span class="n">_LINEAGE_MARKS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s2">"status"</span><span class="p">],</span> <span class="sa">f</span><span class="s2">"? </span><span class="si">{</span><span class="n">node</span><span class="p">[</span><span class="s1">'status'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">guess</span> <span class="o">=</span> <span class="s2">" ~"</span> <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="s2">"confidence"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"inferred"</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">room</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_LINEAGE_NAME_COLUMN</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">stem</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]))</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s2">"project"</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">""</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="si">}{</span><span class="n">node</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}{</span><span class="s1">' '</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">room</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">mark</span><span class="si">:</span><span class="s2">&lt;10</span><span class="si">}{</span><span class="n">where</span><span class="si">}{</span><span class="n">guess</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
+        <span class="n">kids</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s2">"children"</span><span class="p">]</span>
+        <span class="n">below</span> <span class="o">=</span> <span class="n">pad</span> <span class="k">if</span> <span class="n">top</span> <span class="k">else</span> <span class="n">pad</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"    "</span> <span class="k">if</span> <span class="n">last</span> <span class="k">else</span> <span class="s2">"|   "</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">kid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">kids</span><span class="p">):</span>
+            <span class="n">walk</span><span class="p">(</span><span class="n">kid</span><span class="p">,</span> <span class="n">below</span><span class="p">,</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">kids</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">root</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s2">"roots"</span><span class="p">]):</span>
+        <span class="n">walk</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s2">"roots"</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">lineage</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">backfill</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Who started whom: the live sessions as a spawn tree, roots first.</span>
+
+<span class="sd">    A session records its own children from now on, so the tree fills in as sessions are</span>
+<span class="sd">    spawned. `--backfill` recovers what older sessions left behind, by scanning every</span>
+<span class="sd">    transcript on this machine for the `crowsnest spawn` commands that created them, and</span>
+<span class="sd">    writes what it finds into the event log so it is there next time. That is inference,</span>
+<span class="sd">    marked `~` in the tree; run it once. `--dry-run` says what it would add and writes</span>
+<span class="sd">    nothing.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_json</span>
+
+    <span class="k">if</span> <span class="n">backfill</span><span class="p">:</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">backfill_lineage</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">write</span><span class="o">=</span><span class="ow">not</span> <span class="n">dry_run</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">done</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="n">done</span><span class="p">[</span><span class="s2">"graph"</span><span class="p">]</span>
+        <span class="n">verb</span> <span class="o">=</span> <span class="s2">"would add"</span> <span class="k">if</span> <span class="n">dry_run</span> <span class="k">else</span> <span class="s2">"added"</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"backfill: </span><span class="si">{</span><span class="n">done</span><span class="p">[</span><span class="s1">'found'</span><span class="p">]</span><span class="si">}</span><span class="s2"> spawn command(s) in transcripts, "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">verb</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">done</span><span class="p">[</span><span class="s1">'added'</span><span class="p">]</span><span class="si">}</span><span class="s2">, skipped </span><span class="si">{</span><span class="n">done</span><span class="p">[</span><span class="s1">'skipped'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">found</span><span class="p">,</span> <span class="n">head</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">lineage</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">),</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">json</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">found</span><span class="p">[</span><span class="s2">"counts"</span><span class="p">]</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'nodes'</span><span class="p">]</span><span class="si">}</span><span class="s2"> session(s), </span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'edges'</span><span class="p">]</span><span class="si">}</span><span class="s2"> edge(s), "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'roots'</span><span class="p">]</span><span class="si">}</span><span class="s2"> root(s), </span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'orphans'</span><span class="p">]</span><span class="si">}</span><span class="s2"> orphan(s), "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="s1">'gone'</span><span class="p">]</span><span class="si">}</span><span class="s2"> parent(s) no longer alive"</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">[</span><span class="s2">"nodes"</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="o">*</span><span class="n">head</span><span class="p">,</span> <span class="s2">"nothing alive"</span><span class="p">])</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="o">*</span><span class="n">head</span><span class="p">,</span> <span class="o">*</span><span class="n">_lineage_lines</span><span class="p">(</span><span class="n">found</span><span class="p">),</span> <span class="o">*</span><span class="n">tail</span><span class="p">])</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -413,9 +506,11 @@
         <span class="k">return</span> <span class="n">_json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">pages</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pages</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">pages</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">known</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">_ledger</span><span class="o">.</span><span class="n">list_ledgers</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">))</span>
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="n">page</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">page</span><span class="p">[</span><span class="s2">"exists"</span><span class="p">]</span>
-        <span class="k">else</span> <span class="sa">f</span><span class="s2">"(no ledger for </span><span class="si">{</span><span class="n">page</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="n">known</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">(</span>
+            <span class="n">page</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">page</span><span class="p">[</span><span class="s2">"exists"</span><span class="p">]</span>
+            <span class="k">else</span> <span class="sa">f</span><span class="s2">"(no ledger for </span><span class="si">{</span><span class="n">page</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">; known: </span><span class="si">{</span><span class="n">known</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">)</span>
         <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">pages</span>
     <span class="p">)</span>
 
@@ -438,7 +533,11 @@
     <span class="n">s</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"session"</span><span class="p">]</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"# </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2"> — digest  (</span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'status'</span><span class="p">]</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="s1">'cwd'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">"digest"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"(no openloops digest yet: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'why'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span> <span class="s2">"Run `ol sync` first."</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="s2">""</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"(no openloops digest yet: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">'why'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+            <span class="s2">"Run `ol sync` first."</span><span class="p">,</span>
+        <span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">out</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s2">"digest"</span><span class="p">][</span><span class="s2">"text"</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
@@ -470,7 +569,10 @@
         <span class="p">(</span><span class="s2">"proj hooks"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"project_settings"</span><span class="p">]),</span>
     <span class="p">):</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'action'</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;9</span><span class="si">}{</span><span class="n">label</span><span class="si">:</span><span class="s2">&lt;11</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'reason'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]),</span> <span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"project_settings"</span><span class="p">])):</span>
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">]),</span>
+        <span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"project_settings"</span><span class="p">]),</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"backup"</span><span class="p">]:</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"backup    </span><span class="si">{</span><span class="n">label</span><span class="si">:</span><span class="s2">&lt;11</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">'backup'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">plan</span><span class="p">[</span><span class="s2">"settings"</span><span class="p">][</span><span class="s2">"action"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"skipped"</span><span class="p">:</span>
@@ -600,6 +702,7 @@
     <span class="n">show</span><span class="p">,</span>
     <span class="n">turns</span><span class="p">,</span>
     <span class="n">brief</span><span class="p">,</span>
+    <span class="n">lineage</span><span class="p">,</span>
     <span class="n">report</span><span class="p">,</span>
     <span class="n">watch</span><span class="p">,</span>
     <span class="n">ledger</span><span class="p">,</span>

@@ -1,0 +1,466 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crowsnest.lineage &mdash; crowsnest 0.0.29 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=828725f0"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="crowsnest.open" href="open.html" />
+    <link rel="prev" title="crowsnest.ledger" href="ledger.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            crowsnest
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../crowsnest.html">crowsnest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">crowsnest.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="account.html">crowsnest.account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activity.html">crowsnest.activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">crowsnest.config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hook.html">crowsnest.hook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="init.html">crowsnest.init</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">crowsnest.lineage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.CONFIDENCE"><code class="docutils literal notranslate"><span class="pre">CONFIDENCE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.LINEAGE_FILENAME"><code class="docutils literal notranslate"><span class="pre">LINEAGE_FILENAME</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.MAX_PPID_HOPS"><code class="docutils literal notranslate"><span class="pre">MAX_PPID_HOPS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.SESSION_ID_VAR"><code class="docutils literal notranslate"><span class="pre">SESSION_ID_VAR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.SESSION_PID_VAR"><code class="docutils literal notranslate"><span class="pre">SESSION_PID_VAR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.SPAWN_COMMANDS"><code class="docutils literal notranslate"><span class="pre">SPAWN_COMMANDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.SPAWN_EVENT"><code class="docutils literal notranslate"><span class="pre">SPAWN_EVENT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.SPAWN_VALUE_FLAGS"><code class="docutils literal notranslate"><span class="pre">SPAWN_VALUE_FLAGS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.SpawnEdge"><code class="docutils literal notranslate"><span class="pre">SpawnEdge</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#crowsnest.lineage.SpawnEdge.as_dict"><code class="docutils literal notranslate"><span class="pre">SpawnEdge.as_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#crowsnest.lineage.SpawnEdge.rank"><code class="docutils literal notranslate"><span class="pre">SpawnEdge.rank</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.append_edge"><code class="docutils literal notranslate"><span class="pre">append_edge()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.current_session"><code class="docutils literal notranslate"><span class="pre">current_session()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.dflt_sources"><code class="docutils literal notranslate"><span class="pre">dflt_sources()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.from_processes"><code class="docutils literal notranslate"><span class="pre">from_processes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.from_records"><code class="docutils literal notranslate"><span class="pre">from_records()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.from_transcripts"><code class="docutils literal notranslate"><span class="pre">from_transcripts()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.graph"><code class="docutils literal notranslate"><span class="pre">graph()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.lineage_path"><code class="docutils literal notranslate"><span class="pre">lineage_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.names_by_session_id"><code class="docutils literal notranslate"><span class="pre">names_by_session_id()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.record_spawn"><code class="docutils literal notranslate"><span class="pre">record_spawn()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crowsnest.lineage.spawn_event"><code class="docutils literal notranslate"><span class="pre">spawn_event()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="open.html">crowsnest.open</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paths.html">crowsnest.paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registry.html">crowsnest.registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="report.html">crowsnest.report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="skills.html">crowsnest.skills</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spawn.html">crowsnest.spawn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">crowsnest.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="watch.html">crowsnest.watch</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">crowsnest</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crowsnest.lineage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/crowsnest/lineage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-crowsnest.lineage">
+<span id="crowsnest-lineage"></span><h1>crowsnest.lineage<a class="headerlink" href="#module-crowsnest.lineage" title="Link to this heading"></a></h1>
+<p>Who started whom: the spawn graph, as data.</p>
+<p>The roster says which sessions are alive and what each is doing. It does not say that
+six of them are one dispatcher’s children and that the dispatcher exited an hour ago –
+and that is most of what a person needs in order to read a fleet of forty rather than a
+list of forty. This module is the missing half: an edge <code class="docutils literal notranslate"><span class="pre">parent</span> <span class="pre">-&gt;</span> <span class="pre">child</span></code> per session,
+collected from whatever recorded it, so that <code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.graph</span></code> has something to draw
+and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">lineage</span></code> has something to print.</p>
+<p><strong>The record is the fix; the rest is recovery.</strong> <a class="reference internal" href="spawn.html#crowsnest.spawn.spawn" title="crowsnest.spawn.spawn"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.spawn.spawn()</span></code></a> knows its
+own caller at the moment it creates a session, so it writes one <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line into
+<code class="docutils literal notranslate"><span class="pre">lineage.jsonl</span></code> (<a class="reference internal" href="#crowsnest.lineage.LINEAGE_FILENAME" title="crowsnest.lineage.LINEAGE_FILENAME"><code class="xref py py-data docutils literal notranslate"><span class="pre">LINEAGE_FILENAME</span></code></a>, and see it for why that is <em>not</em> the hook’s
+<code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>) naming both ends. That costs nothing, cannot be wrong, and is the only
+source that needs no guessing – but it only works forwards, from the version that ships
+it. The other two readers exist because a fleet already running was started by a version
+that did not:</p>
+<p>The first two are cheap enough to run on every report and are the default <code class="docutils literal notranslate"><span class="pre">sources</span></code>.
+The third reads every transcript on the machine, so it is the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">lineage</span>
+<span class="pre">--backfill</span></code> path instead: run once, it writes what it found back into the event log as
+<code class="docutils literal notranslate"><span class="pre">spawn</span></code> lines marked <code class="docutils literal notranslate"><span class="pre">inferred</span></code>, and from then on the cheap reader has them. An edge
+never loses its provenance – <code class="docutils literal notranslate"><span class="pre">source</span></code> and <code class="docutils literal notranslate"><span class="pre">confidence</span></code> travel with it, and the graph
+draws an inferred edge differently from a recorded one, because a guess that looks like a
+record is worse than no guess at all.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sources=</span></code> is the seam: an ordered sequence of callables taking no positional argument
+and returning edges. A child claimed by more than one is settled by <strong>source position
+first</strong> – putting a better reader first is all it takes to override a worse one, which is
+the whole point of ordering them – then by confidence, then by recency. <code class="docutils literal notranslate"><span class="pre">xa</span></code>’s own
+record of the sessions it starts on other hosts is the replacement this exists for, and
+it is reachable without editing anything: <a class="reference internal" href="tools.html#crowsnest.tools.lineage" title="crowsnest.tools.lineage"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.lineage()</span></code></a> carries
+<code class="docutils literal notranslate"><span class="pre">sources=</span></code> through to here, so a surface adds a reader by passing one.</p>
+<p>Two properties that are not obvious and are load-bearing. Nodes are keyed by
+<code class="xref py py-func docutils literal notranslate"><span class="pre">address()</span></code> – <code class="docutils literal notranslate"><span class="pre">label</span></code>, or <code class="docutils literal notranslate"><span class="pre">label&#64;home</span></code> when several homes are read – because
+<strong>a session name is not unique</strong>, neither across machines nor over time (crowsnest issue
+#42); an edge whose recorded child id does not match the session now holding that name is
+about a session that has exited, and is dropped rather than drawn onto today’s. And the
+forest keeps only live sessions and their <em>ancestors</em>: a parent that has exited stays, so
+an orphaned fleet still reads as a fleet, but a dead child does not, or every session a
+long-lived dispatcher ever started would sit on the graph forever.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">SpawnEdge</span><span class="p">(</span><span class="n">child</span><span class="o">=</span><span class="s1">'b'</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s1">'a'</span><span class="p">),</span> <span class="n">SpawnEdge</span><span class="p">(</span><span class="n">child</span><span class="o">=</span><span class="s1">'c'</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s1">'b'</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">found</span> <span class="o">=</span> <span class="n">graph</span><span class="p">(</span><span class="n">sessions</span><span class="o">=</span><span class="p">[{</span><span class="s1">'label'</span><span class="p">:</span> <span class="n">n</span><span class="p">}</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="s1">'abc'</span><span class="p">],</span> <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">edges</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">found</span><span class="p">[</span><span class="s1">'roots'</span><span class="p">],</span> <span class="p">[(</span><span class="n">e</span><span class="p">[</span><span class="s1">'parent'</span><span class="p">],</span> <span class="n">e</span><span class="p">[</span><span class="s1">'child'</span><span class="p">])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s1">'edges'</span><span class="p">]]</span>
+<span class="go">(['a'], [('a', 'b'), ('b', 'c')])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">n</span><span class="p">[</span><span class="s1">'name'</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="s1">'depth'</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s1">'nodes'</span><span class="p">]]</span>
+<span class="go">[('a', 0), ('b', 1), ('c', 2)]</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.lineage.CONFIDENCE">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">CONFIDENCE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('recorded',</span> <span class="pre">'observed',</span> <span class="pre">'inferred')</span></span><a class="headerlink" href="#crowsnest.lineage.CONFIDENCE" title="Link to this definition"></a></dt>
+<dd><p>How much an edge is worth, strongest first. <code class="docutils literal notranslate"><span class="pre">recorded</span></code> was written by the thing that
+did the spawning; <code class="docutils literal notranslate"><span class="pre">observed</span></code> was read off a running process; <code class="docutils literal notranslate"><span class="pre">inferred</span></code> was read
+out of prose or a command line that merely <em>mentions</em> a spawn.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.lineage.LINEAGE_FILENAME">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">LINEAGE_FILENAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lineage.jsonl'</span></span><a class="headerlink" href="#crowsnest.lineage.LINEAGE_FILENAME" title="Link to this definition"></a></dt>
+<dd><p>The file the recorded edges live in, under the data directory. <strong>Deliberately not</strong>
+<code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>: that log rotates at 4 MiB (<a class="reference internal" href="hook.html#crowsnest.hook.MAX_EVENT_BYTES" title="crowsnest.hook.MAX_EVENT_BYTES"><code class="xref py py-data docutils literal notranslate"><span class="pre">crowsnest.hook.MAX_EVENT_BYTES</span></code></a>)
+and nothing reads a retired one, so a machine busy enough to have an interesting graph
+is exactly the machine whose graph would vanish – for sessions still running, with the
+id-to-name history the backfill needs, and with the “re-running adds nothing”
+guarantee. Provenance is permanent or it is not provenance. One JSON object per line,
+append-only, never rotated: an edge is about 200 bytes and a busy week is a few
+thousand of them.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.lineage.MAX_PPID_HOPS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">MAX_PPID_HOPS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></span><a class="headerlink" href="#crowsnest.lineage.MAX_PPID_HOPS" title="Link to this definition"></a></dt>
+<dd><p>How far up a process chain a session’s ancestor is looked for. A shell, a login shell
+and a terminal between two sessions is three; beyond a handful the relationship is not
+one a person would call “spawned by” anyway.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.lineage.SESSION_ID_VAR">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">SESSION_ID_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CLAUDE_CODE_SESSION_ID'</span></span><a class="headerlink" href="#crowsnest.lineage.SESSION_ID_VAR" title="Link to this definition"></a></dt>
+<dd><p>The variable Claude Code exports into every session, naming that session. It is how a
+<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> running inside a session knows whose child it is about to create.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.lineage.SESSION_PID_VAR">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">SESSION_PID_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CLAUDE_PID'</span></span><a class="headerlink" href="#crowsnest.lineage.SESSION_PID_VAR" title="Link to this definition"></a></dt>
+<dd><p>The spawning session’s pid, when Claude Code exported it. A fallback for
+<a class="reference internal" href="#crowsnest.lineage.current_session" title="crowsnest.lineage.current_session"><code class="xref py py-func docutils literal notranslate"><span class="pre">current_session()</span></code></a> when the id variable is absent but the pid is not.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.lineage.SPAWN_COMMANDS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">SPAWN_COMMANDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('crowsnest',</span> <span class="pre">'cw')</span></span><a class="headerlink" href="#crowsnest.lineage.SPAWN_COMMANDS" title="Link to this definition"></a></dt>
+<dd><p>The commands that are <code class="docutils literal notranslate"><span class="pre">crowsnest</span></code>. A path is allowed (<code class="docutils literal notranslate"><span class="pre">/usr/local/bin/crowsnest</span></code>);
+only the last component is compared.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.lineage.SPAWN_EVENT">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">SPAWN_EVENT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'spawn'</span></span><a class="headerlink" href="#crowsnest.lineage.SPAWN_EVENT" title="Link to this definition"></a></dt>
+<dd><p>The event name a spawn record carries in <code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>. Chosen so that
+<a class="reference internal" href="watch.html#crowsnest.watch.hook_event" title="crowsnest.watch.hook_event"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.watch.hook_event()</span></code></a> and every existing reader skip it unchanged: an
+event kind nobody knows is already specified to be logged and ignored.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.lineage.SPAWN_VALUE_FLAGS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">SPAWN_VALUE_FLAGS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'--add-dirs',</span> <span class="pre">'--binary',</span> <span class="pre">'--cwd',</span> <span class="pre">'--effort',</span> <span class="pre">'--home',</span> <span class="pre">'--model',</span> <span class="pre">'--profile',</span> <span class="pre">'--prompt',</span> <span class="pre">'--wait',</span> <span class="pre">'-p'})</span></span><a class="headerlink" href="#crowsnest.lineage.SPAWN_VALUE_FLAGS" title="Link to this definition"></a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> flags that take a separate value, so the backfill knows which
+token after a flag is that flag’s and which is the session name.</p>
+<p>SSOT is <code class="docutils literal notranslate"><span class="pre">crowsnest.__main__.spawn</span></code>: every keyword-only parameter of it that is not a
+<code class="docutils literal notranslate"><span class="pre">bool</span></code> takes a value. Stated here rather than introspected because <code class="docutils literal notranslate"><span class="pre">lineage</span></code> must
+not import the CLI, and kept honest by
+<code class="docutils literal notranslate"><span class="pre">test_spawn_value_flags_matches_the_cli</span></code> rather than by hope.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.lineage.SpawnEdge">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">SpawnEdge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">child</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'event'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'recorded'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#SpawnEdge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.SpawnEdge" title="Link to this definition"></a></dt>
+<dd><p>One <code class="docutils literal notranslate"><span class="pre">parent</span> <span class="pre">-&gt;</span> <span class="pre">child</span></code> link, with where it came from and how much it is worth.</p>
+<p>Both ends are session <em>names</em>, because a name is the address every other crowsnest
+verb takes. Session ids travel alongside when the source knew them, so a reader that
+cares more about identity than about addressing can prefer them.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">SpawnEdge</span><span class="p">(</span><span class="n">child</span><span class="o">=</span><span class="s1">'c'</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s1">'p'</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()[</span><span class="s1">'confidence'</span><span class="p">]</span>
+<span class="go">'recorded'</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.lineage.SpawnEdge.as_dict">
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#SpawnEdge.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.SpawnEdge.as_dict" title="Link to this definition"></a></dt>
+<dd><p>JSON-ready form.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crowsnest.lineage.SpawnEdge.rank">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">rank</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#crowsnest.lineage.SpawnEdge.rank" title="Link to this definition"></a></dt>
+<dd><p>Position in <a class="reference internal" href="#crowsnest.lineage.CONFIDENCE" title="crowsnest.lineage.CONFIDENCE"><code class="xref py py-data docutils literal notranslate"><span class="pre">CONFIDENCE</span></code></a>; anything unknown sorts last.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.append_edge">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">append_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#crowsnest.lineage.SpawnEdge" title="crowsnest.lineage.SpawnEdge"><span class="pre">SpawnEdge</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#append_edge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.append_edge" title="Link to this definition"></a></dt>
+<dd><p>Write one recovered edge into the lineage log, keeping its provenance.</p>
+<p>The backfill’s other half: what a transcript scan found becomes a <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line like
+any other, so the cheap reader picks it up on every run afterwards and the expensive
+scan is never repeated. <code class="docutils literal notranslate"><span class="pre">source</span></code> and <code class="docutils literal notranslate"><span class="pre">confidence</span></code> are the edge’s own, which is
+what stops a recovered guess from ageing into an apparent record.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.current_session">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">current_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#current_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.current_session" title="Link to this definition"></a></dt>
+<dd><p>The session this process is running inside: <code class="docutils literal notranslate"><span class="pre">{'name',</span> <span class="pre">'session_id',</span> <span class="pre">'pid'}</span></code>.</p>
+<p>Claude Code exports the session id into every session it runs, which is the whole
+trick: a <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> typed by a session is a subprocess of that session and
+inherits the variable. The <em>name</em> is not exported, so it is looked up in the registry
+– one directory of small files, the same read <code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.hook._identify()</span></code> does.</p>
+<p>Every field is <code class="docutils literal notranslate"><span class="pre">''</span></code> (and <code class="docutils literal notranslate"><span class="pre">pid</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code>) when the command was not run from inside
+a session at all, which is the honest answer for a person at a shell prompt.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.dflt_sources">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">dflt_sources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sessions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.lineage.SpawnEdge" title="crowsnest.lineage.SpawnEdge"><span class="pre">SpawnEdge</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#dflt_sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.dflt_sources" title="Link to this definition"></a></dt>
+<dd><p>The readers <a class="reference internal" href="#crowsnest.lineage.graph" title="crowsnest.lineage.graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph()</span></code></a> uses when the caller names none, strongest first.</p>
+<p>Both are cheap enough for every report: one file read, and one <code class="docutils literal notranslate"><span class="pre">ps</span></code>. The transcript
+scan is deliberately absent – it belongs to <code class="docutils literal notranslate"><span class="pre">--backfill</span></code>, which writes its findings
+into the event log so that this list picks them up on the next run.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.from_processes">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">from_processes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sessions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.lineage.SpawnEdge" title="crowsnest.lineage.SpawnEdge"><span class="pre">SpawnEdge</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#from_processes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.from_processes" title="Link to this definition"></a></dt>
+<dd><p>Edges visible in the process table right now, for sessions crowsnest did not start.</p>
+<p>Two things are read, and neither is a guess about <em>meaning</em> – both are the operating
+system answering a question about parentage:</p>
+<p><code class="docutils literal notranslate"><span class="pre">--spawned-by</span></code> – Claude Code puts a small JSON object (<code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">cwd</span></code>, <code class="docutils literal notranslate"><span class="pre">pid</span></code>)
+on the command line of a daemon or background session, naming the process that asked
+for it. When that pid is a live session, it is the parent.</p>
+<p>The parent-pid chain – a session started as a plain subprocess of another session is
+that session’s descendant in the process tree, so walking up <code class="docutils literal notranslate"><span class="pre">ppid</span></code> until a live
+session’s pid appears finds it. A session started through <code class="docutils literal notranslate"><span class="pre">tmux</span></code> is deliberately
+<em>not</em> found this way: tmux reparents it to init, which is exactly why the recorded
+event exists.</p>
+<p><strong>Only sessions of this machine are considered.</strong> A roster read with <code class="docutils literal notranslate"><span class="pre">all_homes</span></code>
+carries rows from other accounts and other hosts, whose pids belong to those machines;
+matching them against a local <code class="docutils literal notranslate"><span class="pre">ps</span></code> would invent a parent out of a pid collision,
+which across two machines running thirty sessions each is a near-certainty rather than
+a corner case. A row is local when it carries no <code class="docutils literal notranslate"><span class="pre">home</span></code> tag – which is how
+<a class="reference internal" href="tools.html#crowsnest.tools.sessions" title="crowsnest.tools.sessions"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.sessions()</span></code></a> marks the home it was asked for.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sessions</span></code> is the roster to match pids against; it defaults to this home’s live
+sessions. Returns <code class="docutils literal notranslate"><span class="pre">[]</span></code> on a machine with no usable <code class="docutils literal notranslate"><span class="pre">ps</span></code>, which is not an error.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.from_records">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">from_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.lineage.SpawnEdge" title="crowsnest.lineage.SpawnEdge"><span class="pre">SpawnEdge</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#from_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.from_records" title="Link to this definition"></a></dt>
+<dd><p>Every edge crowsnest recorded for itself, oldest first.</p>
+<p>The cheap, authoritative reader: one pass over <code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>, keeping only the
+<code class="docutils literal notranslate"><span class="pre">spawn</span></code> lines. A malformed line is skipped rather than raising – the log is
+appended to by a hook that runs inside other people’s sessions, and a reader that
+dies on one bad byte would take the whole report with it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.from_transcripts">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">from_transcripts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.lineage.SpawnEdge" title="crowsnest.lineage.SpawnEdge"><span class="pre">SpawnEdge</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#from_transcripts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.from_transcripts" title="Link to this definition"></a></dt>
+<dd><p>The backfill: every <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span> <span class="pre">&lt;name&gt;</span></code> still recorded in a transcript.</p>
+<p>A session that spawned another typed the command, and the command is in that
+session’s own transcript along with the session id that owns it. That is enough to
+recover most of a fleet’s parentage from a machine that has been running for weeks –
+but it is <em>inference</em>, not record: the command may have failed, may have been shown
+in help output, may have been quoted in prose about spawning. So every edge it
+returns is <code class="docutils literal notranslate"><span class="pre">inferred</span></code>, and the graph says so.</p>
+<p><code class="docutils literal notranslate"><span class="pre">known</span></code> narrows the result to names that exist somewhere a caller trusts (the
+registry, the ledger directory); without it every token that parses as a name is
+taken. <a class="reference internal" href="tools.html#crowsnest.tools.backfill_lineage" title="crowsnest.tools.backfill_lineage"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.backfill_lineage()</span></code></a> passes one.</p>
+<p><strong>What it can still get wrong</strong>, stated rather than hidden: a heredoc whose <em>body</em>
+contains a line beginning <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span> <span class="pre">&lt;name&gt;</span></code> – a session pasting a dispatch
+into its own ledger – reads as a command, because a shell tokeniser cannot tell a
+heredoc body from the script around it. The edge that produces is usually true anyway
+(a session that documents a dispatch is generally the session that made it), it must
+still name a session something else knows, and it is marked <code class="docutils literal notranslate"><span class="pre">inferred</span></code>. That is the
+trade: the guard that matters is the one against a <code class="docutils literal notranslate"><span class="pre">grep</span></code> or a commit message, and
+that one holds.</p>
+<p>This reads <strong>every transcript on the machine</strong> – seconds, not milliseconds. It is
+the <code class="docutils literal notranslate"><span class="pre">--backfill</span></code> path for that reason, and what it finds is written back into the
+event log so the cheap reader has it from then on.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.graph">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sessions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#crowsnest.lineage.SpawnEdge" title="crowsnest.lineage.SpawnEdge"><span class="pre">SpawnEdge</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.graph" title="Link to this definition"></a></dt>
+<dd><p>The spawn forest: every live session as a node, every parent link as an edge.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sources</span></code> is the seam – an ordered sequence of zero-argument callables returning
+edges. A child claimed by more than one is settled by, in order: <strong>which source
+claimed it</strong> (earlier wins, so putting a better reader first overrides a worse one),
+then <a class="reference internal" href="#crowsnest.lineage.CONFIDENCE" title="crowsnest.lineage.CONFIDENCE"><code class="xref py py-data docutils literal notranslate"><span class="pre">CONFIDENCE</span></code></a>, then recency. <code class="docutils literal notranslate"><span class="pre">dflt_sources</span></code> is what a caller gets by
+leaving it out.</p>
+<p>A node is every live session, plus every ancestor of one that has since exited: those
+come back with <code class="docutils literal notranslate"><span class="pre">alive</span></code> false and <code class="docutils literal notranslate"><span class="pre">status</span></code> <code class="docutils literal notranslate"><span class="pre">&quot;gone&quot;</span></code>, so a fleet whose dispatcher
+left an hour ago still draws as a fleet instead of as six unrelated roots. A dead
+<em>child</em> is not kept – otherwise every session a long-lived dispatcher ever started
+would stay on the graph forever.</p>
+<p>Nodes are keyed by <code class="xref py py-func docutils literal notranslate"><span class="pre">address()</span></code> (<code class="docutils literal notranslate"><span class="pre">label</span></code>, or <code class="docutils literal notranslate"><span class="pre">label&#64;home</span></code> when several homes
+are read), which is the spelling <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">show</span></code> accepts, and is what keeps two
+machines’ identically-named sessions apart.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">{&quot;nodes&quot;,</span> <span class="pre">&quot;edges&quot;,</span> <span class="pre">&quot;roots&quot;,</span> <span class="pre">&quot;orphans&quot;,</span> <span class="pre">&quot;counts&quot;}</span></code>, all JSON-able. Each node
+carries <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">session_id</span></code>, <code class="docutils literal notranslate"><span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">home</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>,
+<code class="docutils literal notranslate"><span class="pre">status_since</span></code>, <code class="docutils literal notranslate"><span class="pre">alive</span></code>, <code class="docutils literal notranslate"><span class="pre">parent</span></code>, <code class="docutils literal notranslate"><span class="pre">confidence</span></code>, <code class="docutils literal notranslate"><span class="pre">depth</span></code>, <code class="docutils literal notranslate"><span class="pre">children</span></code> and
+<code class="docutils literal notranslate"><span class="pre">at</span></code> (when its parent link was recorded) – enough for a renderer to lay out, group
+and age the tree without going back to the roster.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.lineage_path">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">lineage_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#lineage_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.lineage_path" title="Link to this definition"></a></dt>
+<dd><p>Where recorded edges live: <code class="docutils literal notranslate"><span class="pre">path</span></code> when given, else <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/lineage.jsonl</span></code>.</p>
+<p>Spelled out here rather than in <a class="reference internal" href="paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.paths</span></code></a> because the module that writes
+a kind of data owns where that kind of data goes; <code class="docutils literal notranslate"><span class="pre">paths</span></code> owns only the root.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.names_by_session_id">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">names_by_session_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">events_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#names_by_session_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.names_by_session_id" title="Link to this definition"></a></dt>
+<dd><p>Every session id these two logs have ever named, mapped to that name.</p>
+<p>The event log has one line per turn ending and per notification, each carrying both
+the id and the name the registry gave at the time, so it is a <em>history</em> of names where
+the registry is only a census of the living. That is what the backfill needs: a
+transcript identifies a parent by session id, and the parent exited last Tuesday.</p>
+<p>Both files are read because they have opposite properties. <code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code> is rich
+but rotates (<a class="reference internal" href="hook.html#crowsnest.hook.MAX_EVENT_BYTES" title="crowsnest.hook.MAX_EVENT_BYTES"><code class="xref py py-data docutils literal notranslate"><span class="pre">crowsnest.hook.MAX_EVENT_BYTES</span></code></a>), so old names fall off the end;
+<code class="docutils literal notranslate"><span class="pre">lineage.jsonl</span></code> never rotates but only names sessions that spawned or were spawned.
+Between them a name usually survives, and when one does not the caller sees a missing
+key rather than a wrong answer.</p>
+<p>The newest name for an id wins, so a session renamed mid-life is remembered as what it
+was last called – which is what a person reading a graph today expects to see.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.record_spawn">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">record_spawn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">child</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#record_spawn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.record_spawn" title="Link to this definition"></a></dt>
+<dd><p>Write the <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line for a session just created. <strong>Never raises.</strong></p>
+<p>Called by <a class="reference internal" href="spawn.html#crowsnest.spawn.spawn" title="crowsnest.spawn.spawn"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.spawn.spawn()</span></code></a> at the one moment the answer is free and
+certain. A failure here – an unwritable data directory, a registry that will not
+read – must not fail the spawn itself: the session exists either way, and a graph
+missing one edge is a smaller loss than a session that did not start.</p>
+<p><code class="docutils literal notranslate"><span class="pre">home</span></code> is <strong>the caller’s</strong> home, not the new session’s. The two differ exactly when
+<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span> <span class="pre">--profile</span></code> starts a session on another account, and looking the
+caller up in the <em>target</em> registry finds nothing – leaving an 8-character session-id
+prefix as the parent’s name, which is not a name any crowsnest verb accepts and cannot
+be repaired afterwards. Left out, it is this process’s own account, which is right for
+every caller that is a session.</p>
+<p>Returns the record written, or <code class="docutils literal notranslate"><span class="pre">{}</span></code> when nothing could be written.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.spawn_event">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">spawn_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">child</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_session_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'event'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'recorded'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../_modules/crowsnest/lineage.html#spawn_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.spawn_event" title="Link to this definition"></a></dt>
+<dd><p>One <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line for the event log, shaped like every other line in it.</p>
+<p>The extra field is <code class="docutils literal notranslate"><span class="pre">parent</span></code>, a small object rather than a flat <code class="docutils literal notranslate"><span class="pre">parent_name</span></code> so
+that a reader can tell “spawned by nobody we could name” (<code class="docutils literal notranslate"><span class="pre">parent</span></code> present, its
+<code class="docutils literal notranslate"><span class="pre">name</span></code> empty) from “written by a version that did not record parents” (no
+<code class="docutils literal notranslate"><span class="pre">parent</span></code> at all).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">line</span> <span class="o">=</span> <span class="n">spawn_event</span><span class="p">(</span><span class="s1">'kid'</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'boss'</span><span class="p">},</span> <span class="n">at</span><span class="o">=</span><span class="s1">'2026-01-01T00:00:00+00:00'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="p">[</span><span class="s1">'event'</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="s1">'name'</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="s1">'parent'</span><span class="p">][</span><span class="s1">'name'</span><span class="p">]</span>
+<span class="go">('spawn', 'kid', 'boss')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ledger.html" class="btn btn-neutral float-left" title="crowsnest.ledger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="open.html" class="btn btn-neutral float-right" title="crowsnest.open" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

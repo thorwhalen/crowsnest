@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to crowsnest’s documentation! &mdash; crowsnest 0.0.28 documentation</title>
+  <title>Welcome to crowsnest’s documentation! &mdash; crowsnest 0.0.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=26ffa1e9"></script>
+      <script src="_static/documentation_options.js?v=828725f0"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,6 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/init.html">crowsnest.init</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/open.html">crowsnest.open</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
@@ -99,6 +100,7 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.Activity"><code class="docutils literal notranslate"><span class="pre">Activity</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.LiveSession"><code class="docutils literal notranslate"><span class="pre">LiveSession</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.Turn"><code class="docutils literal notranslate"><span class="pre">Turn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.backfill_lineage"><code class="docutils literal notranslate"><span class="pre">backfill_lineage()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.brief"><code class="docutils literal notranslate"><span class="pre">brief()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.list_ledgers"><code class="docutils literal notranslate"><span class="pre">list_ledgers()</span></code></a></li>
@@ -193,6 +195,29 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.update_ledger"><code class="docutils literal notranslate"><span class="pre">update_ledger()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/lineage.html">crowsnest.lineage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.CONFIDENCE"><code class="docutils literal notranslate"><span class="pre">CONFIDENCE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.LINEAGE_FILENAME"><code class="docutils literal notranslate"><span class="pre">LINEAGE_FILENAME</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.MAX_PPID_HOPS"><code class="docutils literal notranslate"><span class="pre">MAX_PPID_HOPS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SESSION_ID_VAR"><code class="docutils literal notranslate"><span class="pre">SESSION_ID_VAR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SESSION_PID_VAR"><code class="docutils literal notranslate"><span class="pre">SESSION_PID_VAR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SPAWN_COMMANDS"><code class="docutils literal notranslate"><span class="pre">SPAWN_COMMANDS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SPAWN_EVENT"><code class="docutils literal notranslate"><span class="pre">SPAWN_EVENT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SPAWN_VALUE_FLAGS"><code class="docutils literal notranslate"><span class="pre">SPAWN_VALUE_FLAGS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SpawnEdge"><code class="docutils literal notranslate"><span class="pre">SpawnEdge</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.append_edge"><code class="docutils literal notranslate"><span class="pre">append_edge()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.current_session"><code class="docutils literal notranslate"><span class="pre">current_session()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.dflt_sources"><code class="docutils literal notranslate"><span class="pre">dflt_sources()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_processes"><code class="docutils literal notranslate"><span class="pre">from_processes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_records"><code class="docutils literal notranslate"><span class="pre">from_records()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_transcripts"><code class="docutils literal notranslate"><span class="pre">from_transcripts()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.graph"><code class="docutils literal notranslate"><span class="pre">graph()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.lineage_path"><code class="docutils literal notranslate"><span class="pre">lineage_path()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.names_by_session_id"><code class="docutils literal notranslate"><span class="pre">names_by_session_id()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.record_spawn"><code class="docutils literal notranslate"><span class="pre">record_spawn()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.spawn_event"><code class="docutils literal notranslate"><span class="pre">spawn_event()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/open.html">crowsnest.open</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/open.html#crowsnest.open.default_opener"><code class="docutils literal notranslate"><span class="pre">default_opener()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/open.html#crowsnest.open.open_session"><code class="docutils literal notranslate"><span class="pre">open_session()</span></code></a></li>
@@ -240,7 +265,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/tools.html">crowsnest.tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.backfill_lineage"><code class="docutils literal notranslate"><span class="pre">backfill_lineage()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.brief"><code class="docutils literal notranslate"><span class="pre">brief()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.lineage"><code class="docutils literal notranslate"><span class="pre">lineage()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.repo_url"><code class="docutils literal notranslate"><span class="pre">repo_url()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.report"><code class="docutils literal notranslate"><span class="pre">report()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
@@ -273,8 +300,8 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-<p>Release: 0.0.28</p>
-<p>Last change: Sep 09, 2026</p>
+<p>Release: 0.0.29</p>
+<p>Last change: Sep 12, 2026</p>
 </section>
 
 
