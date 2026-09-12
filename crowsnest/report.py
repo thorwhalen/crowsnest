@@ -687,21 +687,40 @@ def _render(
     triaged = any(group_of(s) for s in sessions)
     needs_you = [s for s in sessions if group_of(s) == "needs_you"]
     clear = [s for s in sessions if group_of(s) == "safe_to_close"]
-    waiting = [s for s in sessions if s.get("status") == "waiting"]
-    busy = [s for s in sessions if s.get("status") == "busy"]
+
+    # **Every session appears exactly once.** A row is claimed by the first register that
+    # takes it, and whatever no register claimed falls to Quiet at the end. Both halves
+    # matter and both were got wrong first time: a session classified `needs_you` from its
+    # ledger while its registry status is `idle` was rendered twice, with a duplicate
+    # `id="session-..."` that breaks the page's own deep links; and a custom `verdicts=`
+    # reader returning a group the page has no register for made its session vanish
+    # silently, which is the worst thing a page about what needs you can do.
+    claimed = {id(s) for s in (needs_you + clear if triaged else [])}
+
+    def unclaimed(rows: Sequence[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+        taken = [row for row in rows if id(row) not in claimed]
+        claimed.update(id(row) for row in taken)
+        return taken
+
+    # Only a register that is actually rendered may claim a row. When the page is
+    # triaged the "Waiting on you" register is replaced by "Needs you", so claiming for
+    # it would strand any waiting session a custom `verdicts=` reader classified
+    # otherwise -- which is how the seam made a session disappear.
+    waiting = (
+        []
+        if triaged
+        else unclaimed([s for s in sessions if s.get("status") == "waiting"])
+    )
+    busy = unclaimed([s for s in sessions if s.get("status") == "busy"])
     idle = [s for s in sessions if s.get("status") == "idle"]
-    finished = [
-        s
-        for s in idle
-        if now_epoch - float(s.get("status_since") or 0) <= FINISHED_WINDOW
-        and s not in clear
-    ]
-    quiet = [
-        s
-        for s in idle
-        if now_epoch - float(s.get("status_since") or 0) > FINISHED_WINDOW
-        and s not in clear
-    ] + [s for s in sessions if s.get("status") not in ("waiting", "busy", "idle")]
+    finished = unclaimed(
+        [
+            s
+            for s in idle
+            if now_epoch - float(s.get("status_since") or 0) <= FINISHED_WINDOW
+        ]
+    )
+    quiet = unclaimed(list(sessions))  # everything no register above took
 
     head = (
         _register_from_rows(

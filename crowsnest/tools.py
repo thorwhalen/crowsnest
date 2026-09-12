@@ -173,6 +173,7 @@ def roster(
     ledger_dir: str | Path | None = None,
     resolvers=None,
     text_limit: int = ROSTER_TEXT_LIMIT,
+    _pages: dict | None = None,
 ) -> dict:
     """Every live session, most urgent first, each with a clipped view of its activity.
 
@@ -191,8 +192,17 @@ def roster(
     listing -- and ``activity=False`` promises "instant". Pass ``links=True`` to have both.
     """
     links = activity if links is None else links
+    found = sessions(home=home, all_homes=all_homes, config=config)
+    # One read per ledger for the whole roster. `links` and `triage` both want the same
+    # file, and reading it twice is the kind of waste that only shows up when `ledger_dir`
+    # points at a synced home, which is what that seam is for.
+    pages = (
+        _pages
+        if _pages is not None
+        else (_ledgers_for({s.label for s in found}, ledger_dir) if links else {})
+    )
     rows = []
-    for s in sessions(home=home, all_homes=all_homes, config=config):
+    for s in found:
         row = s.as_dict()
         row["repo_url"] = repo_url(s.cwd)
         if activity:
@@ -213,7 +223,11 @@ def roster(
             }
         if links:
             row["links"] = _links_of(
-                row, ledger_dir=ledger_dir, resolvers=resolvers, limit=ROSTER_LINKS
+                row,
+                ledger_dir=ledger_dir,
+                resolvers=resolvers,
+                limit=ROSTER_LINKS,
+                page=pages.get(s.label),
             )
         rows.append(row)
     counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}
@@ -232,6 +246,7 @@ def _links_of(
     ledger_dir=None,
     resolvers=None,
     limit: int | None = ROSTER_LINKS,
+    page: dict | None = None,
 ) -> list[dict]:
     """Every reference one session wrote, resolved as far as it can honestly be.
 
@@ -265,7 +280,11 @@ def _links_of(
             found.setdefault(
                 identity(url), {**loc, "text": label_for(url, loc.get("text", ""))}
             )
-    page = _ledger_page(str(row.get("label") or ""), ledger_dir)
+    page = (
+        page
+        if page is not None
+        else _ledger_page(str(row.get("label") or ""), ledger_dir)
+    )
     chosen = DFLT_RESOLVERS if resolvers is None else tuple(resolvers)
     own_work = "\n".join(
         part
@@ -315,6 +334,7 @@ def triage(
     config: str | Path | None = None,
     ledger_dir: str | Path | None = None,
     verdicts=None,
+    owner: str = "",
     activity: bool = True,
 ) -> dict:
     """Every live session grouped by what it needs: the three-line answer to "where are we".
@@ -330,23 +350,26 @@ def triage(
     """
     from crowsnest.triage import classify
 
+    # `links=False`: this verb reports what needs a person, and never renders a link.
     rows = roster(
         home=home,
         all_homes=all_homes,
         config=config,
         activity=activity,
-        links=True,
+        links=False,
         ledger_dir=ledger_dir,
     )["sessions"]
     ledgers = _ledgers_for({str(r.get("label") or "") for r in rows}, ledger_dir)
-    return {**classify(rows, ledgers=ledgers, verdicts=verdicts), "made_at": _now()}
+    found = classify(rows, ledgers=ledgers, verdicts=verdicts, owner=owner)
+    return {**found, "made_at": _now()}
 
 
-def _verdicted(rows, ledger_dir, verdicts) -> list[dict]:
+def _verdicted(rows, ledger_dir, verdicts, owner="", *, pages=None) -> list[dict]:
     """``rows`` with each one's triage verdict attached, order untouched."""
     from crowsnest.triage import classify_row
 
-    pages = _ledgers_for({str(r.get("label") or "") for r in rows}, ledger_dir)
+    if pages is None:
+        pages = _ledgers_for({str(r.get("label") or "") for r in rows}, ledger_dir)
     return [
         {
             **row,
@@ -361,15 +384,10 @@ def _verdicted(rows, ledger_dir, verdicts) -> list[dict]:
 
 
 def _ledgers_for(labels, ledger_dir) -> dict:
-    """The ledger page of each named session, skipping the ones with none."""
-    pages = {}
-    for label in labels:
-        if not label:
-            continue
-        page = _ledger_page(label, ledger_dir)
-        if page.get("text"):
-            pages[label] = page
-    return pages
+    """The ledger page of each named session, read once. A session with no ledger gets an
+    empty page rather than no entry, so a caller can tell "read it, there was nothing"
+    from "not read yet" and does not go back to disk to find out."""
+    return {label: _ledger_page(label, ledger_dir) for label in labels if label}
 
 
 def _now() -> str:
@@ -421,6 +439,7 @@ def report(
     resolvers=None,
     triage: bool = True,
     verdicts=None,
+    owner: str = "",
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -446,6 +465,12 @@ def report(
     ledgers of whoever is running it.
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
+    # One read per ledger for the whole page: `links` and `triage` both want the same
+    # file, and the roster is built before either of them asks for it.
+    pages = _ledgers_for(
+        {s.label for s in sessions(home=home, all_homes=all_homes, config=config)},
+        ledger_dir,
+    )
     data = roster(
         home=home,
         all_homes=all_homes,
@@ -453,9 +478,15 @@ def report(
         links=links,
         ledger_dir=ledger_dir,
         resolvers=resolvers,
+        _pages=pages,
     )
     if triage:
-        data = {**data, "sessions": _verdicted(data["sessions"], ledger_dir, verdicts)}
+        data = {
+            **data,
+            "sessions": _verdicted(
+                data["sessions"], ledger_dir, verdicts, owner, pages=pages
+            ),
+        }
     html = render_report(
         data, made_at=made_at, title=title, fragment=fragment, interactive=interactive
     )

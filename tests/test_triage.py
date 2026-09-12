@@ -142,7 +142,7 @@ def test_a_section_ends_at_the_next_heading():
         "No open questions.",
         "All landed.",
         "Closed out.",
-        "no blockers",
+        "no outstanding blockers",
         "Nothing needs you.",
         "The work is complete.",
     ],

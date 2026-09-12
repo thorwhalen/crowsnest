@@ -359,10 +359,19 @@ def triage(
         if not rows:
             out.append("  (none)")
     counts = found["counts"]
+    wants = ", ".join(
+        f"{counts[f'needs_you_{why}']} to {verb}"
+        for why, verb in (
+            ("decision", "decide"),
+            ("action", "do"),
+            ("question", "answer"),
+        )
+        if counts.get(f"needs_you_{why}")
+    )
     out.append(
-        f"\n-- {counts['needs_you']} need you "
-        f"({counts['needs_you_decision']} to decide, {counts['needs_you_action']} to do), "
-        f"{counts['safe_to_close']} safe to close, {counts['working']} working, "
+        f"\n-- {counts['needs_you']} need you"
+        + (f" ({wants})" if wants else "")
+        + f", {counts['safe_to_close']} safe to close, {counts['working']} working, "
         f"{counts['unclassified']} unclassified"
     )
     return "\n".join(out).lstrip("\n")
@@ -375,6 +384,8 @@ def report(
     all_homes: bool = False,
     fragment: bool = False,
     interactive: bool = False,
+    triage: bool = True,
+    ledger_dir: str | None = None,
 ):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
@@ -386,10 +397,16 @@ def report(
     a claude.ai artifact wants (the publisher wraps it itself). `--interactive` adds the
     console (buttons per row and a Refresh) that works when the page is published with
     the `db` capability; without it the page is the static one.
+
+    The page leads with what needs you and what is safe to close, read from each session's
+    ledger. `--no-triage` renders the older page, organised by status alone, which is also
+    what you get from a session that keeps no ledger. `--ledger-dir` reads them elsewhere.
     """
     result = tools.report(
         home=home,
         all_homes=all_homes,
+        triage=triage,
+        ledger_dir=ledger_dir,
         fragment=fragment,
         interactive=interactive,
     )
