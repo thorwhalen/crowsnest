@@ -755,7 +755,13 @@ def _key_of_filename(name: str) -> str:
 
 
 def _doc_of_text(text: str) -> dict:
-    doc = json.loads(text)
+    try:
+        doc = json.loads(text)
+    except RecursionError:
+        # JSON nested past the interpreter's limit is a broken file like any other: every
+        # reader treats it as unreadable, instead of it taking down the page, or the verb
+        # that means to replace it.
+        raise ValueError("an attention document nested too deep to read") from None
     if not isinstance(doc, dict):
         # A file's content is input, reported like a JSON syntax error: as ValueError.
         raise ValueError(  # noqa: TRY004

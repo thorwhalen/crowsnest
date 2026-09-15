@@ -537,3 +537,41 @@ def test_probe_cli_plain_and_the_triage_toggle_render_without_attention(home, tm
             assert marker not in outs[name], (name, marker)
         assert 'id="session-fixer"' in outs[name]
     assert 'id="needs-you"' not in outs["untriaged"]
+
+
+# --------------------------------------------------------------------------------
+# Re-verification after the rebase onto #66.
+# --------------------------------------------------------------------------------
+
+
+def test_probe_a_record_file_nested_too_deep_reads_as_no_record(tmp_path):
+    """D3 through the default *file* store: `json.loads` raises RecursionError before
+    `Record.from_dict`'s one-level check runs, and `_record_or_none` catches ValueError only."""
+    store = attention.dflt_store(tmp_path / "attention")
+    r = row("deep", group="needs_you", why="question", reason="Q?", status="waiting")
+    item = attention.item_id(r)
+    attention.write_record(item, attention.seen(None, attention.fingerprint(r)), store=store)
+    (tmp_path / "attention" / f"{item}.json").write_text("[" * 200_000 + "]" * 200_000)
+    got = outcome(render_report, {"sessions": [r], "counts": {}}, store=store)
+    assert got[0] == "ok", got
+
+
+def test_probe_later_and_woke_times_are_in_the_page_zone():
+    stamp = "2026-02-01T23:30:00Z"
+    now = attention.instant(stamp)
+    a = row("sleeper", group="needs_you", why="question", reason="Q?", status="waiting")
+    b = row("waker", group="needs_you", why="decision", reason="D?", status="waiting")
+    store = {}
+    mark(store, a, attention.later, until=now + timedelta(minutes=90))
+    mark(store, b, attention.later, until=now - timedelta(minutes=30), plan="after lunch")
+    roster = {"sessions": [a, b], "counts": {}}
+    expected = {
+        "America/Los_Angeles": ("until 17:00 or it changes", "you put it off until 15:00"),
+        "UTC": ("until 2026-02-02 01:00 or it changes", "you put it off until 23:00"),
+        "Asia/Tokyo": ("until 10:00 or it changes", "you put it off until 08:00"),
+    }
+    for tz, (later_text, back_text) in expected.items():
+        html = render_report(roster, made_at=stamp, store=store, tz=tz)
+        assert later_text in html.split(LATER_BLOCK, 1)[1], tz
+        assert back_text in register(html, "needs-you"), tz
+        assert " UTC" not in html.split(LATER_BLOCK, 1)[1].split("</details>", 1)[0]
