@@ -545,9 +545,9 @@ def test_every_open_tag_is_closed_with_attention_markup():
     stack: list[str] = []
     for closing, name in re.findall(r"<(/?)([a-z0-9]+)", body):
         if closing:
-            assert (
-                stack and stack[-1] == name
-            ), f"{name} closed out of order: {stack[-3:]}"
+            assert stack and stack[-1] == name, (
+                f"{name} closed out of order: {stack[-3:]}"
+            )
             stack.pop()
         elif name not in void:
             stack.append(name)
