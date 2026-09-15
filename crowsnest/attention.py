@@ -596,7 +596,8 @@ class Record:
     ``prev`` is the snapshot :func:`undo` restores, one level deep. ``updated_at`` is what
     last-write-wins compares when the store and a page's mirror disagree. ``seen_as`` is
     what the item was at ``seen_rev`` (:class:`SeenAs`); a record written before the field
-    existed has none, and still reads.
+    existed has none, and still reads. A document whose ``seen_as`` has no ``seen_rev`` to
+    describe reads without it (#56's page may write one); built in Python, it is refused.
 
     >>> Record.from_dict(Record(seen_rev='ab').as_dict()) == Record(seen_rev='ab')
     True
@@ -654,7 +655,11 @@ class Record:
             prev=None if doc.get("prev") is None else cls.from_dict(doc["prev"]),
             updated_at=_field(doc, "updated_at", str, ""),
             seen_as=(
-                None if doc.get("seen_as") is None else SeenAs.from_dict(doc["seen_as"])
+                # A label with no revision to describe is dropped, not refused: a page
+                # that marks unread and keeps it must not make a courier's batch unimportable.
+                None
+                if doc.get("seen_as") is None or doc.get("seen_rev") is None
+                else SeenAs.from_dict(doc["seen_as"])
             ),
         )
 
@@ -731,11 +736,17 @@ def _step(record: Record | None, now: datetime | None, **changes) -> Record:
     )
 
 
-def _seen_as(value) -> SeenAs | None:
-    """``value`` as a :class:`SeenAs`: one already, a mapping of one, or ``None``."""
-    if value is None or isinstance(value, SeenAs):
-        return value
-    return SeenAs.from_dict(value)
+def _label(record: Record | None, rev: str, seen_as) -> SeenAs | None:
+    """What was seen at ``rev``: ``seen_as`` when given, one already or a mapping of one;
+    else the label ``record`` keeps, when it describes this same revision; else ``None``.
+    """
+    if isinstance(seen_as, SeenAs):
+        return seen_as
+    if seen_as is not None:
+        return SeenAs.from_dict(seen_as)
+    if record is not None and record.seen_rev == rev:
+        return record.seen_as
+    return None
 
 
 def seen(
@@ -753,10 +764,14 @@ def seen(
     named, it is the way to wake one early.
 
     ``seen_as`` is what the item was at ``rev`` (:func:`seen_as_of` the row the revision
-    came from). ``later`` and ``done`` take it too. Given none, the record keeps none: a
-    label from an older revision must not describe this one.
+    came from). ``later`` and ``done`` take it too. Given none, the record keeps the label
+    it has for this same revision, and otherwise none: a label from an older revision
+    must not describe this one.
     """
-    return _step(record, now, seen_rev=_rev(rev), seen_as=_seen_as(seen_as), state=ACTIVE)
+    rev = _rev(rev)
+    return _step(
+        record, now, seen_rev=rev, seen_as=_label(record, rev, seen_as), state=ACTIVE
+    )
 
 
 def unseen(record: Record | None, *, now: datetime | None = None) -> Record:
@@ -802,7 +817,7 @@ def later(
         state=LATER,
         later=deferral,
         seen_rev=rev,
-        seen_as=_seen_as(seen_as),
+        seen_as=_label(record, rev, seen_as),
     )
 
 
@@ -816,7 +831,12 @@ def done(
     """The person did their part at ``rev``: hidden until the item's revision changes."""
     rev = _rev(rev)
     return _step(
-        record, now, state=DONE, done_rev=rev, seen_rev=rev, seen_as=_seen_as(seen_as)
+        record,
+        now,
+        state=DONE,
+        done_rev=rev,
+        seen_rev=rev,
+        seen_as=_label(record, rev, seen_as),
     )
 
 

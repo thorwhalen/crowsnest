@@ -61,9 +61,10 @@ five days old from being repeated as current (crowsnest#66).
 
 **A request carries its asks, whole.** ``reason`` quotes the start of one request, clipped
 to :data:`REASON_LIMIT` so a page stays a page. A ``needs_you`` verdict's ``asks``
-(:class:`Ask`) are everything it asks of a person, each unclipped and dated: the question,
-the field, a statement from its sentence to the end of its block, and every "for <person>"
-section in the file. :func:`crowsnest.attention.fingerprint` reads them, so a link changed
+(:class:`Ask`) are what it asks of a person, each unclipped and dated: first the request
+its reason quotes (the question, the field, a statement to the end of its sentence and
+block, or a section), then every other "for <person>" section in the file. A statement
+elsewhere is not an ask. :func:`crowsnest.attention.fingerprint` reads them, so a link changed
 after the reason, a second section appended later, or a change past the clip is a change
 to the item (crowsnest#67). That makes this module's reading of an ask part of every
 stored revision: a change to where an ask begins or ends resurfaces the items it touches.
@@ -451,21 +452,28 @@ _ACTION = re.compile(
 )
 
 
-def _sentence_at(text: str, match: re.Match) -> str:
+def _sentence_at(text: str, match: re.Match, *, limit: int | None = None) -> str:
     """The sentence a mid-paragraph statement sits in, so the reason reads as one.
 
     A heading opens a section; "blocked on Thor (priv#145)" opens nothing, and quoting
-    from the match forward gives a reason beginning mid-clause.
+    from the match forward gives a reason beginning mid-clause. ``limit`` cuts it where
+    the statement's block ends, so it never runs on into a list or a log below it.
     """
     start = max(
         text.rfind(".", 0, match.start()) + 1,
         text.rfind("\n", 0, match.start()) + 1,
     )
+    end = _sentence_end(text, match)
+    return text[start : end if limit is None else min(end, limit)].strip()
+
+
+def _sentence_end(text: str, match: re.Match) -> int:
+    """Where the sentence holding ``match`` ends: after its full stop, or at a blank line."""
     end = len(text)
     for stop in (text.find(". ", match.end()), text.find("\n\n", match.end())):
         if 0 <= stop < end:
             end = stop + 1
-    return text[start:end].strip()
+    return end
 
 
 #: Which of :func:`_person_patterns` is the "for <person>" lead-in, the one form that
@@ -485,16 +493,53 @@ _OPENS_A_BLOCK = (
 _HEADING, _RULE, _LIST_ITEM, _TABLE_ROW, _QUOTE = _OPENS_A_BLOCK
 
 #: Where a "for <person>" section ends: at a heading, whatever decorates it, read where
-#: code is blanked so a ``# comment`` in a fence is not one; or at two blank lines, read
-#: where code is not, so a fence is not two. A rule or another lead-in ends it as well
-#: (:func:`_section_ask`).
+#: code is blanked so a ``# comment`` in a fence is not one; or at two blank lines outside
+#: a fence, read where code is not, so a blanked fence is not two and the blank lines in
+#: a fence end nothing. A rule or another lead-in ends it as well (:func:`_section_ask`).
 _SECTION_HEADING_STOP = re.compile(r"\n[\s>*#_-]*#{1,6}\s")
 _SECTION_GAP_STOP = re.compile(r"\n\s*\n\s*\n")
 
 #: A request right after "no" or "without" is the absence of one: "no manual-task needed",
 #: "no longer blocked on Thor". One word may sit between; two ("no reply yet; blocked on
-#: Thor") and it is a request again.
-_NO_SUCH = re.compile(r"(?i)\b(?:no|without)\s+(?:[\w-]+\s+)?$")
+#: Thor") and it is a request again. A word starts with a letter: in "No - only Thor can
+#: push tags" the dash is punctuation, the "No" answers a question, and the request stands.
+_NO_SUCH = re.compile(r"(?i)\b(?:no|without)\s+(?:[^\W\d_][\w'-]*\s+)?$")
+
+#: How a "for <person>" line opens a section rather than naming a person in passing: a
+#: heading, a bold phrase still open where the person is named, or a colon soon after.
+#: "- Opened pull/46 for Thor to review." is none of them: a log line, not a request.
+_HEADING_LEAD = re.compile(r"^[ \t>]*#")
+_BOLD_LEAD = re.compile(r"^[ \t>]*(?:[-*+][ \t]+)?(\*\*|__)(?:(?!\1).)*$")
+_COLON_LEAD = re.compile(r"[^\n:]{0,40}:")
+
+
+def _is_a_lead_in(text: str, found: re.Match) -> bool:
+    """Does the "for <person>" match ``found`` open a section?
+
+    >>> p = _for_person('thor')
+    >>> [_is_a_lead_in(t, p.search(t)) for t in (
+    ...     '## For Thor', '**For Thor - do not reinstall.**', 'Outstanding for Thor: x',
+    ...     '- Opened pull/46 for Thor to review.', '- **Opened** pull/46 for Thor')]
+    [True, True, True, False, False]
+    """
+    start, _ = _line_bounds(text, found.end() - 1)
+    head = text[start : found.end()]
+    return bool(
+        _HEADING_LEAD.match(head)
+        or _BOLD_LEAD.match(head)
+        or _COLON_LEAD.match(text, found.end())
+    )
+
+
+def _on_a_heading(text: str, pos: int) -> bool:
+    """Is ``pos`` on a heading line? A request named there names the section below it.
+
+    >>> text = '## Manual (only the user can do)'
+    >>> _on_a_heading(text, text.index('only')), _on_a_heading('only you can', 0)
+    (True, False)
+    """
+    start, _ = _line_bounds(text, pos)
+    return bool(_HEADING_LEAD.match(text[start:pos]))
 
 
 class _Page(NamedTuple):
@@ -508,6 +553,7 @@ class _Page(NamedTuple):
     raw: str
     shown: str
     lead_ins: frozenset[int]  # where each line opening a "for <person>" section starts
+    fences: tuple[tuple[int, int], ...]  # where each fenced code block lies
 
 
 def _page_of(free, owner: str) -> _Page:
@@ -517,8 +563,18 @@ def _page_of(free, owner: str) -> _Page:
     lead_ins = frozenset(
         _line_bounds(shown, found.end() - 1)[0]
         for found in _for_person(owner).finditer(shown)
+        if _is_a_lead_in(shown, found)
     )
-    return _Page(raw, shown, lead_ins)
+    return _Page(raw, shown, lead_ins, tuple(m.span() for m in _FENCE.finditer(raw)))
+
+
+def _in_fence(page: _Page, pos: int) -> bool:
+    return any(start <= pos < end for start, end in page.fences)
+
+
+def _is_blank(page: _Page, start: int, end: int) -> bool:
+    """Is the line ``[start, end)`` blank as written? A blank line in a fence is code."""
+    return not page.raw[start:end].strip() and not _in_fence(page, start)
 
 
 def _line_bounds(text: str, pos: int) -> tuple[int, int]:
@@ -535,8 +591,9 @@ def _opens_a_block(page: _Page, start: int, end: int) -> bool:
 def _block_end(page: _Page, pos: int) -> int:
     """Where the block holding ``pos`` ends: before a blank line or a line opening a block.
 
-    A line ending in ``:`` opens a list rather than ending at one: "Blocked on Thor for
-    two things:" is followed by the two things.
+    When the line holding ``pos`` ends in ``:``, the list under it belongs to it: "Blocked
+    on Thor for two things:" is followed by the two things. Only that line: a "Done so
+    far:" further down opens a progress list, not part of the request.
 
     >>> text = 'Blocked on Thor. Approve pull/45.\\nand the tag\\n- Committed 7d30838.'
     >>> text[: _block_end(_page_of(text, 'thor'), 0)]
@@ -551,12 +608,12 @@ def _block_end(page: _Page, pos: int) -> int:
     while end < len(shown):
         start, after = _line_bounds(shown, end + 1)
         line = shown[start:after]
-        if not page.raw[start:after].strip():
+        if _is_blank(page, start, after):
             break
-        if not (listing and _LIST_ITEM.match(line)):
-            if _opens_a_block(page, start, after):
-                break
-            listing = listing or line.rstrip().endswith(":")
+        if not (listing and _LIST_ITEM.match(line)) and _opens_a_block(
+            page, start, after
+        ):
+            break
         end = after
     return end
 
@@ -566,10 +623,15 @@ def _statement_ask(page: _Page, opened: re.Match) -> tuple[int, int]:
 
     "Blocked on Thor. Please approve pull/45." asks in its second sentence, so the sentence
     alone is not the ask. The lines after it are not part of it once a blank line, a list
-    item, a table row, a heading or a rule begins: that is where a log grows.
+    item, a table row, a heading or a rule begins: that is where a log grows. A statement
+    on a heading line -- "## Manual (only the user can do)" -- names the section below
+    it, and its ask runs to that section's end (:func:`_section_ask`).
     """
     shown = page.shown
     start = max(shown.rfind(".", 0, opened.start()), shown.rfind("\n", 0, opened.start()))
+    # The reason is the sentence cut at this same end (`_requests`), so the ask holds it.
+    if _on_a_heading(shown, opened.start()):
+        return start + 1, _section_ask(page, opened)[1]
     return start + 1, _block_end(page, opened.start())
 
 
@@ -592,9 +654,10 @@ def _section_ask(page: _Page, opened: re.Match) -> tuple[int, int]:
     shown = page.shown
     start = opened.end()
     end = len(shown)
+    gaps = _SECTION_GAP_STOP.finditer(page.raw, start)
     for found in (
         _SECTION_HEADING_STOP.search(shown, start),
-        _SECTION_GAP_STOP.search(page.raw, start),
+        next((gap for gap in gaps if not _in_fence(page, gap.start())), None),
     ):
         if found and found.start() < end:
             end = found.start()
@@ -607,8 +670,9 @@ def _section_ask(page: _Page, opened: re.Match) -> tuple[int, int]:
             break
         line_start = line_end + 1
     # The heading's own trailing punctuation and decoration is not the section:
-    # `**Open for Thor:** attach the GIF` should read back as `attach the GIF`.
-    body = shown[start:end]
+    # `**Open for Thor:** attach the GIF` should read back as `attach the GIF`. Measured
+    # on the text as written, so a fence opening the section is not stripped as blank.
+    body = page.raw[start:end]
     return start + len(body) - len(body.lstrip(":*_)-— \t\r\n")), end
 
 
@@ -618,7 +682,7 @@ class _Request(NamedTuple):
     wanted: str  # the section or sentence a reason quotes
     at: int  # where its words begin, for when they were said
     span: tuple[int, int]  # its ask: the section, or the sentence to its block's end
-    form: int  # which of `_person_patterns` found it
+    opens_a_section: bool  # a lead-in (`_is_a_lead_in`) or a heading naming a request
 
 
 def _requests(page: _Page, owner: str) -> list[_Request]:
@@ -643,7 +707,7 @@ def _requests(page: _Page, owner: str) -> list[_Request]:
                 wanted = free[span[0] : span[1]]
             else:
                 span = _statement_ask(page, opened)
-                wanted = _sentence_at(free, opened)
+                wanted = _sentence_at(free, opened, limit=span[1])
             # A section headed "For Thor" whose content is itself an all-clear is a
             # session reporting that it needs nothing, in the place it would have said
             # what it needed. Reading that as a request is the same error as reading
@@ -655,7 +719,12 @@ def _requests(page: _Page, owner: str) -> list[_Request]:
             ):
                 # `end`, not `start`: a heading pattern may begin on the blank lines
                 # above its own line, which belong to the section before.
-                found.append(_Request(wanted, opened.end(), span, form))
+                opens = (
+                    _is_a_lead_in(free, opened)
+                    if form == _LEAD_IN
+                    else _on_a_heading(free, opened.start())
+                )
+                found.append(_Request(wanted, opened.end(), span, opens))
     return found
 
 
@@ -667,9 +736,12 @@ def _asks(page: _Page, requests: Sequence[_Request], ledger: Mapping) -> tuple[A
     it is the request the reason quotes. Sessions *mention* requests in statements: they
     restate them, quote a brief, say no manual-task was needed, and every one of those in
     a growing file would make the item change (K2 in discussion #51). A "for <person>"
-    section is how a session *makes* a request, which is what a second ask is.
+    section is how a session *makes* a request, which is what a second ask is -- when a
+    heading, a bold phrase or a colon opens it (:func:`_is_a_lead_in`), or a heading names
+    the request ("## Manual (only the user can do)"). "- Opened pull/46 for Thor to
+    review." under a dated log heading mentions a person; it opens nothing.
     """
-    chosen = [requests[0], *(r for r in requests[1:] if r.form == _LEAD_IN)]
+    chosen = [requests[0], *(r for r in requests[1:] if r.opens_a_section)]
     found: dict[str, Ask] = {}
     for request in chosen:
         start, end = request.span

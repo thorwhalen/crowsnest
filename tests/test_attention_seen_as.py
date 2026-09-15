@@ -82,10 +82,24 @@ def test_it_holds_a_group_and_a_why_and_never_words():
     assert set(doc["seen_as"]) == {"group", "why"}
 
 
+def test_a_label_with_nothing_seen_is_dropped_on_read_not_refused():
+    # A page that marks unread and keeps the label must not make its courier's whole
+    # batch unimportable (review of #72): the label describes no revision, so it goes.
+    doc = {"state": "active", "seen_as": {"group": "needs_you", "why": "question"}}
+    assert att.Record.from_dict(doc).seen_as is None
+    with pytest.raises(ValueError):
+        att.Record(seen_as=ASKED)  # built in Python, it is a mistake, and says so
+
+
+def test_a_step_at_the_revision_already_seen_keeps_its_label():
+    looked = att.seen(None, "ab", seen_as=ASKED, now=T0)
+    assert att.done(looked, "ab", now=T0).seen_as == ASKED
+    assert att.done(looked, "cd", now=T0).seen_as is None
+
+
 @pytest.mark.parametrize(
     "doc",
     [
-        {"seen_as": {"group": "needs_you"}},  # no seen_rev for it to describe
         {"seen_rev": "ab", "seen_as": "needs_you"},
         {"seen_rev": "ab", "seen_as": {"group": ""}},
         {"seen_rev": "ab", "seen_as": {"group": "needs_you", "why": 3}},
