@@ -8,6 +8,7 @@ crowsnest.report
 
    .. autosummary::
    
+      ATTENTION_CSS
       CONSOLE_CSS
       CONSOLE_SCRIPT
    

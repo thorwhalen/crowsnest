@@ -101,6 +101,7 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.report.ATTENTION_CSS"><code class="docutils literal notranslate"><span class="pre">ATTENTION_CSS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.report.CONSOLE_CSS"><code class="docutils literal notranslate"><span class="pre">CONSOLE_CSS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.report.CONSOLE_SCRIPT"><code class="docutils literal notranslate"><span class="pre">CONSOLE_SCRIPT</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.report.render_report"><code class="docutils literal notranslate"><span class="pre">render_report()</span></code></a></li>
@@ -169,6 +170,10 @@ never from the page (<a class="reference internal" href="crowsnest.said.html#mod
 element with the local <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code>, plus the date when that is not <code class="docutils literal notranslate"><span class="pre">made_at</span></code>’s day, then
 how long ago, then the word <em>stale</em> once it is older than <code class="docutils literal notranslate"><span class="pre">stale_after</span></code>. The rail’s large
 figure is that same age. A row whose source gave no time says <em>time unknown</em>.</p>
+<p><strong>What the person decided about each row shows too</strong> (<a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.attention</span></code></a>,
+crowsnest#55): seen rows dim and sort below the rest of their register, rows put off fold
+into a collapsed <em>Later</em> block, rows handled and unchanged since are counted rather than
+shown. A store holding no readable record, and <code class="docutils literal notranslate"><span class="pre">plain</span></code>, leave the page as it was.</p>
 <p>Every string reaches the page through <code class="xref py py-class docutils literal notranslate"><span class="pre">_Sanitizer</span></code>, which is
 <code class="xref py py-func docutils literal notranslate"><span class="pre">openloops.egress.scrub()</span></code> plus HTML escaping. A row’s <code class="docutils literal notranslate"><span class="pre">last_assistant_text</span></code> or
 <code class="docutils literal notranslate"><span class="pre">pending_question</span></code> comes straight from a transcript, and a transcript is the highest-
@@ -183,10 +188,13 @@ withheld and counted, never printed – the count is in the footer.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.report.CONSOLE_CSS" title="crowsnest.report.CONSOLE_CSS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CONSOLE_CSS</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.report.ATTENTION_CSS" title="crowsnest.report.ATTENTION_CSS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ATTENTION_CSS</span></code></a></p></td>
+<td><p>The styles attention adds, on top of the shared stylesheet's tokens.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.report.CONSOLE_CSS" title="crowsnest.report.CONSOLE_CSS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CONSOLE_CSS</span></code></a></p></td>
 <td><p>The console's styles, on top of the shared stylesheet's tokens.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.report.CONSOLE_SCRIPT" title="crowsnest.report.CONSOLE_SCRIPT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CONSOLE_SCRIPT</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.report.CONSOLE_SCRIPT" title="crowsnest.report.CONSOLE_SCRIPT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CONSOLE_SCRIPT</span></code></a></p></td>
 <td><p>the only thing it talks to is the host's <code class="docutils literal notranslate"><span class="pre">db</span></code> capability, and when that is absent it leaves the page exactly as the static one.</p></td>
 </tr>
 </tbody>
@@ -202,6 +210,14 @@ withheld and counted, never printed – the count is in the footer.</p>
 </tbody>
 </table>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.report.ATTENTION_CSS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">ATTENTION_CSS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\n.row--seen{opacity:.55}\n.chip--reach{color:var(--ink-soft);background:transparent;border-style:dashed}\n.dot{display:inline-block;width:.45rem;height:.45rem;border-radius:50%;\n</span>&#160; <span class="pre">background:var(--accent);margin-left:.45rem;vertical-align:middle}\n.since{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);margin-top:1.4rem}\n.wip{font-family:var(--mono);font-size:.78rem;color:var(--needs);padding:.8rem</span> <span class="pre">0</span> <span class="pre">.1rem}\n.note-mark{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;\n</span>&#160; <span class="pre">text-transform:uppercase;color:var(--accent)}\n.register--later&gt;summary{cursor:pointer;list-style:none}\n.register--later&gt;summary::-webkit-details-marker{display:none}\n.register--later</span> <span class="pre">.figure{color:var(--ink-soft)}\n'</span></span><a class="headerlink" href="#crowsnest.report.ATTENTION_CSS" title="Link to this definition">#</a></dt>
+<dd><p>The styles attention adds, on top of the shared stylesheet’s tokens. Only a page that
+applies a store carries them, so a page from an empty store stays byte for byte what it
+was. Seen rows are dimmed, never recoloured: the register’s colour is its meaning.</p>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.report.CONSOLE_CSS">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">CONSOLE_CSS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\n.console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;\n</span>&#160; <span class="pre">font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}\n.acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}\n.acts</span> <span class="pre">button,.console</span> <span class="pre">button{font:inherit;font-family:var(--mono);font-size:.68rem;\n</span>&#160; <span class="pre">letter-spacing:.08em;text-transform:uppercase;padding:.3rem</span> <span class="pre">.55rem;cursor:pointer;\n</span>&#160; <span class="pre">border:1px</span> <span class="pre">solid</span> <span class="pre">var(--accent);background:transparent;color:var(--accent)}\n.acts</span> <span class="pre">button:hover,.console</span> <span class="pre">button:hover,.acts</span> <span class="pre">button:focus-visible,.console</span> <span class="pre">button:focus-visible{\n</span>&#160; <span class="pre">background:var(--accent);color:var(--surface)}\n.acts</span> <span class="pre">textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;\n</span>&#160; <span class="pre">border:1px</span> <span class="pre">solid</span> <span class="pre">var(--rule);background:var(--surface);color:var(--ink)}\n.answers{list-style:none;margin:.2rem</span> <span class="pre">0</span> <span class="pre">0;padding:0;width:100%;font-family:var(--mono);\n</span>&#160; <span class="pre">font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}\n.answers</span> <span class="pre">li</span> <span class="pre">b{color:var(--ink);font-weight:500}\n.unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}\n'</span></span><a class="headerlink" href="#crowsnest.report.CONSOLE_CSS" title="Link to this definition">#</a></dt>
@@ -223,7 +239,7 @@ the static one. Everything read back from the store is untrusted and rendered as
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.report.render_report">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">render_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roster</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">made_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'crowsnest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/report.html#render_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.report.render_report" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">render_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roster</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">made_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'crowsnest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/report.html#render_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.report.render_report" title="Link to this definition">#</a></dt>
 <dd><p>The roster <a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.roster()</span></code></a> returns as one self-contained HTML page.</p>
 <p><code class="docutils literal notranslate"><span class="pre">made_at</span></code> is the moment the snapshot claims to be from and is printed in the
 largest type on the page; it is a required argument (not a hidden <code class="docutils literal notranslate"><span class="pre">now()</span></code>) so that
@@ -252,6 +268,29 @@ wants it – the claude.ai artifact publisher does: the <code class="docutils li
 <code class="xref py py-data docutils literal notranslate"><span class="pre">FINISHED_WINDOW</span></code> seconds, and “quiet” otherwise. Anything not <code class="docutils literal notranslate"><span class="pre">waiting</span></code>,
 <code class="docutils literal notranslate"><span class="pre">busy</span></code> or <code class="docutils literal notranslate"><span class="pre">idle</span></code> also falls into Quiet, so an unrecognised status is shown rather
 than dropped.</p>
+<p><strong>What the person decided shows too</strong> (<a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.attention</span></code></a>). <code class="docutils literal notranslate"><span class="pre">store</span></code> is the
+attention store – by default the one <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">seen|later|done|note</span></code> write – and
+each row’s item id, revision and <a class="reference internal" href="crowsnest.attention.html#crowsnest.attention.present" title="crowsnest.attention.present"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.attention.present()</span></code></a> at <code class="docutils literal notranslate"><span class="pre">made_at</span></code>
+decide how it is drawn:</p>
+<ul class="simple">
+<li><p>a <code class="docutils literal notranslate"><span class="pre">seen</span></code> row is dimmed in place and sorted below the unseen rows of its register;</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">changed</span></code> or <code class="docutils literal notranslate"><span class="pre">woke</span></code> row says so in words in the register that needs the
+person, and elsewhere with a dot, which the title’s count leaves out;</p></li>
+<li><p>a row put off leaves its register for a collapsed <em>Later</em> block after <em>Working</em>;</p></li>
+<li><p>a row handled and unchanged since is left out, and the footer counts it;</p></li>
+<li><p>a line under the masthead counts what is new, changed, woke and landed; <em>Needs you</em>
+opens with how many sessions wait on the person; the <code class="docutils literal notranslate"><span class="pre">&lt;title&gt;</span></code> counts the new,
+changed and woke rows of that register; a row with a note shows its first line, and
+a row back from <em>Later</em> its plan; a <em>Needs you</em> row carries its reach, <code class="docutils literal notranslate"><span class="pre">phone</span></code> or
+<code class="docutils literal notranslate"><span class="pre">terminal</span></code>.</p></li>
+</ul>
+<p><strong>A store with no readable record changes nothing</strong>: the page is byte for byte the
+page from before attention existed. Neither does <code class="docutils literal notranslate"><span class="pre">plain=True</span></code>, which ignores the
+store – a copy to share – nor a roster without triage verdicts, whose rows carry
+revisions no verb pinned. <code class="docutils literal notranslate"><span class="pre">identity</span></code> and <code class="docutils literal notranslate"><span class="pre">material</span></code> are
+<a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.attention</span></code></a>’s seams, and must be the ones the verbs were given. An
+interactive page carries <code class="docutils literal notranslate"><span class="pre">data-item</span></code> and <code class="docutils literal notranslate"><span class="pre">data-rev</span></code> for its script on every row
+that has an identity, whatever the store holds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
@@ -301,7 +340,7 @@ than dropped.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=423071ad"></script>
+      <script src="../_static/documentation_options.js?v=e648f5b4"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

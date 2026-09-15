@@ -30,6 +30,11 @@ element with the local `HH:MM`, plus the date when that is not `made_at`’s day
 how long ago, then the word *stale* once it is older than `stale_after`. The rail’s large
 figure is that same age. A row whose source gave no time says *time unknown*.
 
+**What the person decided about each row shows too** ([`crowsnest.attention`](crowsnest.attention.html.md#module-crowsnest.attention),
+crowsnest#55): seen rows dim and sort below the rest of their register, rows put off fold
+into a collapsed *Later* block, rows handled and unchanged since are counted rather than
+shown. A store holding no readable record, and `plain`, leave the page as it was.
+
 Every string reaches the page through `_Sanitizer`, which is
 `openloops.egress.scrub()` plus HTML escaping. A row’s `last_assistant_text` or
 `pending_question` comes straight from a transcript, and a transcript is the highest-
@@ -44,14 +49,21 @@ True
 
 ### Module Attributes
 
-| [`CONSOLE_CSS`](#crowsnest.report.CONSOLE_CSS)    | The console's styles, on top of the shared stylesheet's tokens.                                                                 |
-|-----------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| [`CONSOLE_SCRIPT`](#crowsnest.report.CONSOLE_SCRIPT) | the only thing it talks to is the host's `db` capability, and when that is absent it leaves the page exactly as the static one. |
+| [`ATTENTION_CSS`](#crowsnest.report.ATTENTION_CSS)   | The styles attention adds, on top of the shared stylesheet's tokens.                                                            |
+|------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| [`CONSOLE_CSS`](#crowsnest.report.CONSOLE_CSS)     | The console's styles, on top of the shared stylesheet's tokens.                                                                 |
+| [`CONSOLE_SCRIPT`](#crowsnest.report.CONSOLE_SCRIPT)  | the only thing it talks to is the host's `db` capability, and when that is absent it leaves the page exactly as the static one. |
 
 ### Functions
 
 | [`render_report`](#crowsnest.report.render_report)(roster, \*, made_at[, title, ...])   | The roster [`crowsnest.tools.roster()`](crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.   |
 |-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+### crowsnest.report.ATTENTION_CSS *= '\\n.row--seen{opacity:.55}\\n.chip--reach{color:var(--ink-soft);background:transparent;border-style:dashed}\\n.dot{display:inline-block;width:.45rem;height:.45rem;border-radius:50%;\\n  background:var(--accent);margin-left:.45rem;vertical-align:middle}\\n.since{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);margin-top:1.4rem}\\n.wip{font-family:var(--mono);font-size:.78rem;color:var(--needs);padding:.8rem 0 .1rem}\\n.note-mark{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;\\n  text-transform:uppercase;color:var(--accent)}\\n.register--later>summary{cursor:pointer;list-style:none}\\n.register--later>summary::-webkit-details-marker{display:none}\\n.register--later .figure{color:var(--ink-soft)}\\n'*
+
+The styles attention adds, on top of the shared stylesheet’s tokens. Only a page that
+applies a store carries them, so a page from an empty store stays byte for byte what it
+was. Seen rows are dimmed, never recoloured: the register’s colour is its meaning.
 
 ### crowsnest.report.CONSOLE_CSS *= '\\n.console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;\\n  font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}\\n.acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}\\n.acts button,.console button{font:inherit;font-family:var(--mono);font-size:.68rem;\\n  letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer;\\n  border:1px solid var(--accent);background:transparent;color:var(--accent)}\\n.acts button:hover,.console button:hover,.acts button:focus-visible,.console button:focus-visible{\\n  background:var(--accent);color:var(--surface)}\\n.acts textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.answers{list-style:none;margin:.2rem 0 0;padding:0;width:100%;font-family:var(--mono);\\n  font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}\\n.answers li b{color:var(--ink);font-weight:500}\\n.unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}\\n'*
 
@@ -66,7 +78,7 @@ the static one. Everything read back from the store is untrusted and rendered as
 * **Type:**
   The console’s one script. It loads nothing from anywhere
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, identity=None, material=None)
 
 The roster [`crowsnest.tools.roster()`](crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -101,6 +113,30 @@ A session counts as “just finished” when it has been `idle` for less than
 `FINISHED_WINDOW` seconds, and “quiet” otherwise. Anything not `waiting`,
 `busy` or `idle` also falls into Quiet, so an unrecognised status is shown rather
 than dropped.
+
+**What the person decided shows too** ([`crowsnest.attention`](crowsnest.attention.html.md#module-crowsnest.attention)). `store` is the
+attention store – by default the one `crowsnest seen|later|done|note` write – and
+each row’s item id, revision and [`crowsnest.attention.present()`](crowsnest.attention.html.md#crowsnest.attention.present) at `made_at`
+decide how it is drawn:
+
+- a `seen` row is dimmed in place and sorted below the unseen rows of its register;
+- a `changed` or `woke` row says so in words in the register that needs the
+  person, and elsewhere with a dot, which the title’s count leaves out;
+- a row put off leaves its register for a collapsed *Later* block after *Working*;
+- a row handled and unchanged since is left out, and the footer counts it;
+- a line under the masthead counts what is new, changed, woke and landed; *Needs you*
+  opens with how many sessions wait on the person; the `<title>` counts the new,
+  changed and woke rows of that register; a row with a note shows its first line, and
+  a row back from *Later* its plan; a *Needs you* row carries its reach, `phone` or
+  `terminal`.
+
+**A store with no readable record changes nothing**: the page is byte for byte the
+page from before attention existed. Neither does `plain=True`, which ignores the
+store – a copy to share – nor a roster without triage verdicts, whose rows carry
+revisions no verb pinned. `identity` and `material` are
+[`crowsnest.attention`](crowsnest.attention.html.md#module-crowsnest.attention)’s seams, and must be the ones the verbs were given. An
+interactive page carries `data-item` and `data-rev` for its script on every row
+that has an identity, whatever the store holds.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
