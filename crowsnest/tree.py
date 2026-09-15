@@ -565,5 +565,5 @@ def _as_a_list(
         items.append(f'<li style="margin-left:{indent}rem">{named} &mdash; {said}</li>')
     return (
         '<details class="spawn-tree-list"><summary>The same tree as a list</summary>'
-        f'<ul>{"".join(items)}</ul></details>'
+        f"<ul>{''.join(items)}</ul></details>"
     )
