@@ -1,0 +1,57 @@
+crowsnest.attention
+===================
+
+.. automodule:: crowsnest.attention
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      NAMESPACE
+      ACTIVE
+      LATER
+      DONE
+      NEW
+      CHANGED
+      WOKE
+      SEEN
+      HIDDEN
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      as_doc
+      attention_dir
+      dflt_identity
+      dflt_material
+      dflt_store
+      done
+      export_docs
+      fingerprint
+      import_docs
+      instant
+      is_item_id
+      item_id
+      later
+      later_until
+      note
+      present
+      reach
+      read_doc
+      read_record
+      seen
+      undo
+      unseen
+      update
+      write_record
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Later
+      Note
+      Record
+   

@@ -26,11 +26,24 @@ path = "~/.cache/xa/remotes/server"   # a synced copy
 remote = true                         # liveness by freshness, no pid check
 ```
 
-The one non-`homes` setting is `claude_bin` ([`claude_bin_setting()`](#crowsnest.config.claude_bin_setting)), for a
+The one other top-level setting is `claude_bin` ([`claude_bin_setting()`](#crowsnest.config.claude_bin_setting)), for a
 machine whose Claude Code is not the `claude` a login shell finds first. \*\*It goes
 above the first\*\* `[[homes]]`: TOML gives every key after a table header to that
 table, so a `claude_bin` written at the bottom belongs to the last home and does
 nothing. [`claude_bin_setting()`](#crowsnest.config.claude_bin_setting) refuses that arrangement rather than ignoring it.
+
+The `[attention]` table ([`attention_settings()`](#crowsnest.config.attention_settings)) holds the hours the *Later*
+presets land on and the ages at which something counts as stale or stuck
+([`crowsnest.attention`](crowsnest.attention.html.md#module-crowsnest.attention)). Every key is optional; a key it does not know is an error.
+
+```toml
+[attention]
+evening_hour = 18      # "this evening", local time
+morning_hour = 9       # "tomorrow morning", local time
+max_snoozes = 3        # put off this often, and Drop is offered first
+stale_after = "24h"    # a number is hours; or "90m", "2d"
+stuck_after = "6h"
+```
 
 On Windows write paths in single quotes (`path = 'C:\Users\me\.claude'`): a TOML
 double-quoted string treats a backslash as an escape.
@@ -51,19 +64,41 @@ and nothing in this module pretends otherwise.
 |---------------------------------------------------------------------|----------------------------------------------------------------------------------|
 | [`CONFIG_ENV_VAR`](#crowsnest.config.CONFIG_ENV_VAR)     | Overrides the config file location outright.                                     |
 | [`DFLT_FRESH_SECONDS`](#crowsnest.config.DFLT_FRESH_SECONDS) | How recently a remote home's registry record must have changed to count as live. |
+| [`ATTENTION_KEY`](#crowsnest.config.ATTENTION_KEY)      | The config table holding the attention settings.                                 |
 
 ### Functions
 
-| [`claude_bin_setting`](#crowsnest.config.claude_bin_setting)(\*[, path])   | The `claude_bin` the config file names, or `''` when it names none.              |
+| [`attention_settings`](#crowsnest.config.attention_settings)(\*[, path])   | The config file's `[attention]` table, or the defaults when it has none.         |
 |-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`claude_bin_setting`](#crowsnest.config.claude_bin_setting)(\*[, path])   | The `claude_bin` the config file names, or `''` when it names none.              |
 | [`config_path`](#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
 | [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
 | [`homes`](#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
 
 ### Classes
 
-| [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds])   | One Claude Code config directory to read, and how to judge liveness in it.   |
-|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`AttentionSettings`](#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                        |
+|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it. |
+
+### crowsnest.config.ATTENTION_KEY *= 'attention'*
+
+The config table holding the attention settings.
+
+### *class* crowsnest.config.AttentionSettings(evening_hour=18, morning_hour=9, max_snoozes=3, stale_after=datetime.timedelta(days=1), stuck_after=datetime.timedelta(seconds=21600))
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[attention]` table, validated. Every field has the default the research suggests.
+
+```pycon
+>>> AttentionSettings().evening_hour
+18
+>>> AttentionSettings(morning_hour=24)
+Traceback (most recent call last):
+  ...
+ValueError: morning_hour must be a whole hour from 0 to 23, not 24
+```
 
 ### crowsnest.config.CLAUDE_BIN_KEY *= 'claude_bin'*
 
@@ -83,6 +118,17 @@ How recently a remote home’s registry record must have changed to count as liv
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One Claude Code config directory to read, and how to judge liveness in it.
+
+### crowsnest.config.attention_settings(, path=None)
+
+The config file’s `[attention]` table, or the defaults when it has none.
+
+Refuses a key it does not know rather than ignoring it: a misspelt `evening_hours`
+that silently kept 18:00 would be found only by someone wondering why their evening
+starts at six.
+
+* **Return type:**
+  [`AttentionSettings`](#crowsnest.config.AttentionSettings)
 
 ### crowsnest.config.claude_bin_setting(, path=None)
 

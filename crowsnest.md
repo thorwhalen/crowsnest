@@ -1,4 +1,4 @@
-> built 2026-09-15 11:42 UTC from b0665f6 (main) · crowsnest 0.0.35. Details: build_info.json
+> built 2026-09-15 12:18 UTC from 3a11c7f (main) · crowsnest 0.0.36. Details: build_info.json
 
 # index.html.md
 
@@ -66,6 +66,10 @@ crowsnest lineage                  who started whom, as a tree; --backfill recov
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
                                    (--fragment: without the document wrapper, for publishing as an artifact;
                                     --interactive: buttons per row and a Refresh, live when published with the db capability)
+crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
+crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
+crowsnest note|undo <session>      a note to yourself; one step back
+crowsnest attention export|import  your attention records as JSON, last write wins
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
@@ -116,6 +120,22 @@ UNCLASSIFIED — has not said where it stands: 48
 To be reported well, a session writes the ledger’s `open questions` field, or says “nothing outstanding” in its notes when it is done. The shipped `crowsnest-worker` skill teaches both, so the signal improves as sessions run.
 
 `crowsnest report` organises the page the same way: **Needs you** first, then **Safe to close**, then what is working and what is quiet.
+
+## What you have already dealt with
+
+Triage says what each session needs; it cannot know that you read three of them, put two off until this evening, and handled a fourth. That is a second record, kept apart from the first: yours, not the sessions’, one small JSON document per item under `~/.local/share/crowsnest/attention/`.
+
+```default
+crowsnest seen shipper                              read: dimmed until what it asks for changes
+crowsnest later shipper evening --plan "after the deploy"
+crowsnest done shipper                              handled: hidden until what it asks for changes
+crowsnest note shipper "check the benchmark first"  a note to yourself, never an instruction
+crowsnest undo shipper                              one step back
+```
+
+**Seen and done are pinned to a revision of the item, not a flag.** The revision is a hash of what you would have to decide again — the group, why, and the ask in its own words — and never a timestamp, a tool name, or the session’s latest chatter and the links in it. A session that asks a different question comes back as *changed*; one that merely runs another command does not. *Later* wakes when its time passes or as soon as the item changes, whichever comes first (`--ignore-changes` keeps it asleep through a change), and `change` as the preset means no time at all. Nothing is scheduled: what you see is computed from the record whenever it is shown.
+
+Items are keyed by session id, not name, so a resumed session keeps its record and a new session given an old name starts fresh. The hours behind `evening` and `tomorrow` are an `[attention]` table in the config file (`evening_hour = 18`, `morning_hour = 9`). `crowsnest attention export` and `import` move the records as JSON, the newer `updated_at` winning, which is how a published page’s copy and this machine’s are kept in step. The report page showing this record is the next step ([#55](https://github.com/thorwhalen/crowsnest/issues/55)).
 
 ## Every reference, as a link
 
@@ -281,6 +301,7 @@ Nothing into another session, and nothing into a repository. Everything crowsnes
 - `ledger/<name>.md`: one per session, as above.
 - `events.jsonl`: one line per hook event, append-only, rotated by size. `crowsnest watch` tails it.
 - `hook.log`: one line for anything `crowsnest hook` swallowed, so “the hook did nothing” is a question with an answer.
+- `attention/<item-id>.json`: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.
 
 The only other writes in the package are `crowsnest spawn`, which starts a session, and `install-skills`, which writes symlinks.
 
@@ -656,6 +677,477 @@ line of a window that starts mid-file is a fragment and is dropped.
 ```
 
 
+# _autosummary/crowsnest.attention.html.md
+
+# crowsnest.attention
+
+What the person did about each item the report shows: seen, put off, done, a note.
+
+The report derives what every session *is* – needs you, working, safe to close – afresh
+on each render. What the person *decided about it* is a second record, owned by the
+person, kept apart from the first and outside any one page (discussion #51; section 2.1
+of `crowsnest/data/skills/crowsnest-report/references/triage-ux.md`). This module is
+that second record: how an item is identified, what counts as a change to it, the
+person’s record and its transitions, the pure function deciding what the person sees,
+and the store it lives in.
+
+**Seen and done are pinned to a revision, not a boolean.** [`fingerprint()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.fingerprint) hashes only
+what the person has to decide about – the group, why, and the ask – so an item comes
+back when that changes, and not because a session ran another tool or said something new
+while it waits.
+
+**State is first-class fields in one document per item**, never a fold over a log
+(openloops-lab ADR-009): an export is the data, not an event stream only this module can
+replay.
+
+Three seams, one keyword argument each:
+
+| seam        | default                                                 | replacement it exists for                                                                                                    |
+|-------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| `identity=` | `("session", session_id)`                               | `("ask", session_id, ask)` once<br/>triage emits several asks;<br/>`("ref", url)` for an issue<br/>several sessions point at |
+| `material=` | `(group, why, normalised reason)`                       | a tighter or looser tuple, once<br/>resurfacing is measured (K2)                                                             |
+| `store=`    | one JSON file per item under<br/>`data_dir()/attention` | the page’s `db` mirror; a synced<br/>data dir; an S3 mapping                                                                 |
+```pycon
+>>> row = {'session_id': 'e7c1', 'status': 'waiting',
+...        'verdict': {'group': 'needs_you', 'why': 'decision', 'reason': 'Squash or rebase?'}}
+>>> store = {}
+>>> rev = fingerprint(row)
+>>> _ = write_record(item_id(row), later(None, rev, until=None), store=store)
+>>> present(rev, read_record(item_id(row), store=store))
+'later'
+>>> asked_again = {**row, 'verdict': {**row['verdict'], 'reason': 'Merge before the deploy?'}}
+>>> present(fingerprint(asked_again), read_record(item_id(row), store=store))
+'changed'
+```
+
+### Module Attributes
+
+| [`NAMESPACE`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.NAMESPACE)   | every id already in a store, a page's `db` and an export was derived from it, and a new one orphans them all.                       |
+|--------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| [`ACTIVE`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.ACTIVE)      | The person's states.                                                                                                                |
+| [`LATER`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.LATER)       | The person's states.                                                                                                                |
+| [`DONE`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.DONE)        | The person's states.                                                                                                                |
+| [`NEW`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.NEW)         | What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
+| [`CHANGED`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.CHANGED)     | What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
+| [`WOKE`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.WOKE)        | What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
+| [`SEEN`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.SEEN)        | What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
+| [`HIDDEN`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.HIDDEN)      | The presentations the page does not show as rows.                                                                                   |
+
+### Functions
+
+| [`as_doc`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.as_doc)(item, record, \*[, extras])              | The stored document: `extras`, then the record's fields and its `id`.                                                           |
+|--------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| [`attention_dir`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.attention_dir)([rootdir])                        | Where the default store keeps its documents: `rootdir`, else `data_dir()/attention`.                                            |
+| [`dflt_identity`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.dflt_identity)(row)                              | `("session", session_id)`: one item per session, by the id that is the same everywhere.                                         |
+| [`dflt_material`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.dflt_material)(row)                              | What counts as a change to an item: what the person would have to decide again.                                                 |
+| [`dflt_store`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.dflt_store)([rootdir])                           | One JSON file per item, keyed by item id, under [`attention_dir()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.attention_dir).               |
+| [`done`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.done)(record, rev, \*[, now])                    | The person did their part at `rev`: hidden until the item's revision changes.                                                   |
+| [`export_docs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.export_docs)(\*[, since, store])                 | Every record as its document, oldest change first; with `since`, only later changes.                                            |
+| [`fingerprint`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.fingerprint)(row, \*[, material])                | The item's revision: a short hash over `material(row)`.                                                                         |
+| [`import_docs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.import_docs)(docs, \*[, store])                  | Take documents into the store, last write winning by `updated_at`.                                                              |
+| [`instant`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.instant)(stamp)                                  | An ISO timestamp or date as an aware datetime; one without an offset is read as UTC.                                            |
+| [`is_item_id`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.is_item_id)(key)                                 | Is `key` an item id as [`item_id()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.item_id) spells one? Anything else never names a file. |
+| [`item_id`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.item_id)(row, \*[, identity])                    | The item's stable id: `uuid5(NAMESPACE, ":".join(identity(row)))`, kind first.                                                  |
+| [`later`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.later)(record, rev, \*, until[, on_change, ...]) | Put the item off until `until`, or until it changes when `on_change`, whichever first.                                          |
+| [`later_until`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.later_until)(preset, \*[, now, config])          | When a Later preset wakes: `1h`, `evening`, `tomorrow`, or `None` for `change`.                                                 |
+| [`note`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.note)(record, text, \*[, now])                   | Set the item's note; empty text removes it.                                                                                     |
+| [`present`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present)(rev, record, \*[, now])                 | What the person sees of one item.                                                                                               |
+| [`reach`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.reach)(row)                                      | `phone` for a question or a decision, `terminal` for an action, else `''`.                                                      |
+| [`read_doc`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.read_doc)(item, \*[, store])                     | `item`'s stored document as it is, or `None` when there is none.                                                                |
+| [`read_record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.read_record)(item, \*[, store])                  | The record for `item`, or `None` when the person has never acted on it.                                                         |
+| [`seen`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.seen)(record, rev, \*[, now])                    | The person has looked at the item at `rev`: it dims until it changes.                                                           |
+| [`undo`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.undo)(record, \*[, now])                         | Restore the record before the last transition.                                                                                  |
+| [`unseen`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.unseen)(record, \*[, now])                       | Mark unread: the item shows as `new` again, wherever it is not hidden.                                                          |
+| [`update`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.update)(item, step, \*[, store])                 | Apply `step` to `item`'s record and store the result; return the document.                                                      |
+| [`write_record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.write_record)(item, record, \*[, store, extras]) | Store `record` as `item`'s document, with `extras` carried along; return it.                                                    |
+
+### Classes
+
+| [`Later`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Later)([until, on_change, rev_at, count, plan])   | A deferral: wake at `until` (`None`: no time), or on a change when `on_change`.      |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`Note`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Note)(text, updated_at)                           | The person's note on an item: never read as an instruction, never a change of state. |
+| [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)([seen_rev, state, later, done_rev, ...])  | The person's attention to one item.                                                  |
+
+### crowsnest.attention.ACTIVE *= 'active'*
+
+The person’s states. `later` and `done` hide an item until something brings it back.
+
+### crowsnest.attention.CHANGED *= 'changed'*
+
+What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names.
+
+### crowsnest.attention.DONE *= 'done'*
+
+The person’s states. `later` and `done` hide an item until something brings it back.
+
+### crowsnest.attention.HIDDEN *= ('later', 'done')*
+
+The presentations the page does not show as rows.
+
+### crowsnest.attention.LATER *= 'later'*
+
+The person’s states. `later` and `done` hide an item until something brings it back.
+
+### *class* crowsnest.attention.Later(until=None, on_change=True, rev_at='', count=1, plan='')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A deferral: wake at `until` (`None`: no time), or on a change when `on_change`.
+
+`rev_at` is the revision it was put off at; `count` is how often this item has
+been put off; `plan` is the optional one-line next step.
+
+### crowsnest.attention.NAMESPACE *= UUID('24eeea57-b566-5e57-9d7b-db0884fa9768')*
+
+every id already in a
+store, a page’s `db` and an export was derived from it, and a new one orphans them all.
+`tests/test_attention.py` pins the derivation independently of this constant.
+
+* **Type:**
+  The namespace every item id is derived in. **Never change it**
+
+### crowsnest.attention.NEW *= 'new'*
+
+What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names.
+
+### *class* crowsnest.attention.Note(text, updated_at)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The person’s note on an item: never read as an instruction, never a change of state.
+
+### *class* crowsnest.attention.Record(seen_rev=None, state='active', later=None, done_rev=None, note=None, prev=None, updated_at='')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The person’s attention to one item. JSON both ways: [`as_dict()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record.as_dict), [`from_dict()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record.from_dict).
+
+`prev` is the snapshot [`undo()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.undo) restores, one level deep. `updated_at` is what
+last-write-wins compares when the store and a page’s mirror disagree.
+
+```pycon
+>>> Record.from_dict(Record(seen_rev='ab').as_dict()) == Record(seen_rev='ab')
+True
+```
+
+#### as_dict()
+
+JSON-ready form, nested blocks included.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### *classmethod* from_dict(doc)
+
+Read a record back, refusing a wrong type rather than coercing it.
+
+Keys it does not know are not part of the record. A newer writer keeps its own
+fields in the document’s `ext` object, which the store functions carry through
+([`update()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.update), [`import_docs()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.import_docs)); any other unknown key is dropped.
+
+* **Return type:**
+  [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
+
+### crowsnest.attention.SEEN *= 'seen'*
+
+What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names.
+
+### crowsnest.attention.WOKE *= 'woke'*
+
+What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names.
+
+### crowsnest.attention.as_doc(item, record, , extras=None)
+
+The stored document: `extras`, then the record’s fields and its `id`.
+
+This is the export shape. `extras` is the `ext` object a newer writer added; the
+record’s own fields always win over it.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.attention.attention_dir(rootdir=None)
+
+Where the default store keeps its documents: `rootdir`, else `data_dir()/attention`.
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### crowsnest.attention.dflt_identity(row)
+
+`("session", session_id)`: one item per session, by the id that is the same everywhere.
+
+Not the name, which is not unique across homes or over time (#42), and not
+`label@home`, which each crow’s nest spells with its own name for the other
+account’s home. A resumed session keeps its id and so its record; a new session given
+an old name does not inherit one. (`/clear` starts a new session id in the same
+terminal, so a record made before it stays with the conversation that was cleared.)
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]
+
+### crowsnest.attention.dflt_material(row)
+
+What counts as a change to an item: what the person would have to decide again.
+
+With a verdict that says something: `(group, why, normalised reason)` – except
+that a `working` row’s reason is left out, because it is the tool in flight.
+Otherwise (no verdict, or `unclassified`): `(status,)`, plus the normalised last
+words for an `idle` row, so a session that finished and said so is news.
+
+**The row’s links are not part of it.** They are the page’s reference list, resolved
+from the session’s latest words, the ledger line the hook rewrites on every turn, and
+its recent pull requests; they move with chatter, and a revision over them made every
+“committed 7d30838” a change. The ask’s own words are material, but only as far as
+the verdict’s reason quotes them: a link in the sentence after it, a second ask
+appended later, or a change past the reason’s clip is not seen yet (#67).
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
+
+```pycon
+>>> dflt_material({'status': 'busy', 'activity': {'last_assistant_text': 'hi'}})
+('busy',)
+>>> dflt_material({'status': 'idle', 'activity': {'last_assistant_text': 'Merged.'},
+...                'verdict': {'group': 'unclassified', 'reason': 'nothing said'}})
+('idle', 'merged.')
+```
+
+### crowsnest.attention.dflt_store(rootdir=None)
+
+One JSON file per item, keyed by item id, under [`attention_dir()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.attention_dir).
+
+Per OS user, not per account, because [`crowsnest.paths.data_dir()`](_autosummary/crowsnest.paths.html.md#crowsnest.paths.data_dir) is: both
+accounts’ crow’s nests on one machine share it, which is what makes one store across
+several reports free. `$CROWSNEST_DATA_DIR` moves it. Files that are not item
+documents – a temporary write, a stray note – are not keys.
+
+* **Return type:**
+  [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.attention.done(record, rev, , now=None)
+
+The person did their part at `rev`: hidden until the item’s revision changes.
+
+* **Return type:**
+  [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
+
+### crowsnest.attention.export_docs(, since=None, store=None)
+
+Every record as its document, oldest change first; with `since`, only later changes.
+
+`since` is an ISO time or date (read as UTC without an offset) or a datetime, and is
+exclusive. A write is stamped before it is stored, and the page’s clock is not this
+machine’s, so a write can land after a courier’s export with a stamp older than it. A
+courier therefore notes the time *before* it lists, and next passes that time minus a
+margin of minutes – never the push time itself. Resending what the far side already
+has costs nothing, because [`import_docs()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.import_docs) keeps a copy that is as new. A document that cannot be read is skipped with a warning rather than
+stopping every other record from moving.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.attention.fingerprint(row, , material=None)
+
+The item’s revision: a short hash over `material(row)`.
+
+Hashed as JSON, so the components cannot run into each other. A `material` that
+returns something JSON cannot encode (a set, whose order is not stable) raises
+`TypeError` rather than producing a revision that changes between runs.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> len(fingerprint({'status': 'busy'})) == 2 * FINGERPRINT_BYTES
+True
+```
+
+### crowsnest.attention.import_docs(docs, , store=None)
+
+Take documents into the store, last write winning by `updated_at`.
+
+Every document is checked before any is written, so a batch with one bad document
+changes nothing. A tie keeps the copy already here: the same write arriving twice is a
+no-op. A local copy that cannot be read is replaced. The winning document’s `ext`
+object travels with it; any other key a mirror adds (its own `version`, say) does not. Returns `{"written", "kept", "total"}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.attention.instant(stamp)
+
+An ISO timestamp or date as an aware datetime; one without an offset is read as UTC.
+
+For a query like `--since 2026-01-01`. A time *stored* in a record must carry its
+offset ([`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record) refuses one that does not), because a page reads a time
+without one as its viewer’s local time. A *naive datetime* handed to a function here
+is a wall-clock time, and is read as local.
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime)
+
+```pycon
+>>> instant('2026-09-15T12:00:00.000Z') == instant('2026-09-15T12:00:00+00:00')
+True
+>>> instant('2026-01-01').isoformat()
+'2026-01-01T00:00:00+00:00'
+```
+
+### crowsnest.attention.is_item_id(key)
+
+Is `key` an item id as [`item_id()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.item_id) spells one? Anything else never names a file.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+```pycon
+>>> is_item_id(item_id({'session_id': 'x'})), is_item_id('../etc/passwd')
+(True, False)
+```
+
+### crowsnest.attention.item_id(row, , identity=None)
+
+The item’s stable id: `uuid5(NAMESPACE, ":".join(identity(row)))`, kind first.
+
+Each component has `%` and `:` escaped before the join, so no two identities can
+share an id however many components they have – `("ask", "s1:x")` and
+`("ask", "s1", "x")` are two items. A session id contains neither character, so the
+default is hashed as literally `session:<id>`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> item_id({'session_id': 'e7c1', 'name': 'a'}) == item_id({'session_id': 'e7c1', 'name': 'b'})
+True
+```
+
+### crowsnest.attention.later(record, rev, , until, on_change=True, plan='', now=None)
+
+Put the item off until `until`, or until it changes when `on_change`, whichever first.
+
+`until=None` with `on_change` is *Drop*: no time, back only when it changes.
+`count` goes up by one each time. Putting something off is also having seen it, so
+`seen_rev` is pinned too – which is what lets it come back as `woke` rather than
+as `new` when its time passes.
+
+* **Return type:**
+  [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
+
+### crowsnest.attention.later_until(preset, , now=None, config=None)
+
+When a Later preset wakes: `1h`, `evening`, `tomorrow`, or `None` for `change`.
+
+`evening` is today at `evening_hour`; from that hour on it means tomorrow morning,
+which is what the button turns into (triage-ux 2.5). `tomorrow` is the next calendar
+day at `morning_hour`. Hours are the wall clock of `now`’s timezone, local when
+`now` is naive or not given; `config` is [`crowsnest.config.attention_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings).
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+```pycon
+>>> from datetime import datetime, timezone
+>>> noon = datetime(2026, 1, 5, 12, tzinfo=timezone.utc)
+>>> later_until('evening', now=noon).isoformat()
+'2026-01-05T18:00:00+00:00'
+```
+
+### crowsnest.attention.note(record, text, , now=None)
+
+Set the item’s note; empty text removes it. The state and presentation are untouched.
+
+* **Return type:**
+  [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
+
+### crowsnest.attention.present(rev, record, , now=None)
+
+What the person sees of one item. Pure: reads nothing, writes nothing.
+
+Transcribed from section 2.1 of the research, and \*\*the specification the page’s
+script transcribes in turn\*\*, so the two agree without a scheduler: a snooze wakes
+because this function says so at render time, not because anything fired. A Later
+with no `until` is asleep until it changes – a transcription must not compare the
+time against a missing value.
+
+`later` and `done` ([`HIDDEN`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.HIDDEN)) are not shown as rows. After [`undo()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.undo), an
+item shows what the restored snapshot shows.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.attention.reach(row)
+
+`phone` for a question or a decision, `terminal` for an action, else `''`.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> reach({'verdict': {'group': 'needs_you', 'why': 'action'}})
+'terminal'
+```
+
+### crowsnest.attention.read_doc(item, , store=None)
+
+`item`’s stored document as it is, or `None` when there is none.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.attention.read_record(item, , store=None)
+
+The record for `item`, or `None` when the person has never acted on it.
+
+* **Return type:**
+  [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.attention.seen(record, rev, , now=None)
+
+The person has looked at the item at `rev`: it dims until it changes.
+
+It also makes the item `active` again. An item the person can see is not asleep –
+it woke, or it changed after Done – and a look that left it in `later` or `done`
+would show it as `woke` forever. From a terminal, where a sleeping item can be
+named, it is the way to wake one early.
+
+* **Return type:**
+  [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
+
+### crowsnest.attention.undo(record, , now=None)
+
+Restore the record before the last transition. One level: a second undo has nothing.
+
+* **Return type:**
+  [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
+
+### crowsnest.attention.unseen(record, , now=None)
+
+Mark unread: the item shows as `new` again, wherever it is not hidden.
+
+* **Return type:**
+  [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
+
+### crowsnest.attention.update(item, step, , store=None)
+
+Apply `step` to `item`’s record and store the result; return the document.
+
+The stored document’s `ext` object is kept. A document
+that cannot be read counts as no record and is replaced, with a warning: a verb that
+refused to overwrite a broken file would leave that item stuck for good.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.attention.write_record(item, record, , store=None, extras=None)
+
+Store `record` as `item`’s document, with `extras` carried along; return it.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+
 # _autosummary/crowsnest.config.html.md
 
 # crowsnest.config
@@ -686,11 +1178,24 @@ path = "~/.cache/xa/remotes/server"   # a synced copy
 remote = true                         # liveness by freshness, no pid check
 ```
 
-The one non-`homes` setting is `claude_bin` ([`claude_bin_setting()`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)), for a
+The one other top-level setting is `claude_bin` ([`claude_bin_setting()`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)), for a
 machine whose Claude Code is not the `claude` a login shell finds first. \*\*It goes
 above the first\*\* `[[homes]]`: TOML gives every key after a table header to that
 table, so a `claude_bin` written at the bottom belongs to the last home and does
 nothing. [`claude_bin_setting()`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting) refuses that arrangement rather than ignoring it.
+
+The `[attention]` table ([`attention_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings)) holds the hours the *Later*
+presets land on and the ages at which something counts as stale or stuck
+([`crowsnest.attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention)). Every key is optional; a key it does not know is an error.
+
+```toml
+[attention]
+evening_hour = 18      # "this evening", local time
+morning_hour = 9       # "tomorrow morning", local time
+max_snoozes = 3        # put off this often, and Drop is offered first
+stale_after = "24h"    # a number is hours; or "90m", "2d"
+stuck_after = "6h"
+```
 
 On Windows write paths in single quotes (`path = 'C:\Users\me\.claude'`): a TOML
 double-quoted string treats a backslash as an escape.
@@ -711,19 +1216,41 @@ and nothing in this module pretends otherwise.
 |---------------------------------------------------------------------|----------------------------------------------------------------------------------|
 | [`CONFIG_ENV_VAR`](_autosummary/crowsnest.config.html.md#crowsnest.config.CONFIG_ENV_VAR)     | Overrides the config file location outright.                                     |
 | [`DFLT_FRESH_SECONDS`](_autosummary/crowsnest.config.html.md#crowsnest.config.DFLT_FRESH_SECONDS) | How recently a remote home's registry record must have changed to count as live. |
+| [`ATTENTION_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.ATTENTION_KEY)      | The config table holding the attention settings.                                 |
 
 ### Functions
 
-| [`claude_bin_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)(\*[, path])   | The `claude_bin` the config file names, or `''` when it names none.              |
+| [`attention_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings)(\*[, path])   | The config file's `[attention]` table, or the defaults when it has none.         |
 |-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`claude_bin_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)(\*[, path])   | The `claude_bin` the config file names, or `''` when it names none.              |
 | [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
 | [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
 | [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
 
 ### Classes
 
-| [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds])   | One Claude Code config directory to read, and how to judge liveness in it.   |
-|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                        |
+|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it. |
+
+### crowsnest.config.ATTENTION_KEY *= 'attention'*
+
+The config table holding the attention settings.
+
+### *class* crowsnest.config.AttentionSettings(evening_hour=18, morning_hour=9, max_snoozes=3, stale_after=datetime.timedelta(days=1), stuck_after=datetime.timedelta(seconds=21600))
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[attention]` table, validated. Every field has the default the research suggests.
+
+```pycon
+>>> AttentionSettings().evening_hour
+18
+>>> AttentionSettings(morning_hour=24)
+Traceback (most recent call last):
+  ...
+ValueError: morning_hour must be a whole hour from 0 to 23, not 24
+```
 
 ### crowsnest.config.CLAUDE_BIN_KEY *= 'claude_bin'*
 
@@ -743,6 +1270,17 @@ How recently a remote home’s registry record must have changed to count as liv
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One Claude Code config directory to read, and how to judge liveness in it.
+
+### crowsnest.config.attention_settings(, path=None)
+
+The config file’s `[attention]` table, or the defaults when it has none.
+
+Refuses a key it does not know rather than ignoring it: a misspelt `evening_hours`
+that silently kept 18:00 would be found only by someone wondering why their evening
+starts at six.
+
+* **Return type:**
+  [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)
 
 ### crowsnest.config.claude_bin_setting(, path=None)
 
@@ -1017,10 +1555,15 @@ Reading the others is the whole point, but the watching session also needs to *c
 the sessions it will then watch: `crowsnest.spawn.spawn()` starts one, named, in a
 directory, and waits for the registry to see it.
 
+One record belongs to the person rather than to any session: **attention**
+([`crowsnest.attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention)) – which items they have seen, put off until later, marked
+done or written a note on, each pinned to a revision of the item so it comes back when
+what it asks for changes. `crowsnest seen|later|done|note|undo` write it.
+
 Those are the writes, and they are all of them: a session started, and files that are
 crowsnest’s own and live outside any repository – the ledgers, the hook event log, the
-spawn records (all three under [`crowsnest.paths.data_dir()`](_autosummary/crowsnest.paths.html.md#crowsnest.paths.data_dir)), and the symlinks the
-skill installer makes.
+spawn records, the attention records (all four under [`crowsnest.paths.data_dir()`](_autosummary/crowsnest.paths.html.md#crowsnest.paths.data_dir)),
+and the symlinks the skill installer makes.
 crowsnest never sends into, kills, or writes into a session that already exists.
 
 ```pycon
@@ -1329,24 +1872,25 @@ silently wrote nothing would be worse than a stack trace.
 
 ### Modules
 
-| [`account`](_autosummary/crowsnest.account.html.md#module-crowsnest.account)   | Which account a new session runs under, and which `claude` binary starts it.                          |
-|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| [`activity`](_autosummary/crowsnest.activity.html.md#module-crowsnest.activity) | What a session is doing right now, read from the tail of its transcript.                              |
-| [`config`](_autosummary/crowsnest.config.html.md#module-crowsnest.config)     | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                |
-| [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)         | The push half of the stream: what Claude Code's own hooks tell crowsnest.                             |
-| [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)         | Everything a crowsnest session needs before it can be one, set up in one command.                     |
-| [`ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)     | The ledger: the durable page a session leaves for the watcher, one file per session.                  |
-| [`lineage`](_autosummary/crowsnest.lineage.html.md#module-crowsnest.lineage)   | Who started whom: the spawn graph, as data.                                                           |
-| [`links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)       | References in a session's own words, turned into links you can click.                                 |
-| [`open`](_autosummary/crowsnest.open.html.md#module-crowsnest.open)         | Bring a live session's terminal to the front, or say where it runs.                                   |
-| [`paths`](_autosummary/crowsnest.paths.html.md#module-crowsnest.paths)       | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
-| [`registry`](_autosummary/crowsnest.registry.html.md#module-crowsnest.registry) | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
-| [`report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report)     | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
-| [`skills`](_autosummary/crowsnest.skills.html.md#module-crowsnest.skills)     | The agent-facing surface: the skills, the subagent, and the command that installs them.               |
-| [`tools`](_autosummary/crowsnest.tools.html.md#module-crowsnest.tools)       | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                      |
-| [`tree`](_autosummary/crowsnest.tree.html.md#module-crowsnest.tree)         | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                               |
-| [`triage`](_autosummary/crowsnest.triage.html.md#module-crowsnest.triage)     | Which sessions need you, which are safe to close, and which are still going.                          |
-| [`watch`](_autosummary/crowsnest.watch.html.md#module-crowsnest.watch)       | A stream of what changed, so a monitor is told instead of made to poll.                               |
+| [`account`](_autosummary/crowsnest.account.html.md#module-crowsnest.account)     | Which account a new session runs under, and which `claude` binary starts it.                          |
+|---------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| [`activity`](_autosummary/crowsnest.activity.html.md#module-crowsnest.activity)   | What a session is doing right now, read from the tail of its transcript.                              |
+| [`attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                    |
+| [`config`](_autosummary/crowsnest.config.html.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                |
+| [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)           | The push half of the stream: what Claude Code's own hooks tell crowsnest.                             |
+| [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)           | Everything a crowsnest session needs before it can be one, set up in one command.                     |
+| [`ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)       | The ledger: the durable page a session leaves for the watcher, one file per session.                  |
+| [`lineage`](_autosummary/crowsnest.lineage.html.md#module-crowsnest.lineage)     | Who started whom: the spawn graph, as data.                                                           |
+| [`links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)         | References in a session's own words, turned into links you can click.                                 |
+| [`open`](_autosummary/crowsnest.open.html.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                   |
+| [`paths`](_autosummary/crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
+| [`registry`](_autosummary/crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
+| [`report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
+| [`skills`](_autosummary/crowsnest.skills.html.md#module-crowsnest.skills)       | The agent-facing surface: the skills, the subagent, and the command that installs them.               |
+| [`tools`](_autosummary/crowsnest.tools.html.md#module-crowsnest.tools)         | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                      |
+| [`tree`](_autosummary/crowsnest.tree.html.md#module-crowsnest.tree)           | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                               |
+| [`triage`](_autosummary/crowsnest.triage.html.md#module-crowsnest.triage)       | Which sessions need you, which are safe to close, and which are still going.                          |
+| [`watch`](_autosummary/crowsnest.watch.html.md#module-crowsnest.watch)         | A stream of what changed, so a monitor is told instead of made to poll.                               |
 
 
 # _autosummary/crowsnest.init.html.md
@@ -2922,18 +3466,43 @@ here prints, exits, or knows which surface called it.
 
 ### Functions
 
-| [`backfill_lineage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.backfill_lineage)(\*[, home, all_homes, ...])       | Recover parentage from transcripts, once, and write it into the lineage log.                                                                                                                                                              |
+| [`attention_export`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.attention_export)(\*[, since, store])               | Every attention record as its document, oldest change first; `since` (an ISO time or date) keeps only those changed after it.                                                                                                             |
 |-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`attention_import`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.attention_import)(docs, \*[, store])                | Take attention documents into the store, last write winning by `updated_at`.                                                                                                                                                              |
+| [`backfill_lineage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.backfill_lineage)(\*[, home, all_homes, ...])       | Recover parentage from transcripts, once, and write it into the lineage log.                                                                                                                                                              |
 | [`brief`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.brief)(session, \*[, home, all_homes, config, ...]) | openloops' digest for one live session: what it has been doing, dated, in its words.                                                                                                                                                      |
+| [`done`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.done)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item handled: hidden until what it asks for changes.                                                                                                                                                                     |
+| [`later`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.later)(session, preset, \*[, plan, on_change, ...]) | Put `session`'s item off until a preset time, or until it changes, whichever first.                                                                                                                                                       |
 | [`lineage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
+| [`note`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
 | [`repo_url`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. |
 | [`resolve`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                                                                                                                                                              |
 | [`roster`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster)(\*[, home, all_homes, config, ...])         | Every live session, most urgent first, each with a clipped view of its activity.                                                                                                                                                          |
+| [`seen`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.seen)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item seen at its current revision: it dims until it changes.                                                                                                                                                             |
 | [`sessions`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.sessions)(\*[, home, all_homes, config])            | The live sessions of one home, or of every configured home when `all_homes`.                                                                                                                                                              |
 | [`show`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.show)(session, \*[, home, all_homes, config, ...])  | One session in full: its registry record, its activity unclipped, and its links.                                                                                                                                                          |
 | [`triage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.triage)(\*[, home, all_homes, config, ...])         | Every live session grouped by what it needs: the three-line answer to "where are we".                                                                                                                                                     |
 | [`turns`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.turns)(session, \*[, last, before, home, ...])      | The last `last` turns of a session, oldest first; `before=N` pages back from turn N.                                                                                                                                                      |
+| [`undo`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.undo)(session, \*[, home, all_homes, config, ...])  | Restore `session`'s attention record to before its last change.                                                                                                                                                                           |
+| [`unseen`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.unseen)(session, \*[, home, all_homes, ...])        | Mark `session`'s item unread: it shows as new again.                                                                                                                                                                                      |
+
+### crowsnest.tools.attention_export(, since=None, store=None)
+
+Every attention record as its document, oldest change first; `since` (an ISO time
+or date) keeps only those changed after it. The shape [`attention_import()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.attention_import) reads.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.tools.attention_import(docs, , store=None)
+
+Take attention documents into the store, last write winning by `updated_at`.
+
+All are checked before any is written. Returns `{"written", "kept", "total"}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.tools.backfill_lineage(, home=None, all_homes=False, config=None, lineage_path=None, events_path=None, ledger_dir=None, write=True)
 
@@ -2974,6 +3543,25 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### crowsnest.tools.done(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Mark `session`’s item handled: hidden until what it asks for changes.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.later(session, preset, , plan='', on_change=True, home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Put `session`’s item off until a preset time, or until it changes, whichever first.
+
+`preset` is one of `crowsnest.attention.PRESETS` – `1h`, `evening`,
+`tomorrow`, `change` – with the hours from the config file’s `[attention]`
+table. `plan` is the optional one-line next step; `on_change=False` keeps it asleep
+through changes, which `change` (no time at all) refuses.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### crowsnest.tools.lineage(, home=None, all_homes=False, config=None, lineage_path=None, sources=None, extra_edges=(), sessions_read=None)
 
 Who started whom: the live sessions as a forest of `parent -> child` edges.
@@ -2991,6 +3579,14 @@ how [`backfill_lineage()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.
 
 Run [`backfill_lineage()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.backfill_lineage) once on a machine that has been running sessions since
 before crowsnest recorded parents, or this answers with the edges of today only.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.note(session, text, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Set the note on `session`’s item; empty text removes it. Nothing reads a note as an
+instruction.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -3070,6 +3666,13 @@ listing – and `activity=False` promises “instant”. Pass `links=True` to ha
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### crowsnest.tools.seen(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Mark `session`’s item seen at its current revision: it dims until it changes.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### crowsnest.tools.sessions(, home=None, all_homes=False, config=None)
 
 The live sessions of one home, or of every configured home when `all_homes`.
@@ -3116,6 +3719,21 @@ them.
 ### crowsnest.tools.turns(session, , last=5, before=None, home=None, all_homes=False, config=None)
 
 The last `last` turns of a session, oldest first; `before=N` pages back from turn N.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.undo(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Restore `session`’s attention record to before its last change. One level deep;
+raises `ValueError` when there is nothing to undo.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.unseen(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Mark `session`’s item unread: it shows as new again.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -3751,16 +4369,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-15 11:42 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/b0665f622ffdd925a622da750a3427f79869b531"><code>b0665f6</code></a> on branch <code>main</code>, for **crowsnest 0.0.35** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-15 12:18 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/3a11c7faef93ca586a9fd09e5ab5b76fe551105f"><code>3a11c7f</code></a> on branch <code>main</code>, for **crowsnest 0.0.36** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.36) is behind the latest release on PyPI (0.0.37): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/b0665f622ffdd925a622da750a3427f79869b531"><code>b0665f622ffdd925a622da750a3427f79869b531</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/3a11c7faef93ca586a9fd09e5ab5b76fe551105f"><code>3a11c7faef93ca586a9fd09e5ab5b76fe551105f</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -3771,9 +4391,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34964572765">34964572765</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34967926890">34967926890</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>b0665f622ffdd925a622da750a3427f79869b531</code> (in the history of the built commit) |
+| Event commit | <code>3a11c7faef93ca586a9fd09e5ab5b76fe551105f</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -3798,13 +4418,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.35/">0.0.35</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.37/">0.0.37</a>, newer than the documented version (0.0.36).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout b0665f622ffdd925a622da750a3427f79869b531
+git checkout 3a11c7faef93ca586a9fd09e5ab5b76fe551105f
 pip install "epythet==0.2.11"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

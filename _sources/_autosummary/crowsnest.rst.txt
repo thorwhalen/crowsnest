@@ -39,6 +39,7 @@
 
    account
    activity
+   attention
    config
    hook
    init

@@ -62,6 +62,10 @@ crowsnest lineage                  who started whom, as a tree; --backfill recov
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
                                    (--fragment: without the document wrapper, for publishing as an artifact;
                                     --interactive: buttons per row and a Refresh, live when published with the db capability)
+crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
+crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
+crowsnest note|undo <session>      a note to yourself; one step back
+crowsnest attention export|import  your attention records as JSON, last write wins
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
@@ -112,6 +116,22 @@ UNCLASSIFIED — has not said where it stands: 48
 To be reported well, a session writes the ledger’s `open questions` field, or says “nothing outstanding” in its notes when it is done. The shipped `crowsnest-worker` skill teaches both, so the signal improves as sessions run.
 
 `crowsnest report` organises the page the same way: **Needs you** first, then **Safe to close**, then what is working and what is quiet.
+
+## What you have already dealt with
+
+Triage says what each session needs; it cannot know that you read three of them, put two off until this evening, and handled a fourth. That is a second record, kept apart from the first: yours, not the sessions’, one small JSON document per item under `~/.local/share/crowsnest/attention/`.
+
+```default
+crowsnest seen shipper                              read: dimmed until what it asks for changes
+crowsnest later shipper evening --plan "after the deploy"
+crowsnest done shipper                              handled: hidden until what it asks for changes
+crowsnest note shipper "check the benchmark first"  a note to yourself, never an instruction
+crowsnest undo shipper                              one step back
+```
+
+**Seen and done are pinned to a revision of the item, not a flag.** The revision is a hash of what you would have to decide again — the group, why, and the ask in its own words — and never a timestamp, a tool name, or the session’s latest chatter and the links in it. A session that asks a different question comes back as *changed*; one that merely runs another command does not. *Later* wakes when its time passes or as soon as the item changes, whichever comes first (`--ignore-changes` keeps it asleep through a change), and `change` as the preset means no time at all. Nothing is scheduled: what you see is computed from the record whenever it is shown.
+
+Items are keyed by session id, not name, so a resumed session keeps its record and a new session given an old name starts fresh. The hours behind `evening` and `tomorrow` are an `[attention]` table in the config file (`evening_hour = 18`, `morning_hour = 9`). `crowsnest attention export` and `import` move the records as JSON, the newer `updated_at` winning, which is how a published page’s copy and this machine’s are kept in step. The report page showing this record is the next step ([#55](https://github.com/thorwhalen/crowsnest/issues/55)).
 
 ## Every reference, as a link
 
@@ -277,6 +297,7 @@ Nothing into another session, and nothing into a repository. Everything crowsnes
 - `ledger/<name>.md`: one per session, as above.
 - `events.jsonl`: one line per hook event, append-only, rotated by size. `crowsnest watch` tails it.
 - `hook.log`: one line for anything `crowsnest hook` swallowed, so “the hook did nothing” is a question with an answer.
+- `attention/<item-id>.json`: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.
 
 The only other writes in the package are `crowsnest spawn`, which starts a session, and `install-skills`, which writes symlinks.
 

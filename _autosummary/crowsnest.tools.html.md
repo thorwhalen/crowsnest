@@ -13,18 +13,43 @@ here prints, exits, or knows which surface called it.
 
 ### Functions
 
-| [`backfill_lineage`](#crowsnest.tools.backfill_lineage)(\*[, home, all_homes, ...])       | Recover parentage from transcripts, once, and write it into the lineage log.                                                                                                                                                              |
+| [`attention_export`](#crowsnest.tools.attention_export)(\*[, since, store])               | Every attention record as its document, oldest change first; `since` (an ISO time or date) keeps only those changed after it.                                                                                                             |
 |-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`attention_import`](#crowsnest.tools.attention_import)(docs, \*[, store])                | Take attention documents into the store, last write winning by `updated_at`.                                                                                                                                                              |
+| [`backfill_lineage`](#crowsnest.tools.backfill_lineage)(\*[, home, all_homes, ...])       | Recover parentage from transcripts, once, and write it into the lineage log.                                                                                                                                                              |
 | [`brief`](#crowsnest.tools.brief)(session, \*[, home, all_homes, config, ...]) | openloops' digest for one live session: what it has been doing, dated, in its words.                                                                                                                                                      |
+| [`done`](#crowsnest.tools.done)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item handled: hidden until what it asks for changes.                                                                                                                                                                     |
+| [`later`](#crowsnest.tools.later)(session, preset, \*[, plan, on_change, ...]) | Put `session`'s item off until a preset time, or until it changes, whichever first.                                                                                                                                                       |
 | [`lineage`](#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
+| [`note`](#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
 | [`repo_url`](#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](#crowsnest.tools.roster) returns. |
 | [`resolve`](#crowsnest.tools.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                                                                                                                                                              |
 | [`roster`](#crowsnest.tools.roster)(\*[, home, all_homes, config, ...])         | Every live session, most urgent first, each with a clipped view of its activity.                                                                                                                                                          |
+| [`seen`](#crowsnest.tools.seen)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item seen at its current revision: it dims until it changes.                                                                                                                                                             |
 | [`sessions`](#crowsnest.tools.sessions)(\*[, home, all_homes, config])            | The live sessions of one home, or of every configured home when `all_homes`.                                                                                                                                                              |
 | [`show`](#crowsnest.tools.show)(session, \*[, home, all_homes, config, ...])  | One session in full: its registry record, its activity unclipped, and its links.                                                                                                                                                          |
 | [`triage`](#crowsnest.tools.triage)(\*[, home, all_homes, config, ...])         | Every live session grouped by what it needs: the three-line answer to "where are we".                                                                                                                                                     |
 | [`turns`](#crowsnest.tools.turns)(session, \*[, last, before, home, ...])      | The last `last` turns of a session, oldest first; `before=N` pages back from turn N.                                                                                                                                                      |
+| [`undo`](#crowsnest.tools.undo)(session, \*[, home, all_homes, config, ...])  | Restore `session`'s attention record to before its last change.                                                                                                                                                                           |
+| [`unseen`](#crowsnest.tools.unseen)(session, \*[, home, all_homes, ...])        | Mark `session`'s item unread: it shows as new again.                                                                                                                                                                                      |
+
+### crowsnest.tools.attention_export(, since=None, store=None)
+
+Every attention record as its document, oldest change first; `since` (an ISO time
+or date) keeps only those changed after it. The shape [`attention_import()`](#crowsnest.tools.attention_import) reads.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.tools.attention_import(docs, , store=None)
+
+Take attention documents into the store, last write winning by `updated_at`.
+
+All are checked before any is written. Returns `{"written", "kept", "total"}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.tools.backfill_lineage(, home=None, all_homes=False, config=None, lineage_path=None, events_path=None, ledger_dir=None, write=True)
 
@@ -65,6 +90,25 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### crowsnest.tools.done(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Mark `session`’s item handled: hidden until what it asks for changes.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.later(session, preset, , plan='', on_change=True, home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Put `session`’s item off until a preset time, or until it changes, whichever first.
+
+`preset` is one of `crowsnest.attention.PRESETS` – `1h`, `evening`,
+`tomorrow`, `change` – with the hours from the config file’s `[attention]`
+table. `plan` is the optional one-line next step; `on_change=False` keeps it asleep
+through changes, which `change` (no time at all) refuses.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### crowsnest.tools.lineage(, home=None, all_homes=False, config=None, lineage_path=None, sources=None, extra_edges=(), sessions_read=None)
 
 Who started whom: the live sessions as a forest of `parent -> child` edges.
@@ -82,6 +126,14 @@ how [`backfill_lineage()`](#crowsnest.tools.backfill_lineage) shows a forest inc
 
 Run [`backfill_lineage()`](#crowsnest.tools.backfill_lineage) once on a machine that has been running sessions since
 before crowsnest recorded parents, or this answers with the edges of today only.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.note(session, text, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Set the note on `session`’s item; empty text removes it. Nothing reads a note as an
+instruction.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -161,6 +213,13 @@ listing – and `activity=False` promises “instant”. Pass `links=True` to ha
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### crowsnest.tools.seen(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Mark `session`’s item seen at its current revision: it dims until it changes.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### crowsnest.tools.sessions(, home=None, all_homes=False, config=None)
 
 The live sessions of one home, or of every configured home when `all_homes`.
@@ -207,6 +266,21 @@ them.
 ### crowsnest.tools.turns(session, , last=5, before=None, home=None, all_homes=False, config=None)
 
 The last `last` turns of a session, oldest first; `before=N` pages back from turn N.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.undo(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Restore `session`’s attention record to before its last change. One level deep;
+raises `ValueError` when there is nothing to undo.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.unseen(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+
+Mark `session`’s item unread: it shows as new again.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

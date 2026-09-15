@@ -11,11 +11,13 @@ crowsnest.config
       CLAUDE_BIN_KEY
       CONFIG_ENV_VAR
       DFLT_FRESH_SECONDS
+      ATTENTION_KEY
    
    .. rubric:: Functions
 
    .. autosummary::
    
+      attention_settings
       claude_bin_setting
       config_path
       configured_homes
@@ -25,5 +27,6 @@ crowsnest.config
 
    .. autosummary::
    
+      AttentionSettings
       Home
    

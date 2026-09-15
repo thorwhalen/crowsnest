@@ -8,15 +8,23 @@ crowsnest.tools
 
    .. autosummary::
    
+      attention_export
+      attention_import
       backfill_lineage
       brief
+      done
+      later
       lineage
+      note
       repo_url
       report
       resolve
       roster
+      seen
       sessions
       show
       triage
       turns
+      undo
+      unseen
    

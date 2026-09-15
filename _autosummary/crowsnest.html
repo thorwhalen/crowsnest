@@ -67,6 +67,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">crowsnest</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
@@ -192,10 +193,14 @@ human. A session writes its own; a watcher reads it and survives being cleared.<
 <p>Reading the others is the whole point, but the watching session also needs to <em>create</em>
 the sessions it will then watch: <code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.spawn.spawn()</span></code> starts one, named, in a
 directory, and waits for the registry to see it.</p>
+<p>One record belongs to the person rather than to any session: <strong>attention</strong>
+(<a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.attention</span></code></a>) – which items they have seen, put off until later, marked
+done or written a note on, each pinned to a revision of the item so it comes back when
+what it asks for changes. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">seen|later|done|note|undo</span></code> write it.</p>
 <p>Those are the writes, and they are all of them: a session started, and files that are
 crowsnest’s own and live outside any repository – the ledgers, the hook event log, the
-spawn records (all three under <a class="reference internal" href="crowsnest.paths.html#crowsnest.paths.data_dir" title="crowsnest.paths.data_dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.paths.data_dir()</span></code></a>), and the symlinks the
-skill installer makes.
+spawn records, the attention records (all four under <a class="reference internal" href="crowsnest.paths.html#crowsnest.paths.data_dir" title="crowsnest.paths.data_dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.paths.data_dir()</span></code></a>),
+and the symlinks the skill installer makes.
 crowsnest never sends into, kills, or writes into a session that already exists.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">live_sessions</span><span class="p">,</span> <span class="n">roster</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="s1">'/nonexistent-dir-for-doctest'</span><span class="p">)</span>
@@ -592,49 +597,52 @@ silently wrote nothing would be worse than a stack trace.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="crowsnest.activity.html#module-crowsnest.activity" title="crowsnest.activity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">activity</span></code></a></p></td>
 <td><p>What a session is doing right now, read from the tail of its transcript.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.config.html#module-crowsnest.config" title="crowsnest.config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">config</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attention</span></code></a></p></td>
+<td><p>What the person did about each item the report shows: seen, put off, done, a note.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.config.html#module-crowsnest.config" title="crowsnest.config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">config</span></code></a></p></td>
 <td><p>The homes a roster covers, and the <code class="docutils literal notranslate"><span class="pre">claude</span></code> a spawn starts -- what a config file says.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.hook.html#module-crowsnest.hook" title="crowsnest.hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hook</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.hook.html#module-crowsnest.hook" title="crowsnest.hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hook</span></code></a></p></td>
 <td><p>The push half of the stream: what Claude Code's own hooks tell crowsnest.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.init.html#module-crowsnest.init" title="crowsnest.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.init.html#module-crowsnest.init" title="crowsnest.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a></p></td>
 <td><p>Everything a crowsnest session needs before it can be one, set up in one command.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger</span></code></a></p></td>
 <td><p>The ledger: the durable page a session leaves for the watcher, one file per session.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.lineage.html#module-crowsnest.lineage" title="crowsnest.lineage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lineage</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.lineage.html#module-crowsnest.lineage" title="crowsnest.lineage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lineage</span></code></a></p></td>
 <td><p>Who started whom: the spawn graph, as data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.links.html#module-crowsnest.links" title="crowsnest.links"><code class="xref py py-obj docutils literal notranslate"><span class="pre">links</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.links.html#module-crowsnest.links" title="crowsnest.links"><code class="xref py py-obj docutils literal notranslate"><span class="pre">links</span></code></a></p></td>
 <td><p>References in a session's own words, turned into links you can click.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.open.html#module-crowsnest.open" title="crowsnest.open"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.open.html#module-crowsnest.open" title="crowsnest.open"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open</span></code></a></p></td>
 <td><p>Bring a live session's terminal to the front, or say where it runs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paths</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paths</span></code></a></p></td>
 <td><p>Where crowsnest keeps what is not code: the data directory, and nothing else.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.registry.html#module-crowsnest.registry" title="crowsnest.registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.registry.html#module-crowsnest.registry" title="crowsnest.registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span></code></a></p></td>
 <td><p>Who is alive right now, read from the registry Claude Code keeps while a session runs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.report.html#module-crowsnest.report" title="crowsnest.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.report.html#module-crowsnest.report" title="crowsnest.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
 <td><p>The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.skills.html#module-crowsnest.skills" title="crowsnest.skills"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skills</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.skills.html#module-crowsnest.skills" title="crowsnest.skills"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skills</span></code></a></p></td>
 <td><p>The agent-facing surface: the skills, the subagent, and the command that installs them.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.tools.html#module-crowsnest.tools" title="crowsnest.tools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.tools.html#module-crowsnest.tools" title="crowsnest.tools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools</span></code></a></p></td>
 <td><p>The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.tree.html#module-crowsnest.tree" title="crowsnest.tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tree</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.tree.html#module-crowsnest.tree" title="crowsnest.tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tree</span></code></a></p></td>
 <td><p>The spawn forest as a picture: laid out in Python, drawn as inline SVG.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.triage.html#module-crowsnest.triage" title="crowsnest.triage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triage</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.triage.html#module-crowsnest.triage" title="crowsnest.triage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triage</span></code></a></p></td>
 <td><p>Which sessions need you, which are safe to close, and which are still going.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.watch.html#module-crowsnest.watch" title="crowsnest.watch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watch</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.watch.html#module-crowsnest.watch" title="crowsnest.watch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watch</span></code></a></p></td>
 <td><p>A stream of what changed, so a monitor is told instead of made to poll.</p></td>
 </tr>
 </tbody>
@@ -682,7 +690,7 @@ silently wrote nothing would be worse than a stack trace.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../_static/documentation_options.js?v=0e525676"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
