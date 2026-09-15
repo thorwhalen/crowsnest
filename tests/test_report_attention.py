@@ -316,6 +316,29 @@ def test_a_done_row_that_changed_is_back_in_its_register_as_changed():
     assert "<title>crowsnest (3)</title>" in html
 
 
+def test_a_changed_row_says_what_it_was_when_the_record_keeps_it():
+    # #73: the record keeps the group and why it was seen at, never the words.
+    rows = fleet()
+    store = {}
+    asker = named(rows, "asker")
+    mark(store, asker, attention.done, seen_as=attention.seen_as_of(asker))
+    now_decides = renamed(asker, why="decision", reason="Merge before the deploy?")
+    rows = [now_decides if r["label"] == "asker" else r for r in rows]
+    needs = register(page(rows, store), "needs-you")
+    assert "was: needs you, a question; changed since you marked it handled" in needs
+
+
+def test_a_changed_row_still_what_it_was_says_only_what_the_person_did():
+    rows = fleet()
+    store = {}
+    asker = named(rows, "asker")
+    mark(store, asker, attention.seen, seen_as=attention.seen_as_of(asker))
+    asked_again = renamed(asker, reason="Merge before the deploy?")
+    rows = [asked_again if r["label"] == "asker" else r for r in rows]
+    needs = register(page(rows, store), "needs-you")
+    assert "changed since you saw it" in needs and "was:" not in needs
+
+
 def test_a_woken_row_says_when_it_was_put_off_until_and_shows_the_plan():
     rows = fleet()
     store = {}
@@ -521,9 +544,9 @@ def test_every_open_tag_is_closed_with_attention_markup():
     stack: list[str] = []
     for closing, name in re.findall(r"<(/?)([a-z0-9]+)", body):
         if closing:
-            assert stack and stack[-1] == name, (
-                f"{name} closed out of order: {stack[-3:]}"
-            )
+            assert (
+                stack and stack[-1] == name
+            ), f"{name} closed out of order: {stack[-3:]}"
             stack.pop()
         elif name not in void:
             stack.append(name)

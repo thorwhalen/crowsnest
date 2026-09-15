@@ -79,6 +79,7 @@ __all__ = [
     "Later",
     "Note",
     "Record",
+    "SeenAs",
     "as_doc",
     "attention_dir",
     "dflt_identity",
@@ -99,6 +100,7 @@ __all__ = [
     "read_doc",
     "read_record",
     "seen",
+    "seen_as_of",
     "undo",
     "unseen",
     "update",
@@ -337,6 +339,24 @@ def reach(row: Mapping) -> str:
     return ""
 
 
+def seen_as_of(row: Mapping) -> SeenAs | None:
+    """What a row is, as :class:`SeenAs` records it: its verdict's group and why, or ``None``.
+
+    The same whatever ``material=`` a caller uses: it describes the verdict, not the hash.
+
+    >>> seen_as_of({'verdict': {'group': 'needs_you', 'why': 'action', 'reason': 'attach'}})
+    SeenAs(group='needs_you', why='action')
+    >>> seen_as_of({'status': 'idle'}) is None
+    True
+    """
+    verdict = row.get("verdict")
+    group = verdict.get("group") if isinstance(verdict, Mapping) else None
+    if not isinstance(group, str) or not group:
+        return None
+    why = verdict.get("why")
+    return SeenAs(group, why if isinstance(why, str) else "")
+
+
 # --------------------------------------------------------------------------------------
 # Time
 
@@ -536,11 +556,47 @@ class Note:
 
 
 @dataclass(frozen=True)
+class SeenAs:
+    """What an item was when the person last looked: its verdict's group and why, no words.
+
+    Kept beside ``seen_rev`` so an item that changed can say what it was (#73): a revision
+    is a hash and cannot be read back. The ask's words are in the revision
+    (:func:`fingerprint`); this is the part of it a person can be told. Never the reason,
+    the asks or any other text, because the record is mirrored into a page's ``db``, which
+    anyone who can open the page can read.
+
+    >>> SeenAs.from_dict({'group': 'needs_you', 'why': 'question'})
+    SeenAs(group='needs_you', why='question')
+    """
+
+    group: str
+    why: str = ""
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.group, str) or not self.group:
+            raise ValueError(
+                f"seen_as.group must be a non-empty string, not {self.group!r}"
+            )
+        if not isinstance(self.why, str):
+            # ValueError, not TypeError: a document is input, reported like every other.
+            raise ValueError(  # noqa: TRY004
+                f"seen_as.why must be a string, not {self.why!r}"
+            )
+
+    @classmethod
+    def from_dict(cls, doc: Mapping) -> SeenAs:
+        doc = _mapping(doc, "seen_as")
+        return cls(group=_field(doc, "group", str, ""), why=_field(doc, "why", str, ""))
+
+
+@dataclass(frozen=True)
 class Record:
     """The person's attention to one item. JSON both ways: :meth:`as_dict`, :meth:`from_dict`.
 
     ``prev`` is the snapshot :func:`undo` restores, one level deep. ``updated_at`` is what
-    last-write-wins compares when the store and a page's mirror disagree.
+    last-write-wins compares when the store and a page's mirror disagree. ``seen_as`` is
+    what the item was at ``seen_rev`` (:class:`SeenAs`); a record written before the field
+    existed has none, and still reads.
 
     >>> Record.from_dict(Record(seen_rev='ab').as_dict()) == Record(seen_rev='ab')
     True
@@ -553,8 +609,11 @@ class Record:
     note: Note | None = None
     prev: Record | None = None
     updated_at: str = ""
+    seen_as: SeenAs | None = None
 
     def __post_init__(self) -> None:
+        if self.seen_as is not None and self.seen_rev is None:
+            raise ValueError("seen_as describes seen_rev: a record never seen has none")
         if self.state not in STATES:
             raise ValueError(
                 f"state must be one of {', '.join(STATES)}, not {self.state!r}"
@@ -594,6 +653,9 @@ class Record:
             note=None if doc.get("note") is None else Note.from_dict(doc["note"]),
             prev=None if doc.get("prev") is None else cls.from_dict(doc["prev"]),
             updated_at=_field(doc, "updated_at", str, ""),
+            seen_as=(
+                None if doc.get("seen_as") is None else SeenAs.from_dict(doc["seen_as"])
+            ),
         )
 
 
@@ -669,20 +731,37 @@ def _step(record: Record | None, now: datetime | None, **changes) -> Record:
     )
 
 
-def seen(record: Record | None, rev: str, *, now: datetime | None = None) -> Record:
+def _seen_as(value) -> SeenAs | None:
+    """``value`` as a :class:`SeenAs`: one already, a mapping of one, or ``None``."""
+    if value is None or isinstance(value, SeenAs):
+        return value
+    return SeenAs.from_dict(value)
+
+
+def seen(
+    record: Record | None,
+    rev: str,
+    *,
+    seen_as: SeenAs | Mapping | None = None,
+    now: datetime | None = None,
+) -> Record:
     """The person has looked at the item at ``rev``: it dims until it changes.
 
     It also makes the item ``active`` again. An item the person can see is not asleep --
     it woke, or it changed after Done -- and a look that left it in ``later`` or ``done``
     would show it as ``woke`` forever. From a terminal, where a sleeping item can be
     named, it is the way to wake one early.
+
+    ``seen_as`` is what the item was at ``rev`` (:func:`seen_as_of` the row the revision
+    came from). ``later`` and ``done`` take it too. Given none, the record keeps none: a
+    label from an older revision must not describe this one.
     """
-    return _step(record, now, seen_rev=_rev(rev), state=ACTIVE)
+    return _step(record, now, seen_rev=_rev(rev), seen_as=_seen_as(seen_as), state=ACTIVE)
 
 
 def unseen(record: Record | None, *, now: datetime | None = None) -> Record:
     """Mark unread: the item shows as ``new`` again, wherever it is not hidden."""
-    return _step(record, now, seen_rev=None)
+    return _step(record, now, seen_rev=None, seen_as=None)
 
 
 def later(
@@ -692,14 +771,15 @@ def later(
     until: datetime | str | None,
     on_change: bool = True,
     plan: str = "",
+    seen_as: SeenAs | Mapping | None = None,
     now: datetime | None = None,
 ) -> Record:
     """Put the item off until ``until``, or until it changes when ``on_change``, whichever first.
 
     ``until=None`` with ``on_change`` is *Drop*: no time, back only when it changes.
     ``count`` goes up by one each time. Putting something off is also having seen it, so
-    ``seen_rev`` is pinned too -- which is what lets it come back as ``woke`` rather than
-    as ``new`` when its time passes.
+    ``seen_rev`` and ``seen_as`` are pinned too -- which is what lets it come back as
+    ``woke`` rather than as ``new`` when its time passes.
     """
     rev = _rev(rev)
     before = Record() if record is None else record
@@ -716,13 +796,28 @@ def later(
         count=(before.later.count + 1) if before.later is not None else 1,
         plan=str(plan or "").strip(),
     )
-    return _step(record, now, state=LATER, later=deferral, seen_rev=rev)
+    return _step(
+        record,
+        now,
+        state=LATER,
+        later=deferral,
+        seen_rev=rev,
+        seen_as=_seen_as(seen_as),
+    )
 
 
-def done(record: Record | None, rev: str, *, now: datetime | None = None) -> Record:
+def done(
+    record: Record | None,
+    rev: str,
+    *,
+    seen_as: SeenAs | Mapping | None = None,
+    now: datetime | None = None,
+) -> Record:
     """The person did their part at ``rev``: hidden until the item's revision changes."""
     rev = _rev(rev)
-    return _step(record, now, state=DONE, done_rev=rev, seen_rev=rev)
+    return _step(
+        record, now, state=DONE, done_rev=rev, seen_rev=rev, seen_as=_seen_as(seen_as)
+    )
 
 
 def note(record: Record | None, text: str, *, now: datetime | None = None) -> Record:
