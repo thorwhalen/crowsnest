@@ -799,7 +799,12 @@ def _attend(
     )
     item = _attention.item_id(row, identity=identity)
     rev = _attention.fingerprint(row, material=material)
-    return _attention.update(item, lambda record: step(record, rev), store=store)
+    # `watch.attention_wakes` rebuilds this row from the store alone, to say a `later`
+    # item woke -- and an item id cannot be inverted back to a session id, so it is kept
+    # here, in the one place every attention verb already writes.
+    session_id = str(row.get("session_id") or "")
+    ext = {"session_id": session_id} if session_id else None
+    return _attention.update(item, lambda record: step(record, rev), store=store, ext=ext)
 
 
 # The attention verbs. Each takes a session reference the way `resolve` does, reads the

@@ -21,6 +21,16 @@ a guess at it -- so when a hook ``stopped`` and a polled ``idle`` describe the s
 ending, the polled one is dropped and the hook's line is the one that is yielded. With no
 hooks installed the file never appears and the stream is exactly the registry diff.
 
+**The attention store.** A person can put an item off (:mod:`crowsnest.attention`'s
+``later``) until a time, or until it changes. Nobody schedules that wake -- discussion
+#51 is explicit that there is no cron for a snooze -- so :func:`attention_wakes` asks
+the same pure :func:`crowsnest.attention.present` the static page and the console
+already use, once a tick, for every item still in state ``later``. An item that
+:func:`~crowsnest.attention.present` would no longer show as ``later`` (because its time
+passed, or because it changed while ``on_change``) yields one ``woke`` event, exactly
+once: the tick keeps what it has already announced in memory, so a restarted watcher
+announcing a wake twice is acceptable, and announcing it never is not.
+
 ``crowsnest watch`` prints this stream one line per event, which is the shape Claude
 Code's own ``Monitor`` tool consumes: each line becomes a notification in the watching
 session's conversation.
@@ -34,7 +44,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -47,6 +57,7 @@ __all__ = [
     "HOOK_KINDS",
     "QUIET_NOTIFICATIONS",
     "WORKING",
+    "attention_wakes",
     "diff",
     "events",
     "hook_event",
@@ -272,6 +283,98 @@ def hook_event(record: dict) -> dict | None:
     }
 
 
+def _attention_row(
+    doc: Mapping,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+) -> dict | None:
+    """The row :func:`crowsnest.tools.report` would show for ``doc``'s session, or
+    ``None`` when it has no ``session_id`` on record (:func:`crowsnest.tools._attend`
+    keeps one in ``ext`` for exactly this) or that session is no longer live.
+    """
+    from crowsnest.tools import _item_row
+
+    ext = doc.get("ext")
+    session_id = str(ext.get("session_id") or "") if isinstance(ext, Mapping) else ""
+    if not session_id:
+        return None
+    try:
+        return _item_row(session_id, home=home, all_homes=all_homes, config=config)
+    except KeyError:
+        return None
+
+
+def _woke_event(row: Mapping, record) -> dict:
+    verdict = row.get("verdict")
+    verdict = verdict if isinstance(verdict, Mapping) else {}
+    group = str(verdict.get("group") or "")
+    plan = record.later.plan if record.later is not None else ""
+    return {
+        "at": _now(),
+        "kind": "woke",
+        "session_id": str(row.get("session_id") or ""),
+        "name": str(row.get("label") or row.get("name") or ""),
+        "project": str(row.get("project") or ""),
+        "home": str(row.get("home") or ""),
+        "status": str(row.get("status") or ""),
+        "waiting_for": group,
+        "detail": _one_line(plan or str(verdict.get("reason") or "")),
+        "group": group,
+    }
+
+
+def attention_wakes(
+    *,
+    store: MutableMapping[str, dict] | None = None,
+    row_of: Callable[[Mapping], Mapping | None] | None = None,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    announced: set[str] | None = None,
+    now: datetime | None = None,
+) -> list[dict]:
+    """One ``woke`` event per attention item that just left ``later``.
+
+    Every item still in state ``later`` is re-read through :func:`crowsnest.attention.present`,
+    the same pure function the static page and the console use, with the item's *current*
+    revision -- ``row_of`` is how that row is rebuilt from the document alone (default
+    :func:`_attention_row`; a test hands a synthetic row instead of a live session). An
+    item :func:`~crowsnest.attention.present` no longer shows as ``later`` -- its time
+    passed, or it changed while ``on_change`` -- has woken; one that a prior call already
+    announced is not repeated. ``announced`` is that bookkeeping, kept by the caller
+    across ticks (:func:`events` keeps its own); a fresh one announces every already-woken
+    item once, which is the same acceptable-not-silent choice :func:`events` makes for a
+    restarted watcher.
+    """
+    from crowsnest import attention as _attention
+
+    store = _attention.dflt_store() if store is None else store
+    fetch = _attention_row if row_of is None else row_of
+    seen = set() if announced is None else announced
+    found: list[dict] = []
+    for item in list(store):
+        try:
+            doc = _attention.read_doc(item, store=store)
+            record = None if doc is None else _attention.Record.from_dict(doc)
+        except ValueError:
+            continue
+        if record is None or record.state != _attention.LATER:
+            seen.discard(item)
+            continue
+        row = fetch(doc, home=home, all_homes=all_homes, config=config)
+        if row is None:
+            continue
+        rev = _attention.fingerprint(row)
+        if _attention.present(rev, record, now=now) == _attention.LATER:
+            continue
+        if item not in seen:
+            seen.add(item)
+            found.append(_woke_event(row, record))
+    return found
+
+
 def events(
     *,
     interval: float = DFLT_INTERVAL,
@@ -282,6 +385,7 @@ def events(
     events_path: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
+    attention_store: MutableMapping[str, dict] | None = None,
 ) -> Iterator[dict]:
     """Yield one dict per change, forever -- or for ``ticks`` snapshots when given.
 
@@ -296,6 +400,7 @@ def events(
     log = _events_path(events_path)
     before = snapshot(home=home, is_alive=is_alive, all_homes=all_homes, config=config)
     position = tail_position(log)
+    woken: set[str] = set()
     taken = 0
     while ticks is None or taken < ticks:
         sleep(interval)
@@ -309,5 +414,12 @@ def events(
             if event["kind"] == "idle" and event["session_id"] in stopped:
                 continue
             yield event
+        yield from attention_wakes(
+            store=attention_store,
+            home=home,
+            all_homes=all_homes,
+            config=config,
+            announced=woken,
+        )
         before = after
         taken += 1
