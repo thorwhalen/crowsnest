@@ -157,7 +157,9 @@ transcript" and "it told me" are different kinds of evidence.
   with pointers, spawn it or message the existing one.
 - **The user wants to read this on a phone, or to be able to comment on it** → the
   **`crowsnest-report`** skill: `crowsnest report`, publish it as an artifact, act on the
-  comments that come back.
+  comments that come back. When designing or changing how a report's items are seen,
+  put off, marked done, or annotated, read `crowsnest-report/references/triage-ux.md`
+  (sections 1-2 suffice).
 - **You are being set up for the first time** → `crowsnest init` writes your `CLAUDE.md`,
   creates the data directory, and installs the hooks that push events at you.
 
