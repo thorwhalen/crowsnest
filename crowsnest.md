@@ -1,4 +1,4 @@
-> built 2026-09-15 14:40 UTC from b2e551c (main) · crowsnest 0.0.41. Details: build_info.json
+> built 2026-09-15 14:45 UTC from 1ddf457 (main) · crowsnest 0.0.42. Details: build_info.json
 
 # index.html.md
 
@@ -4867,7 +4867,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-15 14:40 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/b2e551cfad47e1b4a56d6a0caecf9216c49eee04"><code>b2e551c</code></a> on branch <code>main</code>, for **crowsnest 0.0.41** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-15 14:45 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/1ddf457c9f4d17ee0521063bb66a1914a6d32f01"><code>1ddf457</code></a> on branch <code>main</code>, for **crowsnest 0.0.42** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4876,7 +4876,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/b2e551cfad47e1b4a56d6a0caecf9216c49eee04"><code>b2e551cfad47e1b4a56d6a0caecf9216c49eee04</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/1ddf457c9f4d17ee0521063bb66a1914a6d32f01"><code>1ddf457c9f4d17ee0521063bb66a1914a6d32f01</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -4887,9 +4887,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34982999254">34982999254</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34983581212">34983581212</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>b2e551cfad47e1b4a56d6a0caecf9216c49eee04</code> (in the history of the built commit) |
+| Event commit | <code>1ddf457c9f4d17ee0521063bb66a1914a6d32f01</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4914,13 +4914,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.41/">0.0.41</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.42/">0.0.42</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout b2e551cfad47e1b4a56d6a0caecf9216c49eee04
+git checkout 1ddf457c9f4d17ee0521063bb66a1914a6d32f01
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
