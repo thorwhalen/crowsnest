@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import random
 import re
-from datetime import timedelta
+from datetime import timedelta, timezone
 
 import pytest
 from fixtures import ALIVE, demo_home
@@ -565,10 +565,18 @@ def test_probe_later_and_woke_times_are_in_the_page_zone():
     mark(store, a, attention.later, until=now + timedelta(minutes=90))
     mark(store, b, attention.later, until=now - timedelta(minutes=30), plan="after lunch")
     roster = {"sessions": [a, b], "counts": {}}
+    # Fixed offsets, not zone names: Windows has no zone database without `tzdata`.
+    # In February, Los Angeles is UTC-8 and Tokyo UTC+9.
     expected = {
-        "America/Los_Angeles": ("until 17:00 or it changes", "you put it off until 15:00"),
+        timezone(timedelta(hours=-8)): (
+            "until 17:00 or it changes",
+            "you put it off until 15:00",
+        ),
         "UTC": ("until 2026-02-02 01:00 or it changes", "you put it off until 23:00"),
-        "Asia/Tokyo": ("until 10:00 or it changes", "you put it off until 08:00"),
+        timezone(timedelta(hours=9)): (
+            "until 10:00 or it changes",
+            "you put it off until 08:00",
+        ),
     }
     for tz, (later_text, back_text) in expected.items():
         html = render_report(roster, made_at=stamp, store=store, tz=tz)
