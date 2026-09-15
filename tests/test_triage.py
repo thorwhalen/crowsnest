@@ -220,9 +220,9 @@ def test_the_line_above_a_statement_is_not_its_ask():
     assert _texts(found) == ["Blocked on Thor. Go."]
 
 
-def test_every_for_person_section_is_an_ask_and_the_log_around_them_is_not():
+def test_every_for_person_section_is_an_ask_and_the_log_between_them_is_not():
     text = (
-        "## For Thor\n\nwhich base branch?\n\nCommitted 7d30838.\n\n## Notes\n\n"
+        "## For Thor\n\nwhich base branch?\n\n### 2026-09-16 notes\n\nCommitted 7d3.\n\n"
         "still blocked on Thor.\n\n## For Thor\n\nattach the GIF"
     )
     assert _texts(classify_row(_row(), ledger=_ledger(text))) == [
@@ -232,10 +232,44 @@ def test_every_for_person_section_is_an_ask_and_the_log_around_them_is_not():
 
 
 def test_a_list_under_a_for_person_heading_is_part_of_its_ask():
-    text = "## For Thor\n\nTwo things:\n\n- attach the GIF\n- rotate the key\n\nDone 7d3."
+    text = "## For Thor\n\nTwo things:\n\n- attach the GIF\n- rotate the key\n\n### Log\n\nDone."
     assert _texts(classify_row(_row(), ledger=_ledger(text))) == [
         "Two things:\n\n- attach the GIF\n- rotate the key"
     ]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "**Open for Thor (2 items):**\n1. attach the GIF\n2. rotate the key",
+        "## For Thor\n\n**1. attach the GIF**\n\n**2. rotate the key**",
+    ],
+)
+def test_a_request_section_runs_across_its_blocks(text):
+    # The shapes real ledgers write. Ending the ask at its first gap cut three of four
+    # such sections short on the ledgers this was measured on.
+    assert "rotate the key" in _texts(classify_row(_row(), ledger=_ledger(text)))[0]
+
+
+@pytest.mark.parametrize(
+    "text, asks",
+    [
+        ("## For Thor\n\nattach the GIF\n\n---\n\nparser notes", ["attach the GIF"]),
+        (
+            "**Open for Thor:** attach the GIF\n**Decision for Thor:** squash or rebase?",
+            ["attach the GIF", "squash or rebase?"],
+        ),
+    ],
+    ids=["a-rule", "another-lead-in"],
+)
+def test_a_rule_or_another_lead_in_ends_a_request_section(text, asks):
+    assert _texts(classify_row(_row(), ledger=_ledger(text))) == asks
+
+
+def test_a_statement_ending_in_a_colon_takes_the_list_under_it():
+    said = "Blocked on Thor for two things:\n- approve pull/45\n- rotate the key"
+    found = classify_row(_row(), ledger=_ledger(said + "\n\nparser tidied"))
+    assert _texts(found) == [said]
 
 
 def test_a_bold_lead_in_holding_a_statement_is_one_ask():

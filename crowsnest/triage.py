@@ -484,6 +484,13 @@ _OPENS_A_BLOCK = (
 )
 _HEADING, _RULE, _LIST_ITEM, _TABLE_ROW, _QUOTE = _OPENS_A_BLOCK
 
+#: Where a "for <person>" section ends: at a heading, whatever decorates it, read where
+#: code is blanked so a ``# comment`` in a fence is not one; or at two blank lines, read
+#: where code is not, so a fence is not two. A rule or another lead-in ends it as well
+#: (:func:`_section_ask`).
+_SECTION_HEADING_STOP = re.compile(r"\n[\s>*#_-]*#{1,6}\s")
+_SECTION_GAP_STOP = re.compile(r"\n\s*\n\s*\n")
+
 #: A request right after "no" or "without" is the absence of one: "no manual-task needed",
 #: "no longer blocked on Thor". One word may sit between; two ("no reply yet; blocked on
 #: Thor") and it is a request again.
@@ -528,15 +535,28 @@ def _opens_a_block(page: _Page, start: int, end: int) -> bool:
 def _block_end(page: _Page, pos: int) -> int:
     """Where the block holding ``pos`` ends: before a blank line or a line opening a block.
 
+    A line ending in ``:`` opens a list rather than ending at one: "Blocked on Thor for
+    two things:" is followed by the two things.
+
     >>> text = 'Blocked on Thor. Approve pull/45.\\nand the tag\\n- Committed 7d30838.'
     >>> text[: _block_end(_page_of(text, 'thor'), 0)]
     'Blocked on Thor. Approve pull/45.\\nand the tag'
+    >>> text = 'Blocked on Thor for two things:\\n- approve pull/45\\n- rotate it\\n\\nnotes'
+    >>> text[: _block_end(_page_of(text, 'thor'), 0)]
+    'Blocked on Thor for two things:\\n- approve pull/45\\n- rotate it'
     """
-    _, end = _line_bounds(page.shown, pos)
-    while end < len(page.shown):
-        start, after = _line_bounds(page.shown, end + 1)
-        if not page.raw[start:after].strip() or _opens_a_block(page, start, after):
+    shown = page.shown
+    _, end = _line_bounds(shown, pos)
+    listing = shown[:end].rstrip().endswith(":")
+    while end < len(shown):
+        start, after = _line_bounds(shown, end + 1)
+        line = shown[start:after]
+        if not page.raw[start:after].strip():
             break
+        if not (listing and _LIST_ITEM.match(line)):
+            if _opens_a_block(page, start, after):
+                break
+            listing = listing or line.rstrip().endswith(":")
         end = after
     return end
 
@@ -554,43 +574,42 @@ def _statement_ask(page: _Page, opened: re.Match) -> tuple[int, int]:
 
 
 def _section_ask(page: _Page, opened: re.Match) -> tuple[int, int]:
-    """A "for <person>" section's ask: what its lead-in opens, and no further.
+    """A "for <person>" section's ask: what its lead-in opens, up to the next heading, rule
+    or lead-in, or two blank lines.
 
-    Words on the lead-in's own line (``**Open for Thor:** attach the GIF``) are a block of
-    their own. Under a heading, the ask is the first block and any list, table or indented
-    lines after it, across single blank lines. It ends where unindented prose resumes
-    after a gap, at a heading, a rule or another lead-in, and at two blank lines. Notes
-    appended below an ask are the log, not the ask.
+    A request section is often more than one block, and the ledgers this was measured on
+    show it: an "**Open for Thor (2 items):**" lead-in over a numbered list, a "## For
+    Thor" heading over bold numbered paragraphs with gaps between. Ending the ask at its
+    first gap cut three of four of them short. The cost is that prose appended under a
+    request section with no heading of its own becomes part of the ask. Sessions append
+    under dated headings, and a heading ends the section.
 
-    >>> text = '## For Thor\\n\\nTwo things:\\n\\n- attach the GIF\\n\\nCommitted 7d30838.'
+    >>> text = '## For Thor\\n\\nTwo things:\\n\\n- attach the GIF\\n\\n---\\n\\nCommitted.'
     >>> page = _page_of(text, 'thor')
     >>> text[slice(*_section_ask(page, _for_person('thor').search(text)))]
-    'Two things:\\n\\n- attach the GIF'
+    'Two things:\\n\\n- attach the GIF\\n'
     """
-    shown, raw = page.shown, page.raw
-    _, pos = _line_bounds(shown, opened.end())
-    inline = shown[opened.end() : pos]
-    words = opened.end() + len(inline) - len(inline.lstrip(":*_)-— \t"))
-    if shown[words:pos].strip():
-        return words, _block_end(page, opened.end())
-    start = end = -1
-    gap = 0
-    while pos < len(shown):
-        line_start, pos = _line_bounds(shown, pos + 1)
-        line = shown[line_start:pos]
-        if not raw[line_start:pos].strip():
-            gap += 1
-            if gap > 1:
-                break
-            continue
-        if line_start in page.lead_ins or _HEADING.match(line) or _RULE.match(line):
+    shown = page.shown
+    start = opened.end()
+    end = len(shown)
+    for found in (
+        _SECTION_HEADING_STOP.search(shown, start),
+        _SECTION_GAP_STOP.search(page.raw, start),
+    ):
+        if found and found.start() < end:
+            end = found.start()
+    line_start = shown.find("\n", start) + 1
+    while 0 < line_start < end:
+        line_end = shown.find("\n", line_start)
+        line_end = len(shown) if line_end < 0 else line_end
+        if line_start in page.lead_ins or _RULE.match(shown[line_start:line_end]):
+            end = line_start - 1
             break
-        continues = _LIST_ITEM.match(line) or _TABLE_ROW.match(line) or line[0] in " \t"
-        if start >= 0 and gap and not continues:
-            break
-        start = line_start if start < 0 else start
-        end, gap = pos, 0
-    return (start, end) if start >= 0 else (opened.end(), opened.end())
+        line_start = line_end + 1
+    # The heading's own trailing punctuation and decoration is not the section:
+    # `**Open for Thor:** attach the GIF` should read back as `attach the GIF`.
+    body = shown[start:end]
+    return start + len(body) - len(body.lstrip(":*_)-— \t\r\n")), end
 
 
 class _Request(NamedTuple):

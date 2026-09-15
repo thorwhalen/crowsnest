@@ -20,8 +20,8 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 | `verdicts=` in `triage.classify`, ordered `(row, ledger) -> Verdict \| None`; first non-`None` wins. Reachable from `tools.triage(verdicts=)` and `tools.report(verdicts=)` | `(from_registry, from_ledger)` — the live waiting signal, then the ledger's field and its "for <person>" prose | `from_digest` over openloops' digest, whose store is already the `store=` seam below |
 | `layout=` in `tree.render`, `(graph) -> [Placed]` | the indented depth-first walk, fleets collapsed, childless roots dropped | a real graph library behind `--interactive`, which already permits script |
 | `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
-| `identity=` in `attention.item_id`, `(row) -> tuple[str, ...]`, kind first. Reachable from every verb and from `tools.report(identity=)` / `report.render_report(identity=)`, which must be given the same one | `("session", session_id)`, `uuid5(NAMESPACE, ":".join(...))`; only the last component may hold a colon | `("ask", session_id, ask)` once triage emits several asks; `("ref", url)` for an item several sessions share |
-| `material=` in `attention.fingerprint`, `(row) -> tuple` | `(group, why, normalised reason)`; a `working` row's reason (the tool in flight) left out; rows with no verdict or `unclassified`: `(status,)` plus an idle row's last words. **Not the row's links**: they are resolved from tail text and the hook-rewritten `last_said`, and made chatter a change (adversarial review of #65). Reachable like `identity=` | a tighter or looser tuple once resurfacing is measured (K2 in discussion #51) |
+| `identity=` in `attention.item_id`, `(row) -> tuple[str, ...]`, kind first. Reachable from every verb and from `tools.report(identity=)` / `report.render_report(identity=)`, which must be given the same one | `("session", session_id)`, `uuid5(NAMESPACE, ":".join(...))`; only the last component may hold a colon | `("ask", session_id, ask)` over a `needs_you` verdict's `asks`, one item per ask; `("ref", url)` for an item several sessions share |
+| `material=` in `attention.fingerprint`, `(row) -> tuple` | `(group, why, *normalised asks)`: a `needs_you` verdict's `asks` (`triage.Ask`, each whole), else its reason; a `working` row's reason (the tool in flight) left out; rows with no verdict or `unclassified`: `(status,)` plus an idle row's last words. One ask is the same three-part tuple a reason made, so such revisions survived #67. **Not the row's links**: they are resolved from tail text and the hook-rewritten `last_said`, and made chatter a change (adversarial review of #65). Reachable like `identity=` | a tighter or looser tuple once resurfacing is measured (K2 in discussion #51) |
 | `store=` on every `attention` function, `tools.seen`/`unseen`/`later`/`done`/`note`/`undo`/`attention_export`/`attention_import`, and `tools.report` / `report.render_report` (which apply it to the page; `plain=` ignores it), a `MutableMapping[str, dict]` keyed by item id | `attention.dflt_store()`: one JSON file per item under `data_dir()/attention/` (`dol`, UTF-8, atomic writes; a key that is not an item id never becomes a file) | the page's `db` mirror (#57); a synced data dir; an S3 mapping |
 
 Surfaces built: the `cw` CLI (`__main__.py` renders, `tools.py` is the JSON core), the
@@ -35,6 +35,15 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
   `db` or an export, changing `attention.NAMESPACE`, the identity join, or how
   `fingerprint` encodes and hashes orphans it or resurfaces every item at once. Change
   them only with a migration; `tests/test_attention.py` pins the id derivation.
+- **So is where `triage` bounds an ask.** A `needs_you` verdict's `asks` feed every
+  revision, so a change to `_person_patterns`, `_NOT_REALLY`, `_NO_SUCH`, `_section_ask`
+  or `_statement_ask` resurfaces each item it touches, once. Measure it on the real
+  ledgers (read-only, counts only) and say so in the PR. Before #67 the whole file's
+  statements counted and one appended "no manual-task needed" resurfaced every item (K2).
+- **A record's document is the export/import shape and the page mirror's** (#56, #57).
+  Add a field only as optional, keep a record without it readable, and never store
+  transcript text in it: the mirror is readable by anyone who can open the artifact.
+  `seen_as` (#73) keeps a verdict's `group` and `why`, never its reason.
 - The attention verbs pin the revision of the row `tools._item_row` builds, which is the
   row `report` renders (`_roster_row`, then triage). Build a page row any other way and
   every seen item reads as changed.
