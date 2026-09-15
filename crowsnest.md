@@ -1,4 +1,4 @@
-> built 2026-09-15 14:45 UTC from 1ddf457 (main) · crowsnest 0.0.42. Details: build_info.json
+> built 2026-09-15 14:51 UTC from c89f669 (main) · crowsnest 0.0.43. Details: build_info.json
 
 # index.html.md
 
@@ -1744,12 +1744,14 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None)
+### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None, ledger_dir=None, resolvers=None, owner='', verdicts=None, material=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 
 `all_homes` watches every configured home at once; registry events then carry the
 home’s name. Hook events come from this machine’s own hook log and carry none.
+`ledger_dir`, `resolvers`, `owner`, `verdicts` and `material` reach
+`attention_wakes()`, and must be the ones the attention verbs were given.
 
 The first snapshot is the baseline and yields nothing, and the hook log is opened at
 its end: a monitor that starts up is not told about forty sessions that were already
@@ -4754,7 +4756,7 @@ news; a move in or out of the pair still is.
 * **Type:**
   Statuses that mean the same thing to a watcher
 
-### crowsnest.watch.attention_wakes(, store=None, row_of=None, home=None, all_homes=False, config=None, announced=None, now=None)
+### crowsnest.watch.attention_wakes(, store=None, row_of=None, home=None, all_homes=False, config=None, announced=None, now=None, ledger_dir=None, resolvers=None, owner='', verdicts=None, material=None)
 
 One `woke` event per attention item that just left `later`.
 
@@ -4768,6 +4770,10 @@ announced is not repeated. `announced` is that bookkeeping, kept by the caller
 across ticks ([`events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events) keeps its own); a fresh one announces every already-woken
 item once, which is the same acceptable-not-silent choice [`events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events) makes for a
 restarted watcher.
+
+`ledger_dir`, `resolvers`, `owner` and `verdicts` build the default row, and
+`material` takes its revision. Like the report’s, they must be the ones the verbs were given: a
+row built or hashed any other way reads as changed, and wakes on the first tick (#74).
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
@@ -4784,12 +4790,14 @@ session whose last words were an error banner is reported as `error` instead.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
-### crowsnest.watch.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None)
+### crowsnest.watch.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None, ledger_dir=None, resolvers=None, owner='', verdicts=None, material=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 
 `all_homes` watches every configured home at once; registry events then carry the
 home’s name. Hook events come from this machine’s own hook log and carry none.
+`ledger_dir`, `resolvers`, `owner`, `verdicts` and `material` reach
+[`attention_wakes()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.attention_wakes), and must be the ones the attention verbs were given.
 
 The first snapshot is the baseline and yields nothing, and the hook log is opened at
 its end: a monitor that starts up is not told about forty sessions that were already
@@ -4867,16 +4875,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-15 14:45 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/1ddf457c9f4d17ee0521063bb66a1914a6d32f01"><code>1ddf457</code></a> on branch <code>main</code>, for **crowsnest 0.0.42** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-15 14:51 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c89f66974b5f865bf9696f2c57d7a7e58d6413f7"><code>c89f669</code></a> on branch <code>main</code>, for **crowsnest 0.0.43** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.43) is behind the latest release on PyPI (0.0.44): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/1ddf457c9f4d17ee0521063bb66a1914a6d32f01"><code>1ddf457c9f4d17ee0521063bb66a1914a6d32f01</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c89f66974b5f865bf9696f2c57d7a7e58d6413f7"><code>c89f66974b5f865bf9696f2c57d7a7e58d6413f7</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -4887,9 +4897,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34983581212">34983581212</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34984210605">34984210605</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>1ddf457c9f4d17ee0521063bb66a1914a6d32f01</code> (in the history of the built commit) |
+| Event commit | <code>c89f66974b5f865bf9696f2c57d7a7e58d6413f7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4914,13 +4924,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.42/">0.0.42</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.44/">0.0.44</a>, newer than the documented version (0.0.43).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 1ddf457c9f4d17ee0521063bb66a1914a6d32f01
+git checkout c89f66974b5f865bf9696f2c57d7a7e58d6413f7
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
