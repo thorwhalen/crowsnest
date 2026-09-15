@@ -333,8 +333,10 @@ def test_the_console_controls_are_hidden_until_the_page_lights_them_up():
     assert 'data-kind="refresh" data-console hidden' in page
     assert 'id="console-status">console: connecting' in page
     assert 'data-session="fixer"' in page and 'data-home="one"' in page
-    for kind in ("ask", "tell", "start", "handled"):
+    for kind in ("ask", "tell", "start"):
         assert f'data-kind="{kind}"' in page
+    # Handled became the attention arm's Done (#56), which writes the record, not an intent.
+    assert 'data-kind="handled"' not in page
     acts = page.split('<div class="acts"', 1)[1].split("</div>", 1)[0]
     assert acts.startswith(" data-console hidden")
 

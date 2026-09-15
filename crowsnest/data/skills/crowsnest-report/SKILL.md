@@ -115,14 +115,19 @@ the page by hand, and do not paste a transcript into a comment reply.
 
 ## 5. The console: acting from the page
 
-An `--interactive` page carries buttons per row (**Ask**, **Tell**, **Start work
-here**, **Handled**) and a **Refresh**, hidden until the page's `db` capability resolves
-in the claude.ai viewer. Each press writes one document into the artifact's `intents`
-collection; nothing on the page runs a command. Publish with the capability declared:
+An `--interactive` page carries buttons per row and a **Refresh**, hidden until the page's `db` capability resolves in the claude.ai viewer. Publish with the capability declared:
 
 ```
 Artifact({ file_path: "<file>.html", capabilities: { db: {} } })
 ```
+
+The buttons come in two kinds, and only one of them reaches you.
+
+**Seen, Later, Done and Note are the user's own record, not instructions.** Each tap writes that item's attention document whole into the page's `db` at `attention/<item id>`, the same document `crowsnest attention export|import` reads and writes, and redraws the row at once. Seen dims it. Later opens a sheet (*In 1 hour*, *This evening*, *Tomorrow morning*, *Until it changes*, "or when it changes", an optional next step; after `max_snoozes` put-offs it leads with *Drop it*) and folds the row into **Later**. Done hides the row until it changes. Note keeps a line for the user. **Seen above**, on each register's head below the first, marks every row above it seen, and a toast offers **Undo**. None of it writes an intent and none of it is yours to act on: a note is never an instruction. The sheet's hours are the config file's `[attention]` table. These buttons appear only on a page with triage verdicts, so a `--no-triage` page has none.
+
+**Ask, Tell and Start work here are instructions.** Each press writes one document into the artifact's `intents` collection; nothing on the page runs a command.
+
+The status line says when the `db` is missing. A second line reads the page's `console/heartbeat` document (`{at}`): when it is absent or older than two ticks, it says crowsnest has not looked lately and that terminal changes and queued actions wait.
 
 A `db` write does **not** wake this session; only a comment sent to Claude does. So
 while the user is operating from the page, poll:
@@ -143,7 +148,7 @@ and stop the loop when they say they are done. Each tick:
      `answer: "delivered"`. If the session is `waiting`, say so in `answer` instead.
    - `start`: `crowsnest spawn` a session in that row's directory with `text` as its
      prompt (the `crowsnest-dispatch` skill); `answer` names the new session.
-   - `handled`: record it in that session's ledger notes; `status: "done"`.
+   - `handled`: only from a page published before **Done** replaced it. Record it in that session's ledger notes; `status: "done"`.
    - `refresh`: re-run `crowsnest report --fragment --interactive` and republish to the
      same URL; `answer` is the new "as of" time.
 3. Anything you cannot do (a session that is not reachable, an instruction the

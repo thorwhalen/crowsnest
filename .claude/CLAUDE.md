@@ -51,6 +51,13 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
   existed**, and so does `plain=True` on any store (`tests/test_report_attention.py`).
   Attention's classes, CSS, badge and lines appear only when the store holds a record;
   `data-item`/`data-rev` only on an interactive page, which has a script to read them.
+  The console's attention arm draws with classes of its own (`is-seen`, `later-live`,
+  `live`) for the same reason.
+- **The console's script transcribes `attention.py`.** `report.ATTENTION_SCRIPT` reads a
+  document, runs `present`, the transitions, `seen_as_of` and `later_until` as the Python
+  does. Change both together: `tests/test_console_script.py` runs the script in node
+  against the Python, and `node --check`s the whole page script. It skips where node is
+  missing.
 
 - Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
 - `links.py` never fetches. A link is constructed from the text plus the session's cwd remote;

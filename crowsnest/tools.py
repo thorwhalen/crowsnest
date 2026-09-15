@@ -556,7 +556,9 @@ def report(
     ``None`` for this machine's). ``stale_after`` is the age, as a ``timedelta``, past
     which an item is called stale. By default it is the ``[attention]`` table's
     ``stale_after`` (:func:`crowsnest.config.attention_settings`), the same number that
-    table gives everything else, so there is no second setting for it.
+    table gives everything else, so there is no second setting for it. ``interactive``
+    adds the console, whose Later sheet takes its hours and snooze limit from that same
+    table.
 
     ``store`` is the person's attention store (:mod:`crowsnest.attention`; by default one
     JSON file per item under the data directory), and the page applies it: seen rows dim
@@ -591,8 +593,14 @@ def report(
     ledgers of whoever is running it.
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
+    # The `[attention]` table gives the stale age and, on an interactive page, the Later
+    # sheet's hours and snooze limit. It is read only when one of those is wanted, so a
+    # page that needs neither does not fail on a table it never uses.
+    settings = (
+        attention_settings(path=config) if stale_after is None or interactive else None
+    )
     if stale_after is None:
-        stale_after = attention_settings(path=config).stale_after
+        stale_after = settings.stale_after
     # One read per ledger for the whole page: `links` and `triage` both want the same
     # file, and the roster is built before either of them asks for it.
     pages = _ledgers_for(
@@ -648,6 +656,7 @@ def report(
         plain=plain,
         identity=identity,
         material=material,
+        attention_settings=settings,
     )
     return {
         "html": html,
