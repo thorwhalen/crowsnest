@@ -133,10 +133,40 @@ A `db` write does **not** wake this session; only a comment sent to Claude does.
 while the user is operating from the page, poll:
 
 ```
-/loop 30s Read the report console: act on queued intents per the crowsnest-report skill, section 5.
+/loop 30s Read the report console: sync attention and act on queued intents per the crowsnest-report skill, section 5.
 ```
 
-and stop the loop when they say they are done. Each tick:
+and stop the loop when they say they are done.
+
+**The watcher as courier.** The page's `db` cannot be read by a Python process, and the
+page cannot reach one; only this session holds both ends (the `Artifact` tool on one
+side, `crowsnest attention import`/`export` on the other). Do this every tick, before
+acting on intents:
+
+1. `read_db` query `attention` where `updated_at > <last pull>`, then
+   `crowsnest attention import` with the documents on stdin; note the counts. Keep
+   `<last pull>` in your own session notes, never in the store — it is this watcher's
+   bookmark, not shared state.
+2. `crowsnest attention export --since <last push>`; for each document, `write_db` `set`
+   `attention/<id>`. This is what carries a terminal write (`crowsnest seen|later|done|note`)
+   to the page. Note the time *before* listing, and next tick pass that time minus a
+   few minutes' margin, never the push time itself — `import_docs` is a no-op on a
+   document it already holds as new, so resending costs nothing.
+3. `write_db` `set` `console/heartbeat` `{at: now}`. The page's status line reads it.
+4. Prune `intents` documents older than a day with `status` `done` or `failed` — the
+   artifact holds at most 5,000 documents.
+5. Republish (`--fragment --interactive`) when a register's membership changed since
+   the last publish, rate-limited as section 4 already says.
+
+**Reconciliation is last-write-wins by `updated_at`, in both directions**; `attention
+import` already implements it (step 2 above). One console owner per artifact (section 2)
+keeps two couriers from racing on the same page.
+
+**Sharing across crow's nests.** Nothing extra to do: every watcher on this machine
+couriers its own artifact into the same store (the data dir is per OS user), so an item
+seen on one page is seen on the other after each side's next tick.
+
+Then act on queued intents. Each tick:
 
 1. `Artifact({ action: "read_db", url, db_op: "query", collection: "intents",
    query: { where: [["status", "==", "queued"]], order_by: { field: "at" } } })`.
