@@ -78,6 +78,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.said.html">crowsnest.said</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.skills.html">crowsnest.skills</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.tools.html">crowsnest.tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.tree.html">crowsnest.tree</a></li>
@@ -250,11 +251,11 @@ data-aria-dark="Switch to auto color mode">
 </span></pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">NEEDS YOU (5)
-</span><span data-line="2">  cn-mergeset          mergeset    [decision] The history rewrite and the PyPI deletions — awaiting go-ahead…
-</span><span data-line="3">  cosmo_3d_02          cosmograph  [action] attach the two GIFs to #604/#616 bodies (no API for that)…
+</span><span data-line="2">  cn-mergeset          mergeset    (09:12, 3h) [decision] The history rewrite and the PyPI deletions — awaiting go-ahead…
+</span><span data-line="3">  cosmo_3d_02          cosmograph  (2026-09-10, 5d) [action] attach the two GIFs to #604/#616 bodies (no API for that)…
 </span><span data-line="4">
 </span><span data-line="5">SAFE TO CLOSE (4)
-</span><span data-line="6">  cn-cosm-synth        cosm        Nothing outstanding
+</span><span data-line="6">  cn-cosm-synth        cosm        (2026-09-14 18:40, 18h) Nothing outstanding
 </span><span data-line="7">
 </span><span data-line="8">WORKING (1)
 </span><span data-line="9">UNCLASSIFIED — has not said where it stands: 48
@@ -263,6 +264,7 @@ data-aria-dark="Switch to auto color mode">
 </span></pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">[decision]</span></code> is a minute of thought; <code class="docutils literal notranslate"><span class="pre">[action]</span></code> is a trip to another window. The reason is the session’s own words, so you can check the verdict without opening the session.</p>
+<p>Every item says <strong>when its words were said</strong>, taken from where they were said. For last words that is the transcript’s time. For a waiting session it is when the registry says it began waiting. For a ledger request it is the date in the heading of the section it comes from. An undated section only has the ledger’s last write, which is an upper bound, and the item says so. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code> shows the same time on every row, in your local zone (<code class="docutils literal notranslate"><span class="pre">--tz</span></code> for another), and marks an item <em>stale</em> once it is older than <code class="docutils literal notranslate"><span class="pre">stale_after</span></code> in the config file’s <code class="docutils literal notranslate"><span class="pre">[attention]</span></code> table. JSON rows carry it as <code class="docutils literal notranslate"><span class="pre">said_at</span></code> and <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code>. A session that relays a claim keeps the claim’s own time and never restamps it with its own, because a restamped claim reads as current long after it stopped being true.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">unclassified</span></code> is the honest group, and it is the point.</strong> A wrong “safe to close” is the expensive error — somebody closes a terminal on unfinished work and nothing ever tells them — so a verdict is only reached on <em>positive</em> evidence. A session that has not said where it stands is reported as not having said. Nothing infers “finished” from silence, because silence is also what an interrupted session leaves behind.</p>
 <p>To be reported well, a session writes the ledger’s <code class="docutils literal notranslate"><span class="pre">open</span> <span class="pre">questions</span></code> field, or says “nothing outstanding” in its notes when it is done. The shipped <code class="docutils literal notranslate"><span class="pre">crowsnest-worker</span></code> skill teaches both, so the signal improves as sessions run.</p>
 <p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code> organises the page the same way: <strong>Needs you</strong> first, then <strong>Safe to close</strong>, then what is working and what is quiet.</p>
@@ -482,7 +484,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-15 12:32 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb">82328e9</a> (main) · crowsnest 0.0.37 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-15 12:53 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/63b4823677f1b1b995520c91c75654385cb56890">63b4823</a> (main) · crowsnest 0.0.38 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -517,7 +519,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=aa2ad26f"></script>
+      <script src="_static/documentation_options.js?v=423071ad"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

@@ -148,11 +148,17 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, ledger_dir=None, lineage_path=None, resolvers=None, triage=True, verdicts=None, owner='', with_lineage=True)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, ledger_dir=None, lineage_path=None, resolvers=None, triage=True, verdicts=None, owner='', with_lineage=True, tz=None, stale_after=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
 that supplies its own (the artifact publisher).
+
+`tz` is the zone the rows’ times are shown in (an IANA name, a `tzinfo`, or
+`None` for this machine’s). `stale_after` is the age, as a `timedelta`, past
+which an item is called stale. By default it is the `[attention]` table’s
+`stale_after` ([`crowsnest.config.attention_settings()`](crowsnest.config.html.md#crowsnest.config.attention_settings)), the same number that
+table gives everything else, so there is no second setting for it.
 
 `made_at` is the moment the snapshot claims to be from; it defaults to now, but a
 caller that wants byte-stable output passes it explicitly – this is the one
@@ -209,6 +215,11 @@ where the ledgers are).
 \*\*It follows `activity` unless it is asked for.\*\* Resolving costs a ledger read per
 session, which is nothing next to a transcript tail and everything next to a registry
 listing – and `activity=False` promises “instant”. Pass `links=True` to have both.
+
+Every row carries `said_at` and `said_at_basis`, which say when the thing the row
+quotes was said, taken from its source ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
+words, the question the session waits on, or the call in flight. Both are empty when
+no source gives a time. Every surface renders the time from these two fields.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

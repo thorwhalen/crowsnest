@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.said - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.skills" href="crowsnest.skills.html" /><link rel="prev" title="crowsnest.report" href="crowsnest.report.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.said"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.said.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.said</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.said.BARE_DATE_ZONE"><code class="docutils literal notranslate"><span class="pre">BARE_DATE_ZONE</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.BASES"><code class="docutils literal notranslate"><span class="pre">BASES</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.CLOCK_SLACK"><code class="docutils literal notranslate"><span class="pre">CLOCK_SLACK</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.QUOTING_GROUPS"><code class="docutils literal notranslate"><span class="pre">QUOTING_GROUPS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.from_epoch"><code class="docutils literal notranslate"><span class="pre">from_epoch()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.from_stamp"><code class="docutils literal notranslate"><span class="pre">from_stamp()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.heading_date"><code class="docutils literal notranslate"><span class="pre">heading_date()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.of_activity"><code class="docutils literal notranslate"><span class="pre">of_activity()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.of_row"><code class="docutils literal notranslate"><span class="pre">of_row()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.parse"><code class="docutils literal notranslate"><span class="pre">parse()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.when_said"><code class="docutils literal notranslate"><span class="pre">when_said()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.said.with_said"><code class="docutils literal notranslate"><span class="pre">with_said()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.said</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.said">
+<span id="crowsnest-said"></span><h1>crowsnest.said<a class="headerlink" href="#module-crowsnest.said" title="Link to this heading">#</a></h1>
+<p>When the thing an item quotes was said: its own time, taken from its own source.</p>
+<p>A report row quotes something. It might be a session’s last words, the question it is
+waiting on, or a sentence from its ledger. The reader needs to know how old that thing
+is, because a blocker from five minutes ago and one from five days ago call for different
+actions. The only time a row used to carry was how long the session had been in its
+current status. That is a different fact. A session idle for an hour whose last words are
+from yesterday read “1 h”.</p>
+<p>Worse, a claim gets passed on. One watching session relays another session’s warning, and
+a second relays the first. If each relay stamps the claim with its own “now”, a five-day-old
+warning reads as current for as long as anyone keeps repeating it. **So a time travels with
+the claim, from its source, and a relay never replaces it** (crowsnest#66).</p>
+<p>Every item carries two values. <code class="docutils literal notranslate"><span class="pre">said_at</span></code> is an ISO 8601 instant in UTC, a bare date when
+the source gives only a day, or <code class="docutils literal notranslate"><span class="pre">''</span></code> when no source time is known. <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code> names
+where the time came from:</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>basis</p></th>
+<th class="head"><p>the time is</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transcript</span></code></p></td>
+<td><p>the transcript’s own timestamp on the words quoted</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">registry</span></code></p></td>
+<td><p>when the registry says the session entered its status, e.g. began
+waiting on the question it asks</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ledger</span> <span class="pre">section</span></code></p></td>
+<td><p>the date in the heading of the ledger section the words come from</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ledger</span> <span class="pre">written</span></code></p></td>
+<td><p>the ledger’s last write. The words are <strong>no newer</strong> than this and may
+be much older, so this basis is an upper bound, never a date</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>An unknown time stays <code class="docutils literal notranslate"><span class="pre">''</span></code>. It is never filled from the time the page was made, since
+that fallback is exactly how an old claim comes to look new.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">of_row</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'activity'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'last_text_at'</span><span class="p">:</span> <span class="s1">'2026-01-01T09:30:00.000Z'</span><span class="p">}})</span>
+</span><span data-line="2"><span class="go">('2026-01-01T09:30:00+00:00', 'transcript')</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">of_row</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'activity'</span><span class="p">:</span> <span class="p">{}})</span>
+</span><span data-line="4"><span class="go">('', '')</span>
+</span></pre></div>
+</div>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.said.BASES" title="crowsnest.said.BASES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BASES</span></code></a></p></td>
+<td><p>Every basis a time can have, most exact first.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.said.QUOTING_GROUPS" title="crowsnest.said.QUOTING_GROUPS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QUOTING_GROUPS</span></code></a></p></td>
+<td><p>The triage groups in which the verdict's reason <em>is</em> the quoted item.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.said.BARE_DATE_ZONE" title="crowsnest.said.BARE_DATE_ZONE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BARE_DATE_ZONE</span></code></a></p></td>
+<td><p>Where a bare date's day begins when its age is counted.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.said.CLOCK_SLACK" title="crowsnest.said.CLOCK_SLACK"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CLOCK_SLACK</span></code></a></p></td>
+<td><p>How far past &quot;now&quot; a time may fall and still count as now.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.said.from_epoch" title="crowsnest.said.from_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_epoch</span></code></a>(epoch)</p></td>
+<td><p>Unix seconds as an ISO instant in UTC; <code class="docutils literal notranslate"><span class="pre">''</span></code> for nothing, zero, or nonsense.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.said.from_stamp" title="crowsnest.said.from_stamp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_stamp</span></code></a>(text)</p></td>
+<td><p>An ISO timestamp normalised to UTC seconds; <code class="docutils literal notranslate"><span class="pre">''</span></code> when it is not an instant.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.said.heading_date" title="crowsnest.said.heading_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">heading_date</span></code></a>(heading)</p></td>
+<td><p>The date that opens a heading, as <code class="docutils literal notranslate"><span class="pre">said_at</span></code>; <code class="docutils literal notranslate"><span class="pre">''</span></code> when it does not open with one.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.said.of_activity" title="crowsnest.said.of_activity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">of_activity</span></code></a>(row)</p></td>
+<td><p>When the activity a row shows was said, by the row's status.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.said.of_row" title="crowsnest.said.of_row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">of_row</span></code></a>(row)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(said_at,</span> <span class="pre">said_at_basis)</span></code> for the item a row is shown as.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.said.parse" title="crowsnest.said.parse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse</span></code></a>(said_at)</p></td>
+<td><p>A <code class="docutils literal notranslate"><span class="pre">said_at</span></code> read back: an aware <code class="docutils literal notranslate"><span class="pre">datetime</span></code>, a <code class="docutils literal notranslate"><span class="pre">date</span></code> for a bare day, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.said.when_said" title="crowsnest.said.when_said"><code class="xref py py-obj docutils literal notranslate"><span class="pre">when_said</span></code></a>(said_at, *, now[, zone])</p></td>
+<td><p>Where an item's age counts from: <code class="docutils literal notranslate"><span class="pre">(epoch,</span> <span class="pre">day)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.said.with_said" title="crowsnest.said.with_said"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_said</span></code></a>(row)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">row</span></code> with its <code class="docutils literal notranslate"><span class="pre">said_at</span></code> and <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code> set by <a class="reference internal" href="#crowsnest.said.of_row" title="crowsnest.said.of_row"><code class="xref py py-func docutils literal notranslate"><span class="pre">of_row()</span></code></a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.said.BARE_DATE_ZONE">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">BARE_DATE_ZONE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.timezone.utc</span></span><a class="headerlink" href="#crowsnest.said.BARE_DATE_ZONE" title="Link to this definition">#</a></dt>
+<dd><p>Where a bare date’s day begins when its age is counted. The writer’s zone is unknown,
+so no choice is exact. The reader’s zone would make “stale” depend on who reads, so it
+is out. The earliest zone (UTC+14) would call a section dated this morning stale by
+lunchtime. UTC is the same for every reader and is off by at most the writer’s offset.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.said.BASES">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">BASES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('transcript',</span> <span class="pre">'registry',</span> <span class="pre">'ledger</span> <span class="pre">section',</span> <span class="pre">'ledger</span> <span class="pre">written')</span></span><a class="headerlink" href="#crowsnest.said.BASES" title="Link to this definition">#</a></dt>
+<dd><p>Every basis a time can have, most exact first.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.said.CLOCK_SLACK">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">CLOCK_SLACK</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.timedelta(seconds=300)</span></span><a class="headerlink" href="#crowsnest.said.CLOCK_SLACK" title="Link to this definition">#</a></dt>
+<dd><p>How far past “now” a time may fall and still count as now. A page’s time is taken a
+moment before the transcripts it quotes are read, so a fresh stamp can be ahead of it.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.said.QUOTING_GROUPS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">QUOTING_GROUPS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('needs_you',</span> <span class="pre">'safe_to_close')</span></span><a class="headerlink" href="#crowsnest.said.QUOTING_GROUPS" title="Link to this definition">#</a></dt>
+<dd><p>The triage groups in which the verdict’s reason <em>is</em> the quoted item. In the other groups
+the page and the CLI quote the session’s activity (last words, the call in flight), so
+that is the item whose time counts.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.said.from_epoch">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">from_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#from_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.from_epoch" title="Link to this definition">#</a></dt>
+<dd><p>Unix seconds as an ISO instant in UTC; <code class="docutils literal notranslate"><span class="pre">''</span></code> for nothing, zero, or nonsense.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_epoch</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">from_epoch</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">from_epoch</span><span class="p">(</span><span class="s1">'x'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">('', '', '')</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_epoch</span><span class="p">(</span><span class="mi">1767225600</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">'2026-01-01T00:00:00+00:00'</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.said.from_stamp">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">from_stamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#from_stamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.from_stamp" title="Link to this definition">#</a></dt>
+<dd><p>An ISO timestamp normalised to UTC seconds; <code class="docutils literal notranslate"><span class="pre">''</span></code> when it is not an instant.</p>
+<p>A timestamp with no zone is not an instant, so it is not read as one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_stamp</span><span class="p">(</span><span class="s1">'2026-01-01T09:30:00.000Z'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">'2026-01-01T09:30:00+00:00'</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_stamp</span><span class="p">(</span><span class="s1">'2026-01-01T11:30:00+02:00'</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">'2026-01-01T09:30:00+00:00'</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_stamp</span><span class="p">(</span><span class="s1">'2026-01-01T09:30:00'</span><span class="p">),</span> <span class="n">from_stamp</span><span class="p">(</span><span class="s1">'soon'</span><span class="p">)</span>
+</span><span data-line="6"><span class="go">('', '')</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.said.heading_date">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">heading_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">heading</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#heading_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.heading_date" title="Link to this definition">#</a></dt>
+<dd><p>The date that opens a heading, as <code class="docutils literal notranslate"><span class="pre">said_at</span></code>; <code class="docutils literal notranslate"><span class="pre">''</span></code> when it does not open with one.</p>
+<p>A time is kept only with a zone. A date before 1970 is not taken.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">heading_date</span><span class="p">(</span><span class="s1">'### 2026-09-12 — all four stages landed'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">'2026-09-12'</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">heading_date</span><span class="p">(</span><span class="s1">'## 2026-09-12T09:40Z handoff'</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">'2026-09-12T09:40:00+00:00'</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">heading_date</span><span class="p">(</span><span class="s1">'## 2026-09-12 09:40 no zone given'</span><span class="p">)</span>
+</span><span data-line="6"><span class="go">'2026-09-12'</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">heading_date</span><span class="p">(</span><span class="s1">'### Follow-up to the 2026-01-10 outage'</span><span class="p">)</span>
+</span><span data-line="8"><span class="go">''</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="n">heading_date</span><span class="p">(</span><span class="s1">'## 2026-13-45 not a date'</span><span class="p">),</span> <span class="n">heading_date</span><span class="p">(</span><span class="s1">'## 0001-01-01 notes'</span><span class="p">)</span>
+</span><span data-line="10"><span class="go">('', '')</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.said.of_activity">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">of_activity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#of_activity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.of_activity" title="Link to this definition">#</a></dt>
+<dd><p>When the activity a row shows was said, by the row’s status.</p>
+<ul class="simple">
+<li><p>A <strong>waiting</strong> session’s item is the question it waits on, which it began waiting on
+when the registry says its status changed.</p></li>
+<li><p>A <strong>busy</strong> session’s item is the call in flight. Its time is the transcript’s latest
+event. With nothing in flight, the item is the status itself, so the time is when
+the registry recorded that status.</p></li>
+<li><p>Anything else shows its last words, stamped by the transcript.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.said.of_row">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">of_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#of_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.of_row" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(said_at,</span> <span class="pre">said_at_basis)</span></code> for the item a row is shown as.</p>
+<p>A verdict that quotes a reason (see <a class="reference internal" href="#crowsnest.said.QUOTING_GROUPS" title="crowsnest.said.QUOTING_GROUPS"><code class="xref py py-data docutils literal notranslate"><span class="pre">QUOTING_GROUPS</span></code></a>) supplies the time of that
+reason. If the verdict carries no time, the answer is <em>unknown</em>: another time on the
+row belongs to different words, so it is never borrowed. Every other row falls back
+to <a class="reference internal" href="#crowsnest.said.of_activity" title="crowsnest.said.of_activity"><code class="xref py py-func docutils literal notranslate"><span class="pre">of_activity()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">of_row</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'activity'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'last_text_at'</span><span class="p">:</span> <span class="s1">'2026-01-01T09:30:00Z'</span><span class="p">},</span>
+</span><span data-line="2"><span class="gp">... </span>        <span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'safe_to_close'</span><span class="p">,</span> <span class="s1">'said_at'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}})</span>
+</span><span data-line="3"><span class="go">('', '')</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.said.parse">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">said_at</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.parse" title="Link to this definition">#</a></dt>
+<dd><p>A <code class="docutils literal notranslate"><span class="pre">said_at</span></code> read back: an aware <code class="docutils literal notranslate"><span class="pre">datetime</span></code>, a <code class="docutils literal notranslate"><span class="pre">date</span></code> for a bare day, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse</span><span class="p">(</span><span class="s1">'2026-01-05'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">datetime.date(2026, 1, 5)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse</span><span class="p">(</span><span class="s1">'2026-01-05T08:00:00+00:00'</span><span class="p">)</span><span class="o">.</span><span class="n">hour</span>
+</span><span data-line="4"><span class="go">8</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse</span><span class="p">(</span><span class="s1">''</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">parse</span><span class="p">(</span><span class="s1">'2026-13-01'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="6"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.said.when_said">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">when_said</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">said_at</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#when_said"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.when_said" title="Link to this definition">#</a></dt>
+<dd><p>Where an item’s age counts from: <code class="docutils literal notranslate"><span class="pre">(epoch,</span> <span class="pre">day)</span></code>. <code class="docutils literal notranslate"><span class="pre">day</span></code> is the bare date when
+only a day is known. <code class="docutils literal notranslate"><span class="pre">None</span></code> means the time is unknown, or cannot be when anything
+was said.</p>
+<p>A bare date counts from 00:00 in <a class="reference internal" href="#crowsnest.said.BARE_DATE_ZONE" title="crowsnest.said.BARE_DATE_ZONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">BARE_DATE_ZONE</span></code></a>, so whether it is stale does
+not depend on the reader’s zone. Three things count as
+unknown rather than as “today”. The first is a time later than <code class="docutils literal notranslate"><span class="pre">now</span></code> by more than
+<a class="reference internal" href="#crowsnest.said.CLOCK_SLACK" title="crowsnest.said.CLOCK_SLACK"><code class="xref py py-data docutils literal notranslate"><span class="pre">CLOCK_SLACK</span></code></a>. The second is a date later than <code class="docutils literal notranslate"><span class="pre">now</span></code>’s day in <code class="docutils literal notranslate"><span class="pre">zone</span></code>
+(<code class="docutils literal notranslate"><span class="pre">None</span></code> means this machine’s zone); a future date names a plan or a deadline. The
+third is anything before 1970.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">now</span> <span class="o">=</span> <span class="mf">1767268800.0</span>  <span class="c1"># 2026-01-01T12:00:00Z</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">when_said</span><span class="p">(</span><span class="s1">'2026-01-01T11:00:00+00:00'</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">)</span>
+</span><span data-line="3"><span class="go">(1767265200.0, None)</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">when_said</span><span class="p">(</span><span class="s1">'2026-01-01'</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">,</span> <span class="n">zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+</span><span data-line="5"><span class="go">(1767225600.0, datetime.date(2026, 1, 1))</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">when_said</span><span class="p">(</span><span class="s1">'2026-01-02'</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">,</span> <span class="n">zone</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="7"><span class="go">True</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="n">when_said</span><span class="p">(</span><span class="s1">'2026-01-01T20:00:00+00:00'</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="9"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.said.with_said">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">with_said</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#with_said"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.with_said" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">row</span></code> with its <code class="docutils literal notranslate"><span class="pre">said_at</span></code> and <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code> set by <a class="reference internal" href="#crowsnest.said.of_row" title="crowsnest.said.of_row"><code class="xref py py-func docutils literal notranslate"><span class="pre">of_row()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">with_said</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'waiting'</span><span class="p">,</span> <span class="s1">'status_since'</span><span class="p">:</span> <span class="mi">1767225600</span><span class="p">})[</span><span class="s1">'said_at_basis'</span><span class="p">]</span>
+</span><span data-line="2"><span class="go">'registry'</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.report.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.report</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.skills.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.skills</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=423071ad"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

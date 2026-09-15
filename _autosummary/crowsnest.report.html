@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="orange" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.report - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.skills" href="crowsnest.skills.html" /><link rel="prev" title="crowsnest.registry" href="crowsnest.registry.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.report - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.said" href="crowsnest.said.html" /><link rel="prev" title="crowsnest.registry" href="crowsnest.registry.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
@@ -78,6 +78,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
@@ -161,8 +162,13 @@ last words clipped), <strong>Working</strong> (busy, with the tool call in fligh
 comment on the published page can anchor to it (crowsnest issue #4).</p>
 <p>Like the openloops dashboard, **the page is a snapshot, and it says so in its largest
 type.** <code class="docutils literal notranslate"><span class="pre">made_at</span></code> is a required-in-practice argument rather than a hidden <code class="docutils literal notranslate"><span class="pre">now()</span></code>,
-which is also what lets a test compare bytes: the same roster and <code class="docutils literal notranslate"><span class="pre">made_at</span></code> render the
-same document, byte for byte.</p>
+which is also what lets a test compare bytes: the same roster, <code class="docutils literal notranslate"><span class="pre">made_at</span></code> and <code class="docutils literal notranslate"><span class="pre">tz</span></code>
+render the same document, byte for byte.</p>
+<p><strong>Every row says when the words it quotes were said.</strong> The time comes from their source,
+never from the page (<a class="reference internal" href="crowsnest.said.html#module-crowsnest.said" title="crowsnest.said"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.said</span></code></a>, crowsnest#66). It renders as a <code class="docutils literal notranslate"><span class="pre">&lt;time&gt;</span></code>
+element with the local <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code>, plus the date when that is not <code class="docutils literal notranslate"><span class="pre">made_at</span></code>’s day, then
+how long ago, then the word <em>stale</em> once it is older than <code class="docutils literal notranslate"><span class="pre">stale_after</span></code>. The rail’s large
+figure is that same age. A row whose source gave no time says <em>time unknown</em>.</p>
 <p>Every string reaches the page through <code class="xref py py-class docutils literal notranslate"><span class="pre">_Sanitizer</span></code>, which is
 <code class="xref py py-func docutils literal notranslate"><span class="pre">openloops.egress.scrub()</span></code> plus HTML escaping. A row’s <code class="docutils literal notranslate"><span class="pre">last_assistant_text</span></code> or
 <code class="docutils literal notranslate"><span class="pre">pending_question</span></code> comes straight from a transcript, and a transcript is the highest-
@@ -217,11 +223,22 @@ the static one. Everything read back from the store is untrusted and rendered as
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.report.render_report">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">render_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roster</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">made_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'crowsnest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/report.html#render_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.report.render_report" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">render_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roster</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">made_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'crowsnest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/report.html#render_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.report.render_report" title="Link to this definition">#</a></dt>
 <dd><p>The roster <a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.roster()</span></code></a> returns as one self-contained HTML page.</p>
 <p><code class="docutils literal notranslate"><span class="pre">made_at</span></code> is the moment the snapshot claims to be from and is printed in the
 largest type on the page; it is a required argument (not a hidden <code class="docutils literal notranslate"><span class="pre">now()</span></code>) so that
-two calls with the same <code class="docutils literal notranslate"><span class="pre">roster</span></code> and <code class="docutils literal notranslate"><span class="pre">made_at</span></code> render the identical document.</p>
+two calls with the same <code class="docutils literal notranslate"><span class="pre">roster</span></code>, <code class="docutils literal notranslate"><span class="pre">made_at</span></code> and <code class="docutils literal notranslate"><span class="pre">tz</span></code> render the identical
+document.</p>
+<p><strong>Every item shows the time its words were said.</strong> That is <code class="docutils literal notranslate"><span class="pre">said_at</span></code>, taken from its
+source (<a class="reference internal" href="crowsnest.said.html#module-crowsnest.said" title="crowsnest.said"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.said</span></code></a>), never <code class="docutils literal notranslate"><span class="pre">made_at</span></code>. It renders as a <code class="docutils literal notranslate"><span class="pre">&lt;time&gt;</span></code> element
+with the local <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code>, the date when it is not <code class="docutils literal notranslate"><span class="pre">made_at</span></code>’s day, and how long ago.
+A row’s own <code class="docutils literal notranslate"><span class="pre">said_at</span></code> and <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code> are used when it has them; otherwise the
+time is computed from the row. A row with no source time says <em>time unknown</em>.
+<code class="docutils literal notranslate"><span class="pre">tz</span></code> is the zone the times are shown in: a <code class="docutils literal notranslate"><span class="pre">tzinfo</span></code>, an IANA name, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for
+this machine’s own. The masthead names it once. An item older than <code class="docutils literal notranslate"><span class="pre">stale_after</span></code>
+says <em>stale</em> in words. The default is <code class="xref py py-data docutils literal notranslate"><span class="pre">crowsnest.config.DFLT_STALE_AFTER</span></code>, the
+<code class="docutils literal notranslate"><span class="pre">[attention]</span></code> table’s default, which <a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.report" title="crowsnest.tools.report"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.report()</span></code></a> replaces with
+the configured value.</p>
 <p><code class="docutils literal notranslate"><span class="pre">interactive=True</span></code> adds the console: per-row buttons and a Refresh, hidden until the
 page’s <code class="docutils literal notranslate"><span class="pre">db</span></code> capability resolves in the claude.ai viewer, and one inline script that
 queues each press as an intent document for the watching session to act on (see the
@@ -256,10 +273,10 @@ than dropped.</p>
         <span>Previous</span><div class="title">crowsnest.registry</div></div>
     </a>
   </div><div class="navigation-next">
-    <a href="crowsnest.skills.html">
+    <a href="crowsnest.said.html">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">crowsnest.skills</div>
+        <div class="title">crowsnest.said</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>
@@ -284,7 +301,7 @@ than dropped.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=aa2ad26f"></script>
+      <script src="../_static/documentation_options.js?v=423071ad"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

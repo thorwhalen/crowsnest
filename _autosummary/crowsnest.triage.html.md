@@ -48,6 +48,14 @@ would have found eight per cent of them. So [`from_ledger()`](#crowsnest.triage.
 fields, and the shipped `crowsnest-worker` skill now teaches the field, so the signal
 gets better going forward rather than staying where it is.
 
+**Every verdict says when its reason was said.** `said_at` comes from the reason’s own
+source, and `said_at_basis` names that source ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said)). For a waiting
+session it is when the registry says it began waiting. For ledger prose it is the date in
+the heading of the section the words sit in, or, when that heading has no date, the
+ledger’s last write, which is only an upper bound. A reader never borrows another time,
+so a verdict with no source time has an empty `said_at`. That is what stops a claim
+five days old from being repeated as current (crowsnest#66).
+
 `verdicts=` is the seam: an ordered sequence of `(row, ledger) -> Verdict | None`,
 first non-`None` winning. The default pair is the live registry signal – which is
 authoritative for *right now*, because a session that is `waiting` is waiting whatever its
@@ -84,8 +92,8 @@ whose own store is already a seam) is the reader this exists to make room for.
 
 ### Classes
 
-| [`Verdict`](#crowsnest.triage.Verdict)(group[, why, reason, source])   | One session's classification, and the evidence for it.   |
-|------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| [`Verdict`](#crowsnest.triage.Verdict)(group[, why, reason, source, ...])   | One session's classification, and the evidence for it.   |
+|-----------------------------------------------------------------------------------------------|----------------------------------------------------------|
 
 ### crowsnest.triage.DFLT_OWNER *= 'thor'*
 
@@ -102,7 +110,7 @@ the residue, not a finding.
 How much of the sentence that decided a verdict is quoted back. Enough to recognise
 the thing, not enough to make the report into the ledger.
 
-### *class* crowsnest.triage.Verdict(group, why='', reason='', source='')
+### *class* crowsnest.triage.Verdict(group, why='', reason='', source='', said_at='', said_at_basis='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -112,6 +120,10 @@ One session’s classification, and the evidence for it.
 check is one they end up re-deriving by opening every session, which is the work this
 was meant to remove. `source` says which reader decided, so a surprising verdict can
 be traced to the thing that produced it.
+
+`said_at` is when the words in `reason` were said, taken from their source, and
+`said_at_basis` names that source (one of [`crowsnest.said.BASES`](crowsnest.said.html.md#crowsnest.said.BASES)). Both are
+empty when no source time is known. They are never filled with the time of reading.
 
 ```pycon
 >>> Verdict('needs_you', why='decision', reason='squash or rebase?').as_dict()['group']
@@ -142,7 +154,9 @@ from the registry alone, which is right for one that is waiting and honestly
 
 Returns `{"groups": {...}, "counts": {...}}` where each group holds the rows that
 fell into it, each with a `verdict`. Rows keep the order they arrived in, which is
-the roster’s own – most urgent first.
+the roster’s own – most urgent first. Each row’s `said_at` and `said_at_basis`
+are set again once its verdict is known ([`crowsnest.said.with_said()`](crowsnest.said.html.md#crowsnest.said.with_said)), so a row
+and its verdict never disagree about when the thing it quotes was said.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -187,6 +201,9 @@ Returns `None` when the ledger says none of those – and that `None` is the who
 reason this is honest. Inferring “finished” from silence would be inferring it from
 exactly what an interrupted session leaves behind.
 
+Each verdict carries the time of the words it quotes (`_said_in()`). The fields
+carry no date of their own, so they take the ledger’s last write.
+
 * **Return type:**
   [`Verdict`](#crowsnest.triage.Verdict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
@@ -200,6 +217,10 @@ the transcript caught the question it asked, that question is the reason, verbat
 
 Everything else running is `working`: busy is busy. Idle says nothing here, and is
 left to the ledger.
+
+The time is [`crowsnest.said.of_activity()`](crowsnest.said.html.md#crowsnest.said.of_activity)’s. For a waiting session that is when
+it began waiting. For a busy one it is the transcript’s latest event while a call is
+in flight.
 
 * **Return type:**
   [`Verdict`](#crowsnest.triage.Verdict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)

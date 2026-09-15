@@ -21,13 +21,14 @@
 - [crowsnest.paths](_autosummary/crowsnest.paths.html.md): Where crowsnest keeps what is not code: the data directory, and nothing else.
 - [crowsnest.registry](_autosummary/crowsnest.registry.html.md): Who is alive right now, read from the registry Claude Code keeps while a session runs.
 - [crowsnest.report](_autosummary/crowsnest.report.html.md): The live roster as one self-contained HTML page: no stylesheet, script, font, or
+- [crowsnest.said](_autosummary/crowsnest.said.html.md): When the thing an item quotes was said: its own time, taken from its own source.
 - [crowsnest.skills](_autosummary/crowsnest.skills.html.md): The agent-facing surface: the skills, the subagent, and the command that installs them.
 - [crowsnest.tools](_autosummary/crowsnest.tools.html.md): The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.
 - [crowsnest.tree](_autosummary/crowsnest.tree.html.md): The spawn forest as a picture: laid out in Python, drawn as inline SVG.
 - [crowsnest.triage](_autosummary/crowsnest.triage.html.md): Which sessions need you, which are safe to close, and which are still going.
 - [crowsnest.watch](_autosummary/crowsnest.watch.html.md): A stream of what changed, so a monitor is told instead of made to poll.
 - [For AI agents](ai-agents.html.md): `crowsnest` ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on **2026-09-15 12:32 UTC** from commit <a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on **2026-09-15 12:53 UTC** from commit <a href="https://github.com/tho...
 
 ---
 

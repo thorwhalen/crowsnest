@@ -1,0 +1,28 @@
+crowsnest.said
+==============
+
+.. automodule:: crowsnest.said
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      BASES
+      QUOTING_GROUPS
+      BARE_DATE_ZONE
+      CLOCK_SLACK
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      from_epoch
+      from_stamp
+      heading_date
+      of_activity
+      of_row
+      parse
+      when_said
+      with_said
+   

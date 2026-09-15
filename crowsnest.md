@@ -1,4 +1,4 @@
-> built 2026-09-15 12:32 UTC from 82328e9 (main) · crowsnest 0.0.37. Details: build_info.json
+> built 2026-09-15 12:53 UTC from 63b4823 (main) · crowsnest 0.0.38. Details: build_info.json
 
 # index.html.md
 
@@ -101,11 +101,11 @@ crowsnest triage --quiet
 
 ```default
 NEEDS YOU (5)
-  cn-mergeset          mergeset    [decision] The history rewrite and the PyPI deletions — awaiting go-ahead…
-  cosmo_3d_02          cosmograph  [action] attach the two GIFs to #604/#616 bodies (no API for that)…
+  cn-mergeset          mergeset    (09:12, 3h) [decision] The history rewrite and the PyPI deletions — awaiting go-ahead…
+  cosmo_3d_02          cosmograph  (2026-09-10, 5d) [action] attach the two GIFs to #604/#616 bodies (no API for that)…
 
 SAFE TO CLOSE (4)
-  cn-cosm-synth        cosm        Nothing outstanding
+  cn-cosm-synth        cosm        (2026-09-14 18:40, 18h) Nothing outstanding
 
 WORKING (1)
 UNCLASSIFIED — has not said where it stands: 48
@@ -114,6 +114,8 @@ UNCLASSIFIED — has not said where it stands: 48
 ```
 
 `[decision]` is a minute of thought; `[action]` is a trip to another window. The reason is the session’s own words, so you can check the verdict without opening the session.
+
+Every item says **when its words were said**, taken from where they were said. For last words that is the transcript’s time. For a waiting session it is when the registry says it began waiting. For a ledger request it is the date in the heading of the section it comes from. An undated section only has the ledger’s last write, which is an upper bound, and the item says so. `crowsnest report` shows the same time on every row, in your local zone (`--tz` for another), and marks an item *stale* once it is older than `stale_after` in the config file’s `[attention]` table. JSON rows carry it as `said_at` and `said_at_basis`. A session that relays a claim keeps the claim’s own time and never restamps it with its own, because a restamped claim reads as current long after it stopped being true.
 
 **`unclassified` is the honest group, and it is the point.** A wrong “safe to close” is the expensive error — somebody closes a terminal on unfinished work and nothing ever tells them — so a verdict is only reached on *positive* evidence. A session that has not said where it stands is reported as not having said. Nothing infers “finished” from silence, because silence is also what an interrupted session leaves behind.
 
@@ -1786,6 +1788,11 @@ where the ledgers are).
 session, which is nothing next to a transcript tail and everything next to a registry
 listing – and `activity=False` promises “instant”. Pass `links=True` to have both.
 
+Every row carries `said_at` and `said_at_basis`, which say when the thing the row
+quotes was said, taken from its source ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
+words, the question the session waits on, or the call in flight. Both are empty when
+no source gives a time. Every surface renders the time from these two fields.
+
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
@@ -1888,6 +1895,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`paths`](_autosummary/crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
 | [`registry`](_autosummary/crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
 | [`report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
+| [`said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)           | When the thing an item quotes was said: its own time, taken from its own source.                      |
 | [`skills`](_autosummary/crowsnest.skills.html.md#module-crowsnest.skills)       | The agent-facing surface: the skills, the subagent, and the command that installs them.               |
 | [`tools`](_autosummary/crowsnest.tools.html.md#module-crowsnest.tools)         | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                      |
 | [`tree`](_autosummary/crowsnest.tree.html.md#module-crowsnest.tree)           | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                               |
@@ -3317,8 +3325,14 @@ comment on the published page can anchor to it (crowsnest issue #4).
 
 Like the openloops dashboard, \*\*the page is a snapshot, and it says so in its largest
 type.\*\* `made_at` is a required-in-practice argument rather than a hidden `now()`,
-which is also what lets a test compare bytes: the same roster and `made_at` render the
-same document, byte for byte.
+which is also what lets a test compare bytes: the same roster, `made_at` and `tz`
+render the same document, byte for byte.
+
+**Every row says when the words it quotes were said.** The time comes from their source,
+never from the page ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said), crowsnest#66). It renders as a `<time>`
+element with the local `HH:MM`, plus the date when that is not `made_at`’s day, then
+how long ago, then the word *stale* once it is older than `stale_after`. The rail’s large
+figure is that same age. A row whose source gave no time says *time unknown*.
 
 Every string reaches the page through `_Sanitizer`, which is
 `openloops.egress.scrub()` plus HTML escaping. A row’s `last_assistant_text` or
@@ -3356,13 +3370,25 @@ the static one. Everything read back from the store is untrusted and rendered as
 * **Type:**
   The console’s one script. It loads nothing from anywhere
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None)
 
 The roster [`crowsnest.tools.roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
 `made_at` is the moment the snapshot claims to be from and is printed in the
 largest type on the page; it is a required argument (not a hidden `now()`) so that
-two calls with the same `roster` and `made_at` render the identical document.
+two calls with the same `roster`, `made_at` and `tz` render the identical
+document.
+
+**Every item shows the time its words were said.** That is `said_at`, taken from its
+source ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)), never `made_at`. It renders as a `<time>` element
+with the local `HH:MM`, the date when it is not `made_at`’s day, and how long ago.
+A row’s own `said_at` and `said_at_basis` are used when it has them; otherwise the
+time is computed from the row. A row with no source time says *time unknown*.
+`tz` is the zone the times are shown in: a `tzinfo`, an IANA name, or `None` for
+this machine’s own. The masthead names it once. An item older than `stale_after`
+says *stale* in words. The default is `crowsnest.config.DFLT_STALE_AFTER`, the
+`[attention]` table’s default, which [`crowsnest.tools.report()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report) replaces with
+the configured value.
 
 `interactive=True` adds the console: per-row buttons and a Refresh, hidden until the
 page’s `db` capability resolves in the claude.ai viewer, and one inline script that
@@ -3382,6 +3408,230 @@ than dropped.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+
+# _autosummary/crowsnest.said.html.md
+
+# crowsnest.said
+
+When the thing an item quotes was said: its own time, taken from its own source.
+
+A report row quotes something. It might be a session’s last words, the question it is
+waiting on, or a sentence from its ledger. The reader needs to know how old that thing
+is, because a blocker from five minutes ago and one from five days ago call for different
+actions. The only time a row used to carry was how long the session had been in its
+current status. That is a different fact. A session idle for an hour whose last words are
+from yesterday read “1 h”.
+
+Worse, a claim gets passed on. One watching session relays another session’s warning, and
+a second relays the first. If each relay stamps the claim with its own “now”, a five-day-old
+warning reads as current for as long as anyone keeps repeating it. \*\*So a time travels with
+the claim, from its source, and a relay never replaces it\*\* (crowsnest#66).
+
+Every item carries two values. `said_at` is an ISO 8601 instant in UTC, a bare date when
+the source gives only a day, or `''` when no source time is known. `said_at_basis` names
+where the time came from:
+
+| basis            | the time is                                                                                                                            |
+|------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| `transcript`     | the transcript’s own timestamp on the words quoted                                                                                     |
+| `registry`       | when the registry says the session entered its status, e.g. began<br/>waiting on the question it asks                                  |
+| `ledger section` | the date in the heading of the ledger section the words come from                                                                      |
+| `ledger written` | the ledger’s last write. The words are **no newer** than this and may<br/>be much older, so this basis is an upper bound, never a date |
+
+An unknown time stays `''`. It is never filled from the time the page was made, since
+that fallback is exactly how an old claim comes to look new.
+
+```pycon
+>>> of_row({'status': 'idle', 'activity': {'last_text_at': '2026-01-01T09:30:00.000Z'}})
+('2026-01-01T09:30:00+00:00', 'transcript')
+>>> of_row({'status': 'idle', 'activity': {}})
+('', '')
+```
+
+### Module Attributes
+
+| [`BASES`](_autosummary/crowsnest.said.html.md#crowsnest.said.BASES)          | Every basis a time can have, most exact first.                        |
+|-----------------------------------------------------------------|-----------------------------------------------------------------------|
+| [`QUOTING_GROUPS`](_autosummary/crowsnest.said.html.md#crowsnest.said.QUOTING_GROUPS) | The triage groups in which the verdict's reason *is* the quoted item. |
+| [`BARE_DATE_ZONE`](_autosummary/crowsnest.said.html.md#crowsnest.said.BARE_DATE_ZONE) | Where a bare date's day begins when its age is counted.               |
+| [`CLOCK_SLACK`](_autosummary/crowsnest.said.html.md#crowsnest.said.CLOCK_SLACK)    | How far past "now" a time may fall and still count as now.            |
+
+### Functions
+
+| [`from_epoch`](_autosummary/crowsnest.said.html.md#crowsnest.said.from_epoch)(epoch)                   | Unix seconds as an ISO instant in UTC; `''` for nothing, zero, or nonsense.                                    |
+|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| [`from_stamp`](_autosummary/crowsnest.said.html.md#crowsnest.said.from_stamp)(text)                    | An ISO timestamp normalised to UTC seconds; `''` when it is not an instant.                                    |
+| [`heading_date`](_autosummary/crowsnest.said.html.md#crowsnest.said.heading_date)(heading)               | The date that opens a heading, as `said_at`; `''` when it does not open with one.                              |
+| [`of_activity`](_autosummary/crowsnest.said.html.md#crowsnest.said.of_activity)(row)                    | When the activity a row shows was said, by the row's status.                                                   |
+| [`of_row`](_autosummary/crowsnest.said.html.md#crowsnest.said.of_row)(row)                         | `(said_at, said_at_basis)` for the item a row is shown as.                                                     |
+| [`parse`](_autosummary/crowsnest.said.html.md#crowsnest.said.parse)(said_at)                      | A `said_at` read back: an aware `datetime`, a `date` for a bare day, or `None`.                                |
+| [`when_said`](_autosummary/crowsnest.said.html.md#crowsnest.said.when_said)(said_at, \*, now[, zone]) | Where an item's age counts from: `(epoch, day)`.                                                               |
+| [`with_said`](_autosummary/crowsnest.said.html.md#crowsnest.said.with_said)(row)                      | `row` with its `said_at` and `said_at_basis` set by [`of_row()`](_autosummary/crowsnest.said.html.md#crowsnest.said.of_row). |
+
+### crowsnest.said.BARE_DATE_ZONE *= datetime.timezone.utc*
+
+Where a bare date’s day begins when its age is counted. The writer’s zone is unknown,
+so no choice is exact. The reader’s zone would make “stale” depend on who reads, so it
+is out. The earliest zone (UTC+14) would call a section dated this morning stale by
+lunchtime. UTC is the same for every reader and is off by at most the writer’s offset.
+
+### crowsnest.said.BASES *= ('transcript', 'registry', 'ledger section', 'ledger written')*
+
+Every basis a time can have, most exact first.
+
+### crowsnest.said.CLOCK_SLACK *= datetime.timedelta(seconds=300)*
+
+How far past “now” a time may fall and still count as now. A page’s time is taken a
+moment before the transcripts it quotes are read, so a fresh stamp can be ahead of it.
+
+### crowsnest.said.QUOTING_GROUPS *= ('needs_you', 'safe_to_close')*
+
+The triage groups in which the verdict’s reason *is* the quoted item. In the other groups
+the page and the CLI quote the session’s activity (last words, the call in flight), so
+that is the item whose time counts.
+
+### crowsnest.said.from_epoch(epoch)
+
+Unix seconds as an ISO instant in UTC; `''` for nothing, zero, or nonsense.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> from_epoch(0), from_epoch(None), from_epoch('x')
+('', '', '')
+>>> from_epoch(1767225600)
+'2026-01-01T00:00:00+00:00'
+```
+
+### crowsnest.said.from_stamp(text)
+
+An ISO timestamp normalised to UTC seconds; `''` when it is not an instant.
+
+A timestamp with no zone is not an instant, so it is not read as one.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> from_stamp('2026-01-01T09:30:00.000Z')
+'2026-01-01T09:30:00+00:00'
+>>> from_stamp('2026-01-01T11:30:00+02:00')
+'2026-01-01T09:30:00+00:00'
+>>> from_stamp('2026-01-01T09:30:00'), from_stamp('soon')
+('', '')
+```
+
+### crowsnest.said.heading_date(heading)
+
+The date that opens a heading, as `said_at`; `''` when it does not open with one.
+
+A time is kept only with a zone. A date before 1970 is not taken.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> heading_date('### 2026-09-12 — all four stages landed')
+'2026-09-12'
+>>> heading_date('## 2026-09-12T09:40Z handoff')
+'2026-09-12T09:40:00+00:00'
+>>> heading_date('## 2026-09-12 09:40 no zone given')
+'2026-09-12'
+>>> heading_date('### Follow-up to the 2026-01-10 outage')
+''
+>>> heading_date('## 2026-13-45 not a date'), heading_date('## 0001-01-01 notes')
+('', '')
+```
+
+### crowsnest.said.of_activity(row)
+
+When the activity a row shows was said, by the row’s status.
+
+- A **waiting** session’s item is the question it waits on, which it began waiting on
+  when the registry says its status changed.
+- A **busy** session’s item is the call in flight. Its time is the transcript’s latest
+  event. With nothing in flight, the item is the status itself, so the time is when
+  the registry recorded that status.
+- Anything else shows its last words, stamped by the transcript.
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.said.of_row(row)
+
+`(said_at, said_at_basis)` for the item a row is shown as.
+
+A verdict that quotes a reason (see [`QUOTING_GROUPS`](_autosummary/crowsnest.said.html.md#crowsnest.said.QUOTING_GROUPS)) supplies the time of that
+reason. If the verdict carries no time, the answer is *unknown*: another time on the
+row belongs to different words, so it is never borrowed. Every other row falls back
+to [`of_activity()`](_autosummary/crowsnest.said.html.md#crowsnest.said.of_activity).
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> of_row({'status': 'idle', 'activity': {'last_text_at': '2026-01-01T09:30:00Z'},
+...         'verdict': {'group': 'safe_to_close', 'said_at': ''}})
+('', '')
+```
+
+### crowsnest.said.parse(said_at)
+
+A `said_at` read back: an aware `datetime`, a `date` for a bare day, or `None`.
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+```pycon
+>>> parse('2026-01-05')
+datetime.date(2026, 1, 5)
+>>> parse('2026-01-05T08:00:00+00:00').hour
+8
+>>> parse('') is None and parse('2026-13-01') is None
+True
+```
+
+### crowsnest.said.when_said(said_at, , now, zone=None)
+
+Where an item’s age counts from: `(epoch, day)`. `day` is the bare date when
+only a day is known. `None` means the time is unknown, or cannot be when anything
+was said.
+
+A bare date counts from 00:00 in [`BARE_DATE_ZONE`](_autosummary/crowsnest.said.html.md#crowsnest.said.BARE_DATE_ZONE), so whether it is stale does
+not depend on the reader’s zone. Three things count as
+unknown rather than as “today”. The first is a time later than `now` by more than
+[`CLOCK_SLACK`](_autosummary/crowsnest.said.html.md#crowsnest.said.CLOCK_SLACK). The second is a date later than `now`’s day in `zone`
+(`None` means this machine’s zone); a future date names a plan or a deadline. The
+third is anything before 1970.
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+```pycon
+>>> now = 1767268800.0  # 2026-01-01T12:00:00Z
+>>> when_said('2026-01-01T11:00:00+00:00', now=now)
+(1767265200.0, None)
+>>> when_said('2026-01-01', now=now, zone=timezone.utc)
+(1767225600.0, datetime.date(2026, 1, 1))
+>>> when_said('2026-01-02', now=now, zone=timezone.utc) is None
+True
+>>> when_said('2026-01-01T20:00:00+00:00', now=now) is None
+True
+```
+
+### crowsnest.said.with_said(row)
+
+`row` with its `said_at` and `said_at_basis` set by [`of_row()`](_autosummary/crowsnest.said.html.md#crowsnest.said.of_row).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+```pycon
+>>> with_said({'status': 'waiting', 'status_since': 1767225600})['said_at_basis']
+'registry'
+```
 
 
 # _autosummary/crowsnest.skills.html.md
@@ -3603,11 +3853,17 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, ledger_dir=None, lineage_path=None, resolvers=None, triage=True, verdicts=None, owner='', with_lineage=True)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, ledger_dir=None, lineage_path=None, resolvers=None, triage=True, verdicts=None, owner='', with_lineage=True, tz=None, stale_after=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
 that supplies its own (the artifact publisher).
+
+`tz` is the zone the rows’ times are shown in (an IANA name, a `tzinfo`, or
+`None` for this machine’s). `stale_after` is the age, as a `timedelta`, past
+which an item is called stale. By default it is the `[attention]` table’s
+`stale_after` ([`crowsnest.config.attention_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings)), the same number that
+table gives everything else, so there is no second setting for it.
 
 `made_at` is the moment the snapshot claims to be from; it defaults to now, but a
 caller that wants byte-stable output passes it explicitly – this is the one
@@ -3664,6 +3920,11 @@ where the ledgers are).
 \*\*It follows `activity` unless it is asked for.\*\* Resolving costs a ledger read per
 session, which is nothing next to a transcript tail and everything next to a registry
 listing – and `activity=False` promises “instant”. Pass `links=True` to have both.
+
+Every row carries `said_at` and `said_at_basis`, which say when the thing the row
+quotes was said, taken from its source ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
+words, the question the session waits on, or the call in flight. Both are empty when
+no source gives a time. Every surface renders the time from these two fields.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -4005,6 +4266,14 @@ would have found eight per cent of them. So [`from_ledger()`](_autosummary/crows
 fields, and the shipped `crowsnest-worker` skill now teaches the field, so the signal
 gets better going forward rather than staying where it is.
 
+**Every verdict says when its reason was said.** `said_at` comes from the reason’s own
+source, and `said_at_basis` names that source ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)). For a waiting
+session it is when the registry says it began waiting. For ledger prose it is the date in
+the heading of the section the words sit in, or, when that heading has no date, the
+ledger’s last write, which is only an upper bound. A reader never borrows another time,
+so a verdict with no source time has an empty `said_at`. That is what stops a claim
+five days old from being repeated as current (crowsnest#66).
+
 `verdicts=` is the seam: an ordered sequence of `(row, ledger) -> Verdict | None`,
 first non-`None` winning. The default pair is the live registry signal – which is
 authoritative for *right now*, because a session that is `waiting` is waiting whatever its
@@ -4041,8 +4310,8 @@ whose own store is already a seam) is the reader this exists to make room for.
 
 ### Classes
 
-| [`Verdict`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Verdict)(group[, why, reason, source])   | One session's classification, and the evidence for it.   |
-|------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| [`Verdict`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Verdict)(group[, why, reason, source, ...])   | One session's classification, and the evidence for it.   |
+|-----------------------------------------------------------------------------------------------|----------------------------------------------------------|
 
 ### crowsnest.triage.DFLT_OWNER *= 'thor'*
 
@@ -4059,7 +4328,7 @@ the residue, not a finding.
 How much of the sentence that decided a verdict is quoted back. Enough to recognise
 the thing, not enough to make the report into the ledger.
 
-### *class* crowsnest.triage.Verdict(group, why='', reason='', source='')
+### *class* crowsnest.triage.Verdict(group, why='', reason='', source='', said_at='', said_at_basis='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -4069,6 +4338,10 @@ One session’s classification, and the evidence for it.
 check is one they end up re-deriving by opening every session, which is the work this
 was meant to remove. `source` says which reader decided, so a surprising verdict can
 be traced to the thing that produced it.
+
+`said_at` is when the words in `reason` were said, taken from their source, and
+`said_at_basis` names that source (one of [`crowsnest.said.BASES`](_autosummary/crowsnest.said.html.md#crowsnest.said.BASES)). Both are
+empty when no source time is known. They are never filled with the time of reading.
 
 ```pycon
 >>> Verdict('needs_you', why='decision', reason='squash or rebase?').as_dict()['group']
@@ -4099,7 +4372,9 @@ from the registry alone, which is right for one that is waiting and honestly
 
 Returns `{"groups": {...}, "counts": {...}}` where each group holds the rows that
 fell into it, each with a `verdict`. Rows keep the order they arrived in, which is
-the roster’s own – most urgent first.
+the roster’s own – most urgent first. Each row’s `said_at` and `said_at_basis`
+are set again once its verdict is known ([`crowsnest.said.with_said()`](_autosummary/crowsnest.said.html.md#crowsnest.said.with_said)), so a row
+and its verdict never disagree about when the thing it quotes was said.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -4144,6 +4419,9 @@ Returns `None` when the ledger says none of those – and that `None` is the who
 reason this is honest. Inferring “finished” from silence would be inferring it from
 exactly what an interrupted session leaves behind.
 
+Each verdict carries the time of the words it quotes (`_said_in()`). The fields
+carry no date of their own, so they take the ledger’s last write.
+
 * **Return type:**
   [`Verdict`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Verdict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
@@ -4157,6 +4435,10 @@ the transcript caught the question it asked, that question is the reason, verbat
 
 Everything else running is `working`: busy is busy. Idle says nothing here, and is
 left to the ledger.
+
+The time is [`crowsnest.said.of_activity()`](_autosummary/crowsnest.said.html.md#crowsnest.said.of_activity)’s. For a waiting session that is when
+it began waiting. For a busy one it is the transcript’s latest event while a call is
+in flight.
 
 * **Return type:**
   [`Verdict`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Verdict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
@@ -4400,7 +4682,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-15 12:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb"><code>82328e9</code></a> on branch <code>main</code>, for **crowsnest 0.0.37** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-15 12:53 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/63b4823677f1b1b995520c91c75654385cb56890"><code>63b4823</code></a> on branch <code>main</code>, for **crowsnest 0.0.38** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4409,7 +4691,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb"><code>82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/63b4823677f1b1b995520c91c75654385cb56890"><code>63b4823677f1b1b995520c91c75654385cb56890</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -4420,15 +4702,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34969260646">34969260646</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34971392374">34971392374</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb</code> (in the history of the built commit) |
+| Event commit | <code>63b4823677f1b1b995520c91c75654385cb56890</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.11  |
+| epythet  | 0.2.12  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
 | Python   | 3.12.14 |
@@ -4447,14 +4729,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.37/">0.0.37</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.38/">0.0.38</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb
-pip install "epythet==0.2.11"
+git checkout 63b4823677f1b1b995520c91c75654385cb56890
+pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

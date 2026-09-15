@@ -50,6 +50,7 @@
    paths
    registry
    report
+   said
    skills
    tools
    tree

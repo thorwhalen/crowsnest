@@ -278,6 +278,11 @@ where the ledgers are).
 session, which is nothing next to a transcript tail and everything next to a registry
 listing – and `activity=False` promises “instant”. Pass `links=True` to have both.
 
+Every row carries `said_at` and `said_at_basis`, which say when the thing the row
+quotes was said, taken from its source ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
+words, the question the session waits on, or the call in flight. Both are empty when
+no source gives a time. Every surface renders the time from these two fields.
+
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
@@ -380,6 +385,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`paths`](crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
 | [`registry`](crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
 | [`report`](crowsnest.report.html.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
+| [`said`](crowsnest.said.html.md#module-crowsnest.said)           | When the thing an item quotes was said: its own time, taken from its own source.                      |
 | [`skills`](crowsnest.skills.html.md#module-crowsnest.skills)       | The agent-facing surface: the skills, the subagent, and the command that installs them.               |
 | [`tools`](crowsnest.tools.html.md#module-crowsnest.tools)         | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                      |
 | [`tree`](crowsnest.tree.html.md#module-crowsnest.tree)           | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                               |

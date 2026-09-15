@@ -21,8 +21,14 @@ comment on the published page can anchor to it (crowsnest issue #4).
 
 Like the openloops dashboard, \*\*the page is a snapshot, and it says so in its largest
 type.\*\* `made_at` is a required-in-practice argument rather than a hidden `now()`,
-which is also what lets a test compare bytes: the same roster and `made_at` render the
-same document, byte for byte.
+which is also what lets a test compare bytes: the same roster, `made_at` and `tz`
+render the same document, byte for byte.
+
+**Every row says when the words it quotes were said.** The time comes from their source,
+never from the page ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said), crowsnest#66). It renders as a `<time>`
+element with the local `HH:MM`, plus the date when that is not `made_at`’s day, then
+how long ago, then the word *stale* once it is older than `stale_after`. The rail’s large
+figure is that same age. A row whose source gave no time says *time unknown*.
 
 Every string reaches the page through `_Sanitizer`, which is
 `openloops.egress.scrub()` plus HTML escaping. A row’s `last_assistant_text` or
@@ -60,13 +66,25 @@ the static one. Everything read back from the store is untrusted and rendered as
 * **Type:**
   The console’s one script. It loads nothing from anywhere
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None)
 
 The roster [`crowsnest.tools.roster()`](crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
 `made_at` is the moment the snapshot claims to be from and is printed in the
 largest type on the page; it is a required argument (not a hidden `now()`) so that
-two calls with the same `roster` and `made_at` render the identical document.
+two calls with the same `roster`, `made_at` and `tz` render the identical
+document.
+
+**Every item shows the time its words were said.** That is `said_at`, taken from its
+source ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said)), never `made_at`. It renders as a `<time>` element
+with the local `HH:MM`, the date when it is not `made_at`’s day, and how long ago.
+A row’s own `said_at` and `said_at_basis` are used when it has them; otherwise the
+time is computed from the row. A row with no source time says *time unknown*.
+`tz` is the zone the times are shown in: a `tzinfo`, an IANA name, or `None` for
+this machine’s own. The masthead names it once. An item older than `stale_after`
+says *stale* in words. The default is `crowsnest.config.DFLT_STALE_AFTER`, the
+`[attention]` table’s default, which [`crowsnest.tools.report()`](crowsnest.tools.html.md#crowsnest.tools.report) replaces with
+the configured value.
 
 `interactive=True` adds the console: per-row buttons and a Refresh, hidden until the
 page’s `db` capability resolves in the claude.ai viewer, and one inline script that
