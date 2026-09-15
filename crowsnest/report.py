@@ -53,7 +53,7 @@ import os
 import re
 import shlex
 from collections.abc import Mapping, MutableMapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta, timezone, tzinfo
 from typing import Any
 
@@ -657,6 +657,7 @@ CONSOLE_SCRIPT = r"""
     // nothing redraws or moves them, and an item handled and hidden has a line and no row.
     const reviewLines = new Set([...document.querySelectorAll("li[data-item][data-review-rev]")]
       .filter((el) => A.isItemId(el.dataset.item)));
+    const linesOf = (item) => [...reviewLines].filter((line) => line.dataset.item === item);
     const rowsOf = (item) => rows.get(item) || [];
     const isRow = (el) => Boolean(el) && (rowsOf(el.dataset.item).includes(el) || reviewLines.has(el));
     const revOf = (el) => el.dataset.rev || el.dataset.reviewRev;
@@ -793,10 +794,14 @@ CONSOLE_SCRIPT = r"""
         el.hidden = false;
         delete el.dataset.live;
         renderedMarks(el).forEach((node) => { node.hidden = false; });
+        linesOf(el.dataset.item).forEach((line) => line.classList.remove("is-seen"));
       } else {
         const shown = A.present(el.dataset.rev, record, Date.now());
-        // An open sheet moves with its row; it closes only when the row leaves the page.
-        if (sheetRow === el && shown === A.DONE) closeSheet();
+        // An open sheet moves with its row -- or sits in one of the item's review lines --
+        // and closes only when the item leaves the page.
+        if (sheetRow && sheetRow.dataset.item === el.dataset.item && shown === A.DONE) closeSheet();
+        // Put off or done, the item leaves the review band on the next load: its lines dim now.
+        linesOf(el.dataset.item).forEach((line) => line.classList.toggle("is-seen", shown === A.LATER || shown === A.DONE));
         displayed.set(el, record);
         el.dataset.live = shown;
         renderedMarks(el).forEach((node) => { node.hidden = true; });
@@ -834,16 +839,16 @@ CONSOLE_SCRIPT = r"""
         try { record = transition(before.record, el, now); } catch (e) { say("not done: " + codeOf(e)); continue; }
         const all = rowsOf(item);
         const entry = {
-          item, el, line: reviewLines.has(el) ? el : null, rows: all, record, before, failed: false,
+          item, el, lines: reviewLines.has(el) ? linesOf(item) : [], rows: all, record, before, failed: false,
           shownBefore: new Map(all.map((row) => [row, displayed.has(row) ? displayed.get(row) : null])),
         };
         acted.push(entry);
         known.set(item, { record, ext: before.ext });
         for (const row of all) apply(row, display && display.has(row) ? display.get(row) : record);
-        if (entry.line) entry.line.classList.toggle("is-seen", resolve);
+        entry.lines.forEach((line) => line.classList.toggle("is-seen", resolve));
         save(item, record, before.ext).catch((error) => {
           entry.failed = true;
-          if (entry.line) entry.line.classList.toggle("is-seen", !resolve);
+          entry.lines.forEach((line) => line.classList.toggle("is-seen", !resolve));
           const current = known.get(item);
           if (current && current.record === record) {
             known.set(item, before);
@@ -1053,13 +1058,15 @@ LATER_PRESETS = (
 DROP, CANCEL = "drop", "cancel"
 
 #: What a review line offers besides the row's own transitions: a link to the row, and
-#: *Undo* on an item handled here, which marks it seen at its revision so it is back.
+#: *Re-open* on an item handled here, which marks it seen at its revision so it is back.
+#: (The issue calls it Undo; the toast's Undo restores the previous record, a different act.)
 OPEN, REOPEN = "open", "reopen"
 
 #: The review band's one-tap resolutions by kind, in the order a line shows them (#59,
-#: triage-ux 2.7). ``ask`` and ``tell`` queue the console's intents, as a row's buttons do;
-#: ``drop``, ``later``, ``done`` and ``reopen`` write the record. An unclassified row's
-#: *Recap* is #58's intent: until it lands, the row offers Ask, which a recap answers.
+#: triage-ux 2.7). Actions in :data:`_INTENT_ACTIONS` queue the console's intents, as a
+#: row's buttons do; ``drop``, ``later``, ``done`` and ``reopen`` write the record. An
+#: unclassified row's *Recap* is #58's intent: until it lands, the row offers Ask, which a
+#: recap answers. #58 adds ``recap`` to :data:`_INTENT_ACTIONS` and swaps it in here.
 REVIEW_ACTIONS = {
     _attention.SNOOZED: ((DROP, "Drop"), (_attention.LATER, "Later"), (OPEN, "Open")),
     _attention.STALE: (
@@ -1068,12 +1075,14 @@ REVIEW_ACTIONS = {
         (_attention.DONE, "Done"),
     ),
     _attention.STUCK: (("ask", "Ask"), (_attention.LATER, "Later")),
-    _attention.UNMOVED: ((REOPEN, "Undo"), ("tell", "Tell")),
+    _attention.UNMOVED: ((REOPEN, "Re-open"), ("tell", "Tell")),
     _attention.UNCLASSIFIED: (("ask", "Ask"), (_attention.LATER, "Later")),
 }
 
-#: The actions that queue an intent rather than write a record.
+#: The actions that queue an intent rather than write a record, and those of them that
+#: carry text the person types (the line then has the console's text box and Send).
 _INTENT_ACTIONS = ("ask", "tell")
+_TEXT_INTENTS = ("tell",)
 
 #: How often the watching session reads the console, in seconds: the skill's ``/loop 30s``.
 #: The page calls crowsnest's heartbeat stale past two of these.
@@ -2190,7 +2199,7 @@ def _footer(safe: _Sanitizer, stamp: str, *, handled: int = 0) -> str:
             "matched text is not printed anywhere, including here.</p>"
         )
     left_out = (
-        f"<p>{handled} handled and unchanged since, so not shown here; "
+        f"<p>{handled} handled and unchanged since, so left out of the registers above; "
         "<code>crowsnest report --plain</code> shows every session.</p>"
         if handled
         else ""
@@ -2243,7 +2252,7 @@ def _attention_view(
     applied = not plain and triaged
     if applied and store is None:
         store = _attention.dflt_store()
-    on = applied and _holds_a_record(store)
+    on = applied and _attention.holds_a_record(store)
     # The console's attention arm needs ids and triaged revisions, not this machine's store:
     # it reads and writes the page's own `db`. So `plain`, which leaves the store out, leaves
     # the arm in, and an interactive page from an empty store is still its plain copy.
@@ -2271,11 +2280,6 @@ def _attention_view(
             record, shown = None, _attention.NEW
         rows[id(row)] = _Attended(item, rev, shown, record, now_as)
     return _View(on=on, rows=rows, arm=arm)
-
-
-def _holds_a_record(store: Mapping[str, dict]) -> bool:
-    """Does ``store`` hold a document that reads as a record? Stops at the first one."""
-    return any(_record_or_none(item, store) is not None for item in store)
 
 
 def _record_or_none(item: str, store: Mapping[str, dict]) -> _attention.Record | None:
@@ -2406,12 +2410,21 @@ def _later_register(
 #: The review band's headings by kind. Each states the ``[attention]`` threshold that put
 #: its rows there, so the page never holds a number the config file does not.
 _REVIEW_HEADINGS = {
-    _attention.SNOOZED: "Put off {max_snoozes} times or more",
+    _attention.SNOOZED: "Put off {snoozes} or more",
     _attention.STALE: "Seen, still waiting on you, untouched for over {stale}",
-    _attention.STUCK: "Working, with no change for over {stuck}",
+    _attention.STUCK: "Working, in one status for over {stuck}",
     _attention.UNMOVED: "Handled over {stuck} ago, and the session has not moved",
     _attention.UNCLASSIFIED: "Has not said where it stands",
 }
+
+
+def _times(count: int) -> str:
+    """``once``, ``2 times``: how the Later block says how often something was put off.
+
+    >>> _times(1), _times(3)
+    ('once', '3 times')
+    """
+    return "once" if count == 1 else f"{count} times"
 
 
 def _review_entries(
@@ -2419,27 +2432,23 @@ def _review_entries(
     view: _View,
     clock: _Clock,
     settings: AttentionSettings,
-) -> list[tuple[Mapping[str, Any], _Attended, dict]]:
-    """Every row :func:`crowsnest.attention.review_of` places, in page order.
+) -> list[dict]:
+    """:func:`crowsnest.attention.review_entries` over this render's rows, in page order.
 
     From the item, revision and record this render already has: the band names and hashes
     nothing itself, so it cannot disagree with the rows above it about a revision (#78).
+    Each entry's ``attended`` is the row's view.
     """
+    named = [
+        (row, attended.item, attended.rev, attended.record)
+        for row, attended in ((row, view.of(row)) for row in sessions)
+        if attended is not None
+    ]
     moment = datetime.fromtimestamp(clock.now, tz=timezone.utc)
-    found = []
-    for row in sessions:
-        attended = view.of(row)
-        if attended is None:
-            continue
-        try:
-            kind = _attention.review_of(
-                row, attended.rev, attended.record, now=moment, config=settings
-            )
-        except (ValueError, OverflowError):
-            continue
-        if kind is not None:
-            found.append((row, attended, kind))
-    return found
+    return [
+        {**entry, "attended": view.of(entry["row"])}
+        for entry in _attention.review_entries(named, now=moment, config=settings)
+    ]
 
 
 def _review_controls(safe: _Sanitizer, row: Mapping[str, Any], kind: str) -> str:
@@ -2468,7 +2477,7 @@ def _review_controls(safe: _Sanitizer, row: Mapping[str, Any], kind: str) -> str
             parts.append(
                 f'<button type="button" data-review="{action}" hidden>{safe.text(label)}</button>'
             )
-    if any(action == "tell" for action, _ in actions):
+    if any(action in _TEXT_INTENTS for action, _ in actions):
         parts.append(
             '<textarea hidden rows="2"></textarea>'
             '<button type="button" data-kind="send" hidden>Send</button>'
@@ -2506,9 +2515,9 @@ def _review_line(
     span = f"{figure}{unit}"
     status = safe.text(row.get("status") or "?")
     what = {
-        _attention.SNOOZED: f"put off {count} times",
+        _attention.SNOOZED: f"put off {_times(count)}",
         _attention.STALE: f"seen {span} ago, untouched since",
-        _attention.STUCK: f"{status} for {span} with no change",
+        _attention.STUCK: f"{status} for {span}",
         _attention.UNMOVED: f"marked handled {span} ago; the session has not moved",
         _attention.UNCLASSIFIED: f"{status} for {span}",
     }[name]
@@ -2557,16 +2566,16 @@ def _review_register(
     if not entries:
         return ""
     numbers = {
-        "max_snoozes": settings.max_snoozes,
+        "snoozes": _times(settings.max_snoozes),
         "stale": _exactly(settings.stale_after.total_seconds()),
         "stuck": _exactly(settings.stuck_after.total_seconds()),
     }
     groups = []
     for name in _attention.REVIEW_KINDS:
         lines = "".join(
-            _review_line(safe, row, attended, kind, clock)
-            for row, attended, kind in entries
-            if kind["kind"] == name
+            _review_line(safe, entry["row"], entry["attended"], entry, clock)
+            for entry in entries
+            if entry["kind"] == name
         )
         if lines:
             heading = _REVIEW_HEADINGS[name].format(**numbers)
@@ -2620,9 +2629,10 @@ def render_report(
     time is computed from the row. A row with no source time says *time unknown*.
     ``tz`` is the zone the times are shown in: a ``tzinfo``, an IANA name, or ``None`` for
     this machine's own. The masthead names it once. An item older than ``stale_after``
-    says *stale* in words. The default is :data:`crowsnest.config.DFLT_STALE_AFTER`, the
-    ``[attention]`` table's default, which :func:`crowsnest.tools.report` replaces with
-    the configured value.
+    says *stale* in words. The default is ``attention_settings``' ``stale_after``, else
+    :data:`crowsnest.config.DFLT_STALE_AFTER`; :func:`crowsnest.tools.report` passes the
+    configured value. The review band's stale group uses the same number, so a page has
+    one stale threshold.
 
     ``interactive=True`` adds the console: per-row buttons and a Refresh, hidden until the
     page's ``db`` capability resolves in the claude.ai viewer, and one inline script. Ask,
@@ -2680,7 +2690,12 @@ def render_report(
     row built without them would, the transcript's own locators included. Its revision
     is still taken from the whole row, because that is the row the verbs pin.
     """
+    settings = AttentionSettings() if attention_settings is None else attention_settings
+    if stale_after is None and attention_settings is not None:
+        stale_after = attention_settings.stale_after
     clock = _clock(made_at, tz=tz, stale_after=stale_after)
+    # One stale threshold per page: the rows' "stale" and the review band's read the same.
+    settings = replace(settings, stale_after=timedelta(seconds=clock.stale_after))
     sessions = list(roster.get("sessions") or [])
     token = _interactive.set(interactive)
     links_token = _links_shown.set(links)
@@ -2701,11 +2716,7 @@ def render_report(
                 title=title,
                 fragment=fragment,
                 view=view,
-                settings=(
-                    AttentionSettings()
-                    if attention_settings is None
-                    else attention_settings
-                ),
+                settings=settings,
             )
         finally:
             _view.reset(view_token)

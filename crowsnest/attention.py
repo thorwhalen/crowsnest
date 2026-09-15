@@ -95,6 +95,7 @@ __all__ = [
     "done",
     "export_docs",
     "fingerprint",
+    "holds_a_record",
     "import_docs",
     "instant",
     "is_item_id",
@@ -107,6 +108,7 @@ __all__ = [
     "read_doc",
     "read_record",
     "review",
+    "review_entries",
     "review_of",
     "seen",
     "seen_as_of",
@@ -927,8 +929,8 @@ def review_of(
                       more, and back on the page (woke, or changed)
     ``stale``         shows ``seen``, group ``needs_you``, untouched    the record's
                       for longer than ``stale_after``                   ``updated_at``
-    ``stuck``         group ``working``, shown, in its status for       the row's
-                      longer than ``stuck_after``                       ``status_since``
+    ``stuck``         group ``working``, shown and not ``changed``, in  the row's
+                      its status for longer than ``stuck_after``        ``status_since``
     ``unmoved``       shows ``done`` -- handled at this very revision   the record's
                       -- for longer than ``stuck_after``                ``updated_at``
     ``unclassified``  group ``unclassified``, shown                     none
@@ -938,12 +940,14 @@ def review_of(
     it has had its decision, and Later and Drop are the decisions the band offers: tapping
     one takes the row out of the band. An item put off yet again is back once it wakes.
 
-    **"No material change" for a working row is timed by its status**, not by a time the
-    store keeps per revision: a render that wrote one would turn attention on for a person
-    who never marked anything. A ``working`` row's default material is its group, which
-    stays the same exactly as long as the session stays in that status. A time nobody
-    knows is no time, so a row without ``status_since`` is never stuck. "Untouched" means
-    what it says: a note counts as touching an item.
+    **A working row is timed by its status**, not by a time the store keeps per revision: a
+    render that wrote one would turn attention on for a person who never marked anything.
+    Under the default material a ``working`` row's revision is its group, which holds as
+    long as the session stays in that status. A custom ``material=`` or ``verdicts=`` can
+    move the revision within one status, and nothing records when, so the rule claims no
+    more than the time in status, and a row that reads ``changed`` is never stuck. A time
+    nobody knows is no time: a row without ``status_since`` is never stuck. "Untouched"
+    means what it says: a note counts as touching an item.
 
     >>> from datetime import datetime, timedelta, timezone
     >>> now = datetime(2026, 2, 1, 12, tzinfo=timezone.utc)
@@ -979,7 +983,7 @@ def review_of(
         touched = _touched(record)
         if touched is not None and moment - touched > settings.stale_after:
             return found(STALE, touched)
-    if group == "working":
+    if group == "working" and shown != CHANGED:
         since = _moment_of_epoch(row.get("status_since"))
         if since is not None and moment - since > settings.stuck_after:
             return found(STUCK, since)
@@ -1017,17 +1021,37 @@ def review(
 
     ctx = RowContext() if row_context is None else row_context
     store = dflt_store() if store is None else store
+
+    def named():
+        for row in rows:
+            try:
+                item, rev = ctx.item(row), ctx.rev(row)
+            except ValueError:  # UnicodeEncodeError included
+                continue
+            try:
+                record = read_record(item, store=store)
+            except ValueError:
+                record = None
+            yield row, item, rev, record
+
+    return review_entries(named(), now=now, config=config)
+
+
+def review_entries(
+    named: Iterable[tuple[Mapping, str, str, Record | None]],
+    *,
+    now: datetime | None = None,
+    config: AttentionSettings | None = None,
+) -> list[dict]:
+    """:func:`review` over rows already named: ``(row, item, rev, record)`` each.
+
+    For a caller that has computed them already -- the report's page does, for every row --
+    so the band and the rows above it read one item, one revision and one record. A row
+    :func:`review_of` cannot place (a record it cannot read the time of) is left out.
+    """
     moment = _aware(now)
     found = []
-    for row in rows:
-        try:
-            item, rev = ctx.item(row), ctx.rev(row)
-        except ValueError:  # UnicodeEncodeError included
-            continue
-        try:
-            record = read_record(item, store=store)
-        except ValueError:
-            record = None
+    for row, item, rev, record in named:
         try:
             kind = review_of(row, rev, record, now=moment, config=config)
         except (ValueError, OverflowError):
@@ -1036,6 +1060,25 @@ def review(
             found.append({**kind, "item": item, "rev": rev, "row": row})
     found.sort(key=lambda entry: REVIEW_KINDS.index(entry["kind"]))
     return found
+
+
+def holds_a_record(store: Mapping | None = None) -> bool:
+    """Does ``store`` hold a document that reads as a record? Stops at the first one.
+
+    What decides whether a page applies the store at all: one that holds none renders as
+    it did before attention existed.
+
+    >>> holds_a_record({}), holds_a_record({item_id({'session_id': 'x'}): {'seen_rev': 'r'}})
+    (False, True)
+    """
+    store = dflt_store() if store is None else store
+    for item in store:
+        try:
+            if read_record(item, store=store) is not None:
+                return True
+        except ValueError:
+            continue
+    return False
 
 
 # --------------------------------------------------------------------------------------

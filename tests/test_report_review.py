@@ -229,7 +229,7 @@ def test_the_band_is_closed_at_the_foot_and_grouped_under_the_configured_thresho
     assert re.findall(r'<p class="subhead">([^<]*)</p>', band(html)) == [
         "Put off 2 times or more",
         "Seen, still waiting on you, untouched for over 3 h",
-        "Working, with no change for over 2 h",
+        "Working, in one status for over 2 h",
         "Handled over 2 h ago, and the session has not moved",
         "Has not said where it stands",
     ]
@@ -237,7 +237,7 @@ def test_the_band_is_closed_at_the_foot_and_grouped_under_the_configured_thresho
     assert list(lines(html)) == [label for _, label in EVERY_KIND]
     assert "put off 2 times" in lines(html)["snoozer"]
     assert "seen 4h ago, untouched since" in lines(html)["asker"]
-    assert "busy for 3h with no change" in lines(html)["runner"]
+    assert "busy for 3h" in lines(html)["runner"]
     assert "marked handled 3h ago; the session has not moved" in lines(html)["closer"]
 
 
@@ -355,13 +355,13 @@ def test_the_report_takes_the_band_thresholds_from_the_config_file(tmp_path, mon
     home = demo_home(tmp_path)
     store = {}
     tools.seen("fixer", home=home, store=store)  # a record, so the page applies the store
-    stuck = "Working, with no change for over 6 h"
+    stuck = "Working, in one status for over 6 h"
     kw = {"home": home, "store": store, "with_lineage": False, "tz": "UTC"}
     assert stuck in tools.report(**kw)["html"]  # `parser` has been busy since 1970
     cfg = tmp_path / "config.toml"
     cfg.write_text('[attention]\nstuck_after = "36500d"\n', encoding="utf-8")
     configured = tools.report(config=cfg, **kw)["html"]
-    assert REVIEW_BLOCK in configured and "Working, with no change" not in configured
+    assert REVIEW_BLOCK in configured and "Working, in one status" not in configured
     assert (
         "Put off 3 times or more" not in configured
     )  # nothing put off: no empty heading

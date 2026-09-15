@@ -598,10 +598,16 @@ def report(
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
     # The `[attention]` table gives the stale age, the review band's thresholds on a page
-    # that applies the store, and, on an interactive page, the Later sheet's hours and
-    # snooze limit. It is read only when one of those is wanted, so a page that needs none
-    # does not fail on a table it never uses.
-    wanted = stale_after is None or interactive or (triage and not plain)
+    # that draws one, and, on an interactive page, the Later sheet's hours and snooze
+    # limit. It is read only when one of those is wanted, so a page that needs none does
+    # not fail on a table it never uses. A band needs a triaged, non-plain page whose store
+    # holds a record, which is when `render_report` applies the store.
+    from crowsnest import attention as _attention
+
+    if store is None and triage and not plain:
+        store = _attention.dflt_store()
+    band = triage and not plain and _attention.holds_a_record(store)
+    wanted = stale_after is None or interactive or band
     settings = attention_settings(path=config) if wanted else None
     if stale_after is None:
         stale_after = settings.stale_after
