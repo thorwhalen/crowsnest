@@ -55,10 +55,10 @@ roster; say so in the closing line.
 
 ```
 ## Waiting on you
-- <name> (<project>, <how long>) — <what for; the pending question verbatim if any>
+- <name> (<project>, <HH:MM, or date HH:MM>, <age>) — <what for; the pending question verbatim if any>
 
 ## Just finished
-- <name> (<project>, <how long ago>) — "<its last words, one line>"
+- <name> (<project>, <HH:MM, or date HH:MM>, <age>) — "<its last words, one line>"
 
 ## Working
 - <project>: <one line for the whole project, however many sessions>
@@ -70,6 +70,8 @@ roster; say so in the closing line.
 - "Just finished" is idle within the last hour or so; older idle sessions are one
   clause in the headline, or one line under Working grouped by project if the user asked
   for everything.
+- **Every item carries its source's time, `(<HH:MM, or date HH:MM>, <age>)`**: when the quoted words were said, never when you read them. `crowsnest triage` prints it beside every item as `(HH:MM, age)`. `crowsnest` prints it beside last words and calls in flight. For a waiting row the status age already is that time. `--json` has it as `said_at`. Anywhere else, the roster's age column is how long a session has been in its status, which is a different fact. A ledger claim takes the date in its section's heading when there is one. Otherwise say "by <when the ledger was last written>", because the words may be older than that.
+- **A relayed claim keeps its source's time.** Something one session said about another, or an earlier report said, is dated when *it* was said. A claim older than 24 h (the `[attention]` table's `stale_after`) is written "as of <date>" and flagged as needing a fresh read before anyone acts on it. With no time from the source, write "time unknown".
 - Omit an empty section; say so in the headline.
 - Cap it at about 350 words. More than six rows in a bucket becomes the top rows plus
   "…and N more".

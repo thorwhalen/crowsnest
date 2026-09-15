@@ -51,6 +51,14 @@ would have found eight per cent of them. So :func:`from_ledger` reads the prose 
 fields, and the shipped ``crowsnest-worker`` skill now teaches the field, so the signal
 gets better going forward rather than staying where it is.
 
+**Every verdict says when its reason was said.** ``said_at`` comes from the reason's own
+source, and ``said_at_basis`` names that source (:mod:`crowsnest.said`). For a waiting
+session it is when the registry says it began waiting. For ledger prose it is the date in
+the heading of the section the words sit in, or, when that heading has no date, the
+ledger's last write, which is only an upper bound. A reader never borrows another time,
+so a verdict with no source time has an empty ``said_at``. That is what stops a claim
+five days old from being repeated as current (crowsnest#66).
+
 ``verdicts=`` is the seam: an ordered sequence of ``(row, ledger) -> Verdict | None``,
 first non-``None`` winning. The default pair is the live registry signal -- which is
 authoritative for *right now*, because a session that is `waiting` is waiting whatever its
@@ -70,7 +78,18 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
+from datetime import datetime, time, timedelta, timezone
 from functools import partial
+
+from crowsnest.said import (
+    LEDGER_SECTION,
+    LEDGER_WRITTEN,
+    from_epoch,
+    heading_date,
+    of_activity,
+    parse,
+    with_said,
+)
 
 __all__ = [
     "DFLT_OWNER",
@@ -110,6 +129,10 @@ class Verdict:
     was meant to remove. ``source`` says which reader decided, so a surprising verdict can
     be traced to the thing that produced it.
 
+    ``said_at`` is when the words in ``reason`` were said, taken from their source, and
+    ``said_at_basis`` names that source (one of :data:`crowsnest.said.BASES`). Both are
+    empty when no source time is known. They are never filled with the time of reading.
+
     >>> Verdict('needs_you', why='decision', reason='squash or rebase?').as_dict()['group']
     'needs_you'
     """
@@ -118,6 +141,8 @@ class Verdict:
     why: str = ""
     reason: str = ""
     source: str = ""
+    said_at: str = ""
+    said_at_basis: str = ""
 
     def as_dict(self) -> dict[str, str]:
         """JSON-ready form."""
@@ -263,6 +288,63 @@ def latest_section(text: str) -> str:
     return text[found[-1].start() :] if found else (text or "")
 
 
+def _written(ledger: Mapping) -> tuple[str, str]:
+    """The ledger's last write, as the time of words that carry none of their own."""
+    at = from_epoch(ledger.get("updated_at"))
+    return (at, LEDGER_WRITTEN) if at else ("", "")
+
+
+def _said_in(ledger: Mapping, text: str, offset: int) -> tuple[str, str]:
+    """When the ledger words at ``offset`` in ``text`` were written.
+
+    Only the heading of the section the words sit in counts. A date in an earlier
+    section's heading belongs to earlier words, so it is not borrowed. With no dated
+    heading of its own, the words take the ledger's last write. That time is an upper
+    bound, and the basis says so.
+
+    >>> _said_in({}, '## Mon\\n\\n## 2026-02-01 handoff\\n\\nattach the GIF', 30)
+    ('2026-02-01', 'ledger section')
+    >>> _said_in({}, '## 2026-02-01 start\\n\\n## Later\\n\\nattach the GIF', 30)
+    ('', '')
+    """
+    heading = ""
+    for found in _SECTION.finditer(text or ""):
+        if found.start() > offset:
+            break
+        end = text.find("\n", found.start())
+        heading = text[found.start() : end if end >= 0 else len(text)]
+    dated = heading_date(heading)
+    if dated and not _after_the_write(dated, ledger):
+        return dated, LEDGER_SECTION
+    return _written(ledger)
+
+
+#: How far past the ledger's last write a heading's date may fall and still be the day
+#: its words were written. The writer's zone can run up to a day ahead of UTC.
+_ZONE_SLACK = timedelta(days=1)
+
+
+def _after_the_write(dated: str, ledger: Mapping) -> bool:
+    """Is ``dated`` later than the ledger's last write? Then it cannot be when the words
+    were written: "### Release planned 2026-10-01" names a plan or a deadline. Taking
+    that date would make the item newer than the file holding it, and never stale.
+
+    >>> _after_the_write('2026-10-01', {'updated_at': 1767225600})  # written 2026-01-01
+    True
+    >>> _after_the_write('2026-01-01', {'updated_at': 1767225600})
+    False
+    >>> _after_the_write('2026-10-01', {})  # no last write to check against
+    False
+    """
+    written = parse(from_epoch(ledger.get("updated_at")))
+    found = parse(dated)
+    if not isinstance(written, datetime) or found is None:
+        return False
+    if not isinstance(found, datetime):
+        found = datetime.combine(found, time(), tzinfo=timezone.utc)
+    return found > written + _ZONE_SLACK
+
+
 def _is_a_real_all_clear(text: str) -> re.Match | None:
     """The first all-clear in ``text`` that is not negated, quoted, or partial.
 
@@ -390,8 +472,13 @@ def from_registry(row: Mapping, ledger: Mapping) -> Verdict | None:
 
     Everything else running is ``working``: busy is busy. Idle says nothing here, and is
     left to the ledger.
+
+    The time is :func:`crowsnest.said.of_activity`'s. For a waiting session that is when
+    it began waiting. For a busy one it is the transcript's latest event while a call is
+    in flight.
     """
     status = str(row.get("status") or "")
+    said_at, basis = of_activity(row)
     if status == "waiting":
         act = row.get("activity") or {}
         asked = str(act.get("pending_question") or "") if isinstance(act, Mapping) else ""
@@ -401,13 +488,21 @@ def from_registry(row: Mapping, ledger: Mapping) -> Verdict | None:
             _why(reason) if asked else "question",
             _one_line(reason),
             "registry",
+            said_at,
+            basis,
         )
     if status in ("busy", "shell"):
         act = row.get("activity") or {}
         running = (
             "; ".join(act.get("in_flight") or ()) if isinstance(act, Mapping) else ""
         )
-        return Verdict("working", reason=_one_line(running), source="registry")
+        return Verdict(
+            "working",
+            reason=_one_line(running),
+            source="registry",
+            said_at=said_at,
+            said_at_basis=basis,
+        )
     return None
 
 
@@ -422,6 +517,9 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     Returns ``None`` when the ledger says none of those -- and that ``None`` is the whole
     reason this is honest. Inferring "finished" from silence would be inferring it from
     exactly what an interrupted session leaves behind.
+
+    Each verdict carries the time of the words it quotes (:func:`_said_in`). The fields
+    carry no date of their own, so they take the ledger's last write.
     """
     fields = ledger.get("fields") or {}
     free = without_code(str(ledger.get("free") or ""))
@@ -430,7 +528,11 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     asked = _substantive(fields.get("open_questions"))
     if asked:
         return Verdict(
-            "needs_you", _why(asked), _one_line(asked), "ledger:open questions"
+            "needs_you",
+            _why(asked),
+            _one_line(asked),
+            "ledger:open questions",
+            *_written(ledger),
         )
 
     # Needing a person is read from the WHOLE file: a request written on Monday and never
@@ -453,7 +555,13 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
                 and not _is_a_real_all_clear(wanted)
             ):
                 return Verdict(
-                    "needs_you", _why(wanted), _one_line(wanted), "ledger:for a person"
+                    "needs_you",
+                    _why(wanted),
+                    _one_line(wanted),
+                    "ledger:for a person",
+                    # `end`, not `start`: a heading pattern may begin on the blank lines
+                    # above its own line, which belong to the section before.
+                    *_said_in(ledger, free, opened.end()),
                 )
 
     # Being finished is read only from what the session said LAST. See the module
@@ -462,15 +570,22 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     stated = _is_a_real_all_clear(str(fields.get("state") or ""))
     if stated:
         return Verdict(
-            "safe_to_close", reason=_one_line(stated.group(0)), source="ledger:state"
+            "safe_to_close",
+            reason=_one_line(stated.group(0)),
+            source="ledger:state",
+            said_at=_written(ledger)[0],
+            said_at_basis=_written(ledger)[1],
         )
     latest = latest_section(free)
     ending = _is_a_real_all_clear(latest)
     if ending:
+        said_at, basis = _said_in(ledger, free, len(free) - len(latest))
         return Verdict(
             "safe_to_close",
             reason=_one_line(ending.group(0)),
             source="ledger:last section",
+            said_at=said_at,
+            said_at_basis=basis,
         )
     return None
 
@@ -614,7 +729,9 @@ def classify(
 
     Returns ``{"groups": {...}, "counts": {...}}`` where each group holds the rows that
     fell into it, each with a ``verdict``. Rows keep the order they arrived in, which is
-    the roster's own -- most urgent first.
+    the roster's own -- most urgent first. Each row's ``said_at`` and ``said_at_basis``
+    are set again once its verdict is known (:func:`crowsnest.said.with_said`), so a row
+    and its verdict never disagree about when the thing it quotes was said.
     """
     ledgers = {} if ledgers is None else ledgers
     groups: dict[str, list[dict]] = {group: [] for group in GROUPS}
@@ -622,7 +739,7 @@ def classify(
         label = str(row.get("label") or "")
         verdict = classify_row(row, ledger=ledgers.get(label) or {}, verdicts=verdicts)
         groups[verdict["group"] if verdict["group"] in groups else "unclassified"].append(
-            {**row, "verdict": verdict}
+            with_said({**row, "verdict": verdict})
         )
     counts = {group: len(found) for group, found in groups.items()}
     counts["needs_you_decision"] = sum(

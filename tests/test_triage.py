@@ -196,6 +196,8 @@ def test_verdicts_is_the_seam():
         "why": "",
         "reason": "because I said so",
         "source": "test",
+        "said_at": "",
+        "said_at_basis": "",
     }
 
 

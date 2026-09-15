@@ -27,6 +27,8 @@ Four registers, in the order a person needs them: **Waiting on you**, **Just fin
 **Working**, **Quiet**. The page is a snapshot — the generation time is in the largest
 type on it.
 
+Every row carries **when its words were said**, taken from their source and never the page's own time. That is shown as local `HH:MM`, with the date when it falls on another day, then how long ago, then **stale** once it is older than `stale_after` (the `[attention]` table's, default 24 h). The masthead names the zone once, and `--tz` changes it. A row whose source gave no time says *time unknown*.
+
 Every session the page names leads to that session. A session running with Remote Control gets an **open** link to it on claude.ai. Any other session gets the `crowsnest open` command that reaches it from a terminal, shown as code, never as a link. **Who started whom** does the same in the list under its figure.
 
 If the user only wanted something to read, hand over the path and stop here.
@@ -37,6 +39,8 @@ When you write a page yourself rather than rendering one, every session you name
 
 - `crowsnest roster --json` (add `--all-homes` for every account): each row's `session_url` and `open_command`.
 - `crowsnest show <address> --json`: the same two fields, under `session`.
+
+Every item you put on a hand-written page carries its source's time, `(<HH:MM, or date HH:MM>, <age>)`. Take it from the row's `said_at` (`crowsnest roster --json`, `crowsnest triage --json`), never from the moment you write the page. A claim copied from another session, a ledger or an earlier report keeps the time it had there. A claim older than `stale_after` says "as of <date>" and is re-read at tier 1 before it goes on the page as current. A claim with no source time says *time unknown*.
 
 When `session_url` is non-empty, link the session's name to it. When it is empty, write `open_command` beside the name as code. **Never build a claude.ai URL yourself.** The URL is made from the Remote Control bridge id, not the session id, so a URL made from `session_id` goes nowhere. Never shorten or rewrite `open_command` either. It names the session by its id, because a name can belong to two sessions. Its `--home` or `--all-homes` says where to look; without it, the command reads whichever account the pasting terminal selects. A command under your own home (`--home '~/...'`) is fine to publish. When one carries a path under another user's home, or text shaped like a credential, the rendered page shows a "withheld" note in its place; do the same.
 

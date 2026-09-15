@@ -138,13 +138,13 @@ more:
 
 ```
 ## Waiting on you
-- <name> (<project>) — <what for, and the question if there is one>
+- <name> (<project>, <HH:MM, or date HH:MM>, <age>) — <what for, and the question if there is one>
 
 ## Just finished
-- <name> (<project>) — <its last words, one line>
+- <name> (<project>, <HH:MM, or date HH:MM>, <age>) — <its last words, one line>
 
 ## Working
-- <project>: <one line for the whole project, however many sessions>
+- <project> (<HH:MM, or date HH:MM>, <age> of its newest item): <one line for the whole project, however many sessions>
 
 ## Headline
 <N waiting on you, N just finished, N working, N idle.>
@@ -154,6 +154,8 @@ Group **Working** and idle sessions by project, not by session. Omit an empty se
 and say so in the headline. Quote a session's last words; never invent a summary of
 work you did not read. Say which tier answered each item when it matters — "from its
 transcript" and "it told me" are different kinds of evidence.
+
+**Every item carries its source's time, never yours.** That is when the quoted thing was said. `crowsnest triage` prints it beside every item as `(HH:MM, age)`. The text roster prints it beside last words and calls in flight. For a waiting row the roster's status age already is that time, since the session began waiting on its question when its status changed. `--json` gives the time as each row's `said_at` and `said_at_basis`. Anywhere else, the roster's age column is how long a session has been in its status, which is a different fact. A claim you repeat from another session, a ledger or an earlier report keeps **that source's** time. Never stamp a relayed claim with the moment you relay it: a warning five days old, restamped at each relay, reads as current for as long as anyone repeats it. A claim older than `stale_after` (the `[attention]` table's, default 24 h) is said as "as of <date>" and re-read at tier 1 before you repeat it as current. If the source gives no time, write *time unknown*. Never borrow another time.
 
 ## When the answer is not a report
 

@@ -96,11 +96,11 @@ crowsnest triage --quiet
 
 ```
 NEEDS YOU (5)
-  cn-mergeset          mergeset    [decision] The history rewrite and the PyPI deletions — awaiting go-ahead…
-  cosmo_3d_02          cosmograph  [action] attach the two GIFs to #604/#616 bodies (no API for that)…
+  cn-mergeset          mergeset    (09:12, 3h) [decision] The history rewrite and the PyPI deletions — awaiting go-ahead…
+  cosmo_3d_02          cosmograph  (2026-09-10, 5d) [action] attach the two GIFs to #604/#616 bodies (no API for that)…
 
 SAFE TO CLOSE (4)
-  cn-cosm-synth        cosm        Nothing outstanding
+  cn-cosm-synth        cosm        (2026-09-14 18:40, 18h) Nothing outstanding
 
 WORKING (1)
 UNCLASSIFIED — has not said where it stands: 48
@@ -109,6 +109,8 @@ UNCLASSIFIED — has not said where it stands: 48
 ```
 
 `[decision]` is a minute of thought; `[action]` is a trip to another window. The reason is the session's own words, so you can check the verdict without opening the session.
+
+Every item says **when its words were said**, taken from where they were said. For last words that is the transcript's time. For a waiting session it is when the registry says it began waiting. For a ledger request it is the date in the heading of the section it comes from. An undated section only has the ledger's last write, which is an upper bound, and the item says so. `crowsnest report` shows the same time on every row, in your local zone (`--tz` for another), and marks an item *stale* once it is older than `stale_after` in the config file's `[attention]` table. JSON rows carry it as `said_at` and `said_at_basis`. A session that relays a claim keeps the claim's own time and never restamps it with its own, because a restamped claim reads as current long after it stopped being true.
 
 **`unclassified` is the honest group, and it is the point.** A wrong "safe to close" is the expensive error — somebody closes a terminal on unfinished work and nothing ever tells them — so a verdict is only reached on *positive* evidence. A session that has not said where it stands is reported as not having said. Nothing infers "finished" from silence, because silence is also what an interrupted session leaves behind.
 
