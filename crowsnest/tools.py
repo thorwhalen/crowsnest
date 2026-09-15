@@ -21,9 +21,16 @@ from pathlib import Path
 from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
-from crowsnest.config import homes
+from crowsnest.config import configured_homes, homes
 from crowsnest.lineage import from_records as _from_records
-from crowsnest.registry import STATUSES, LiveSession, fresh_within, live_sessions
+from crowsnest.lineage import open_command as _open_command
+from crowsnest.registry import (
+    STATUSES,
+    LiveSession,
+    claude_home,
+    fresh_within,
+    live_sessions,
+)
 from crowsnest.report import DFLT_TITLE, render_report
 
 __all__ = [
@@ -129,6 +136,22 @@ def _tag(session: LiveSession) -> str:
     return f"{session.label}@{session.home}" if session.home else session.label
 
 
+def _home_to_pin(
+    *, home: str | Path | None, all_homes: bool, config: str | Path | None
+) -> Path | None:
+    """The directory a printed ``crowsnest open`` must name to reach rows read this way.
+
+    ``None`` when the rows come from homes the config file's ``[[homes]]`` entries name:
+    ``--all-homes`` reads that file, which is the same whichever account the pasting
+    terminal runs. Otherwise the directory itself. That covers one home read, and
+    ``--all-homes`` with a config file that names no homes (or no file at all). That case
+    falls back to the *current* ``$CLAUDE_CONFIG_DIR``: the pasting shell's, not this one's.
+    """
+    if all_homes and configured_homes(path=config):
+        return None
+    return claude_home(None if all_homes else home)
+
+
 def resolve(
     session: str,
     *,
@@ -138,10 +161,14 @@ def resolve(
 ) -> LiveSession:
     """The live session a human means by ``session``.
 
-    Tried in order: the exact registry name, a unique name prefix, a unique session-id
-    prefix, the pid. ``name@home`` names a session in one home when several homes are
-    read. Raises ``KeyError`` naming the candidates when nothing or too much matches --
-    an ambiguous pick is a wrong pick half the time.
+    Tried in order: the exact session id, the exact registry name, a unique name prefix, a
+    unique session-id prefix, the pid. ``name@home`` names a session in one home when
+    several homes are read. Raises ``KeyError`` naming the candidates when nothing or too
+    much matches -- an ambiguous pick is a wrong pick half the time.
+
+    The exact id comes first because it is what a printed ``crowsnest open`` names
+    (:func:`crowsnest.lineage.open_command`), and a whole id must not lose to its own
+    prefix: an id that happens to begin another session's id would otherwise be ambiguous.
     """
     wanted = session.strip()
     candidates = sessions(home=home, all_homes=all_homes, config=config)
@@ -149,6 +176,9 @@ def resolve(
         wanted, _, in_home = wanted.rpartition("@")
         candidates = [s for s in candidates if s.home == in_home]
     sessions_ = candidates
+    by_whole_id = [s for s in sessions_ if s.session_id == wanted]
+    if len(by_whole_id) == 1:
+        return by_whole_id[0]
     exact = [s for s in sessions_ if s.name == wanted]
     if len(exact) == 1:
         return exact[0]
@@ -194,6 +224,9 @@ def roster(
     """
     links = activity if links is None else links
     found = sessions(home=home, all_homes=all_homes, config=config)
+    # Every row carries the command that reaches it from a terminal, pinned to the home it
+    # was read from -- otherwise it reads whichever account the pasting shell selects.
+    read_from = _home_to_pin(home=home, all_homes=all_homes, config=config)
     # One read per ledger for the whole roster. `links` and `triage` both want the same
     # file, and reading it twice is the kind of waste that only shows up when `ledger_dir`
     # points at a synced home, which is what that seam is for.
@@ -205,6 +238,7 @@ def roster(
     rows = []
     for s in found:
         row = s.as_dict()
+        row["open_command"] = _open_command(row, home_dir=read_from)
         row["repo_url"] = repo_url(s.cwd)
         if activity:
             act = read_activity(s.transcript, session_id=s.session_id, recent=3)
@@ -412,10 +446,24 @@ def show(
     words -- into a URL, a bare ``#17`` included (:mod:`crowsnest.links`). Unlike the
     roster's, this list is not cut short: a person asking about one session wants all of
     them.
+
+    ``session`` carries ``session_url`` (claude.ai, when the session runs with Remote
+    Control) and ``open_command`` (the terminal command that reaches it either way), as
+    every :func:`roster` row does -- the two things a page naming the session links it by.
     """
     s = resolve(session, home=home, all_homes=all_homes, config=config)
     act = read_activity(s.transcript, session_id=s.session_id, recent=recent)
-    row = {"session": s.as_dict(), "activity": act.as_dict()}
+    record = s.as_dict()
+    row = {
+        "session": {
+            **record,
+            "open_command": _open_command(
+                record,
+                home_dir=_home_to_pin(home=home, all_homes=all_homes, config=config),
+            ),
+        },
+        "activity": act.as_dict(),
+    }
     if links:
         row["links"] = _links_of(
             {**s.as_dict(), "repo_url": repo_url(s.cwd), "activity": act.as_dict()},

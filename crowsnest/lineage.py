@@ -94,6 +94,7 @@ __all__ = [
     "graph",
     "lineage_path",
     "names_by_session_id",
+    "open_command",
     "record_spawn",
     "spawn_event",
 ]
@@ -903,6 +904,73 @@ def address(row: Mapping) -> str:
     return f"{label}@{home}" if home and label else label
 
 
+def open_command(row: Mapping, *, home_dir: str | Path | None = None) -> str:
+    """What to type in a terminal to reach one session: ``crowsnest open ... <session>``.
+
+    The way in for a session with no ``session_url`` (one not running with Remote
+    Control). It is a command and never a link, and it has to reach *that* session from
+    any of the user's terminals on this machine, whichever account a terminal is set to.
+    (Another user's terminal is not covered: ``~/`` expands to *that* user's home.)
+
+    - **The session, by its id.** A name does not pick out one session: two sessions may
+      share a name (crowsnest issue #42), an unnamed session's label is the head of its id
+      and matches a session *named* after that head first, and a name can hold an ``@``
+      that reads as a home. The whole ``session_id`` has none of those problems.
+      :func:`crowsnest.tools.resolve` matches it exactly, and it needs no quoting. Only a
+      row with no id (a roster built by hand) is addressed as ``label`` / ``label@home``.
+    - **Where to look, pinned.** ``home_dir`` goes in as ``--home``. Without it the command
+      reads whichever account the *pasting* shell selects (``$CLAUDE_CONFIG_DIR``), which
+      on a machine with two accounts is the wrong one. A directory under the user's own
+      home is written ``~/...`` (``--home`` expands it), so the page names no user. With
+      no ``home_dir``, a row carrying a home *name* gets ``--all-homes``, which reads the
+      homes the config file names: the same file whichever account runs it.
+    - **Nothing else runs.** Everything variable is quoted for a POSIX shell (not Windows
+      ``cmd``), and an address starting with ``-`` goes after ``--``, or it would be read
+      as a flag.
+
+    ``''`` for a row with nothing to address.
+
+    >>> open_command({'label': 'cn', 'session_id': '3f2a-77'}, home_dir=Path.home() / '.cq')
+    "crowsnest open --home '~/.cq' 3f2a-77"
+    >>> open_command({'label': 'cn', 'home': 'server', 'session_id': '3f2a-77'})
+    'crowsnest open --all-homes 3f2a-77'
+    >>> open_command({'label': 'cn', 'home': 'server'})
+    'crowsnest open --all-homes cn@server'
+    >>> open_command({'label': 'fix; rm -rf ~'})
+    "crowsnest open 'fix; rm -rf ~'"
+    >>> open_command({'label': '-x'})
+    'crowsnest open -- -x'
+    """
+    where = str(row.get("session_id") or "") or address(row)
+    if not where:
+        return ""
+    if home_dir:
+        flags = f" --home {shlex.quote(_tilde(home_dir))}"
+    elif row.get("home"):
+        flags = " --all-homes"
+    else:
+        flags = ""
+    dashes = " --" if where.startswith("-") else ""
+    return f"crowsnest open{flags}{dashes} {shlex.quote(where)}"
+
+
+def _tilde(path: str | Path) -> str:
+    """``path``, made absolute, with the user's own home written ``~``.
+
+    Absolute, because a relative ``$CLAUDE_CONFIG_DIR`` names a different directory from
+    every other working directory. ``~``, because the command is published and the user's
+    name is not.
+
+    >>> _tilde(Path.home() / '.claude-iq')
+    '~/.claude-iq'
+    """
+    full = Path(path).expanduser().absolute()
+    try:
+        return "~/" + full.relative_to(Path.home()).as_posix()
+    except ValueError:
+        return full.as_posix()
+
+
 def _addressed(sessions: Iterable[Mapping]) -> dict[str, dict]:
     """Live sessions keyed by :func:`address`, newest registration winning a collision."""
     out: dict[str, dict] = {}
@@ -1126,10 +1194,16 @@ def graph(
     machines' identically-named sessions apart.
 
     Returns ``{"nodes", "edges", "roots", "orphans", "counts"}``, all JSON-able. Each node
-    carries ``name``, ``label``, ``session_id``, ``project``, ``home``, ``status``,
-    ``status_since``, ``alive``, ``parent``, ``confidence``, ``depth``, ``children`` and
-    ``at`` (when its parent link was recorded) -- enough for a renderer to lay out, group
-    and age the tree without going back to the roster.
+    carries ``name``, ``label``, ``session_id``, ``session_url``, ``open_command``,
+    ``project``, ``home``, ``status``, ``status_since``, ``alive``, ``parent``,
+    ``confidence``, ``depth``, ``children`` and ``at`` (when its parent link was
+    recorded) -- enough for a renderer to lay out, group, age and link the tree without
+    going back to the roster. ``open_command`` is passed on from the row, which
+    :func:`crowsnest.tools.roster` computes knowing which home it read; it is ``''`` for
+    an exited node and for rows that carry none.
+
+    A live node's ``home`` is its row's, and only an exited one's is read back out of its
+    address: a session named ``a@b`` on the one home read has no home called ``b``.
     """
     if sessions is None:
         from crowsnest.tools import sessions as _sessions  # circular at import time only
@@ -1164,8 +1238,14 @@ def graph(
                 "name": name,
                 "label": str(row.get("label") or name.partition("@")[0]),
                 "session_id": str(row.get("session_id") or ""),
+                "session_url": str(row.get("session_url") or ""),
+                "open_command": str(row.get("open_command") or ""),
                 "project": str(row.get("project") or ""),
-                "home": str(row.get("home") or name.partition("@")[2]),
+                "home": (
+                    str(row.get("home") or "")
+                    if name in alive
+                    else name.partition("@")[2]
+                ),
                 "status": str(row.get("status") or "gone"),
                 "status_since": float(row.get("status_since") or 0),
                 "alive": name in alive,

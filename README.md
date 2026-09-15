@@ -71,9 +71,7 @@ crowsnest init                     this session's CLAUDE.md, the data directory,
 crowsnest install-skills           link the skills and the scout subagent into ~/.claude
 ```
 
-`open` is a desktop command -- it looks for an iTerm tab or a tmux session and has nothing
-to raise from a web page, so a claude.ai artifact (`crowsnest report`) can only tell you
-where a session runs, never bring its terminal to the front for you.
+`open` is a desktop command -- it looks for an iTerm tab or a tmux session and has nothing to raise from a web page. So wherever `crowsnest report` cannot link a session (no Remote Control, so no claude.ai URL), the page shows the `crowsnest open` command that reaches it. You paste that into a terminal; the page never brings the terminal to the front for you.
 
 `<session>` is the name you gave the session with `claude -n <name>`, a unique prefix of one, a session-id prefix, or a pid.
 
@@ -172,7 +170,7 @@ path = "~/.cache/xa/remotes/server"   # a copy synced down with `xa sync`
 remote = true                         # its pids are not ours: alive while fresh
 ```
 
-Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which — which is also how a session spawned with `--profile` shows up, on the account it actually runs on — `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`.
+Every report row links to the session on claude.ai when it runs with Remote Control, and otherwise shows the `crowsnest open` command that reaches it. The spawn tree's list does the same for every session it names. Rows also link to the session's repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which — which is also how a session spawned with `--profile` shows up, on the account it actually runs on — `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`.
 
 A profile name is resolved against the `[[homes]]` names above first, then against a `claude-profile dir <name>` command on your `PATH` if you keep one; a name neither knows is an error, never a quiet fall back to the default account, and a home marked `remote` is refused — those are another machine's, read-only.
 

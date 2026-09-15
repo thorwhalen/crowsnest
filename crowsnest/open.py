@@ -20,6 +20,7 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
+from crowsnest.config import homes
 from crowsnest.registry import LiveSession
 from crowsnest.tools import resolve
 
@@ -123,6 +124,7 @@ def open_session(
     home: str | Path | None = None,
     all_homes: bool = False,
     opener: Callable[[LiveSession], dict | None] | None = None,
+    config: str | Path | None = None,
 ) -> dict:
     """Raise ``session``'s terminal, or say where it runs when none can be found.
 
@@ -133,8 +135,19 @@ def open_session(
 
     Returns ``{"name", "how", "detail"}``; ``how`` is ``"not found"`` when no strategy
     matched, with the pid and cwd in ``detail`` so the caller can say where it runs.
+
+    **A session in a remote home is never handed to the opener.** Its registry is a synced
+    copy of another machine's, so it has no terminal here. The opener matches terminals
+    by *name*, so it would raise whichever local tab happened to share that name.
+    ``how`` is then ``"remote"`` and ``detail`` says which home it runs on.
     """
-    found = resolve(session, home=home, all_homes=all_homes)
+    found = resolve(session, home=home, all_homes=all_homes, config=config)
+    if found.home and any(h.remote and h.name == found.home for h in homes(path=config)):
+        return {
+            "name": found.label,
+            "how": "remote",
+            "detail": f"runs on {found.home}, not this machine; nothing here to raise",
+        }
     opener = opener or default_opener()
     result = opener(found)
     if result is None:

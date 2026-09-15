@@ -63,6 +63,7 @@ __all__ = [
     "Home",
     "claude_bin_setting",
     "config_path",
+    "configured_homes",
     "homes",
 ]
 
@@ -162,15 +163,27 @@ def _default_home() -> Home:
 
 
 def homes(*, path: str | Path | None = None) -> list[Home]:
-    """The configured homes, or the default one when there is no config file.
+    """The configured homes, or the default one when the config file names none.
 
     A config file that cannot be parsed is an error worth seeing, not a silent fallback:
     a person who wrote one meant it.
     """
+    return configured_homes(path=path) or [_default_home()]
+
+
+def configured_homes(*, path: str | Path | None = None) -> list[Home]:
+    """The homes the config file's ``[[homes]]`` entries name; ``[]`` when it names none.
+
+    :func:`homes` falls back to the default home, whose path is whatever
+    ``$CLAUDE_CONFIG_DIR`` the *running* process has. That is right for reading, and
+    wrong for anything that must mean the same home in another account's terminal: a
+    command printed for later pasting (:func:`crowsnest.lineage.open_command`), say.
+
+    >>> configured_homes(path='/nonexistent-config-for-doctest')
+    []
+    """
     file = config_path(path)
     data = _loaded(path)
-    if not data:
-        return [_default_home()]
     found = []
     for entry in data.get("homes") or []:
         if not isinstance(entry, dict) or not entry.get("path"):
@@ -183,4 +196,4 @@ def homes(*, path: str | Path | None = None) -> list[Home]:
                 fresh_seconds=float(entry.get("fresh_seconds", DFLT_FRESH_SECONDS)),
             )
         )
-    return found or [_default_home()]
+    return found
