@@ -42,7 +42,9 @@ __all__ = [
     "done",
     "later",
     "lineage",
+    "live",
     "note",
+    "recap",
     "repo_url",
     "report",
     "resolve",
@@ -1018,6 +1020,76 @@ def attention_import(docs: list[dict], *, store=None) -> dict:
     from crowsnest.attention import import_docs
 
     return import_docs(docs, store=store)
+
+
+def live(
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    activity: bool = True,
+    as_of: str | None = None,
+) -> dict:
+    """What every live session is doing now, as the page's ``live/roster`` document.
+
+    :func:`crowsnest.live.live_roster`: per session its ``address``, ``status``, ``since``,
+    ``waiting_for`` and at most one call ``in_flight``, plus ``as_of``, every string
+    already through the page's sanitiser. The courier writes it once per tick, and the page
+    paints a status chip per row from it (crowsnest#58).
+
+    Cheaper than :func:`roster`, because it runs every tick: no links, no ledgers, no
+    ``git``, and a transcript tail is read only for a session that can have a call in
+    flight (waiting, busy, or in a shell). ``activity=False`` reads no tail at all, and
+    every ``in_flight`` is empty. ``as_of`` defaults to now, taken before the registry is
+    read, so the document never claims to be fresher than what it holds.
+    """
+    from crowsnest.live import live_roster, reads_in_flight
+
+    as_of = as_of or datetime.now(timezone.utc).isoformat(timespec="seconds")
+    rows = []
+    for s in sessions(home=home, all_homes=all_homes, config=config):
+        row = s.as_dict()
+        if activity and reads_in_flight(s.status):
+            act = read_activity(s.transcript, session_id=s.session_id, recent=1)
+            row["activity"] = {"in_flight": list(act.in_flight)}
+        rows.append(row)
+    return live_roster(rows, as_of=as_of)
+
+
+def recap(
+    session: str,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    digests_store=None,
+) -> dict:
+    """Five lines about one live session, read from disk: the answer to a ``recap`` intent.
+
+    :func:`crowsnest.live.recap_lines` over its registry record, the tail of its transcript
+    and openloops' digest (``digests_store`` is :func:`brief`'s seam). It sends the session
+    nothing and costs it no turn, which is the difference from an ``ask``. Every line is
+    already through the page's sanitiser, because the watcher writes them into the page's
+    ``db``. Raises ``KeyError`` when no live session matches, as :func:`resolve` does.
+
+    Returns ``{"session", "lines", "made_at"}``, ``session`` being its sanitised address.
+    """
+    from crowsnest.lineage import address
+    from crowsnest.live import publishable, recap_lines
+
+    made_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    s = resolve(session, home=home, all_homes=all_homes, config=config)
+    act = read_activity(s.transcript, session_id=s.session_id, recent=1)
+    try:
+        digest = _openloops_digest(s.session_id, digests_store=digests_store)
+    except KeyError:
+        digest = None
+    record = s.as_dict()
+    return {
+        "session": publishable(address(record)),
+        "lines": recap_lines(record, act.as_dict(), digest),
+        "made_at": made_at,
+    }
 
 
 def turns(

@@ -441,9 +441,11 @@ def report(
     (accounts, synced machines); each row shows which when it does not match `home`.
     `--fragment` leaves out the document wrapper, which is what publishing the page as
     a claude.ai artifact wants (the publisher wraps it itself). `--interactive` adds the
-    console: Ask, Tell and Start work here on each row, and on a triaged page Seen, Later,
-    Done and Note too, Seen above on the registers, and a Refresh. It works when the page
-    is published with the `db` capability; without it the page is the static one.
+    console: Recap, Ask, Tell and Start work here on each row, and on a triaged page Seen,
+    Later, Done and Note too, Seen above on the registers, a Refresh, and a live status
+    chip per row read from the page's `live/roster` document (`crowsnest live`). It works
+    when the page is published with the `db` capability; without it the page is the
+    static one.
 
     The page leads with what needs you and what is safe to close, read from each session's
     ledger. `--no-triage` renders the older page, organised by status alone, which is also
@@ -789,6 +791,61 @@ def brief(
     return "\n".join(out)
 
 
+def live(
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    brief: bool = False,
+    out: str = "",
+    json: bool = False,
+):
+    """What every session is doing now, as the report page's `live/roster` document.
+
+    Per session its address, status, since when, what it waits for and the call in
+    flight, every string sanitised as the page sanitises it. The courier writes it into
+    the page's `db` each tick, and the page paints a status chip per row from it.
+
+    `--out FILE` writes the document there and prints one line, so a watcher hands the
+    file to `write_db` and the document never enters its context. `--json` prints it.
+    `--brief` reads no transcript: every `in_flight` is empty. Use the same `--home` or
+    `--all-homes` as the page, or its rows will not find their sessions.
+    """
+    doc = tools.live(home=home, all_homes=all_homes, activity=not brief)
+    if out:
+        path = Path(out).expanduser()
+        path.write_text(_json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        return f"wrote live status for {len(doc['sessions'])} sessions, as of {doc['as_of']}, to {path}"
+    if json:
+        return _json.dumps(doc, indent=2, ensure_ascii=False)
+    lines = []
+    for row in doc["sessions"]:
+        since = _said.parse(row["since"])
+        age = _age(since.timestamp()) if isinstance(since, datetime) else "?"
+        doing = row["waiting_for"] or "; ".join(row["in_flight"])
+        lines.append(f"{row['status']:<8}{age:>4}  {row['address']}  {doing}".rstrip())
+    lines.append(f"-- {len(doc['sessions'])} live, as of {_local(doc['as_of'])}")
+    return "\n".join(lines)
+
+
+def recap(
+    session: str,
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    json: bool = False,
+):
+    """Five lines about one session, read from disk, without costing it a turn.
+
+    Its status, what it was asked last and what it said last (each with its own time),
+    what is in flight, and openloops' digest. Every line is sanitised as the report page
+    sanitises it: this is what a watcher writes as the answer to the page's Recap.
+    """
+    result = tools.recap(session, home=home, all_homes=all_homes)
+    if json:
+        return _json.dumps(result, indent=2, ensure_ascii=False)
+    return "\n".join(result["lines"])
+
+
 def init(
     *,
     directory: str | None = None,
@@ -960,6 +1017,8 @@ _commands = [
     show,
     turns,
     brief,
+    recap,
+    live,
     lineage,
     triage,
     report,

@@ -63,8 +63,10 @@ from openloops.dashboard import Sanitizer as _Sanitizer
 import crowsnest.attention as _attention
 from crowsnest import said as _said
 from crowsnest.config import DFLT_STALE_AFTER, AttentionSettings
+from crowsnest.lineage import address as _address
 from crowsnest.lineage import open_command as _open_command
 from crowsnest.links import label_for as _label_for
+from crowsnest.live import publishable as _publishable
 from crowsnest.rows import RowContext
 from crowsnest.tree import TREE_CSS as _TREE_CSS
 from crowsnest.tree import Placed as _Placed
@@ -74,6 +76,7 @@ __all__ = [
     "ATTENTION_SCRIPT",
     "CONSOLE_CSS",
     "CONSOLE_SCRIPT",
+    "LIVE_SCRIPT",
     "render_report",
 ]
 
@@ -208,6 +211,97 @@ CONSOLE_CSS = """
   font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--surface)}
 .toast button{font:inherit;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .6rem;
   cursor:pointer;border:1px solid var(--surface);background:transparent;color:var(--surface)}
+.chip--live{background:transparent;border:1px solid currentColor;margin-left:.45rem}
+.rail .chip--live{margin-left:0}
+.chip--live.is-stale,.chip--live.is-unknown,.chip--live.is-gone{color:var(--ink-soft);
+  border-style:dashed}
+.chip--live.is-stale,.chip--live.is-unknown{opacity:.7}
+.answers li{white-space:pre-line}
+"""
+
+#: The live status chips as the console's script paints them (crowsnest#58), with no DOM
+#: and no network, so ``tests/test_console_script.py`` runs it in node. It defines one
+#: global, ``cnLive``, whose ``present`` turns the page's ``live/roster`` document (written
+#: by :func:`crowsnest.tools.live`, already sanitised) into the live-status line and one
+#: chip per placeholder. **A chip never looks fresh from a stale document**: a document
+#: older than two ticks, or dated ahead of this device's clock, greys every chip and says
+#: so, and a name two sessions share, on the page or in the document, reads as unknown.
+LIVE_SCRIPT = r"""
+const cnLive = (() => {
+  "use strict";
+  const A = cnAttention;
+  const FRESH = "fresh", STALE = "stale", UNKNOWN = "unknown", GONE = "gone";
+  const TONES = { waiting: "needs", busy: "flight", shell: "flight", idle: "done" };
+  const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+  const isText = (value) => typeof value === "string";
+
+  /** The document as far as it can be trusted -- {asOf, rows, counts} -- or null. One
+   * malformed entry makes the whole document unreadable: skipping it would call its
+   * session "not in live status", which is a claim the document did not make. */
+  function read(data) {
+    if (!isObject(data) || !Array.isArray(data.sessions)) return null;
+    const asOf = A.instant(data.as_of);
+    if (Number.isNaN(asOf)) return null;
+    const rows = new Map(), counts = new Map();
+    for (const row of data.sessions) {
+      if (!isObject(row) || !isText(row.address) || !isText(row.status) || !isText(row.since)
+        || !isText(row.waiting_for) || !Array.isArray(row.in_flight) || !row.in_flight.every(isText)) return null;
+      counts.set(row.address, (counts.get(row.address) || 0) + 1);
+      rows.set(row.address, row);
+    }
+    return { asOf, rows, counts };
+  }
+
+  const detail = (row) => [
+    row.waiting_for ? "waiting for: " + row.waiting_for : "",
+    row.in_flight.length ? "running: " + row.in_flight[0] : "",
+  ].filter(Boolean).join("; ");
+
+  /** The live-status line, and a chip (or null: hidden) for each of `addresses`, the
+   * placeholders' addresses in page order. `data` is the document's body; null or
+   * undefined when there is none. */
+  function present(data, nowMs, tickSeconds, addresses) {
+    const hidden = addresses.map(() => null);
+    if (data === null || data === undefined) {
+      return { line: "no live status yet: each row shows only this snapshot's chip", chips: hidden };
+    }
+    const doc = read(data);
+    if (doc === null) {
+      return { line: "live status unreadable: each row shows only this snapshot's chip", chips: hidden };
+    }
+    const onPage = new Map();
+    addresses.forEach((address) => onPage.set(address, (onPage.get(address) || 0) + 1));
+    const age = (nowMs - doc.asOf) / 1000;
+    const ahead = age < -tickSeconds;
+    const stale = !ahead && age >= 2 * tickSeconds;
+    let line = "live status as of " + A.since(age) + " ago";
+    if (ahead) line = "live status is dated " + A.since(-age) + " ahead of this device's clock, so how old it is is unknown: every chip is greyed";
+    else if (stale) line = "live status is " + A.since(age) + " old, older than two ticks: every chip is greyed and says how old it is";
+    const chips = addresses.map((address) => {
+      if (!address || onPage.get(address) > 1 || (doc.counts.get(address) || 0) > 1) {
+        return { text: "status unknown: two sessions share this name", tone: "", state: UNKNOWN, title: "" };
+      }
+      const row = doc.rows.get(address);
+      const title = row ? detail(row) : "";
+      if (ahead) {
+        return { text: (row ? row.status || "unknown" : "not in live status") + " · age unknown", tone: "", state: UNKNOWN, title };
+      }
+      if (stale) {
+        const ago = A.since(age) + " ago";
+        return { text: row ? "was " + (row.status || "unknown") + ", " + ago : "not in live status, " + ago, tone: "", state: STALE, title };
+      }
+      if (!row) return { text: "not in live status", tone: "", state: GONE, title };
+      const since = A.instant(row.since);
+      const held = Number.isNaN(since) || since - doc.asOf > tickSeconds * 1000
+        ? "since unknown" : "for " + A.since((doc.asOf - since) / 1000);
+      const tone = Object.prototype.hasOwnProperty.call(TONES, row.status) ? TONES[row.status] : "";
+      return { text: "now " + (row.status || "unknown") + " · " + held, tone, state: FRESH, title };
+    });
+    return { line, chips };
+  }
+
+  return { FRESH, STALE, UNKNOWN, GONE, present };
+})();
 """
 
 #: The person's attention record as the console's script keeps it: a transcription of
@@ -525,6 +619,7 @@ CONSOLE_SCRIPT = r"""
     : "console on: every action is queued for the crowsnest session, which polls while you use this page");
   const attention = attend(arm);
   watchHeartbeat(document.getElementById("console-heartbeat"));
+  watchLive(document.getElementById("live-status"));
 
   // A row's one text box serves Tell, Start and Note, and keeps a draft for each.
   function openBox(acts, kind, placeholder, initial) {
@@ -634,6 +729,46 @@ CONSOLE_SCRIPT = r"""
       }, lost);
     } catch (e) { lost(e); return; }
     setInterval(paintBeat, tick * 1000);
+  }
+
+  // Live status (#58): the page's live/roster document, one chip per row matched by
+  // address, painted by cnLive.present. Before the document is read, and when there is
+  // none, the chips stay hidden and the snapshot's own chips speak. A lost feed keeps the
+  // last document, which then greys on its own as it ages.
+  function watchLive(line) {
+    const tick = line ? Number(line.dataset.tickSeconds) : NaN;
+    const every = line ? Number(line.dataset.repaintSeconds) : NaN;
+    if (!line || !(tick > 0) || !(every > 0)) return;
+    const chips = [...document.querySelectorAll("[data-live-chip]")];
+    const addresses = chips.map((el) => el.dataset.address || "");
+    let read = false, data = null, trouble = "";
+    const paintLive = () => {
+      if (!read) return;
+      const shown = cnLive.present(data, Date.now(), tick, addresses);
+      line.textContent = shown.line + trouble;
+      shown.chips.forEach((chip, i) => {
+        const el = chips[i];
+        if (!chip) { el.hidden = true; return; }
+        el.textContent = chip.text;
+        el.title = chip.title;
+        el.className = "chip chip--live" + (chip.tone ? " chip--" + chip.tone : "") + " is-" + chip.state;
+        el.hidden = false;
+      });
+    };
+    const lost = (error) => {
+      read = true;
+      trouble = "; its feed was lost (" + codeOf(error) + "), so what is shown ages from here";
+      paintLive();
+    };
+    try {
+      db.doc("live/roster").onSnapshot((snap) => {
+        read = true;
+        trouble = "";
+        data = snap && snap.exists && typeof snap.data === "function" ? (snap.data() || null) : null;
+        paintLive();
+      }, lost);
+    } catch (e) { lost(e); return; }
+    setInterval(paintLive, every * 1000);
   }
 
   // The attention arm. Returns null, and leaves its buttons hidden, on a page without it.
@@ -1037,11 +1172,17 @@ CONSOLE_SCRIPT = r"""
 })();
 """
 
+#: What *Ask* is called wherever it is offered. It says the cost, because *Recap* beside it
+#: answers most of the same question from disk for nothing (#58).
+ASK_LABEL = "Ask (costs it a turn)"
+
 #: The actions a row offers. ``kind`` is what the intent document carries; the watching
 #: session's ``crowsnest-report`` skill says what each one does. *Handled* is now the
 #: attention arm's *Done*, which writes the record rather than queueing an intent (#56).
+#: *Recap* is answered from disk and never wakes the session; *Ask* spends one of its turns.
 ROW_ACTIONS = (
-    ("ask", "Ask"),
+    ("recap", "Recap"),
+    ("ask", ASK_LABEL),
     ("tell", "Tell"),
     ("start", "Start work here"),
 )
@@ -1084,19 +1225,24 @@ REVIEW_ACTIONS = {
         (_attention.LATER, "Later"),
         (_attention.DONE, "Done"),
     ),
-    _attention.STUCK: (("ask", "Ask"), (_attention.LATER, "Later")),
+    _attention.STUCK: (("ask", ASK_LABEL), (_attention.LATER, "Later")),
     _attention.UNMOVED: ((REOPEN, "Re-open"), ("tell", "Tell")),
-    _attention.UNCLASSIFIED: (("ask", "Ask"), (_attention.LATER, "Later")),
+    # A session that has not said where it stands has usually said plenty: read it first.
+    _attention.UNCLASSIFIED: (("recap", "Recap"), (_attention.LATER, "Later")),
 }
 
 #: The actions that queue an intent rather than write a record, and those of them that
 #: carry text the person types (the line then has the console's text box and Send).
-_INTENT_ACTIONS = ("ask", "tell")
+_INTENT_ACTIONS = ("ask", "tell", "recap")
 _TEXT_INTENTS = ("tell",)
 
 #: How often the watching session reads the console, in seconds: the skill's ``/loop 30s``.
 #: The page calls crowsnest's heartbeat stale past two of these.
 CONSOLE_TICK_SECONDS = 30
+
+#: How often the page repaints its live status chips, in seconds, so a document that stops
+#: arriving greys its chips on time without a new one to trigger it (#58).
+LIVE_REPAINT_SECONDS = 5
 
 #: How long the undo toast stays on screen, in seconds.
 TOAST_SECONDS = 8
@@ -1381,13 +1527,16 @@ def _slug(text: str) -> str:
 # --------------------------------------------------------------------------------
 
 
-def _rail(chip: str, tone: str, figure: str, unit: str, *, reach: str = "") -> str:
+def _rail(
+    chip: str, tone: str, figure: str, unit: str, *, reach: str = "", live: str = ""
+) -> str:
     # `reach` is one of attention's two literals, `phone` or `terminal`, never row text.
+    # `live` is the row's live status placeholder (`_live_chip`), already markup.
     reach_chip = f'<span class="chip chip--reach">{reach}</span>' if reach else ""
     return (
         f'<div class="rail">'
         f'<span class="chip chip--{tone}">{chip}</span>'
-        f"{reach_chip}"
+        f"{reach_chip}{live}"
         f'<span class="age"><b>{figure}</b><i>{unit}</i></span>'
         f"</div>"
     )
@@ -1616,7 +1765,7 @@ def _row(
     return (
         f'<li class="row row--{tone}{_state_class(attended)}" id="session-{ident}"'
         f"{_item_attrs(safe, attended)}>"
-        + _rail(chip, tone, figure, unit, reach=reach)
+        + _rail(chip, tone, figure, unit, reach=reach, live=_live_chip(row))
         + '<div class="body">'
         + "".join(body)
         + "</div></li>"
@@ -1820,6 +1969,23 @@ def _thin_marks(safe: _Sanitizer, attended: _Attended | None) -> str:
     return marks
 
 
+def _live_chip(row: Mapping[str, Any]) -> str:
+    """Where the console paints the row's live status (#58): hidden, and empty in static mode.
+
+    ``data-address`` is the row's address through the page's sanitiser, which is how
+    :func:`crowsnest.live.live_row` spells it in the ``live/roster`` document, so the
+    script matches the two as strings. A fresh throwaway sanitiser: the label is already
+    counted by the one that put it on the row, and a withheld one would count twice.
+    """
+    if not _interactive.get():
+        return ""
+    address = _html.escape(_publishable(_address(row)), quote=True)
+    return (
+        f'<span class="chip chip--live" data-live-chip data-address="{address}" hidden>'
+        "</span>"
+    )
+
+
 def _controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     """The row's console: hidden until the page's ``db`` resolves; empty in static mode.
 
@@ -1991,7 +2157,7 @@ def _quiet_group(
             f"{_item_attrs(safe, attended)}>"
             f'<span class="thin-age">{figure}{unit}</span>'
             f'<p class="thin-ask">{safe.text(row.get("label"))}'
-            f"{_dot(attended, loud=False)}{tail}</p>"
+            f"{_dot(attended, loud=False)}{_live_chip(row)}{tail}</p>"
             "</li>"
         )
     return (
@@ -2150,6 +2316,9 @@ def _console(settings: AttentionSettings) -> str:
         '<span id="console-status">console: connecting to this page\'s store…</span>'
         '<span id="console-heartbeat" data-console hidden'
         f' data-tick-seconds="{CONSOLE_TICK_SECONDS}"></span>'
+        '<span id="live-status" data-console hidden'
+        f' data-tick-seconds="{CONSOLE_TICK_SECONDS}"'
+        f' data-repaint-seconds="{LIVE_REPAINT_SECONDS}"></span>'
         "</div>"
         '<ul class="answers" id="console-log" data-console hidden></ul>'
         + _attention_arm(settings)
@@ -2389,7 +2558,7 @@ def _later_line(
     return (
         f'<li class="thin" id="session-{ident}"{_item_attrs(safe, attended)}>'
         f'<span class="thin-age">{age}</span>'
-        f'<p class="thin-ask">{label}{rest}{_thin_marks(safe, attended)}</p>'
+        f'<p class="thin-ask">{label}{_live_chip(row)}{rest}{_thin_marks(safe, attended)}</p>'
         "</li>"
     )
 
@@ -2911,7 +3080,7 @@ def _render(
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
     if _interactive.get():
-        body += f"<script>{ATTENTION_SCRIPT}{CONSOLE_SCRIPT}</script>"
+        body += f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{CONSOLE_SCRIPT}</script>"
     if fragment:
         return f"{title_tag}\n{style_tag}\n{body}\n"
     head = (

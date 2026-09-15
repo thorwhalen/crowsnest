@@ -63,6 +63,12 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
   against the Python, and `node --check`s the whole page script. It skips where node is
   missing.
 
+- **The `live/roster` document and a recap's lines are published data** (#58): the courier
+  writes them into a page's `db`. `crowsnest/live.py` puts every string through the page's
+  own `Sanitizer` (sanitise, clip, sanitise again) before it leaves Python; the page's
+  `cnLive` only paints. A new field goes in `LIVE_FIELDS` and through `publishable`, and
+  `tests/test_live.py` walks every string. One document per tick is the budget (K3).
+
 - Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
 - `links.py` never fetches. A link is constructed from the text plus the session's cwd remote;
   a resolver that checked GitHub would turn one report into hundreds of network calls.
