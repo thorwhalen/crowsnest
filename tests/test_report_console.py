@@ -152,7 +152,9 @@ def test_seen_above_heads_every_register_below_the_first():
     for ident in ("safe-to-close", "finished", "working", "quiet"):
         head = register(html, ident).split("</div></div>", 1)[0]
         assert SEEN_ABOVE in head, ident
-    assert html.count(SEEN_ABOVE) == 4
+    # And one at the foot of Quiet, the only control that reaches Quiet's own rows.
+    assert SEEN_ABOVE in register(html, "quiet").rsplit("</ul>", 1)[1]
+    assert html.count(SEEN_ABOVE) == 5
 
 
 def test_rows_carry_their_verdict_and_how_the_page_drew_them_for_the_script():
