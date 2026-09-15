@@ -41,16 +41,21 @@ Three seams, one keyword argument each:
 
 ### Module Attributes
 
-| [`NAMESPACE`](#crowsnest.attention.NAMESPACE)   | every id already in a store, a page's `db` and an export was derived from it, and a new one orphans them all.                       |
-|--------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| [`ACTIVE`](#crowsnest.attention.ACTIVE)      | The person's states.                                                                                                                |
-| [`LATER`](#crowsnest.attention.LATER)       | The person's states.                                                                                                                |
-| [`DONE`](#crowsnest.attention.DONE)        | The person's states.                                                                                                                |
-| [`NEW`](#crowsnest.attention.NEW)         | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
-| [`CHANGED`](#crowsnest.attention.CHANGED)     | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
-| [`WOKE`](#crowsnest.attention.WOKE)        | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
-| [`SEEN`](#crowsnest.attention.SEEN)        | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
-| [`HIDDEN`](#crowsnest.attention.HIDDEN)      | The presentations the page does not show as rows.                                                                                   |
+| [`NAMESPACE`](#crowsnest.attention.NAMESPACE)    | every id already in a store, a page's `db` and an export was derived from it, and a new one orphans them all.                       |
+|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| [`ACTIVE`](#crowsnest.attention.ACTIVE)       | The person's states.                                                                                                                |
+| [`LATER`](#crowsnest.attention.LATER)        | The person's states.                                                                                                                |
+| [`DONE`](#crowsnest.attention.DONE)         | The person's states.                                                                                                                |
+| [`NEW`](#crowsnest.attention.NEW)          | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
+| [`CHANGED`](#crowsnest.attention.CHANGED)      | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
+| [`WOKE`](#crowsnest.attention.WOKE)         | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
+| [`SEEN`](#crowsnest.attention.SEEN)         | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
+| [`HIDDEN`](#crowsnest.attention.HIDDEN)       | The presentations the page does not show as rows.                                                                                   |
+| [`SNOOZED`](#crowsnest.attention.SNOOZED)      | The review band's kinds, in the order the band lists them.                                                                          |
+| [`STALE`](#crowsnest.attention.STALE)        | The review band's kinds, in the order the band lists them.                                                                          |
+| [`STUCK`](#crowsnest.attention.STUCK)        | The review band's kinds, in the order the band lists them.                                                                          |
+| [`UNMOVED`](#crowsnest.attention.UNMOVED)      | The review band's kinds, in the order the band lists them.                                                                          |
+| [`UNCLASSIFIED`](#crowsnest.attention.UNCLASSIFIED) | The review band's kinds, in the order the band lists them.                                                                          |
 
 ### Functions
 
@@ -63,6 +68,7 @@ Three seams, one keyword argument each:
 | [`done`](#crowsnest.attention.done)(record, rev, \*[, seen_as, now])           | The person did their part at `rev`: hidden until the item's revision changes.                                                   |
 | [`export_docs`](#crowsnest.attention.export_docs)(\*[, since, store])                 | Every record as its document, oldest change first; with `since`, only later changes.                                            |
 | [`fingerprint`](#crowsnest.attention.fingerprint)(row, \*[, material])                | The item's revision: a short hash over `material(row)`.                                                                         |
+| [`holds_a_record`](#crowsnest.attention.holds_a_record)([store])                         | Does `store` hold a document that reads as a record? Stops at the first one.                                                    |
 | [`import_docs`](#crowsnest.attention.import_docs)(docs, \*[, store])                  | Take documents into the store, last write winning by `updated_at`.                                                              |
 | [`instant`](#crowsnest.attention.instant)(stamp)                                  | An ISO timestamp or date as an aware datetime; one without an offset is read as UTC.                                            |
 | [`is_item_id`](#crowsnest.attention.is_item_id)(key)                                 | Is `key` an item id as [`item_id()`](#crowsnest.attention.item_id) spells one? Anything else never names a file. |
@@ -74,6 +80,9 @@ Three seams, one keyword argument each:
 | [`reach`](#crowsnest.attention.reach)(row)                                      | `phone` for a question or a decision, `terminal` for an action, else `''`.                                                      |
 | [`read_doc`](#crowsnest.attention.read_doc)(item, \*[, store])                     | `item`'s stored document as it is, or `None` when there is none.                                                                |
 | [`read_record`](#crowsnest.attention.read_record)(item, \*[, store])                  | The record for `item`, or `None` when the person has never acted on it.                                                         |
+| [`review`](#crowsnest.attention.review)(rows, \*[, store, now, config, ...])     | The review band: every row of `rows` that [`review_of()`](#crowsnest.attention.review_of) places, grouped by kind. |
+| [`review_entries`](#crowsnest.attention.review_entries)(named, \*[, now, config])        | [`review()`](#crowsnest.attention.review) over rows already named: `(row, item, rev, record)` each.             |
+| [`review_of`](#crowsnest.attention.review_of)(row, rev, record, \*[, now, config])  | Which review row `row` is: `{"kind", "since", "count"}`, or `None`.                                                             |
 | [`seen`](#crowsnest.attention.seen)(record, rev, \*[, seen_as, now])           | The person has looked at the item at `rev`: it dims until it changes.                                                           |
 | [`seen_as_of`](#crowsnest.attention.seen_as_of)(row)                                 | What a row is, as [`SeenAs`](#crowsnest.attention.SeenAs) records it: its verdict's group and why, or `None`.   |
 | [`undo`](#crowsnest.attention.undo)(record, \*[, now])                         | Restore the record before the last transition.                                                                                  |
@@ -176,6 +185,21 @@ fields in the document’s `ext` object, which the store functions carry through
 
 What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names.
 
+### crowsnest.attention.SNOOZED *= 'snoozed'*
+
+The review band’s kinds, in the order the band lists them. A row is one kind at most:
+the first whose rule it meets, in this order.
+
+### crowsnest.attention.STALE *= 'stale'*
+
+The review band’s kinds, in the order the band lists them. A row is one kind at most:
+the first whose rule it meets, in this order.
+
+### crowsnest.attention.STUCK *= 'stuck'*
+
+The review band’s kinds, in the order the band lists them. A row is one kind at most:
+the first whose rule it meets, in this order.
+
 ### *class* crowsnest.attention.SeenAs(group, why='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -192,6 +216,16 @@ anyone who can open the page can read.
 >>> SeenAs.from_dict({'group': 'needs_you', 'why': 'question'})
 SeenAs(group='needs_you', why='question')
 ```
+
+### crowsnest.attention.UNCLASSIFIED *= 'unclassified'*
+
+The review band’s kinds, in the order the band lists them. A row is one kind at most:
+the first whose rule it meets, in this order.
+
+### crowsnest.attention.UNMOVED *= 'unmoved'*
+
+The review band’s kinds, in the order the band lists them. A row is one kind at most:
+the first whose rule it meets, in this order.
 
 ### crowsnest.attention.WOKE *= 'woke'*
 
@@ -322,6 +356,21 @@ returns something JSON cannot encode (a set, whose order is not stable) raises
 ```pycon
 >>> len(fingerprint({'status': 'busy'})) == 2 * FINGERPRINT_BYTES
 True
+```
+
+### crowsnest.attention.holds_a_record(store=None)
+
+Does `store` hold a document that reads as a record? Stops at the first one.
+
+What decides whether a page applies the store at all: one that holds none renders as
+it did before attention existed.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+```pycon
+>>> holds_a_record({}), holds_a_record({item_id({'session_id': 'x'}): {'seen_rev': 'r'}})
+(False, True)
 ```
 
 ### crowsnest.attention.import_docs(docs, , store=None)
@@ -463,6 +512,86 @@ The record for `item`, or `None` when the person has never acted on it.
 
 * **Return type:**
   [`Record`](#crowsnest.attention.Record) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.attention.review(rows, , store=None, now=None, config=None, row_context=None)
+
+The review band: every row of `rows` that [`review_of()`](#crowsnest.attention.review_of) places, grouped by kind.
+
+Each entry is [`review_of()`](#crowsnest.attention.review_of)’s answer plus the row’s `item`, `rev` and the
+`row` itself, in `REVIEW_KINDS` order and in `rows`’ order within a kind.
+`row_context` ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext); `None` is attention’s own
+defaults) names and hashes each row, and must be the one the rows were built with and
+the verbs were given. A row with no identity, or one a revision cannot hash, is left
+out; a record that cannot be read counts as none, as it does on the page.
+
+It answers for any store. The page draws the band only once the store holds a record
+(the degradation table in discussion #51), so an empty store changes nothing there.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+```pycon
+>>> row = {'session_id': 'e7c1', 'status': 'idle',
+...        'verdict': {'group': 'unclassified', 'reason': 'said nothing'}}
+>>> [entry['kind'] for entry in review([row], store={})]
+['unclassified']
+```
+
+### crowsnest.attention.review_entries(named, , now=None, config=None)
+
+[`review()`](#crowsnest.attention.review) over rows already named: `(row, item, rev, record)` each.
+
+For a caller that has computed them already – the report’s page does, for every row –
+so the band and the rows above it read one item, one revision and one record. A row
+[`review_of()`](#crowsnest.attention.review_of) cannot place (a record it cannot read the time of) is left out.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.attention.review_of(row, rev, record, , now=None, config=None)
+
+Which review row `row` is: `{"kind", "since", "count"}`, or `None`. Pure.
+
+`rev` and `record` are the row’s revision and record as the caller already has
+them: this function never names or hashes a row, which is [`crowsnest.rows`](crowsnest.rows.html.md#module-crowsnest.rows)’s
+job, so a page given a row context and its band cannot disagree about a revision.
+`config` is the `[attention]` table ([`crowsnest.config.attention_settings()`](crowsnest.config.html.md#crowsnest.config.attention_settings)).
+`since` is when the rule’s clock started, stamped like `updated_at` (`''` for a
+rule with no clock); `count` is how often the item has been put off.
+
+| kind           | rule                                                                                         | clock (`since`)               |
+|----------------|----------------------------------------------------------------------------------------------|-------------------------------|
+| `snoozed`      | in `later`, put off `max_snoozes` times or<br/>more, and back on the page (woke, or changed) | none                          |
+| `stale`        | shows `seen`, group `needs_you`, untouched<br/>for longer than `stale_after`                 | the record’s<br/>`updated_at` |
+| `stuck`        | group `working`, shown and not `changed`, in<br/>its status for longer than `stuck_after`    | the row’s<br/>`status_since`  |
+| `unmoved`      | shows `done` – handled at this very revision<br/>– for longer than `stuck_after`             | the record’s<br/>`updated_at` |
+| `unclassified` | group `unclassified`, shown                                                                  | none                          |
+
+**A row the person hid is in review only as unmoved.** Put off and asleep, or dropped,
+it has had its decision, and Later and Drop are the decisions the band offers: tapping
+one takes the row out of the band. An item put off yet again is back once it wakes.
+
+**A working row is timed by its status**, not by a time the store keeps per revision: a
+render that wrote one would turn attention on for a person who never marked anything.
+Under the default material a `working` row’s revision is its group, which holds as
+long as the session stays in that status. A custom `material=` or `verdicts=` can
+move the revision within one status, and nothing records when, so the rule claims no
+more than the time in status, and a row that reads `changed` is never stuck. A time
+nobody knows is no time: a row without `status_since` is never stuck. “Untouched”
+means what it says: a note counts as touching an item.
+
+```pycon
+>>> from datetime import datetime, timedelta, timezone
+>>> now = datetime(2026, 2, 1, 12, tzinfo=timezone.utc)
+>>> asks = {'verdict': {'group': 'needs_you', 'why': 'question', 'reason': 'Squash?'}}
+>>> review_of(asks, 'r1', seen(None, 'r1', now=now - timedelta(days=2)), now=now)['kind']
+'stale'
+>>> review_of(asks, 'r1', seen(None, 'r1', now=now), now=now) is None
+True
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.attention.seen(record, rev, , seen_as=None, now=None)
 

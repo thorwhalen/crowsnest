@@ -751,494 +751,505 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="597"><span class="sd">    also what lets a test of this function not read the ledgers of whoever runs it.</span>
 </span><span data-line="598"><span class="sd">    """</span>
 </span><span data-line="599">    <span class="n">made_at</span> <span class="o">=</span> <span class="n">made_at</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-</span><span data-line="600">    <span class="c1"># The `[attention]` table gives the stale age and, on an interactive page, the Later</span>
-</span><span data-line="601">    <span class="c1"># sheet's hours and snooze limit. It is read only when one of those is wanted, so a</span>
-</span><span data-line="602">    <span class="c1"># page that needs neither does not fail on a table it never uses.</span>
-</span><span data-line="603">    <span class="n">settings</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="604">        <span class="n">attention_settings</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">stale_after</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interactive</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="605">    <span class="p">)</span>
-</span><span data-line="606">    <span class="k">if</span> <span class="n">stale_after</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="607">        <span class="n">stale_after</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">stale_after</span>
-</span><span data-line="608">    <span class="n">ctx</span> <span class="o">=</span> <span class="n">dflt_row_context</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">row_context</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">row_context</span>
-</span><span data-line="609">    <span class="n">found</span> <span class="o">=</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="610">    <span class="c1"># The rows the verbs pin and the watcher rebuilds, built the one way they build them.</span>
-</span><span data-line="611">    <span class="c1"># Every ledger is read once for the whole page: `links` and `triage` want the same file.</span>
-</span><span data-line="612">    <span class="n">rows</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">rows</span><span class="p">(</span>
-</span><span data-line="613">        <span class="n">found</span><span class="p">,</span>
-</span><span data-line="614">        <span class="n">home_dir</span><span class="o">=</span><span class="n">_home_to_pin</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
-</span><span data-line="615">        <span class="n">pages</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">pages</span><span class="p">({</span><span class="n">s</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">found</span><span class="p">}),</span>
-</span><span data-line="616">        <span class="n">triage</span><span class="o">=</span><span class="n">triage</span><span class="p">,</span>
-</span><span data-line="617">    <span class="p">)</span>
-</span><span data-line="618">    <span class="c1"># `links=False` is the renderer's to honour: the rows keep their links, because a verdict</span>
-</span><span data-line="619">    <span class="c1"># reader or a `material` may read them and the verbs pin the row with them. Resolving</span>
-</span><span data-line="620">    <span class="c1"># nothing is `RowContext(resolvers=())`, which the verbs are then given too.</span>
-</span><span data-line="621">    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sessions"</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">:</span> <span class="n">_counts</span><span class="p">(</span><span class="n">rows</span><span class="p">)}</span>
-</span><span data-line="622">    <span class="k">if</span> <span class="n">with_lineage</span><span class="p">:</span>
-</span><span data-line="623">        <span class="c1"># The rows the roster already read, not a second sweep of the registry: reading</span>
-</span><span data-line="624">        <span class="c1"># twice costs a `ps` and a registry listing, and lets the two halves of one</span>
-</span><span data-line="625">        <span class="c1"># snapshot disagree about who is alive.</span>
-</span><span data-line="626">        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="627">            <span class="o">**</span><span class="n">data</span><span class="p">,</span>
-</span><span data-line="628">            <span class="c1"># Recorded edges only. `from_processes` runs a `ps`, and a page render is</span>
-</span><span data-line="629">            <span class="c1"># the wrong place for a subprocess: it is paid on every refresh, it makes a</span>
-</span><span data-line="630">            <span class="c1"># test of this function read the machine it runs on, and on a fleet started</span>
-</span><span data-line="631">            <span class="c1"># through tmux it finds nothing anyway (tmux reparents to init -- see</span>
-</span><span data-line="632">            <span class="c1"># `crowsnest.lineage.from_processes`). `crowsnest lineage` is where a person</span>
-</span><span data-line="633">            <span class="c1"># goes to ask, and it still asks.</span>
-</span><span data-line="634">            <span class="s2">"lineage"</span><span class="p">:</span> <span class="n">lineage</span><span class="p">(</span>
-</span><span data-line="635">                <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="636">                <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="637">                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="638">                <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
-</span><span data-line="639">                <span class="n">sessions_read</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">"sessions"</span><span class="p">],</span>
-</span><span data-line="640">                <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">_from_records</span><span class="p">(</span><span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)],</span>
-</span><span data-line="641">            <span class="p">),</span>
-</span><span data-line="642">        <span class="p">}</span>
-</span><span data-line="643">    <span class="n">html</span> <span class="o">=</span> <span class="n">render_report</span><span class="p">(</span>
-</span><span data-line="644">        <span class="n">data</span><span class="p">,</span>
-</span><span data-line="645">        <span class="n">made_at</span><span class="o">=</span><span class="n">made_at</span><span class="p">,</span>
-</span><span data-line="646">        <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
-</span><span data-line="647">        <span class="n">fragment</span><span class="o">=</span><span class="n">fragment</span><span class="p">,</span>
-</span><span data-line="648">        <span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span><span class="p">,</span>
-</span><span data-line="649">        <span class="n">tz</span><span class="o">=</span><span class="n">tz</span><span class="p">,</span>
-</span><span data-line="650">        <span class="n">stale_after</span><span class="o">=</span><span class="n">stale_after</span><span class="p">,</span>
-</span><span data-line="651">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="652">        <span class="n">plain</span><span class="o">=</span><span class="n">plain</span><span class="p">,</span>
-</span><span data-line="653">        <span class="n">row_context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
-</span><span data-line="654">        <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
-</span><span data-line="655">        <span class="n">attention_settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
-</span><span data-line="656">    <span class="p">)</span>
-</span><span data-line="657">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="658">        <span class="s2">"html"</span><span class="p">:</span> <span class="n">html</span><span class="p">,</span>
-</span><span data-line="659">        <span class="s2">"made_at"</span><span class="p">:</span> <span class="n">made_at</span><span class="p">,</span>
-</span><span data-line="660">        <span class="s2">"fragment"</span><span class="p">:</span> <span class="n">fragment</span><span class="p">,</span>
-</span><span data-line="661">        <span class="s2">"interactive"</span><span class="p">:</span> <span class="n">interactive</span><span class="p">,</span>
-</span><span data-line="662">    <span class="p">}</span></div>
+</span><span data-line="600">    <span class="n">ctx</span> <span class="o">=</span> <span class="n">dflt_row_context</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">row_context</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">row_context</span>
+</span><span data-line="601">    <span class="n">found</span> <span class="o">=</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="602">    <span class="c1"># The rows the verbs pin and the watcher rebuilds, built the one way they build them.</span>
+</span><span data-line="603">    <span class="c1"># Every ledger is read once for the whole page: `links` and `triage` want the same file.</span>
+</span><span data-line="604">    <span class="n">rows</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">rows</span><span class="p">(</span>
+</span><span data-line="605">        <span class="n">found</span><span class="p">,</span>
+</span><span data-line="606">        <span class="n">home_dir</span><span class="o">=</span><span class="n">_home_to_pin</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
+</span><span data-line="607">        <span class="n">pages</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">pages</span><span class="p">({</span><span class="n">s</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">found</span><span class="p">}),</span>
+</span><span data-line="608">        <span class="n">triage</span><span class="o">=</span><span class="n">triage</span><span class="p">,</span>
+</span><span data-line="609">    <span class="p">)</span>
+</span><span data-line="610">    <span class="c1"># The `[attention]` table gives the stale age, the review band's thresholds on a page</span>
+</span><span data-line="611">    <span class="c1"># that may draw one, and, on an interactive page, the Later sheet's hours and snooze</span>
+</span><span data-line="612">    <span class="c1"># limit. It is read only when one of those is wanted, so a page that needs none does</span>
+</span><span data-line="613">    <span class="c1"># not fail on a table it never uses. A band needs rows with verdicts, `plain` off, and</span>
+</span><span data-line="614">    <span class="c1"># a store holding a record -- when `render_report` applies the store -- and the store</span>
+</span><span data-line="615">    <span class="c1"># is opened only once the rows say it could be.</span>
+</span><span data-line="616">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">attention</span> <span class="k">as</span> <span class="n">_attention</span>
+</span><span data-line="617">
+</span><span data-line="618">    <span class="n">band</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">plain</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span>
+</span><span data-line="619">        <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"verdict"</span><span class="p">),</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"group"</span><span class="p">)</span>
+</span><span data-line="620">        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span>
+</span><span data-line="621">    <span class="p">)</span>
+</span><span data-line="622">    <span class="k">if</span> <span class="n">band</span><span class="p">:</span>
+</span><span data-line="623">        <span class="n">store</span> <span class="o">=</span> <span class="n">_attention</span><span class="o">.</span><span class="n">dflt_store</span><span class="p">()</span> <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">store</span>
+</span><span data-line="624">        <span class="n">band</span> <span class="o">=</span> <span class="n">_attention</span><span class="o">.</span><span class="n">holds_a_record</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
+</span><span data-line="625">    <span class="n">wanted</span> <span class="o">=</span> <span class="n">stale_after</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">interactive</span> <span class="ow">or</span> <span class="n">band</span>
+</span><span data-line="626">    <span class="n">settings</span> <span class="o">=</span> <span class="n">attention_settings</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">wanted</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="627">    <span class="k">if</span> <span class="n">stale_after</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="628">        <span class="n">stale_after</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">stale_after</span>
+</span><span data-line="629">    <span class="c1"># `links=False` is the renderer's to honour: the rows keep their links, because a verdict</span>
+</span><span data-line="630">    <span class="c1"># reader or a `material` may read them and the verbs pin the row with them. Resolving</span>
+</span><span data-line="631">    <span class="c1"># nothing is `RowContext(resolvers=())`, which the verbs are then given too.</span>
+</span><span data-line="632">    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sessions"</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">:</span> <span class="n">_counts</span><span class="p">(</span><span class="n">rows</span><span class="p">)}</span>
+</span><span data-line="633">    <span class="k">if</span> <span class="n">with_lineage</span><span class="p">:</span>
+</span><span data-line="634">        <span class="c1"># The rows the roster already read, not a second sweep of the registry: reading</span>
+</span><span data-line="635">        <span class="c1"># twice costs a `ps` and a registry listing, and lets the two halves of one</span>
+</span><span data-line="636">        <span class="c1"># snapshot disagree about who is alive.</span>
+</span><span data-line="637">        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="638">            <span class="o">**</span><span class="n">data</span><span class="p">,</span>
+</span><span data-line="639">            <span class="c1"># Recorded edges only. `from_processes` runs a `ps`, and a page render is</span>
+</span><span data-line="640">            <span class="c1"># the wrong place for a subprocess: it is paid on every refresh, it makes a</span>
+</span><span data-line="641">            <span class="c1"># test of this function read the machine it runs on, and on a fleet started</span>
+</span><span data-line="642">            <span class="c1"># through tmux it finds nothing anyway (tmux reparents to init -- see</span>
+</span><span data-line="643">            <span class="c1"># `crowsnest.lineage.from_processes`). `crowsnest lineage` is where a person</span>
+</span><span data-line="644">            <span class="c1"># goes to ask, and it still asks.</span>
+</span><span data-line="645">            <span class="s2">"lineage"</span><span class="p">:</span> <span class="n">lineage</span><span class="p">(</span>
+</span><span data-line="646">                <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="647">                <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="648">                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="649">                <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
+</span><span data-line="650">                <span class="n">sessions_read</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">"sessions"</span><span class="p">],</span>
+</span><span data-line="651">                <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span><span class="p">:</span> <span class="n">_from_records</span><span class="p">(</span><span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)],</span>
+</span><span data-line="652">            <span class="p">),</span>
+</span><span data-line="653">        <span class="p">}</span>
+</span><span data-line="654">    <span class="n">html</span> <span class="o">=</span> <span class="n">render_report</span><span class="p">(</span>
+</span><span data-line="655">        <span class="n">data</span><span class="p">,</span>
+</span><span data-line="656">        <span class="n">made_at</span><span class="o">=</span><span class="n">made_at</span><span class="p">,</span>
+</span><span data-line="657">        <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+</span><span data-line="658">        <span class="n">fragment</span><span class="o">=</span><span class="n">fragment</span><span class="p">,</span>
+</span><span data-line="659">        <span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span><span class="p">,</span>
+</span><span data-line="660">        <span class="n">tz</span><span class="o">=</span><span class="n">tz</span><span class="p">,</span>
+</span><span data-line="661">        <span class="n">stale_after</span><span class="o">=</span><span class="n">stale_after</span><span class="p">,</span>
+</span><span data-line="662">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="663">        <span class="n">plain</span><span class="o">=</span><span class="n">plain</span><span class="p">,</span>
+</span><span data-line="664">        <span class="n">row_context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
+</span><span data-line="665">        <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+</span><span data-line="666">        <span class="n">attention_settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+</span><span data-line="667">    <span class="p">)</span>
+</span><span data-line="668">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="669">        <span class="s2">"html"</span><span class="p">:</span> <span class="n">html</span><span class="p">,</span>
+</span><span data-line="670">        <span class="s2">"made_at"</span><span class="p">:</span> <span class="n">made_at</span><span class="p">,</span>
+</span><span data-line="671">        <span class="s2">"fragment"</span><span class="p">:</span> <span class="n">fragment</span><span class="p">,</span>
+</span><span data-line="672">        <span class="s2">"interactive"</span><span class="p">:</span> <span class="n">interactive</span><span class="p">,</span>
+</span><span data-line="673">    <span class="p">}</span></div>
 
-</span><span data-line="663">
-</span><span data-line="664">
+</span><span data-line="674">
+</span><span data-line="675">
 <div class="viewcode-block" id="lineage">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.lineage">[docs]</a>
-</span><span data-line="665"><span class="k">def</span><span class="w"> </span><span class="nf">lineage</span><span class="p">(</span>
-</span><span data-line="666">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="667">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="668">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="669">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="670">    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="671">    <span class="n">sources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="672">    <span class="n">extra_edges</span><span class="o">=</span><span class="p">(),</span>
-</span><span data-line="673">    <span class="n">sessions_read</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="674"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="675"><span class="w">    </span><span class="sd">"""Who started whom: the live sessions as a forest of ``parent -&gt; child`` edges.</span>
-</span><span data-line="676">
-</span><span data-line="677"><span class="sd">    :func:`crowsnest.lineage.graph` over the same sessions :func:`roster` reports, read</span>
-</span><span data-line="678"><span class="sd">    from the cheap sources only (the ``spawn`` lines crowsnest wrote, and what the process</span>
-</span><span data-line="679"><span class="sd">    table still shows). A fleet whose dispatcher has exited keeps its shape: the parent</span>
-</span><span data-line="680"><span class="sd">    comes back as a node with ``alive`` false, and its children are listed in ``orphans``.</span>
-</span><span data-line="681">
-</span><span data-line="682"><span class="sd">    ``sources`` is :func:`crowsnest.lineage.graph`'s seam, carried through to here so that</span>
-</span><span data-line="683"><span class="sd">    a surface can reach it without anything in this module changing -- a reader for</span>
-</span><span data-line="684"><span class="sd">    another host's sessions is added by passing it, not by editing this function.</span>
-</span><span data-line="685"><span class="sd">    ``extra_edges`` are edges to consider alongside whatever the sources find, which is</span>
-</span><span data-line="686"><span class="sd">    how :func:`backfill_lineage` shows a forest including what it has not written yet.</span>
+</span><span data-line="676"><span class="k">def</span><span class="w"> </span><span class="nf">lineage</span><span class="p">(</span>
+</span><span data-line="677">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="678">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="679">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="680">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="681">    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="682">    <span class="n">sources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="683">    <span class="n">extra_edges</span><span class="o">=</span><span class="p">(),</span>
+</span><span data-line="684">    <span class="n">sessions_read</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="685"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="686"><span class="w">    </span><span class="sd">"""Who started whom: the live sessions as a forest of ``parent -&gt; child`` edges.</span>
 </span><span data-line="687">
-</span><span data-line="688"><span class="sd">    Run :func:`backfill_lineage` once on a machine that has been running sessions since</span>
-</span><span data-line="689"><span class="sd">    before crowsnest recorded parents, or this answers with the edges of today only.</span>
-</span><span data-line="690"><span class="sd">    """</span>
-</span><span data-line="691">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">dflt_sources</span>
-</span><span data-line="692">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph</span> <span class="k">as</span> <span class="n">_graph</span>
-</span><span data-line="693">
-</span><span data-line="694">    <span class="n">rows</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="695">        <span class="nb">list</span><span class="p">(</span><span class="n">sessions_read</span><span class="p">)</span>
-</span><span data-line="696">        <span class="k">if</span> <span class="n">sessions_read</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="697">        <span class="k">else</span> <span class="p">[</span>
-</span><span data-line="698">            <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="699">        <span class="p">]</span>
-</span><span data-line="700">    <span class="p">)</span>
-</span><span data-line="701">    <span class="n">readers</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="702">        <span class="n">dflt_sources</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span> <span class="n">sessions</span><span class="o">=</span><span class="n">rows</span><span class="p">)</span>
-</span><span data-line="703">        <span class="k">if</span> <span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span>
-</span><span data-line="704">        <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
-</span><span data-line="705">    <span class="p">)</span>
-</span><span data-line="706">    <span class="k">if</span> <span class="n">extra_edges</span><span class="p">:</span>
-</span><span data-line="707">        <span class="n">readers</span> <span class="o">=</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">edges</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">extra_edges</span><span class="p">):</span> <span class="nb">list</span><span class="p">(</span><span class="n">edges</span><span class="p">),</span> <span class="o">*</span><span class="n">readers</span><span class="p">]</span>
-</span><span data-line="708">    <span class="k">return</span> <span class="n">_graph</span><span class="p">(</span><span class="n">sessions</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="n">readers</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span></div>
+</span><span data-line="688"><span class="sd">    :func:`crowsnest.lineage.graph` over the same sessions :func:`roster` reports, read</span>
+</span><span data-line="689"><span class="sd">    from the cheap sources only (the ``spawn`` lines crowsnest wrote, and what the process</span>
+</span><span data-line="690"><span class="sd">    table still shows). A fleet whose dispatcher has exited keeps its shape: the parent</span>
+</span><span data-line="691"><span class="sd">    comes back as a node with ``alive`` false, and its children are listed in ``orphans``.</span>
+</span><span data-line="692">
+</span><span data-line="693"><span class="sd">    ``sources`` is :func:`crowsnest.lineage.graph`'s seam, carried through to here so that</span>
+</span><span data-line="694"><span class="sd">    a surface can reach it without anything in this module changing -- a reader for</span>
+</span><span data-line="695"><span class="sd">    another host's sessions is added by passing it, not by editing this function.</span>
+</span><span data-line="696"><span class="sd">    ``extra_edges`` are edges to consider alongside whatever the sources find, which is</span>
+</span><span data-line="697"><span class="sd">    how :func:`backfill_lineage` shows a forest including what it has not written yet.</span>
+</span><span data-line="698">
+</span><span data-line="699"><span class="sd">    Run :func:`backfill_lineage` once on a machine that has been running sessions since</span>
+</span><span data-line="700"><span class="sd">    before crowsnest recorded parents, or this answers with the edges of today only.</span>
+</span><span data-line="701"><span class="sd">    """</span>
+</span><span data-line="702">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">dflt_sources</span>
+</span><span data-line="703">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph</span> <span class="k">as</span> <span class="n">_graph</span>
+</span><span data-line="704">
+</span><span data-line="705">    <span class="n">rows</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="706">        <span class="nb">list</span><span class="p">(</span><span class="n">sessions_read</span><span class="p">)</span>
+</span><span data-line="707">        <span class="k">if</span> <span class="n">sessions_read</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="708">        <span class="k">else</span> <span class="p">[</span>
+</span><span data-line="709">            <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="710">        <span class="p">]</span>
+</span><span data-line="711">    <span class="p">)</span>
+</span><span data-line="712">    <span class="n">readers</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="713">        <span class="n">dflt_sources</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span> <span class="n">sessions</span><span class="o">=</span><span class="n">rows</span><span class="p">)</span>
+</span><span data-line="714">        <span class="k">if</span> <span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="715">        <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
+</span><span data-line="716">    <span class="p">)</span>
+</span><span data-line="717">    <span class="k">if</span> <span class="n">extra_edges</span><span class="p">:</span>
+</span><span data-line="718">        <span class="n">readers</span> <span class="o">=</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">edges</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">extra_edges</span><span class="p">):</span> <span class="nb">list</span><span class="p">(</span><span class="n">edges</span><span class="p">),</span> <span class="o">*</span><span class="n">readers</span><span class="p">]</span>
+</span><span data-line="719">    <span class="k">return</span> <span class="n">_graph</span><span class="p">(</span><span class="n">sessions</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="n">readers</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span></div>
 
-</span><span data-line="709">
-</span><span data-line="710">
+</span><span data-line="720">
+</span><span data-line="721">
 <div class="viewcode-block" id="backfill_lineage">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.backfill_lineage">[docs]</a>
-</span><span data-line="711"><span class="k">def</span><span class="w"> </span><span class="nf">backfill_lineage</span><span class="p">(</span>
-</span><span data-line="712">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="713">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="714">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="715">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="716">    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="717">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="718">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="719">    <span class="n">write</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="720"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="721"><span class="w">    </span><span class="sd">"""Recover parentage from transcripts, once, and write it into the lineage log.</span>
-</span><span data-line="722">
-</span><span data-line="723"><span class="sd">    Every ``crowsnest spawn &lt;name&gt;`` a session ever *ran* is still in that session's</span>
-</span><span data-line="724"><span class="sd">    transcript, which is enough to give a machine that has been running for weeks a graph</span>
-</span><span data-line="725"><span class="sd">    on the first report instead of an empty one. It is inference -- the command may have</span>
-</span><span data-line="726"><span class="sd">    failed -- so every edge is written marked ``inferred`` and is drawn as a guess, never</span>
-</span><span data-line="727"><span class="sd">    as a record.</span>
-</span><span data-line="728">
-</span><span data-line="729"><span class="sd">    Three guards keep it honest. The command must be the head of a shell segment, so a</span>
-</span><span data-line="730"><span class="sd">    ``grep`` for the phrase or a commit message about it is not a spawn. A name is only</span>
-</span><span data-line="731"><span class="sd">    taken when something else on the machine also knows it -- a live session, a ledger, or</span>
-</span><span data-line="732"><span class="sd">    a name either log has used. And a child that already has a *recorded* edge is left</span>
-</span><span data-line="733"><span class="sd">    alone: the backfill may fill gaps, never overwrite what was witnessed.</span>
-</span><span data-line="734">
-</span><span data-line="735"><span class="sd">    ``write=False`` writes nothing, and the ``graph`` it returns then includes the edges it</span>
-</span><span data-line="736"><span class="sd">    would have added -- a dry run whose picture did not show them would be answering a</span>
-</span><span data-line="737"><span class="sd">    different question from the one that was asked. Returns</span>
-</span><span data-line="738"><span class="sd">    ``{"found", "added", "skipped", "edges", "graph"}``.</span>
-</span><span data-line="739"><span class="sd">    """</span>
-</span><span data-line="740">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span data-line="741">        <span class="n">append_edge</span> <span class="k">as</span> <span class="n">_append_edge</span><span class="p">,</span>
-</span><span data-line="742">    <span class="p">)</span>
-</span><span data-line="743">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span data-line="744">        <span class="n">from_records</span> <span class="k">as</span> <span class="n">_from_records</span><span class="p">,</span>
-</span><span data-line="745">    <span class="p">)</span>
-</span><span data-line="746">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span data-line="747">        <span class="n">from_transcripts</span> <span class="k">as</span> <span class="n">_from_transcripts</span><span class="p">,</span>
-</span><span data-line="748">    <span class="p">)</span>
-</span><span data-line="749">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span data-line="750">        <span class="n">names_by_session_id</span> <span class="k">as</span> <span class="n">_names_by_id</span><span class="p">,</span>
-</span><span data-line="751">    <span class="p">)</span>
-</span><span data-line="752">
-</span><span data-line="753">    <span class="n">live</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)}</span>
-</span><span data-line="754">    <span class="n">by_id</span> <span class="o">=</span> <span class="n">_names_by_id</span><span class="p">(</span><span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
-</span><span data-line="755">    <span class="n">known</span> <span class="o">=</span> <span class="n">live</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">by_id</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">|</span> <span class="n">_ledger_names</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">)</span>
-</span><span data-line="756">    <span class="n">recorded</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">child</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">_from_records</span><span class="p">(</span><span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)}</span>
-</span><span data-line="757">    <span class="n">found</span> <span class="o">=</span> <span class="n">_from_transcripts</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">known</span><span class="o">=</span><span class="n">known</span><span class="p">)</span>
-</span><span data-line="758">    <span class="n">added</span><span class="p">,</span> <span class="n">pending</span><span class="p">,</span> <span class="n">skipped</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-</span><span data-line="759">    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
-</span><span data-line="760">        <span class="n">parent</span> <span class="o">=</span> <span class="n">by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">parent_session_id</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="761">        <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span> <span class="ow">or</span> <span class="n">parent</span> <span class="o">==</span> <span class="n">edge</span><span class="o">.</span><span class="n">child</span> <span class="ow">or</span> <span class="n">edge</span><span class="o">.</span><span class="n">child</span> <span class="ow">in</span> <span class="n">recorded</span><span class="p">:</span>
-</span><span data-line="762">            <span class="n">skipped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
-</span><span data-line="763">            <span class="k">continue</span>
-</span><span data-line="764">        <span class="n">recorded</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">child</span><span class="p">)</span>
-</span><span data-line="765">        <span class="n">named</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
-</span><span data-line="766">        <span class="k">if</span> <span class="n">write</span><span class="p">:</span>
-</span><span data-line="767">            <span class="n">_append_edge</span><span class="p">(</span><span class="n">named</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
-</span><span data-line="768">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="769">            <span class="n">pending</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">named</span><span class="p">)</span>
-</span><span data-line="770">        <span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">named</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
-</span><span data-line="771">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="772">        <span class="s2">"found"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">),</span>
-</span><span data-line="773">        <span class="s2">"added"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">added</span><span class="p">),</span>
-</span><span data-line="774">        <span class="s2">"skipped"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">skipped</span><span class="p">),</span>
-</span><span data-line="775">        <span class="s2">"edges"</span><span class="p">:</span> <span class="n">added</span><span class="p">,</span>
-</span><span data-line="776">        <span class="s2">"graph"</span><span class="p">:</span> <span class="n">lineage</span><span class="p">(</span>
-</span><span data-line="777">            <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="778">            <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="779">            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="780">            <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
-</span><span data-line="781">            <span class="n">extra_edges</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span>
-</span><span data-line="782">        <span class="p">),</span>
-</span><span data-line="783">    <span class="p">}</span></div>
+</span><span data-line="722"><span class="k">def</span><span class="w"> </span><span class="nf">backfill_lineage</span><span class="p">(</span>
+</span><span data-line="723">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="724">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="725">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="726">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="727">    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="728">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="729">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="730">    <span class="n">write</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="731"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="732"><span class="w">    </span><span class="sd">"""Recover parentage from transcripts, once, and write it into the lineage log.</span>
+</span><span data-line="733">
+</span><span data-line="734"><span class="sd">    Every ``crowsnest spawn &lt;name&gt;`` a session ever *ran* is still in that session's</span>
+</span><span data-line="735"><span class="sd">    transcript, which is enough to give a machine that has been running for weeks a graph</span>
+</span><span data-line="736"><span class="sd">    on the first report instead of an empty one. It is inference -- the command may have</span>
+</span><span data-line="737"><span class="sd">    failed -- so every edge is written marked ``inferred`` and is drawn as a guess, never</span>
+</span><span data-line="738"><span class="sd">    as a record.</span>
+</span><span data-line="739">
+</span><span data-line="740"><span class="sd">    Three guards keep it honest. The command must be the head of a shell segment, so a</span>
+</span><span data-line="741"><span class="sd">    ``grep`` for the phrase or a commit message about it is not a spawn. A name is only</span>
+</span><span data-line="742"><span class="sd">    taken when something else on the machine also knows it -- a live session, a ledger, or</span>
+</span><span data-line="743"><span class="sd">    a name either log has used. And a child that already has a *recorded* edge is left</span>
+</span><span data-line="744"><span class="sd">    alone: the backfill may fill gaps, never overwrite what was witnessed.</span>
+</span><span data-line="745">
+</span><span data-line="746"><span class="sd">    ``write=False`` writes nothing, and the ``graph`` it returns then includes the edges it</span>
+</span><span data-line="747"><span class="sd">    would have added -- a dry run whose picture did not show them would be answering a</span>
+</span><span data-line="748"><span class="sd">    different question from the one that was asked. Returns</span>
+</span><span data-line="749"><span class="sd">    ``{"found", "added", "skipped", "edges", "graph"}``.</span>
+</span><span data-line="750"><span class="sd">    """</span>
+</span><span data-line="751">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span data-line="752">        <span class="n">append_edge</span> <span class="k">as</span> <span class="n">_append_edge</span><span class="p">,</span>
+</span><span data-line="753">    <span class="p">)</span>
+</span><span data-line="754">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span data-line="755">        <span class="n">from_records</span> <span class="k">as</span> <span class="n">_from_records</span><span class="p">,</span>
+</span><span data-line="756">    <span class="p">)</span>
+</span><span data-line="757">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span data-line="758">        <span class="n">from_transcripts</span> <span class="k">as</span> <span class="n">_from_transcripts</span><span class="p">,</span>
+</span><span data-line="759">    <span class="p">)</span>
+</span><span data-line="760">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span data-line="761">        <span class="n">names_by_session_id</span> <span class="k">as</span> <span class="n">_names_by_id</span><span class="p">,</span>
+</span><span data-line="762">    <span class="p">)</span>
+</span><span data-line="763">
+</span><span data-line="764">    <span class="n">live</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)}</span>
+</span><span data-line="765">    <span class="n">by_id</span> <span class="o">=</span> <span class="n">_names_by_id</span><span class="p">(</span><span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
+</span><span data-line="766">    <span class="n">known</span> <span class="o">=</span> <span class="n">live</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">by_id</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">|</span> <span class="n">_ledger_names</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">)</span>
+</span><span data-line="767">    <span class="n">recorded</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="n">child</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">_from_records</span><span class="p">(</span><span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)}</span>
+</span><span data-line="768">    <span class="n">found</span> <span class="o">=</span> <span class="n">_from_transcripts</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">known</span><span class="o">=</span><span class="n">known</span><span class="p">)</span>
+</span><span data-line="769">    <span class="n">added</span><span class="p">,</span> <span class="n">pending</span><span class="p">,</span> <span class="n">skipped</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+</span><span data-line="770">    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+</span><span data-line="771">        <span class="n">parent</span> <span class="o">=</span> <span class="n">by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">parent_session_id</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="772">        <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span> <span class="ow">or</span> <span class="n">parent</span> <span class="o">==</span> <span class="n">edge</span><span class="o">.</span><span class="n">child</span> <span class="ow">or</span> <span class="n">edge</span><span class="o">.</span><span class="n">child</span> <span class="ow">in</span> <span class="n">recorded</span><span class="p">:</span>
+</span><span data-line="773">            <span class="n">skipped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
+</span><span data-line="774">            <span class="k">continue</span>
+</span><span data-line="775">        <span class="n">recorded</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">child</span><span class="p">)</span>
+</span><span data-line="776">        <span class="n">named</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+</span><span data-line="777">        <span class="k">if</span> <span class="n">write</span><span class="p">:</span>
+</span><span data-line="778">            <span class="n">_append_edge</span><span class="p">(</span><span class="n">named</span><span class="p">,</span> <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">)</span>
+</span><span data-line="779">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="780">            <span class="n">pending</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">named</span><span class="p">)</span>
+</span><span data-line="781">        <span class="n">added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">named</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
+</span><span data-line="782">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="783">        <span class="s2">"found"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">),</span>
+</span><span data-line="784">        <span class="s2">"added"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">added</span><span class="p">),</span>
+</span><span data-line="785">        <span class="s2">"skipped"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">skipped</span><span class="p">),</span>
+</span><span data-line="786">        <span class="s2">"edges"</span><span class="p">:</span> <span class="n">added</span><span class="p">,</span>
+</span><span data-line="787">        <span class="s2">"graph"</span><span class="p">:</span> <span class="n">lineage</span><span class="p">(</span>
+</span><span data-line="788">            <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="789">            <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="790">            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="791">            <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
+</span><span data-line="792">            <span class="n">extra_edges</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span>
+</span><span data-line="793">        <span class="p">),</span>
+</span><span data-line="794">    <span class="p">}</span></div>
 
-</span><span data-line="784">
-</span><span data-line="785">
-</span><span data-line="786"><span class="k">def</span><span class="w"> </span><span class="nf">_ledger_names</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="787"><span class="w">    </span><span class="sd">"""Every name that has a ledger -- the machine's memory of sessions that have exited."""</span>
-</span><span data-line="788">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.ledger</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_ledgers</span>
-</span><span data-line="789">
-</span><span data-line="790">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="791">        <span class="k">return</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"name"</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">list_ledgers</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)}</span>
-</span><span data-line="792">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-</span><span data-line="793">        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
-</span><span data-line="794">
 </span><span data-line="795">
-</span><span data-line="796"><span class="k">def</span><span class="w"> </span><span class="nf">_attend</span><span class="p">(</span>
-</span><span data-line="797">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="798">    <span class="n">step</span><span class="p">,</span>
-</span><span data-line="799">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="800">    <span class="n">home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="801">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="802">    <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="803">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="804">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="805"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="806"><span class="w">    </span><span class="sd">"""Apply ``step(record, rev, seen_as)`` to ``session``'s attention record and store it.</span>
-</span><span data-line="807">
-</span><span data-line="808"><span class="sd">    The row is the one :func:`report` shows for ``session``, built and hashed by</span>
-</span><span data-line="809"><span class="sd">    ``row_context`` (:class:`crowsnest.rows.RowContext`; by default the config file's), so</span>
-</span><span data-line="810"><span class="sd">    the record is pinned to the revision the page computes. ``seen_as`` is</span>
-</span><span data-line="811"><span class="sd">    :func:`crowsnest.attention.seen_as_of` that row, for the steps that pin a revision to</span>
-</span><span data-line="812"><span class="sd">    keep beside it (#73).</span>
-</span><span data-line="813"><span class="sd">    """</span>
-</span><span data-line="814">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">attention</span> <span class="k">as</span> <span class="n">_attention</span>
-</span><span data-line="815">
-</span><span data-line="816">    <span class="n">ctx</span> <span class="o">=</span> <span class="n">dflt_row_context</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">row_context</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">row_context</span>
-</span><span data-line="817">    <span class="n">row</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="818">    <span class="n">item</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-</span><span data-line="819">    <span class="n">rev</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">rev</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-</span><span data-line="820">    <span class="c1"># `watch.attention_wakes` rebuilds this row from the store alone, to say a `later`</span>
-</span><span data-line="821">    <span class="c1"># item woke -- and an item id cannot be inverted back to a session id, so it is kept</span>
-</span><span data-line="822">    <span class="c1"># here, in the one place every attention verb already writes.</span>
-</span><span data-line="823">    <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="824">    <span class="n">ext</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">}</span> <span class="k">if</span> <span class="n">session_id</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="825">    <span class="n">was</span> <span class="o">=</span> <span class="n">_attention</span><span class="o">.</span><span class="n">seen_as_of</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-</span><span data-line="826">    <span class="k">return</span> <span class="n">_attention</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-</span><span data-line="827">        <span class="n">item</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">step</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">),</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="n">ext</span>
-</span><span data-line="828">    <span class="p">)</span>
-</span><span data-line="829">
-</span><span data-line="830">
-</span><span data-line="831"><span class="c1"># The attention verbs. Each takes a session reference the way `resolve` does, reads the</span>
-</span><span data-line="832"><span class="c1"># row the report would show for it, and returns the stored document. `row_context` builds</span>
-</span><span data-line="833"><span class="c1"># and hashes that row (`crowsnest.rows.RowContext`), so it must be the report's; by default</span>
-</span><span data-line="834"><span class="c1"># both read it from the config file. `store` is where the record lives (default: one JSON</span>
-</span><span data-line="835"><span class="c1"># file per item under the data directory).</span>
-</span><span data-line="836">
-</span><span data-line="837">
+</span><span data-line="796">
+</span><span data-line="797"><span class="k">def</span><span class="w"> </span><span class="nf">_ledger_names</span><span class="p">(</span><span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="798"><span class="w">    </span><span class="sd">"""Every name that has a ledger -- the machine's memory of sessions that have exited."""</span>
+</span><span data-line="799">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.ledger</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_ledgers</span>
+</span><span data-line="800">
+</span><span data-line="801">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="802">        <span class="k">return</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"name"</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">list_ledgers</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)}</span>
+</span><span data-line="803">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="804">        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+</span><span data-line="805">
+</span><span data-line="806">
+</span><span data-line="807"><span class="k">def</span><span class="w"> </span><span class="nf">_attend</span><span class="p">(</span>
+</span><span data-line="808">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="809">    <span class="n">step</span><span class="p">,</span>
+</span><span data-line="810">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="811">    <span class="n">home</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="812">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="813">    <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="814">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="815">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="816"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="817"><span class="w">    </span><span class="sd">"""Apply ``step(record, rev, seen_as)`` to ``session``'s attention record and store it.</span>
+</span><span data-line="818">
+</span><span data-line="819"><span class="sd">    The row is the one :func:`report` shows for ``session``, built and hashed by</span>
+</span><span data-line="820"><span class="sd">    ``row_context`` (:class:`crowsnest.rows.RowContext`; by default the config file's), so</span>
+</span><span data-line="821"><span class="sd">    the record is pinned to the revision the page computes. ``seen_as`` is</span>
+</span><span data-line="822"><span class="sd">    :func:`crowsnest.attention.seen_as_of` that row, for the steps that pin a revision to</span>
+</span><span data-line="823"><span class="sd">    keep beside it (#73).</span>
+</span><span data-line="824"><span class="sd">    """</span>
+</span><span data-line="825">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">attention</span> <span class="k">as</span> <span class="n">_attention</span>
+</span><span data-line="826">
+</span><span data-line="827">    <span class="n">ctx</span> <span class="o">=</span> <span class="n">dflt_row_context</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">row_context</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">row_context</span>
+</span><span data-line="828">    <span class="n">row</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="829">    <span class="n">item</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span><span data-line="830">    <span class="n">rev</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">rev</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span><span data-line="831">    <span class="c1"># `watch.attention_wakes` rebuilds this row from the store alone, to say a `later`</span>
+</span><span data-line="832">    <span class="c1"># item woke -- and an item id cannot be inverted back to a session id, so it is kept</span>
+</span><span data-line="833">    <span class="c1"># here, in the one place every attention verb already writes.</span>
+</span><span data-line="834">    <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="835">    <span class="n">ext</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">}</span> <span class="k">if</span> <span class="n">session_id</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="836">    <span class="n">was</span> <span class="o">=</span> <span class="n">_attention</span><span class="o">.</span><span class="n">seen_as_of</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span><span data-line="837">    <span class="k">return</span> <span class="n">_attention</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+</span><span data-line="838">        <span class="n">item</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">step</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">),</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="n">ext</span>
+</span><span data-line="839">    <span class="p">)</span>
+</span><span data-line="840">
+</span><span data-line="841">
+</span><span data-line="842"><span class="c1"># The attention verbs. Each takes a session reference the way `resolve` does, reads the</span>
+</span><span data-line="843"><span class="c1"># row the report would show for it, and returns the stored document. `row_context` builds</span>
+</span><span data-line="844"><span class="c1"># and hashes that row (`crowsnest.rows.RowContext`), so it must be the report's; by default</span>
+</span><span data-line="845"><span class="c1"># both read it from the config file. `store` is where the record lives (default: one JSON</span>
+</span><span data-line="846"><span class="c1"># file per item under the data directory).</span>
+</span><span data-line="847">
+</span><span data-line="848">
 <div class="viewcode-block" id="seen">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.seen">[docs]</a>
-</span><span data-line="838"><span class="k">def</span><span class="w"> </span><span class="nf">seen</span><span class="p">(</span>
-</span><span data-line="839">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="840">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="841">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="842">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="843">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="844">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="845">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="846"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="847"><span class="w">    </span><span class="sd">"""Mark ``session``'s item seen at its current revision: it dims until it changes."""</span>
-</span><span data-line="848">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">seen</span> <span class="k">as</span> <span class="n">_seen</span>
-</span><span data-line="849">
-</span><span data-line="850">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="851">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="852">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_seen</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">seen_as</span><span class="o">=</span><span class="n">was</span><span class="p">),</span>
-</span><span data-line="853">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="854">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="855">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="856">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
-</span><span data-line="857">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="858">    <span class="p">)</span></div>
-
-</span><span data-line="859">
+</span><span data-line="849"><span class="k">def</span><span class="w"> </span><span class="nf">seen</span><span class="p">(</span>
+</span><span data-line="850">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="851">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="852">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="853">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="854">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="855">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="856">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="857"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="858"><span class="w">    </span><span class="sd">"""Mark ``session``'s item seen at its current revision: it dims until it changes."""</span>
+</span><span data-line="859">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">seen</span> <span class="k">as</span> <span class="n">_seen</span>
 </span><span data-line="860">
+</span><span data-line="861">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="862">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="863">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_seen</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">seen_as</span><span class="o">=</span><span class="n">was</span><span class="p">),</span>
+</span><span data-line="864">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="865">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="866">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="867">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
+</span><span data-line="868">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="869">    <span class="p">)</span></div>
+
+</span><span data-line="870">
+</span><span data-line="871">
 <div class="viewcode-block" id="unseen">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.unseen">[docs]</a>
-</span><span data-line="861"><span class="k">def</span><span class="w"> </span><span class="nf">unseen</span><span class="p">(</span>
-</span><span data-line="862">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="863">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="864">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="865">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="866">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="867">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="868">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="869"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="870"><span class="w">    </span><span class="sd">"""Mark ``session``'s item unread: it shows as new again."""</span>
-</span><span data-line="871">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">unseen</span> <span class="k">as</span> <span class="n">_unseen</span>
-</span><span data-line="872">
-</span><span data-line="873">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="874">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="875">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_unseen</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
-</span><span data-line="876">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="877">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="878">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="879">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
-</span><span data-line="880">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="881">    <span class="p">)</span></div>
-
-</span><span data-line="882">
+</span><span data-line="872"><span class="k">def</span><span class="w"> </span><span class="nf">unseen</span><span class="p">(</span>
+</span><span data-line="873">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="874">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="875">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="876">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="877">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="878">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="879">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="880"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="881"><span class="w">    </span><span class="sd">"""Mark ``session``'s item unread: it shows as new again."""</span>
+</span><span data-line="882">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">unseen</span> <span class="k">as</span> <span class="n">_unseen</span>
 </span><span data-line="883">
+</span><span data-line="884">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="885">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="886">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_unseen</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
+</span><span data-line="887">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="888">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="889">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="890">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
+</span><span data-line="891">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="892">    <span class="p">)</span></div>
+
+</span><span data-line="893">
+</span><span data-line="894">
 <div class="viewcode-block" id="later">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.later">[docs]</a>
-</span><span data-line="884"><span class="k">def</span><span class="w"> </span><span class="nf">later</span><span class="p">(</span>
-</span><span data-line="885">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="886">    <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="887">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="888">    <span class="n">plan</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="889">    <span class="n">on_change</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="890">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="891">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="892">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="893">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="894">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="895"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="896"><span class="w">    </span><span class="sd">"""Put ``session``'s item off until a preset time, or until it changes, whichever first.</span>
-</span><span data-line="897">
-</span><span data-line="898"><span class="sd">    ``preset`` is one of :data:`crowsnest.attention.PRESETS` -- ``1h``, ``evening``,</span>
-</span><span data-line="899"><span class="sd">    ``tomorrow``, ``change`` -- with the hours from the config file's ``[attention]``</span>
-</span><span data-line="900"><span class="sd">    table. ``plan`` is the optional one-line next step; ``on_change=False`` keeps it asleep</span>
-</span><span data-line="901"><span class="sd">    through changes, which ``change`` (no time at all) refuses.</span>
-</span><span data-line="902"><span class="sd">    """</span>
-</span><span data-line="903">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">later</span> <span class="k">as</span> <span class="n">_later</span>
-</span><span data-line="904">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">later_until</span>
-</span><span data-line="905">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">attention_settings</span>
-</span><span data-line="906">
-</span><span data-line="907">    <span class="n">until</span> <span class="o">=</span> <span class="n">later_until</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">attention_settings</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">))</span>
-</span><span data-line="908">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="909">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="910">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_later</span><span class="p">(</span>
-</span><span data-line="911">            <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">until</span><span class="o">=</span><span class="n">until</span><span class="p">,</span> <span class="n">on_change</span><span class="o">=</span><span class="n">on_change</span><span class="p">,</span> <span class="n">plan</span><span class="o">=</span><span class="n">plan</span><span class="p">,</span> <span class="n">seen_as</span><span class="o">=</span><span class="n">was</span>
-</span><span data-line="912">        <span class="p">),</span>
-</span><span data-line="913">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="914">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="915">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="916">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
-</span><span data-line="917">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="918">    <span class="p">)</span></div>
+</span><span data-line="895"><span class="k">def</span><span class="w"> </span><span class="nf">later</span><span class="p">(</span>
+</span><span data-line="896">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="897">    <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="898">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="899">    <span class="n">plan</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="900">    <span class="n">on_change</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="901">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="902">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="903">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="904">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="905">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="906"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="907"><span class="w">    </span><span class="sd">"""Put ``session``'s item off until a preset time, or until it changes, whichever first.</span>
+</span><span data-line="908">
+</span><span data-line="909"><span class="sd">    ``preset`` is one of :data:`crowsnest.attention.PRESETS` -- ``1h``, ``evening``,</span>
+</span><span data-line="910"><span class="sd">    ``tomorrow``, ``change`` -- with the hours from the config file's ``[attention]``</span>
+</span><span data-line="911"><span class="sd">    table. ``plan`` is the optional one-line next step; ``on_change=False`` keeps it asleep</span>
+</span><span data-line="912"><span class="sd">    through changes, which ``change`` (no time at all) refuses.</span>
+</span><span data-line="913"><span class="sd">    """</span>
+</span><span data-line="914">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">later</span> <span class="k">as</span> <span class="n">_later</span>
+</span><span data-line="915">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">later_until</span>
+</span><span data-line="916">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">attention_settings</span>
+</span><span data-line="917">
+</span><span data-line="918">    <span class="n">until</span> <span class="o">=</span> <span class="n">later_until</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">attention_settings</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">))</span>
+</span><span data-line="919">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="920">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="921">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_later</span><span class="p">(</span>
+</span><span data-line="922">            <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">until</span><span class="o">=</span><span class="n">until</span><span class="p">,</span> <span class="n">on_change</span><span class="o">=</span><span class="n">on_change</span><span class="p">,</span> <span class="n">plan</span><span class="o">=</span><span class="n">plan</span><span class="p">,</span> <span class="n">seen_as</span><span class="o">=</span><span class="n">was</span>
+</span><span data-line="923">        <span class="p">),</span>
+</span><span data-line="924">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="925">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="926">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="927">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
+</span><span data-line="928">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="929">    <span class="p">)</span></div>
 
-</span><span data-line="919">
-</span><span data-line="920">
+</span><span data-line="930">
+</span><span data-line="931">
 <div class="viewcode-block" id="done">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.done">[docs]</a>
-</span><span data-line="921"><span class="k">def</span><span class="w"> </span><span class="nf">done</span><span class="p">(</span>
-</span><span data-line="922">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="923">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="924">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="925">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="926">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="927">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="928">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="929"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="930"><span class="w">    </span><span class="sd">"""Mark ``session``'s item handled: hidden until what it asks for changes."""</span>
-</span><span data-line="931">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">done</span> <span class="k">as</span> <span class="n">_done</span>
-</span><span data-line="932">
-</span><span data-line="933">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="934">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="935">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_done</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">seen_as</span><span class="o">=</span><span class="n">was</span><span class="p">),</span>
-</span><span data-line="936">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="937">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="938">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="939">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
-</span><span data-line="940">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="941">    <span class="p">)</span></div>
-
-</span><span data-line="942">
+</span><span data-line="932"><span class="k">def</span><span class="w"> </span><span class="nf">done</span><span class="p">(</span>
+</span><span data-line="933">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="934">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="935">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="936">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="937">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="938">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="939">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="940"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="941"><span class="w">    </span><span class="sd">"""Mark ``session``'s item handled: hidden until what it asks for changes."""</span>
+</span><span data-line="942">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">done</span> <span class="k">as</span> <span class="n">_done</span>
 </span><span data-line="943">
+</span><span data-line="944">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="945">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="946">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_done</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">seen_as</span><span class="o">=</span><span class="n">was</span><span class="p">),</span>
+</span><span data-line="947">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="948">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="949">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="950">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
+</span><span data-line="951">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="952">    <span class="p">)</span></div>
+
+</span><span data-line="953">
+</span><span data-line="954">
 <div class="viewcode-block" id="note">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.note">[docs]</a>
-</span><span data-line="944"><span class="k">def</span><span class="w"> </span><span class="nf">note</span><span class="p">(</span>
-</span><span data-line="945">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="946">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="947">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="948">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="949">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="950">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="951">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="952">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="953"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="954"><span class="w">    </span><span class="sd">"""Set the note on ``session``'s item; empty text removes it. Nothing reads a note as an</span>
-</span><span data-line="955"><span class="sd">    instruction."""</span>
-</span><span data-line="956">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">note</span> <span class="k">as</span> <span class="n">_note</span>
-</span><span data-line="957">
-</span><span data-line="958">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="959">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="960">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_note</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">text</span><span class="p">),</span>
-</span><span data-line="961">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="962">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="963">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="964">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
-</span><span data-line="965">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="966">    <span class="p">)</span></div>
-
-</span><span data-line="967">
+</span><span data-line="955"><span class="k">def</span><span class="w"> </span><span class="nf">note</span><span class="p">(</span>
+</span><span data-line="956">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="957">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="958">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="959">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="960">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="961">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="962">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="963">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="964"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="965"><span class="w">    </span><span class="sd">"""Set the note on ``session``'s item; empty text removes it. Nothing reads a note as an</span>
+</span><span data-line="966"><span class="sd">    instruction."""</span>
+</span><span data-line="967">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">note</span> <span class="k">as</span> <span class="n">_note</span>
 </span><span data-line="968">
+</span><span data-line="969">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="970">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="971">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_note</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">text</span><span class="p">),</span>
+</span><span data-line="972">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="973">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="974">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="975">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
+</span><span data-line="976">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="977">    <span class="p">)</span></div>
+
+</span><span data-line="978">
+</span><span data-line="979">
 <div class="viewcode-block" id="undo">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.undo">[docs]</a>
-</span><span data-line="969"><span class="k">def</span><span class="w"> </span><span class="nf">undo</span><span class="p">(</span>
-</span><span data-line="970">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="971">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="972">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="973">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="974">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="975">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="976">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="977"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="978"><span class="w">    </span><span class="sd">"""Restore ``session``'s attention record to before its last change. One level deep;</span>
-</span><span data-line="979"><span class="sd">    raises ``ValueError`` when there is nothing to undo."""</span>
-</span><span data-line="980">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">undo</span> <span class="k">as</span> <span class="n">_undo</span>
-</span><span data-line="981">
-</span><span data-line="982">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="983">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="984">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_undo</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
-</span><span data-line="985">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="986">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="987">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="988">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
-</span><span data-line="989">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="990">    <span class="p">)</span></div>
-
-</span><span data-line="991">
+</span><span data-line="980"><span class="k">def</span><span class="w"> </span><span class="nf">undo</span><span class="p">(</span>
+</span><span data-line="981">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="982">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="983">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="984">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="985">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="986">    <span class="n">row_context</span><span class="p">:</span> <span class="n">RowContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="987">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="988"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="989"><span class="w">    </span><span class="sd">"""Restore ``session``'s attention record to before its last change. One level deep;</span>
+</span><span data-line="990"><span class="sd">    raises ``ValueError`` when there is nothing to undo."""</span>
+</span><span data-line="991">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">undo</span> <span class="k">as</span> <span class="n">_undo</span>
 </span><span data-line="992">
+</span><span data-line="993">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="994">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="995">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">was</span><span class="p">:</span> <span class="n">_undo</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
+</span><span data-line="996">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="997">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="998">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="999">        <span class="n">row_context</span><span class="o">=</span><span class="n">row_context</span><span class="p">,</span>
+</span><span data-line="1000">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="1001">    <span class="p">)</span></div>
+
+</span><span data-line="1002">
+</span><span data-line="1003">
 <div class="viewcode-block" id="attention_export">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.attention_export">[docs]</a>
-</span><span data-line="993"><span class="k">def</span><span class="w"> </span><span class="nf">attention_export</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">since</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-</span><span data-line="994"><span class="w">    </span><span class="sd">"""Every attention record as its document, oldest change first; ``since`` (an ISO time</span>
-</span><span data-line="995"><span class="sd">    or date) keeps only those changed after it. The shape :func:`attention_import` reads.</span>
-</span><span data-line="996"><span class="sd">    """</span>
-</span><span data-line="997">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_docs</span>
-</span><span data-line="998">
-</span><span data-line="999">    <span class="k">return</span> <span class="n">export_docs</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span></div>
+</span><span data-line="1004"><span class="k">def</span><span class="w"> </span><span class="nf">attention_export</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">since</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="1005"><span class="w">    </span><span class="sd">"""Every attention record as its document, oldest change first; ``since`` (an ISO time</span>
+</span><span data-line="1006"><span class="sd">    or date) keeps only those changed after it. The shape :func:`attention_import` reads.</span>
+</span><span data-line="1007"><span class="sd">    """</span>
+</span><span data-line="1008">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_docs</span>
+</span><span data-line="1009">
+</span><span data-line="1010">    <span class="k">return</span> <span class="n">export_docs</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span></div>
 
-</span><span data-line="1000">
-</span><span data-line="1001">
+</span><span data-line="1011">
+</span><span data-line="1012">
 <div class="viewcode-block" id="attention_import">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.attention_import">[docs]</a>
-</span><span data-line="1002"><span class="k">def</span><span class="w"> </span><span class="nf">attention_import</span><span class="p">(</span><span class="n">docs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1003"><span class="w">    </span><span class="sd">"""Take attention documents into the store, last write winning by ``updated_at``.</span>
-</span><span data-line="1004">
-</span><span data-line="1005"><span class="sd">    All are checked before any is written. Returns ``{"written", "kept", "total"}``.</span>
-</span><span data-line="1006"><span class="sd">    """</span>
-</span><span data-line="1007">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_docs</span>
-</span><span data-line="1008">
-</span><span data-line="1009">    <span class="k">return</span> <span class="n">import_docs</span><span class="p">(</span><span class="n">docs</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span></div>
+</span><span data-line="1013"><span class="k">def</span><span class="w"> </span><span class="nf">attention_import</span><span class="p">(</span><span class="n">docs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1014"><span class="w">    </span><span class="sd">"""Take attention documents into the store, last write winning by ``updated_at``.</span>
+</span><span data-line="1015">
+</span><span data-line="1016"><span class="sd">    All are checked before any is written. Returns ``{"written", "kept", "total"}``.</span>
+</span><span data-line="1017"><span class="sd">    """</span>
+</span><span data-line="1018">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_docs</span>
+</span><span data-line="1019">
+</span><span data-line="1020">    <span class="k">return</span> <span class="n">import_docs</span><span class="p">(</span><span class="n">docs</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span></div>
 
-</span><span data-line="1010">
-</span><span data-line="1011">
+</span><span data-line="1021">
+</span><span data-line="1022">
 <div class="viewcode-block" id="turns">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.turns">[docs]</a>
-</span><span data-line="1012"><span class="k">def</span><span class="w"> </span><span class="nf">turns</span><span class="p">(</span>
-</span><span data-line="1013">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="1014">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1015">    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-</span><span data-line="1016">    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1017">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1018">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1019">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1020"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1021"><span class="w">    </span><span class="sd">"""The last ``last`` turns of a session, oldest first; ``before=N`` pages back from turn N."""</span>
-</span><span data-line="1022">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1023">    <span class="n">found</span> <span class="o">=</span> <span class="n">read_turns</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
-</span><span data-line="1024">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]}</span></div>
+</span><span data-line="1023"><span class="k">def</span><span class="w"> </span><span class="nf">turns</span><span class="p">(</span>
+</span><span data-line="1024">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1025">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1026">    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span data-line="1027">    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1028">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1029">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1030">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1031"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1032"><span class="w">    </span><span class="sd">"""The last ``last`` turns of a session, oldest first; ``before=N`` pages back from turn N."""</span>
+</span><span data-line="1033">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1034">    <span class="n">found</span> <span class="o">=</span> <span class="n">read_turns</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
+</span><span data-line="1035">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]}</span></div>
 
-</span><span data-line="1025">
-</span><span data-line="1026">
+</span><span data-line="1036">
+</span><span data-line="1037">
 <div class="viewcode-block" id="brief">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.brief">[docs]</a>
-</span><span data-line="1027"><span class="k">def</span><span class="w"> </span><span class="nf">brief</span><span class="p">(</span>
-</span><span data-line="1028">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="1029">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1030">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1031">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1032">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1033">    <span class="n">digests_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1034"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1035"><span class="w">    </span><span class="sd">"""openloops' digest for one live session: what it has been doing, dated, in its words.</span>
-</span><span data-line="1036">
-</span><span data-line="1037"><span class="sd">    A digest is written by openloops when a session's turn ends, so this answers "what has</span>
-</span><span data-line="1038"><span class="sd">    this session been up to" without reading a transcript at all, and without spending a</span>
-</span><span data-line="1039"><span class="sd">    turn of that session's context. It is a lookup, not a second reader: the digest's</span>
-</span><span data-line="1040"><span class="sd">    content is openloops' business, and ``digests_store`` is the seam it reads from.</span>
-</span><span data-line="1041">
-</span><span data-line="1042"><span class="sd">    ``digest`` is ``None`` when openloops has not digested this session yet -- a normal</span>
-</span><span data-line="1043"><span class="sd">    state for a session started minutes ago -- and ``why`` says so.</span>
-</span><span data-line="1044"><span class="sd">    """</span>
-</span><span data-line="1045">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1046">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="1047">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
-</span><span data-line="1048">    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="1049">        <span class="n">why</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-</span><span data-line="1050">        <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">why</span><span class="p">}</span>
-</span><span data-line="1051">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="n">digest</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span></div>
+</span><span data-line="1038"><span class="k">def</span><span class="w"> </span><span class="nf">brief</span><span class="p">(</span>
+</span><span data-line="1039">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1040">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1041">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1042">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1043">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1044">    <span class="n">digests_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1045"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1046"><span class="w">    </span><span class="sd">"""openloops' digest for one live session: what it has been doing, dated, in its words.</span>
+</span><span data-line="1047">
+</span><span data-line="1048"><span class="sd">    A digest is written by openloops when a session's turn ends, so this answers "what has</span>
+</span><span data-line="1049"><span class="sd">    this session been up to" without reading a transcript at all, and without spending a</span>
+</span><span data-line="1050"><span class="sd">    turn of that session's context. It is a lookup, not a second reader: the digest's</span>
+</span><span data-line="1051"><span class="sd">    content is openloops' business, and ``digests_store`` is the seam it reads from.</span>
+</span><span data-line="1052">
+</span><span data-line="1053"><span class="sd">    ``digest`` is ``None`` when openloops has not digested this session yet -- a normal</span>
+</span><span data-line="1054"><span class="sd">    state for a session started minutes ago -- and ``why`` says so.</span>
+</span><span data-line="1055"><span class="sd">    """</span>
+</span><span data-line="1056">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1057">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="1058">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
+</span><span data-line="1059">    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="1060">        <span class="n">why</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+</span><span data-line="1061">        <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">why</span><span class="p">}</span>
+</span><span data-line="1062">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="n">digest</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -1267,7 +1278,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=78cc6f98"></script>
+      <script src="../../_static/documentation_options.js?v=dcb4eb81"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

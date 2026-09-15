@@ -17,6 +17,11 @@ crowsnest.attention
       WOKE
       SEEN
       HIDDEN
+      SNOOZED
+      STALE
+      STUCK
+      UNMOVED
+      UNCLASSIFIED
    
    .. rubric:: Functions
 
@@ -30,6 +35,7 @@ crowsnest.attention
       done
       export_docs
       fingerprint
+      holds_a_record
       import_docs
       instant
       is_item_id
@@ -41,6 +47,9 @@ crowsnest.attention
       reach
       read_doc
       read_record
+      review
+      review_entries
+      review_of
       seen
       seen_as_of
       undo
