@@ -46,7 +46,7 @@ before the turn ends, not at the end of the day.
 - **You own the content.** The watching session reads it and never writes it. The
   `crowsnest hook` lines keep "last asked" and "last said" current on their own; the rest
   is yours.
-- Append; do not rewrite history. Date what you add.
+- Append; do not rewrite history. Date what you add, in the heading of the section you append (`### 2026-09-15 — what changed`). Triage quotes your words with that date. Words under an undated heading can only be dated by the file's last write, and that makes an old request look new.
 - **Never mark work done before it is verified.** A ledger that claims a green test suite
   that never ran poisons every read after it, including the user's.
 - Nothing secret goes in it: no tokens, no credentials, no absolute home paths you would

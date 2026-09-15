@@ -21,7 +21,7 @@ from pathlib import Path
 from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
-from crowsnest.config import configured_homes, homes
+from crowsnest.config import attention_settings, configured_homes, homes
 from crowsnest.lineage import from_records as _from_records
 from crowsnest.lineage import open_command as _open_command
 from crowsnest.registry import (
@@ -229,6 +229,11 @@ def roster(
     **It follows ``activity`` unless it is asked for.** Resolving costs a ledger read per
     session, which is nothing next to a transcript tail and everything next to a registry
     listing -- and ``activity=False`` promises "instant". Pass ``links=True`` to have both.
+
+    Every row carries ``said_at`` and ``said_at_basis``, which say when the thing the row
+    quotes was said, taken from its source (:mod:`crowsnest.said`). That thing is the last
+    words, the question the session waits on, or the call in flight. Both are empty when
+    no source gives a time. Every surface renders the time from these two fields.
     """
     links = activity if links is None else links
     found = sessions(home=home, all_homes=all_homes, config=config)
@@ -258,7 +263,9 @@ def roster(
     ]
     counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}
     counts["other"] = len(rows) - sum(counts.values())
-    return {"sessions": rows, "counts": counts}
+    from crowsnest.said import with_said
+
+    return {"sessions": [with_said(r) for r in rows], "counts": counts}
 
 
 def _roster_row(
@@ -438,21 +445,25 @@ def triage(
 
 
 def _verdicted(rows, ledger_dir, verdicts, owner="", *, pages=None) -> list[dict]:
-    """``rows`` with each one's triage verdict attached, order untouched."""
+    """``rows`` with each one's triage verdict attached, order untouched, and each row's
+    ``said_at`` set again from its verdict."""
+    from crowsnest.said import with_said
     from crowsnest.triage import classify_row
 
     if pages is None:
         pages = _ledgers_for({str(r.get("label") or "") for r in rows}, ledger_dir)
     return [
-        {
-            **row,
-            "verdict": classify_row(
-                row,
-                ledger=pages.get(str(row.get("label") or "")) or {},
-                verdicts=verdicts,
-                owner=owner,
-            ),
-        }
+        with_said(
+            {
+                **row,
+                "verdict": classify_row(
+                    row,
+                    ledger=pages.get(str(row.get("label") or "")) or {},
+                    verdicts=verdicts,
+                    owner=owner,
+                ),
+            }
+        )
         for row in rows
     ]
 
@@ -530,10 +541,18 @@ def report(
     verdicts=None,
     owner: str = "",
     with_lineage: bool = True,
+    tz=None,
+    stale_after=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
     that supplies its own (the artifact publisher).
+
+    ``tz`` is the zone the rows' times are shown in (an IANA name, a ``tzinfo``, or
+    ``None`` for this machine's). ``stale_after`` is the age, as a ``timedelta``, past
+    which an item is called stale. By default it is the ``[attention]`` table's
+    ``stale_after`` (:func:`crowsnest.config.attention_settings`), the same number that
+    table gives everything else, so there is no second setting for it.
 
     ``made_at`` is the moment the snapshot claims to be from; it defaults to now, but a
     caller that wants byte-stable output passes it explicitly -- this is the one
@@ -555,6 +574,8 @@ def report(
     ledgers of whoever is running it.
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
+    if stale_after is None:
+        stale_after = attention_settings(path=config).stale_after
     # One read per ledger for the whole page: `links` and `triage` both want the same
     # file, and the roster is built before either of them asks for it.
     pages = _ledgers_for(
@@ -599,7 +620,13 @@ def report(
             ),
         }
     html = render_report(
-        data, made_at=made_at, title=title, fragment=fragment, interactive=interactive
+        data,
+        made_at=made_at,
+        title=title,
+        fragment=fragment,
+        interactive=interactive,
+        tz=tz,
+        stale_after=stale_after,
     )
     return {
         "html": html,

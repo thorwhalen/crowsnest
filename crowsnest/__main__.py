@@ -20,6 +20,7 @@ from pathlib import Path
 from crowsnest import hook as _hook
 from crowsnest import init as _init
 from crowsnest import ledger as _ledger
+from crowsnest import said as _said
 from crowsnest import skills as _skills
 from crowsnest import tools
 from crowsnest import watch as _watch
@@ -68,6 +69,25 @@ def _age_of(stamp: str) -> str:
     return _age(then.timestamp())
 
 
+def _when(said_at: str) -> str:
+    """When an item's words were said, from its ``said_at``: ``(14:02, 2h)``, with the date
+    when it is not today, the date alone when the source gave only a day, or
+    ``(time unknown)``. A time later than now also reads as unknown, since it names a
+    plan and not when anything was said. :func:`crowsnest.said.when_said` decides, as it
+    does for the page."""
+    now = datetime.now(timezone.utc)
+    found = _said.when_said(said_at, now=now.timestamp())
+    if found is None:
+        return "(time unknown)"
+    epoch, day = found
+    today = now.astimezone().date()
+    if day is not None:
+        return f"({day.isoformat()}, {max(0, (today - day).days)}d)"
+    local = datetime.fromtimestamp(epoch, tz=timezone.utc).astimezone()
+    shown = local.strftime("%H:%M" if local.date() == today else "%Y-%m-%d %H:%M")
+    return f"({shown}, {_age(epoch)})"
+
+
 def _row_detail(row: dict, limit: int) -> str:
     act = row.get("activity") or {}
     status = row["status"]
@@ -99,6 +119,7 @@ def roster(
     all_homes: bool = False,
     brief: bool = False,
     width: int = 110,
+    json: bool = False,
 ):
     """Who is alive, most urgent first: waiting on you, then busy, then idle.
 
@@ -106,8 +127,16 @@ def roster(
     `--all-homes` reads every home in the config file (accounts, synced machines) and
     adds a column saying which -- which is also where a session spawned under another
     account shows up.
+
+    The age after the status is how long the session has been in it. The `(HH:MM, age)`
+    before a row's last words, or before the call it has in flight, is when those were
+    said, from the transcript. A waiting row has no second time: it began waiting on its
+    question when its status changed, so the status age already is that time. `--json`
+    prints the rows, each with its time as `said_at` and `said_at_basis`.
     """
     result = tools.roster(home=home, all_homes=all_homes, activity=not brief)
+    if json:
+        return _json.dumps(result, indent=2)
     lines = []
     tagged = any(row.get("home") for row in result["sessions"])
     for row in result["sessions"]:
@@ -116,7 +145,13 @@ def roster(
             f"{row['status']:<8}{_age(row['status_since']):>4}  {where}"
             f"{row['label'][:26]:<27}{row['project'][:16]:<17}"
         )
-        detail = "" if brief else _row_detail(row, max(20, width - len(head)))
+        detail = ""
+        if not brief:
+            # A registry time is the status change the age column already shows.
+            registry = row.get("said_at_basis") == _said.REGISTRY
+            when = "" if registry else f"{_when(row.get('said_at', ''))} "
+            quoted = _row_detail(row, max(20, width - len(head) - len(when)))
+            detail = when + quoted if quoted else ""
         lines.append((head + detail).rstrip())
     counts = result["counts"]
     summary = ", ".join(f"{n} {k}" for k, n in counts.items() if n)
@@ -354,7 +389,10 @@ def triage(
         for row in rows:
             verdict = row["verdict"]
             why = f"[{verdict['why']}] " if verdict["why"] else ""
-            detail = _one_line(f"{why}{verdict['reason']}", 88)
+            # The reason's own time, from its source. An unclassified reason quotes nobody:
+            # it is crowsnest saying the session has not said.
+            when = "" if group == "unclassified" else f"{_when(verdict['said_at'])} "
+            detail = _one_line(f"{when}{why}{verdict['reason']}", 88 + len(when))
             out.append(f"  {row['label'][:26]:<27}{row['project'][:14]:<15}{detail}")
         if not rows:
             out.append("  (none)")
@@ -387,9 +425,14 @@ def report(
     triage: bool = True,
     lineage: bool = True,
     ledger_dir: str | None = None,
+    tz: str | None = None,
 ):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
+
+    Every row shows when the words it quotes were said, from their source, and says
+    *stale* once that is older than the config file's `[attention] stale_after` (default
+    24h). `--tz Europe/Paris` shows the times in that zone rather than this machine's.
 
     Writes to `--out FILE`, or prints to stdout so you can pipe it:
     `crowsnest report > roster.html`. `--all-homes` reads every home in the config file
@@ -415,6 +458,7 @@ def report(
         ledger_dir=ledger_dir,
         fragment=fragment,
         interactive=interactive,
+        tz=tz,
     )
     if not out:
         return result["html"]

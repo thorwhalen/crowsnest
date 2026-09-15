@@ -19,8 +19,14 @@ comment on the published page can anchor to it (crowsnest issue #4).
 
 Like the openloops dashboard, **the page is a snapshot, and it says so in its largest
 type.** ``made_at`` is a required-in-practice argument rather than a hidden ``now()``,
-which is also what lets a test compare bytes: the same roster and ``made_at`` render the
-same document, byte for byte.
+which is also what lets a test compare bytes: the same roster, ``made_at`` and ``tz``
+render the same document, byte for byte.
+
+**Every row says when the words it quotes were said.** The time comes from their source,
+never from the page (:mod:`crowsnest.said`, crowsnest#66). It renders as a ``<time>``
+element with the local ``HH:MM``, plus the date when that is not ``made_at``'s day, then
+how long ago, then the word *stale* once it is older than ``stale_after``. The rail's large
+figure is that same age. A row whose source gave no time says *time unknown*.
 
 Every string reaches the page through :class:`_Sanitizer`, which is
 :func:`openloops.egress.scrub` plus HTML escaping. A row's ``last_assistant_text`` or
@@ -37,15 +43,19 @@ from __future__ import annotations
 
 import contextvars
 import html as _html
+import os
 import re
 import shlex
 from collections.abc import Mapping, Sequence
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta, timezone, tzinfo
 from typing import Any
 
 from openloops.dashboard import CSS as _CSS
 from openloops.dashboard import Sanitizer as _Sanitizer
 
+from crowsnest import said as _said
+from crowsnest.config import DFLT_STALE_AFTER
 from crowsnest.lineage import open_command as _open_command
 from crowsnest.links import label_for as _label_for
 from crowsnest.tree import TREE_CSS as _TREE_CSS
@@ -174,6 +184,23 @@ WAY_IN_CSS = """
 #: What the page is called when the caller does not name it.
 DFLT_TITLE = "crowsnest"
 
+#: The time beside each quoted item, and the word that says it is stale. The word carries
+#: the signal and the colour only repeats it.
+WHEN_CSS = """
+.when time{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.when .stale{font-family:var(--mono);font-weight:600;color:var(--needs)}
+"""
+
+#: What the time on a row is called, by where it came from (:data:`crowsnest.said.BASES`).
+#: A ledger's last write is only an upper bound on when its words were written, so that
+#: one reads "by".
+_BASIS_TAGS = {
+    _said.TRANSCRIPT: "said",
+    _said.REGISTRY: "since",
+    _said.LEDGER_SECTION: "dated",
+    _said.LEDGER_WRITTEN: "by",
+}
+
 
 #: An idle session counts as "just finished" for this long after it went idle.
 FINISHED_WINDOW = 3600.0
@@ -221,8 +248,191 @@ def _since(seconds: float) -> tuple[str, str]:
     return f"{seconds:.0f}", "s"
 
 
-def _age(row: Mapping[str, Any], now_epoch: float) -> tuple[str, str]:
+def _status_age(row: Mapping[str, Any], now_epoch: float) -> tuple[str, str]:
+    """How long a session has been in its current status: not when anything was said."""
     return _since(now_epoch - float(row.get("status_since") or 0))
+
+
+@dataclass(frozen=True)
+class _Clock:
+    """What a page is made against: the moment it claims to be from, the zone its times
+    are shown in (``None``: this machine's own), and the age in seconds at which a quoted
+    item is stale."""
+
+    now: float
+    zone: tzinfo | None = None
+    stale_after: float = DFLT_STALE_AFTER.total_seconds()
+
+    def local(self, epoch: float) -> datetime:
+        return datetime.fromtimestamp(epoch, tz=timezone.utc).astimezone(self.zone)
+
+
+def _local_zone() -> tzinfo | None:
+    """This machine's zone by its IANA name, when that can be found: ``$TZ``, or where
+    ``/etc/localtime`` points. A named zone gives the right offset on both sides of a DST
+    change, and it is something the masthead can name. Otherwise ``None``, which means
+    ``astimezone``'s local rules with no name."""
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    key = os.environ.get("TZ", "").lstrip(":")
+    if not key:
+        _, found, key = os.path.realpath("/etc/localtime").partition("zoneinfo/")
+        key = key if found else ""
+    if not key:
+        return None
+    try:
+        return ZoneInfo(key)
+    except (ZoneInfoNotFoundError, ValueError, OSError):
+        return None
+
+
+def _zone(tz: tzinfo | str | None) -> tzinfo | None:
+    """``tz`` as a ``tzinfo``. A name is looked up; ``None`` is this machine's own zone.
+
+    >>> _zone('UTC') is timezone.utc
+    True
+    >>> _zone('Mars/Olympus')
+    Traceback (most recent call last):
+      ...
+    ValueError: unknown time zone 'Mars/Olympus'; name one like 'Europe/Paris' or 'UTC'
+    """
+    if tz is None:
+        return _local_zone()
+    if isinstance(tz, tzinfo):
+        return tz
+    name = str(tz).strip()
+    if name.upper() in ("UTC", "Z"):
+        return timezone.utc
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    try:
+        return ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError) as exc:
+        raise ValueError(
+            f"unknown time zone {name!r}; name one like 'Europe/Paris' or 'UTC'"
+        ) from exc
+
+
+def _clock(
+    made_at: str, *, tz: tzinfo | str | None, stale_after: timedelta | None
+) -> _Clock:
+    """The page's clock, its arguments checked before anything is rendered."""
+    limit = DFLT_STALE_AFTER if stale_after is None else stale_after
+    if not isinstance(limit, timedelta) or limit <= timedelta(0):
+        raise ValueError(f"stale_after must be a positive timedelta, not {stale_after!r}")
+    return _Clock(_epoch(made_at), _zone(tz), limit.total_seconds())
+
+
+def _zone_name(clock: _Clock) -> str:
+    """The zone the rows' times are in, by a name that holds for every row: an IANA key,
+    a fixed offset's own name, or "this machine's local time". It is never the offset at
+    ``made_at``, because a row from the other side of a DST change is shown at a
+    different offset.
+
+    >>> _zone_name(_Clock(0.0, timezone.utc))
+    'UTC'
+    >>> _zone_name(_Clock(0.0, timezone(-timedelta(hours=5, minutes=30))))
+    'UTC-05:30'
+    """
+    if clock.zone is None:
+        return "this machine's local time"
+    return getattr(clock.zone, "key", "") or clock.zone.tzname(None) or "UTC"
+
+
+def _said_of(row: Mapping[str, Any]) -> tuple[str, str]:
+    """The row's ``said_at`` and its basis.
+
+    A verdict that quotes its reason always decides, through
+    :func:`crowsnest.said.of_row`. The row's own fields may have been set before that
+    verdict was attached, in which case they are the time of other words. Otherwise the
+    row's own fields are used when it has them, and :func:`crowsnest.said.of_row` (the
+    function :func:`crowsnest.tools.roster` uses) when it does not.
+    """
+    verdict = row.get("verdict")
+    quoting = (
+        isinstance(verdict, Mapping) and verdict.get("group") in _said.QUOTING_GROUPS
+    )
+    if quoting or "said_at" not in row:
+        return _said.of_row(row)
+    return str(row.get("said_at") or ""), str(row.get("said_at_basis") or "")
+
+
+def _when(row: Mapping[str, Any], clock: _Clock) -> tuple[float, date | None, str] | None:
+    """When the row's item was said: ``(epoch, day, basis)``, where ``day`` is the bare
+    date when only a day is known; ``None`` when unknown. :func:`crowsnest.said.when_said`
+    decides. A bare date's staleness is therefore the same in every zone, and a time
+    after ``made_at`` is unknown rather than "today"."""
+    at, basis = _said_of(row)
+    found = _said.when_said(at, now=clock.now, zone=clock.zone)
+    return None if found is None else (*found, basis)
+
+
+def _days_before(day: date, clock: _Clock) -> int:
+    return max(0, (clock.local(clock.now).date() - day).days)
+
+
+def _exactly(seconds: float) -> str:
+    """A duration in whole units with nothing rounded away, for stating a threshold.
+
+    >>> _exactly(5400), _exactly(86400), _exactly(129600), _exactly(45)
+    ('1 h 30 m', '1 d', '1 d 12 h', '45 s')
+    """
+    rest = round(seconds)
+    parts = []
+    for size, unit in (*_AGE_UNITS, (1.0, "s")):
+        count, rest = divmod(rest, int(size))
+        if count:
+            parts.append(f"{count} {unit}")
+    return " ".join(parts) or "0 s"
+
+
+def _said_age(row: Mapping[str, Any], clock: _Clock) -> tuple[str, str]:
+    """The rail's figure: how long ago the row's item was said, ``?`` when nobody knows.
+
+    It is not the status age: a session idle for an hour whose last words are a day old
+    reads "1 d".
+    """
+    when = _when(row, clock)
+    if when is None:
+        return "?", ""
+    epoch, day, _ = when
+    if day is not None:
+        return str(_days_before(day, clock)), "d"
+    return _since(clock.now - epoch)
+
+
+def _when_line(row: Mapping[str, Any], clock: _Clock) -> str:
+    """The row's time: local ``HH:MM`` (with the date when it falls on another day than the
+    page's), how long ago, and the word *stale* past ``stale_after``. An unknown time says so.
+    """
+    when = _when(row, clock)
+    if when is None:
+        return (
+            '<p class="line when"><span class="tag">said</span>'
+            "<span>time unknown</span></p>"
+        )
+    epoch, day, basis = when
+    if day is None:
+        local = clock.local(epoch)
+        same_day = local.date() == clock.local(clock.now).date()
+        shown = local.strftime("%H:%M" if same_day else "%Y-%m-%d %H:%M")
+        machine = datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat("T", "seconds")
+        figure, unit = _since(clock.now - epoch)
+        ago = f"{figure} {unit} ago"
+    else:
+        shown = machine = day.isoformat()
+        days = _days_before(day, clock)
+        ago = f"{days} d ago" if days else "today"
+    parts = [f'<time datetime="{machine}">{shown}</time>', ago]
+    if basis == _said.LEDGER_WRITTEN:
+        parts.append("undated: when the ledger was last written, the words may be older")
+    if clock.now - epoch > clock.stale_after:
+        limit = _exactly(clock.stale_after)
+        parts.append(f'<strong class="stale">stale: older than {limit}</strong>')
+    return (
+        f'<p class="line when"><span class="tag">{_BASIS_TAGS.get(basis, "said")}</span>'
+        "<span>" + ' <span class="sep">·</span> '.join(parts) + "</span></p>"
+    )
 
 
 def _slug(text: str) -> str:
@@ -434,18 +644,20 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
 def _row(
     safe: _Sanitizer,
     row: Mapping[str, Any],
+    clock: _Clock,
     *,
     chip: str,
     tone: str,
-    figure: str,
-    unit: str,
     lines: Sequence[str],
 ) -> str:
+    """One row: its chip, how long ago its item was said, then what it quotes and when."""
     ident = _slug(str(row.get("label") or row.get("session_id") or ""))
+    figure, unit = _said_age(row, clock)
     body = [
         f'<p class="ask">{safe.text(row.get("label"))}</p>',
         _where(safe, row),
         *lines,
+        _when_line(row, clock),
         _refs(safe, row),
         _controls(safe, row),
     ]
@@ -502,11 +714,10 @@ def _line(safe: _Sanitizer, tag: str, value: Any) -> str:
 _WHY_CHIPS = {"decision": "decide", "action": "do", "question": "answer"}
 
 
-def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -> str:
+def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str:
     """A session holding for a person, with what it wants and in whose words."""
     act = row.get("activity") or {}
     verdict = row.get("verdict") or {}
-    figure, unit = _age(row, now_epoch)
     lines = []
     if row.get("waiting_for"):
         lines.append(_line(safe, "for", row["waiting_for"]))
@@ -516,55 +727,43 @@ def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -
     if reason and reason not in (row.get("waiting_for"), act.get("pending_question")):
         lines.append(_line(safe, _WHY_CHIPS.get(verdict.get("why"), "needs"), reason))
     chip = _WHY_CHIPS.get(verdict.get("why"), "waiting")
-    return _row(safe, row, chip=chip, tone="needs", figure=figure, unit=unit, lines=lines)
+    return _row(safe, row, clock, chip=chip, tone="needs", lines=lines)
 
 
-def _safe_to_close_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -> str:
+def _safe_to_close_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str:
     """A session that said, in its own words, that nothing is outstanding."""
     verdict = row.get("verdict") or {}
-    figure, unit = _age(row, now_epoch)
     lines = []
     if verdict.get("reason"):
         lines.append(_line(safe, "said", verdict["reason"]))
-    return _row(
-        safe, row, chip="clear", tone="free", figure=figure, unit=unit, lines=lines
-    )
+    return _row(safe, row, clock, chip="clear", tone="free", lines=lines)
 
 
-def _waiting_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -> str:
+def _waiting_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str:
     act = row.get("activity") or {}
-    figure, unit = _age(row, now_epoch)
     lines = []
     if row.get("waiting_for"):
         lines.append(_line(safe, "for", row["waiting_for"]))
     if act.get("pending_question"):
         lines.append(_line(safe, "asks", act["pending_question"]))
-    return _row(
-        safe, row, chip="waiting", tone="needs", figure=figure, unit=unit, lines=lines
-    )
+    return _row(safe, row, clock, chip="waiting", tone="needs", lines=lines)
 
 
-def _finished_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -> str:
+def _finished_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str:
     act = row.get("activity") or {}
-    figure, unit = _age(row, now_epoch)
     lines = []
     if act.get("last_assistant_text"):
         lines.append(_line(safe, "said", act["last_assistant_text"]))
-    return _row(
-        safe, row, chip="idle", tone="free", figure=figure, unit=unit, lines=lines
-    )
+    return _row(safe, row, clock, chip="idle", tone="free", lines=lines)
 
 
-def _working_row(safe: _Sanitizer, row: Mapping[str, Any], now_epoch: float) -> str:
+def _working_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str:
     act = row.get("activity") or {}
-    figure, unit = _age(row, now_epoch)
     lines = []
     running = act.get("in_flight") or []
     if running:
         lines.append(_line(safe, "running", "; ".join(running)))
-    return _row(
-        safe, row, chip="busy", tone="flight", figure=figure, unit=unit, lines=lines
-    )
+    return _row(safe, row, clock, chip="busy", tone="flight", lines=lines)
 
 
 def _by_project(
@@ -608,11 +807,12 @@ def _thin_refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
 
 
 def _quiet_group(
-    safe: _Sanitizer, project: str, rows: Sequence[Mapping[str, Any]], now_epoch: float
+    safe: _Sanitizer, project: str, rows: Sequence[Mapping[str, Any]], clock: _Clock
 ) -> str:
     items = []
     for row in rows:
-        figure, unit = _age(row, now_epoch)
+        # A quiet row quotes nothing, so its age is how long it has been in its status.
+        figure, unit = _status_age(row, clock.now)
         ident = _slug(str(row.get("label") or row.get("session_id") or ""))
         home = row.get("home")
         tail = f' <span class="sep">·</span> {safe.text(home)}' if home else ""
@@ -635,7 +835,7 @@ def _quiet_group(
 def _register_from_rows(
     safe: _Sanitizer,
     rows: Sequence[Mapping[str, Any]],
-    now_epoch: float,
+    clock: _Clock,
     *,
     row_fn,
     ident: str,
@@ -646,7 +846,7 @@ def _register_from_rows(
 ) -> str:
     figure = str(len(rows))
     if rows:
-        items = "".join(row_fn(safe, r, now_epoch) for r in rows)
+        items = "".join(row_fn(safe, r, clock) for r in rows)
         body = f'<ol class="ledger">{items}</ol>'
     else:
         body = _empty(empty)
@@ -656,12 +856,12 @@ def _register_from_rows(
 
 
 def _quiet_register(
-    safe: _Sanitizer, rows: Sequence[Mapping[str, Any]], now_epoch: float
+    safe: _Sanitizer, rows: Sequence[Mapping[str, Any]], clock: _Clock
 ) -> str:
     figure = str(len(rows))
     if rows:
         body = "".join(
-            _quiet_group(safe, project, group_rows, now_epoch)
+            _quiet_group(safe, project, group_rows, clock)
             for project, group_rows in _by_project(rows)
         )
     else:
@@ -719,7 +919,9 @@ def _lineage_register(safe: _Sanitizer, found: Any) -> str:
     )
 
 
-def _masthead(safe: _Sanitizer, counts: Mapping[str, Any], stamp: str, title: str) -> str:
+def _masthead(
+    safe: _Sanitizer, counts: Mapping[str, Any], stamp: str, title: str, *, zone: str
+) -> str:
     tally = [
         ("Waiting", counts.get("waiting", 0), "needs"),
         ("Busy", counts.get("busy", 0), "flight"),
@@ -738,6 +940,9 @@ def _masthead(safe: _Sanitizer, counts: Mapping[str, Any], stamp: str, title: st
         '<p class="claim">Every session below was alive at that moment, read from its '
         "registry entry and the tail of its transcript, and nothing since. Re-run "
         "<code>crowsnest report</code> for a newer one.</p>"
+        f'<p class="claim">Times on the rows are in {safe.text(zone)}. Each is when the '
+        "words beside it were said, taken from where they were said, never the time this "
+        "page was made.</p>"
         f'<div class="tally">{cells}</div>' + _console() + "</header>"
     )
 
@@ -787,12 +992,26 @@ def render_report(
     title: str = DFLT_TITLE,
     fragment: bool = False,
     interactive: bool = False,
+    tz: tzinfo | str | None = None,
+    stale_after: timedelta | None = None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
     ``made_at`` is the moment the snapshot claims to be from and is printed in the
     largest type on the page; it is a required argument (not a hidden ``now()``) so that
-    two calls with the same ``roster`` and ``made_at`` render the identical document.
+    two calls with the same ``roster``, ``made_at`` and ``tz`` render the identical
+    document.
+
+    **Every item shows the time its words were said.** That is ``said_at``, taken from its
+    source (:mod:`crowsnest.said`), never ``made_at``. It renders as a ``<time>`` element
+    with the local ``HH:MM``, the date when it is not ``made_at``'s day, and how long ago.
+    A row's own ``said_at`` and ``said_at_basis`` are used when it has them; otherwise the
+    time is computed from the row. A row with no source time says *time unknown*.
+    ``tz`` is the zone the times are shown in: a ``tzinfo``, an IANA name, or ``None`` for
+    this machine's own. The masthead names it once. An item older than ``stale_after``
+    says *stale* in words. The default is :data:`crowsnest.config.DFLT_STALE_AFTER`, the
+    ``[attention]`` table's default, which :func:`crowsnest.tools.report` replaces with
+    the configured value.
 
     ``interactive=True`` adds the console: per-row buttons and a Refresh, hidden until the
     page's ``db`` capability resolves in the claude.ai viewer, and one inline script that
@@ -810,21 +1029,21 @@ def render_report(
     ``busy`` or ``idle`` also falls into Quiet, so an unrecognised status is shown rather
     than dropped.
     """
+    clock = _clock(made_at, tz=tz, stale_after=stale_after)
     token = _interactive.set(interactive)
     try:
-        return _render(roster, made_at=made_at, title=title, fragment=fragment)
+        return _render(roster, clock=clock, title=title, fragment=fragment)
     finally:
         _interactive.reset(token)
 
 
 def _render(
-    roster: Mapping[str, Any], *, made_at: str, title: str, fragment: bool
+    roster: Mapping[str, Any], *, clock: _Clock, title: str, fragment: bool
 ) -> str:
     safe = _Sanitizer()
     sessions = list(roster.get("sessions") or [])
     counts = dict(roster.get("counts") or {})
-    now_epoch = _epoch(made_at)
-    stamp = datetime.fromtimestamp(now_epoch, tz=timezone.utc).strftime(
+    stamp = datetime.fromtimestamp(clock.now, tz=timezone.utc).strftime(
         "%Y-%m-%d %H:%M UTC"
     )
 
@@ -868,7 +1087,7 @@ def _render(
         [
             s
             for s in idle
-            if now_epoch - float(s.get("status_since") or 0) <= FINISHED_WINDOW
+            if clock.now - float(s.get("status_since") or 0) <= FINISHED_WINDOW
         ]
     )
     quiet = unclaimed(list(sessions))  # everything no register above took
@@ -877,7 +1096,7 @@ def _render(
         _register_from_rows(
             safe,
             needs_you,
-            now_epoch,
+            clock,
             row_fn=_needs_you_row,
             ident="needs-you",
             name="Needs you",
@@ -890,7 +1109,7 @@ def _render(
         else _register_from_rows(
             safe,
             waiting,
-            now_epoch,
+            clock,
             row_fn=_waiting_row,
             ident="waiting",
             name="Waiting on you",
@@ -901,7 +1120,7 @@ def _render(
     )
 
     parts = [
-        _masthead(safe, counts, stamp, title),
+        _masthead(safe, counts, stamp, title, zone=_zone_name(clock)),
         head,
     ]
     if triaged:
@@ -909,7 +1128,7 @@ def _render(
             _register_from_rows(
                 safe,
                 clear,
-                now_epoch,
+                clock,
                 row_fn=_safe_to_close_row,
                 ident="safe-to-close",
                 name="Safe to close",
@@ -923,7 +1142,7 @@ def _render(
         _register_from_rows(
             safe,
             finished,
-            now_epoch,
+            clock,
             row_fn=_finished_row,
             ident="finished",
             name="Just finished",
@@ -934,7 +1153,7 @@ def _render(
         _register_from_rows(
             safe,
             busy,
-            now_epoch,
+            clock,
             row_fn=_working_row,
             ident="working",
             name="Working",
@@ -943,13 +1162,13 @@ def _render(
             empty="No session is running a tool right now.",
         ),
         _lineage_register(safe, roster.get("lineage")),
-        _quiet_register(safe, quiet, now_epoch),
+        _quiet_register(safe, quiet, clock),
         _footer(safe, stamp),
     ]
     title_tag = f"<title>{safe.text(title)}</title>"
     # One <style>, not two: the figure's rules belong with the page's rules, and the
     # interactive mode's own block is the only thing that earns a second tag.
-    style_tag = f"<style>{_CSS}{_TREE_CSS}{WAY_IN_CSS}</style>"
+    style_tag = f"<style>{_CSS}{_TREE_CSS}{WAY_IN_CSS}{WHEN_CSS}</style>"
     if _interactive.get():
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
