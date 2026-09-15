@@ -450,6 +450,7 @@ def _verdicted(rows, ledger_dir, verdicts, owner="", *, pages=None) -> list[dict
                 row,
                 ledger=pages.get(str(row.get("label") or "")) or {},
                 verdicts=verdicts,
+                owner=owner,
             ),
         }
         for row in rows
@@ -798,9 +799,7 @@ def _attend(
     )
     item = _attention.item_id(row, identity=identity)
     rev = _attention.fingerprint(row, material=material)
-    store = _attention.dflt_store() if store is None else store
-    record = step(_attention.read_record(item, store=store), rev)
-    return _attention.write_record(item, record, store=store)
+    return _attention.update(item, lambda record: step(record, rev), store=store)
 
 
 # The attention verbs. Each takes a session reference the way `resolve` does, reads the

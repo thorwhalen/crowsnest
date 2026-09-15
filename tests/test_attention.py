@@ -79,16 +79,15 @@ def test_a_row_without_a_session_id_has_no_identity():
         att.item_id({"name": "shipper"})
 
 
-def test_the_identity_seam_takes_another_kind():
+def test_the_identity_seam_takes_another_kind_and_colons_cannot_merge_two():
     by_ref = att.item_id(
         {}, identity=lambda r: ("ref", "https://github.com/o/r/issues/1")
     )
     assert att.is_item_id(by_ref) and by_ref != att.item_id(row())
-
-
-def test_a_colon_before_the_last_identity_component_is_refused():
-    with pytest.raises(ValueError, match="last identity component"):
-        att.item_id({}, identity=lambda r: ("ask", "a:b", "text"))
+    two = att.item_id({}, identity=lambda r: ("ask", "s1:x"))
+    three = att.item_id({}, identity=lambda r: ("ask", "s1", "x"))
+    escaped = att.item_id({}, identity=lambda r: ("ask", "s1%3Ax"))
+    assert len({two, three, escaped}) == 3
 
 
 # --- revision -------------------------------------------------------------------------
@@ -121,13 +120,13 @@ def test_timestamps_tools_and_tail_text_are_not_a_change():
     assert rev(base) == rev(moved)
 
 
-def test_a_link_added_is_a_change_and_link_order_is_not():
+def test_the_rows_links_are_not_material_but_the_asks_words_are():
     one = row(links=["https://github.com/o/r/issues/1"])
     two = row(links=["https://github.com/o/r/issues/1", "https://github.com/o/r/pull/2"])
-    swapped = row(
-        links=["https://github.com/o/r/pull/2", "https://github.com/o/r/issues/1"]
+    assert rev(one) == rev(two)
+    assert rev(row(reason="Review https://github.com/o/r/pull/2?")) != rev(
+        row(reason="Review https://github.com/o/r/pull/3?")
     )
-    assert rev(one) != rev(two) and rev(two) == rev(swapped)
 
 
 def test_group_and_why_are_material():
@@ -152,6 +151,14 @@ def test_the_pending_question_stands_in_for_an_empty_reason():
 def test_without_a_verdict_an_idle_rows_new_last_words_are_a_change():
     a, b = row(status="idle", group=None), row(status="idle", group=None)
     b["activity"]["last_assistant_text"] = "Now it is merged."
+    assert rev(a) != rev(b)
+
+
+def test_an_unclassified_idle_rows_new_last_words_are_a_change():
+    # Triage attaches `unclassified` to every row it cannot place, with one fixed reason.
+    kw = {"status": "idle", "group": "unclassified", "why": "", "reason": "nothing said"}
+    a, b = row(**kw), row(**kw)
+    b["activity"]["last_assistant_text"] = "Migration finished; the table is live."
     assert rev(a) != rev(b)
 
 
@@ -273,14 +280,18 @@ def test_later_counts_every_deferral_across_other_acts():
     assert record.later.count == 2 and record.later.plan == "after the deploy"
 
 
-def test_every_transition_stamps_updated_at():
-    assert att.seen(None, R1, now=T0).updated_at == T0.isoformat()
+def test_every_transition_stamps_updated_at_the_way_javascript_does():
+    assert att.seen(None, R1, now=T0).updated_at == "2026-01-05T12:00:00.000Z"
+    assert (
+        att.later(None, R1, until=LATER_, now=T0).later.until
+        == "2026-01-05T14:00:00.000Z"
+    )
 
 
 def test_a_note_changes_nothing_but_the_note():
     record = att.done(None, R1, now=T0)
-    noted = att.note(record, "ask Ana first", now=T0)
-    assert noted.note.text == "ask Ana first" and att.present(R1, noted, now=T0) == "done"
+    noted = att.note(record, "ask first", now=T0)
+    assert noted.note.text == "ask first" and att.present(R1, noted, now=T0) == "done"
     assert att.note(noted, "  ", now=T0).note is None
 
 
@@ -303,7 +314,7 @@ def test_a_record_with_a_wrong_type_is_refused_not_coerced():
         Record.from_dict({"state": "later"})
 
 
-def test_unknown_keys_in_a_document_are_ignored():
+def test_unknown_keys_in_a_document_are_not_part_of_the_record():
     assert Record.from_dict({"id": "x", "version": 7, "seen_rev": R1}).seen_rev == R1
 
 
@@ -431,13 +442,24 @@ def test_a_write_leaves_no_temporary_file_and_keeps_utf8(tmp_path):
     assert att.read_record(item, store=store).note.text == "café — after the deploy"
 
 
-def test_an_unreadable_document_is_an_error_naming_the_item(tmp_path):
+def test_an_unreadable_document_names_the_item_and_export_skips_it_aloud(tmp_path):
     root = tmp_path / "attention"
     root.mkdir()
     item = att.item_id(row())
     (root / f"{item}.json").write_text("{not json", encoding="utf-8")
     with pytest.raises(ValueError, match=item):
         att.read_record(item, store=att.dflt_store(root))
+    with pytest.warns(UserWarning, match=item):
+        assert att.export_docs(store=att.dflt_store(root)) == []
+
+
+def test_update_keeps_keys_this_version_does_not_know():
+    store = {}
+    item = att.item_id(row())
+    store[item] = {**att.as_doc(item, att.seen(None, R1, now=T0)), "seen_at": "kept"}
+    doc = att.update(item, lambda record: att.done(record, R1, now=T0), store=store)
+    assert doc["seen_at"] == "kept" and doc["state"] == "done"
+    assert att.export_docs(store=store)[0]["seen_at"] == "kept"
 
 
 def _filled(store, *moments):

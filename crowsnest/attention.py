@@ -9,8 +9,9 @@ person's record and its transitions, the pure function deciding what the person 
 and the store it lives in.
 
 **Seen and done are pinned to a revision, not a boolean.** :func:`fingerprint` hashes only
-what the person has to decide about -- the group, why, the ask, its links -- so an item
-comes back when that changes, and not because a session ran another tool.
+what the person has to decide about -- the group, why, and the ask -- so an item comes
+back when that changes, and not because a session ran another tool or said something new
+while it waits.
 
 **State is first-class fields in one document per item**, never a fold over a log
 (openloops-lab ADR-009): an export is the data, not an event stream only this module can
@@ -25,7 +26,7 @@ seam           default                                 replacement it exists for
                                                        triage emits several asks;
                                                        ``("ref", url)`` for an issue
                                                        several sessions point at
-``material=``  ``(group, why, reason, link urls)``     a tighter or looser tuple, once
+``material=``  ``(group, why, normalised reason)``     a tighter or looser tuple, once
                                                        resurfacing is measured (K2)
 ``store=``     one JSON file per item under            the page's ``db`` mirror; a synced
                ``data_dir()/attention``                data dir; an S3 mapping
@@ -50,8 +51,9 @@ import hashlib
 import json
 import os
 import uuid
+import warnings
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass, fields, replace
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import ClassVar
@@ -94,10 +96,12 @@ __all__ = [
     "note",
     "present",
     "reach",
+    "read_doc",
     "read_record",
     "seen",
     "undo",
     "unseen",
+    "update",
     "write_record",
 ]
 
@@ -140,8 +144,12 @@ _TERMINAL_WHYS = ("action",)
 #: reason, and a revision over it would change on every tool call.
 _REASON_IS_WHAT_RUNS = ("working",)
 
-#: Unverdicted rows whose last words are material: a just-finished session saying
-#: something new is news; a busy one talking is not.
+#: Groups whose verdict says nothing: ``unclassified`` carries one fixed reason, so a row
+#: in it is fingerprinted like a row with no verdict at all.
+_VERDICT_SAYS_NOTHING = ("unclassified",)
+
+#: Statuses whose last words are material when no verdict says anything: a just-finished
+#: session saying something new is news; a busy one talking is not.
 _LAST_WORDS_ARE_MATERIAL = ("idle",)
 
 #: Where the default store keeps its documents, under :func:`crowsnest.paths.data_dir`.
@@ -160,7 +168,8 @@ def dflt_identity(row: Mapping) -> tuple[str, ...]:
     Not the name, which is not unique across homes or over time (#42), and not
     ``label@home``, which each crow's nest spells with its own name for the other
     account's home. A resumed session keeps its id and so its record; a new session given
-    an old name does not inherit one.
+    an old name does not inherit one. (``/clear`` starts a new session id in the same
+    terminal, so a record made before it stays with the conversation that was cleared.)
     """
     session_id = str(row.get("session_id") or "").strip()
     if not session_id:
@@ -168,15 +177,19 @@ def dflt_identity(row: Mapping) -> tuple[str, ...]:
     return ("session", session_id)
 
 
+def _escaped(part: str) -> str:
+    return part.replace("%", "%25").replace(":", "%3A")
+
+
 def item_id(
     row: Mapping, *, identity: Callable[[Mapping], Iterable[str]] | None = None
 ) -> str:
-    """The item's stable id: ``uuid5(NAMESPACE, ":".join(identity(row)))``.
+    """The item's stable id: ``uuid5(NAMESPACE, ":".join(identity(row)))``, kind first.
 
-    The first component names the kind, and a kind always has the same number of
-    components. Only the last may contain a colon -- a URL, a free-text ask -- which keeps
-    the join unambiguous; a colon anywhere else is refused rather than hashed into an id
-    another item could share.
+    Each component has ``%`` and ``:`` escaped before the join, so no two identities can
+    share an id however many components they have -- ``("ask", "s1:x")`` and
+    ``("ask", "s1", "x")`` are two items. A session id contains neither character, so the
+    default is hashed as literally ``session:<id>``.
 
     >>> item_id({'session_id': 'e7c1', 'name': 'a'}) == item_id({'session_id': 'e7c1', 'name': 'b'})
     True
@@ -184,11 +197,7 @@ def item_id(
     parts = tuple((dflt_identity if identity is None else identity)(row))
     if len(parts) < 2 or not all(isinstance(p, str) and p for p in parts):
         raise ValueError(f"an identity is a kind and non-empty strings, not {parts!r}")
-    if any(":" in part for part in parts[:-1]):
-        raise ValueError(
-            f"only the last identity component may contain ':', not {parts!r}"
-        )
-    return str(uuid.uuid5(NAMESPACE, ":".join(parts)))
+    return str(uuid.uuid5(NAMESPACE, ":".join(_escaped(p) for p in parts)))
 
 
 def is_item_id(key) -> bool:
@@ -223,32 +232,31 @@ def _reason(row: Mapping, verdict: Mapping) -> str:
     )
 
 
-def _link_urls(row: Mapping) -> tuple[str, ...]:
-    urls = set()
-    for link in row.get("links") or ():
-        url = link.get("url") if isinstance(link, Mapping) else link
-        if isinstance(url, str) and url.strip():
-            urls.add(url.strip())
-    return tuple(sorted(urls))
-
-
 def dflt_material(row: Mapping) -> tuple:
     """What counts as a change to an item: what the person would have to decide again.
 
-    With a verdict: ``(group, why, normalised reason, sorted link urls)`` -- except that a
-    ``working`` row's reason is left out, because it is the tool in flight. Without one:
-    ``(status,)``, plus the normalised last words for an ``idle`` row. Never a timestamp,
-    tail text of a verdicted row, a tool name or a token count.
+    With a verdict that says something: ``(group, why, normalised reason)`` -- except
+    that a ``working`` row's reason is left out, because it is the tool in flight.
+    Otherwise (no verdict, or ``unclassified``): ``(status,)``, plus the normalised last
+    words for an ``idle`` row, so a session that finished and said so is news.
+
+    **The row's links are not part of it.** They are the page's reference list, resolved
+    from the session's latest words, the ledger line the hook rewrites on every turn, and
+    its recent pull requests; they move with chatter, and a revision over them made every
+    "committed 7d30838" a change. The links of the ask itself are in its words, which are.
 
     >>> dflt_material({'status': 'busy', 'activity': {'last_assistant_text': 'hi'}})
     ('busy',)
+    >>> dflt_material({'status': 'idle', 'activity': {'last_assistant_text': 'Merged.'},
+    ...                'verdict': {'group': 'unclassified', 'reason': 'nothing said'}})
+    ('idle', 'merged.')
     """
     verdict = row.get("verdict")
-    if isinstance(verdict, Mapping) and verdict.get("group"):
-        group = str(verdict["group"])
+    group = str(verdict.get("group") or "") if isinstance(verdict, Mapping) else ""
+    if group and group not in _VERDICT_SAYS_NOTHING:
         why = str(verdict.get("why") or "")
         reason = "" if group in _REASON_IS_WHAT_RUNS else _reason(row, verdict)
-        return (group, why, reason, _link_urls(row))
+        return (group, why, reason)
     status = str(row.get("status") or "")
     if status in _LAST_WORDS_ARE_MATERIAL:
         return (status, _normalise(_activity(row).get("last_assistant_text")))
@@ -295,28 +303,43 @@ def reach(row: Mapping) -> str:
 # Time
 
 
-def instant(stamp: str) -> datetime:
-    """An ISO timestamp as an aware datetime: Python's ``+00:00``, JavaScript's ``Z``, a date.
-
-    A string without an offset is read as UTC: it is data, and data written without an
-    offset by this module or the page is UTC. (A *naive datetime* handed to a function
-    here is the opposite -- a wall-clock time -- and is read as local.)
-
-    >>> instant('2026-09-15T12:00:00.000Z') == instant('2026-09-15T12:00:00+00:00')
-    True
-    >>> instant('2026-01-01').isoformat()
-    '2026-01-01T00:00:00+00:00'
-    """
+def _parsed(stamp) -> datetime:
     if not isinstance(stamp, str) or not stamp.strip():
         raise ValueError(f"not an ISO timestamp: {stamp!r}")
     text = stamp.strip()
     if text[-1] in "Zz":
         text = text[:-1] + "+00:00"
     try:
-        moment = datetime.fromisoformat(text)
+        return datetime.fromisoformat(text)
     except ValueError:
         raise ValueError(f"not an ISO timestamp: {stamp!r}") from None
+
+
+def instant(stamp: str) -> datetime:
+    """An ISO timestamp or date as an aware datetime; one without an offset is read as UTC.
+
+    For a query like ``--since 2026-01-01``. A time *stored* in a record must carry its
+    offset (:class:`Record` refuses one that does not), because a page reads a time
+    without one as its viewer's local time. A *naive datetime* handed to a function here
+    is a wall-clock time, and is read as local.
+
+    >>> instant('2026-09-15T12:00:00.000Z') == instant('2026-09-15T12:00:00+00:00')
+    True
+    >>> instant('2026-01-01').isoformat()
+    '2026-01-01T00:00:00+00:00'
+    """
+    moment = _parsed(stamp)
     return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+def _stored_instant(stamp, what: str) -> datetime:
+    moment = _parsed(stamp)
+    if moment.tzinfo is None:
+        raise ValueError(
+            f"{what} needs a UTC offset or Z, not {stamp!r}: a page reads a time "
+            f"without one as local time"
+        )
+    return moment
 
 
 def _aware(moment: datetime | None = None) -> datetime:
@@ -327,7 +350,17 @@ def _aware(moment: datetime | None = None) -> datetime:
 
 
 def _stamp(moment: datetime | None = None) -> str:
-    return _aware(moment).astimezone(timezone.utc).isoformat()
+    """``YYYY-MM-DDTHH:MM:SS.mmmZ``: what JavaScript's ``toISOString`` writes.
+
+    One format on both sides of the page, so the page parses these without surprises and
+    stamps from either side compare equal as strings when they are equal as times.
+
+    >>> from datetime import datetime, timezone
+    >>> _stamp(datetime(2026, 1, 5, 12, 0, 0, 123456, tzinfo=timezone.utc))
+    '2026-01-05T12:00:00.123Z'
+    """
+    utc = _aware(moment).astimezone(timezone.utc)
+    return f"{utc:%Y-%m-%dT%H:%M:%S}.{utc.microsecond // 1000:03d}Z"
 
 
 def _wall(day: date, hour: int, tz) -> datetime:
@@ -409,7 +442,7 @@ class Later:
 
     def __post_init__(self) -> None:
         if self.until is not None:
-            instant(self.until)
+            _stored_instant(self.until, "until")
         if self.until is None and not self.on_change:
             raise ValueError(
                 "a Later that wakes on neither a time nor a change never wakes; "
@@ -442,6 +475,10 @@ class Note:
 
     text: str
     updated_at: str
+
+    def __post_init__(self) -> None:
+        if self.updated_at:
+            _stored_instant(self.updated_at, "note.updated_at")
 
     @classmethod
     def from_dict(cls, doc: Mapping) -> Note:
@@ -483,7 +520,7 @@ class Record:
         if self.prev is not None and self.prev.prev is not None:
             raise ValueError("undo is one level deep: a snapshot carries no snapshot")
         if self.updated_at:
-            instant(self.updated_at)
+            _stored_instant(self.updated_at, "updated_at")
 
     def as_dict(self) -> dict:
         """JSON-ready form, nested blocks included."""
@@ -493,8 +530,9 @@ class Record:
     def from_dict(cls, doc: Mapping) -> Record:
         """Read a record back, refusing a wrong type rather than coercing it.
 
-        Keys it does not know -- ``id``, a mirror's own bookkeeping, a newer page's
-        field -- are ignored, so a document from a newer writer still reads.
+        Keys it does not know -- ``id``, a newer page's field -- are not part of the
+        record; the store functions carry them through (:func:`update`,
+        :func:`import_docs`), so a document from a newer writer loses nothing here.
         """
         doc = _mapping(doc, "a record")
         return cls(
@@ -508,6 +546,10 @@ class Record:
         )
 
 
+#: The top-level keys a document holds for this version: the record's fields and ``id``.
+_DOC_KEYS = frozenset(f.name for f in fields(Record)) | {"id"}
+
+
 # --------------------------------------------------------------------------------------
 # Presentation
 
@@ -517,7 +559,9 @@ def present(rev: str, record: Record | None, *, now: datetime | None = None) -> 
 
     Transcribed from section 2.1 of the research, and **the specification the page's
     script transcribes in turn**, so the two agree without a scheduler: a snooze wakes
-    because this function says so at render time, not because anything fired.
+    because this function says so at render time, not because anything fired. A Later
+    with no ``until`` is asleep until it changes -- a transcription must not compare the
+    time against a missing value.
 
     ====================================================  ===============  ============
     record                                                current rev      shows
@@ -606,11 +650,12 @@ def later(
     """
     rev = _rev(rev)
     before = Record() if record is None else record
-    wake = (
-        None
-        if until is None
-        else _stamp(instant(until) if isinstance(until, str) else until)
-    )
+    if until is None:
+        wake = None
+    elif isinstance(until, str):
+        wake = _stamp(_stored_instant(until, "until"))
+    else:
+        wake = _stamp(until)
     deferral = Later(
         until=wake,
         on_change=on_change,
@@ -656,7 +701,8 @@ class _AtomicUtf8Files(FileStringPersister):
 
     UTF-8 because ``dol`` inherits the locale's encoding, and a note is whatever a person
     typed. Atomic because the terminal and the courier both write here: a reader must see
-    the old document or the new one, never half of one.
+    the old document or the new one, never half of one. The temporary name is unique per
+    write, so two writers in one process do not share it.
     """
 
     _read_open_kwargs: ClassVar[dict] = dict(
@@ -668,7 +714,7 @@ class _AtomicUtf8Files(FileStringPersister):
 
     def __setitem__(self, k, v):
         os.makedirs(os.path.dirname(k), exist_ok=True)
-        tmp = f"{k}.{os.getpid()}{_TMP_SUFFIX}"
+        tmp = f"{k}.{uuid.uuid4().hex}{_TMP_SUFFIX}"
         try:
             with open(tmp, **self._write_open_kwargs) as fp:
                 fp.write(v)
@@ -724,20 +770,36 @@ def dflt_store(rootdir: str | Path | None = None) -> MutableMapping[str, dict]:
     return filt_iter(docs, filt=is_item_id)
 
 
-def as_doc(item: str, record: Record) -> dict:
-    """The stored document: the record's fields plus its ``id``. This is the export shape."""
-    return {"id": item, **record.as_dict()}
+def _extras(doc: Mapping | None) -> dict:
+    """The top-level keys of ``doc`` this version does not know, to be carried through."""
+    return {k: v for k, v in (doc or {}).items() if k not in _DOC_KEYS}
 
 
-def read_record(item: str, *, store: MutableMapping | None = None) -> Record | None:
-    """The record for ``item``, or ``None`` when the person has never acted on it."""
+def as_doc(item: str, record: Record, *, extras: Mapping | None = None) -> dict:
+    """The stored document: ``extras``, then the record's fields and its ``id``.
+
+    This is the export shape. ``extras`` are keys a newer writer added; the record's own
+    fields always win over them.
+    """
+    return {**(extras or {}), "id": item, **record.as_dict()}
+
+
+def read_doc(item: str, *, store: MutableMapping | None = None) -> dict | None:
+    """``item``'s stored document as it is, or ``None`` when there is none."""
     store = dflt_store() if store is None else store
     try:
-        doc = store[item]
+        return store[item]
     except KeyError:
         return None
     except ValueError as exc:
         raise ValueError(f"attention record {item} is unreadable: {exc}") from None
+
+
+def read_record(item: str, *, store: MutableMapping | None = None) -> Record | None:
+    """The record for ``item``, or ``None`` when the person has never acted on it."""
+    doc = read_doc(item, store=store)
+    if doc is None:
+        return None
     try:
         return Record.from_dict(doc)
     except ValueError as exc:
@@ -745,23 +807,49 @@ def read_record(item: str, *, store: MutableMapping | None = None) -> Record | N
 
 
 def write_record(
-    item: str, record: Record, *, store: MutableMapping | None = None
+    item: str,
+    record: Record,
+    *,
+    store: MutableMapping | None = None,
+    extras: Mapping | None = None,
 ) -> dict:
-    """Store ``record`` as ``item``'s document, and return the document."""
+    """Store ``record`` as ``item``'s document, with ``extras`` carried along; return it."""
     if not is_item_id(item):
         raise ValueError(f"{item!r} is not an item id")
     store = dflt_store() if store is None else store
-    doc = as_doc(item, record)
+    doc = as_doc(item, record, extras=extras)
     store[item] = doc
     return doc
 
 
+def update(
+    item: str,
+    step: Callable[[Record | None], Record],
+    *,
+    store: MutableMapping | None = None,
+) -> dict:
+    """Apply ``step`` to ``item``'s record and store the result; return the document.
+
+    Keys the stored document holds and this version does not know are kept. A document
+    that cannot be read counts as no record and is replaced, with a warning: a verb that
+    refused to overwrite a broken file would leave that item stuck for good.
+    """
+    store = dflt_store() if store is None else store
+    try:
+        doc = read_doc(item, store=store)
+        record = None if doc is None else Record.from_dict(doc)
+    except ValueError as exc:
+        warnings.warn(
+            f"replacing unreadable attention record {item}: {exc}", stacklevel=2
+        )
+        doc, record = None, None
+    return write_record(item, step(record), store=store, extras=_extras(doc))
+
+
 def _updated(record: Record) -> datetime:
-    return (
-        instant(record.updated_at)
-        if record.updated_at
-        else datetime.min.replace(tzinfo=timezone.utc)
-    )
+    if not record.updated_at:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    return instant(record.updated_at)
 
 
 def export_docs(
@@ -771,9 +859,13 @@ def export_docs(
 ) -> list[dict]:
     """Every record as its document, oldest change first; with ``since``, only later changes.
 
-    ``since`` is an ISO time or date (read as UTC without an offset) or a datetime; a
-    record changed exactly at it is left out, so a courier passing its last push time
-    does not send the same write twice.
+    ``since`` is an ISO time or date (read as UTC without an offset) or a datetime, and is
+    exclusive. A write is stamped before it is stored, so one can land in the store after
+    a courier's export with a stamp older than that export: a courier passes a ``since``
+    with a margin before its last push rather than the push time itself, and resending
+    what the far side already has costs nothing, because :func:`import_docs` keeps a copy
+    that is as new. A document that cannot be read is skipped with a warning rather than
+    stopping every other record from moving.
     """
     store = dflt_store() if store is None else store
     floor = None
@@ -781,12 +873,17 @@ def export_docs(
         floor = instant(since) if isinstance(since, str) else _aware(since)
     found = []
     for item in list(store):
-        record = read_record(item, store=store)
+        try:
+            doc = read_doc(item, store=store)
+            record = None if doc is None else Record.from_dict(doc)
+        except ValueError as exc:
+            warnings.warn(f"skipped attention record {item}: {exc}", stacklevel=2)
+            continue
         if record is None or (floor is not None and _updated(record) <= floor):
             continue
-        found.append((item, record))
-    found.sort(key=lambda pair: (_updated(pair[1]), pair[0]))
-    return [as_doc(item, record) for item, record in found]
+        found.append((item, record, _extras(doc)))
+    found.sort(key=lambda entry: (_updated(entry[1]), entry[0]))
+    return [as_doc(item, record, extras=extras) for item, record, extras in found]
 
 
 def import_docs(docs: Iterable[Mapping], *, store: MutableMapping | None = None) -> dict:
@@ -794,8 +891,8 @@ def import_docs(docs: Iterable[Mapping], *, store: MutableMapping | None = None)
 
     Every document is checked before any is written, so a batch with one bad document
     changes nothing. A tie keeps the copy already here: the same write arriving twice is a
-    no-op. A local copy that cannot be read is replaced. Returns
-    ``{"written", "kept", "total"}``.
+    no-op. A local copy that cannot be read is replaced. Keys this version does not know
+    travel with the winning document. Returns ``{"written", "kept", "total"}``.
     """
     store = dflt_store() if store is None else store
     parsed = []
@@ -811,9 +908,9 @@ def import_docs(docs: Iterable[Mapping], *, store: MutableMapping | None = None)
                 raise ValueError("it has no updated_at, which last-write-wins needs")
         except ValueError as exc:
             raise ValueError(f"{where}: {exc}") from None
-        parsed.append((item, record))
+        parsed.append((item, record, _extras(doc)))
     written = kept = 0
-    for item, record in parsed:
+    for item, record, extras in parsed:
         try:
             current = read_record(item, store=store)
         except ValueError:
@@ -821,6 +918,6 @@ def import_docs(docs: Iterable[Mapping], *, store: MutableMapping | None = None)
         if current is not None and _updated(current) >= _updated(record):
             kept += 1
             continue
-        write_record(item, record, store=store)
+        write_record(item, record, store=store, extras=extras)
         written += 1
     return {"written": written, "kept": kept, "total": len(parsed)}

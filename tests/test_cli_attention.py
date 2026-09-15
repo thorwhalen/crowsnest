@@ -50,8 +50,10 @@ def test_later_1h_writes_one_document_and_prints_it(home, capsys):
     assert len(_documents()) == 1
     assert printed["state"] == "later" and printed["later"]["plan"] == "after the deploy"
     until = attention.instant(printed["later"]["until"])
+    # Stamps are written to the millisecond, as JavaScript writes them.
+    slack = timedelta(milliseconds=1)
     assert (
-        before + timedelta(hours=1)
+        before + timedelta(hours=1) - slack
         <= until
         <= datetime.now(timezone.utc) + timedelta(hours=1)
     )

@@ -57,6 +57,7 @@ and nothing in this module pretends otherwise.
 
 from __future__ import annotations
 
+import math
 import os
 import re
 import sys
@@ -159,20 +160,27 @@ def claude_bin_setting(*, path: str | Path | None = None) -> str:
 
 
 def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:
-    """Raise if ``claude_bin`` was written under a ``[[homes]]`` entry.
+    """Raise if ``claude_bin`` was written under a table: a ``[[homes]]`` entry, ``[attention]``.
 
     The easy mistake, and a silent one: TOML hands every key after a table header to
     that table, so a ``claude_bin`` added at the end of the file becomes a field of the
-    last home -- read by nothing, reported by nothing, and the launcher stays whatever
+    last table -- read by nothing, reported by nothing, and the launcher stays whatever
     it was. Cheaper to say so than to let someone re-read their own config file.
     """
-    for entry in data.get("homes") or []:
-        if isinstance(entry, dict) and CLAUDE_BIN_KEY in entry:
+    for key, value in data.items():
+        entries = value if isinstance(value, list) else [value]
+        for entry in entries:
+            if not (isinstance(entry, dict) and CLAUDE_BIN_KEY in entry):
+                continue
+            where = (
+                f"[[{key}]] entry {entry.get('name', '?')!r}"
+                if isinstance(value, list)
+                else f"[{key}] table"
+            )
             raise ValueError(
-                f"{config_path(path)}: {CLAUDE_BIN_KEY} is inside the "
-                f"[[homes]] entry {entry.get('name', '?')!r}, where it does nothing -- "
-                f"TOML gives every key after a table header to that table. Move it "
-                f"above the first [[homes]] line."
+                f"{config_path(path)}: {CLAUDE_BIN_KEY} is inside the {where}, where "
+                f"it does nothing -- TOML gives every key after a table header to that "
+                f"table. Move it above the first table header."
             )
 
 
@@ -249,15 +257,22 @@ def _duration(value, *, key: str) -> timedelta:
     (datetime.timedelta(days=1), datetime.timedelta(seconds=5400))
     """
     if isinstance(value, (int, float)) and not isinstance(value, bool):
-        return timedelta(hours=value)
-    found = _DURATION.match(value) if isinstance(value, str) else None
-    if not found:
-        raise ValueError(
-            f"{key} must be a number of hours or text like '90m', '24h' or '2d', "
-            f"not {value!r}"
-        )
-    amount, unit = found.groups()
-    return timedelta(**{_DURATION_UNITS[unit]: float(amount)})
+        amount, unit = value, "h"
+    else:
+        found = _DURATION.match(value) if isinstance(value, str) else None
+        if not found:
+            raise ValueError(
+                f"{key} must be a number of hours or text like '90m', '24h' or '2d', "
+                f"not {value!r}"
+            )
+        amount, unit = float(found.group(1)), found.group(2)
+    # TOML has `inf` and `nan`, and timedelta raises OverflowError on a huge one.
+    try:
+        if not math.isfinite(amount):
+            raise OverflowError
+        return timedelta(**{_DURATION_UNITS[unit]: amount})
+    except OverflowError:
+        raise ValueError(f"{key} must be a finite duration, not {value!r}") from None
 
 
 def attention_settings(*, path: str | Path | None = None) -> AttentionSettings:
