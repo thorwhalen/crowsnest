@@ -14,7 +14,7 @@ UTC, so the times they print do not depend on the machine running the tests.
 from __future__ import annotations
 
 import re
-from datetime import timedelta
+from datetime import timedelta, timezone
 
 import pytest
 from fixtures import ALIVE, demo_home
@@ -271,7 +271,8 @@ def test_times_the_person_chose_are_shown_in_the_page_zone():
     store = {}
     mark(store, named(rows, "decider"), attention.later, until=NOW + timedelta(hours=1))
     mark(store, named(rows, "doer"), attention.later, until=NOW - timedelta(hours=1))
-    html = page(rows, store, tz="Asia/Tokyo")  # UTC+9, no daylight saving
+    # A fixed offset, not a zone name: Windows has no zone database without `tzdata`.
+    html = page(rows, store, tz=timezone(timedelta(hours=9)))
     assert "until 22:00 or it changes" in register(html, "later")
     assert "you put it off until 20:00" in register(html, "needs-you")
 
