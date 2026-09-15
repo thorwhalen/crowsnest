@@ -45,6 +45,15 @@ stale_after = "24h"    # a number is hours; or "90m", "2d"
 stuck_after = "6h"
 ```
 
+The `[report]` table ([`report_settings()`](#crowsnest.config.report_settings)) names the ledger directory the report’s
+rows are triaged from. The attention verbs and `crowsnest watch` read the same table, so
+all three build a row the same way without a flag each ([`crowsnest.rows`](crowsnest.rows.html.md#module-crowsnest.rows)).
+
+```toml
+[report]
+ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
+```
+
 On Windows write paths in single quotes (`path = 'C:\Users\me\.claude'`): a TOML
 double-quoted string treats a backslash as an escape.
 
@@ -65,6 +74,7 @@ and nothing in this module pretends otherwise.
 | [`CONFIG_ENV_VAR`](#crowsnest.config.CONFIG_ENV_VAR)     | Overrides the config file location outright.                                     |
 | [`DFLT_FRESH_SECONDS`](#crowsnest.config.DFLT_FRESH_SECONDS) | How recently a remote home's registry record must have changed to count as live. |
 | [`ATTENTION_KEY`](#crowsnest.config.ATTENTION_KEY)      | The config table holding the attention settings.                                 |
+| [`REPORT_KEY`](#crowsnest.config.REPORT_KEY)         | The config table saying how the report's rows are built.                         |
 
 ### Functions
 
@@ -74,12 +84,14 @@ and nothing in this module pretends otherwise.
 | [`config_path`](#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
 | [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
 | [`homes`](#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
+| [`report_settings`](#crowsnest.config.report_settings)(\*[, path])      | The config file's `[report]` table, or the defaults when it has none.            |
 
 ### Classes
 
-| [`AttentionSettings`](#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                        |
-|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
-| [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it. |
+| [`AttentionSettings`](#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                                                                                                                                                                                        |
+|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
+| [`ReportSettings`](#crowsnest.config.ReportSettings)([ledger_dir])              | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
 
@@ -118,6 +130,22 @@ How recently a remote home’s registry record must have changed to count as liv
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One Claude Code config directory to read, and how to judge liveness in it.
+
+### crowsnest.config.REPORT_KEY *= 'report'*
+
+The config table saying how the report’s rows are built.
+
+### *class* crowsnest.config.ReportSettings(ledger_dir=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[report]` table, validated: how the report builds its rows, which the attention
+verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)).
+
+```pycon
+>>> ReportSettings().ledger_dir is None
+True
+```
 
 ### crowsnest.config.attention_settings(, path=None)
 
@@ -178,3 +206,20 @@ a person who wrote one meant it.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](#crowsnest.config.Home)]
+
+### crowsnest.config.report_settings(, path=None)
+
+The config file’s `[report]` table, or the defaults when it has none.
+
+```toml
+[report]
+ledger_dir = "~/sync/crowsnest/ledger"   # the ledgers rows are triaged from
+```
+
+`ledger_dir` must be absolute or start with `~`. A relative one would name a
+different directory for each command run from a different place – the report from one,
+`crowsnest watch` from another – which is the disagreement this setting exists to
+end. A key the table does not know is an error, as in `[attention]`.
+
+* **Return type:**
+  [`ReportSettings`](#crowsnest.config.ReportSettings)

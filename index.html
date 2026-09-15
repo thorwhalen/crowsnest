@@ -78,6 +78,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.rows.html">crowsnest.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.said.html">crowsnest.said</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.skills.html">crowsnest.skills</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.tools.html">crowsnest.tools</a></li>
@@ -282,6 +283,13 @@ data-aria-dark="Switch to auto color mode">
 </div>
 <p><strong>Seen and done are pinned to a revision of the item, not a flag.</strong> The revision is a hash of what you would have to decide again — the group, why, and the ask in its own words — and never a timestamp, a tool name, or the session’s latest chatter and the links in it. A session that asks a different question comes back as <em>changed</em>; one that merely runs another command does not. <em>Later</em> wakes when its time passes or as soon as the item changes, whichever comes first (<code class="docutils literal notranslate"><span class="pre">--ignore-changes</span></code> keeps it asleep through a change), and <code class="docutils literal notranslate"><span class="pre">change</span></code> as the preset means no time at all. Nothing is scheduled: what you see is computed from the record whenever it is shown.</p>
 <p>Items are keyed by session id, not name, so a resumed session keeps its record and a new session given an old name starts fresh. The hours behind <code class="docutils literal notranslate"><span class="pre">evening</span></code> and <code class="docutils literal notranslate"><span class="pre">tomorrow</span></code> are an <code class="docutils literal notranslate"><span class="pre">[attention]</span></code> table in the config file (<code class="docutils literal notranslate"><span class="pre">evening_hour</span> <span class="pre">=</span> <span class="pre">18</span></code>, <code class="docutils literal notranslate"><span class="pre">morning_hour</span> <span class="pre">=</span> <span class="pre">9</span></code>). <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">attention</span> <span class="pre">export</span></code> and <code class="docutils literal notranslate"><span class="pre">import</span></code> move the records as JSON, the newer <code class="docutils literal notranslate"><span class="pre">updated_at</span></code> winning, which is how a published page’s copy and this machine’s are kept in step. The report page showing this record is the next step (<a class="reference external" href="https://github.com/thorwhalen/crowsnest/issues/55">#55</a>).</p>
+<p>A mark holds only if the page, the verbs and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> read the item the same way, and that includes the ledgers each session is triaged from. If yours are not in the default place, name them once rather than passing <code class="docutils literal notranslate"><span class="pre">--ledger-dir</span></code> to each of <code class="docutils literal notranslate"><span class="pre">report</span></code>, the verbs and <code class="docutils literal notranslate"><span class="pre">watch</span></code>. <code class="docutils literal notranslate"><span class="pre">triage</span></code>, <code class="docutils literal notranslate"><span class="pre">roster</span></code> and <code class="docutils literal notranslate"><span class="pre">show</span></code> read the same setting, so they agree with the page too:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># ~/.config/crowsnest/config.toml</span>
+</span><span data-line="2"><span class="k">[report]</span>
+</span><span data-line="3"><span class="n">ledger_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/sync/crowsnest/ledger"</span><span class="w">   </span><span class="c1"># absolute, or starting with ~</span>
+</span></pre></div>
+</div>
+<p>In Python the same agreement is one value, <code class="docutils literal notranslate"><span class="pre">crowsnest.rows.RowContext</span></code> (the ledger directory, link resolvers, triage readers, and attention’s identity and material), handed whole as <code class="docutils literal notranslate"><span class="pre">row_context=</span></code> to <code class="docutils literal notranslate"><span class="pre">tools.report</span></code>, the verbs and <code class="docutils literal notranslate"><span class="pre">watch.events</span></code>.</p>
 </section>
 <section id="every-reference-as-a-link">
 <h2>Every reference, as a link<a class="headerlink" href="#every-reference-as-a-link" title="Link to this heading">#</a></h2>
@@ -485,7 +493,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-15 14:51 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/c89f66974b5f865bf9696f2c57d7a7e58d6413f7">c89f669</a> (main) · crowsnest 0.0.43 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-15 15:41 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/d89a5619704e1f708cf42ae0e307553765177a93">d89a561</a> (main) · crowsnest 0.0.44 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -520,7 +528,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=b345ff55"></script>
+      <script src="_static/documentation_options.js?v=78cc6f98"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

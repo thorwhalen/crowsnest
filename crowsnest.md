@@ -1,4 +1,4 @@
-> built 2026-09-15 14:51 UTC from c89f669 (main) · crowsnest 0.0.43. Details: build_info.json
+> built 2026-09-15 15:41 UTC from d89a561 (main) · crowsnest 0.0.44. Details: build_info.json
 
 # index.html.md
 
@@ -139,6 +139,16 @@ crowsnest undo shipper                              one step back
 **Seen and done are pinned to a revision of the item, not a flag.** The revision is a hash of what you would have to decide again — the group, why, and the ask in its own words — and never a timestamp, a tool name, or the session’s latest chatter and the links in it. A session that asks a different question comes back as *changed*; one that merely runs another command does not. *Later* wakes when its time passes or as soon as the item changes, whichever comes first (`--ignore-changes` keeps it asleep through a change), and `change` as the preset means no time at all. Nothing is scheduled: what you see is computed from the record whenever it is shown.
 
 Items are keyed by session id, not name, so a resumed session keeps its record and a new session given an old name starts fresh. The hours behind `evening` and `tomorrow` are an `[attention]` table in the config file (`evening_hour = 18`, `morning_hour = 9`). `crowsnest attention export` and `import` move the records as JSON, the newer `updated_at` winning, which is how a published page’s copy and this machine’s are kept in step. The report page showing this record is the next step ([#55](https://github.com/thorwhalen/crowsnest/issues/55)).
+
+A mark holds only if the page, the verbs and `crowsnest watch` read the item the same way, and that includes the ledgers each session is triaged from. If yours are not in the default place, name them once rather than passing `--ledger-dir` to each of `report`, the verbs and `watch`. `triage`, `roster` and `show` read the same setting, so they agree with the page too:
+
+```toml
+# ~/.config/crowsnest/config.toml
+[report]
+ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
+```
+
+In Python the same agreement is one value, `crowsnest.rows.RowContext` (the ledger directory, link resolvers, triage readers, and attention’s identity and material), handed whole as `row_context=` to `tools.report`, the verbs and `watch.events`.
 
 ## Every reference, as a link
 
@@ -1265,6 +1275,15 @@ stale_after = "24h"    # a number is hours; or "90m", "2d"
 stuck_after = "6h"
 ```
 
+The `[report]` table ([`report_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)) names the ledger directory the report’s
+rows are triaged from. The attention verbs and `crowsnest watch` read the same table, so
+all three build a row the same way without a flag each ([`crowsnest.rows`](_autosummary/crowsnest.rows.html.md#module-crowsnest.rows)).
+
+```toml
+[report]
+ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
+```
+
 On Windows write paths in single quotes (`path = 'C:\Users\me\.claude'`): a TOML
 double-quoted string treats a backslash as an escape.
 
@@ -1285,6 +1304,7 @@ and nothing in this module pretends otherwise.
 | [`CONFIG_ENV_VAR`](_autosummary/crowsnest.config.html.md#crowsnest.config.CONFIG_ENV_VAR)     | Overrides the config file location outright.                                     |
 | [`DFLT_FRESH_SECONDS`](_autosummary/crowsnest.config.html.md#crowsnest.config.DFLT_FRESH_SECONDS) | How recently a remote home's registry record must have changed to count as live. |
 | [`ATTENTION_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.ATTENTION_KEY)      | The config table holding the attention settings.                                 |
+| [`REPORT_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.REPORT_KEY)         | The config table saying how the report's rows are built.                         |
 
 ### Functions
 
@@ -1294,12 +1314,14 @@ and nothing in this module pretends otherwise.
 | [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
 | [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
 | [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
+| [`report_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)(\*[, path])      | The config file's `[report]` table, or the defaults when it has none.            |
 
 ### Classes
 
-| [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                        |
-|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
-| [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it. |
+| [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                                                                                                                                                                                        |
+|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
+| [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)([ledger_dir])              | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
 
@@ -1338,6 +1360,22 @@ How recently a remote home’s registry record must have changed to count as liv
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One Claude Code config directory to read, and how to judge liveness in it.
+
+### crowsnest.config.REPORT_KEY *= 'report'*
+
+The config table saying how the report’s rows are built.
+
+### *class* crowsnest.config.ReportSettings(ledger_dir=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[report]` table, validated: how the report builds its rows, which the attention
+verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)).
+
+```pycon
+>>> ReportSettings().ledger_dir is None
+True
+```
 
 ### crowsnest.config.attention_settings(, path=None)
 
@@ -1398,6 +1436,23 @@ a person who wrote one meant it.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)]
+
+### crowsnest.config.report_settings(, path=None)
+
+The config file’s `[report]` table, or the defaults when it has none.
+
+```toml
+[report]
+ledger_dir = "~/sync/crowsnest/ledger"   # the ledgers rows are triaged from
+```
+
+`ledger_dir` must be absolute or start with `~`. A relative one would name a
+different directory for each command run from a different place – the report from one,
+`crowsnest watch` from another – which is the disagreement this setting exists to
+end. A key the table does not know is an error, as in `[attention]`.
+
+* **Return type:**
+  [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)
 
 
 # _autosummary/crowsnest.hook.html.md
@@ -1744,14 +1799,15 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None, ledger_dir=None, resolvers=None, owner='', verdicts=None, material=None)
+### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None, row_context=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 
 `all_homes` watches every configured home at once; registry events then carry the
 home’s name. Hook events come from this machine’s own hook log and carry none.
-`ledger_dir`, `resolvers`, `owner`, `verdicts` and `material` reach
-`attention_wakes()`, and must be the ones the attention verbs were given.
+`row_context` reaches `attention_wakes()` ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)),
+and must be the one the attention verbs were given. By default it is the config
+file’s, read once when the stream starts.
 
 The first snapshot is the baseline and yields nothing, and the hook log is opened at
 its end: a monitor that starts up is not told about forty sessions that were already
@@ -1853,6 +1909,10 @@ where the ledgers are).
 \*\*It follows `activity` unless it is asked for.\*\* Resolving costs a ledger read per
 session, which is nothing next to a transcript tail and everything next to a registry
 listing – and `activity=False` promises “instant”. Pass `links=True` to have both.
+
+`ledger_dir=None` is the config file’s `[report] ledger_dir`
+([`crowsnest.config.report_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)), the ledgers the report reads, else
+`<data dir>/ledger`.
 
 Every row carries `said_at` and `said_at_basis`, which say when the thing the row
 quotes was said, taken from its source ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
@@ -1961,6 +2021,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`paths`](_autosummary/crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
 | [`registry`](_autosummary/crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
 | [`report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
+| [`rows`](_autosummary/crowsnest.rows.html.md#module-crowsnest.rows)           | How an item's row is built and hashed: one value, taken whole by every surface that pins it.          |
 | [`said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)           | When the thing an item quotes was said: its own time, taken from its own source.                      |
 | [`skills`](_autosummary/crowsnest.skills.html.md#module-crowsnest.skills)       | The agent-facing surface: the skills, the subagent, and the command that installs them.               |
 | [`tools`](_autosummary/crowsnest.tools.html.md#module-crowsnest.tools)         | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                      |
@@ -3473,7 +3534,7 @@ hidden, and Undo puts either back where it stood.
 * **Type:**
   The console’s one script. It loads nothing from anywhere
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, identity=None, material=None, attention_settings=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None)
 
 The roster [`crowsnest.tools.roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -3535,13 +3596,150 @@ decide how it is drawn:
 **A store with no readable record changes nothing**: the page is byte for byte the
 page from before attention existed. Neither does `plain=True`, which ignores the
 store – a copy to share – nor a roster without triage verdicts, whose rows carry
-revisions no verb pinned. `identity` and `material` are
-[`crowsnest.attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention)’s seams, and must be the ones the verbs were given. An
-interactive page carries `data-item` and `data-rev` for its script on every row
-that has an identity, whatever the store holds.
+revisions no verb pinned. `row_context` names and hashes each row
+([`crowsnest.rows.RowContext.item()`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext.item) and [`rev()`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext.rev);
+`None` is attention’s defaults), and must be the one the rows were built with and
+the verbs were given. An interactive page carries `data-item` and `data-rev` for
+its script on every row that has an identity, whatever the store holds.
+
+`links=False` leaves each row’s resolved references off the page: it renders as a
+row built without them would, the transcript’s own locators included. Its revision
+is still taken from the whole row, because that is the row the verbs pin.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+
+# _autosummary/crowsnest.rows.html.md
+
+# crowsnest.rows
+
+How an item’s row is built and hashed: one value, taken whole by every surface that pins it.
+
+The attention store pins what a person saw to a *revision* of a row
+([`crowsnest.attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention)), and three surfaces compute that revision on their own: the
+report renders it into the page ([`crowsnest.tools.report()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)), the attention verbs pin
+it ([`crowsnest.tools.seen()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.seen) and the rest), and the watcher computes it again to say
+that an item put off has woken ([`crowsnest.watch.attention_wakes()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.attention_wakes)). They agree only
+if they build the row the same way and hash it the same way. When they did not, nothing
+said so: a marked item read as changed on the page, or woke on the watcher’s first tick
+(#74). Each argument that builds a row was threaded through each surface by hand, and the
+review of that fix found one still missing (#78).
+
+So how a row is built and hashed is one value, [`RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext). Each of those surfaces
+takes it as one keyword argument, `row_context=`, and hands it on whole, and nothing
+outside this module reads its fields. A new way to build a row is a field here, read in
+[`RowContext.rows()`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext.rows) or [`RowContext.rev()`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext.rev), and every surface has it.
+
+The default is [`dflt_row_context()`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.dflt_row_context): the config file’s `[report]` table
+([`crowsnest.config.report_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)) names the ledger directory, so
+`crowsnest report`, the verbs and `crowsnest watch` agree without the same
+`--ledger-dir` typed three times.
+
+```toml
+[report]
+ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
+```
+
+The default context builds and hashes exactly as the loose arguments’ defaults did, so no
+stored id or revision changes with it.
+
+```pycon
+>>> RowContext(owner='ana').rev({'status': 'busy'}) == RowContext().rev({'status': 'busy'})
+True
+```
+
+### Functions
+
+| [`dflt_row_context`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.dflt_row_context)(\*[, config])   | The context a surface uses when it is given none: the config file's.   |
+|-----------------------------------------------------------------------------------|------------------------------------------------------------------------|
+
+### Classes
+
+| [`RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)([ledger_dir, resolvers, ...])   | How a row is built and hashed.   |
+|---------------------------------------------------------------------------------------------|----------------------------------|
+
+### *class* crowsnest.rows.RowContext(ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+How a row is built and hashed. Build one once; hand the same one to every surface.
+
+`ledger_dir` is where the ledgers are (`None`: `<data dir>/ledger`);
+`resolvers` turn what a session wrote into links ([`crowsnest.links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links));
+`verdicts` and `owner` classify it ([`crowsnest.triage`](_autosummary/crowsnest.triage.html.md#module-crowsnest.triage)); `identity` and
+`material` name the item and say what counts as a change to it
+([`crowsnest.attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention)). `None` is each module’s own default, so
+`RowContext()` builds and hashes as those modules do on their own.
+
+`resolvers` and `verdicts` are kept as tuples: a generator handed in would be spent
+on the first row of a page, and every row after it would be built without them.
+
+#### *classmethod* from_config(, path=None, \*\*changes)
+
+The context the config file describes, with `changes` on top.
+
+`RowContext.from_config(ledger_dir=flag)` is what a `--ledger-dir` flag means:
+the config file’s context, with that one directory instead.
+
+* **Return type:**
+  [`RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)
+
+#### item(row)
+
+The row’s item id ([`crowsnest.attention.item_id()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.item_id)).
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+#### pages(labels)
+
+Each named session’s ledger page, read once (an empty page for none).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### rev(row)
+
+The row’s revision ([`crowsnest.attention.fingerprint()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.fingerprint)).
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+#### row(session, , home=None, all_homes=False, config=None)
+
+The row the report shows for `session`, a reference as
+[`crowsnest.tools.resolve()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.resolve) takes one. Raises `KeyError` when none matches.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### rows(found, , home_dir=None, pages=None, triage=True)
+
+The rows the report shows for the live sessions `found`, in their order.
+
+The one place a row is built: the roster’s clipping and link cap, then its triage
+verdict. `home_dir` is what each row’s `open_command` pins; `pages` are the
+ledgers already read ([`pages()`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext.pages)), read here when not given. Links are always
+resolved, with `resolvers`: a verdict reader may read them, so a row built
+without them could be classified, and hashed, differently from the one the verbs
+pin. `triage=False` is the report’s switch for a page without verdicts, which
+never applies the store.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.rows.dflt_row_context(, config=None)
+
+The context a surface uses when it is given none: the config file’s.
+
+* **Return type:**
+  [`RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)
+
+```pycon
+>>> dflt_row_context(config='/nonexistent-config-for-doctest') == RowContext()
+True
+```
 
 
 # _autosummary/crowsnest.said.html.md
@@ -3929,14 +4127,14 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.done(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+### crowsnest.tools.done(session, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Mark `session`’s item handled: hidden until what it asks for changes.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.later(session, preset, , plan='', on_change=True, home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+### crowsnest.tools.later(session, preset, , plan='', on_change=True, home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Put `session`’s item off until a preset time, or until it changes, whichever first.
 
@@ -3969,7 +4167,7 @@ before crowsnest recorded parents, or this answers with the edges of today only.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.note(session, text, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+### crowsnest.tools.note(session, text, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Set the note on `session`’s item; empty text removes it. Nothing reads a note as an
 instruction.
@@ -3987,7 +4185,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, ledger_dir=None, lineage_path=None, resolvers=None, triage=True, verdicts=None, owner='', with_lineage=True, tz=None, stale_after=None, store=None, plain=False, identity=None, material=None)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
@@ -4007,12 +4205,18 @@ and sort below the rest of their register, rows put off fold into a collapsed *L
 block, rows handled and unchanged since are left out and counted, and the title counts
 what is new, changed or woke in *Needs you*. A store that holds no readable record
 renders the page exactly as it was before attention existed. `plain` ignores the
-store, for a copy to share. `identity` and `material` are that module’s seams, and
-must be the ones the verbs were given, or every seen item reads as changed.
+store, for a copy to share.
+
+`row_context` is how every row is built and hashed ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext):
+the ledger directory, link resolvers, triage readers and owner, and attention’s
+`identity` and `material`). It must be the one the verbs and the watcher were
+given, or every seen item reads as changed; by default all three read it from the
+config file ([`crowsnest.rows.dflt_row_context()`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.dflt_row_context)), so they agree unless told
+otherwise.
 
 `triage=False` ignores the store as well, because `render_report()` never applies
 it to a page without verdicts: the verbs pin the revision of the *triaged* row
-(`_item_row()`), so there every seen item would read as changed.
+([`crowsnest.rows.RowContext.row()`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext.row)), so there every seen item would read as changed.
 
 `made_at` is the moment the snapshot claims to be from; it defaults to now, but a
 caller that wants byte-stable output passes it explicitly – this is the one
@@ -4027,11 +4231,11 @@ which is the question a person actually has. `triage=False` renders the older
 status-organised page; so does calling [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report) on a
 roster whose rows carry no verdict.
 
-`links`, `ledger_dir` and `resolvers` reach [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) unchanged. This is
-the surface the link resolution exists for, so it is the surface that has to be able
-to turn it off, point it at another ledger directory, or hand it a resolver of its
-own – and `ledger_dir` is also what lets a test of this function not read the
-ledgers of whoever is running it.
+`links=False` leaves the references off the page. They are still resolved: a
+verdict reader may read them, and the verbs pin the row with them. To resolve
+nothing, or to read other ledgers, give `row_context` `resolvers=()` or a
+`ledger_dir`, and give the verbs and the watcher the same one. A `ledger_dir` is
+also what lets a test of this function not read the ledgers of whoever runs it.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -4070,6 +4274,10 @@ where the ledgers are).
 session, which is nothing next to a transcript tail and everything next to a registry
 listing – and `activity=False` promises “instant”. Pass `links=True` to have both.
 
+`ledger_dir=None` is the config file’s `[report] ledger_dir`
+([`crowsnest.config.report_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)), the ledgers the report reads, else
+`<data dir>/ledger`.
+
 Every row carries `said_at` and `said_at_basis`, which say when the thing the row
 quotes was said, taken from its source ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
 words, the question the session waits on, or the call in flight. Both are empty when
@@ -4078,7 +4286,7 @@ no source gives a time. Every surface renders the time from these two fields.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.seen(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+### crowsnest.tools.seen(session, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Mark `session`’s item seen at its current revision: it dims until it changes.
 
@@ -4135,7 +4343,7 @@ The last `last` turns of a session, oldest first; `before=N` pages back from tur
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.undo(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+### crowsnest.tools.undo(session, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Restore `session`’s attention record to before its last change. One level deep;
 raises `ValueError` when there is nothing to undo.
@@ -4143,7 +4351,7 @@ raises `ValueError` when there is nothing to undo.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.unseen(session, , home=None, all_homes=False, config=None, ledger_dir=None, resolvers=None, verdicts=None, owner='', identity=None, material=None, store=None)
+### crowsnest.tools.unseen(session, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Mark `session`’s item unread: it shows as new again.
 
@@ -4756,14 +4964,16 @@ news; a move in or out of the pair still is.
 * **Type:**
   Statuses that mean the same thing to a watcher
 
-### crowsnest.watch.attention_wakes(, store=None, row_of=None, home=None, all_homes=False, config=None, announced=None, now=None, ledger_dir=None, resolvers=None, owner='', verdicts=None, material=None)
+### crowsnest.watch.attention_wakes(, store=None, row_of=None, home=None, all_homes=False, config=None, announced=None, now=None, row_context=None)
 
 One `woke` event per attention item that just left `later`.
 
 Every item still in state `later` is re-read through [`crowsnest.attention.present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present),
 the same pure function the static page and the console use, with the item’s *current*
-revision – `row_of` is how that row is rebuilt from the document alone (default
-`_attention_row()`; a test hands a synthetic row instead of a live session). An
+revision – `row_of` is how that row is rebuilt from the document alone, called as
+`row_of(doc, home=, all_homes=, config=, row_context=)` so a replacement can build it
+the way the verbs did (default `_attention_row()`; a test hands a synthetic row
+instead of a live session). An
 item [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) no longer shows as `later` – its time
 passed, or it changed while `on_change` – has woken; one that a prior call already
 announced is not repeated. `announced` is that bookkeeping, kept by the caller
@@ -4771,9 +4981,10 @@ across ticks ([`events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.
 item once, which is the same acceptable-not-silent choice [`events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events) makes for a
 restarted watcher.
 
-`ledger_dir`, `resolvers`, `owner` and `verdicts` build the default row, and
-`material` takes its revision. Like the report’s, they must be the ones the verbs were given: a
-row built or hashed any other way reads as changed, and wakes on the first tick (#74).
+`row_context` builds the default row and takes every revision
+([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext); by default the config file’s). Like the report’s,
+it must be the one the verbs were given: a row built or hashed any other way reads as
+changed, and wakes on the first tick (#74, #78).
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
@@ -4790,14 +5001,15 @@ session whose last words were an error banner is reported as `error` instead.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
-### crowsnest.watch.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None, ledger_dir=None, resolvers=None, owner='', verdicts=None, material=None)
+### crowsnest.watch.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None, row_context=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 
 `all_homes` watches every configured home at once; registry events then carry the
 home’s name. Hook events come from this machine’s own hook log and carry none.
-`ledger_dir`, `resolvers`, `owner`, `verdicts` and `material` reach
-[`attention_wakes()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.attention_wakes), and must be the ones the attention verbs were given.
+`row_context` reaches [`attention_wakes()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.attention_wakes) ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)),
+and must be the one the attention verbs were given. By default it is the config
+file’s, read once when the stream starts.
 
 The first snapshot is the baseline and yields nothing, and the hook log is opened at
 its end: a monitor that starts up is not told about forty sessions that were already
@@ -4875,18 +5087,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-15 14:51 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c89f66974b5f865bf9696f2c57d7a7e58d6413f7"><code>c89f669</code></a> on branch <code>main</code>, for **crowsnest 0.0.43** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-15 15:41 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/d89a5619704e1f708cf42ae0e307553765177a93"><code>d89a561</code></a> on branch <code>main</code>, for **crowsnest 0.0.44** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.43) is behind the latest release on PyPI (0.0.44): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c89f66974b5f865bf9696f2c57d7a7e58d6413f7"><code>c89f66974b5f865bf9696f2c57d7a7e58d6413f7</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/d89a5619704e1f708cf42ae0e307553765177a93"><code>d89a5619704e1f708cf42ae0e307553765177a93</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -4897,9 +5107,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34984210605">34984210605</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34989858338">34989858338</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>c89f66974b5f865bf9696f2c57d7a7e58d6413f7</code> (in the history of the built commit) |
+| Event commit | <code>d89a5619704e1f708cf42ae0e307553765177a93</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4924,13 +5134,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.44/">0.0.44</a>, newer than the documented version (0.0.43).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.44/">0.0.44</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout c89f66974b5f865bf9696f2c57d7a7e58d6413f7
+git checkout d89a5619704e1f708cf42ae0e307553765177a93
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

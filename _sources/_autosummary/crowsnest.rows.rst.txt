@@ -1,0 +1,18 @@
+crowsnest.rows
+==============
+
+.. automodule:: crowsnest.rows
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      dflt_row_context
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      RowContext
+   

@@ -103,7 +103,7 @@ hidden, and Undo puts either back where it stood.
 * **Type:**
   The console’s one script. It loads nothing from anywhere
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, identity=None, material=None, attention_settings=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None)
 
 The roster [`crowsnest.tools.roster()`](crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -165,10 +165,15 @@ decide how it is drawn:
 **A store with no readable record changes nothing**: the page is byte for byte the
 page from before attention existed. Neither does `plain=True`, which ignores the
 store – a copy to share – nor a roster without triage verdicts, whose rows carry
-revisions no verb pinned. `identity` and `material` are
-[`crowsnest.attention`](crowsnest.attention.html.md#module-crowsnest.attention)’s seams, and must be the ones the verbs were given. An
-interactive page carries `data-item` and `data-rev` for its script on every row
-that has an identity, whatever the store holds.
+revisions no verb pinned. `row_context` names and hashes each row
+([`crowsnest.rows.RowContext.item()`](crowsnest.rows.html.md#crowsnest.rows.RowContext.item) and [`rev()`](crowsnest.rows.html.md#crowsnest.rows.RowContext.rev);
+`None` is attention’s defaults), and must be the one the rows were built with and
+the verbs were given. An interactive page carries `data-item` and `data-rev` for
+its script on every row that has an identity, whatever the store holds.
+
+`links=False` leaves each row’s resolved references off the page: it renders as a
+row built without them would, the transcript’s own locators included. Its revision
+is still taken from the whole row, because that is the row the verbs pin.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

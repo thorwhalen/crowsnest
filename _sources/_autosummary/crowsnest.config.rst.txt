@@ -12,6 +12,7 @@ crowsnest.config
       CONFIG_ENV_VAR
       DFLT_FRESH_SECONDS
       ATTENTION_KEY
+      REPORT_KEY
    
    .. rubric:: Functions
 
@@ -22,6 +23,7 @@ crowsnest.config
       config_path
       configured_homes
       homes
+      report_settings
    
    .. rubric:: Classes
 
@@ -29,4 +31,5 @@ crowsnest.config
    
       AttentionSettings
       Home
+      ReportSettings
    

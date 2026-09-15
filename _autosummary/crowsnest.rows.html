@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.rows - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.said" href="crowsnest.said.html" /><link rel="prev" title="crowsnest.report" href="crowsnest.report.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.rows"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.rows.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.rows.RowContext"><code class="docutils literal notranslate"><span class="pre">RowContext</span></code></a><ul>
+<li><a class="reference internal" href="#crowsnest.rows.RowContext.from_config"><code class="docutils literal notranslate"><span class="pre">RowContext.from_config()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.rows.RowContext.item"><code class="docutils literal notranslate"><span class="pre">RowContext.item()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.rows.RowContext.pages"><code class="docutils literal notranslate"><span class="pre">RowContext.pages()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.rows.RowContext.rev"><code class="docutils literal notranslate"><span class="pre">RowContext.rev()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.rows.RowContext.row"><code class="docutils literal notranslate"><span class="pre">RowContext.row()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.rows.RowContext.rows"><code class="docutils literal notranslate"><span class="pre">RowContext.rows()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#crowsnest.rows.dflt_row_context"><code class="docutils literal notranslate"><span class="pre">dflt_row_context()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.rows</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.rows">
+<span id="crowsnest-rows"></span><h1>crowsnest.rows<a class="headerlink" href="#module-crowsnest.rows" title="Link to this heading">#</a></h1>
+<p>How an item’s row is built and hashed: one value, taken whole by every surface that pins it.</p>
+<p>The attention store pins what a person saw to a <em>revision</em> of a row
+(<a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.attention</span></code></a>), and three surfaces compute that revision on their own: the
+report renders it into the page (<a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.report" title="crowsnest.tools.report"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.report()</span></code></a>), the attention verbs pin
+it (<a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.seen" title="crowsnest.tools.seen"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.seen()</span></code></a> and the rest), and the watcher computes it again to say
+that an item put off has woken (<a class="reference internal" href="crowsnest.watch.html#crowsnest.watch.attention_wakes" title="crowsnest.watch.attention_wakes"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.watch.attention_wakes()</span></code></a>). They agree only
+if they build the row the same way and hash it the same way. When they did not, nothing
+said so: a marked item read as changed on the page, or woke on the watcher’s first tick
+(#74). Each argument that builds a row was threaded through each surface by hand, and the
+review of that fix found one still missing (#78).</p>
+<p>So how a row is built and hashed is one value, <a class="reference internal" href="#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowContext</span></code></a>. Each of those surfaces
+takes it as one keyword argument, <code class="docutils literal notranslate"><span class="pre">row_context=</span></code>, and hands it on whole, and nothing
+outside this module reads its fields. A new way to build a row is a field here, read in
+<a class="reference internal" href="#crowsnest.rows.RowContext.rows" title="crowsnest.rows.RowContext.rows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">RowContext.rows()</span></code></a> or <a class="reference internal" href="#crowsnest.rows.RowContext.rev" title="crowsnest.rows.RowContext.rev"><code class="xref py py-meth docutils literal notranslate"><span class="pre">RowContext.rev()</span></code></a>, and every surface has it.</p>
+<p>The default is <a class="reference internal" href="#crowsnest.rows.dflt_row_context" title="crowsnest.rows.dflt_row_context"><code class="xref py py-func docutils literal notranslate"><span class="pre">dflt_row_context()</span></code></a>: the config file’s <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table
+(<a class="reference internal" href="crowsnest.config.html#crowsnest.config.report_settings" title="crowsnest.config.report_settings"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.config.report_settings()</span></code></a>) names the ledger directory, so
+<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code>, the verbs and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> agree without the same
+<code class="docutils literal notranslate"><span class="pre">--ledger-dir</span></code> typed three times.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[report]</span>
+</span><span data-line="2"><span class="n">ledger_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/sync/crowsnest/ledger"</span><span class="w">   </span><span class="c1"># absolute, or starting with ~</span>
+</span></pre></div>
+</div>
+<p>The default context builds and hashes exactly as the loose arguments’ defaults did, so no
+stored id or revision changes with it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">RowContext</span><span class="p">(</span><span class="n">owner</span><span class="o">=</span><span class="s1">'ana'</span><span class="p">)</span><span class="o">.</span><span class="n">rev</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'busy'</span><span class="p">})</span> <span class="o">==</span> <span class="n">RowContext</span><span class="p">()</span><span class="o">.</span><span class="n">rev</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'busy'</span><span class="p">})</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.rows.dflt_row_context" title="crowsnest.rows.dflt_row_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_row_context</span></code></a>(*[, config])</p></td>
+<td><p>The context a surface uses when it is given none: the config file's.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RowContext</span></code></a>([ledger_dir, resolvers, ...])</p></td>
+<td><p>How a row is built and hashed.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.rows.RowContext">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.rows.</span></span><span class="sig-name descname"><span class="pre">RowContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolvers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verdicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#RowContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.RowContext" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>How a row is built and hashed. Build one once; hand the same one to every surface.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ledger_dir</span></code> is where the ledgers are (<code class="docutils literal notranslate"><span class="pre">None</span></code>: <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/ledger</span></code>);
+<code class="docutils literal notranslate"><span class="pre">resolvers</span></code> turn what a session wrote into links (<a class="reference internal" href="crowsnest.links.html#module-crowsnest.links" title="crowsnest.links"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.links</span></code></a>);
+<code class="docutils literal notranslate"><span class="pre">verdicts</span></code> and <code class="docutils literal notranslate"><span class="pre">owner</span></code> classify it (<a class="reference internal" href="crowsnest.triage.html#module-crowsnest.triage" title="crowsnest.triage"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.triage</span></code></a>); <code class="docutils literal notranslate"><span class="pre">identity</span></code> and
+<code class="docutils literal notranslate"><span class="pre">material</span></code> name the item and say what counts as a change to it
+(<a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.attention</span></code></a>). <code class="docutils literal notranslate"><span class="pre">None</span></code> is each module’s own default, so
+<code class="docutils literal notranslate"><span class="pre">RowContext()</span></code> builds and hashes as those modules do on their own.</p>
+<p><code class="docutils literal notranslate"><span class="pre">resolvers</span></code> and <code class="docutils literal notranslate"><span class="pre">verdicts</span></code> are kept as tuples: a generator handed in would be spent
+on the first row of a page, and every row after it would be built without them.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.rows.RowContext.from_config">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">changes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#RowContext.from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.RowContext.from_config" title="Link to this definition">#</a></dt>
+<dd><p>The context the config file describes, with <code class="docutils literal notranslate"><span class="pre">changes</span></code> on top.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RowContext.from_config(ledger_dir=flag)</span></code> is what a <code class="docutils literal notranslate"><span class="pre">--ledger-dir</span></code> flag means:
+the config file’s context, with that one directory instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowContext</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.rows.RowContext.item">
+<span class="sig-name descname"><span class="pre">item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#RowContext.item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.RowContext.item" title="Link to this definition">#</a></dt>
+<dd><p>The row’s item id (<a class="reference internal" href="crowsnest.attention.html#crowsnest.attention.item_id" title="crowsnest.attention.item_id"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.attention.item_id()</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.rows.RowContext.pages">
+<span class="sig-name descname"><span class="pre">pages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#RowContext.pages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.RowContext.pages" title="Link to this definition">#</a></dt>
+<dd><p>Each named session’s ledger page, read once (an empty page for none).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.rows.RowContext.rev">
+<span class="sig-name descname"><span class="pre">rev</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#RowContext.rev"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.RowContext.rev" title="Link to this definition">#</a></dt>
+<dd><p>The row’s revision (<a class="reference internal" href="crowsnest.attention.html#crowsnest.attention.fingerprint" title="crowsnest.attention.fingerprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.attention.fingerprint()</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.rows.RowContext.row">
+<span class="sig-name descname"><span class="pre">row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#RowContext.row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.RowContext.row" title="Link to this definition">#</a></dt>
+<dd><p>The row the report shows for <code class="docutils literal notranslate"><span class="pre">session</span></code>, a reference as
+<a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.resolve" title="crowsnest.tools.resolve"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.resolve()</span></code></a> takes one. Raises <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> when none matches.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.rows.RowContext.rows">
+<span class="sig-name descname"><span class="pre">rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">found</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#RowContext.rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.RowContext.rows" title="Link to this definition">#</a></dt>
+<dd><p>The rows the report shows for the live sessions <code class="docutils literal notranslate"><span class="pre">found</span></code>, in their order.</p>
+<p>The one place a row is built: the roster’s clipping and link cap, then its triage
+verdict. <code class="docutils literal notranslate"><span class="pre">home_dir</span></code> is what each row’s <code class="docutils literal notranslate"><span class="pre">open_command</span></code> pins; <code class="docutils literal notranslate"><span class="pre">pages</span></code> are the
+ledgers already read (<a class="reference internal" href="#crowsnest.rows.RowContext.pages" title="crowsnest.rows.RowContext.pages"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pages()</span></code></a>), read here when not given. Links are always
+resolved, with <code class="docutils literal notranslate"><span class="pre">resolvers</span></code>: a verdict reader may read them, so a row built
+without them could be classified, and hashed, differently from the one the verbs
+pin. <code class="docutils literal notranslate"><span class="pre">triage=False</span></code> is the report’s switch for a page without verdicts, which
+never applies the store.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.rows.dflt_row_context">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.rows.</span></span><span class="sig-name descname"><span class="pre">dflt_row_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#dflt_row_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.dflt_row_context" title="Link to this definition">#</a></dt>
+<dd><p>The context a surface uses when it is given none: the config file’s.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowContext</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">dflt_row_context</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="s1">'/nonexistent-config-for-doctest'</span><span class="p">)</span> <span class="o">==</span> <span class="n">RowContext</span><span class="p">()</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.report.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.report</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.said.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.said</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=78cc6f98"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

@@ -78,6 +78,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
@@ -107,11 +108,14 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.CONFIG_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">CONFIG_ENV_VAR</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.DFLT_FRESH_SECONDS"><code class="docutils literal notranslate"><span class="pre">DFLT_FRESH_SECONDS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.Home"><code class="docutils literal notranslate"><span class="pre">Home</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.REPORT_KEY"><code class="docutils literal notranslate"><span class="pre">REPORT_KEY</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.ReportSettings"><code class="docutils literal notranslate"><span class="pre">ReportSettings</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.attention_settings"><code class="docutils literal notranslate"><span class="pre">attention_settings()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.claude_bin_setting"><code class="docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.config_path"><code class="docutils literal notranslate"><span class="pre">config_path()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.configured_homes"><code class="docutils literal notranslate"><span class="pre">configured_homes()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.homes"><code class="docutils literal notranslate"><span class="pre">homes()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.report_settings"><code class="docutils literal notranslate"><span class="pre">report_settings()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -191,6 +195,13 @@ presets land on and the ages at which something counts as stale or stuck
 </span><span data-line="6"><span class="n">stuck_after</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"6h"</span>
 </span></pre></div>
 </div>
+<p>The <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table (<a class="reference internal" href="#crowsnest.config.report_settings" title="crowsnest.config.report_settings"><code class="xref py py-func docutils literal notranslate"><span class="pre">report_settings()</span></code></a>) names the ledger directory the report’s
+rows are triaged from. The attention verbs and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> read the same table, so
+all three build a row the same way without a flag each (<a class="reference internal" href="crowsnest.rows.html#module-crowsnest.rows" title="crowsnest.rows"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.rows</span></code></a>).</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[report]</span>
+</span><span data-line="2"><span class="n">ledger_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/sync/crowsnest/ledger"</span><span class="w">   </span><span class="c1"># absolute, or starting with ~</span>
+</span></pre></div>
+</div>
 <p>On Windows write paths in single quotes (<code class="docutils literal notranslate"><span class="pre">path</span> <span class="pre">=</span> <span class="pre">'C:\Users\me\.claude'</span></code>): a TOML
 double-quoted string treats a backslash as an escape.</p>
 <p><code class="docutils literal notranslate"><span class="pre">remote</span> <span class="pre">=</span> <span class="pre">true</span></code> is the one thing a home needs to say about itself: its pids cannot be
@@ -217,6 +228,9 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.ATTENTION_KEY" title="crowsnest.config.ATTENTION_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ATTENTION_KEY</span></code></a></p></td>
 <td><p>The config table holding the attention settings.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.REPORT_KEY" title="crowsnest.config.REPORT_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REPORT_KEY</span></code></a></p></td>
+<td><p>The config table saying how the report's rows are built.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -239,6 +253,9 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.homes" title="crowsnest.config.homes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">homes</span></code></a>(*[, path])</p></td>
 <td><p>The configured homes, or the default one when the config file names none.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.report_settings" title="crowsnest.config.report_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report_settings</span></code></a>(*[, path])</p></td>
+<td><p>The config file's <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table, or the defaults when it has none.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -251,6 +268,9 @@ and nothing in this module pretends otherwise.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.Home" title="crowsnest.config.Home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Home</span></code></a>(name, path[, remote, fresh_seconds])</p></td>
 <td><p>One Claude Code config directory to read, and how to judge liveness in it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.ReportSettings" title="crowsnest.config.ReportSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReportSettings</span></code></a>([ledger_dir])</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way (<a class="reference internal" href="crowsnest.rows.html#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">crowsnest.rows.RowContext</span></code></a>).</p></td>
 </tr>
 </tbody>
 </table>
@@ -302,6 +322,26 @@ and nothing in this module pretends otherwise.</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">Home</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fresh_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3600.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#Home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.Home" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One Claude Code config directory to read, and how to judge liveness in it.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.config.REPORT_KEY">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">REPORT_KEY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'report'</span></span><a class="headerlink" href="#crowsnest.config.REPORT_KEY" title="Link to this definition">#</a></dt>
+<dd><p>The config table saying how the report’s rows are built.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.config.ReportSettings">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">ReportSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#ReportSettings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.ReportSettings" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table, validated: how the report builds its rows, which the attention
+verbs and the watcher must build the same way (<a class="reference internal" href="crowsnest.rows.html#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">crowsnest.rows.RowContext</span></code></a>).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">ReportSettings</span><span class="p">()</span><span class="o">.</span><span class="n">ledger_dir</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -380,6 +420,25 @@ a person who wrote one meant it.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.config.report_settings">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">report_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#report_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.report_settings" title="Link to this definition">#</a></dt>
+<dd><p>The config file’s <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table, or the defaults when it has none.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[report]</span>
+</span><span data-line="2"><span class="n">ledger_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/sync/crowsnest/ledger"</span><span class="w">   </span><span class="c1"># the ledgers rows are triaged from</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ledger_dir</span></code> must be absolute or start with <code class="docutils literal notranslate"><span class="pre">~</span></code>. A relative one would name a
+different directory for each command run from a different place – the report from one,
+<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> from another – which is the disagreement this setting exists to
+end. A key the table does not know is an error, as in <code class="docutils literal notranslate"><span class="pre">[attention]</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.config.ReportSettings" title="crowsnest.config.ReportSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReportSettings</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article><button class="back-to-top" type="button">
@@ -422,7 +481,7 @@ a person who wrote one meant it.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=b345ff55"></script>
+      <script src="../_static/documentation_options.js?v=78cc6f98"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

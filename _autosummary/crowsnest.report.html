@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="orange" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.report - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.said" href="crowsnest.said.html" /><link rel="prev" title="crowsnest.registry" href="crowsnest.registry.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.report - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.rows" href="crowsnest.rows.html" /><link rel="prev" title="crowsnest.registry" href="crowsnest.registry.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
@@ -78,6 +78,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
@@ -270,7 +271,7 @@ hidden, and Undo puts either back where it stood.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.report.render_report">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">render_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roster</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">made_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'crowsnest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/report.html#render_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.report.render_report" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">render_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roster</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">made_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'crowsnest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/report.html#render_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.report.render_report" title="Link to this definition">#</a></dt>
 <dd><p>The roster <a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.roster()</span></code></a> returns as one self-contained HTML page.</p>
 <p><code class="docutils literal notranslate"><span class="pre">made_at</span></code> is the moment the snapshot claims to be from and is printed in the
 largest type on the page; it is a required argument (not a hidden <code class="docutils literal notranslate"><span class="pre">now()</span></code>) so that
@@ -325,10 +326,14 @@ a row back from <em>Later</em> its plan; a <em>Needs you</em> row carries its re
 <p><strong>A store with no readable record changes nothing</strong>: the page is byte for byte the
 page from before attention existed. Neither does <code class="docutils literal notranslate"><span class="pre">plain=True</span></code>, which ignores the
 store – a copy to share – nor a roster without triage verdicts, whose rows carry
-revisions no verb pinned. <code class="docutils literal notranslate"><span class="pre">identity</span></code> and <code class="docutils literal notranslate"><span class="pre">material</span></code> are
-<a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.attention</span></code></a>’s seams, and must be the ones the verbs were given. An
-interactive page carries <code class="docutils literal notranslate"><span class="pre">data-item</span></code> and <code class="docutils literal notranslate"><span class="pre">data-rev</span></code> for its script on every row
-that has an identity, whatever the store holds.</p>
+revisions no verb pinned. <code class="docutils literal notranslate"><span class="pre">row_context</span></code> names and hashes each row
+(<a class="reference internal" href="crowsnest.rows.html#crowsnest.rows.RowContext.item" title="crowsnest.rows.RowContext.item"><code class="xref py py-meth docutils literal notranslate"><span class="pre">crowsnest.rows.RowContext.item()</span></code></a> and <a class="reference internal" href="crowsnest.rows.html#crowsnest.rows.RowContext.rev" title="crowsnest.rows.RowContext.rev"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rev()</span></code></a>;
+<code class="docutils literal notranslate"><span class="pre">None</span></code> is attention’s defaults), and must be the one the rows were built with and
+the verbs were given. An interactive page carries <code class="docutils literal notranslate"><span class="pre">data-item</span></code> and <code class="docutils literal notranslate"><span class="pre">data-rev</span></code> for
+its script on every row that has an identity, whatever the store holds.</p>
+<p><code class="docutils literal notranslate"><span class="pre">links=False</span></code> leaves each row’s resolved references off the page: it renders as a
+row built without them would, the transcript’s own locators included. Its revision
+is still taken from the whole row, because that is the row the verbs pin.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
@@ -350,10 +355,10 @@ that has an identity, whatever the store holds.</p>
         <span>Previous</span><div class="title">crowsnest.registry</div></div>
     </a>
   </div><div class="navigation-next">
-    <a href="crowsnest.said.html">
+    <a href="crowsnest.rows.html">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">crowsnest.said</div>
+        <div class="title">crowsnest.rows</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>
@@ -378,7 +383,7 @@ that has an identity, whatever the store holds.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=b345ff55"></script>
+      <script src="../_static/documentation_options.js?v=78cc6f98"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

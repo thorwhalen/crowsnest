@@ -170,14 +170,15 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None, ledger_dir=None, resolvers=None, owner='', verdicts=None, material=None)
+### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None, row_context=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 
 `all_homes` watches every configured home at once; registry events then carry the
 home’s name. Hook events come from this machine’s own hook log and carry none.
-`ledger_dir`, `resolvers`, `owner`, `verdicts` and `material` reach
-`attention_wakes()`, and must be the ones the attention verbs were given.
+`row_context` reaches `attention_wakes()` ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)),
+and must be the one the attention verbs were given. By default it is the config
+file’s, read once when the stream starts.
 
 The first snapshot is the baseline and yields nothing, and the hook log is opened at
 its end: a monitor that starts up is not told about forty sessions that were already
@@ -279,6 +280,10 @@ where the ledgers are).
 \*\*It follows `activity` unless it is asked for.\*\* Resolving costs a ledger read per
 session, which is nothing next to a transcript tail and everything next to a registry
 listing – and `activity=False` promises “instant”. Pass `links=True` to have both.
+
+`ledger_dir=None` is the config file’s `[report] ledger_dir`
+([`crowsnest.config.report_settings()`](crowsnest.config.html.md#crowsnest.config.report_settings)), the ledgers the report reads, else
+`<data dir>/ledger`.
 
 Every row carries `said_at` and `said_at_basis`, which say when the thing the row
 quotes was said, taken from its source ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
@@ -387,6 +392,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`paths`](crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
 | [`registry`](crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
 | [`report`](crowsnest.report.html.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
+| [`rows`](crowsnest.rows.html.md#module-crowsnest.rows)           | How an item's row is built and hashed: one value, taken whole by every surface that pins it.          |
 | [`said`](crowsnest.said.html.md#module-crowsnest.said)           | When the thing an item quotes was said: its own time, taken from its own source.                      |
 | [`skills`](crowsnest.skills.html.md#module-crowsnest.skills)       | The agent-facing surface: the skills, the subagent, and the command that installs them.               |
 | [`tools`](crowsnest.tools.html.md#module-crowsnest.tools)         | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                      |

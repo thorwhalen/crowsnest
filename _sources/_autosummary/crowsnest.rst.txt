@@ -50,6 +50,7 @@
    paths
    registry
    report
+   rows
    said
    skills
    tools
