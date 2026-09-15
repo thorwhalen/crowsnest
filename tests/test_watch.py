@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from fixtures import (
     alive,
     assistant,
@@ -9,7 +11,39 @@ from fixtures import (
     write_transcript,
 )
 
-from crowsnest.watch import diff, events, snapshot
+from crowsnest import attention as att
+from crowsnest.watch import attention_wakes, diff, events, snapshot
+
+UTC = timezone.utc
+T0 = datetime(2026, 1, 5, 12, 0, tzinfo=UTC)
+
+
+def _later_row(**extra):
+    r = {
+        "session_id": "11111111-2222-3333-4444-555555555555",
+        "name": "shipper",
+        "label": "shipper",
+        "home": "one",
+        "project": "demo",
+        "status": "waiting",
+        "verdict": {
+            "group": "needs_you",
+            "why": "decision",
+            "reason": "Squash or rebase?",
+        },
+    }
+    r.update(extra)
+    return r
+
+
+def _deferred(row, *, until, on_change=True, plan="", store, now=T0):
+    rev = att.fingerprint(row)
+    item = att.item_id(row)
+    record = att.later(None, rev, until=until, on_change=on_change, plan=plan, now=now)
+    att.write_record(
+        item, record, store=store, extras={"ext": {"session_id": row["session_id"]}}
+    )
+    return item
 
 
 def test_first_snapshot_is_a_silent_baseline(tmp_path):
@@ -120,3 +154,68 @@ def test_all_homes_snapshot_covers_every_configured_home_and_tags_events(
     after = snapshot(all_homes=True, config=cfg)
     [event] = diff(before, after)
     assert event["kind"] == "idle" and event["name"] == "fixer" and event["home"] == "two"
+
+
+def test_a_wake_whose_until_has_passed_fires_once_across_two_ticks():
+    store = {}
+    row = _later_row()
+    _deferred(
+        row, until=T0 - timedelta(minutes=1), store=store, now=T0 - timedelta(hours=1)
+    )
+    announced = set()
+    row_of = lambda doc, **_: row
+
+    first = attention_wakes(store=store, row_of=row_of, announced=announced, now=T0)
+    second = attention_wakes(store=store, row_of=row_of, announced=announced, now=T0)
+
+    assert len(first) == 1
+    assert first[0]["kind"] == "woke"
+    assert first[0]["session_id"] == row["session_id"]
+    assert first[0]["group"] == "needs_you"
+    assert second == []
+
+
+def test_a_wake_whose_until_is_in_the_future_never_fires():
+    store = {}
+    row = _later_row()
+    _deferred(row, until=T0 + timedelta(hours=1), store=store, now=T0)
+    announced = set()
+    row_of = lambda doc, **_: row
+
+    got = attention_wakes(store=store, row_of=row_of, announced=announced, now=T0)
+    got_again = attention_wakes(store=store, row_of=row_of, announced=announced, now=T0)
+
+    assert got == [] and got_again == []
+
+
+def test_on_change_wakes_before_until_when_the_revision_moves():
+    store = {}
+    row = _later_row()
+    _deferred(row, until=T0 + timedelta(hours=1), on_change=True, store=store, now=T0)
+    changed_row = _later_row(
+        verdict={**row["verdict"], "reason": "Merge before the deploy?"}
+    )
+    announced = set()
+    row_of = lambda doc, **_: changed_row
+
+    got = attention_wakes(store=store, row_of=row_of, announced=announced, now=T0)
+
+    assert len(got) == 1
+    assert got[0]["detail"] == "Merge before the deploy?"
+
+
+def test_the_plan_wins_over_the_reason_in_the_wake_detail():
+    store = {}
+    row = _later_row()
+    _deferred(
+        row,
+        until=T0 - timedelta(minutes=1),
+        plan="after the deploy",
+        store=store,
+        now=T0 - timedelta(hours=1),
+    )
+    row_of = lambda doc, **_: row
+
+    [event] = attention_wakes(store=store, row_of=row_of, announced=set(), now=T0)
+
+    assert event["detail"] == "after the deploy"

@@ -115,14 +115,18 @@ Monitor({ command: "crowsnest watch", description: "session events", persistent:
 ```
 
 Each printed line becomes a notification here: a session started or exited, went idle
-(with its last words), went busy, started **waiting** (with what for), or ended with an
-error. On each one, decide:
+(with its last words), went busy, started **waiting** (with what for), ended with an
+error, or an item the person put off **woke** (its time passed, or it changed while
+`on_change`). On each one, decide:
 
 - **waiting**, **error** → tell the user now. If they may have walked away, send a
   `PushNotification` (one line, under 200 characters, leading with the session name and
   what it needs).
 - **idle** → tell the user if the last words carry a result or a question; otherwise
   fold it into your next summary.
+- **woke** with `group: needs_you` → tell the user now, quoting the `detail` (the plan
+  they left, else the reason); push if they may have walked away. Otherwise → fold it
+  into your next summary.
 - **busy**, **started**, **exited** → note it; mention it only when asked.
 
 Do not re-run the roster in a loop. The stream is the loop.

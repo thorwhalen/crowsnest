@@ -530,6 +530,9 @@ def watch(
     Plus `needs-you` and `stopped`, pushed by Claude Code's own hooks the moment they
     happen, when `crowsnest hook` is installed on them.
 
+    Plus `woke`: an item a `later` put off whose time passed, or that changed while
+    `on_change` -- computed, not scheduled, once a tick, from the attention store.
+
     Built for Claude Code's `Monitor` tool: each line becomes a notification in the
     watching session. Stop with Ctrl-C.
     """

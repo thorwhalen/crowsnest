@@ -832,12 +832,15 @@ def update(
     step: Callable[[Record | None], Record],
     *,
     store: MutableMapping | None = None,
+    ext: Mapping | None = None,
 ) -> dict:
     """Apply ``step`` to ``item``'s record and store the result; return the document.
 
-    The stored document's ``ext`` object is kept. A document
-    that cannot be read counts as no record and is replaced, with a warning: a verb that
-    refused to overwrite a broken file would leave that item stuck for good.
+    The stored document's ``ext`` object is kept, merged under ``ext`` when given --
+    identifying fields (a session id, say) that a caller wants findable from the document
+    alone, since an item id is a one-way hash of its identity. A document that cannot be
+    read counts as no record and is replaced, with a warning: a verb that refused to
+    overwrite a broken file would leave that item stuck for good.
     """
     store = dflt_store() if store is None else store
     try:
@@ -848,7 +851,10 @@ def update(
             f"replacing unreadable attention record {item}: {exc}", stacklevel=2
         )
         doc, record = None, None
-    return write_record(item, step(record), store=store, extras=_extras(doc))
+    extras = _extras(doc)
+    if ext:
+        extras = {EXT_KEY: {**extras.get(EXT_KEY, {}), **ext}}
+    return write_record(item, step(record), store=store, extras=extras)
 
 
 def _updated(record: Record) -> datetime:
