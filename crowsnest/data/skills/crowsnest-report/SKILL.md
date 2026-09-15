@@ -29,6 +29,8 @@ type on it.
 
 Every row carries **when its words were said**, taken from their source and never the page's own time. That is shown as local `HH:MM`, with the date when it falls on another day, then how long ago, then **stale** once it is older than `stale_after` (the `[attention]` table's, default 24 h). The masthead names the zone once, and `--tz` changes it. A row whose source gave no time says *time unknown*.
 
+What the user marked shows on the page too (`crowsnest seen|later|done|note`, one store for every report on this machine). Seen rows are dimmed below the rest of their register. Rows put off fold into a closed **Later** block after **Working**. Rows handled and unchanged since are left out and counted in the footer. A line under the masthead says what is new, changed, woke and landed, and the page title counts what is new, changed or woke in **Needs you**. A store that has never held a readable record renders the page exactly as it was before. Once it holds one, even for a session that has since exited, every row the user has not looked at counts as new. A page without triage verdicts ignores the store. For a copy meant for someone else, add `--plain`: it ignores the store, notes included.
+
 Every session the page names leads to that session. A session running with Remote Control gets an **open** link to it on claude.ai. Any other session gets the `crowsnest open` command that reaches it from a terminal, shown as code, never as a link. **Who started whom** does the same in the list under its figure.
 
 If the user only wanted something to read, hand over the path and stop here.

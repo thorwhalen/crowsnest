@@ -341,6 +341,14 @@ def _stored_instant(stamp, what: str) -> datetime:
             f"{what} needs a UTC offset or Z, not {stamp!r}: a page reads a time "
             f"without one as local time"
         )
+    try:
+        moment.astimezone(timezone.utc)
+    except (OverflowError, ValueError):
+        # `0001-01-01T00:00+01:00` parses, and is before year 1 once in UTC: every
+        # comparison with it raises, so every reader of the record would raise too.
+        raise ValueError(
+            f"{what} falls outside the calendar once in UTC: {stamp!r}"
+        ) from None
     return moment
 
 
@@ -537,6 +545,11 @@ class Record:
         (:func:`update`, :func:`import_docs`); any other unknown key is dropped.
         """
         doc = _mapping(doc, "a record")
+        # Checked before recursing, not after: a document is input, and one nested
+        # thousands deep would otherwise exhaust the stack before `__post_init__` refused it.
+        prev = doc.get("prev")
+        if isinstance(prev, Mapping) and prev.get("prev") is not None:
+            raise ValueError("undo is one level deep: a snapshot carries no snapshot")
         return cls(
             seen_rev=_field(doc, "seen_rev", str, None),
             state=_field(doc, "state", str, ACTIVE),

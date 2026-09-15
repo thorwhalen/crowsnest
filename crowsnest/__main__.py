@@ -426,6 +426,7 @@ def report(
     lineage: bool = True,
     ledger_dir: str | None = None,
     tz: str | None = None,
+    plain: bool = False,
 ):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
@@ -449,6 +450,11 @@ def report(
     It ends with the spawn forest, drawn: who started whom, as inline SVG with the layout
     computed here rather than by a script. `--no-lineage` leaves it out, which also skips
     the one `ps` the page runs.
+
+    What you marked shows too (`crowsnest seen|later|done|note`): seen rows dimmed below
+    the rest of their register, rows put off folded into a closed *Later* block, rows
+    handled and unchanged since left out and counted at the foot, and the title counting
+    what is new in *Needs you*. `--plain` leaves all of that out, for a copy to share.
     """
     result = tools.report(
         home=home,
@@ -459,6 +465,7 @@ def report(
         fragment=fragment,
         interactive=interactive,
         tz=tz,
+        plain=plain,
     )
     if not out:
         return result["html"]
