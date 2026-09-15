@@ -60,7 +60,8 @@ crowsnest brief <session>          openloops' dated digest for one session; read
 crowsnest lineage                  who started whom, as a tree; --backfill recovers it from transcripts once
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
                                    (--fragment: without the document wrapper, for publishing as an artifact;
-                                    --interactive: buttons per row and a Refresh, live when published with the db capability)
+                                    --interactive: buttons per row and a Refresh, live when published with the db capability;
+                                    --plain: ignore what you marked with seen/later/done/note, for a copy to share)
 crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
 crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
 crowsnest note|undo <session>      a note to yourself; one step back

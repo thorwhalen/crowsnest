@@ -28,6 +28,11 @@ element with the local ``HH:MM``, plus the date when that is not ``made_at``'s d
 how long ago, then the word *stale* once it is older than ``stale_after``. The rail's large
 figure is that same age. A row whose source gave no time says *time unknown*.
 
+**What the person decided about each row shows too** (:mod:`crowsnest.attention`,
+crowsnest#55): seen rows dim and sort below the rest of their register, rows put off fold
+into a collapsed *Later* block, rows handled and unchanged since are counted rather than
+shown. A store holding no readable record, and ``plain``, leave the page as it was.
+
 Every string reaches the page through :class:`_Sanitizer`, which is
 :func:`openloops.egress.scrub` plus HTML escaping. A row's ``last_assistant_text`` or
 ``pending_question`` comes straight from a transcript, and a transcript is the highest-
@@ -46,14 +51,15 @@ import html as _html
 import os
 import re
 import shlex
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone, tzinfo
 from typing import Any
 
 from openloops.dashboard import CSS as _CSS
 from openloops.dashboard import Sanitizer as _Sanitizer
 
+import crowsnest.attention as _attention
 from crowsnest import said as _said
 from crowsnest.config import DFLT_STALE_AFTER
 from crowsnest.lineage import open_command as _open_command
@@ -61,13 +67,81 @@ from crowsnest.links import label_for as _label_for
 from crowsnest.tree import TREE_CSS as _TREE_CSS
 from crowsnest.tree import Placed as _Placed
 
-__all__ = ["CONSOLE_CSS", "CONSOLE_SCRIPT", "render_report"]
+__all__ = ["ATTENTION_CSS", "CONSOLE_CSS", "CONSOLE_SCRIPT", "render_report"]
 
 #: Set for the duration of one :func:`render_report` call in interactive mode, so the row
 #: renderers add their controls without every signature growing a flag.
 _interactive: contextvars.ContextVar[bool] = contextvars.ContextVar(
     "crowsnest_report_interactive", default=False
 )
+
+
+@dataclass(frozen=True)
+class _Attended:
+    """One row's attention on this page: its item id, its revision, and what it shows.
+
+    ``shown`` is :func:`crowsnest.attention.present`'s answer, or ``''`` on a page that does
+    not apply the store -- a plain one, one without verdicts, or one whose store holds no
+    readable record -- where the id and revision are still wanted for an interactive
+    page's ``data-item`` and ``data-rev``.
+    """
+
+    item: str
+    rev: str
+    shown: str = ""
+    record: _attention.Record | None = None
+
+
+@dataclass(frozen=True)
+class _View:
+    """What the person decided about every row of one render, keyed by the row object.
+
+    ``on`` says the store is applied. Rows are keyed by ``id(row)``, which is stable for
+    the one render that holds the roster; a row with no identity (no ``session_id``, or
+    text a revision cannot hash) has no entry and renders as it always did.
+    """
+
+    on: bool = False
+    rows: Mapping[int, _Attended] = field(default_factory=dict)
+
+    def of(self, row: Mapping[str, Any]) -> _Attended | None:
+        return self.rows.get(id(row))
+
+    def shown(self, row: Mapping[str, Any]) -> str:
+        found = self.of(row)
+        return found.shown if found else ""
+
+
+#: The attention view of the render in progress; empty outside one. Like `_interactive`,
+#: it spares every row renderer a new argument. The default is shared by every context,
+#: which is safe only because a `_View` is frozen and nothing writes into its `rows`.
+_view: contextvars.ContextVar[_View] = contextvars.ContextVar(
+    "crowsnest_report_view",
+    default=_View(),  # noqa: B039 -- frozen, and its empty `rows` is never written
+)
+
+#: The presentations that call the reader back to a row they had dealt with.
+_BACK = (_attention.CHANGED, _attention.WOKE)
+
+#: The presentations the badge and "since you last looked" count as unread.
+_UNREAD = (_attention.NEW, *_BACK)
+
+#: The styles attention adds, on top of the shared stylesheet's tokens. Only a page that
+#: applies a store carries them, so a page from an empty store stays byte for byte what it
+#: was. Seen rows are dimmed, never recoloured: the register's colour is its meaning.
+ATTENTION_CSS = """
+.row--seen{opacity:.55}
+.chip--reach{color:var(--ink-soft);background:transparent;border-style:dashed}
+.dot{display:inline-block;width:.45rem;height:.45rem;border-radius:50%;
+  background:var(--accent);margin-left:.45rem;vertical-align:middle}
+.since{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);margin-top:1.4rem}
+.wip{font-family:var(--mono);font-size:.78rem;color:var(--needs);padding:.8rem 0 .1rem}
+.note-mark{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent)}
+.register--later>summary{cursor:pointer;list-style:none}
+.register--later>summary::-webkit-details-marker{display:none}
+.register--later .figure{color:var(--ink-soft)}
+"""
 
 #: The console's styles, on top of the shared stylesheet's tokens. Interactive mode only.
 CONSOLE_CSS = """
@@ -453,10 +527,13 @@ def _slug(text: str) -> str:
 # --------------------------------------------------------------------------------
 
 
-def _rail(chip: str, tone: str, figure: str, unit: str) -> str:
+def _rail(chip: str, tone: str, figure: str, unit: str, *, reach: str = "") -> str:
+    # `reach` is one of attention's two literals, `phone` or `terminal`, never row text.
+    reach_chip = f'<span class="chip chip--reach">{reach}</span>' if reach else ""
     return (
         f'<div class="rail">'
         f'<span class="chip chip--{tone}">{chip}</span>'
+        f"{reach_chip}"
         f'<span class="age"><b>{figure}</b><i>{unit}</i></span>'
         f"</div>"
     )
@@ -649,25 +726,181 @@ def _row(
     chip: str,
     tone: str,
     lines: Sequence[str],
+    reach: str = "",
 ) -> str:
     """One row: its chip, how long ago its item was said, then what it quotes and when."""
     ident = _slug(str(row.get("label") or row.get("session_id") or ""))
     figure, unit = _said_age(row, clock)
+    attended = _view.get().of(row)
+    # A needs register is where a change is announced in words; anywhere else it is a dot.
+    loud = tone == "needs"
     body = [
-        f'<p class="ask">{safe.text(row.get("label"))}</p>',
+        f'<p class="ask">{safe.text(row.get("label"))}{_dot(attended, loud=loud)}</p>',
         _where(safe, row),
         *lines,
         _when_line(row, clock),
+        *_attention_lines(safe, attended, clock, loud=loud),
         _refs(safe, row),
         _controls(safe, row),
     ]
     return (
-        f'<li class="row row--{tone}" id="session-{ident}">'
-        + _rail(chip, tone, figure, unit)
+        f'<li class="row row--{tone}{_state_class(attended)}" id="session-{ident}"'
+        f"{_item_attrs(attended)}>"
+        + _rail(chip, tone, figure, unit, reach=reach)
         + '<div class="body">'
         + "".join(body)
         + "</div></li>"
     )
+
+
+_STATE_CLASSES = {
+    _attention.SEEN: " row--seen",
+    _attention.CHANGED: " row--changed",
+    _attention.WOKE: " row--woke",
+}
+
+
+def _state_class(attended: _Attended | None) -> str:
+    """``row--seen``, ``row--changed`` or ``row--woke``; nothing for a new row or a plain page."""
+    return _STATE_CLASSES.get(attended.shown, "") if attended else ""
+
+
+def _item_attrs(attended: _Attended | None) -> str:
+    """``data-item`` and ``data-rev``, for the console's script: interactive pages only.
+
+    The static page has no script to read them, and carrying them there would make a page
+    from an empty store differ from the page before attention existed. Both values are
+    derived here -- a uuid and a hex digest -- and never text a session wrote.
+    """
+    if attended is None or not _interactive.get():
+        return ""
+    return (
+        f' data-item="{_html.escape(attended.item, quote=True)}"'
+        f' data-rev="{_html.escape(attended.rev, quote=True)}"'
+    )
+
+
+def _dot(attended: _Attended | None, *, loud: bool) -> str:
+    """The quiet mark on a row that changed or woke where a change is not announced.
+
+    Triage-ux 2.2: only a change in *Needs you* interrupts. A session that moved to safe to
+    close, or went busy, after the person dealt with it gets a dot, and the title's count
+    leaves it out. The line under the masthead still counts it, as changed or landed: that
+    line reports, it does not interrupt.
+    """
+    if attended is None or loud or attended.shown not in _BACK:
+        return ""
+    what = (
+        "changed since you last looked"
+        if attended.shown == _attention.CHANGED
+        else "back from later"
+    )
+    return f'<span class="dot" role="img" aria-label="{what}" title="{what}"></span>'
+
+
+def _wake_time(epoch: float, clock: _Clock) -> str:
+    """When something put off comes back, the way the rows' times read: ``HH:MM`` in the
+    page's zone, with the date when it is not ``made_at``'s day.
+
+    >>> _wake_time(3600.0, _Clock(60.0, timezone.utc))
+    '01:00'
+    >>> _wake_time(2 * 86400.0, _Clock(86400.0, timezone.utc))
+    '1970-01-03 00:00'
+    """
+    local = clock.local(epoch)
+    same_day = local.date() == clock.local(clock.now).date()
+    return local.strftime("%H:%M" if same_day else "%Y-%m-%d %H:%M")
+
+
+def _first_line(text: str) -> str:
+    """The first line of ``text`` that has anything on it, its whitespace collapsed.
+
+    Never clipped here. A clip made before the sanitiser sees the text can cut a credential
+    or a home path to a shape the sanitiser no longer recognises, and publish most of it;
+    a long line wraps on the page instead.
+
+    >>> _first_line('\\n  call Ana first \\nthen merge')
+    'call Ana first'
+    """
+    for line in str(text or "").splitlines():
+        if line.strip():
+            return " ".join(line.split())
+    return ""
+
+
+def _plan(attended: _Attended | None) -> str:
+    """The Later plan, once the item it was written for is back (triage-ux 2.8); else ``''``."""
+    if attended is None or attended.shown not in _BACK:
+        return ""
+    record = attended.record
+    if record is None or record.state != _attention.LATER or record.later is None:
+        return ""
+    return record.later.plan
+
+
+def _note(attended: _Attended | None) -> str:
+    """The first line of the row's note, on a page that applies the store; else ``''``."""
+    if attended is None or not attended.shown:
+        return ""
+    record = attended.record
+    return _first_line(record.note.text) if record is not None and record.note else ""
+
+
+def _back_text(attended: _Attended, clock: _Clock) -> str:
+    """Why a row the person had dealt with is in front of them again, from their record.
+
+    The record says what the person did -- saw it, put it off, marked it handled -- and
+    not what the item said at the time, because a revision is a hash. So this says what
+    they did, and the row's own lines say what it asks now.
+    """
+    record = attended.record
+    state = record.state if record is not None else _attention.ACTIVE
+    until = record.later.until if record is not None and record.later else None
+    if attended.shown == _attention.WOKE:
+        if state == _attention.LATER and until:
+            wake = _attention.instant(until).timestamp()
+            return f"you put it off until {_wake_time(wake, clock)}"
+        if state == _attention.DONE:
+            return "you had marked it handled"
+        return "you had put it off"
+    if state == _attention.DONE:
+        return "changed since you marked it handled"
+    if state == _attention.LATER:
+        return "changed since you put it off"
+    return "changed since you saw it"
+
+
+def _attention_lines(
+    safe: _Sanitizer, attended: _Attended | None, clock: _Clock, *, loud: bool
+) -> list[str]:
+    """What a row gains from the person's record: why it is back, their plan, their note.
+
+    The plan shows only when the item is back, which is when it was written for
+    (triage-ux 2.8). The note shows whenever there is one, first line only. Both are the
+    person's own words and go through the sanitiser like everything else.
+    """
+    if attended is None or not attended.shown:
+        return []
+    lines = []
+    if loud and attended.shown in _BACK:
+        lines.append(_line(safe, "back", _back_text(attended, clock)))
+    plan = _plan(attended)
+    if plan:
+        lines.append(_line(safe, "plan", plan))
+    note = _note(attended)
+    if note:
+        lines.append(_line(safe, "note", note))
+    return lines
+
+
+def _thin_marks(safe: _Sanitizer, attended: _Attended | None) -> str:
+    """The plan of a row back from Later and a note's first line, inline on a one-line row."""
+    sep = ' <span class="sep">·</span> '
+    marks = ""
+    for tag, text in (("plan", _plan(attended)), ("note", _note(attended))):
+        if text:
+            marks += f'{sep}<span class="note-mark">{tag}</span> {safe.text(text)}'
+    return marks
 
 
 def _controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
@@ -727,7 +960,10 @@ def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> s
     if reason and reason not in (row.get("waiting_for"), act.get("pending_question")):
         lines.append(_line(safe, _WHY_CHIPS.get(verdict.get("why"), "needs"), reason))
     chip = _WHY_CHIPS.get(verdict.get("why"), "waiting")
-    return _row(safe, row, clock, chip=chip, tone="needs", lines=lines)
+    # Reach is attention's one derived context (triage-ux 2.1). Only a page that applies
+    # the store carries it, so a page from an empty store keeps its bytes.
+    reach = _attention.reach(row) if _view.get().on else ""
+    return _row(safe, row, clock, chip=chip, tone="needs", lines=lines, reach=reach)
 
 
 def _safe_to_close_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str:
@@ -814,16 +1050,20 @@ def _quiet_group(
         # A quiet row quotes nothing, so its age is how long it has been in its status.
         figure, unit = _status_age(row, clock.now)
         ident = _slug(str(row.get("label") or row.get("session_id") or ""))
+        attended = _view.get().of(row)
         home = row.get("home")
         tail = f' <span class="sep">·</span> {safe.text(home)}' if home else ""
         opener = _way_in(safe, row)
         if opener:
             tail += f' <span class="sep">·</span> {opener}'
         tail += _thin_refs(safe, row)
+        tail += _thin_marks(safe, attended)
         items.append(
-            f'<li class="thin" id="session-{ident}">'
+            f'<li class="thin{_state_class(attended)}" id="session-{ident}"'
+            f"{_item_attrs(attended)}>"
             f'<span class="thin-age">{figure}{unit}</span>'
-            f'<p class="thin-ask">{safe.text(row.get("label"))}{tail}</p>'
+            f'<p class="thin-ask">{safe.text(row.get("label"))}'
+            f"{_dot(attended, loud=False)}{tail}</p>"
             "</li>"
         )
     return (
@@ -843,13 +1083,15 @@ def _register_from_rows(
     tone: str,
     rule: str,
     empty: str,
+    lead: str = "",
 ) -> str:
+    """A register of full rows. ``lead`` is markup that opens its body (the WIP line)."""
     figure = str(len(rows))
     if rows:
         items = "".join(row_fn(safe, r, clock) for r in rows)
-        body = f'<ol class="ledger">{items}</ol>'
+        body = f'{lead}<ol class="ledger">{items}</ol>'
     else:
-        body = _empty(empty)
+        body = lead + _empty(empty)
     return _register(
         ident=ident, name=name, figure=figure, tone=tone, rule=rule, body=body
     )
@@ -960,7 +1202,7 @@ def _console() -> str:
     )
 
 
-def _footer(safe: _Sanitizer, stamp: str) -> str:
+def _footer(safe: _Sanitizer, stamp: str, *, handled: int = 0) -> str:
     withheld = ""
     if safe.withheld:
         kinds = ", ".join(sorted(set(safe.withheld)))
@@ -969,14 +1211,205 @@ def _footer(safe: _Sanitizer, stamp: str) -> str:
             f"page because they matched a credential pattern ({safe.text(kinds)}). The "
             "matched text is not printed anywhere, including here.</p>"
         )
+    left_out = (
+        f"<p>{handled} handled and unchanged since, so not shown here; "
+        "<code>crowsnest report --plain</code> shows every session.</p>"
+        if handled
+        else ""
+    )
     return (
         '<footer class="colophon">'
         f"<p>Rendered by <code>crowsnest report</code> at {safe.text(stamp)}. Re-run it "
         "to get a newer one; there is no other way for this page to change.</p>"
         "<p>crowsnest never sends, spawns, kills or writes into another session. Nothing "
         "here did either -- it read, and it reported.</p>"
+        f"{left_out}"
         f"{withheld}"
         "</footer>"
+    )
+
+
+# --------------------------------------------------------------------------------
+# Attention: what the person decided about each row (crowsnest.attention, #55).
+# --------------------------------------------------------------------------------
+
+
+def _group_of(row: Mapping[str, Any]) -> str:
+    return str((row.get("verdict") or {}).get("group") or "")
+
+
+def _attention_view(
+    sessions: Sequence[Mapping[str, Any]],
+    *,
+    now: float,
+    store: MutableMapping[str, dict] | None,
+    plain: bool,
+    identity: Callable[[Mapping], Iterable[str]] | None,
+    material: Callable[[Mapping], Iterable] | None,
+    with_ids: bool,
+) -> _View:
+    """Every row's item, revision and presentation, for one render.
+
+    The store is applied only to a roster with triage verdicts, and only when it holds at
+    least one readable record. The verbs pin the revision of the *triaged* row, so on a
+    page without verdicts every seen row would read as changed; and a person who has never
+    marked a row gets the page as it was, bytes included, rather than one announcing every
+    session as new. ``plain`` never reads the store. Ids and revisions are still computed
+    for an interactive page, whose script needs them before the first mark.
+
+    **One row never takes the page down.** A row with no identity, or with text a
+    revision cannot hash (a lone surrogate), gets no entry and renders as before; a record
+    that cannot be read, or that :func:`crowsnest.attention.present` cannot place, counts
+    as no record, so its row is shown rather than hidden.
+    """
+    applied = not plain and any(_group_of(row) for row in sessions)
+    if applied and store is None:
+        store = _attention.dflt_store()
+    on = applied and _holds_a_record(store)
+    if not (on or with_ids):
+        return _View()
+    moment = datetime.fromtimestamp(now, tz=timezone.utc)
+    rows: dict[int, _Attended] = {}
+    for row in sessions:
+        try:
+            item = _attention.item_id(row, identity=identity)
+            rev = _attention.fingerprint(row, material=material)
+        except ValueError:  # UnicodeEncodeError included
+            continue
+        if not on:
+            rows[id(row)] = _Attended(item, rev)
+            continue
+        record = _record_or_none(item, store)
+        try:
+            shown = _attention.present(rev, record, now=moment)
+        except (ValueError, OverflowError):
+            record, shown = None, _attention.NEW
+        rows[id(row)] = _Attended(item, rev, shown, record)
+    return _View(on=on, rows=rows)
+
+
+def _holds_a_record(store: Mapping[str, dict]) -> bool:
+    """Does ``store`` hold a document that reads as a record? Stops at the first one."""
+    return any(_record_or_none(item, store) is not None for item in store)
+
+
+def _record_or_none(item: str, store: Mapping[str, dict]) -> _attention.Record | None:
+    """The row's record; an unreadable one counts as none, so its row is shown, not hidden.
+
+    The failure goes the way a person can see: a broken "done" brings a row back, where
+    a broken page would hide every row.
+    """
+    try:
+        return _attention.read_record(item, store=store)
+    except ValueError:
+        return None
+
+
+def _unseen_first(rows: Sequence[Mapping[str, Any]], view: _View) -> list:
+    """``rows`` with the seen ones moved below the rest, each half in its own order."""
+    return sorted(rows, key=lambda row: view.shown(row) == _attention.SEEN)
+
+
+def _landed(row: Mapping[str, Any]) -> bool:
+    """A changed row that finished rather than asked: safe to close now, or gone idle."""
+    group = _group_of(row)
+    return group != "needs_you" and (
+        group == "safe_to_close" or row.get("status") == "idle"
+    )
+
+
+#: What "since you last looked" counts, in the order it says them.
+_LANDED = "landed"
+_SINCE = (_attention.NEW, _attention.CHANGED, _attention.WOKE, _LANDED)
+
+
+def _since_line(rows: Sequence[Mapping[str, Any]], view: _View) -> str:
+    """New, changed, woke and landed among the rows shown. Derived from the rows' states,
+    so it needs no record of when the person last looked -- and no line on a plain page.
+
+    A changed row that landed is counted as landed, not also as changed.
+    """
+    if not view.on:
+        return ""
+    tally = dict.fromkeys(_SINCE, 0)
+    for row in rows:
+        shown = view.shown(row)
+        if shown == _attention.CHANGED and _landed(row):
+            tally[_LANDED] += 1
+        elif shown in _UNREAD:
+            tally[shown] += 1
+    said = ", ".join(f"{n} {what}" for what, n in tally.items())
+    return f'<p class="since">Since you last looked: {said}</p>'
+
+
+def _wip(waiting: int, put_off: int) -> str:
+    """How many sessions wait on the person: a limit on dispatching more, not a score.
+
+    >>> _wip(3, 1)
+    '<p class="wip">3 sessions are waiting on you, 1 of them put off</p>'
+    >>> _wip(0, 0)
+    ''
+    """
+    if not waiting:
+        return ""
+    who = "1 session is" if waiting == 1 else f"{waiting} sessions are"
+    if not put_off:
+        tail = ""
+    elif put_off == waiting:
+        tail = ", put off" if waiting == 1 else ", all put off"
+    else:
+        tail = f", {put_off} of them put off"
+    return f'<p class="wip">{who} waiting on you{tail}</p>'
+
+
+def _later_line(
+    safe: _Sanitizer, row: Mapping[str, Any], view: _View, clock: _Clock
+) -> str:
+    attended = view.of(row)
+    later = attended.record.later  # `present` shows `later` only for a record with one
+    ident = _slug(str(row.get("label") or row.get("session_id") or ""))
+    sep = ' <span class="sep">·</span> '
+    if later.until:
+        wake = _attention.instant(later.until).timestamp()
+        figure, unit = _since(wake - clock.now)
+        age = f"in {figure}{unit}"
+        when = f"until {_wake_time(wake, clock)}"
+        if later.on_change:
+            when += " or it changes"
+    else:
+        age, when = "", "until it changes"
+    parts = [safe.text(row.get("label")), when]
+    if later.plan:
+        parts.append(safe.text(later.plan))
+    parts.append("put off once" if later.count == 1 else f"put off {later.count} times")
+    return (
+        f'<li class="thin" id="session-{ident}"{_item_attrs(attended)}>'
+        f'<span class="thin-age">{age}</span>'
+        f'<p class="thin-ask">{sep.join(parts)}{_thin_marks(safe, attended)}</p>'
+        "</li>"
+    )
+
+
+def _later_register(
+    safe: _Sanitizer, rows: Sequence[Mapping[str, Any]], view: _View, clock: _Clock
+) -> str:
+    """The rows the person put off, closed by default, one line each; nothing when none.
+
+    A ``<summary>`` may hold phrasing content and a heading only, so the figure is a
+    ``<span>`` and the rule sits under the summary rather than inside it.
+    """
+    if not rows:
+        return ""
+    items = "".join(_later_line(safe, row, view, clock) for row in rows)
+    return (
+        '<details class="register register--later" id="later">'
+        '<summary class="register-head">'
+        f'<span class="figure">{len(rows)}</span>'
+        "<h2>Later</h2>"
+        "</summary>"
+        '<p class="rule">Put off by you. Each line says when it comes back.</p>'
+        f'<ul class="thins">{items}</ul>'
+        "</details>"
     )
 
 
@@ -994,6 +1427,10 @@ def render_report(
     interactive: bool = False,
     tz: tzinfo | str | None = None,
     stale_after: timedelta | None = None,
+    store: MutableMapping[str, dict] | None = None,
+    plain: bool = False,
+    identity: Callable[[Mapping], Iterable[str]] | None = None,
+    material: Callable[[Mapping], Iterable] | None = None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -1028,17 +1465,66 @@ def render_report(
     :data:`FINISHED_WINDOW` seconds, and "quiet" otherwise. Anything not ``waiting``,
     ``busy`` or ``idle`` also falls into Quiet, so an unrecognised status is shown rather
     than dropped.
+
+    **What the person decided shows too** (:mod:`crowsnest.attention`). ``store`` is the
+    attention store -- by default the one ``crowsnest seen|later|done|note`` write -- and
+    each row's item id, revision and :func:`crowsnest.attention.present` at ``made_at``
+    decide how it is drawn:
+
+    - a ``seen`` row is dimmed in place and sorted below the unseen rows of its register;
+    - a ``changed`` or ``woke`` row says so in words in the register that needs the
+      person, and elsewhere with a dot, which the title's count leaves out;
+    - a row put off leaves its register for a collapsed *Later* block after *Working*;
+    - a row handled and unchanged since is left out, and the footer counts it;
+    - a line under the masthead counts what is new, changed, woke and landed; *Needs you*
+      opens with how many sessions wait on the person; the ``<title>`` counts the new,
+      changed and woke rows of that register; a row with a note shows its first line, and
+      a row back from *Later* its plan; a *Needs you* row carries its reach, ``phone`` or
+      ``terminal``.
+
+    **A store with no readable record changes nothing**: the page is byte for byte the
+    page from before attention existed. Neither does ``plain=True``, which ignores the
+    store -- a copy to share -- nor a roster without triage verdicts, whose rows carry
+    revisions no verb pinned. ``identity`` and ``material`` are
+    :mod:`crowsnest.attention`'s seams, and must be the ones the verbs were given. An
+    interactive page carries ``data-item`` and ``data-rev`` for its script on every row
+    that has an identity, whatever the store holds.
     """
     clock = _clock(made_at, tz=tz, stale_after=stale_after)
+    sessions = list(roster.get("sessions") or [])
     token = _interactive.set(interactive)
     try:
-        return _render(roster, clock=clock, title=title, fragment=fragment)
+        view = _attention_view(
+            sessions,
+            now=clock.now,
+            store=store,
+            plain=plain,
+            identity=identity,
+            material=material,
+            with_ids=interactive,
+        )
+        view_token = _view.set(view)
+        try:
+            return _render(
+                {**roster, "sessions": sessions},
+                clock=clock,
+                title=title,
+                fragment=fragment,
+                view=view,
+            )
+        finally:
+            _view.reset(view_token)
     finally:
         _interactive.reset(token)
 
 
 def _render(
-    roster: Mapping[str, Any], *, clock: _Clock, title: str, fragment: bool
+    roster: Mapping[str, Any],
+    *,
+    clock: _Clock,
+    title: str,
+    fragment: bool,
+    view: _View,
 ) -> str:
     safe = _Sanitizer()
     sessions = list(roster.get("sessions") or [])
@@ -1047,16 +1533,22 @@ def _render(
         "%Y-%m-%d %H:%M UTC"
     )
 
-    def group_of(row: Mapping[str, Any]) -> str:
-        return str((row.get("verdict") or {}).get("group") or "")
-
     # A roster classified by `crowsnest.triage` organises the page by what each session
     # *needs*, which is the question a person actually has. Without verdicts the page
     # falls back to organising by status, which is what it always did -- so an older
     # caller, and `render_report` called on a bare roster, render exactly as before.
-    triaged = any(group_of(s) for s in sessions)
-    needs_you = [s for s in sessions if group_of(s) == "needs_you"]
-    clear = [s for s in sessions if group_of(s) == "safe_to_close"]
+    # Read over every row, hidden ones included: putting off the last verdict-bearing
+    # row must not turn the page into the status-organised one.
+    triaged = any(_group_of(s) for s in sessions)
+
+    # What the person put off or handled leaves the page before any register claims a
+    # row, so "every session appears exactly once" still holds: in its register, in the
+    # Later block, or -- handled and unchanged -- only in the footer's count.
+    put_off = [s for s in sessions if view.shown(s) == _attention.LATER]
+    handled = sum(1 for s in sessions if view.shown(s) == _attention.DONE)
+    shown = [s for s in sessions if view.shown(s) not in _attention.HIDDEN]
+    needs_you = [s for s in shown if _group_of(s) == "needs_you"]
+    clear = [s for s in shown if _group_of(s) == "safe_to_close"]
 
     # **Every session appears exactly once.** A row is claimed by the first register that
     # takes it, and whatever no register claimed falls to Quiet at the end. Both halves
@@ -1077,12 +1569,10 @@ def _render(
     # it would strand any waiting session a custom `verdicts=` reader classified
     # otherwise -- which is how the seam made a session disappear.
     waiting = (
-        []
-        if triaged
-        else unclaimed([s for s in sessions if s.get("status") == "waiting"])
+        [] if triaged else unclaimed([s for s in shown if s.get("status") == "waiting"])
     )
-    busy = unclaimed([s for s in sessions if s.get("status") == "busy"])
-    idle = [s for s in sessions if s.get("status") == "idle"]
+    busy = unclaimed([s for s in shown if s.get("status") == "busy"])
+    idle = [s for s in shown if s.get("status") == "idle"]
     finished = unclaimed(
         [
             s
@@ -1090,7 +1580,23 @@ def _render(
             if clock.now - float(s.get("status_since") or 0) <= FINISHED_WINDOW
         ]
     )
-    quiet = unclaimed(list(sessions))  # everything no register above took
+    quiet = unclaimed(list(shown))  # everything no register above took
+
+    # Seen rows sort below the unseen ones of their register (triage-ux 2.10); the
+    # register order itself never changes. An empty store sees nothing, so nothing moves.
+    needs_you, clear, waiting, busy, finished, quiet = (
+        _unseen_first(rows, view)
+        for rows in (needs_you, clear, waiting, busy, finished, quiet)
+    )
+    waiting_on_you = len(needs_you) + sum(
+        1 for s in put_off if _group_of(s) == "needs_you"
+    )
+    # "Nothing needs you" over a line saying two sessions wait on you would contradict it.
+    nothing_needs_you = (
+        "Nothing needs you now: what waits on you is put off, in Later below."
+        if waiting_on_you and not needs_you
+        else "Nothing needs you."
+    )
 
     head = (
         _register_from_rows(
@@ -1103,7 +1609,8 @@ def _render(
             tone="needs",
             rule="Holding for a person: a question to answer, a decision to make, or "
             "something only you can do.",
-            empty="Nothing needs you.",
+            empty=nothing_needs_you,
+            lead=_wip(waiting_on_you, waiting_on_you - len(needs_you)) if view.on else "",
         )
         if triaged
         else _register_from_rows(
@@ -1121,6 +1628,7 @@ def _render(
 
     parts = [
         _masthead(safe, counts, stamp, title, zone=_zone_name(clock)),
+        _since_line(shown, view),
         head,
     ]
     if triaged:
@@ -1161,14 +1669,21 @@ def _render(
             rule="Busy, with the tool call in flight.",
             empty="No session is running a tool right now.",
         ),
+        _later_register(safe, put_off, view, clock),
         _lineage_register(safe, roster.get("lineage")),
         _quiet_register(safe, quiet, clock),
-        _footer(safe, stamp),
+        _footer(safe, stamp, handled=handled),
     ]
-    title_tag = f"<title>{safe.text(title)}</title>"
+    # The badge (triage-ux 2.4): only what is unread in the register that needs the
+    # person, never a total across the page.
+    unread = sum(
+        1 for s in (needs_you if triaged else waiting) if view.shown(s) in _UNREAD
+    )
+    title_tag = f"<title>{safe.text(f'{title} ({unread})' if unread else title)}</title>"
     # One <style>, not two: the figure's rules belong with the page's rules, and the
     # interactive mode's own block is the only thing that earns a second tag.
-    style_tag = f"<style>{_CSS}{_TREE_CSS}{WAY_IN_CSS}{WHEN_CSS}</style>"
+    attention_css = ATTENTION_CSS if view.on else ""
+    style_tag = f"<style>{_CSS}{_TREE_CSS}{WAY_IN_CSS}{WHEN_CSS}{attention_css}</style>"
     if _interactive.get():
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'

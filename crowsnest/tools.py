@@ -543,6 +543,10 @@ def report(
     with_lineage: bool = True,
     tz=None,
     stale_after=None,
+    store=None,
+    plain: bool = False,
+    identity=None,
+    material=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -553,6 +557,19 @@ def report(
     which an item is called stale. By default it is the ``[attention]`` table's
     ``stale_after`` (:func:`crowsnest.config.attention_settings`), the same number that
     table gives everything else, so there is no second setting for it.
+
+    ``store`` is the person's attention store (:mod:`crowsnest.attention`; by default one
+    JSON file per item under the data directory), and the page applies it: seen rows dim
+    and sort below the rest of their register, rows put off fold into a collapsed *Later*
+    block, rows handled and unchanged since are left out and counted, and the title counts
+    what is new, changed or woke in *Needs you*. A store that holds no readable record
+    renders the page exactly as it was before attention existed. ``plain`` ignores the
+    store, for a copy to share. ``identity`` and ``material`` are that module's seams, and
+    must be the ones the verbs were given, or every seen item reads as changed.
+
+    ``triage=False`` ignores the store as well, because :func:`render_report` never applies
+    it to a page without verdicts: the verbs pin the revision of the *triaged* row
+    (:func:`_item_row`), so there every seen item would read as changed.
 
     ``made_at`` is the moment the snapshot claims to be from; it defaults to now, but a
     caller that wants byte-stable output passes it explicitly -- this is the one
@@ -627,6 +644,10 @@ def report(
         interactive=interactive,
         tz=tz,
         stale_after=stale_after,
+        store=store,
+        plain=plain,
+        identity=identity,
+        material=material,
     )
     return {
         "html": html,
