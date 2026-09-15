@@ -70,6 +70,7 @@ CONSOLE_CSS = """
 .answers{list-style:none;margin:.2rem 0 0;padding:0;width:100%;font-family:var(--mono);
   font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}
 .answers li b{color:var(--ink);font-weight:500}
+.unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}
 """
 
 #: The console's one script. It loads nothing from anywhere: the only thing it talks to
@@ -96,6 +97,10 @@ CONSOLE_SCRIPT = r"""
   }
   document.querySelectorAll(".acts").forEach((acts) => {
     const session = acts.dataset.session || "", home = acts.dataset.home || "";
+    if (acts.dataset.reachable === "0") {
+      acts.querySelectorAll('button[data-kind="ask"],button[data-kind="tell"]').forEach((b) => { b.hidden = true; });
+      const note = acts.querySelector(".unreachable"); if (note) note.hidden = false;
+    }
     const box = acts.querySelector("textarea"), send = acts.querySelector("[data-kind=send]");
     let pending = "";
     acts.querySelectorAll("button[data-kind]").forEach((b) => b.addEventListener("click", () => {
@@ -362,19 +367,29 @@ def _row(
 
 
 def _controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
-    """The row's console: hidden until the page's ``db`` resolves; empty in static mode."""
+    """The row's console: hidden until the page's ``db`` resolves; empty in static mode.
+
+    ``data-reachable`` is ``"0"`` for a row from another home and ``"1"`` for the
+    watcher's own: :func:`crowsnest.tools.roster` stamps ``home`` only when a row is
+    *not* the watched one, so an empty ``home`` already means "mine" and no separate
+    "own home" argument is needed here (crowsnest#52). The script hides **Ask** and
+    **Tell** on an unreachable row and shows the ``.unreachable`` line in their place --
+    a session under one config directory cannot message one under another (crowsnest#9).
+    """
     if not _interactive.get():
         return ""
+    reachable = "0" if row.get("home") else "1"
     buttons = "".join(
         f'<button type="button" data-kind="{kind}">{safe.text(label)}</button>'
         for kind, label in ROW_ACTIONS
     )
     return (
         f'<div class="acts" data-console hidden data-session="{safe.text(row.get("label"))}"'
-        f' data-home="{safe.text(row.get("home") or "")}">'
+        f' data-home="{safe.text(row.get("home") or "")}" data-reachable="{reachable}">'
         f"{buttons}"
         '<textarea hidden rows="2"></textarea>'
         '<button type="button" data-kind="send" hidden>Send</button>'
+        '<p class="unreachable" hidden>on another account — open it there</p>'
         '<ul class="answers"></ul>'
         "</div>"
     )

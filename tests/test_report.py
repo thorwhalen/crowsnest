@@ -207,9 +207,9 @@ def test_every_open_tag_is_closed():
     stack: list[str] = []
     for closing, name in re.findall(r"<(/?)([a-z0-9]+)", body):
         if closing:
-            assert stack and stack[-1] == name, (
-                f"{name} closed out of order: {stack[-3:]}"
-            )
+            assert (
+                stack and stack[-1] == name
+            ), f"{name} closed out of order: {stack[-3:]}"
             stack.pop()
         elif name not in void:
             stack.append(name)
@@ -353,3 +353,24 @@ def test_interactive_rendering_does_not_leak_into_the_next_static_render():
     _interactive_page()
     r = row(label="fixer", status="busy", status_since=since(10))
     assert "<script" not in render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
+
+
+def test_a_row_from_another_home_is_marked_unreachable_the_watched_home_is_not():
+    """crowsnest#52: a row's `home` is stamped only when it is not the watched one, so
+    an empty `home` already means "mine" -- no separate "own home" argument needed."""
+    mine = row(label="fixer", status="busy", status_since=since(10))
+    theirs = row(label="other", status="busy", status_since=since(10), home="elsewhere")
+    page = render_report(
+        {"sessions": [mine, theirs], "counts": {}}, made_at=STAMP, interactive=True
+    )
+    mine_acts = page.split('data-session="fixer"', 1)[1].split("</div>", 1)[0]
+    theirs_acts = page.split('data-session="other"', 1)[1].split("</div>", 1)[0]
+    assert 'data-reachable="1"' in mine_acts
+    assert 'data-reachable="0"' in theirs_acts
+
+
+def test_the_static_page_is_unchanged_by_the_reachability_marking():
+    r = row(label="fixer", status="busy", status_since=since(10), home="elsewhere")
+    assert "data-reachable" not in render_report(
+        {"sessions": [r], "counts": {}}, made_at=STAMP
+    )
