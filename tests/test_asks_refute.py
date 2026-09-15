@@ -120,6 +120,58 @@ def test_a_dated_log_line_mentioning_the_person_is_not_a_new_ask(note):
     assert _rev(after) == _rev(ASK), _verdict(after)["asks"]
 
 
+@pytest.mark.parametrize(
+    "before, after",
+    [
+        pytest.param(
+            ASK,
+            ASK + "\n### 2026-09-16 — still blocked on Thor\n\n- reran the suite\n",
+            id="dated-heading-statement-appended",
+        ),
+        pytest.param(
+            ASK + "\n### 2026-09-16 — still blocked on Thor\n\n- reran the suite\n",
+            ASK
+            + "\n### 2026-09-16 — still blocked on Thor\n\n- reran the suite\n"
+            + "- tidied fixtures\n",
+            id="bullet-under-a-dated-heading-statement",
+        ),
+        pytest.param(
+            ASK,
+            ASK
+            + "\n### 2026-09-16 — filed a manual-task for the key\n\nFiled priv#12.\n",
+            id="dated-manual-task-heading-appended",
+        ),
+        pytest.param(
+            "### 2026-09-15 — blocked on Thor\n\nThe deploy key must be rotated.\n\n"
+            "- reran the suite\n",
+            "### 2026-09-15 — blocked on Thor\n\nThe deploy key must be rotated.\n\n"
+            "- reran the suite\n- tidied fixtures\n",
+            id="log-growing-under-the-requests-own-dated-heading",
+        ),
+    ],
+)
+def test_a_statement_in_a_dated_log_heading_does_not_make_the_log_an_ask(before, after):
+    # Fix 2 of 0cfee48: a statement on a heading line runs its ask to the section's end
+    # and opens a section, so a dated log heading naming the person ("still blocked on
+    # Thor", "filed a manual-task") turns every bullet under it into the ask.
+    assert _rev(after) == _rev(before), _verdict(after)["asks"]
+
+
+@pytest.mark.parametrize(
+    "note",
+    [
+        pytest.param(
+            "- Opened a PR for Thor to review https://github.com/o/r/pull/46\n",
+            id="url-after-the-name",
+        ),
+        pytest.param("- Left a note for Thor at 10:02 on the issue.\n", id="clock-time"),
+    ],
+)
+def test_a_colon_inside_a_url_or_a_time_does_not_open_a_section(note):
+    after = ASK + "\n## 2026-09-16 log\n\n" + note
+    assert _rev(after) == _rev(ASK), _verdict(after)["asks"]
+
+
 def test_a_progress_list_under_a_statement_is_not_part_of_its_ask():
     # "A line ending in ':' takes the list under it" is about the request's own line
     # ("Blocked on Thor for two things:"); here a later line of the paragraph turns it on.

@@ -506,11 +506,13 @@ _SECTION_GAP_STOP = re.compile(r"\n\s*\n\s*\n")
 _NO_SUCH = re.compile(r"(?i)\b(?:no|without)\s+(?:[^\W\d_][\w'-]*\s+)?$")
 
 #: How a "for <person>" line opens a section rather than naming a person in passing: a
-#: heading, a bold phrase still open where the person is named, or a colon soon after.
-#: "- Opened pull/46 for Thor to review." is none of them: a log line, not a request.
+#: heading, a bold phrase still open where the person is named, or a colon soon after --
+#: not the colon of a URL or a clock time. "- Opened pull/46 for Thor to review." is none
+#: of them, and neither is "... for Thor to review https://..." or "... for Thor at 10:02":
+#: log lines, not requests.
 _HEADING_LEAD = re.compile(r"^[ \t>]*#")
 _BOLD_LEAD = re.compile(r"^[ \t>]*(?:[-*+][ \t]+)?(\*\*|__)(?:(?!\1).)*$")
-_COLON_LEAD = re.compile(r"[^\n:]{0,40}:")
+_COLON_LEAD = re.compile(r"[^\n:]{0,40}:(?!//|\d)")
 
 
 def _is_a_lead_in(text: str, found: re.Match) -> bool:
@@ -531,15 +533,28 @@ def _is_a_lead_in(text: str, found: re.Match) -> bool:
     )
 
 
-def _on_a_heading(text: str, pos: int) -> bool:
-    """Is ``pos`` on a heading line? A request named there names the section below it.
+def _on_an_undated_heading(text: str, pos: int) -> bool:
+    """Is ``pos`` on an undated heading line? A request named there names the section
+    below it.
+
+    A dated heading is a log entry: "### 2026-09-16 — still blocked on Thor" reports on
+    the day, and the notes under it are not a request. (A "for <person>" lead-in on a
+    dated heading is another matter -- that is the form the ``crowsnest-worker`` skill
+    teaches for one, and :func:`_is_a_lead_in` reads it.)
 
     >>> text = '## Manual (only the user can do)'
-    >>> _on_a_heading(text, text.index('only')), _on_a_heading('only you can', 0)
-    (True, False)
+    >>> _on_an_undated_heading(text, text.index('only'))
+    True
+    >>> dated = '### 2026-09-16 — still blocked on Thor'
+    >>> _on_an_undated_heading(dated, dated.index('blocked'))
+    False
+    >>> _on_an_undated_heading('only you can', 0)
+    False
     """
-    start, _ = _line_bounds(text, pos)
-    return bool(_HEADING_LEAD.match(text[start:pos]))
+    start, end = _line_bounds(text, pos)
+    return bool(_HEADING_LEAD.match(text[start:pos])) and not heading_date(
+        text[start:end]
+    )
 
 
 class _Page(NamedTuple):
@@ -630,7 +645,7 @@ def _statement_ask(page: _Page, opened: re.Match) -> tuple[int, int]:
     shown = page.shown
     start = max(shown.rfind(".", 0, opened.start()), shown.rfind("\n", 0, opened.start()))
     # The reason is the sentence cut at this same end (`_requests`), so the ask holds it.
-    if _on_a_heading(shown, opened.start()):
+    if _on_an_undated_heading(shown, opened.start()):
         return start + 1, _section_ask(page, opened)[1]
     return start + 1, _block_end(page, opened.start())
 
@@ -722,7 +737,7 @@ def _requests(page: _Page, owner: str) -> list[_Request]:
                 opens = (
                     _is_a_lead_in(free, opened)
                     if form == _LEAD_IN
-                    else _on_a_heading(free, opened.start())
+                    else _on_an_undated_heading(free, opened.start())
                 )
                 found.append(_Request(wanted, opened.end(), span, opens))
     return found
