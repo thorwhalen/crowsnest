@@ -231,12 +231,17 @@ def roster(
     session, which is nothing next to a transcript tail and everything next to a registry
     listing -- and ``activity=False`` promises "instant". Pass ``links=True`` to have both.
 
+    ``ledger_dir=None`` is the config file's ``[report] ledger_dir``
+    (:func:`crowsnest.config.report_settings`), the ledgers the report reads, else
+    ``<data dir>/ledger``.
+
     Every row carries ``said_at`` and ``said_at_basis``, which say when the thing the row
     quotes was said, taken from its source (:mod:`crowsnest.said`). That thing is the last
     words, the question the session waits on, or the call in flight. Both are empty when
     no source gives a time. Every surface renders the time from these two fields.
     """
     links = activity if links is None else links
+    ledger_dir = _configured_ledgers(ledger_dir, config=config)
     found = sessions(home=home, all_homes=all_homes, config=config)
     # Every row carries the command that reaches it from a terminal, pinned to the home it
     # was read from -- otherwise it reads whichever account the pasting shell selects.
@@ -436,6 +441,7 @@ def triage(
     """
     from crowsnest.triage import classify
 
+    ledger_dir = _configured_ledgers(ledger_dir, config=config)
     # `links=False`: this verb reports what needs a person, and never renders a link.
     rows = roster(
         home=home,
@@ -455,6 +461,18 @@ def _ledgers_for(labels, ledger_dir) -> dict:
     empty page rather than no entry, so a caller can tell "read it, there was nothing"
     from "not read yet" and does not go back to disk to find out."""
     return {label: _ledger_page(label, ledger_dir) for label in labels if label}
+
+
+def _configured_ledgers(ledger_dir, *, config=None):
+    """``ledger_dir``, or the config file's ``[report] ledger_dir`` when it is ``None``.
+
+    Those are the ledgers the report, the verbs and the watcher read
+    (:mod:`crowsnest.rows`), so a roster, ``show`` and ``triage`` read them too and agree
+    with the page.
+    """
+    if ledger_dir is not None:
+        return ledger_dir
+    return RowContext.from_config(path=config).ledger_dir
 
 
 def _now() -> str:
@@ -484,6 +502,7 @@ def show(
     every :func:`roster` row does -- the two things a page naming the session links it by.
     """
     s = resolve(session, home=home, all_homes=all_homes, config=config)
+    ledger_dir = _configured_ledgers(ledger_dir, config=config)
     act = read_activity(s.transcript, session_id=s.session_id, recent=recent)
     record = s.as_dict()
     row = {
@@ -569,11 +588,11 @@ def report(
     status-organised page; so does calling :func:`crowsnest.report.render_report` on a
     roster whose rows carry no verdict.
 
-    ``links``, ``ledger_dir`` and ``resolvers`` reach :func:`roster` unchanged. This is
-    the surface the link resolution exists for, so it is the surface that has to be able
-    to turn it off, point it at another ledger directory, or hand it a resolver of its
-    own -- and ``ledger_dir`` is also what lets a test of this function not read the
-    ledgers of whoever is running it.
+    ``links=False`` leaves the references off the page. They are still resolved: a
+    verdict reader may read them, and the verbs pin the row with them. To resolve
+    nothing, or to read other ledgers, give ``row_context`` ``resolvers=()`` or a
+    ``ledger_dir``, and give the verbs and the watcher the same one. A ``ledger_dir`` is
+    also what lets a test of this function not read the ledgers of whoever runs it.
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
     # The `[attention]` table gives the stale age and, on an interactive page, the Later
@@ -592,9 +611,13 @@ def report(
         found,
         home_dir=_home_to_pin(home=home, all_homes=all_homes, config=config),
         pages=ctx.pages({s.label for s in found}),
-        links=links,
         triage=triage,
     )
+    if not links:
+        # Left off the page, not unresolved: a verdict reader may read a row's links, and
+        # the verbs pin the row with them. Resolving nothing is `RowContext(resolvers=())`,
+        # which the verbs are then given too.
+        rows = [{k: v for k, v in row.items() if k != "links"} for row in rows]
     data = {"sessions": rows, "counts": _counts(rows)}
     if with_lineage:
         # The rows the roster already read, not a second sweep of the registry: reading

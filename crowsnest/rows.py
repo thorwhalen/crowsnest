@@ -69,8 +69,20 @@ class RowContext:
     def __post_init__(self) -> None:
         for name in ("resolvers", "verdicts"):
             value = getattr(self, name)
-            if value is not None and not isinstance(value, tuple):
-                object.__setattr__(self, name, tuple(value))
+            if value is None or isinstance(value, tuple):
+                continue
+            # A lone reader, or a reader's name, would fail on the first row of a page (or
+            # become a tuple of characters) with an error that names nothing.
+            if (
+                callable(value)
+                or isinstance(value, (str, bytes, Mapping))
+                or not (isinstance(value, Iterable))
+            ):
+                raise TypeError(
+                    f"RowContext.{name} is a sequence of readers, not {value!r}; "
+                    f"a single one goes in a tuple: ({name}=(reader,))"
+                )
+            object.__setattr__(self, name, tuple(value))
 
     @classmethod
     def from_config(cls, *, path: str | Path | None = None, **changes) -> RowContext:
@@ -93,16 +105,17 @@ class RowContext:
         *,
         home_dir: Path | None = None,
         pages: Mapping | None = None,
-        links: bool = True,
         triage: bool = True,
     ) -> list[dict]:
         """The rows the report shows for the live sessions ``found``, in their order.
 
         The one place a row is built: the roster's clipping and link cap, then its triage
         verdict. ``home_dir`` is what each row's ``open_command`` pins; ``pages`` are the
-        ledgers already read (:meth:`pages`), read here when not given. ``links=False``
-        and ``triage=False`` are the report's switches; the verbs and the watcher build
-        with both on, because the page they must agree with does.
+        ledgers already read (:meth:`pages`), read here when not given. Links are always
+        resolved, with ``resolvers``: a verdict reader may read them, so a row built
+        without them could be classified, and hashed, differently from the one the verbs
+        pin. ``triage=False`` is the report's switch for a page without verdicts, which
+        never applies the store.
         """
         from crowsnest.said import with_said
         from crowsnest.tools import _roster_row
@@ -116,7 +129,7 @@ class RowContext:
             row = with_said(
                 _roster_row(
                     s,
-                    links=links,
+                    links=True,
                     ledger_dir=self.ledger_dir,
                     resolvers=self.resolvers,
                     page=page,

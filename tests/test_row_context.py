@@ -292,7 +292,9 @@ def test_a_ledger_dir_flag_overrides_the_config_file_for_one_command(
 def test_report_settings_read_the_ledger_dir(tmp_path, monkeypatch):
     assert report_settings().ledger_dir is None
     assert dflt_row_context() == RowContext()
+    # `~` is $HOME on POSIX and %USERPROFILE% on Windows, which ignores HOME.
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     cfg = _config(tmp_path, monkeypatch, "[report]\nledger_dir = '~/ledgers'\n")
     assert report_settings(path=cfg).ledger_dir == tmp_path / "ledgers"
     assert dflt_row_context(config=cfg).ledger_dir == tmp_path / "ledgers"

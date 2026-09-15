@@ -135,7 +135,7 @@ crowsnest undo shipper                              one step back
 
 Items are keyed by session id, not name, so a resumed session keeps its record and a new session given an old name starts fresh. The hours behind `evening` and `tomorrow` are an `[attention]` table in the config file (`evening_hour = 18`, `morning_hour = 9`). `crowsnest attention export` and `import` move the records as JSON, the newer `updated_at` winning, which is how a published page's copy and this machine's are kept in step. The report page showing this record is the next step ([#55](https://github.com/thorwhalen/crowsnest/issues/55)).
 
-A mark holds only if the page, the verbs and `crowsnest watch` read the item the same way, and that includes the ledgers each session is triaged from. If yours are not in the default place, name them once rather than passing `--ledger-dir` to every command:
+A mark holds only if the page, the verbs and `crowsnest watch` read the item the same way, and that includes the ledgers each session is triaged from. If yours are not in the default place, name them once rather than passing `--ledger-dir` to each of `report`, the verbs and `watch`. `triage`, `roster` and `show` read the same setting, so they agree with the page too:
 
 ```toml
 # ~/.config/crowsnest/config.toml

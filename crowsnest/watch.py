@@ -46,7 +46,6 @@ import json
 import time
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from datetime import datetime, timezone
-from functools import partial
 from pathlib import Path
 
 from crowsnest.activity import Activity, read_activity
@@ -346,8 +345,10 @@ def attention_wakes(
 
     Every item still in state ``later`` is re-read through :func:`crowsnest.attention.present`,
     the same pure function the static page and the console use, with the item's *current*
-    revision -- ``row_of`` is how that row is rebuilt from the document alone (default
-    :func:`_attention_row`; a test hands a synthetic row instead of a live session). An
+    revision -- ``row_of`` is how that row is rebuilt from the document alone, called as
+    ``row_of(doc, home=, all_homes=, config=, row_context=)`` so a replacement can build it
+    the way the verbs did (default :func:`_attention_row`; a test hands a synthetic row
+    instead of a live session). An
     item :func:`~crowsnest.attention.present` no longer shows as ``later`` -- its time
     passed, or it changed while ``on_change`` -- has woken; one that a prior call already
     announced is not repeated. ``announced`` is that bookkeeping, kept by the caller
@@ -365,7 +366,8 @@ def attention_wakes(
 
     store = _attention.dflt_store() if store is None else store
     ctx = dflt_row_context(config=config) if row_context is None else row_context
-    fetch = partial(_attention_row, row_context=ctx) if row_of is None else row_of
+    # A replacement is handed the context too, so it can build the row as the verbs did.
+    fetch = _attention_row if row_of is None else row_of
     seen = set() if announced is None else announced
     found: list[dict] = []
     for item in list(store):
@@ -377,7 +379,7 @@ def attention_wakes(
         if record is None or record.state != _attention.LATER:
             seen.discard(item)
             continue
-        row = fetch(doc, home=home, all_homes=all_homes, config=config)
+        row = fetch(doc, home=home, all_homes=all_homes, config=config, row_context=ctx)
         if row is None:
             continue
         rev = ctx.rev(row)
