@@ -42,7 +42,31 @@ The name is the address for everything afterwards — the roster row, `crowsnest
 `SendMessage`, and its ledger file. Pick a short, unique, lowercase one that says the
 corpus and the job: `parser-tests`, `tw-deploy-fix`, `cn-ledger`. Never reuse a live name.
 
-## 3. Compose the brief as pointers
+## 3. Choose the model before the brief
+
+**Fable is for solving hard problems, and for design and planning that needs intelligence.**
+Everything else runs on the cheapest model that finishes the job. Decide this *before* you
+write the brief, because the brief you copy from was written for a different kind of work.
+
+| The work is | Model and effort | Shape |
+|---|---|---|
+| Design, architecture, novel debugging — no procedure exists yet | Fable or Opus, effort `high` | one session, thinking |
+| Applying a documented procedure across repositories — a sweep, a migration, a rollout | **Sonnet, effort `medium`** | **sequential, one corpus at a time** |
+| A bounded review, or one judgment call the worker flagged as hard | Opus, as a **subagent inside the worker** | short prompt, narrow question |
+
+**Never copy `-m` from the previous brief.** A work-package template carries the flags of
+the task it was written for; a sweep dispatched with the design session's `-m fable -e high`
+costs many times what it needs to and can burn a week's allowance in an afternoon. State the
+model and the reason on the dispatch line: *"sonnet, medium — procedural, the skill is the
+procedure"*, *"fable, high — no procedure exists for this yet"*.
+
+**Parallel fan-out is not a goal.** Four sessions on four repositories is four times the
+spend for a wall-clock win the user did not ask for, and four times the blast radius when
+the procedure turns out to be wrong on repository one. Run one corpus at a time unless the
+user asks for parallel — and when a corpus is a fleet, let the first one land and be read
+before the second starts.
+
+## 4. Compose the brief as pointers
 
 Five parts, in this order, and nothing else:
 
@@ -59,11 +83,16 @@ Five parts, in this order, and nothing else:
 If you find yourself writing a sixth paragraph explaining the work, stop: that paragraph
 belongs in an issue the session can read.
 
-## 4. Start it, or message it
+## 5. Start it, or message it
 
 ```bash
-crowsnest spawn <name> --cwd <dir> --prompt "<the brief>"
+crowsnest spawn <name> --cwd <dir> --model sonnet --effort medium --prompt "<the brief>"
 ```
+
+Always pass `--model` explicitly, even when it matches your own: left out, the session
+inherits whatever the user's default happens to be, which is the expensive one exactly
+when you were not thinking about cost. The confirmation row echoes the model it started
+with, so read it — that row is your last chance to catch a copied flag.
 
 The row appears in `crowsnest` within seconds, named, in that directory, busy, and
 running the way you run: your account and your `claude` binary. `--profile <name>` starts
@@ -77,7 +106,7 @@ thing that looks like a failure and is not.
 For a session that already exists, `SendMessage` to its name from `ListAgents`, with the
 same five parts. Idle only — never a `busy` or `waiting` one.
 
-## 5. Subscribe once, then stop looking
+## 6. Subscribe once, then stop looking
 
 Pass `notify_when_idle: true` on the `SendMessage` (no message needed for a pure, free
 subscription) so you are told when this one dispatch finishes. It is one-shot and it
@@ -86,7 +115,7 @@ the `Monitor` tool.
 
 Do not poll. Do not send "are you done?".
 
-## 6. Record it and let go
+## 7. Record it and let go
 
 Write the dispatch into that corpus's ledger so it survives your next `/clear`: the name,
 the directory, what it was asked for, and where the acceptance line lives. Then drop the
