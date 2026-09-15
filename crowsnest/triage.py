@@ -59,6 +59,16 @@ ledger's last write, which is only an upper bound. A reader never borrows anothe
 so a verdict with no source time has an empty ``said_at``. That is what stops a claim
 five days old from being repeated as current (crowsnest#66).
 
+**A request carries its asks, whole.** ``reason`` quotes the start of one request, clipped
+to :data:`REASON_LIMIT` so a page stays a page. A ``needs_you`` verdict's ``asks``
+(:class:`Ask`) are what it asks of a person, each unclipped and dated: first the request
+its reason quotes (the question, the field, a statement to the end of its sentence and
+block, or a section), then every other "for <person>" section in the file. A statement
+elsewhere is not an ask. :func:`crowsnest.attention.fingerprint` reads them, so a link changed
+after the reason, a second section appended later, or a change past the clip is a change
+to the item (crowsnest#67). That makes this module's reading of an ask part of every
+stored revision: a change to where an ask begins or ends resurfaces the items it touches.
+
 ``verdicts=`` is the seam: an ordered sequence of ``(row, ledger) -> Verdict | None``,
 first non-``None`` winning. The default pair is the live registry signal -- which is
 authoritative for *right now*, because a session that is `waiting` is waiting whatever its
@@ -80,6 +90,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime, time, timedelta, timezone
 from functools import partial
+from typing import NamedTuple
 
 from crowsnest.said import (
     LEDGER_SECTION,
@@ -96,6 +107,7 @@ __all__ = [
     "GROUPS",
     "REASON_LIMIT",
     "WHYS",
+    "Ask",
     "Verdict",
     "classify",
     "classify_row",
@@ -121,6 +133,23 @@ REASON_LIMIT = 200
 
 
 @dataclass(frozen=True)
+class Ask:
+    """One thing a session asks of a person, whole: never clipped, and dated from its source.
+
+    ``said_at`` and ``said_at_basis`` are when these words were said, as a
+    :class:`Verdict`'s are for its reason (:mod:`crowsnest.said`), and empty when no
+    source gives a time.
+
+    >>> Ask('attach the GIF').text
+    'attach the GIF'
+    """
+
+    text: str
+    said_at: str = ""
+    said_at_basis: str = ""
+
+
+@dataclass(frozen=True)
 class Verdict:
     """One session's classification, and the evidence for it.
 
@@ -133,6 +162,10 @@ class Verdict:
     ``said_at_basis`` names that source (one of :data:`crowsnest.said.BASES`). Both are
     empty when no source time is known. They are never filled with the time of reading.
 
+    ``asks`` are what a ``needs_you`` verdict asks of a person, each whole and with its own
+    time (:class:`Ask`). The first is the request ``reason`` quotes. Other verdicts have
+    none.
+
     >>> Verdict('needs_you', why='decision', reason='squash or rebase?').as_dict()['group']
     'needs_you'
     """
@@ -143,10 +176,13 @@ class Verdict:
     source: str = ""
     said_at: str = ""
     said_at_basis: str = ""
+    asks: tuple[Ask, ...] = ()
 
-    def as_dict(self) -> dict[str, str]:
-        """JSON-ready form."""
-        return asdict(self)
+    def as_dict(self) -> dict:
+        """JSON-ready form, the asks as a list of dicts."""
+        found = asdict(self)
+        found["asks"] = list(found["asks"])
+        return found
 
 
 def _one_line(text: str, limit: int = REASON_LIMIT) -> str:
@@ -416,36 +452,318 @@ _ACTION = re.compile(
 )
 
 
-def _section_after(text: str, match: re.Match) -> str:
-    """The block of prose a "for <person>" heading opens: up to the next heading or gap."""
-    rest = text[match.end() :]
-    end = len(rest)
-    for stop in (
-        re.search(r"\n[\s>*#_-]*#{1,6}\s", rest),
-        re.search(r"\n\s*\n\s*\n", rest),
-    ):
-        if stop and stop.start() < end:
-            end = stop.start()
-    # The heading's own trailing punctuation and decoration is not the section:
-    # `**Open for Thor:** attach the GIF` should read back as `attach the GIF`.
-    return rest[:end].lstrip(":*_)-— \t\r\n")
-
-
-def _sentence_at(text: str, match: re.Match) -> str:
+def _sentence_at(text: str, match: re.Match, *, limit: int | None = None) -> str:
     """The sentence a mid-paragraph statement sits in, so the reason reads as one.
 
     A heading opens a section; "blocked on Thor (priv#145)" opens nothing, and quoting
-    from the match forward gives a reason beginning mid-clause.
+    from the match forward gives a reason beginning mid-clause. ``limit`` cuts it where
+    the statement's block ends, so it never runs on into a list or a log below it.
     """
     start = max(
         text.rfind(".", 0, match.start()) + 1,
         text.rfind("\n", 0, match.start()) + 1,
     )
+    end = _sentence_end(text, match)
+    return text[start : end if limit is None else min(end, limit)].strip()
+
+
+def _sentence_end(text: str, match: re.Match) -> int:
+    """Where the sentence holding ``match`` ends: after its full stop, or at a blank line."""
     end = len(text)
     for stop in (text.find(". ", match.end()), text.find("\n\n", match.end())):
         if 0 <= stop < end:
             end = stop + 1
-    return text[start:end].strip()
+    return end
+
+
+#: Which of :func:`_person_patterns` is the "for <person>" lead-in, the one form that
+#: opens a section rather than a sentence.
+_LEAD_IN = 0
+
+#: Lines that open a markdown block of their own, and so end any block above them.
+_OPENS_A_BLOCK = (
+    re.compile(r"^[ \t]{0,3}#{1,6}(?:[ \t]|$)"),  # a heading
+    re.compile(
+        r"^[ \t]{0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$"
+    ),  # rule
+    re.compile(r"^[ \t]*(?:[-*+]|\d{1,9}[.)])[ \t]+\S"),  # a list item
+    re.compile(r"^[ \t]*\|"),  # a table row
+    re.compile(r"^[ \t]{0,3}>"),  # a quote
+)
+_HEADING, _RULE, _LIST_ITEM, _TABLE_ROW, _QUOTE = _OPENS_A_BLOCK
+
+#: Where a "for <person>" section ends: at a heading, whatever decorates it, read where
+#: code is blanked so a ``# comment`` in a fence is not one; or at two blank lines outside
+#: a fence, read where code is not, so a blanked fence is not two and the blank lines in
+#: a fence end nothing. A rule or another lead-in ends it as well (:func:`_section_ask`).
+_SECTION_HEADING_STOP = re.compile(r"\n[\s>*#_-]*#{1,6}\s")
+_SECTION_GAP_STOP = re.compile(r"\n\s*\n\s*\n")
+
+#: A request right after "no" or "without" is the absence of one: "no manual-task needed",
+#: "no longer blocked on Thor". One word may sit between; two ("no reply yet; blocked on
+#: Thor") and it is a request again. A word starts with a letter: in "No - only Thor can
+#: push tags" the dash is punctuation, the "No" answers a question, and the request stands.
+_NO_SUCH = re.compile(r"(?i)\b(?:no|without)\s+(?:[^\W\d_][\w'-]*\s+)?$")
+
+#: How a "for <person>" line opens a section rather than naming a person in passing: a
+#: heading, a bold phrase still open where the person is named, or a colon soon after --
+#: not the colon of a URL or a clock time. "- Opened pull/46 for Thor to review." is none
+#: of them, and neither is "... for Thor to review https://..." or "... for Thor at 10:02":
+#: log lines, not requests.
+_HEADING_LEAD = re.compile(r"^[ \t>]*#")
+_BOLD_LEAD = re.compile(r"^[ \t>]*(?:[-*+][ \t]+)?(\*\*|__)(?:(?!\1).)*$")
+_COLON_LEAD = re.compile(r"[^\n:]{0,40}:(?!//|\d)")
+
+
+def _is_a_lead_in(text: str, found: re.Match) -> bool:
+    """Does the "for <person>" match ``found`` open a section?
+
+    >>> p = _for_person('thor')
+    >>> [_is_a_lead_in(t, p.search(t)) for t in (
+    ...     '## For Thor', '**For Thor - do not reinstall.**', 'Outstanding for Thor: x',
+    ...     '- Opened pull/46 for Thor to review.', '- **Opened** pull/46 for Thor')]
+    [True, True, True, False, False]
+    """
+    start, _ = _line_bounds(text, found.end() - 1)
+    head = text[start : found.end()]
+    return bool(
+        _HEADING_LEAD.match(head)
+        or _BOLD_LEAD.match(head)
+        or _COLON_LEAD.match(text, found.end())
+    )
+
+
+def _on_an_undated_heading(text: str, pos: int) -> bool:
+    """Is ``pos`` on an undated heading line? A request named there names the section
+    below it.
+
+    A dated heading is a log entry: "### 2026-09-16 — still blocked on Thor" reports on
+    the day, and the notes under it are not a request. (A "for <person>" lead-in on a
+    dated heading is another matter -- that is the form the ``crowsnest-worker`` skill
+    teaches for one, and :func:`_is_a_lead_in` reads it.)
+
+    >>> text = '## Manual (only the user can do)'
+    >>> _on_an_undated_heading(text, text.index('only'))
+    True
+    >>> dated = '### 2026-09-16 — still blocked on Thor'
+    >>> _on_an_undated_heading(dated, dated.index('blocked'))
+    False
+    >>> _on_an_undated_heading('only you can', 0)
+    False
+    """
+    start, end = _line_bounds(text, pos)
+    return bool(_HEADING_LEAD.match(text[start:pos])) and not heading_date(
+        text[start:end]
+    )
+
+
+class _Page(NamedTuple):
+    """A ledger's free part, read two ways over one set of offsets.
+
+    Patterns and block boundaries read ``shown``, where code is blanked, so nothing in a
+    code block is taken for a request or a heading. An ask's text is cut from ``raw``, so
+    a command it asks a person to run is part of it: :func:`without_code` keeps lengths.
+    """
+
+    raw: str
+    shown: str
+    lead_ins: frozenset[int]  # where each line opening a "for <person>" section starts
+    fences: tuple[tuple[int, int], ...]  # where each fenced code block lies
+
+
+def _page_of(free, owner: str) -> _Page:
+    """``free`` as a :class:`_Page`, its line endings made ``\\n`` first."""
+    raw = str(free or "").replace("\r\n", "\n").replace("\r", "\n")
+    shown = without_code(raw)
+    lead_ins = frozenset(
+        _line_bounds(shown, found.end() - 1)[0]
+        for found in _for_person(owner).finditer(shown)
+        if _is_a_lead_in(shown, found)
+    )
+    return _Page(raw, shown, lead_ins, tuple(m.span() for m in _FENCE.finditer(raw)))
+
+
+def _in_fence(page: _Page, pos: int) -> bool:
+    return any(start <= pos < end for start, end in page.fences)
+
+
+def _is_blank(page: _Page, start: int, end: int) -> bool:
+    """Is the line ``[start, end)`` blank as written? A blank line in a fence is code."""
+    return not page.raw[start:end].strip() and not _in_fence(page, start)
+
+
+def _line_bounds(text: str, pos: int) -> tuple[int, int]:
+    """Where the line holding ``pos`` starts and ends, its newline left out."""
+    end = text.find("\n", pos)
+    return text.rfind("\n", 0, pos) + 1, len(text) if end < 0 else end
+
+
+def _opens_a_block(page: _Page, start: int, end: int) -> bool:
+    line = page.shown[start:end]
+    return start in page.lead_ins or any(p.match(line) for p in _OPENS_A_BLOCK)
+
+
+def _block_end(page: _Page, pos: int) -> int:
+    """Where the block holding ``pos`` ends: before a blank line or a line opening a block.
+
+    When the line holding ``pos`` ends in ``:``, the list under it belongs to it: "Blocked
+    on Thor for two things:" is followed by the two things. Only that line: a "Done so
+    far:" further down opens a progress list, not part of the request.
+
+    >>> text = 'Blocked on Thor. Approve pull/45.\\nand the tag\\n- Committed 7d30838.'
+    >>> text[: _block_end(_page_of(text, 'thor'), 0)]
+    'Blocked on Thor. Approve pull/45.\\nand the tag'
+    >>> text = 'Blocked on Thor for two things:\\n- approve pull/45\\n- rotate it\\n\\nnotes'
+    >>> text[: _block_end(_page_of(text, 'thor'), 0)]
+    'Blocked on Thor for two things:\\n- approve pull/45\\n- rotate it'
+    """
+    shown = page.shown
+    _, end = _line_bounds(shown, pos)
+    listing = shown[:end].rstrip().endswith(":")
+    while end < len(shown):
+        start, after = _line_bounds(shown, end + 1)
+        line = shown[start:after]
+        if _is_blank(page, start, after):
+            break
+        if not (listing and _LIST_ITEM.match(line)) and _opens_a_block(
+            page, start, after
+        ):
+            break
+        end = after
+    return end
+
+
+def _statement_ask(page: _Page, opened: re.Match) -> tuple[int, int]:
+    """A statement's ask: from its sentence to the end of its block.
+
+    "Blocked on Thor. Please approve pull/45." asks in its second sentence, so the sentence
+    alone is not the ask. The lines after it are not part of it once a blank line, a list
+    item, a table row, a heading or a rule begins: that is where a log grows. A statement
+    on a heading line -- "## Manual (only the user can do)" -- names the section below
+    it, and its ask runs to that section's end (:func:`_section_ask`).
+    """
+    shown = page.shown
+    start = max(shown.rfind(".", 0, opened.start()), shown.rfind("\n", 0, opened.start()))
+    # The reason is the sentence cut at this same end (`_requests`), so the ask holds it.
+    if _on_an_undated_heading(shown, opened.start()):
+        return start + 1, _section_ask(page, opened)[1]
+    return start + 1, _block_end(page, opened.start())
+
+
+def _section_ask(page: _Page, opened: re.Match) -> tuple[int, int]:
+    """A "for <person>" section's ask: what its lead-in opens, up to the next heading, rule
+    or lead-in, or two blank lines.
+
+    A request section is often more than one block, and the ledgers this was measured on
+    show it: an "**Open for Thor (2 items):**" lead-in over a numbered list, a "## For
+    Thor" heading over bold numbered paragraphs with gaps between. Ending the ask at its
+    first gap cut three of four of them short. The cost is that prose appended under a
+    request section with no heading of its own becomes part of the ask. Sessions append
+    under dated headings, and a heading ends the section.
+
+    >>> text = '## For Thor\\n\\nTwo things:\\n\\n- attach the GIF\\n\\n---\\n\\nCommitted.'
+    >>> page = _page_of(text, 'thor')
+    >>> text[slice(*_section_ask(page, _for_person('thor').search(text)))]
+    'Two things:\\n\\n- attach the GIF\\n'
+    """
+    shown = page.shown
+    start = opened.end()
+    end = len(shown)
+    gaps = _SECTION_GAP_STOP.finditer(page.raw, start)
+    for found in (
+        _SECTION_HEADING_STOP.search(shown, start),
+        next((gap for gap in gaps if not _in_fence(page, gap.start())), None),
+    ):
+        if found and found.start() < end:
+            end = found.start()
+    line_start = shown.find("\n", start) + 1
+    while 0 < line_start < end:
+        line_end = shown.find("\n", line_start)
+        line_end = len(shown) if line_end < 0 else line_end
+        if line_start in page.lead_ins or _RULE.match(shown[line_start:line_end]):
+            end = line_start - 1
+            break
+        line_start = line_end + 1
+    # The heading's own trailing punctuation and decoration is not the section:
+    # `**Open for Thor:** attach the GIF` should read back as `attach the GIF`. Measured
+    # on the text as written, so a fence opening the section is not stripped as blank.
+    body = page.raw[start:end]
+    return start + len(body) - len(body.lstrip(":*_)-— \t\r\n")), end
+
+
+class _Request(NamedTuple):
+    """One request for a person in a ledger's free part."""
+
+    wanted: str  # the section or sentence a reason quotes
+    at: int  # where its words begin, for when they were said
+    span: tuple[int, int]  # its ask: the section, or the sentence to its block's end
+    opens_a_section: bool  # a lead-in (`_is_a_lead_in`) or a heading naming a request
+
+
+def _requests(page: _Page, owner: str) -> list[_Request]:
+    """Every request for a person in the free part: lead-ins first, then statements, each
+    in file order -- the order the reason is chosen by.
+
+    Needing a person is read from the WHOLE file: a request written on Monday and never
+    withdrawn is still open on Wednesday, and a stale one costs a glance.
+    """
+    free = page.shown
+    found = []
+    for form, pattern in enumerate(_person_patterns(owner)):
+        for opened in pattern.finditer(free):
+            before = free[: opened.start()].rsplit("\n", 1)[-1]
+            if _NOT_REALLY.search(before) or _NO_SUCH.search(before):
+                continue  # "so no manual-task issue" is the absence of one
+            # A lead-in opens a section: its ask, which the reason quotes from the start.
+            # A statement mid-paragraph opens a sentence, which the reason quotes, and
+            # its ask runs on to the end of the block.
+            if form == _LEAD_IN:
+                span = _section_ask(page, opened)
+                wanted = free[span[0] : span[1]]
+            else:
+                span = _statement_ask(page, opened)
+                wanted = _sentence_at(free, opened, limit=span[1])
+            # A section headed "For Thor" whose content is itself an all-clear is a
+            # session reporting that it needs nothing, in the place it would have said
+            # what it needed. Reading that as a request is the same error as reading
+            # silence as completion, pointing the other way.
+            if (
+                _substantive(wanted)
+                and not _opens_with_nothing(wanted)
+                and not _is_a_real_all_clear(wanted)
+            ):
+                # `end`, not `start`: a heading pattern may begin on the blank lines
+                # above its own line, which belong to the section before.
+                opens = (
+                    _is_a_lead_in(free, opened)
+                    if form == _LEAD_IN
+                    else _on_an_undated_heading(free, opened.start())
+                )
+                found.append(_Request(wanted, opened.end(), span, opens))
+    return found
+
+
+def _asks(page: _Page, requests: Sequence[_Request], ledger: Mapping) -> tuple[Ask, ...]:
+    """What the session asks: the request its reason quotes, then every other "for
+    <person>" section in file order, each once.
+
+    A statement -- "blocked on Thor", "manual-task", "only you can" -- is an ask only when
+    it is the request the reason quotes. Sessions *mention* requests in statements: they
+    restate them, quote a brief, say no manual-task was needed, and every one of those in
+    a growing file would make the item change (K2 in discussion #51). A "for <person>"
+    section is how a session *makes* a request, which is what a second ask is -- when a
+    heading, a bold phrase or a colon opens it (:func:`_is_a_lead_in`), or a heading names
+    the request ("## Manual (only the user can do)"). "- Opened pull/46 for Thor to
+    review." under a dated log heading mentions a person; it opens nothing.
+    """
+    chosen = [requests[0], *(r for r in requests[1:] if r.opens_a_section)]
+    found: dict[str, Ask] = {}
+    for request in chosen:
+        start, end = request.span
+        text = page.raw[start:end].strip() or request.wanted.strip()
+        said_at, basis = _said_in(ledger, page.shown, request.at)
+        found.setdefault(" ".join(text.split()).casefold(), Ask(text, said_at, basis))
+    return tuple(found.values())
 
 
 def _why(text: str) -> str:
@@ -499,7 +817,8 @@ def from_registry(row: Mapping, ledger: Mapping) -> Verdict | None:
     if status == "waiting":
         act = row.get("activity") or {}
         asked = str(act.get("pending_question") or "") if isinstance(act, Mapping) else ""
-        reason = asked or str(row.get("waiting_for") or "") or "waiting for input"
+        said = asked or str(row.get("waiting_for") or "")
+        reason = said or "waiting for input"
         return Verdict(
             "needs_you",
             _why(reason) if asked else "question",
@@ -507,6 +826,7 @@ def from_registry(row: Mapping, ledger: Mapping) -> Verdict | None:
             "registry",
             said_at,
             basis,
+            asks=(Ask(said, said_at, basis),) if said else (),
         )
     if status in ("busy", "shell"):
         act = row.get("activity") or {}
@@ -537,61 +857,53 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
 
     Each verdict carries the time of the words it quotes (:func:`_said_in`). The fields
     carry no date of their own, so they take the ledger's last write.
+
+    A request's ``asks`` are the one its reason quotes and every other "for <person>"
+    section in the file (:func:`_asks`): a section appended after the first is still
+    something the session needs.
     """
     fields = ledger.get("fields") or {}
-    free = without_code(str(ledger.get("free") or ""))
     owner = owner or DFLT_OWNER
+    page = _page_of(ledger.get("free"), owner)
+    free = page.shown
 
     asked = _substantive(fields.get("open_questions"))
     if asked:
+        said_at, basis = _written(ledger)
         return Verdict(
             "needs_you",
             _why(asked),
             _one_line(asked),
             "ledger:open questions",
-            *_written(ledger),
+            said_at,
+            basis,
+            asks=(Ask(asked, said_at, basis),),
         )
 
-    # Needing a person is read from the WHOLE file: a request written on Monday and never
-    # withdrawn is still open on Wednesday, and a stale one costs a glance.
-    for index, pattern in enumerate(_person_patterns(owner)):
-        for opened in pattern.finditer(free):
-            if _NOT_REALLY.search(free[: opened.start()].rsplit("\n", 1)[-1]):
-                continue  # "so no manual-task issue" is the absence of one
-            # A heading opens a section; a statement mid-paragraph opens a sentence.
-            wanted = (
-                _section_after(free, opened) if index == 0 else _sentence_at(free, opened)
-            )
-            # A section headed "For Thor" whose content is itself an all-clear is a
-            # session reporting that it needs nothing, in the place it would have said
-            # what it needed. Reading that as a request is the same error as reading
-            # silence as completion, pointing the other way.
-            if (
-                _substantive(wanted)
-                and not _opens_with_nothing(wanted)
-                and not _is_a_real_all_clear(wanted)
-            ):
-                return Verdict(
-                    "needs_you",
-                    _why(wanted),
-                    _one_line(wanted),
-                    "ledger:for a person",
-                    # `end`, not `start`: a heading pattern may begin on the blank lines
-                    # above its own line, which belong to the section before.
-                    *_said_in(ledger, free, opened.end()),
-                )
+    requests = _requests(page, owner)
+    if requests:
+        first = requests[0]
+        return Verdict(
+            "needs_you",
+            _why(first.wanted),
+            _one_line(first.wanted),
+            "ledger:for a person",
+            *_said_in(ledger, free, first.at),
+            asks=_asks(page, requests, ledger),
+        )
 
     # Being finished is read only from what the session said LAST. See the module
     # docstring: an all-clear in the middle of an append-only file is a report about
     # Monday, and today is not Monday.
     stated = _is_a_real_all_clear(str(fields.get("state") or ""))
     if stated:
+        said_at, basis = _written(ledger)
         return Verdict(
             "safe_to_close",
             reason=_one_line(stated.group(0)),
             source="ledger:state",
-            said_at=_written(ledger)[0],
-            said_at_basis=_written(ledger)[1],
+            said_at=said_at,
+            said_at_basis=basis,
         )
     latest = latest_section(free)
     ending = _is_a_real_all_clear(latest)
@@ -749,12 +1061,18 @@ def classify(
     the roster's own -- most urgent first. Each row's ``said_at`` and ``said_at_basis``
     are set again once its verdict is known (:func:`crowsnest.said.with_said`), so a row
     and its verdict never disagree about when the thing it quotes was said.
+
+    ``owner`` is whose attention "for <person>" is about (:func:`dflt_verdicts`), passed
+    to every row as :func:`classify_row` takes it; readers given as ``verdicts`` bind
+    their own.
     """
     ledgers = {} if ledgers is None else ledgers
     groups: dict[str, list[dict]] = {group: [] for group in GROUPS}
     for row in rows:
         label = str(row.get("label") or "")
-        verdict = classify_row(row, ledger=ledgers.get(label) or {}, verdicts=verdicts)
+        verdict = classify_row(
+            row, ledger=ledgers.get(label) or {}, verdicts=verdicts, owner=owner
+        )
         groups[verdict["group"] if verdict["group"] in groups else "unclassified"].append(
             with_said({**row, "verdict": verdict})
         )

@@ -26,7 +26,7 @@ seam           default                                 replacement it exists for
                                                        triage emits several asks;
                                                        ``("ref", url)`` for an issue
                                                        several sessions point at
-``material=``  ``(group, why, normalised reason)``     a tighter or looser tuple, once
+``material=``  ``(group, why, *normalised asks)``      a tighter or looser tuple, once
                                                        resurfacing is measured (K2)
 ``store=``     one JSON file per item under            the page's ``db`` mirror; a synced
                ``data_dir()/attention``                data dir; an S3 mapping
@@ -79,6 +79,7 @@ __all__ = [
     "Later",
     "Note",
     "Record",
+    "SeenAs",
     "as_doc",
     "attention_dir",
     "dflt_identity",
@@ -99,6 +100,7 @@ __all__ = [
     "read_doc",
     "read_record",
     "seen",
+    "seen_as_of",
     "undo",
     "unseen",
     "update",
@@ -143,6 +145,11 @@ _TERMINAL_WHYS = ("action",)
 #: :func:`crowsnest.triage.from_registry` gives a busy session the tools in flight as its
 #: reason, and a revision over it would change on every tool call.
 _REASON_IS_WHAT_RUNS = ("working",)
+
+#: Groups whose verdict's ``asks`` are fingerprinted, each whole. A ``needs_you`` reason
+#: clips its request at :data:`crowsnest.triage.REASON_LIMIT` and quotes only the first,
+#: and what the person must decide is all of them (#67).
+_ASKS_ARE_MATERIAL = ("needs_you",)
 
 #: Groups whose verdict says nothing: ``unclassified`` carries one fixed reason, so a row
 #: in it is fingerprinted like a row with no verdict at all.
@@ -223,42 +230,73 @@ def _activity(row: Mapping) -> Mapping:
     return act if isinstance(act, Mapping) else {}
 
 
-def _reason(row: Mapping, verdict: Mapping) -> str:
-    """The ask, normalised: the verdict's reason, else the pending question, else waiting-for."""
-    return _normalise(
-        verdict.get("reason")
-        or _activity(row).get("pending_question")
-        or row.get("waiting_for")
+def _asks(row: Mapping, verdict: Mapping) -> tuple[str, ...]:
+    """What the person is asked, each normalised and each once: a request's asks, else the
+    verdict's reason, else the pending question, else waiting-for."""
+    listed = verdict.get("asks") if verdict.get("group") in _ASKS_ARE_MATERIAL else ()
+    texts = (
+        _normalise(ask.get("text"))
+        for ask in (listed if isinstance(listed, (list, tuple)) else ())
+        if isinstance(ask, Mapping)
+    )
+    found = tuple(dict.fromkeys(text for text in texts if text))
+    return found or (
+        _normalise(
+            verdict.get("reason")
+            or _activity(row).get("pending_question")
+            or row.get("waiting_for")
+        ),
     )
 
 
 def dflt_material(row: Mapping) -> tuple:
     """What counts as a change to an item: what the person would have to decide again.
 
-    With a verdict that says something: ``(group, why, normalised reason)`` -- except
-    that a ``working`` row's reason is left out, because it is the tool in flight.
-    Otherwise (no verdict, or ``unclassified``): ``(status,)``, plus the normalised last
-    words for an ``idle`` row, so a session that finished and said so is news.
+    With a verdict that says something: ``(group, why, *normalised asks)``. For a
+    ``needs_you`` verdict those are its ``asks`` (:class:`crowsnest.triage.Ask`), each
+    whole: the question unclipped, or the request its reason quotes and every other "for
+    <person>" section its ledger holds. So a link changed in the sentence after the
+    reason, a second section appended later, and a change past the reason's clip are
+    each a change (#67). For any other group, or a verdict with no asks (a custom
+    ``verdicts=`` reader's), the one ask is the reason, and a ``working`` row's is left
+    out, because it is the tool in flight. Otherwise (no verdict, or ``unclassified``):
+    ``(status,)``, plus the normalised last words for an ``idle`` row, so a session that
+    finished and said so is news.
+
+    **Where an ask begins and ends is triage's reading** (:func:`crowsnest.triage.from_ledger`),
+    and so part of every stored revision: a change to it resurfaces the items it touches.
 
     **The row's links are not part of it.** They are the page's reference list, resolved
     from the session's latest words, the ledger line the hook rewrites on every turn, and
     its recent pull requests; they move with chatter, and a revision over them made every
-    "committed 7d30838" a change. The ask's own words are material, but only as far as
-    the verdict's reason quotes them: a link in the sentence after it, a second ask
-    appended later, or a change past the reason's clip is not seen yet (#67).
+    "committed 7d30838" a change. A link inside an ask is material as the ask's words.
+
+    **Revisions stored before #67 still hold** for every group but ``needs_you``, and for
+    a ``needs_you`` item with one ask whose text is what its reason already quoted,
+    because one ask makes the same three-part tuple. Any other ``needs_you`` item shows
+    ``changed`` once: those are the items whose old revision missed part of what they
+    ask. Ids are untouched. Both halves are tests in ``tests/test_attention_refute.py``.
 
     >>> dflt_material({'status': 'busy', 'activity': {'last_assistant_text': 'hi'}})
     ('busy',)
     >>> dflt_material({'status': 'idle', 'activity': {'last_assistant_text': 'Merged.'},
     ...                'verdict': {'group': 'unclassified', 'reason': 'nothing said'}})
     ('idle', 'merged.')
+    >>> asked = {'group': 'needs_you', 'why': 'decision', 'reason': 'Squash?'}
+    >>> whole = [{'text': 'Squash?  The PR is #45.'}]
+    >>> dflt_material({'verdict': {**asked, 'asks': whole}})
+    ('needs_you', 'decision', 'squash? the pr is #45.')
+    >>> two = [{'text': 'Squash?'}, {'text': 'Rotate the key.'}]
+    >>> dflt_material({'verdict': {**asked, 'asks': two}})
+    ('needs_you', 'decision', 'squash?', 'rotate the key.')
     """
     verdict = row.get("verdict")
     group = str(verdict.get("group") or "") if isinstance(verdict, Mapping) else ""
     if group and group not in _VERDICT_SAYS_NOTHING:
         why = str(verdict.get("why") or "")
-        reason = "" if group in _REASON_IS_WHAT_RUNS else _reason(row, verdict)
-        return (group, why, reason)
+        if group in _REASON_IS_WHAT_RUNS:
+            return (group, why, "")
+        return (group, why, *_asks(row, verdict))
     status = str(row.get("status") or "")
     if status in _LAST_WORDS_ARE_MATERIAL:
         return (status, _normalise(_activity(row).get("last_assistant_text")))
@@ -299,6 +337,24 @@ def reach(row: Mapping) -> str:
     if why in _TERMINAL_WHYS:
         return REACH_TERMINAL
     return ""
+
+
+def seen_as_of(row: Mapping) -> SeenAs | None:
+    """What a row is, as :class:`SeenAs` records it: its verdict's group and why, or ``None``.
+
+    The same whatever ``material=`` a caller uses: it describes the verdict, not the hash.
+
+    >>> seen_as_of({'verdict': {'group': 'needs_you', 'why': 'action', 'reason': 'attach'}})
+    SeenAs(group='needs_you', why='action')
+    >>> seen_as_of({'status': 'idle'}) is None
+    True
+    """
+    verdict = row.get("verdict")
+    group = verdict.get("group") if isinstance(verdict, Mapping) else None
+    if not isinstance(group, str) or not group:
+        return None
+    why = verdict.get("why")
+    return SeenAs(group, why if isinstance(why, str) else "")
 
 
 # --------------------------------------------------------------------------------------
@@ -500,11 +556,48 @@ class Note:
 
 
 @dataclass(frozen=True)
+class SeenAs:
+    """What an item was when the person last looked: its verdict's group and why, no words.
+
+    Kept beside ``seen_rev`` so an item that changed can say what it was (#73): a revision
+    is a hash and cannot be read back. The ask's words are in the revision
+    (:func:`fingerprint`); this is the part of it a person can be told. Never the reason,
+    the asks or any other text, because the record is mirrored into a page's ``db``, which
+    anyone who can open the page can read.
+
+    >>> SeenAs.from_dict({'group': 'needs_you', 'why': 'question'})
+    SeenAs(group='needs_you', why='question')
+    """
+
+    group: str
+    why: str = ""
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.group, str) or not self.group:
+            raise ValueError(
+                f"seen_as.group must be a non-empty string, not {self.group!r}"
+            )
+        if not isinstance(self.why, str):
+            # ValueError, not TypeError: a document is input, reported like every other.
+            raise ValueError(  # noqa: TRY004
+                f"seen_as.why must be a string, not {self.why!r}"
+            )
+
+    @classmethod
+    def from_dict(cls, doc: Mapping) -> SeenAs:
+        doc = _mapping(doc, "seen_as")
+        return cls(group=_field(doc, "group", str, ""), why=_field(doc, "why", str, ""))
+
+
+@dataclass(frozen=True)
 class Record:
     """The person's attention to one item. JSON both ways: :meth:`as_dict`, :meth:`from_dict`.
 
     ``prev`` is the snapshot :func:`undo` restores, one level deep. ``updated_at`` is what
-    last-write-wins compares when the store and a page's mirror disagree.
+    last-write-wins compares when the store and a page's mirror disagree. ``seen_as`` is
+    what the item was at ``seen_rev`` (:class:`SeenAs`); a record written before the field
+    existed has none, and still reads. A document whose ``seen_as`` has no ``seen_rev`` to
+    describe reads without it (#56's page may write one); built in Python, it is refused.
 
     >>> Record.from_dict(Record(seen_rev='ab').as_dict()) == Record(seen_rev='ab')
     True
@@ -517,8 +610,11 @@ class Record:
     note: Note | None = None
     prev: Record | None = None
     updated_at: str = ""
+    seen_as: SeenAs | None = None
 
     def __post_init__(self) -> None:
+        if self.seen_as is not None and self.seen_rev is None:
+            raise ValueError("seen_as describes seen_rev: a record never seen has none")
         if self.state not in STATES:
             raise ValueError(
                 f"state must be one of {', '.join(STATES)}, not {self.state!r}"
@@ -558,6 +654,13 @@ class Record:
             note=None if doc.get("note") is None else Note.from_dict(doc["note"]),
             prev=None if doc.get("prev") is None else cls.from_dict(doc["prev"]),
             updated_at=_field(doc, "updated_at", str, ""),
+            seen_as=(
+                # A label with no revision to describe is dropped, not refused: a page
+                # that marks unread and keeps it must not make a courier's batch unimportable.
+                None
+                if doc.get("seen_as") is None or doc.get("seen_rev") is None
+                else SeenAs.from_dict(doc["seen_as"])
+            ),
         )
 
 
@@ -633,20 +736,47 @@ def _step(record: Record | None, now: datetime | None, **changes) -> Record:
     )
 
 
-def seen(record: Record | None, rev: str, *, now: datetime | None = None) -> Record:
+def _label(record: Record | None, rev: str, seen_as) -> SeenAs | None:
+    """What was seen at ``rev``: ``seen_as`` when given, one already or a mapping of one;
+    else the label ``record`` keeps, when it describes this same revision; else ``None``.
+    """
+    if isinstance(seen_as, SeenAs):
+        return seen_as
+    if seen_as is not None:
+        return SeenAs.from_dict(seen_as)
+    if record is not None and record.seen_rev == rev:
+        return record.seen_as
+    return None
+
+
+def seen(
+    record: Record | None,
+    rev: str,
+    *,
+    seen_as: SeenAs | Mapping | None = None,
+    now: datetime | None = None,
+) -> Record:
     """The person has looked at the item at ``rev``: it dims until it changes.
 
     It also makes the item ``active`` again. An item the person can see is not asleep --
     it woke, or it changed after Done -- and a look that left it in ``later`` or ``done``
     would show it as ``woke`` forever. From a terminal, where a sleeping item can be
     named, it is the way to wake one early.
+
+    ``seen_as`` is what the item was at ``rev`` (:func:`seen_as_of` the row the revision
+    came from). ``later`` and ``done`` take it too. Given none, the record keeps the label
+    it has for this same revision, and otherwise none: a label from an older revision
+    must not describe this one.
     """
-    return _step(record, now, seen_rev=_rev(rev), state=ACTIVE)
+    rev = _rev(rev)
+    return _step(
+        record, now, seen_rev=rev, seen_as=_label(record, rev, seen_as), state=ACTIVE
+    )
 
 
 def unseen(record: Record | None, *, now: datetime | None = None) -> Record:
     """Mark unread: the item shows as ``new`` again, wherever it is not hidden."""
-    return _step(record, now, seen_rev=None)
+    return _step(record, now, seen_rev=None, seen_as=None)
 
 
 def later(
@@ -656,14 +786,15 @@ def later(
     until: datetime | str | None,
     on_change: bool = True,
     plan: str = "",
+    seen_as: SeenAs | Mapping | None = None,
     now: datetime | None = None,
 ) -> Record:
     """Put the item off until ``until``, or until it changes when ``on_change``, whichever first.
 
     ``until=None`` with ``on_change`` is *Drop*: no time, back only when it changes.
     ``count`` goes up by one each time. Putting something off is also having seen it, so
-    ``seen_rev`` is pinned too -- which is what lets it come back as ``woke`` rather than
-    as ``new`` when its time passes.
+    ``seen_rev`` and ``seen_as`` are pinned too -- which is what lets it come back as
+    ``woke`` rather than as ``new`` when its time passes.
     """
     rev = _rev(rev)
     before = Record() if record is None else record
@@ -680,13 +811,33 @@ def later(
         count=(before.later.count + 1) if before.later is not None else 1,
         plan=str(plan or "").strip(),
     )
-    return _step(record, now, state=LATER, later=deferral, seen_rev=rev)
+    return _step(
+        record,
+        now,
+        state=LATER,
+        later=deferral,
+        seen_rev=rev,
+        seen_as=_label(record, rev, seen_as),
+    )
 
 
-def done(record: Record | None, rev: str, *, now: datetime | None = None) -> Record:
+def done(
+    record: Record | None,
+    rev: str,
+    *,
+    seen_as: SeenAs | Mapping | None = None,
+    now: datetime | None = None,
+) -> Record:
     """The person did their part at ``rev``: hidden until the item's revision changes."""
     rev = _rev(rev)
-    return _step(record, now, state=DONE, done_rev=rev, seen_rev=rev)
+    return _step(
+        record,
+        now,
+        state=DONE,
+        done_rev=rev,
+        seen_rev=rev,
+        seen_as=_label(record, rev, seen_as),
+    )
 
 
 def note(record: Record | None, text: str, *, now: datetime | None = None) -> Record:

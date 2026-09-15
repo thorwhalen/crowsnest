@@ -832,7 +832,11 @@ def _attend(
     material=None,
     store=None,
 ) -> dict:
-    """Apply ``step(record, rev)`` to ``session``'s attention record and store the result."""
+    """Apply ``step(record, rev, seen_as)`` to ``session``'s attention record and store it.
+
+    ``seen_as`` is :func:`crowsnest.attention.seen_as_of` the row the revision is taken
+    from, for the steps that pin a revision to keep beside it (#73).
+    """
     from crowsnest import attention as _attention
 
     row = _item_row(
@@ -852,7 +856,10 @@ def _attend(
     # here, in the one place every attention verb already writes.
     session_id = str(row.get("session_id") or "")
     ext = {"session_id": session_id} if session_id else None
-    return _attention.update(item, lambda record: step(record, rev), store=store, ext=ext)
+    was = _attention.seen_as_of(row)
+    return _attention.update(
+        item, lambda record: step(record, rev, was), store=store, ext=ext
+    )
 
 
 # The attention verbs. Each takes a session reference the way `resolve` does, reads the
@@ -881,7 +888,7 @@ def seen(
 
     return _attend(
         session,
-        _seen,
+        lambda record, rev, was: _seen(record, rev, seen_as=was),
         home=home,
         all_homes=all_homes,
         config=config,
@@ -914,7 +921,7 @@ def unseen(
 
     return _attend(
         session,
-        lambda record, rev: _unseen(record),
+        lambda record, rev, was: _unseen(record),
         home=home,
         all_homes=all_homes,
         config=config,
@@ -959,8 +966,8 @@ def later(
     until = later_until(preset, config=attention_settings(path=config))
     return _attend(
         session,
-        lambda record, rev: _later(
-            record, rev, until=until, on_change=on_change, plan=plan
+        lambda record, rev, was: _later(
+            record, rev, until=until, on_change=on_change, plan=plan, seen_as=was
         ),
         home=home,
         all_homes=all_homes,
@@ -994,7 +1001,7 @@ def done(
 
     return _attend(
         session,
-        _done,
+        lambda record, rev, was: _done(record, rev, seen_as=was),
         home=home,
         all_homes=all_homes,
         config=config,
@@ -1029,7 +1036,7 @@ def note(
 
     return _attend(
         session,
-        lambda record, rev: _note(record, text),
+        lambda record, rev, was: _note(record, text),
         home=home,
         all_homes=all_homes,
         config=config,
@@ -1063,7 +1070,7 @@ def undo(
 
     return _attend(
         session,
-        lambda record, rev: _undo(record),
+        lambda record, rev, was: _undo(record),
         home=home,
         all_homes=all_homes,
         config=config,

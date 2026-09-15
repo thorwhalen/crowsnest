@@ -11,6 +11,7 @@ import pytest
 
 from crowsnest.triage import (
     GROUPS,
+    REASON_LIMIT,
     Verdict,
     classify,
     classify_row,
@@ -183,6 +184,146 @@ def test_whichever_was_asked_for_first_wins():
 
 
 # --------------------------------------------------------------------------------------
+# Asks: what a needs_you verdict asks of a person, whole (#67)
+
+
+def _texts(verdict):
+    return [ask["text"] for ask in verdict["asks"]]
+
+
+def test_the_reason_is_clipped_and_the_ask_is_not():
+    ask = "which base branch? " + "Some context on why. " * 12 + "The PR is o/r#46."
+    found = classify_row(_row(), ledger=_ledger(f"## For Thor\n\n{ask}"))
+    assert len(found["reason"]) <= REASON_LIMIT and "o/r#46" not in found["reason"]
+    assert _texts(found) == [ask]
+
+
+@pytest.mark.parametrize(
+    "below",
+    [
+        "\n\nparser tidied",
+        "\n- Committed 7d30838.",
+        "\n| parser | done |",
+        "\n---",
+        "\n## N",
+    ],
+)
+def test_a_statements_ask_runs_to_the_end_of_its_block_and_no_further(below):
+    said = "Blocked on Thor. Please approve https://github.com/o/r/pull/45 first."
+    found = classify_row(_row(), ledger=_ledger(said + below))
+    assert found["reason"] == "Blocked on Thor."
+    assert _texts(found) == [said]
+
+
+def test_the_line_above_a_statement_is_not_its_ask():
+    found = classify_row(_row(), ledger=_ledger("Checked 10:02.\nBlocked on Thor. Go."))
+    assert _texts(found) == ["Blocked on Thor. Go."]
+
+
+def test_every_for_person_section_is_an_ask_and_the_log_between_them_is_not():
+    text = (
+        "## For Thor\n\nwhich base branch?\n\n### 2026-09-16 notes\n\nCommitted 7d3.\n\n"
+        "still blocked on Thor.\n\n## For Thor\n\nattach the GIF"
+    )
+    assert _texts(classify_row(_row(), ledger=_ledger(text))) == [
+        "which base branch?",
+        "attach the GIF",
+    ]
+
+
+def test_a_list_under_a_for_person_heading_is_part_of_its_ask():
+    text = "## For Thor\n\nTwo things:\n\n- attach the GIF\n- rotate the key\n\n### Log\n\nDone."
+    assert _texts(classify_row(_row(), ledger=_ledger(text))) == [
+        "Two things:\n\n- attach the GIF\n- rotate the key"
+    ]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "**Open for Thor (2 items):**\n1. attach the GIF\n2. rotate the key",
+        "## For Thor\n\n**1. attach the GIF**\n\n**2. rotate the key**",
+    ],
+)
+def test_a_request_section_runs_across_its_blocks(text):
+    # The shapes real ledgers write. Ending the ask at its first gap cut three of four
+    # such sections short on the ledgers this was measured on.
+    assert "rotate the key" in _texts(classify_row(_row(), ledger=_ledger(text)))[0]
+
+
+@pytest.mark.parametrize(
+    "text, asks",
+    [
+        ("## For Thor\n\nattach the GIF\n\n---\n\nparser notes", ["attach the GIF"]),
+        (
+            "**Open for Thor:** attach the GIF\n**Decision for Thor:** squash or rebase?",
+            ["attach the GIF", "squash or rebase?"],
+        ),
+    ],
+    ids=["a-rule", "another-lead-in"],
+)
+def test_a_rule_or_another_lead_in_ends_a_request_section(text, asks):
+    assert _texts(classify_row(_row(), ledger=_ledger(text))) == asks
+
+
+def test_a_statement_ending_in_a_colon_takes_the_list_under_it():
+    said = "Blocked on Thor for two things:\n- approve pull/45\n- rotate the key"
+    found = classify_row(_row(), ledger=_ledger(said + "\n\nparser tidied"))
+    assert _texts(found) == [said]
+
+
+def test_a_bold_lead_in_holding_a_statement_is_one_ask():
+    text = "**Open for Thor:** only you can approve the spend."
+    assert _texts(classify_row(_row(), ledger=_ledger(text))) == [
+        "only you can approve the spend."
+    ]
+
+
+def test_a_section_repeated_word_for_word_is_one_ask():
+    text = "## For Thor\n\nattach the GIF\n\n## For Thor\n\nattach  the GIF"
+    assert _texts(classify_row(_row(), ledger=_ledger(text))) == ["attach the GIF"]
+
+
+def test_a_command_a_person_is_asked_to_run_is_part_of_the_ask():
+    text = "## For Thor\n\nPlease run:\n\n```\nexport TOKEN=v2\n```\n"
+    assert "TOKEN=v2" in _texts(classify_row(_row(), ledger=_ledger(text)))[0]
+
+
+def test_crlf_ends_a_statements_ask_at_its_blank_line():
+    text = "Blocked on Thor. Approve pull/45.\r\n\r\nparser tidied, committed 7d30838."
+    assert _texts(classify_row(_row(), ledger=_ledger(text))) == [
+        "Blocked on Thor. Approve pull/45."
+    ]
+
+
+def test_no_manual_task_is_not_a_request_and_no_reply_yet_hides_none():
+    nothing = classify_row(_row(), ledger=_ledger("No manual-task needed; tests pass."))
+    assert nothing["group"] != "needs_you"
+    found = classify_row(
+        _row(), ledger=_ledger("No reply yet; blocked on Thor for the key.")
+    )
+    assert found["group"] == "needs_you"
+
+
+def test_a_waiting_sessions_ask_is_the_question_it_asked_whole():
+    asked = "Squash or rebase? " + "Some context on why. " * 12
+    found = classify_row(_row(status="waiting", activity={"pending_question": asked}))
+    assert _texts(found) == [asked] and len(found["reason"]) <= REASON_LIMIT
+
+
+def test_only_a_needs_you_verdict_has_asks():
+    assert classify_row(_row(status="busy"))["asks"] == []
+    assert classify_row(_row(), ledger=_ledger("Nothing outstanding."))["asks"] == []
+
+
+def test_classify_reads_ledgers_for_the_owner_it_is_given():
+    # #68: `classify` took `owner` and never passed it on.
+    ledgers = {"a": _ledger("## For Ana\n\npick the base branch")}
+    assert classify([_row("a")], ledgers=ledgers, owner="ana")["counts"]["needs_you"] == 1
+    assert classify([_row("a")], ledgers=ledgers)["counts"]["needs_you"] == 0
+
+
+# --------------------------------------------------------------------------------------
 # The seam
 
 
@@ -198,6 +339,7 @@ def test_verdicts_is_the_seam():
         "source": "test",
         "said_at": "",
         "said_at_basis": "",
+        "asks": [],
     }
 
 

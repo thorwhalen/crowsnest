@@ -90,6 +90,7 @@ class _Attended:
     rev: str
     shown: str = ""
     record: _attention.Record | None = None
+    now_as: _attention.SeenAs | None = None  # what the row is now, as `seen_as` would say
 
 
 @dataclass(frozen=True)
@@ -846,12 +847,39 @@ def _note(attended: _Attended | None) -> str:
     return _first_line(record.note.text) if record is not None and record.note else ""
 
 
+#: How a verdict's group and why read after "was:" on a row that changed (#73).
+_GROUP_WORDS = {
+    "needs_you": "needs you",
+    "safe_to_close": "safe to close",
+    "working": "working",
+    "unclassified": "unclassified",
+}
+_WHY_WORDS = {"question": "a question", "decision": "a decision", "action": "an action"}
+
+
+def _was(attended: _Attended) -> str:
+    """``"was: needs you, a question; "`` from the record, or ``''``.
+
+    Empty when the record predates ``seen_as``, and when the row is still what it was:
+    then its group and why are on the row already, and only the ask's words changed.
+    """
+    record = attended.record
+    was = record.seen_as if record is not None else None
+    if was is None or was == attended.now_as:
+        return ""
+    words = _GROUP_WORDS.get(was.group, was.group.replace("_", " "))
+    if was.why:
+        words += f", {_WHY_WORDS.get(was.why, was.why)}"
+    return f"was: {words}; "
+
+
 def _back_text(attended: _Attended, clock: _Clock) -> str:
     """Why a row the person had dealt with is in front of them again, from their record.
 
-    The record says what the person did -- saw it, put it off, marked it handled -- and
-    not what the item said at the time, because a revision is a hash. So this says what
-    they did, and the row's own lines say what it asks now.
+    The record says what the person did -- saw it, put it off, marked it handled -- and,
+    when it keeps ``seen_as`` (#73), what the item was then: its group and why, never its
+    words, because a revision is a hash. So a changed row says what it was and what the
+    person did, and the row's own lines say what it asks now.
     """
     record = attended.record
     state = record.state if record is not None else _attention.ACTIVE
@@ -864,10 +892,10 @@ def _back_text(attended: _Attended, clock: _Clock) -> str:
             return "you had marked it handled"
         return "you had put it off"
     if state == _attention.DONE:
-        return "changed since you marked it handled"
+        return f"{_was(attended)}changed since you marked it handled"
     if state == _attention.LATER:
-        return "changed since you put it off"
-    return "changed since you saw it"
+        return f"{_was(attended)}changed since you put it off"
+    return f"{_was(attended)}changed since you saw it"
 
 
 def _attention_lines(
@@ -1284,7 +1312,7 @@ def _attention_view(
             shown = _attention.present(rev, record, now=moment)
         except (ValueError, OverflowError):
             record, shown = None, _attention.NEW
-        rows[id(row)] = _Attended(item, rev, shown, record)
+        rows[id(row)] = _Attended(item, rev, shown, record, _attention.seen_as_of(row))
     return _View(on=on, rows=rows)
 
 
