@@ -53,16 +53,20 @@ Every implication carries the references it rests on. Numbers written as "sugges
 def present(item, rec, now, cfg):
     """What the person sees for one item. Pure: no writes."""
     changed_since_later = rec.later and item.rev != rec.later.rev_at
-    if rec.state == "later" and now < rec.later.until and not (rec.later.on_change and changed_since_later):
-        return "hidden"                     # snoozed, still asleep
+    if (
+        rec.state == "later"
+        and now < rec.later.until
+        and not (rec.later.on_change and changed_since_later)
+    ):
+        return "hidden"  # snoozed, still asleep
     if rec.state == "done" and item.rev == rec.done_rev:
-        return "hidden"                     # dealt with, nothing new since
+        return "hidden"  # dealt with, nothing new since
     if rec.seen_rev is None:
         return "new"
     if rec.seen_rev != item.rev:
-        return "changed"                    # show what changed, not just a dot
+        return "changed"  # show what changed, not just a dot
     if rec.state in ("later", "done"):
-        return "woke"                       # timer elapsed or activity returned it
+        return "woke"  # timer elapsed or activity returned it
     return "seen"
 ```
 
