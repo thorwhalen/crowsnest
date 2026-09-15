@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.activity - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.config" href="crowsnest.config.html" /><link rel="prev" title="crowsnest.account" href="crowsnest.account.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.activity"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.activity.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.activity.Activity"><code class="docutils literal notranslate"><span class="pre">Activity</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.QUESTION_TOOL"><code class="docutils literal notranslate"><span class="pre">QUESTION_TOOL</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.RECENT_TOOLS"><code class="docutils literal notranslate"><span class="pre">RECENT_TOOLS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.TAIL_BYTES"><code class="docutils literal notranslate"><span class="pre">TAIL_BYTES</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.Turn"><code class="docutils literal notranslate"><span class="pre">Turn</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.describe_tool"><code class="docutils literal notranslate"><span class="pre">describe_tool()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.load_records"><code class="docutils literal notranslate"><span class="pre">load_records()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.read_activity"><code class="docutils literal notranslate"><span class="pre">read_activity()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.read_turns"><code class="docutils literal notranslate"><span class="pre">read_turns()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.activity.tail_records"><code class="docutils literal notranslate"><span class="pre">tail_records()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.activity</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.activity">
+<span id="crowsnest-activity"></span><h1>crowsnest.activity<a class="headerlink" href="#module-crowsnest.activity" title="Link to this heading">#</a></h1>
+<p>What a session is doing right now, read from the tail of its transcript.</p>
+<p>A transcript is append-only and can run to megabytes; the part that says what a session
+is doing <em>now</em> is its last few kilobytes. So <a class="reference internal" href="#crowsnest.activity.read_activity" title="crowsnest.activity.read_activity"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_activity()</span></code></a> reads from the end,
+widening the window only until it has seen one human prompt, and reports what it found:
+what the session was last asked, what it last said, the tools it ran most recently, the
+tool call that has not returned yet, and – the case a monitor exists for – a question it
+has put to its human that nobody has answered.</p>
+<p>What the transcript’s <em>content</em> means is <code class="xref py py-mod docutils literal notranslate"><span class="pre">openloops.transcripts</span></code>’s business – which
+<code class="docutils literal notranslate"><span class="pre">user</span></code> line is a person speaking and which is tooling, what the assistant’s last words
+were, whether the turn ended – and <code class="xref py py-func docutils literal notranslate"><span class="pre">openloops.transcripts.parse_session()</span></code> is called
+on the tail rather than that logic being written a second time. What this module adds is
+the tool-level view that a dated digest has no use for and a live monitor cannot do
+without.</p>
+<p><a class="reference internal" href="#crowsnest.activity.read_turns" title="crowsnest.activity.read_turns"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_turns()</span></code></a> is the deep path. It reads the whole file and pages backwards through
+turns, for when the tail did not carry enough context and the alternative is spending a
+turn of the watched session’s own context asking it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">read_activity</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span><span class="o">.</span><span class="n">last_user_prompt</span>
+</span><span data-line="2"><span class="go">''</span>
+</span></pre></div>
+</div>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.TAIL_BYTES" title="crowsnest.activity.TAIL_BYTES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TAIL_BYTES</span></code></a></p></td>
+<td><p>How much of the file's end is read first.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.activity.RECENT_TOOLS" title="crowsnest.activity.RECENT_TOOLS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RECENT_TOOLS</span></code></a></p></td>
+<td><p>How many recent tool calls an <a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><code class="xref py py-class docutils literal notranslate"><span class="pre">Activity</span></code></a> carries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.QUESTION_TOOL" title="crowsnest.activity.QUESTION_TOOL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QUESTION_TOOL</span></code></a></p></td>
+<td><p>The tool Claude Code uses to put a structured question to its human.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.describe_tool" title="crowsnest.activity.describe_tool"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe_tool</span></code></a>(name, inputs, *[, limit])</p></td>
+<td><p>One line naming a tool call: the tool, and the argument that says what it did.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.activity.load_records" title="crowsnest.activity.load_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_records</span></code></a>(path)</p></td>
+<td><p>Every record in a transcript, tolerating blank and malformed lines.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.read_activity" title="crowsnest.activity.read_activity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_activity</span></code></a>(path, *[, session_id, ...])</p></td>
+<td><p>Read the tail of a transcript into an <a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><code class="xref py py-class docutils literal notranslate"><span class="pre">Activity</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.activity.read_turns" title="crowsnest.activity.read_turns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_turns</span></code></a>(path, *[, last, before])</p></td>
+<td><p>The last <code class="docutils literal notranslate"><span class="pre">last</span></code> turns of a transcript, oldest first; <code class="docutils literal notranslate"><span class="pre">before=N</span></code> pages back.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.tail_records" title="crowsnest.activity.tail_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail_records</span></code></a>(path, *[, tail_bytes, enough])</p></td>
+<td><p>The records in the last <code class="docutils literal notranslate"><span class="pre">tail_bytes</span></code> of a transcript, widening until <code class="docutils literal notranslate"><span class="pre">enough</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Activity</span></code></a>([session_id, last_event_at, ...])</p></td>
+<td><p>What one session is doing, as its transcript tail reads.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.activity.Turn" title="crowsnest.activity.Turn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Turn</span></code></a>(index, prompt, prompt_at, reply, ...)</p></td>
+<td><p>One exchange: a human prompt, what the assistant did, and its last words.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.activity.Activity">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">Activity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_event_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_user_prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_prompt_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_assistant_text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_text_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recent_tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_flight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pending_question</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">turn_open</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errored</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_branch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_complete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_turns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#Activity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.Activity" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>What one session is doing, as its transcript tail reads. Flat and JSON-shaped.</p>
+<p><code class="docutils literal notranslate"><span class="pre">in_flight</span></code> lists tool calls with no result yet, oldest first: normally one, several
+when calls were issued in parallel. <code class="docutils literal notranslate"><span class="pre">pending_question</span></code> is the first question of an
+in-flight <a class="reference internal" href="#crowsnest.activity.QUESTION_TOOL" title="crowsnest.activity.QUESTION_TOOL"><code class="xref py py-data docutils literal notranslate"><span class="pre">QUESTION_TOOL</span></code></a> call – a session waiting on a person.
+<code class="docutils literal notranslate"><span class="pre">tail_complete</span></code> says whether the window reached the start of the file, which is what
+makes the difference between “no prompt in the tail” and “no prompt at all”.
+<code class="docutils literal notranslate"><span class="pre">tail_turns</span></code> is how many human prompts the window held: the session’s turn count
+when <code class="docutils literal notranslate"><span class="pre">tail_complete</span></code> is true, and a floor otherwise. <code class="docutils literal notranslate"><span class="pre">locators</span></code> are the typed
+references openloops found in the window – issues, pull requests – each a dict with
+<code class="docutils literal notranslate"><span class="pre">type</span></code>, <code class="docutils literal notranslate"><span class="pre">url</span></code> and <code class="docutils literal notranslate"><span class="pre">text</span></code>, oldest first.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.activity.QUESTION_TOOL">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">QUESTION_TOOL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'AskUserQuestion'</span></span><a class="headerlink" href="#crowsnest.activity.QUESTION_TOOL" title="Link to this definition">#</a></dt>
+<dd><p>The tool Claude Code uses to put a structured question to its human. A call to it with
+no result yet is a session waiting on a person.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.activity.RECENT_TOOLS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">RECENT_TOOLS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></span><a class="headerlink" href="#crowsnest.activity.RECENT_TOOLS" title="Link to this definition">#</a></dt>
+<dd><p>How many recent tool calls an <a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><code class="xref py py-class docutils literal notranslate"><span class="pre">Activity</span></code></a> carries.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.activity.TAIL_BYTES">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">TAIL_BYTES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">262144</span></span><a class="headerlink" href="#crowsnest.activity.TAIL_BYTES" title="Link to this definition">#</a></dt>
+<dd><p>How much of the file’s end is read first. A turn of tool calls is a few kilobytes; a
+quarter megabyte covers the last several turns of nearly every session and costs a
+few milliseconds. The window doubles until it holds a human prompt.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.activity.Turn">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">Turn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reply</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reply_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#Turn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.Turn" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One exchange: a human prompt, what the assistant did, and its last words.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.describe_tool">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">describe_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#describe_tool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.describe_tool" title="Link to this definition">#</a></dt>
+<dd><p>One line naming a tool call: the tool, and the argument that says what it did.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'Bash'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'command'</span><span class="p">:</span> <span class="s1">'ls -la'</span><span class="p">,</span> <span class="s1">'description'</span><span class="p">:</span> <span class="s1">'List files'</span><span class="p">})</span>
+</span><span data-line="2"><span class="go">'Bash: List files'</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'Read'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'file_path'</span><span class="p">:</span> <span class="s1">'/a/b/c.py'</span><span class="p">})</span>
+</span><span data-line="4"><span class="go">'Read: c.py'</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'AskUserQuestion'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'questions'</span><span class="p">:</span> <span class="p">[{</span><span class="s1">'question'</span><span class="p">:</span> <span class="s1">'Ship it?'</span><span class="p">}]})</span>
+</span><span data-line="6"><span class="go">'AskUserQuestion: Ship it?'</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'ListAgents'</span><span class="p">,</span> <span class="p">{})</span>
+</span><span data-line="8"><span class="go">'ListAgents'</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.load_records">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">load_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#load_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.load_records" title="Link to this definition">#</a></dt>
+<dd><p>Every record in a transcript, tolerating blank and malformed lines.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.read_activity">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">read_activity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">262144</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#read_activity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.read_activity" title="Link to this definition">#</a></dt>
+<dd><p>Read the tail of a transcript into an <a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><code class="xref py py-class docutils literal notranslate"><span class="pre">Activity</span></code></a>.</p>
+<p>Costs the watched session nothing: the file is opened read-only and the session is
+never signalled, messaged or otherwise made aware.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.activity.Activity" title="crowsnest.activity.Activity"><code class="xref py py-class docutils literal notranslate"><span class="pre">Activity</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.read_turns">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">read_turns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#read_turns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.read_turns" title="Link to this definition">#</a></dt>
+<dd><p>The last <code class="docutils literal notranslate"><span class="pre">last</span></code> turns of a transcript, oldest first; <code class="docutils literal notranslate"><span class="pre">before=N</span></code> pages back.</p>
+<p>Reads the whole file. This is the deep path, taken on request when the tail did not
+carry enough context – still cheaper than a turn of the watched session’s own.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.activity.Turn" title="crowsnest.activity.Turn"><code class="xref py py-class docutils literal notranslate"><span class="pre">Turn</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.activity.tail_records">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">tail_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">262144</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enough</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">_has_prompt&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#tail_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.tail_records" title="Link to this definition">#</a></dt>
+<dd><p>The records in the last <code class="docutils literal notranslate"><span class="pre">tail_bytes</span></code> of a transcript, widening until <code class="docutils literal notranslate"><span class="pre">enough</span></code>.</p>
+<p>Returns the records and whether the window reached the start of the file. The first
+line of a window that starts mid-file is a fragment and is dropped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tail_records</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">([], True)</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.account.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.account</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.config.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.config</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

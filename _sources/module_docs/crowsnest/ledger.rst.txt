@@ -1,4 +1,0 @@
-crowsnest.ledger
-================
-.. automodule:: crowsnest.ledger
-   :members:

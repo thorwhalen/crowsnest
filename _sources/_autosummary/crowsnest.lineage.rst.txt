@@ -1,0 +1,41 @@
+crowsnest.lineage
+=================
+
+.. automodule:: crowsnest.lineage
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      SPAWN_EVENT
+      LINEAGE_FILENAME
+      CONFIDENCE
+      SESSION_ID_VAR
+      SESSION_PID_VAR
+      SPAWN_COMMANDS
+      SPAWN_VALUE_FLAGS
+      MAX_PPID_HOPS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      append_edge
+      current_session
+      dflt_sources
+      from_processes
+      from_records
+      from_transcripts
+      graph
+      lineage_path
+      names_by_session_id
+      record_spawn
+      spawn_event
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SpawnEdge
+   

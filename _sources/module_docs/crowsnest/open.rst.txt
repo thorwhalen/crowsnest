@@ -1,4 +1,0 @@
-crowsnest.open
-==============
-.. automodule:: crowsnest.open
-   :members:

@@ -1,0 +1,32 @@
+crowsnest.tree
+==============
+
+.. automodule:: crowsnest.tree
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      FLEET_MIN
+      FLEET_SHOWN
+      MAX_ROWS
+      MAX_INDENT_DEPTH
+      CHAR
+      RIGHT_COLUMN
+      TREE_CSS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      escape
+      layout
+      render
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Placed
+   

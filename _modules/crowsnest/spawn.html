@@ -1,690 +1,1073 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../../">
+<html lang="en" data-accent-color="orange" data-content_root="../../">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.spawn &mdash; crowsnest 0.0.31 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
-
-  
-      <script src="../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c5dbc6bb"></script>
-      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
-      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
-</head>
-
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../../index.html" class="icon icon-home">
-            crowsnest
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.spawn - crowsnest</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.spawn"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
 </div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/account.html">crowsnest.account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/links.html">crowsnest.links</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tree.html">crowsnest.tree</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/triage.html">crowsnest.triage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../_autosummary/crowsnest.html">crowsnest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ai-agents.html">For AI agents</a></li>
 </ul>
 
         </div>
       </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">crowsnest</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">crowsnest.spawn</li>
-      <li class="wy-breadcrumbs-aside">
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <h1>Source code for crowsnest.spawn</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""Start a new named Claude Code session, the one write crowsnest performs.</span>
-
-<span class="sd">Every other module in this package only reads what Claude Code already writes. This is</span>
-<span class="sd">the exception the operating model needs: the watching session must be able to *create*</span>
-<span class="sd">the sessions it will then watch and message with :mod:`crowsnest.tools`, including from</span>
-<span class="sd">a phone over Remote Control. It never resumes or kills a session -- that stays with</span>
-<span class="sd">``xa`` (:func:`crowsnest.spawn.spawn` is the seam ``xa spawn`` replaces) -- it only starts</span>
-<span class="sd">one somewhere a person can find it, and waits for :mod:`crowsnest.registry` to see it.</span>
-
-<span class="sd">A spawned session runs, by default, as the session that spawned it: the same *account*</span>
-<span class="sd">and the same *binary*. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so</span>
-<span class="sd">:func:`child_env` carries that variable (with the ``CLAUDE_PROFILE`` label a shell may</span>
-<span class="sd">pair with it) into the child while stripping every other ``CLAUDE*`` marker, and</span>
-<span class="sd">:func:`local_argv` starts the child with :func:`crowsnest.account.claude_bin` -- this</span>
-<span class="sd">session's own executable -- rather than leaving a login shell's ``PATH`` to pick one.</span>
-<span class="sd">That substitution is each *local* spawner's, not :func:`claude_argv`'s, so the command</span>
-<span class="sd">line a remote spawner is handed stays runnable where it is going.</span>
-<span class="sd">``home=`` puts the child under another home, ``profile=`` names one</span>
-<span class="sd">(:mod:`crowsnest.account`), and :data:`crowsnest.account.DROPPED_VARS` never travels.</span>
-
-<span class="sd">&gt;&gt;&gt; claude_argv('demo', prompt='hello')</span>
-<span class="sd">['claude', '--remote-control', '--dangerously-skip-permissions', '-n', 'demo', 'hello']</span>
-<span class="sd">"""</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.account</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLAUDE_BIN</span><span class="p">,</span> <span class="n">DROPPED_VARS</span><span class="p">,</span> <span class="n">account_home</span><span class="p">,</span> <span class="n">claude_bin</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_HOME</span><span class="p">,</span> <span class="n">HOME_ENV_VAR</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">live_sessions</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"ACCOUNT_VARS"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BIN"</span><span class="p">,</span>
-    <span class="s2">"SESSION_VARS"</span><span class="p">,</span>
-    <span class="s2">"child_env"</span><span class="p">,</span>
-    <span class="s2">"claude_argv"</span><span class="p">,</span>
-    <span class="s2">"default_spawner"</span><span class="p">,</span>
-    <span class="s2">"env_prefix"</span><span class="p">,</span>
-    <span class="s2">"local_argv"</span><span class="p">,</span>
-    <span class="s2">"spawn"</span><span class="p">,</span>
-<span class="p">]</span>
-
-<span class="c1">#: The variables that select which account a session runs under. ``CLAUDE_CONFIG_DIR`` is</span>
-<span class="c1">#: Claude Code's own (its config, credentials and registry all move with it); a shell</span>
-<span class="c1">#: profile scheme commonly pairs it with a ``CLAUDE_PROFILE`` label and re-derives one</span>
-<span class="c1">#: from the other, so the two travel together or not at all.</span>
-<span class="n">ACCOUNT_VARS</span> <span class="o">=</span> <span class="p">(</span><span class="n">HOME_ENV_VAR</span><span class="p">,</span> <span class="s2">"CLAUDE_PROFILE"</span><span class="p">)</span>
-<span class="n">_PROFILE_VAR</span> <span class="o">=</span> <span class="s2">"CLAUDE_PROFILE"</span>
-
-<span class="c1">#: The ``CLAUDE*`` variables that identify *one running session* -- who it is, what</span>
-<span class="c1">#: started it, how to talk to it -- named so that :func:`env_prefix` can unset them</span>
-<span class="c1">#: whether or not *this* process has them.</span>
-<span class="c1">#:</span>
-<span class="c1">#: :func:`child_env` can test its own environment, because it hands the child a complete</span>
-<span class="c1">#: one. A command *line* cannot: it is run by a shell whose environment is that shell's</span>
-<span class="c1">#: own. A tmux server first started from inside a session keeps that session's markers in</span>
-<span class="c1">#: its global environment and gives them to every window it opens afterwards -- including</span>
-<span class="c1">#: one spawned much later from a plain terminal, where this process has no marker to see</span>
-<span class="c1">#: and so nothing to unset. The markers visible here are therefore not the markers the</span>
-<span class="c1">#: child will meet, and a list that must be stated rather than discovered is a list.</span>
-<span class="c1">#:</span>
-<span class="c1">#: *Identity, not configuration.* Claude Code reads some seven hundred ``CLAUDE*``</span>
-<span class="c1">#: variables, nearly all of them settings a person may deliberately export (proxies,</span>
-<span class="c1">#: token ceilings, feature switches). Those are none of our business and stay. What must</span>
-<span class="c1">#: go is the session's own identity: it is what makes the child register as a *child* of</span>
-<span class="c1">#: the spawner rather than as the standalone session `spawn` asked for. Hence the</span>
-<span class="c1">#: families below -- the session and background-job plumbing, the messaging and bridge</span>
-<span class="c1">#: sockets, the job and project directories -- and nothing else.</span>
-<span class="c1">#:</span>
-<span class="c1">#: Derived by matching those families against the name table of the ``claude`` binary</span>
-<span class="c1">#: (``strings $(crowsnest.account.claude_bin()) | grep -oE 'CLAUDE[A-Z0-9_]*'``) rather</span>
-<span class="c1">#: than typed out, because a hand-copied constant's characteristic failure is a typo that</span>
-<span class="c1">#: nothing detects. Re-derive it when Claude Code grows a new family;</span>
-<span class="c1">#: ``test_session_vars_covers_every_marker_this_live_session_carries`` is the tripwire.</span>
-<span class="c1">#:</span>
-<span class="c1">#: Account variables are deliberately absent: they are :data:`ACCOUNT_VARS`, which</span>
-<span class="c1">#: :func:`env_prefix` states outright rather than merely unsetting.</span>
-<span class="n">SESSION_VARS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"CLAUDECODE"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_AGENT_SDK_VERSION"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_AUTH_SNAPSHOT_PATH"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_BACKEND"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_CLAIM_AUTH"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_DISPATCHER_RATE_LIMIT_TIER"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_DISPATCHER_SUBSCRIPTION_TYPE"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_ISOLATION"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_MEMORY_TOGGLED_OFF"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_POST_CLEAR_RESPAWN"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_PTY_AUTH"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_RENDEZVOUS_SOCK"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_RV_AUTH"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_SESSION_PERMISSION_RULES"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_SOCKET_TOKENS_PATH"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_SOURCE"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_STARTUP_WEDGE_MS"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_BG_TCC_DISCLAIMED"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_BRIDGE_SESSION_ID"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_CHILD_SESSION"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_CLOUD_SESSION_ID"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_ENTRYPOINT"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_EXECPATH"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_MESSAGING_SOCKET"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_MESSAGING_TOKEN"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_ID"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_ORIGIN"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_UUID"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_SESSION_ACCESS_TOKEN"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_SESSION_ID"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_SESSION_KIND"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_SESSION_LOG"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_SESSION_NAME"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_SESSION_ORIGIN"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_SPAWN_TIMESTAMP_MS"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_SSE_PORT"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_TRIGGER_ID"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_CODE_WORKER_EPOCH"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_EFFORT"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_JOB_DIR"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_PID"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_PROJECT_DIR"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_PROJECT_UUID"</span><span class="p">,</span>
-    <span class="s2">"CLAUDE_SESSION_ID"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1">#: How long `spawn` waits, by default, for the registry to notice the new session.</span>
-<span class="n">DFLT_WAIT</span> <span class="o">=</span> <span class="mf">20.0</span>
-<span class="n">_POLL_INTERVAL</span> <span class="o">=</span> <span class="mf">0.5</span>
-
-
-<div class="viewcode-block" id="claude_argv">
-<a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.claude_argv">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">claude_argv</span><span class="p">(</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-    <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-    <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
-    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CLAUDE_BIN</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""The ``claude`` command line for a new named session.</span>
-
-<span class="sd">    ``add_dirs`` are extra directories the session may work in (``--add-dir``, which</span>
-<span class="sd">    takes several values and so is placed where a flag follows it, never the prompt).</span>
-
-<span class="sd">    ``binary`` is what actually runs. It stays the bare name unless a caller names one:</span>
-<span class="sd">    the local spawners substitute :func:`local_argv` when they run the line here, and a</span>
-<span class="sd">    spawner that sends it elsewhere keeps a command line its target can resolve.</span>
-
-<span class="sd">    Permissions are skipped because a spawned session has no one at the keyboard to</span>
-<span class="sd">    approve them. ``--remote-control`` takes an *optional* value and so would swallow</span>
-<span class="sd">    the prompt if it came right before it; it goes first instead, where the next token</span>
-<span class="sd">    is always another flag. Empty strings mean "let claude decide" and are omitted.</span>
-
-<span class="sd">    &gt;&gt;&gt; claude_argv('demo', model='opus', effort='high', remote_control=False)</span>
-<span class="sd">    ['claude', '--dangerously-skip-permissions', '-n', 'demo', '--model', 'opus', '--effort', 'high']</span>
-<span class="sd">    &gt;&gt;&gt; claude_argv('demo', binary='/v/2.1.263')[0]</span>
-<span class="sd">    '/v/2.1.263'</span>
-<span class="sd">    """</span>
-    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">binary</span> <span class="ow">or</span> <span class="n">CLAUDE_BIN</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">remote_control</span><span class="p">:</span>
-        <span class="n">argv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"--remote-control"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">add_dirs</span><span class="p">:</span>
-        <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--add-dir"</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">add_dirs</span><span class="p">]]</span>
-    <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--dangerously-skip-permissions"</span><span class="p">,</span> <span class="s2">"-n"</span><span class="p">,</span> <span class="n">name</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
-        <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--model"</span><span class="p">,</span> <span class="n">model</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">effort</span><span class="p">:</span>
-        <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--effort"</span><span class="p">,</span> <span class="n">effort</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">prompt</span><span class="p">:</span>
-        <span class="n">argv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">argv</span></div>
-
-
-
-<div class="viewcode-block" id="child_env">
-<a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.child_env">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">child_env</span><span class="p">(</span>
-    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">drop</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DROPPED_VARS</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""``environ`` (default ``os.environ``) as a new session should inherit it.</span>
-
-<span class="sd">    Every ``CLAUDE*`` marker of the *spawning* session goes (``CLAUDECODE``,</span>
-<span class="sd">    ``CLAUDE_CODE_SESSION_ID``, ``CLAUDE_EFFORT``, the messaging socket, ...): Claude Code</span>
-<span class="sd">    reads them to register the new process as a *child* of the spawning session, under its</span>
-<span class="sd">    name and effort, rather than as the standalone session `spawn` asked for.</span>
-
-<span class="sd">    The account stays. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so without</span>
-<span class="sd">    it a session spawned from a second account would open under the default one, in a</span>
-<span class="sd">    registry the spawner is not watching. With ``home`` the child runs under that home</span>
-<span class="sd">    instead: ``CLAUDE_CONFIG_DIR`` set to it, or *unset* when it is the default home,</span>
-<span class="sd">    which Claude Code reaches only by the variable's absence. The ``CLAUDE_PROFILE``</span>
-<span class="sd">    label travels only with the account it labels.</span>
-
-<span class="sd">    ``drop`` goes too, and for the opposite reason: a variable that would *override* the</span>
-<span class="sd">    account the home selects (:data:`crowsnest.account.DROPPED_VARS`, an API key that</span>
-<span class="sd">    bills elsewhere). Pass ``drop=()`` to inherit them after all.</span>
-
-<span class="sd">    &gt;&gt;&gt; child_env({'CLAUDECODE': '1', 'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'})</span>
-<span class="sd">    {'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'}</span>
-<span class="sd">    &gt;&gt;&gt; child_env({'ANTHROPIC_API_KEY': 'sk-x', 'PATH': '/bin'})</span>
-<span class="sd">    {'PATH': '/bin'}</span>
-<span class="sd">    &gt;&gt;&gt; env = child_env({'CLAUDE_CONFIG_DIR': '/h/iq', 'CLAUDE_PROFILE': 'iq'}, home='/h/work')</span>
-<span class="sd">    &gt;&gt;&gt; sorted(env), env['CLAUDE_CONFIG_DIR'].endswith('work')</span>
-<span class="sd">    (['CLAUDE_CONFIG_DIR'], True)</span>
-<span class="sd">    """</span>
-    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
-    <span class="n">dropped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">drop</span><span class="p">)</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">environ</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ACCOUNT_VARS</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dropped</span>
-    <span class="p">}</span>
-    <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">env</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="n">_resolved</span><span class="p">(</span><span class="n">home</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">target</span> <span class="o">!=</span> <span class="n">_resolved</span><span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">HOME_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="n">DFLT_HOME</span><span class="p">):</span>
-        <span class="n">env</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_PROFILE_VAR</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="n">_resolved</span><span class="p">(</span><span class="n">DFLT_HOME</span><span class="p">):</span>
-        <span class="n">env</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">HOME_ENV_VAR</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">env</span><span class="p">[</span><span class="n">HOME_ENV_VAR</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">env</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_resolved</span><span class="p">(</span><span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""One spelling per home, so a relative path or a symlink still names the same account."""</span>
-    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">home</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-
-
-<div class="viewcode-block" id="env_prefix">
-<a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.env_prefix">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">env_prefix</span><span class="p">(</span>
-    <span class="n">env</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">drop</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DROPPED_VARS</span><span class="p">,</span>
-    <span class="n">markers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">SESSION_VARS</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""The ``env -u ... K=V ...`` tokens that make a fresh shell run a command under ``env``.</span>
-
-<span class="sd">    For the spawners that hand a command *line* to another program (tmux, a terminal</span>
-<span class="sd">    tab): the shell that runs it is not this process's child and starts with whatever</span>
-<span class="sd">    ``CLAUDE*`` variables its own login put there. So each name this function *controls*</span>
-<span class="sd">    -- ``markers`` (:data:`SESSION_VARS`), the ``CLAUDE*`` of ``environ``,</span>
-<span class="sd">    :data:`ACCOUNT_VARS`, ``drop`` and :data:`crowsnest.account.DROPPED_VARS` -- is</span>
-<span class="sd">    stated either way round: set when ``env`` has it, unset when it does not. Nothing</span>
-<span class="sd">    controlled is left to the shell.</span>
-
-<span class="sd">    Stated, rather than "whatever this process has", because the two differ exactly when</span>
-<span class="sd">    it matters: a tmux server started once from inside a session hands that session's</span>
-<span class="sd">    markers to every window it opens afterwards, so a spawn run later from a plain</span>
-<span class="sd">    terminal -- nothing to see, nothing to unset -- would put its new session under the</span>
-<span class="sd">    name and effort of a session that has long since ended. The scan of ``environ``</span>
-<span class="sd">    (default ``os.environ``) is kept on top of the list, but only as a bonus: it can add</span>
-<span class="sd">    a name a later version invents *when the spawner is itself a session*, which is</span>
-<span class="sd">    precisely the case that already worked. The list is what covers the case that did</span>
-<span class="sd">    not, so a marker missing from it is missing, full stop -- see :data:`SESSION_VARS`</span>
-<span class="sd">    for how to re-derive it.</span>
-
-<span class="sd">    ``drop`` is unset for the neighbouring reason: this process not having an API key</span>
-<span class="sd">    says nothing about the shell that will run the command. Conversely ``drop=()`` --</span>
-<span class="sd">    ``child_env``'s "inherit it after all" -- puts the key in ``env``, and it is then</span>
-<span class="sd">    passed explicitly rather than left to whatever the shell happens to hold.</span>
-
-<span class="sd">    &gt;&gt;&gt; env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={}, markers=('CLAUDECODE',))</span>
-<span class="sd">    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR=/h/iq']</span>
-
-<span class="sd">    A marker only the *shell* will have is unset all the same:</span>
-
-<span class="sd">    &gt;&gt;&gt; env_prefix({}, environ={}, markers=('CLAUDECODE',), drop=())</span>
-<span class="sd">    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_CONFIG_DIR', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY']</span>
-<span class="sd">    """</span>
-    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
-    <span class="n">seen</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">environ</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)]</span>
-    <span class="n">controlled</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">markers</span><span class="p">,</span> <span class="o">*</span><span class="n">seen</span><span class="p">,</span> <span class="o">*</span><span class="n">ACCOUNT_VARS</span><span class="p">,</span> <span class="o">*</span><span class="n">drop</span><span class="p">,</span> <span class="o">*</span><span class="n">DROPPED_VARS</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">controlled</span><span class="p">:</span>
-            <span class="n">controlled</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-    <span class="n">unset</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">controlled</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span><span class="p">]</span>
-    <span class="n">stated</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">controlled</span><span class="p">)</span>
-    <span class="n">assignments</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">stated</span>
-    <span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">unset</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">assignments</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[]</span>
-    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"env"</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">unset</span><span class="p">:</span>
-        <span class="n">tokens</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-u"</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">tokens</span> <span class="o">+</span> <span class="n">assignments</span></div>
-
-
-
-<div class="viewcode-block" id="local_argv">
-<a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.local_argv">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""``argv`` with the bare ``claude`` replaced by the one *this machine* should run</span>
-<span class="sd">    (:func:`crowsnest.account.claude_bin`): what a person configured, else this session's</span>
-<span class="sd">    own executable.</span>
-
-<span class="sd">    For the spawners that start a session on this machine. It is deliberately not done in</span>
-<span class="sd">    :func:`claude_argv`: a command line is built once and a spawner may send it somewhere</span>
-<span class="sd">    else entirely (``xa spawn`` runs it over ssh), where an absolute local path names</span>
-<span class="sd">    nothing. So ``argv`` stays portable, each spawner resolves it for its own target, and</span>
-<span class="sd">    a caller who named a binary explicitly is left alone.</span>
-
-<span class="sd">    &gt;&gt;&gt; local_argv(['/opt/claude-next', '-n', 'demo'])</span>
-<span class="sd">    ['/opt/claude-next', '-n', 'demo']</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">argv</span> <span class="ow">or</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">CLAUDE_BIN</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">argv</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">claude_bin</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span> <span class="o">*</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_tmux_spawner</span><span class="p">(</span>
-    <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># A running tmux server gives a new session *its* environment, not this client's, so</span>
-    <span class="c1"># the account goes into the command line; ``env=`` still matters when this call is</span>
-    <span class="c1"># what starts the server.</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-    <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env_prefix</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="o">+</span> <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">))</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"new-session"</span><span class="p">,</span> <span class="s2">"-d"</span><span class="p">,</span> <span class="s2">"-s"</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="n">cwd</span><span class="p">,</span> <span class="n">command</span><span class="p">],</span>
-        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tmux new-session failed: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_applescript_string</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""``text`` as the inside of a double-quoted AppleScript string literal."""</span>
-    <span class="k">return</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\\</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\\\</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s1">'</span><span class="se">\\</span><span class="s1">"'</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_iterm_spawner</span><span class="p">(</span>
-    <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="n">env_prefix</span><span class="p">(</span><span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">))</span> <span class="o">+</span> <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">line</span> <span class="o">=</span> <span class="n">_applescript_string</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cd </span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s1">'tell application "iTerm2"</span><span class="se">\n</span><span class="s1">'</span>
-        <span class="s2">"  activate</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"  if (count of windows) = 0 then</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"    create window with default profile</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"  end if</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"  tell current window</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"    set newTab to (create tab with default profile)</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"    tell current session of newTab</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="sa">f</span><span class="s1">'      write text "</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s1">"</span><span class="se">\n</span><span class="s1">'</span>
-        <span class="s2">"    end tell</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"  end tell</span><span class="se">\n</span><span class="s2">"</span>
-        <span class="s2">"end tell</span><span class="se">\n</span><span class="s2">"</span>
-    <span class="p">)</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">"osascript"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">script</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"osascript failed: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_subprocess_spawner</span><span class="p">(</span>
-    <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-        <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
-        <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span>
-        <span class="n">env</span><span class="o">=</span><span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">),</span>
-        <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-        <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-        <span class="n">start_new_session</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-
-
-<span class="c1">#: The spawners this module ships. Named so :func:`spawn` can tell one of its own --</span>
-<span class="c1">#: which takes the ``config`` naming the launcher -- from a caller's, which does not.</span>
-<span class="n">_BUILTIN_SPAWNERS</span> <span class="o">=</span> <span class="p">(</span><span class="n">_tmux_spawner</span><span class="p">,</span> <span class="n">_iterm_spawner</span><span class="p">,</span> <span class="n">_subprocess_spawner</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="default_spawner">
-<a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.default_spawner">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">default_spawner</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""The strongest spawner this machine offers, needing no new dependency, and its name.</span>
-
-<span class="sd">    ``tmux`` first -- a session survives the one that spawned it and can be attached from</span>
-<span class="sd">    any terminal later. Failing that, a new iTerm tab on macOS, which is what a person at</span>
-<span class="sd">    the machine expects to see. A plain detached subprocess is the last resort: it runs,</span>
-<span class="sd">    but nothing shows it to a human until :mod:`crowsnest.registry` reports it.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"tmux"</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">_tmux_spawner</span><span class="p">,</span> <span class="s2">"tmux"</span>
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"darwin"</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"osascript"</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">_iterm_spawner</span><span class="p">,</span> <span class="s2">"iterm"</span>
-    <span class="k">return</span> <span class="n">_subprocess_spawner</span><span class="p">,</span> <span class="s2">"subprocess"</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_find_by_name</span><span class="p">(</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiveSession</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">deadline</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">+</span> <span class="n">wait</span>
-    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">session</span>
-        <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">deadline</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">_POLL_INTERVAL</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">wait</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="ow">or</span> <span class="n">_POLL_INTERVAL</span><span class="p">)</span>
-
-
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.spawn</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <h1>Source code for crowsnest.spawn</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="sd">"""Start a new named Claude Code session, the one write crowsnest performs.</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="sd">Every other module in this package only reads what Claude Code already writes. This is</span>
+</span><span data-line="4"><span class="sd">the exception the operating model needs: the watching session must be able to *create*</span>
+</span><span data-line="5"><span class="sd">the sessions it will then watch and message with :mod:`crowsnest.tools`, including from</span>
+</span><span data-line="6"><span class="sd">a phone over Remote Control. It never resumes or kills a session -- that stays with</span>
+</span><span data-line="7"><span class="sd">``xa`` (:func:`crowsnest.spawn.spawn` is the seam ``xa spawn`` replaces) -- it only starts</span>
+</span><span data-line="8"><span class="sd">one somewhere a person can find it, and waits for :mod:`crowsnest.registry` to see it.</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="sd">A spawned session runs, by default, as the session that spawned it: the same *account*</span>
+</span><span data-line="11"><span class="sd">and the same *binary*. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so</span>
+</span><span data-line="12"><span class="sd">:func:`child_env` carries that variable (with the ``CLAUDE_PROFILE`` label a shell may</span>
+</span><span data-line="13"><span class="sd">pair with it) into the child while stripping every other ``CLAUDE*`` marker, and</span>
+</span><span data-line="14"><span class="sd">:func:`local_argv` starts the child with :func:`crowsnest.account.claude_bin` -- this</span>
+</span><span data-line="15"><span class="sd">session's own executable -- rather than leaving a login shell's ``PATH`` to pick one.</span>
+</span><span data-line="16"><span class="sd">That substitution is each *local* spawner's, not :func:`claude_argv`'s, so the command</span>
+</span><span data-line="17"><span class="sd">line a remote spawner is handed stays runnable where it is going.</span>
+</span><span data-line="18"><span class="sd">``home=`` puts the child under another home, ``profile=`` names one</span>
+</span><span data-line="19"><span class="sd">(:mod:`crowsnest.account`), and :data:`crowsnest.account.DROPPED_VARS` never travels.</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="sd">&gt;&gt;&gt; claude_argv('demo', prompt='hello')</span>
+</span><span data-line="22"><span class="sd">['claude', '--remote-control', '--dangerously-skip-permissions', '-n', 'demo', 'hello']</span>
+</span><span data-line="23"><span class="sd">"""</span>
+</span><span data-line="24">
+</span><span data-line="25"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span data-line="28"><span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+</span><span data-line="29"><span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+</span><span data-line="30"><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+</span><span data-line="31"><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span data-line="32"><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span data-line="33"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
+</span><span data-line="34"><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+</span><span data-line="35"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="36">
+</span><span data-line="37"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.account</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLAUDE_BIN</span><span class="p">,</span> <span class="n">DROPPED_VARS</span><span class="p">,</span> <span class="n">account_home</span><span class="p">,</span> <span class="n">claude_bin</span>
+</span><span data-line="38"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_HOME</span><span class="p">,</span> <span class="n">HOME_ENV_VAR</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">live_sessions</span>
+</span><span data-line="39">
+</span><span data-line="40"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="41">    <span class="s2">"ACCOUNT_VARS"</span><span class="p">,</span>
+</span><span data-line="42">    <span class="s2">"CLAUDE_BIN"</span><span class="p">,</span>
+</span><span data-line="43">    <span class="s2">"SESSION_VARS"</span><span class="p">,</span>
+</span><span data-line="44">    <span class="s2">"child_env"</span><span class="p">,</span>
+</span><span data-line="45">    <span class="s2">"claude_argv"</span><span class="p">,</span>
+</span><span data-line="46">    <span class="s2">"default_spawner"</span><span class="p">,</span>
+</span><span data-line="47">    <span class="s2">"env_prefix"</span><span class="p">,</span>
+</span><span data-line="48">    <span class="s2">"local_argv"</span><span class="p">,</span>
+</span><span data-line="49">    <span class="s2">"spawn"</span><span class="p">,</span>
+</span><span data-line="50"><span class="p">]</span>
+</span><span data-line="51">
+</span><span data-line="52"><span class="c1">#: The variables that select which account a session runs under. ``CLAUDE_CONFIG_DIR`` is</span>
+</span><span data-line="53"><span class="c1">#: Claude Code's own (its config, credentials and registry all move with it); a shell</span>
+</span><span data-line="54"><span class="c1">#: profile scheme commonly pairs it with a ``CLAUDE_PROFILE`` label and re-derives one</span>
+</span><span data-line="55"><span class="c1">#: from the other, so the two travel together or not at all.</span>
+</span><span data-line="56"><span class="n">ACCOUNT_VARS</span> <span class="o">=</span> <span class="p">(</span><span class="n">HOME_ENV_VAR</span><span class="p">,</span> <span class="s2">"CLAUDE_PROFILE"</span><span class="p">)</span>
+</span><span data-line="57"><span class="n">_PROFILE_VAR</span> <span class="o">=</span> <span class="s2">"CLAUDE_PROFILE"</span>
+</span><span data-line="58">
+</span><span data-line="59"><span class="c1">#: The ``CLAUDE*`` variables that identify *one running session* -- who it is, what</span>
+</span><span data-line="60"><span class="c1">#: started it, how to talk to it -- named so that :func:`env_prefix` can unset them</span>
+</span><span data-line="61"><span class="c1">#: whether or not *this* process has them.</span>
+</span><span data-line="62"><span class="c1">#:</span>
+</span><span data-line="63"><span class="c1">#: :func:`child_env` can test its own environment, because it hands the child a complete</span>
+</span><span data-line="64"><span class="c1">#: one. A command *line* cannot: it is run by a shell whose environment is that shell's</span>
+</span><span data-line="65"><span class="c1">#: own. A tmux server first started from inside a session keeps that session's markers in</span>
+</span><span data-line="66"><span class="c1">#: its global environment and gives them to every window it opens afterwards -- including</span>
+</span><span data-line="67"><span class="c1">#: one spawned much later from a plain terminal, where this process has no marker to see</span>
+</span><span data-line="68"><span class="c1">#: and so nothing to unset. The markers visible here are therefore not the markers the</span>
+</span><span data-line="69"><span class="c1">#: child will meet, and a list that must be stated rather than discovered is a list.</span>
+</span><span data-line="70"><span class="c1">#:</span>
+</span><span data-line="71"><span class="c1">#: *Identity, not configuration.* Claude Code reads some seven hundred ``CLAUDE*``</span>
+</span><span data-line="72"><span class="c1">#: variables, nearly all of them settings a person may deliberately export (proxies,</span>
+</span><span data-line="73"><span class="c1">#: token ceilings, feature switches). Those are none of our business and stay. What must</span>
+</span><span data-line="74"><span class="c1">#: go is the session's own identity: it is what makes the child register as a *child* of</span>
+</span><span data-line="75"><span class="c1">#: the spawner rather than as the standalone session `spawn` asked for. Hence the</span>
+</span><span data-line="76"><span class="c1">#: families below -- the session and background-job plumbing, the messaging and bridge</span>
+</span><span data-line="77"><span class="c1">#: sockets, the job and project directories -- and nothing else.</span>
+</span><span data-line="78"><span class="c1">#:</span>
+</span><span data-line="79"><span class="c1">#: Derived by matching those families against the name table of the ``claude`` binary</span>
+</span><span data-line="80"><span class="c1">#: (``strings $(crowsnest.account.claude_bin()) | grep -oE 'CLAUDE[A-Z0-9_]*'``) rather</span>
+</span><span data-line="81"><span class="c1">#: than typed out, because a hand-copied constant's characteristic failure is a typo that</span>
+</span><span data-line="82"><span class="c1">#: nothing detects. Re-derive it when Claude Code grows a new family;</span>
+</span><span data-line="83"><span class="c1">#: ``test_session_vars_covers_every_marker_this_live_session_carries`` is the tripwire.</span>
+</span><span data-line="84"><span class="c1">#:</span>
+</span><span data-line="85"><span class="c1">#: Account variables are deliberately absent: they are :data:`ACCOUNT_VARS`, which</span>
+</span><span data-line="86"><span class="c1">#: :func:`env_prefix` states outright rather than merely unsetting.</span>
+</span><span data-line="87"><span class="n">SESSION_VARS</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="88">    <span class="s2">"CLAUDECODE"</span><span class="p">,</span>
+</span><span data-line="89">    <span class="s2">"CLAUDE_AGENT_SDK_VERSION"</span><span class="p">,</span>
+</span><span data-line="90">    <span class="s2">"CLAUDE_BG_AUTH_SNAPSHOT_PATH"</span><span class="p">,</span>
+</span><span data-line="91">    <span class="s2">"CLAUDE_BG_BACKEND"</span><span class="p">,</span>
+</span><span data-line="92">    <span class="s2">"CLAUDE_BG_CLAIM_AUTH"</span><span class="p">,</span>
+</span><span data-line="93">    <span class="s2">"CLAUDE_BG_DISPATCHER_RATE_LIMIT_TIER"</span><span class="p">,</span>
+</span><span data-line="94">    <span class="s2">"CLAUDE_BG_DISPATCHER_SUBSCRIPTION_TYPE"</span><span class="p">,</span>
+</span><span data-line="95">    <span class="s2">"CLAUDE_BG_ISOLATION"</span><span class="p">,</span>
+</span><span data-line="96">    <span class="s2">"CLAUDE_BG_MEMORY_TOGGLED_OFF"</span><span class="p">,</span>
+</span><span data-line="97">    <span class="s2">"CLAUDE_BG_POST_CLEAR_RESPAWN"</span><span class="p">,</span>
+</span><span data-line="98">    <span class="s2">"CLAUDE_BG_PTY_AUTH"</span><span class="p">,</span>
+</span><span data-line="99">    <span class="s2">"CLAUDE_BG_RENDEZVOUS_SOCK"</span><span class="p">,</span>
+</span><span data-line="100">    <span class="s2">"CLAUDE_BG_RV_AUTH"</span><span class="p">,</span>
+</span><span data-line="101">    <span class="s2">"CLAUDE_BG_SESSION_PERMISSION_RULES"</span><span class="p">,</span>
+</span><span data-line="102">    <span class="s2">"CLAUDE_BG_SOCKET_TOKENS_PATH"</span><span class="p">,</span>
+</span><span data-line="103">    <span class="s2">"CLAUDE_BG_SOURCE"</span><span class="p">,</span>
+</span><span data-line="104">    <span class="s2">"CLAUDE_BG_STARTUP_WEDGE_MS"</span><span class="p">,</span>
+</span><span data-line="105">    <span class="s2">"CLAUDE_BG_TCC_DISCLAIMED"</span><span class="p">,</span>
+</span><span data-line="106">    <span class="s2">"CLAUDE_CODE_BRIDGE_SESSION_ID"</span><span class="p">,</span>
+</span><span data-line="107">    <span class="s2">"CLAUDE_CODE_CHILD_SESSION"</span><span class="p">,</span>
+</span><span data-line="108">    <span class="s2">"CLAUDE_CODE_CLOUD_SESSION_ID"</span><span class="p">,</span>
+</span><span data-line="109">    <span class="s2">"CLAUDE_CODE_ENTRYPOINT"</span><span class="p">,</span>
+</span><span data-line="110">    <span class="s2">"CLAUDE_CODE_EXECPATH"</span><span class="p">,</span>
+</span><span data-line="111">    <span class="s2">"CLAUDE_CODE_MESSAGING_SOCKET"</span><span class="p">,</span>
+</span><span data-line="112">    <span class="s2">"CLAUDE_CODE_MESSAGING_TOKEN"</span><span class="p">,</span>
+</span><span data-line="113">    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_ID"</span><span class="p">,</span>
+</span><span data-line="114">    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_ORIGIN"</span><span class="p">,</span>
+</span><span data-line="115">    <span class="s2">"CLAUDE_CODE_REMOTE_SESSION_UUID"</span><span class="p">,</span>
+</span><span data-line="116">    <span class="s2">"CLAUDE_CODE_SESSION_ACCESS_TOKEN"</span><span class="p">,</span>
+</span><span data-line="117">    <span class="s2">"CLAUDE_CODE_SESSION_ID"</span><span class="p">,</span>
+</span><span data-line="118">    <span class="s2">"CLAUDE_CODE_SESSION_KIND"</span><span class="p">,</span>
+</span><span data-line="119">    <span class="s2">"CLAUDE_CODE_SESSION_LOG"</span><span class="p">,</span>
+</span><span data-line="120">    <span class="s2">"CLAUDE_CODE_SESSION_NAME"</span><span class="p">,</span>
+</span><span data-line="121">    <span class="s2">"CLAUDE_CODE_SESSION_ORIGIN"</span><span class="p">,</span>
+</span><span data-line="122">    <span class="s2">"CLAUDE_CODE_SPAWN_TIMESTAMP_MS"</span><span class="p">,</span>
+</span><span data-line="123">    <span class="s2">"CLAUDE_CODE_SSE_PORT"</span><span class="p">,</span>
+</span><span data-line="124">    <span class="s2">"CLAUDE_CODE_TRIGGER_ID"</span><span class="p">,</span>
+</span><span data-line="125">    <span class="s2">"CLAUDE_CODE_WORKER_EPOCH"</span><span class="p">,</span>
+</span><span data-line="126">    <span class="s2">"CLAUDE_EFFORT"</span><span class="p">,</span>
+</span><span data-line="127">    <span class="s2">"CLAUDE_JOB_DIR"</span><span class="p">,</span>
+</span><span data-line="128">    <span class="s2">"CLAUDE_PID"</span><span class="p">,</span>
+</span><span data-line="129">    <span class="s2">"CLAUDE_PROJECT_DIR"</span><span class="p">,</span>
+</span><span data-line="130">    <span class="s2">"CLAUDE_PROJECT_UUID"</span><span class="p">,</span>
+</span><span data-line="131">    <span class="s2">"CLAUDE_SESSION_ID"</span><span class="p">,</span>
+</span><span data-line="132"><span class="p">)</span>
+</span><span data-line="133">
+</span><span data-line="134"><span class="c1">#: How long `spawn` waits, by default, for the registry to notice the new session.</span>
+</span><span data-line="135"><span class="n">DFLT_WAIT</span> <span class="o">=</span> <span class="mf">20.0</span>
+</span><span data-line="136"><span class="n">_POLL_INTERVAL</span> <span class="o">=</span> <span class="mf">0.5</span>
+</span><span data-line="137">
+</span><span data-line="138">
+</span><span data-line="139"><span class="k">def</span><span class="w"> </span><span class="nf">claude_argv</span><span class="p">(</span>
+</span><span data-line="140">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="141">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="142">    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="143">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="144">    <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="145">    <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="146">    <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+</span><span data-line="147">    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CLAUDE_BIN</span><span class="p">,</span>
+</span><span data-line="148"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="149"><span class="w">    </span><span class="sd">"""The ``claude`` command line for a new named session.</span>
+</span><span data-line="150">
+</span><span data-line="151"><span class="sd">    ``add_dirs`` are extra directories the session may work in (``--add-dir``, which</span>
+</span><span data-line="152"><span class="sd">    takes several values and so is placed where a flag follows it, never the prompt).</span>
+</span><span data-line="153">
+</span><span data-line="154"><span class="sd">    ``binary`` is what actually runs. It stays the bare name unless a caller names one:</span>
+</span><span data-line="155"><span class="sd">    the local spawners substitute :func:`local_argv` when they run the line here, and a</span>
+</span><span data-line="156"><span class="sd">    spawner that sends it elsewhere keeps a command line its target can resolve.</span>
+</span><span data-line="157">
+</span><span data-line="158"><span class="sd">    Permissions are skipped because a spawned session has no one at the keyboard to</span>
+</span><span data-line="159"><span class="sd">    approve them. ``--remote-control`` takes an *optional* value and so would swallow</span>
+</span><span data-line="160"><span class="sd">    the prompt if it came right before it; it goes first instead, where the next token</span>
+</span><span data-line="161"><span class="sd">    is always another flag. Empty strings mean "let claude decide" and are omitted.</span>
+</span><span data-line="162">
+</span><span data-line="163"><span class="sd">    &gt;&gt;&gt; claude_argv('demo', model='opus', effort='high', remote_control=False)</span>
+</span><span data-line="164"><span class="sd">    ['claude', '--dangerously-skip-permissions', '-n', 'demo', '--model', 'opus', '--effort', 'high']</span>
+</span><span data-line="165"><span class="sd">    &gt;&gt;&gt; claude_argv('demo', binary='/v/2.1.263')[0]</span>
+</span><span data-line="166"><span class="sd">    '/v/2.1.263'</span>
+</span><span data-line="167"><span class="sd">    """</span>
+</span><span data-line="168">    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="n">binary</span> <span class="ow">or</span> <span class="n">CLAUDE_BIN</span><span class="p">]</span>
+</span><span data-line="169">    <span class="k">if</span> <span class="n">remote_control</span><span class="p">:</span>
+</span><span data-line="170">        <span class="n">argv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"--remote-control"</span><span class="p">)</span>
+</span><span data-line="171">    <span class="k">if</span> <span class="n">add_dirs</span><span class="p">:</span>
+</span><span data-line="172">        <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--add-dir"</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">add_dirs</span><span class="p">]]</span>
+</span><span data-line="173">    <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--dangerously-skip-permissions"</span><span class="p">,</span> <span class="s2">"-n"</span><span class="p">,</span> <span class="n">name</span><span class="p">]</span>
+</span><span data-line="174">    <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
+</span><span data-line="175">        <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--model"</span><span class="p">,</span> <span class="n">model</span><span class="p">]</span>
+</span><span data-line="176">    <span class="k">if</span> <span class="n">effort</span><span class="p">:</span>
+</span><span data-line="177">        <span class="n">argv</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--effort"</span><span class="p">,</span> <span class="n">effort</span><span class="p">]</span>
+</span><span data-line="178">    <span class="k">if</span> <span class="n">prompt</span><span class="p">:</span>
+</span><span data-line="179">        <span class="n">argv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+</span><span data-line="180">    <span class="k">return</span> <span class="n">argv</span>
+</span><span data-line="181">
+</span><span data-line="182">
+</span><span data-line="183"><span class="k">def</span><span class="w"> </span><span class="nf">child_env</span><span class="p">(</span>
+</span><span data-line="184">    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="185">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="186">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="187">    <span class="n">drop</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DROPPED_VARS</span><span class="p">,</span>
+</span><span data-line="188"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="189"><span class="w">    </span><span class="sd">"""``environ`` (default ``os.environ``) as a new session should inherit it.</span>
+</span><span data-line="190">
+</span><span data-line="191"><span class="sd">    Every ``CLAUDE*`` marker of the *spawning* session goes (``CLAUDECODE``,</span>
+</span><span data-line="192"><span class="sd">    ``CLAUDE_CODE_SESSION_ID``, ``CLAUDE_EFFORT``, the messaging socket, ...): Claude Code</span>
+</span><span data-line="193"><span class="sd">    reads them to register the new process as a *child* of the spawning session, under its</span>
+</span><span data-line="194"><span class="sd">    name and effort, rather than as the standalone session `spawn` asked for.</span>
+</span><span data-line="195">
+</span><span data-line="196"><span class="sd">    The account stays. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so without</span>
+</span><span data-line="197"><span class="sd">    it a session spawned from a second account would open under the default one, in a</span>
+</span><span data-line="198"><span class="sd">    registry the spawner is not watching. With ``home`` the child runs under that home</span>
+</span><span data-line="199"><span class="sd">    instead: ``CLAUDE_CONFIG_DIR`` set to it, or *unset* when it is the default home,</span>
+</span><span data-line="200"><span class="sd">    which Claude Code reaches only by the variable's absence. The ``CLAUDE_PROFILE``</span>
+</span><span data-line="201"><span class="sd">    label travels only with the account it labels.</span>
+</span><span data-line="202">
+</span><span data-line="203"><span class="sd">    ``drop`` goes too, and for the opposite reason: a variable that would *override* the</span>
+</span><span data-line="204"><span class="sd">    account the home selects (:data:`crowsnest.account.DROPPED_VARS`, an API key that</span>
+</span><span data-line="205"><span class="sd">    bills elsewhere). Pass ``drop=()`` to inherit them after all.</span>
+</span><span data-line="206">
+</span><span data-line="207"><span class="sd">    &gt;&gt;&gt; child_env({'CLAUDECODE': '1', 'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'})</span>
+</span><span data-line="208"><span class="sd">    {'CLAUDE_CONFIG_DIR': '/h/iq', 'PATH': '/bin'}</span>
+</span><span data-line="209"><span class="sd">    &gt;&gt;&gt; child_env({'ANTHROPIC_API_KEY': 'sk-x', 'PATH': '/bin'})</span>
+</span><span data-line="210"><span class="sd">    {'PATH': '/bin'}</span>
+</span><span data-line="211"><span class="sd">    &gt;&gt;&gt; env = child_env({'CLAUDE_CONFIG_DIR': '/h/iq', 'CLAUDE_PROFILE': 'iq'}, home='/h/work')</span>
+</span><span data-line="212"><span class="sd">    &gt;&gt;&gt; sorted(env), env['CLAUDE_CONFIG_DIR'].endswith('work')</span>
+</span><span data-line="213"><span class="sd">    (['CLAUDE_CONFIG_DIR'], True)</span>
+</span><span data-line="214"><span class="sd">    """</span>
+</span><span data-line="215">    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+</span><span data-line="216">    <span class="n">dropped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">drop</span><span class="p">)</span>
+</span><span data-line="217">    <span class="n">env</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="218">        <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+</span><span data-line="219">        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">environ</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+</span><span data-line="220">        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ACCOUNT_VARS</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dropped</span>
+</span><span data-line="221">    <span class="p">}</span>
+</span><span data-line="222">    <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="223">        <span class="k">return</span> <span class="n">env</span>
+</span><span data-line="224">    <span class="n">target</span> <span class="o">=</span> <span class="n">_resolved</span><span class="p">(</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="225">    <span class="k">if</span> <span class="n">target</span> <span class="o">!=</span> <span class="n">_resolved</span><span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">HOME_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="n">DFLT_HOME</span><span class="p">):</span>
+</span><span data-line="226">        <span class="n">env</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_PROFILE_VAR</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="227">    <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="n">_resolved</span><span class="p">(</span><span class="n">DFLT_HOME</span><span class="p">):</span>
+</span><span data-line="228">        <span class="n">env</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">HOME_ENV_VAR</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="229">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="230">        <span class="n">env</span><span class="p">[</span><span class="n">HOME_ENV_VAR</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+</span><span data-line="231">    <span class="k">return</span> <span class="n">env</span>
+</span><span data-line="232">
+</span><span data-line="233">
+</span><span data-line="234"><span class="k">def</span><span class="w"> </span><span class="nf">_resolved</span><span class="p">(</span><span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="235"><span class="w">    </span><span class="sd">"""One spelling per home, so a relative path or a symlink still names the same account."""</span>
+</span><span data-line="236">    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">home</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+</span><span data-line="237">
+</span><span data-line="238">
+</span><span data-line="239"><span class="k">def</span><span class="w"> </span><span class="nf">env_prefix</span><span class="p">(</span>
+</span><span data-line="240">    <span class="n">env</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="241">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="242">    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="243">    <span class="n">drop</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DROPPED_VARS</span><span class="p">,</span>
+</span><span data-line="244">    <span class="n">markers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">SESSION_VARS</span><span class="p">,</span>
+</span><span data-line="245"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="246"><span class="w">    </span><span class="sd">"""The ``env -u ... K=V ...`` tokens that make a fresh shell run a command under ``env``.</span>
+</span><span data-line="247">
+</span><span data-line="248"><span class="sd">    For the spawners that hand a command *line* to another program (tmux, a terminal</span>
+</span><span data-line="249"><span class="sd">    tab): the shell that runs it is not this process's child and starts with whatever</span>
+</span><span data-line="250"><span class="sd">    ``CLAUDE*`` variables its own login put there. So each name this function *controls*</span>
+</span><span data-line="251"><span class="sd">    -- ``markers`` (:data:`SESSION_VARS`), the ``CLAUDE*`` of ``environ``,</span>
+</span><span data-line="252"><span class="sd">    :data:`ACCOUNT_VARS`, ``drop`` and :data:`crowsnest.account.DROPPED_VARS` -- is</span>
+</span><span data-line="253"><span class="sd">    stated either way round: set when ``env`` has it, unset when it does not. Nothing</span>
+</span><span data-line="254"><span class="sd">    controlled is left to the shell.</span>
+</span><span data-line="255">
+</span><span data-line="256"><span class="sd">    Stated, rather than "whatever this process has", because the two differ exactly when</span>
+</span><span data-line="257"><span class="sd">    it matters: a tmux server started once from inside a session hands that session's</span>
+</span><span data-line="258"><span class="sd">    markers to every window it opens afterwards, so a spawn run later from a plain</span>
+</span><span data-line="259"><span class="sd">    terminal -- nothing to see, nothing to unset -- would put its new session under the</span>
+</span><span data-line="260"><span class="sd">    name and effort of a session that has long since ended. The scan of ``environ``</span>
+</span><span data-line="261"><span class="sd">    (default ``os.environ``) is kept on top of the list, but only as a bonus: it can add</span>
+</span><span data-line="262"><span class="sd">    a name a later version invents *when the spawner is itself a session*, which is</span>
+</span><span data-line="263"><span class="sd">    precisely the case that already worked. The list is what covers the case that did</span>
+</span><span data-line="264"><span class="sd">    not, so a marker missing from it is missing, full stop -- see :data:`SESSION_VARS`</span>
+</span><span data-line="265"><span class="sd">    for how to re-derive it.</span>
+</span><span data-line="266">
+</span><span data-line="267"><span class="sd">    ``drop`` is unset for the neighbouring reason: this process not having an API key</span>
+</span><span data-line="268"><span class="sd">    says nothing about the shell that will run the command. Conversely ``drop=()`` --</span>
+</span><span data-line="269"><span class="sd">    ``child_env``'s "inherit it after all" -- puts the key in ``env``, and it is then</span>
+</span><span data-line="270"><span class="sd">    passed explicitly rather than left to whatever the shell happens to hold.</span>
+</span><span data-line="271">
+</span><span data-line="272"><span class="sd">    &gt;&gt;&gt; env_prefix({'CLAUDE_CONFIG_DIR': '/h/iq'}, environ={}, markers=('CLAUDECODE',))</span>
+</span><span data-line="273"><span class="sd">    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR=/h/iq']</span>
+</span><span data-line="274">
+</span><span data-line="275"><span class="sd">    A marker only the *shell* will have is unset all the same:</span>
+</span><span data-line="276">
+</span><span data-line="277"><span class="sd">    &gt;&gt;&gt; env_prefix({}, environ={}, markers=('CLAUDECODE',), drop=())</span>
+</span><span data-line="278"><span class="sd">    ['env', '-u', 'CLAUDECODE', '-u', 'CLAUDE_CONFIG_DIR', '-u', 'CLAUDE_PROFILE', '-u', 'ANTHROPIC_API_KEY']</span>
+</span><span data-line="279"><span class="sd">    """</span>
+</span><span data-line="280">    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+</span><span data-line="281">    <span class="n">seen</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">environ</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)]</span>
+</span><span data-line="282">    <span class="n">controlled</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="283">    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">markers</span><span class="p">,</span> <span class="o">*</span><span class="n">seen</span><span class="p">,</span> <span class="o">*</span><span class="n">ACCOUNT_VARS</span><span class="p">,</span> <span class="o">*</span><span class="n">drop</span><span class="p">,</span> <span class="o">*</span><span class="n">DROPPED_VARS</span><span class="p">):</span>
+</span><span data-line="284">        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">controlled</span><span class="p">:</span>
+</span><span data-line="285">            <span class="n">controlled</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+</span><span data-line="286">    <span class="n">unset</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">controlled</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env</span><span class="p">]</span>
+</span><span data-line="287">    <span class="n">stated</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">controlled</span><span class="p">)</span>
+</span><span data-line="288">    <span class="n">assignments</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="289">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"CLAUDE"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">stated</span>
+</span><span data-line="290">    <span class="p">]</span>
+</span><span data-line="291">    <span class="k">if</span> <span class="ow">not</span> <span class="n">unset</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">assignments</span><span class="p">:</span>
+</span><span data-line="292">        <span class="k">return</span> <span class="p">[]</span>
+</span><span data-line="293">    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"env"</span><span class="p">]</span>
+</span><span data-line="294">    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">unset</span><span class="p">:</span>
+</span><span data-line="295">        <span class="n">tokens</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-u"</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+</span><span data-line="296">    <span class="k">return</span> <span class="n">tokens</span> <span class="o">+</span> <span class="n">assignments</span>
+</span><span data-line="297">
+</span><span data-line="298">
+</span><span data-line="299"><span class="k">def</span><span class="w"> </span><span class="nf">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="300"><span class="w">    </span><span class="sd">"""``argv`` with the bare ``claude`` replaced by the one *this machine* should run</span>
+</span><span data-line="301"><span class="sd">    (:func:`crowsnest.account.claude_bin`): what a person configured, else this session's</span>
+</span><span data-line="302"><span class="sd">    own executable.</span>
+</span><span data-line="303">
+</span><span data-line="304"><span class="sd">    For the spawners that start a session on this machine. It is deliberately not done in</span>
+</span><span data-line="305"><span class="sd">    :func:`claude_argv`: a command line is built once and a spawner may send it somewhere</span>
+</span><span data-line="306"><span class="sd">    else entirely (``xa spawn`` runs it over ssh), where an absolute local path names</span>
+</span><span data-line="307"><span class="sd">    nothing. So ``argv`` stays portable, each spawner resolves it for its own target, and</span>
+</span><span data-line="308"><span class="sd">    a caller who named a binary explicitly is left alone.</span>
+</span><span data-line="309">
+</span><span data-line="310"><span class="sd">    &gt;&gt;&gt; local_argv(['/opt/claude-next', '-n', 'demo'])</span>
+</span><span data-line="311"><span class="sd">    ['/opt/claude-next', '-n', 'demo']</span>
+</span><span data-line="312"><span class="sd">    """</span>
+</span><span data-line="313">    <span class="k">if</span> <span class="ow">not</span> <span class="n">argv</span> <span class="ow">or</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">CLAUDE_BIN</span><span class="p">:</span>
+</span><span data-line="314">        <span class="k">return</span> <span class="n">argv</span>
+</span><span data-line="315">    <span class="k">return</span> <span class="p">[</span><span class="n">claude_bin</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span> <span class="o">*</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+</span><span data-line="316">
+</span><span data-line="317">
+</span><span data-line="318"><span class="k">def</span><span class="w"> </span><span class="nf">_tmux_spawner</span><span class="p">(</span>
+</span><span data-line="319">    <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="320">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="321">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="322">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="323">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="324">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="325"><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="326">    <span class="c1"># A running tmux server gives a new session *its* environment, not this client's, so</span>
+</span><span data-line="327">    <span class="c1"># the account goes into the command line; ``env=`` still matters when this call is</span>
+</span><span data-line="328">    <span class="c1"># what starts the server.</span>
+</span><span data-line="329">    <span class="n">env</span> <span class="o">=</span> <span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="330">    <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env_prefix</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="o">+</span> <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">))</span>
+</span><span data-line="331">    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span data-line="332">        <span class="p">[</span><span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"new-session"</span><span class="p">,</span> <span class="s2">"-d"</span><span class="p">,</span> <span class="s2">"-s"</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="n">cwd</span><span class="p">,</span> <span class="n">command</span><span class="p">],</span>
+</span><span data-line="333">        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="334">        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="335">        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="336">        <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+</span><span data-line="337">    <span class="p">)</span>
+</span><span data-line="338">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="339">        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tmux new-session failed: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="340">
+</span><span data-line="341">
+</span><span data-line="342"><span class="k">def</span><span class="w"> </span><span class="nf">_applescript_string</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="343"><span class="w">    </span><span class="sd">"""``text`` as the inside of a double-quoted AppleScript string literal."""</span>
+</span><span data-line="344">    <span class="k">return</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\\</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\\\</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s1">'</span><span class="se">\\</span><span class="s1">"'</span><span class="p">)</span>
+</span><span data-line="345">
+</span><span data-line="346">
+</span><span data-line="347"><span class="k">def</span><span class="w"> </span><span class="nf">_iterm_spawner</span><span class="p">(</span>
+</span><span data-line="348">    <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="349">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="350">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="351">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="352">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="353">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="354"><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="355">    <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span data-line="356">        <span class="n">env_prefix</span><span class="p">(</span><span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">))</span> <span class="o">+</span> <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="357">    <span class="p">)</span>
+</span><span data-line="358">    <span class="n">line</span> <span class="o">=</span> <span class="n">_applescript_string</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cd </span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="359">    <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="360">        <span class="s1">'tell application "iTerm2"</span><span class="se">\n</span><span class="s1">'</span>
+</span><span data-line="361">        <span class="s2">"  activate</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="362">        <span class="s2">"  if (count of windows) = 0 then</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="363">        <span class="s2">"    create window with default profile</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="364">        <span class="s2">"  end if</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="365">        <span class="s2">"  tell current window</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="366">        <span class="s2">"    set newTab to (create tab with default profile)</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="367">        <span class="s2">"    tell current session of newTab</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="368">        <span class="sa">f</span><span class="s1">'      write text "</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s1">"</span><span class="se">\n</span><span class="s1">'</span>
+</span><span data-line="369">        <span class="s2">"    end tell</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="370">        <span class="s2">"  end tell</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="371">        <span class="s2">"end tell</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="372">    <span class="p">)</span>
+</span><span data-line="373">    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span data-line="374">        <span class="p">[</span><span class="s2">"osascript"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">script</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+</span><span data-line="375">    <span class="p">)</span>
+</span><span data-line="376">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="377">        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"osascript failed: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="378">
+</span><span data-line="379">
+</span><span data-line="380"><span class="k">def</span><span class="w"> </span><span class="nf">_subprocess_spawner</span><span class="p">(</span>
+</span><span data-line="381">    <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="382">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="383">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="384">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="385">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="386">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="387"><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="388">    <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+</span><span data-line="389">        <span class="n">local_argv</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
+</span><span data-line="390">        <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span>
+</span><span data-line="391">        <span class="n">env</span><span class="o">=</span><span class="n">child_env</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">),</span>
+</span><span data-line="392">        <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+</span><span data-line="393">        <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+</span><span data-line="394">        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+</span><span data-line="395">        <span class="n">start_new_session</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="396">    <span class="p">)</span>
+</span><span data-line="397">
+</span><span data-line="398">
+</span><span data-line="399"><span class="c1">#: The spawners this module ships. Named so :func:`spawn` can tell one of its own --</span>
+</span><span data-line="400"><span class="c1">#: which takes the ``config`` naming the launcher -- from a caller's, which does not.</span>
+</span><span data-line="401"><span class="n">_BUILTIN_SPAWNERS</span> <span class="o">=</span> <span class="p">(</span><span class="n">_tmux_spawner</span><span class="p">,</span> <span class="n">_iterm_spawner</span><span class="p">,</span> <span class="n">_subprocess_spawner</span><span class="p">)</span>
+</span><span data-line="402">
+</span><span data-line="403">
+</span><span data-line="404"><span class="k">def</span><span class="w"> </span><span class="nf">default_spawner</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="405"><span class="w">    </span><span class="sd">"""The strongest spawner this machine offers, needing no new dependency, and its name.</span>
+</span><span data-line="406">
+</span><span data-line="407"><span class="sd">    ``tmux`` first -- a session survives the one that spawned it and can be attached from</span>
+</span><span data-line="408"><span class="sd">    any terminal later. Failing that, a new iTerm tab on macOS, which is what a person at</span>
+</span><span data-line="409"><span class="sd">    the machine expects to see. A plain detached subprocess is the last resort: it runs,</span>
+</span><span data-line="410"><span class="sd">    but nothing shows it to a human until :mod:`crowsnest.registry` reports it.</span>
+</span><span data-line="411"><span class="sd">    """</span>
+</span><span data-line="412">    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"tmux"</span><span class="p">):</span>
+</span><span data-line="413">        <span class="k">return</span> <span class="n">_tmux_spawner</span><span class="p">,</span> <span class="s2">"tmux"</span>
+</span><span data-line="414">    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"darwin"</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"osascript"</span><span class="p">):</span>
+</span><span data-line="415">        <span class="k">return</span> <span class="n">_iterm_spawner</span><span class="p">,</span> <span class="s2">"iterm"</span>
+</span><span data-line="416">    <span class="k">return</span> <span class="n">_subprocess_spawner</span><span class="p">,</span> <span class="s2">"subprocess"</span>
+</span><span data-line="417">
+</span><span data-line="418">
+</span><span data-line="419"><span class="k">def</span><span class="w"> </span><span class="nf">_find_by_name</span><span class="p">(</span>
+</span><span data-line="420">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span>
+</span><span data-line="421"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LiveSession</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="422">    <span class="n">deadline</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">+</span> <span class="n">wait</span>
+</span><span data-line="423">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span><span data-line="424">        <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+</span><span data-line="425">            <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+</span><span data-line="426">                <span class="k">return</span> <span class="n">session</span>
+</span><span data-line="427">        <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">deadline</span><span class="p">:</span>
+</span><span data-line="428">            <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="429">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">_POLL_INTERVAL</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">wait</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="ow">or</span> <span class="n">_POLL_INTERVAL</span><span class="p">)</span>
+</span><span data-line="430">
+</span><span data-line="431">
 <div class="viewcode-block" id="spawn">
-<a class="viewcode-back" href="../../module_docs/crowsnest/spawn.html#crowsnest.spawn">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">spawn</span><span class="p">(</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-    <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-    <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">spawner</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_WAIT</span><span class="p">,</span>
-    <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
-    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Start a session named ``name`` in ``cwd``, and wait for the registry to see it.</span>
+<a class="viewcode-back" href="../../_autosummary/crowsnest.html#crowsnest.spawn">[docs]</a>
+</span><span data-line="432"><span class="k">def</span><span class="w"> </span><span class="nf">spawn</span><span class="p">(</span>
+</span><span data-line="433">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="434">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="435">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="436">    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="437">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="438">    <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="439">    <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="440">    <span class="n">spawner</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="441">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="442">    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="443">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="444">    <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_WAIT</span><span class="p">,</span>
+</span><span data-line="445">    <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+</span><span data-line="446">    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="447">    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="448"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="449"><span class="w">    </span><span class="sd">"""Start a session named ``name`` in ``cwd``, and wait for the registry to see it.</span>
+</span><span data-line="450">
+</span><span data-line="451"><span class="sd">    ``add_dirs`` are further directories the session is allowed to work in (a fleet</span>
+</span><span data-line="452"><span class="sd">    manager gets every repository of its fleet this way).</span>
+</span><span data-line="453">
+</span><span data-line="454"><span class="sd">    ``spawner`` is the seam: a callable ``(argv, *, cwd, name, home)`` that starts the</span>
+</span><span data-line="455"><span class="sd">    built ``claude`` command line somewhere a person can find it -- ``argv[0]`` is the</span>
+</span><span data-line="456"><span class="sd">    bare name unless the caller chose one, so a spawner resolves it for its own target</span>
+</span><span data-line="457"><span class="sd">    (:func:`local_argv` does that for this machine) -- under the account</span>
+</span><span data-line="458"><span class="sd">    ``home`` (``None``: the spawner's own) -- the default is :func:`default_spawner`'s</span>
+</span><span data-line="459"><span class="sd">    pick, and :func:`child_env` and :func:`env_prefix` are what a spawner derives its</span>
+</span><span data-line="460"><span class="sd">    environment with. ``xa spawn`` is the pointed replacement, adding hosts and a phone</span>
+</span><span data-line="461"><span class="sd">    web UI; it gets the account as one path to translate, not a local environment.</span>
+</span><span data-line="462">
+</span><span data-line="463"><span class="sd">    ``home`` is both the home whose registry is watched for the new session and the</span>
+</span><span data-line="464"><span class="sd">    account it is started under; left out, both are the spawning session's own, so a</span>
+</span><span data-line="465"><span class="sd">    crowsnest session on one account creates sessions on that account. ``profile`` names</span>
+</span><span data-line="466"><span class="sd">    a home instead of spelling it (:func:`crowsnest.account.account_home`, which also</span>
+</span><span data-line="467"><span class="sd">    reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``</span>
+</span><span data-line="468"><span class="sd">    to run; left out, each local spawner runs the one this session runs.</span>
+</span><span data-line="469">
+</span><span data-line="470"><span class="sd">    Returns ``{"name", "pid", "session_id", "how", "home", "parent"}``, ``home`` being the</span>
+</span><span data-line="471"><span class="sd">    account the session was started under (``""``: the spawning session's own). When the</span>
+</span><span data-line="472"><span class="sd">    registry file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how``</span>
+</span><span data-line="473"><span class="sd">    says so -- the session may still be starting, or may have failed before it could</span>
+</span><span data-line="474"><span class="sd">    register.</span>
+</span><span data-line="475">
+</span><span data-line="476"><span class="sd">    ``parent`` is the session that asked for this one, and the reason it is here is that</span>
+</span><span data-line="477"><span class="sd">    **this is the only moment anyone knows it for free**. Everything downstream -- the</span>
+</span><span data-line="478"><span class="sd">    spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --</span>
+</span><span data-line="479"><span class="sd">    is recovery work if it is not written down now, so one ``spawn`` line goes into</span>
+</span><span data-line="480"><span class="sd">    ``lineage.jsonl`` (:func:`crowsnest.lineage.record_spawn`; ``lineage_path`` is where,</span>
+</span><span data-line="481"><span class="sd">    a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this</span>
+</span><span data-line="482"><span class="sd">    command was not run from inside a session -- the honest answer for a person at a shell</span>
+</span><span data-line="483"><span class="sd">    prompt -- and the whole dict is ``{}`` only when the record could not be written.</span>
+</span><span data-line="484">
+</span><span data-line="485"><span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
+</span><span data-line="486"><span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
+</span><span data-line="487"><span class="sd">    behind one name make all of them ambiguous. Pick another, a suffix will do.</span>
+</span><span data-line="488"><span class="sd">    """</span>
+</span><span data-line="489">    <span class="n">home</span> <span class="o">=</span> <span class="n">account_home</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="490">    <span class="n">taken</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
+</span><span data-line="491">    <span class="k">if</span> <span class="n">taken</span><span class="p">:</span>
+</span><span data-line="492">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="493">            <span class="sa">f</span><span class="s2">"a live session is already named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> (pid </span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">, in "</span>
+</span><span data-line="494">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">); pick another name, for instance </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> with a suffix"</span>
+</span><span data-line="495">        <span class="p">)</span>
+</span><span data-line="496">    <span class="n">how</span> <span class="o">=</span> <span class="s2">"custom"</span>
+</span><span data-line="497">    <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="498">        <span class="n">spawner</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">default_spawner</span><span class="p">()</span>
+</span><span data-line="499">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">in</span> <span class="n">_BUILTIN_SPAWNERS</span><span class="p">:</span>
+</span><span data-line="500">            <span class="c1"># Ours alone are told which config file names the launcher. The seam's</span>
+</span><span data-line="501">            <span class="c1"># signature stays `(argv, *, cwd, name, home)`, so nothing else -- a</span>
+</span><span data-line="502">            <span class="c1"># caller's spawner, a replaced `default_spawner` -- is handed a keyword it</span>
+</span><span data-line="503">            <span class="c1"># never asked for. Anything else resolves its own binary for its own target.</span>
+</span><span data-line="504">            <span class="n">spawner</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">spawner</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="505">    <span class="n">argv</span> <span class="o">=</span> <span class="n">claude_argv</span><span class="p">(</span>
+</span><span data-line="506">        <span class="n">name</span><span class="p">,</span>
+</span><span data-line="507">        <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
+</span><span data-line="508">        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span data-line="509">        <span class="n">effort</span><span class="o">=</span><span class="n">effort</span><span class="p">,</span>
+</span><span data-line="510">        <span class="n">remote_control</span><span class="o">=</span><span class="n">remote_control</span><span class="p">,</span>
+</span><span data-line="511">        <span class="n">add_dirs</span><span class="o">=</span><span class="n">add_dirs</span><span class="p">,</span>
+</span><span data-line="512">        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
+</span><span data-line="513">    <span class="p">)</span>
+</span><span data-line="514">    <span class="n">spawner</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="515">    <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="516">    <span class="n">found</span> <span class="o">=</span> <span class="n">_find_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span>
+</span><span data-line="517">    <span class="c1"># Recorded whether or not the registry saw it: a session that started slowly still</span>
+</span><span data-line="518">    <span class="c1"># has a parent, and the name is the key the edge is kept under either way.</span>
+</span><span data-line="519">    <span class="c1"># `home` is the *new* session's account; the caller is registered in its own, so</span>
+</span><span data-line="520">    <span class="c1"># `record_spawn` is deliberately not told one. Passing the target's would make</span>
+</span><span data-line="521">    <span class="c1"># `--profile` record an 8-character session-id prefix as the parent.</span>
+</span><span data-line="522">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_spawn</span>
+</span><span data-line="523">
+</span><span data-line="524">    <span class="n">record</span> <span class="o">=</span> <span class="n">record_spawn</span><span class="p">(</span>
+</span><span data-line="525">        <span class="n">name</span><span class="p">,</span>
+</span><span data-line="526">        <span class="n">child_session_id</span><span class="o">=</span><span class="n">found</span><span class="o">.</span><span class="n">session_id</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="527">        <span class="n">project</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="528">        <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
+</span><span data-line="529">    <span class="p">)</span>
+</span><span data-line="530">    <span class="n">parent</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">record</span> <span class="k">else</span> <span class="p">{}</span>
+</span><span data-line="531">    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="532">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="533">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="534">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="535">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="536">            <span class="s2">"how"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">: no registry file for </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> within </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span><span class="p">,</span>
+</span><span data-line="537">            <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+</span><span data-line="538">            <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
+</span><span data-line="539">        <span class="p">}</span>
+</span><span data-line="540">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="541">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="542">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
+</span><span data-line="543">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="544">        <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
+</span><span data-line="545">        <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+</span><span data-line="546">        <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
+</span><span data-line="547">    <span class="p">}</span></div>
 
-<span class="sd">    ``add_dirs`` are further directories the session is allowed to work in (a fleet</span>
-<span class="sd">    manager gets every repository of its fleet this way).</span>
-
-<span class="sd">    ``spawner`` is the seam: a callable ``(argv, *, cwd, name, home)`` that starts the</span>
-<span class="sd">    built ``claude`` command line somewhere a person can find it -- ``argv[0]`` is the</span>
-<span class="sd">    bare name unless the caller chose one, so a spawner resolves it for its own target</span>
-<span class="sd">    (:func:`local_argv` does that for this machine) -- under the account</span>
-<span class="sd">    ``home`` (``None``: the spawner's own) -- the default is :func:`default_spawner`'s</span>
-<span class="sd">    pick, and :func:`child_env` and :func:`env_prefix` are what a spawner derives its</span>
-<span class="sd">    environment with. ``xa spawn`` is the pointed replacement, adding hosts and a phone</span>
-<span class="sd">    web UI; it gets the account as one path to translate, not a local environment.</span>
-
-<span class="sd">    ``home`` is both the home whose registry is watched for the new session and the</span>
-<span class="sd">    account it is started under; left out, both are the spawning session's own, so a</span>
-<span class="sd">    crowsnest session on one account creates sessions on that account. ``profile`` names</span>
-<span class="sd">    a home instead of spelling it (:func:`crowsnest.account.account_home`, which also</span>
-<span class="sd">    reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``</span>
-<span class="sd">    to run; left out, each local spawner runs the one this session runs.</span>
-
-<span class="sd">    Returns ``{"name", "pid", "session_id", "how", "home", "parent"}``, ``home`` being the</span>
-<span class="sd">    account the session was started under (``""``: the spawning session's own). When the</span>
-<span class="sd">    registry file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how``</span>
-<span class="sd">    says so -- the session may still be starting, or may have failed before it could</span>
-<span class="sd">    register.</span>
-
-<span class="sd">    ``parent`` is the session that asked for this one, and the reason it is here is that</span>
-<span class="sd">    **this is the only moment anyone knows it for free**. Everything downstream -- the</span>
-<span class="sd">    spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --</span>
-<span class="sd">    is recovery work if it is not written down now, so one ``spawn`` line goes into</span>
-<span class="sd">    ``lineage.jsonl`` (:func:`crowsnest.lineage.record_spawn`; ``lineage_path`` is where,</span>
-<span class="sd">    a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this</span>
-<span class="sd">    command was not run from inside a session -- the honest answer for a person at a shell</span>
-<span class="sd">    prompt -- and the whole dict is ``{}`` only when the record could not be written.</span>
-
-<span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
-<span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
-<span class="sd">    behind one name make all of them ambiguous. Pick another, a suffix will do.</span>
-<span class="sd">    """</span>
-    <span class="n">home</span> <span class="o">=</span> <span class="n">account_home</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-    <span class="n">taken</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">taken</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"a live session is already named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> (pid </span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">, in "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">); pick another name, for instance </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> with a suffix"</span>
-        <span class="p">)</span>
-    <span class="n">how</span> <span class="o">=</span> <span class="s2">"custom"</span>
-    <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">spawner</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">default_spawner</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">in</span> <span class="n">_BUILTIN_SPAWNERS</span><span class="p">:</span>
-            <span class="c1"># Ours alone are told which config file names the launcher. The seam's</span>
-            <span class="c1"># signature stays `(argv, *, cwd, name, home)`, so nothing else -- a</span>
-            <span class="c1"># caller's spawner, a replaced `default_spawner` -- is handed a keyword it</span>
-            <span class="c1"># never asked for. Anything else resolves its own binary for its own target.</span>
-            <span class="n">spawner</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">spawner</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-    <span class="n">argv</span> <span class="o">=</span> <span class="n">claude_argv</span><span class="p">(</span>
-        <span class="n">name</span><span class="p">,</span>
-        <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
-        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-        <span class="n">effort</span><span class="o">=</span><span class="n">effort</span><span class="p">,</span>
-        <span class="n">remote_control</span><span class="o">=</span><span class="n">remote_control</span><span class="p">,</span>
-        <span class="n">add_dirs</span><span class="o">=</span><span class="n">add_dirs</span><span class="p">,</span>
-        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">spawner</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-    <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
-    <span class="n">found</span> <span class="o">=</span> <span class="n">_find_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span>
-    <span class="c1"># Recorded whether or not the registry saw it: a session that started slowly still</span>
-    <span class="c1"># has a parent, and the name is the key the edge is kept under either way.</span>
-    <span class="c1"># `home` is the *new* session's account; the caller is registered in its own, so</span>
-    <span class="c1"># `record_spawn` is deliberately not told one. Passing the target's would make</span>
-    <span class="c1"># `--profile` record an 8-character session-id prefix as the parent.</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_spawn</span>
-
-    <span class="n">record</span> <span class="o">=</span> <span class="n">record_spawn</span><span class="p">(</span>
-        <span class="n">name</span><span class="p">,</span>
-        <span class="n">child_session_id</span><span class="o">=</span><span class="n">found</span><span class="o">.</span><span class="n">session_id</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-        <span class="n">project</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-        <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parent</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">record</span> <span class="k">else</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-            <span class="s2">"how"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">: no registry file for </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> within </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span><span class="p">,</span>
-            <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
-            <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
-        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
-        <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
-        <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
-    <span class="p">}</span></div>
-
-</pre></div>
-
-           </div>
-          </div>
-          <footer>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p></p>
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
   </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
 </footer>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
+      <script src="../../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../../_static/shibuya.js?v=50760d75"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
 
-</body>
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script></body>
 </html>

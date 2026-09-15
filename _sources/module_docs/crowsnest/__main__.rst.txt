@@ -1,4 +1,0 @@
-crowsnest.__main__
-==================
-.. automodule:: crowsnest.__main__
-   :members:

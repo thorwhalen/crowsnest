@@ -1,0 +1,22 @@
+crowsnest.tools
+===============
+
+.. automodule:: crowsnest.tools
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      backfill_lineage
+      brief
+      lineage
+      repo_url
+      report
+      resolve
+      roster
+      sessions
+      show
+      triage
+      turns
+   

@@ -1,4 +1,0 @@
-crowsnest.watch
-===============
-.. automodule:: crowsnest.watch
-   :members:

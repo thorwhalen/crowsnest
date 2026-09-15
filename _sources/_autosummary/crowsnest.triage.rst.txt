@@ -1,0 +1,33 @@
+crowsnest.triage
+================
+
+.. automodule:: crowsnest.triage
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      GROUPS
+      WHYS
+      REASON_LIMIT
+      DFLT_OWNER
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      classify
+      classify_row
+      dflt_verdicts
+      from_ledger
+      from_registry
+      latest_section
+      without_code
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Verdict
+   

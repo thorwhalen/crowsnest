@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.registry - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.report" href="crowsnest.report.html" /><link rel="prev" title="crowsnest.paths" href="crowsnest.paths.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.registry"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.registry.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.registry.CLAUDE_AI_SESSIONS"><code class="docutils literal notranslate"><span class="pre">CLAUDE_AI_SESSIONS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.HOME_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">HOME_ENV_VAR</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.LiveSession"><code class="docutils literal notranslate"><span class="pre">LiveSession</span></code></a><ul>
+<li><a class="reference internal" href="#crowsnest.registry.LiveSession.label"><code class="docutils literal notranslate"><span class="pre">LiveSession.label</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.LiveSession.project"><code class="docutils literal notranslate"><span class="pre">LiveSession.project</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.LiveSession.session_url"><code class="docutils literal notranslate"><span class="pre">LiveSession.session_url</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#crowsnest.registry.STATUSES"><code class="docutils literal notranslate"><span class="pre">STATUSES</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.claude_home"><code class="docutils literal notranslate"><span class="pre">claude_home()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.fresh_within"><code class="docutils literal notranslate"><span class="pre">fresh_within()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.live_sessions"><code class="docutils literal notranslate"><span class="pre">live_sessions()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.pid_alive"><code class="docutils literal notranslate"><span class="pre">pid_alive()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.project_slug"><code class="docutils literal notranslate"><span class="pre">project_slug()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.transcript_path"><code class="docutils literal notranslate"><span class="pre">transcript_path()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.registry</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.registry">
+<span id="crowsnest-registry"></span><h1>crowsnest.registry<a class="headerlink" href="#module-crowsnest.registry" title="Link to this heading">#</a></h1>
+<p>Who is alive right now, read from the registry Claude Code keeps while a session runs.</p>
+<p>Claude Code writes <code class="docutils literal notranslate"><span class="pre">~/.claude/sessions/&lt;pid&gt;.json</span></code> when a session starts, keeps it
+current while the session runs, and removes it on a clean exit. It is the one place that
+says – without opening a transcript – which sessions exist <em>now</em>, what each is called,
+where it is, and whether it is <code class="docutils literal notranslate"><span class="pre">busy</span></code>, <code class="docutils literal notranslate"><span class="pre">idle</span></code> or <code class="docutils literal notranslate"><span class="pre">waiting</span></code> for its human; and when
+it is waiting, what for. It also carries the socket other sessions message it on, which
+is what makes a registered session <em>askable</em> and an unregistered process not.</p>
+<p>Two things this module does not do. It never reads a transcript: that is
+<a class="reference internal" href="crowsnest.activity.html#module-crowsnest.activity" title="crowsnest.activity"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.activity</span></code></a>, and keeping the two apart is what keeps the roster instant on a
+machine with forty sessions. And it does not take the file’s presence as proof of life –
+a crash or a reboot leaves the file behind – so every record is checked against a running
+process before it is reported, through the <code class="docutils literal notranslate"><span class="pre">is_alive</span></code> seam.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="s1">'/nonexistent-dir-for-doctest'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">[]</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">project_slug</span><span class="p">(</span><span class="s1">'/Users/me/py/proj/video_gen'</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">'-Users-me-py-proj-video-gen'</span>
+</span></pre></div>
+</div>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.HOME_ENV_VAR" title="crowsnest.registry.HOME_ENV_VAR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HOME_ENV_VAR</span></code></a></p></td>
+<td><p>Claude Code's own variable for relocating its config directory.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.CLAUDE_AI_SESSIONS" title="crowsnest.registry.CLAUDE_AI_SESSIONS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CLAUDE_AI_SESSIONS</span></code></a></p></td>
+<td><p>this prefix plus its bridge id.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.STATUSES" title="crowsnest.registry.STATUSES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STATUSES</span></code></a></p></td>
+<td><p>what needs a human first, then what is working (<code class="docutils literal notranslate"><span class="pre">shell</span></code> is a session running a shell command, which is a kind of busy), then what is resting.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.claude_home" title="crowsnest.registry.claude_home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">claude_home</span></code></a>([path])</p></td>
+<td><p>The Claude Code config directory: <code class="docutils literal notranslate"><span class="pre">path</span></code>, else <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CONFIG_DIR</span></code>, else <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.fresh_within" title="crowsnest.registry.fresh_within"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fresh_within</span></code></a>(seconds, *[, now])</p></td>
+<td><p>A liveness rule for a synced copy of another machine's home: alive while fresh.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.live_sessions" title="crowsnest.registry.live_sessions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live_sessions</span></code></a>(*[, home, is_alive, is_live, ...])</p></td>
+<td><p>Every registered session whose process is running, most urgent first.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.pid_alive" title="crowsnest.registry.pid_alive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pid_alive</span></code></a>(pid)</p></td>
+<td><p>Is there a process with this pid? Signal 0, the portable minimum.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.project_slug" title="crowsnest.registry.project_slug"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_slug</span></code></a>(cwd)</p></td>
+<td><p>The directory name Claude Code files a working directory's transcripts under.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.transcript_path" title="crowsnest.registry.transcript_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transcript_path</span></code></a>(cwd, session_id, *[, home])</p></td>
+<td><p>Where the transcript for <code class="docutils literal notranslate"><span class="pre">(cwd,</span> <span class="pre">session_id)</span></code> is, or should be.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LiveSession</span></code></a>(pid, session_id, name, cwd, ...)</p></td>
+<td><p>One running session, as the registry describes it.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.registry.CLAUDE_AI_SESSIONS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">CLAUDE_AI_SESSIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'https://claude.ai/code/'</span></span><a class="headerlink" href="#crowsnest.registry.CLAUDE_AI_SESSIONS" title="Link to this definition">#</a></dt>
+<dd><p>this prefix plus its bridge id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Where a Remote Control session opens on the web</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.registry.HOME_ENV_VAR">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">HOME_ENV_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CLAUDE_CONFIG_DIR'</span></span><a class="headerlink" href="#crowsnest.registry.HOME_ENV_VAR" title="Link to this definition">#</a></dt>
+<dd><p>Claude Code’s own variable for relocating its config directory. Honoured, not
+reinvented: the registry and the transcripts move with it.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.registry.LiveSession">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">LiveSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting_for</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_since</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_control</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transcript</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge_session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#LiveSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.LiveSession" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One running session, as the registry describes it. Flat and JSON-shaped.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="crowsnest.registry.LiveSession.label">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">label</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.label" title="Link to this definition">#</a></dt>
+<dd><p>The name the user gave the session, else the head of its id.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crowsnest.registry.LiveSession.project">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">project</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.project" title="Link to this definition">#</a></dt>
+<dd><p>The working directory’s last component – the name a human uses for it.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crowsnest.registry.LiveSession.session_url">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">session_url</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.session_url" title="Link to this definition">#</a></dt>
+<dd><p>The session on claude.ai, when it runs with Remote Control; else <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.registry.STATUSES">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">STATUSES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('waiting',</span> <span class="pre">'busy',</span> <span class="pre">'shell',</span> <span class="pre">'idle')</span></span><a class="headerlink" href="#crowsnest.registry.STATUSES" title="Link to this definition">#</a></dt>
+<dd><p>what needs a human
+first, then what is working (<code class="docutils literal notranslate"><span class="pre">shell</span></code> is a session running a shell command, which is
+a kind of busy), then what is resting. Anything unrecognised sorts last.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The statuses the registry reports, in the order a roster shows them</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.registry.claude_home">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">claude_home</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#claude_home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.claude_home" title="Link to this definition">#</a></dt>
+<dd><p>The Claude Code config directory: <code class="docutils literal notranslate"><span class="pre">path</span></code>, else <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CONFIG_DIR</span></code>, else <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_home</span><span class="p">(</span><span class="s1">'/x/y'</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+</span><span data-line="2"><span class="go">'/x/y'</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.registry.fresh_within">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">fresh_within</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;built-in</span> <span class="pre">function</span> <span class="pre">time&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#fresh_within"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.fresh_within" title="Link to this definition">#</a></dt>
+<dd><p>A liveness rule for a synced copy of another machine’s home: alive while fresh.</p>
+<p>The pids in such a copy belong to the other machine, so the only evidence of life is
+that the record changed recently. Pass the result as <code class="docutils literal notranslate"><span class="pre">is_live=</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveSession</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">rule</span> <span class="o">=</span> <span class="n">fresh_within</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">1000.0</span><span class="p">)</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">rule</span><span class="p">(</span><span class="n">LiveSession</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'s'</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'/w'</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="mf">990.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">''</span><span class="p">))</span>
+</span><span data-line="3"><span class="go">True</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">rule</span><span class="p">(</span><span class="n">LiveSession</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'s'</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'/w'</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="mf">900.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">''</span><span class="p">))</span>
+</span><span data-line="5"><span class="go">False</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.registry.live_sessions">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">live_sessions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_alive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">pid_alive&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_live</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#live_sessions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.live_sessions" title="Link to this definition">#</a></dt>
+<dd><p>Every registered session whose process is running, most urgent first.</p>
+<p>Ordered by <a class="reference internal" href="#crowsnest.registry.STATUSES" title="crowsnest.registry.STATUSES"><code class="xref py py-data docutils literal notranslate"><span class="pre">STATUSES</span></code></a> and then by how recently the status changed, so a roster
+printed from this list reads top-down as: waiting on you, then working, then idle,
+newest first within each.</p>
+<p><code class="docutils literal notranslate"><span class="pre">home</span></code> is the Claude Code config directory to read – a synced copy of another
+machine’s works the same way, which is how one roster can cover several hosts.
+<code class="docutils literal notranslate"><span class="pre">is_alive</span></code> decides whether a registry file still has a process behind it; for a
+synced copy pass <code class="docutils literal notranslate"><span class="pre">is_live=fresh_within(...)</span></code> instead, which replaces the pid check
+with a freshness rule. <code class="docutils literal notranslate"><span class="pre">home_name</span></code> is stamped on every record so a roster over
+several homes can say where each row came from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveSession</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.registry.pid_alive">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">pid_alive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#pid_alive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.pid_alive" title="Link to this definition">#</a></dt>
+<dd><p>Is there a process with this pid? Signal 0, the portable minimum.</p>
+<p>No protection against pid reuse: <code class="docutils literal notranslate"><span class="pre">xa.claude_fs.ephemeral_session_alive</span></code> adds the
+<code class="docutils literal notranslate"><span class="pre">/proc</span></code> start-time check on Linux, and is the replacement this seam exists for.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.registry.project_slug">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">project_slug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#project_slug"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.project_slug" title="Link to this definition">#</a></dt>
+<dd><p>The directory name Claude Code files a working directory’s transcripts under.</p>
+<p>Lossy on purpose (theirs, not ours): every character outside <code class="docutils literal notranslate"><span class="pre">[A-Za-z0-9-]</span></code> becomes
+a dash, so <code class="docutils literal notranslate"><span class="pre">video_gen</span></code> and <code class="docutils literal notranslate"><span class="pre">video.gen</span></code> collide. <a class="reference internal" href="#crowsnest.registry.transcript_path" title="crowsnest.registry.transcript_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">transcript_path()</span></code></a> falls back
+to a search when the guess misses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.registry.transcript_path">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">transcript_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#transcript_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.transcript_path" title="Link to this definition">#</a></dt>
+<dd><p>Where the transcript for <code class="docutils literal notranslate"><span class="pre">(cwd,</span> <span class="pre">session_id)</span></code> is, or should be.</p>
+<p>The slug guess is tried first; when it misses – an encoding edge, a session that
+changed directory before its first line – every project directory is searched for
+the session id, which is unique. A path that exists nowhere is still returned, so a
+caller can say <em>which</em> file is missing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.paths.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.paths</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.report.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.report</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

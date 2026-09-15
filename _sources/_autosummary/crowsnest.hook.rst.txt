@@ -1,0 +1,27 @@
+crowsnest.hook
+==============
+
+.. automodule:: crowsnest.hook
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      EVENTS_FILENAME
+      LOG_FILENAME
+      EVENTS
+      DETAIL_LIMIT
+      MAX_EVENT_BYTES
+      MAX_LOG_BYTES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      append_event
+      events_path
+      handle
+      log_path
+      rotate
+   

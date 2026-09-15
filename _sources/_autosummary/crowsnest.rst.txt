@@ -1,0 +1,56 @@
+﻿crowsnest
+=========
+
+.. automodule:: crowsnest
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      backfill_lineage
+      brief
+      events
+      list_ledgers
+      live_sessions
+      read_activity
+      read_ledger
+      read_turns
+      resolve
+      roster
+      show
+      spawn
+      turns
+      update_ledger
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Activity
+      LiveSession
+      Turn
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   account
+   activity
+   config
+   hook
+   init
+   ledger
+   lineage
+   links
+   open
+   paths
+   registry
+   report
+   skills
+   tools
+   tree
+   triage
+   watch

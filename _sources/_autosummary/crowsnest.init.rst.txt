@@ -1,0 +1,22 @@
+crowsnest.init
+==============
+
+.. automodule:: crowsnest.init
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      HOOKS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      init
+      merged_hooks
+      settings_snippet
+      template_path
+      template_text
+   

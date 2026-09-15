@@ -1,4 +1,0 @@
-crowsnest
-=========
-.. automodule:: crowsnest
-   :members:

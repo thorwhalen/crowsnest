@@ -1,0 +1,13 @@
+crowsnest.open
+==============
+
+.. automodule:: crowsnest.open
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      default_opener
+      open_session
+   

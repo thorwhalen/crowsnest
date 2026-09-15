@@ -1,4 +1,0 @@
-crowsnest.hook
-==============
-.. automodule:: crowsnest.hook
-   :members:

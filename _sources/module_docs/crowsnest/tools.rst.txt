@@ -1,4 +1,0 @@
-crowsnest.tools
-===============
-.. automodule:: crowsnest.tools
-   :members:

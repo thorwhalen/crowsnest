@@ -1,4 +1,0 @@
-crowsnest.tree
-==============
-.. automodule:: crowsnest.tree
-   :members:

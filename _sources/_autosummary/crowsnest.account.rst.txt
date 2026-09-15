@@ -1,0 +1,27 @@
+crowsnest.account
+=================
+
+.. automodule:: crowsnest.account
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      CLAUDE_BIN
+      CLAUDE_BIN_ENV_VAR
+      EXEC_ENV_VAR
+      PROFILE_ENV_VAR
+      PROFILE_CMD
+      DROPPED_VARS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      account_home
+      claude_bin
+      configured_claude_bin
+      profile_home
+      shell_profile_home
+   

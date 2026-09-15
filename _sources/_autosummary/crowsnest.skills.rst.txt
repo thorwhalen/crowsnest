@@ -1,0 +1,19 @@
+crowsnest.skills
+================
+
+.. automodule:: crowsnest.skills
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      bundled
+      install_skills
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Asset
+   

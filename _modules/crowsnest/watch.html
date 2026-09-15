@@ -1,456 +1,854 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../../">
+<html lang="en" data-accent-color="orange" data-content_root="../../">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>crowsnest.watch &mdash; crowsnest 0.0.31 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
-
-  
-      <script src="../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c5dbc6bb"></script>
-      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
-      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
-      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
-</head>
-
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../../index.html" class="icon icon-home">
-            crowsnest
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.watch - crowsnest</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.watch"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
 </div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest.html">crowsnest</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/account.html">crowsnest.account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/config.html">crowsnest.config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/init.html">crowsnest.init</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/links.html">crowsnest.links</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/open.html">crowsnest.open</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/report.html">crowsnest.report</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/tree.html">crowsnest.tree</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/triage.html">crowsnest.triage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../_autosummary/crowsnest.html">crowsnest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ai-agents.html">For AI agents</a></li>
 </ul>
 
         </div>
       </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">crowsnest</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">crowsnest.watch</li>
-      <li class="wy-breadcrumbs-aside">
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <h1>Source code for crowsnest.watch</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""A stream of what changed, so a monitor is told instead of made to poll.</span>
-
-<span class="sd">A session that watches the others has two ways to learn something happened: read the</span>
-<span class="sd">roster again and compare, or be handed the difference. This module is the second, and it</span>
-<span class="sd">has two sources.</span>
-
-<span class="sd">**The registry diff.** :func:`snapshot` takes the roster, :func:`diff` compares it with</span>
-<span class="sd">the one before, and every change worth a line becomes one small dict: a session started</span>
-<span class="sd">or exited, went from busy to idle (with its last words), or started waiting on its human</span>
-<span class="sd">(with what for). Nothing here is notified by anyone; it is the same read-only files the</span>
-<span class="sd">roster reads, at an interval a human would not notice. A busy session appending to its</span>
-<span class="sd">transcript is *not* an event -- it is what busy means -- so a working session produces</span>
-<span class="sd">silence until it stops.</span>
-
-<span class="sd">**The hook log.** When the user has wired ``crowsnest hook`` onto Claude Code's ``Stop``</span>
-<span class="sd">and ``Notification`` hooks (see :mod:`crowsnest.hook`), those two moments are *pushed*</span>
-<span class="sd">into ``&lt;data dir&gt;/events.jsonl`` as they happen. :func:`tail_events` reads what has been</span>
-<span class="sd">appended since the last tick and turns it into ``stopped`` and ``needs-you`` events. They</span>
-<span class="sd">arrive a poll earlier than the registry can notice, and they carry the reason rather than</span>
-<span class="sd">a guess at it -- so when a hook ``stopped`` and a polled ``idle`` describe the same turn</span>
-<span class="sd">ending, the polled one is dropped and the hook's line is the one that is yielded. With no</span>
-<span class="sd">hooks installed the file never appears and the stream is exactly the registry diff.</span>
-
-<span class="sd">``crowsnest watch`` prints this stream one line per event, which is the shape Claude</span>
-<span class="sd">Code's own ``Monitor`` tool consumes: each line becomes a notification in the watching</span>
-<span class="sd">session's conversation.</span>
-
-<span class="sd">&gt;&gt;&gt; list(events(home='/nonexistent-dir-for-doctest', ticks=1, sleep=lambda s: None,</span>
-<span class="sd">...             events_path='/nonexistent-dir-for-doctest/events.jsonl'))</span>
-<span class="sd">[]</span>
-<span class="sd">"""</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.activity</span><span class="w"> </span><span class="kn">import</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">read_activity</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">events_path</span> <span class="k">as</span> <span class="n">_events_path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">live_sessions</span><span class="p">,</span> <span class="n">pid_alive</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"DFLT_INTERVAL"</span><span class="p">,</span>
-    <span class="s2">"HOOK_KINDS"</span><span class="p">,</span>
-    <span class="s2">"QUIET_NOTIFICATIONS"</span><span class="p">,</span>
-    <span class="s2">"WORKING"</span><span class="p">,</span>
-    <span class="s2">"diff"</span><span class="p">,</span>
-    <span class="s2">"events"</span><span class="p">,</span>
-    <span class="s2">"hook_event"</span><span class="p">,</span>
-    <span class="s2">"snapshot"</span><span class="p">,</span>
-    <span class="s2">"tail_events"</span><span class="p">,</span>
-    <span class="s2">"tail_position"</span><span class="p">,</span>
-<span class="p">]</span>
-
-<span class="c1">#: Seconds between snapshots. A turn takes seconds to minutes; five seconds is invisible</span>
-<span class="c1">#: to a human and two file listings per tick is nothing.</span>
-<span class="n">DFLT_INTERVAL</span> <span class="o">=</span> <span class="mf">5.0</span>
-
-<span class="c1">#: How much of a session's last words an event carries. One line; the roster has the rest.</span>
-<span class="n">DETAIL_LIMIT</span> <span class="o">=</span> <span class="mi">200</span>
-
-<span class="c1">#: What a hook event is called in the stream. ``needs-you`` and ``stopped`` are named for</span>
-<span class="c1">#: what the human should do about them, which is what the registry statuses are not.</span>
-<span class="n">HOOK_KINDS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"notification"</span><span class="p">:</span> <span class="s2">"needs-you"</span><span class="p">,</span> <span class="s2">"stop"</span><span class="p">:</span> <span class="s2">"stopped"</span><span class="p">}</span>
-
-<span class="c1">#: Notification types that are not a request. Claude Code sends ``idle_prompt`` when a</span>
-<span class="c1">#: session has merely sat idle for a minute after finishing a turn -- which the ``stop``</span>
-<span class="c1">#: event already said, with the last words. Streaming it as ``needs-you`` would wake the</span>
-<span class="c1">#: watcher for nothing, several times an hour per session. Observed 2026-09-07.</span>
-<span class="n">QUIET_NOTIFICATIONS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"idle_prompt"</span><span class="p">})</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DETAIL_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-    <span class="k">return</span> <span class="n">text</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">text</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
-
-
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.watch</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <h1>Source code for crowsnest.watch</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="sd">"""A stream of what changed, so a monitor is told instead of made to poll.</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="sd">A session that watches the others has two ways to learn something happened: read the</span>
+</span><span data-line="4"><span class="sd">roster again and compare, or be handed the difference. This module is the second, and it</span>
+</span><span data-line="5"><span class="sd">has two sources.</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="sd">**The registry diff.** :func:`snapshot` takes the roster, :func:`diff` compares it with</span>
+</span><span data-line="8"><span class="sd">the one before, and every change worth a line becomes one small dict: a session started</span>
+</span><span data-line="9"><span class="sd">or exited, went from busy to idle (with its last words), or started waiting on its human</span>
+</span><span data-line="10"><span class="sd">(with what for). Nothing here is notified by anyone; it is the same read-only files the</span>
+</span><span data-line="11"><span class="sd">roster reads, at an interval a human would not notice. A busy session appending to its</span>
+</span><span data-line="12"><span class="sd">transcript is *not* an event -- it is what busy means -- so a working session produces</span>
+</span><span data-line="13"><span class="sd">silence until it stops.</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="sd">**The hook log.** When the user has wired ``crowsnest hook`` onto Claude Code's ``Stop``</span>
+</span><span data-line="16"><span class="sd">and ``Notification`` hooks (see :mod:`crowsnest.hook`), those two moments are *pushed*</span>
+</span><span data-line="17"><span class="sd">into ``&lt;data dir&gt;/events.jsonl`` as they happen. :func:`tail_events` reads what has been</span>
+</span><span data-line="18"><span class="sd">appended since the last tick and turns it into ``stopped`` and ``needs-you`` events. They</span>
+</span><span data-line="19"><span class="sd">arrive a poll earlier than the registry can notice, and they carry the reason rather than</span>
+</span><span data-line="20"><span class="sd">a guess at it -- so when a hook ``stopped`` and a polled ``idle`` describe the same turn</span>
+</span><span data-line="21"><span class="sd">ending, the polled one is dropped and the hook's line is the one that is yielded. With no</span>
+</span><span data-line="22"><span class="sd">hooks installed the file never appears and the stream is exactly the registry diff.</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="sd">``crowsnest watch`` prints this stream one line per event, which is the shape Claude</span>
+</span><span data-line="25"><span class="sd">Code's own ``Monitor`` tool consumes: each line becomes a notification in the watching</span>
+</span><span data-line="26"><span class="sd">session's conversation.</span>
+</span><span data-line="27">
+</span><span data-line="28"><span class="sd">&gt;&gt;&gt; list(events(home='/nonexistent-dir-for-doctest', ticks=1, sleep=lambda s: None,</span>
+</span><span data-line="29"><span class="sd">...             events_path='/nonexistent-dir-for-doctest/events.jsonl'))</span>
+</span><span data-line="30"><span class="sd">[]</span>
+</span><span data-line="31"><span class="sd">"""</span>
+</span><span data-line="32">
+</span><span data-line="33"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="34">
+</span><span data-line="35"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span data-line="36"><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span data-line="37"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
+</span><span data-line="38"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+</span><span data-line="39"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="40">
+</span><span data-line="41"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.activity</span><span class="w"> </span><span class="kn">import</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">read_activity</span>
+</span><span data-line="42"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">events_path</span> <span class="k">as</span> <span class="n">_events_path</span>
+</span><span data-line="43"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">live_sessions</span><span class="p">,</span> <span class="n">pid_alive</span>
+</span><span data-line="44">
+</span><span data-line="45"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="46">    <span class="s2">"DFLT_INTERVAL"</span><span class="p">,</span>
+</span><span data-line="47">    <span class="s2">"HOOK_KINDS"</span><span class="p">,</span>
+</span><span data-line="48">    <span class="s2">"QUIET_NOTIFICATIONS"</span><span class="p">,</span>
+</span><span data-line="49">    <span class="s2">"WORKING"</span><span class="p">,</span>
+</span><span data-line="50">    <span class="s2">"diff"</span><span class="p">,</span>
+</span><span data-line="51">    <span class="s2">"events"</span><span class="p">,</span>
+</span><span data-line="52">    <span class="s2">"hook_event"</span><span class="p">,</span>
+</span><span data-line="53">    <span class="s2">"snapshot"</span><span class="p">,</span>
+</span><span data-line="54">    <span class="s2">"tail_events"</span><span class="p">,</span>
+</span><span data-line="55">    <span class="s2">"tail_position"</span><span class="p">,</span>
+</span><span data-line="56"><span class="p">]</span>
+</span><span data-line="57">
+</span><span data-line="58"><span class="c1">#: Seconds between snapshots. A turn takes seconds to minutes; five seconds is invisible</span>
+</span><span data-line="59"><span class="c1">#: to a human and two file listings per tick is nothing.</span>
+</span><span data-line="60"><span class="n">DFLT_INTERVAL</span> <span class="o">=</span> <span class="mf">5.0</span>
+</span><span data-line="61">
+</span><span data-line="62"><span class="c1">#: How much of a session's last words an event carries. One line; the roster has the rest.</span>
+</span><span data-line="63"><span class="n">DETAIL_LIMIT</span> <span class="o">=</span> <span class="mi">200</span>
+</span><span data-line="64">
+</span><span data-line="65"><span class="c1">#: What a hook event is called in the stream. ``needs-you`` and ``stopped`` are named for</span>
+</span><span data-line="66"><span class="c1">#: what the human should do about them, which is what the registry statuses are not.</span>
+</span><span data-line="67"><span class="n">HOOK_KINDS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"notification"</span><span class="p">:</span> <span class="s2">"needs-you"</span><span class="p">,</span> <span class="s2">"stop"</span><span class="p">:</span> <span class="s2">"stopped"</span><span class="p">}</span>
+</span><span data-line="68">
+</span><span data-line="69"><span class="c1">#: Notification types that are not a request. Claude Code sends ``idle_prompt`` when a</span>
+</span><span data-line="70"><span class="c1">#: session has merely sat idle for a minute after finishing a turn -- which the ``stop``</span>
+</span><span data-line="71"><span class="c1">#: event already said, with the last words. Streaming it as ``needs-you`` would wake the</span>
+</span><span data-line="72"><span class="c1">#: watcher for nothing, several times an hour per session. Observed 2026-09-07.</span>
+</span><span data-line="73"><span class="n">QUIET_NOTIFICATIONS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"idle_prompt"</span><span class="p">})</span>
+</span><span data-line="74">
+</span><span data-line="75">
+</span><span data-line="76"><span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="77">    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+</span><span data-line="78">
+</span><span data-line="79">
+</span><span data-line="80"><span class="k">def</span><span class="w"> </span><span class="nf">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DETAIL_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="81">    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</span><span data-line="82">    <span class="k">return</span> <span class="n">text</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">text</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
+</span><span data-line="83">
+</span><span data-line="84">
 <div class="viewcode-block" id="snapshot">
-<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.snapshot">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">snapshot</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">is_alive</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">pid_alive</span><span class="p">,</span>
-    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""The live sessions right now, keyed by session id.</span>
+<a class="viewcode-back" href="../../_autosummary/crowsnest.watch.html#crowsnest.snapshot">[docs]</a>
+</span><span data-line="85"><span class="k">def</span><span class="w"> </span><span class="nf">snapshot</span><span class="p">(</span>
+</span><span data-line="86">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="87">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="88">    <span class="n">is_alive</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">pid_alive</span><span class="p">,</span>
+</span><span data-line="89">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="90">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="91"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">]:</span>
+</span><span data-line="92"><span class="w">    </span><span class="sd">"""The live sessions right now, keyed by session id.</span>
+</span><span data-line="93">
+</span><span data-line="94"><span class="sd">    With ``all_homes`` every configured home is read (see :mod:`crowsnest.config`), each</span>
+</span><span data-line="95"><span class="sd">    with its own liveness rule, and every record carries its home's name.</span>
+</span><span data-line="96"><span class="sd">    """</span>
+</span><span data-line="97">    <span class="k">if</span> <span class="n">all_homes</span><span class="p">:</span>
+</span><span data-line="98">        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">sessions</span>
+</span><span data-line="99">
+</span><span data-line="100">        <span class="k">return</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">all_homes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)}</span>
+</span><span data-line="101">    <span class="k">return</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">)}</span></div>
 
-<span class="sd">    With ``all_homes`` every configured home is read (see :mod:`crowsnest.config`), each</span>
-<span class="sd">    with its own liveness rule, and every record carries its home's name.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">all_homes</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">sessions</span>
-
-        <span class="k">return</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">(</span><span class="n">all_homes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">)}</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_event</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">"at"</span><span class="p">:</span> <span class="n">_now</span><span class="p">(),</span>
-        <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
-        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-        <span class="s2">"project"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
-        <span class="s2">"home"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="p">,</span>
-        <span class="s2">"status"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
-        <span class="s2">"waiting_for"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="p">,</span>
-        <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="n">detail</span><span class="p">),</span>
-    <span class="p">}</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_status_detail</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">activity</span><span class="p">:</span> <span class="n">Activity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""The one line that says what a status change means for the human."""</span>
-    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
-        <span class="n">cause</span> <span class="o">=</span> <span class="n">activity</span><span class="o">.</span><span class="n">pending_question</span> <span class="ow">or</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">activity</span><span class="o">.</span><span class="n">in_flight</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">" · "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="p">,</span> <span class="n">cause</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"idle"</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">activity</span><span class="o">.</span><span class="n">errored</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">"ended with an error: "</span> <span class="o">+</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_assistant_text</span>
-        <span class="k">return</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_assistant_text</span> <span class="ow">or</span> <span class="s2">"(no final text in the tail)"</span>
-    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"busy"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">"asked: "</span> <span class="o">+</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_user_prompt</span> <span class="k">if</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_user_prompt</span> <span class="k">else</span> <span class="s2">""</span>
-    <span class="k">return</span> <span class="s2">""</span>
-
-
-<span class="c1">#: Statuses that mean the same thing to a watcher: the session is working. A session</span>
-<span class="c1">#: running shell commands flips between them several times a minute, and neither flip is</span>
-<span class="c1">#: news; a move in or out of the pair still is.</span>
-<span class="n">WORKING</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_same_state</span><span class="p">(</span><span class="n">before</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">after</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Is this status change one a human would not want a line about?</span>
-
-<span class="sd">    &gt;&gt;&gt; _same_state('busy', 'shell'), _same_state('idle', 'shell')</span>
-<span class="sd">    (True, False)</span>
-<span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">before</span> <span class="o">==</span> <span class="n">after</span> <span class="ow">or</span> <span class="p">(</span><span class="n">before</span> <span class="ow">in</span> <span class="n">WORKING</span> <span class="ow">and</span> <span class="n">after</span> <span class="ow">in</span> <span class="n">WORKING</span><span class="p">)</span>
-
-
+</span><span data-line="102">
+</span><span data-line="103">
+</span><span data-line="104"><span class="k">def</span><span class="w"> </span><span class="nf">_event</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="105">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="106">        <span class="s2">"at"</span><span class="p">:</span> <span class="n">_now</span><span class="p">(),</span>
+</span><span data-line="107">        <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
+</span><span data-line="108">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="109">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+</span><span data-line="110">        <span class="s2">"project"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
+</span><span data-line="111">        <span class="s2">"home"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="112">        <span class="s2">"status"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+</span><span data-line="113">        <span class="s2">"waiting_for"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="p">,</span>
+</span><span data-line="114">        <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="n">detail</span><span class="p">),</span>
+</span><span data-line="115">    <span class="p">}</span>
+</span><span data-line="116">
+</span><span data-line="117">
+</span><span data-line="118"><span class="k">def</span><span class="w"> </span><span class="nf">_status_detail</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">activity</span><span class="p">:</span> <span class="n">Activity</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="119"><span class="w">    </span><span class="sd">"""The one line that says what a status change means for the human."""</span>
+</span><span data-line="120">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
+</span><span data-line="121">        <span class="n">cause</span> <span class="o">=</span> <span class="n">activity</span><span class="o">.</span><span class="n">pending_question</span> <span class="ow">or</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">activity</span><span class="o">.</span><span class="n">in_flight</span><span class="p">)</span>
+</span><span data-line="122">        <span class="k">return</span> <span class="s2">" · "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="p">,</span> <span class="n">cause</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="p">)</span>
+</span><span data-line="123">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"idle"</span><span class="p">:</span>
+</span><span data-line="124">        <span class="k">if</span> <span class="n">activity</span><span class="o">.</span><span class="n">errored</span><span class="p">:</span>
+</span><span data-line="125">            <span class="k">return</span> <span class="s2">"ended with an error: "</span> <span class="o">+</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_assistant_text</span>
+</span><span data-line="126">        <span class="k">return</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_assistant_text</span> <span class="ow">or</span> <span class="s2">"(no final text in the tail)"</span>
+</span><span data-line="127">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"busy"</span><span class="p">:</span>
+</span><span data-line="128">        <span class="k">return</span> <span class="s2">"asked: "</span> <span class="o">+</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_user_prompt</span> <span class="k">if</span> <span class="n">activity</span><span class="o">.</span><span class="n">last_user_prompt</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="129">    <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="130">
+</span><span data-line="131">
+</span><span data-line="132"><span class="c1">#: Statuses that mean the same thing to a watcher: the session is working. A session</span>
+</span><span data-line="133"><span class="c1">#: running shell commands flips between them several times a minute, and neither flip is</span>
+</span><span data-line="134"><span class="c1">#: news; a move in or out of the pair still is.</span>
+</span><span data-line="135"><span class="n">WORKING</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">)</span>
+</span><span data-line="136">
+</span><span data-line="137">
+</span><span data-line="138"><span class="k">def</span><span class="w"> </span><span class="nf">_same_state</span><span class="p">(</span><span class="n">before</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">after</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="139"><span class="w">    </span><span class="sd">"""Is this status change one a human would not want a line about?</span>
+</span><span data-line="140">
+</span><span data-line="141"><span class="sd">    &gt;&gt;&gt; _same_state('busy', 'shell'), _same_state('idle', 'shell')</span>
+</span><span data-line="142"><span class="sd">    (True, False)</span>
+</span><span data-line="143"><span class="sd">    """</span>
+</span><span data-line="144">    <span class="k">return</span> <span class="n">before</span> <span class="o">==</span> <span class="n">after</span> <span class="ow">or</span> <span class="p">(</span><span class="n">before</span> <span class="ow">in</span> <span class="n">WORKING</span> <span class="ow">and</span> <span class="n">after</span> <span class="ow">in</span> <span class="n">WORKING</span><span class="p">)</span>
+</span><span data-line="145">
+</span><span data-line="146">
 <div class="viewcode-block" id="diff">
-<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.diff">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">diff</span><span class="p">(</span>
-    <span class="n">before</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">],</span>
-    <span class="n">after</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">],</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">activity</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="n">Activity</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">read_activity</span><span class="p">(</span>
-        <span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span>
-    <span class="p">),</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""The events between two snapshots: started, exited, and every status change.</span>
+<a class="viewcode-back" href="../../_autosummary/crowsnest.watch.html#crowsnest.diff">[docs]</a>
+</span><span data-line="147"><span class="k">def</span><span class="w"> </span><span class="nf">diff</span><span class="p">(</span>
+</span><span data-line="148">    <span class="n">before</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">],</span>
+</span><span data-line="149">    <span class="n">after</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LiveSession</span><span class="p">],</span>
+</span><span data-line="150">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="151">    <span class="n">activity</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="n">Activity</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">read_activity</span><span class="p">(</span>
+</span><span data-line="152">        <span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span>
+</span><span data-line="153">    <span class="p">),</span>
+</span><span data-line="154"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="155"><span class="w">    </span><span class="sd">"""The events between two snapshots: started, exited, and every status change.</span>
+</span><span data-line="156">
+</span><span data-line="157"><span class="sd">    A status change is reported under the *new* status as its kind (``idle``, ``busy``,</span>
+</span><span data-line="158"><span class="sd">    ``waiting``), with the transcript tail read once to say what it means; an idle</span>
+</span><span data-line="159"><span class="sd">    session whose last words were an error banner is reported as ``error`` instead.</span>
+</span><span data-line="160"><span class="sd">    ``busy`` and ``shell`` count as one state -- see :data:`WORKING`.</span>
+</span><span data-line="161"><span class="sd">    """</span>
+</span><span data-line="162">    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="163">    <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">cur</span> <span class="ow">in</span> <span class="n">after</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="164">        <span class="n">prev</span> <span class="o">=</span> <span class="n">before</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+</span><span data-line="165">        <span class="k">if</span> <span class="n">prev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="166">            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="s2">"started"</span><span class="p">,</span> <span class="n">cur</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cur</span><span class="o">.</span><span class="n">kind</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'session'</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">cur</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+</span><span data-line="167">            <span class="k">continue</span>
+</span><span data-line="168">        <span class="k">if</span> <span class="n">_same_state</span><span class="p">(</span><span class="n">prev</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span><span class="p">):</span>
+</span><span data-line="169">            <span class="k">continue</span>
+</span><span data-line="170">        <span class="n">act</span> <span class="o">=</span> <span class="n">activity</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+</span><span data-line="171">        <span class="n">kind</span> <span class="o">=</span> <span class="s2">"error"</span> <span class="k">if</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"idle"</span> <span class="ow">and</span> <span class="n">act</span><span class="o">.</span><span class="n">errored</span> <span class="k">else</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span>
+</span><span data-line="172">        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">cur</span><span class="p">,</span> <span class="n">_status_detail</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">act</span><span class="p">)))</span>
+</span><span data-line="173">    <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">prev</span> <span class="ow">in</span> <span class="n">before</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="174">        <span class="k">if</span> <span class="n">sid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">after</span><span class="p">:</span>
+</span><span data-line="175">            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="s2">"exited"</span><span class="p">,</span> <span class="n">prev</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+</span><span data-line="176">    <span class="k">return</span> <span class="n">found</span></div>
 
-<span class="sd">    A status change is reported under the *new* status as its kind (``idle``, ``busy``,</span>
-<span class="sd">    ``waiting``), with the transcript tail read once to say what it means; an idle</span>
-<span class="sd">    session whose last words were an error banner is reported as ``error`` instead.</span>
-<span class="sd">    ``busy`` and ``shell`` count as one state -- see :data:`WORKING`.</span>
-<span class="sd">    """</span>
-    <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">cur</span> <span class="ow">in</span> <span class="n">after</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">prev</span> <span class="o">=</span> <span class="n">before</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">prev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="s2">"started"</span><span class="p">,</span> <span class="n">cur</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cur</span><span class="o">.</span><span class="n">kind</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'session'</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">cur</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
-            <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">_same_state</span><span class="p">(</span><span class="n">prev</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span><span class="p">):</span>
-            <span class="k">continue</span>
-        <span class="n">act</span> <span class="o">=</span> <span class="n">activity</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
-        <span class="n">kind</span> <span class="o">=</span> <span class="s2">"error"</span> <span class="k">if</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"idle"</span> <span class="ow">and</span> <span class="n">act</span><span class="o">.</span><span class="n">errored</span> <span class="k">else</span> <span class="n">cur</span><span class="o">.</span><span class="n">status</span>
-        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">cur</span><span class="p">,</span> <span class="n">_status_detail</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">act</span><span class="p">)))</span>
-    <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">prev</span> <span class="ow">in</span> <span class="n">before</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">sid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">after</span><span class="p">:</span>
-            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_event</span><span class="p">(</span><span class="s2">"exited"</span><span class="p">,</span> <span class="n">prev</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">found</span></div>
-
-
-
-<span class="c1">#: A file position: ``(inode, offset)``. The inode is carried because rotation replaces</span>
-<span class="c1">#: the file rather than truncating it, and an offset alone cannot tell that apart.</span>
-<span class="n">Position</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
-
-<span class="n">_NOWHERE</span><span class="p">:</span> <span class="n">Position</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-
-
+</span><span data-line="177">
+</span><span data-line="178">
+</span><span data-line="179"><span class="c1">#: A file position: ``(inode, offset)``. The inode is carried because rotation replaces</span>
+</span><span data-line="180"><span class="c1">#: the file rather than truncating it, and an offset alone cannot tell that apart.</span>
+</span><span data-line="181"><span class="n">Position</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+</span><span data-line="182">
+</span><span data-line="183"><span class="n">_NOWHERE</span><span class="p">:</span> <span class="n">Position</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span><span data-line="184">
+</span><span data-line="185">
 <div class="viewcode-block" id="tail_position">
-<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.tail_position">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">tail_position</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Position</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Where a reader that wants only *new* lines should start: the end of the file now.</span>
+<a class="viewcode-back" href="../../_autosummary/crowsnest.watch.html#crowsnest.tail_position">[docs]</a>
+</span><span data-line="186"><span class="k">def</span><span class="w"> </span><span class="nf">tail_position</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Position</span><span class="p">:</span>
+</span><span data-line="187"><span class="w">    </span><span class="sd">"""Where a reader that wants only *new* lines should start: the end of the file now.</span>
+</span><span data-line="188">
+</span><span data-line="189"><span class="sd">    &gt;&gt;&gt; tail_position('/nonexistent-file-for-doctest')</span>
+</span><span data-line="190"><span class="sd">    (-1, 0)</span>
+</span><span data-line="191"><span class="sd">    """</span>
+</span><span data-line="192">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="193">        <span class="n">stat</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
+</span><span data-line="194">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="195">        <span class="k">return</span> <span class="n">_NOWHERE</span>
+</span><span data-line="196">    <span class="k">return</span> <span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">st_ino</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span><span class="p">)</span></div>
 
-<span class="sd">    &gt;&gt;&gt; tail_position('/nonexistent-file-for-doctest')</span>
-<span class="sd">    (-1, 0)</span>
-<span class="sd">    """</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">stat</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
-    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_NOWHERE</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">st_ino</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span><span class="p">)</span></div>
-
-
-
+</span><span data-line="197">
+</span><span data-line="198">
 <div class="viewcode-block" id="tail_events">
-<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.tail_events">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">tail_events</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="n">Position</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">Position</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""The JSON lines appended since ``position``, and where to resume.</span>
+<a class="viewcode-back" href="../../_autosummary/crowsnest.watch.html#crowsnest.tail_events">[docs]</a>
+</span><span data-line="199"><span class="k">def</span><span class="w"> </span><span class="nf">tail_events</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="n">Position</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">Position</span><span class="p">]:</span>
+</span><span data-line="200"><span class="w">    </span><span class="sd">"""The JSON lines appended since ``position``, and where to resume.</span>
+</span><span data-line="201">
+</span><span data-line="202"><span class="sd">    Three things can have happened to the file since the last read, and all three are the</span>
+</span><span data-line="203"><span class="sd">    same answer: it was rotated (a new inode), it was truncated (smaller than the offset),</span>
+</span><span data-line="204"><span class="sd">    or it did not exist and now does. In each case the read starts at the beginning of</span>
+</span><span data-line="205"><span class="sd">    whatever file is there now, so no line is skipped and none is replayed. A trailing</span>
+</span><span data-line="206"><span class="sd">    fragment -- a line the writer has not finished -- is left for the next read.</span>
+</span><span data-line="207"><span class="sd">    """</span>
+</span><span data-line="208">    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="209">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="210">        <span class="n">stat</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
+</span><span data-line="211">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="212">        <span class="k">return</span> <span class="p">[],</span> <span class="n">_NOWHERE</span>
+</span><span data-line="213">    <span class="n">inode</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">position</span>
+</span><span data-line="214">    <span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_ino</span> <span class="o">!=</span> <span class="n">inode</span> <span class="ow">or</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&lt;</span> <span class="n">offset</span><span class="p">:</span>
+</span><span data-line="215">        <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="216">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="217">        <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+</span><span data-line="218">            <span class="n">stream</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+</span><span data-line="219">            <span class="n">data</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span data-line="220">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="221">        <span class="k">return</span> <span class="p">[],</span> <span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">st_ino</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+</span><span data-line="222">    <span class="n">consumed</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="sa">b</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span data-line="223">    <span class="k">return</span> <span class="n">_json_lines</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="n">consumed</span><span class="p">]),</span> <span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">st_ino</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">consumed</span><span class="p">)</span></div>
 
-<span class="sd">    Three things can have happened to the file since the last read, and all three are the</span>
-<span class="sd">    same answer: it was rotated (a new inode), it was truncated (smaller than the offset),</span>
-<span class="sd">    or it did not exist and now does. In each case the read starts at the beginning of</span>
-<span class="sd">    whatever file is there now, so no line is skipped and none is replayed. A trailing</span>
-<span class="sd">    fragment -- a line the writer has not finished -- is left for the next read.</span>
-<span class="sd">    """</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">stat</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
-    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[],</span> <span class="n">_NOWHERE</span>
-    <span class="n">inode</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">position</span>
-    <span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_ino</span> <span class="o">!=</span> <span class="n">inode</span> <span class="ow">or</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&lt;</span> <span class="n">offset</span><span class="p">:</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
-            <span class="n">stream</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[],</span> <span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">st_ino</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
-    <span class="n">consumed</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="sa">b</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="k">return</span> <span class="n">_json_lines</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="n">consumed</span><span class="p">]),</span> <span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">st_ino</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">consumed</span><span class="p">)</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_json_lines</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-    <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">record</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">records</span>
-
-
+</span><span data-line="224">
+</span><span data-line="225">
+</span><span data-line="226"><span class="k">def</span><span class="w"> </span><span class="nf">_json_lines</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="227">    <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="228">    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+</span><span data-line="229">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="230">            <span class="n">record</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</span><span data-line="231">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+</span><span data-line="232">            <span class="k">continue</span>
+</span><span data-line="233">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="234">            <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+</span><span data-line="235">    <span class="k">return</span> <span class="n">records</span>
+</span><span data-line="236">
+</span><span data-line="237">
 <div class="viewcode-block" id="hook_event">
-<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.hook_event">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">hook_event</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""One line of the hook log as an event, or ``None`` for an event kind we do not stream.</span>
+<a class="viewcode-back" href="../../_autosummary/crowsnest.watch.html#crowsnest.hook_event">[docs]</a>
+</span><span data-line="238"><span class="k">def</span><span class="w"> </span><span class="nf">hook_event</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="239"><span class="w">    </span><span class="sd">"""One line of the hook log as an event, or ``None`` for an event kind we do not stream.</span>
+</span><span data-line="240">
+</span><span data-line="241"><span class="sd">    The keys are the registry events' keys, so a consumer needs one shape. ``status`` is</span>
+</span><span data-line="242"><span class="sd">    empty because a hook says what *happened*, not what the session is now; a</span>
+</span><span data-line="243"><span class="sd">    notification's kind (``permission_prompt``, ``idle_prompt``, ...) is what it waits</span>
+</span><span data-line="244"><span class="sd">    for, so it goes in ``waiting_for``.</span>
+</span><span data-line="245">
+</span><span data-line="246"><span class="sd">    A notification whose type is in :data:`QUIET_NOTIFICATIONS` is not streamed either:</span>
+</span><span data-line="247"><span class="sd">    it is Claude Code noticing a session is idle, not the session asking for anything.</span>
+</span><span data-line="248">
+</span><span data-line="249"><span class="sd">    &gt;&gt;&gt; hook_event({'event': 'stop', 'name': 'lookout', 'detail': 'Merged.'})['kind']</span>
+</span><span data-line="250"><span class="sd">    'stopped'</span>
+</span><span data-line="251"><span class="sd">    &gt;&gt;&gt; hook_event({'event': 'session-start'}) is None</span>
+</span><span data-line="252"><span class="sd">    True</span>
+</span><span data-line="253"><span class="sd">    &gt;&gt;&gt; hook_event({'event': 'notification', 'notification_type': 'idle_prompt'}) is None</span>
+</span><span data-line="254"><span class="sd">    True</span>
+</span><span data-line="255"><span class="sd">    &gt;&gt;&gt; hook_event({'event': 'notification', 'notification_type': 'permission_prompt'})['kind']</span>
+</span><span data-line="256"><span class="sd">    'needs-you'</span>
+</span><span data-line="257"><span class="sd">    """</span>
+</span><span data-line="258">    <span class="n">kind</span> <span class="o">=</span> <span class="n">HOOK_KINDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"event"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+</span><span data-line="259">    <span class="k">if</span> <span class="n">kind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="260">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="261">    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"needs-you"</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notification_type"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">QUIET_NOTIFICATIONS</span><span class="p">:</span>
+</span><span data-line="262">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="263">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="264">        <span class="s2">"at"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"at"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_now</span><span class="p">()),</span>
+</span><span data-line="265">        <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
+</span><span data-line="266">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="267">        <span class="s2">"name"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="268">        <span class="s2">"project"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="269">        <span class="s2">"status"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="270">        <span class="s2">"waiting_for"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notification_type"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="271">        <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"detail"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)),</span>
+</span><span data-line="272">    <span class="p">}</span></div>
 
-<span class="sd">    The keys are the registry events' keys, so a consumer needs one shape. ``status`` is</span>
-<span class="sd">    empty because a hook says what *happened*, not what the session is now; a</span>
-<span class="sd">    notification's kind (``permission_prompt``, ``idle_prompt``, ...) is what it waits</span>
-<span class="sd">    for, so it goes in ``waiting_for``.</span>
-
-<span class="sd">    A notification whose type is in :data:`QUIET_NOTIFICATIONS` is not streamed either:</span>
-<span class="sd">    it is Claude Code noticing a session is idle, not the session asking for anything.</span>
-
-<span class="sd">    &gt;&gt;&gt; hook_event({'event': 'stop', 'name': 'lookout', 'detail': 'Merged.'})['kind']</span>
-<span class="sd">    'stopped'</span>
-<span class="sd">    &gt;&gt;&gt; hook_event({'event': 'session-start'}) is None</span>
-<span class="sd">    True</span>
-<span class="sd">    &gt;&gt;&gt; hook_event({'event': 'notification', 'notification_type': 'idle_prompt'}) is None</span>
-<span class="sd">    True</span>
-<span class="sd">    &gt;&gt;&gt; hook_event({'event': 'notification', 'notification_type': 'permission_prompt'})['kind']</span>
-<span class="sd">    'needs-you'</span>
-<span class="sd">    """</span>
-    <span class="n">kind</span> <span class="o">=</span> <span class="n">HOOK_KINDS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"event"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
-    <span class="k">if</span> <span class="n">kind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"needs-you"</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notification_type"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">QUIET_NOTIFICATIONS</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">"at"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"at"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_now</span><span class="p">()),</span>
-        <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
-        <span class="s2">"session_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-        <span class="s2">"name"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-        <span class="s2">"project"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-        <span class="s2">"status"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-        <span class="s2">"waiting_for"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notification_type"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-        <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"detail"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)),</span>
-    <span class="p">}</span></div>
-
-
-
+</span><span data-line="273">
+</span><span data-line="274">
 <div class="viewcode-block" id="events">
-<a class="viewcode-back" href="../../module_docs/crowsnest/watch.html#crowsnest.events">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">events</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INTERVAL</span><span class="p">,</span>
-    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">is_alive</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">pid_alive</span><span class="p">,</span>
-    <span class="n">sleep</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">,</span>
-    <span class="n">ticks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Yield one dict per change, forever -- or for ``ticks`` snapshots when given.</span>
+<a class="viewcode-back" href="../../_autosummary/crowsnest.watch.html#crowsnest.events">[docs]</a>
+</span><span data-line="275"><span class="k">def</span><span class="w"> </span><span class="nf">events</span><span class="p">(</span>
+</span><span data-line="276">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="277">    <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_INTERVAL</span><span class="p">,</span>
+</span><span data-line="278">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="279">    <span class="n">is_alive</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">pid_alive</span><span class="p">,</span>
+</span><span data-line="280">    <span class="n">sleep</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">,</span>
+</span><span data-line="281">    <span class="n">ticks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="282">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="283">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="284">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="285"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="286"><span class="w">    </span><span class="sd">"""Yield one dict per change, forever -- or for ``ticks`` snapshots when given.</span>
+</span><span data-line="287">
+</span><span data-line="288"><span class="sd">    ``all_homes`` watches every configured home at once; registry events then carry the</span>
+</span><span data-line="289"><span class="sd">    home's name. Hook events come from this machine's own hook log and carry none.</span>
+</span><span data-line="290">
+</span><span data-line="291"><span class="sd">    The first snapshot is the baseline and yields nothing, and the hook log is opened at</span>
+</span><span data-line="292"><span class="sd">    its end: a monitor that starts up is not told about forty sessions that were already</span>
+</span><span data-line="293"><span class="sd">    there, nor about yesterday's events. ``sleep`` and ``ticks`` exist so a test can drive</span>
+</span><span data-line="294"><span class="sd">    the loop; nothing else should pass them.</span>
+</span><span data-line="295"><span class="sd">    """</span>
+</span><span data-line="296">    <span class="n">log</span> <span class="o">=</span> <span class="n">_events_path</span><span class="p">(</span><span class="n">events_path</span><span class="p">)</span>
+</span><span data-line="297">    <span class="n">before</span> <span class="o">=</span> <span class="n">snapshot</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="298">    <span class="n">position</span> <span class="o">=</span> <span class="n">tail_position</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+</span><span data-line="299">    <span class="n">taken</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="300">    <span class="k">while</span> <span class="n">ticks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">taken</span> <span class="o">&lt;</span> <span class="n">ticks</span><span class="p">:</span>
+</span><span data-line="301">        <span class="n">sleep</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+</span><span data-line="302">        <span class="n">records</span><span class="p">,</span> <span class="n">position</span> <span class="o">=</span> <span class="n">tail_events</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+</span><span data-line="303">        <span class="n">pushed</span> <span class="o">=</span> <span class="p">[</span><span class="n">event</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="n">hook_event</span><span class="p">,</span> <span class="n">records</span><span class="p">)</span> <span class="k">if</span> <span class="n">event</span><span class="p">]</span>
+</span><span data-line="304">        <span class="k">yield from</span> <span class="n">pushed</span>
+</span><span data-line="305">        <span class="n">stopped</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">pushed</span> <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"stopped"</span><span class="p">}</span>
+</span><span data-line="306">        <span class="n">after</span> <span class="o">=</span> <span class="n">snapshot</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="307">        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">diff</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">):</span>
+</span><span data-line="308">            <span class="c1"># A hook already said this turn ended, and said why. One line, not two.</span>
+</span><span data-line="309">            <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"idle"</span> <span class="ow">and</span> <span class="n">event</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">stopped</span><span class="p">:</span>
+</span><span data-line="310">                <span class="k">continue</span>
+</span><span data-line="311">            <span class="k">yield</span> <span class="n">event</span>
+</span><span data-line="312">        <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+</span><span data-line="313">        <span class="n">taken</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
-<span class="sd">    ``all_homes`` watches every configured home at once; registry events then carry the</span>
-<span class="sd">    home's name. Hook events come from this machine's own hook log and carry none.</span>
-
-<span class="sd">    The first snapshot is the baseline and yields nothing, and the hook log is opened at</span>
-<span class="sd">    its end: a monitor that starts up is not told about forty sessions that were already</span>
-<span class="sd">    there, nor about yesterday's events. ``sleep`` and ``ticks`` exist so a test can drive</span>
-<span class="sd">    the loop; nothing else should pass them.</span>
-<span class="sd">    """</span>
-    <span class="n">log</span> <span class="o">=</span> <span class="n">_events_path</span><span class="p">(</span><span class="n">events_path</span><span class="p">)</span>
-    <span class="n">before</span> <span class="o">=</span> <span class="n">snapshot</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-    <span class="n">position</span> <span class="o">=</span> <span class="n">tail_position</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
-    <span class="n">taken</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">ticks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">taken</span> <span class="o">&lt;</span> <span class="n">ticks</span><span class="p">:</span>
-        <span class="n">sleep</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
-        <span class="n">records</span><span class="p">,</span> <span class="n">position</span> <span class="o">=</span> <span class="n">tail_events</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
-        <span class="n">pushed</span> <span class="o">=</span> <span class="p">[</span><span class="n">event</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="n">hook_event</span><span class="p">,</span> <span class="n">records</span><span class="p">)</span> <span class="k">if</span> <span class="n">event</span><span class="p">]</span>
-        <span class="k">yield from</span> <span class="n">pushed</span>
-        <span class="n">stopped</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">pushed</span> <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"stopped"</span><span class="p">}</span>
-        <span class="n">after</span> <span class="o">=</span> <span class="n">snapshot</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">is_alive</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">diff</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">):</span>
-            <span class="c1"># A hook already said this turn ended, and said why. One line, not two.</span>
-            <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"idle"</span> <span class="ow">and</span> <span class="n">event</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">stopped</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">yield</span> <span class="n">event</span>
-        <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
-        <span class="n">taken</span> <span class="o">+=</span> <span class="mi">1</span></div>
-
-</pre></div>
-
-           </div>
-          </div>
-          <footer>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p></p>
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
   </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
 </footer>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
+      <script src="../../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../../_static/shibuya.js?v=50760d75"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
 
-</body>
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script></body>
 </html>

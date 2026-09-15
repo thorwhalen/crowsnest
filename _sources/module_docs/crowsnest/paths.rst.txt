@@ -1,4 +1,0 @@
-crowsnest.paths
-===============
-.. automodule:: crowsnest.paths
-   :members:

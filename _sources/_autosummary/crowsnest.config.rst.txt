@@ -1,0 +1,28 @@
+crowsnest.config
+================
+
+.. automodule:: crowsnest.config
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      CLAUDE_BIN_KEY
+      CONFIG_ENV_VAR
+      DFLT_FRESH_SECONDS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      claude_bin_setting
+      config_path
+      homes
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Home
+   

@@ -1,0 +1,31 @@
+crowsnest.activity
+==================
+
+.. automodule:: crowsnest.activity
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      TAIL_BYTES
+      RECENT_TOOLS
+      QUESTION_TOOL
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      describe_tool
+      load_records
+      read_activity
+      read_turns
+      tail_records
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Activity
+      Turn
+   

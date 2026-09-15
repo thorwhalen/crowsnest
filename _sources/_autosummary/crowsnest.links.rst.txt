@@ -1,0 +1,37 @@
+crowsnest.links
+===============
+
+.. automodule:: crowsnest.links
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MAX_LINKS
+      SECRET_URL_SHAPES
+      DFLT_RESOLVERS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      from_commits
+      from_issue_refs
+      from_markdown_links
+      from_repo_refs
+      from_urls
+      github_ref
+      identity
+      kind_of
+      label_for
+      looks_like_a_secret
+      resolve
+      without_written_out_links
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Link
+   

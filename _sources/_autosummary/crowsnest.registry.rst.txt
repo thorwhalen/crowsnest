@@ -1,0 +1,31 @@
+crowsnest.registry
+==================
+
+.. automodule:: crowsnest.registry
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      HOME_ENV_VAR
+      CLAUDE_AI_SESSIONS
+      STATUSES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      claude_home
+      fresh_within
+      live_sessions
+      pid_alive
+      project_slug
+      transcript_path
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      LiveSession
+   

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.tree - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.triage" href="crowsnest.triage.html" /><link rel="prev" title="crowsnest.tools" href="crowsnest.tools.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.tree"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.tree.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.tree.CHAR"><code class="docutils literal notranslate"><span class="pre">CHAR</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.FLEET_MIN"><code class="docutils literal notranslate"><span class="pre">FLEET_MIN</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.FLEET_SHOWN"><code class="docutils literal notranslate"><span class="pre">FLEET_SHOWN</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.MAX_INDENT_DEPTH"><code class="docutils literal notranslate"><span class="pre">MAX_INDENT_DEPTH</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.MAX_ROWS"><code class="docutils literal notranslate"><span class="pre">MAX_ROWS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.Placed"><code class="docutils literal notranslate"><span class="pre">Placed</span></code></a><ul>
+<li><a class="reference internal" href="#crowsnest.tree.Placed.as_dict"><code class="docutils literal notranslate"><span class="pre">Placed.as_dict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#crowsnest.tree.RIGHT_COLUMN"><code class="docutils literal notranslate"><span class="pre">RIGHT_COLUMN</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.TREE_CSS"><code class="docutils literal notranslate"><span class="pre">TREE_CSS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.escape"><code class="docutils literal notranslate"><span class="pre">escape()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.layout"><code class="docutils literal notranslate"><span class="pre">layout()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tree.render"><code class="docutils literal notranslate"><span class="pre">render()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.tree</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.tree">
+<span id="crowsnest-tree"></span><h1>crowsnest.tree<a class="headerlink" href="#module-crowsnest.tree" title="Link to this heading">#</a></h1>
+<p>The spawn forest as a picture: laid out in Python, drawn as inline SVG.</p>
+<p><a class="reference internal" href="crowsnest.lineage.html#module-crowsnest.lineage" title="crowsnest.lineage"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.lineage</span></code></a> answers <em>who started whom</em>. This module is the half that makes
+the answer legible: a tree a person can read on a phone, with each session’s status on it,
+in a page that still loads nothing from anywhere.</p>
+<p><strong>Why it is drawn here and not by a graph library.</strong> <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code>’s contract is a
+page with “no stylesheet, script, or request to anywhere” – that is why it works offline,
+on a phone, and inside a locked-down viewer. A JavaScript graph library is a request to
+somewhere and a script tag, so the layout is arithmetic in Python and the output is
+<code class="docutils literal notranslate"><span class="pre">&lt;svg&gt;</span></code> elements with no behaviour attached. <code class="docutils literal notranslate"><span class="pre">--interactive</span></code> is the existing escape
+hatch for anything that genuinely needs script; nothing here does.</p>
+<p><strong>The shape it has to survive.</strong> Not a textbook tree: about thirty live sessions on one
+home, a fleet of fifty near-identical siblings on another, and orphans whose parent exited
+an hour ago. Three decisions follow from that, and each is what stops the picture being
+unreadable at that size:</p>
+<p><em>An indented tree, not a node-link diagram.</em> One session per row, depth as indentation.
+A balanced tree-of-boxes needs width proportional to the widest generation – fifty
+siblings means fifty columns, which is a horizontal scroll on a phone and unreadable on
+anything. Rows stack downward, which is the direction a phone already scrolls, and a name
+stays readable however deep it sits.</p>
+<p><em>Fleets collapse.</em> A parent with more than <a class="reference internal" href="#crowsnest.tree.FLEET_MIN" title="crowsnest.tree.FLEET_MIN"><code class="xref py py-data docutils literal notranslate"><span class="pre">FLEET_MIN</span></code></a> childless children gets the
+first few drawn – <strong>the ones that need a person first</strong>, because the whole value of
+keeping a few is that they are the few worth seeing – and the rest become one row saying
+how many there are and what they are doing. Fifty rows that differ only by a number teach
+a reader to skip the section; one row that says “43 more, 41 idle” tells them the same
+thing and costs a line.</p>
+<p><em>A session nobody started and that started nobody is not drawn.</em> It is a root with no
+tree under it, and the roster above the figure is already a list of every session. Drawing
+forty-four of them around the four that have a shape is how the shape gets lost.</p>
+<p><em>A parent that has exited is still drawn</em>, hollow, because a fleet whose dispatcher left is
+still a fleet, and six orphans drawn as six roots is exactly the picture that hides it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">layout=</span></code> is the seam: a callable taking the graph and returning placed rows. The default
+is the indented walk below. A real graph library behind <code class="docutils literal notranslate"><span class="pre">--interactive</span></code> is the
+replacement it exists for – that flag already exists and already permits script.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">found</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'nodes'</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="2"><span class="gp">... </span>    <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'boss'</span><span class="p">,</span> <span class="s1">'label'</span><span class="p">:</span> <span class="s1">'boss'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'alive'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="3"><span class="gp">... </span>     <span class="s1">'parent'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'children'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'kid'</span><span class="p">],</span> <span class="s1">'depth'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'confidence'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'project'</span><span class="p">:</span> <span class="s1">''</span><span class="p">},</span>
+</span><span data-line="4"><span class="gp">... </span>    <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'kid'</span><span class="p">,</span> <span class="s1">'label'</span><span class="p">:</span> <span class="s1">'kid'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">:</span> <span class="s1">'waiting'</span><span class="p">,</span> <span class="s1">'alive'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="5"><span class="gp">... </span>     <span class="s1">'parent'</span><span class="p">:</span> <span class="s1">'boss'</span><span class="p">,</span> <span class="s1">'children'</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">'depth'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'confidence'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'project'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}],</span>
+</span><span data-line="6"><span class="gp">... </span>    <span class="s1">'roots'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'boss'</span><span class="p">],</span> <span class="s1">'edges'</span><span class="p">:</span> <span class="p">[{</span><span class="s1">'parent'</span><span class="p">:</span> <span class="s1">'boss'</span><span class="p">,</span> <span class="s1">'child'</span><span class="p">:</span> <span class="s1">'kid'</span><span class="p">}],</span>
+</span><span data-line="7"><span class="gp">... </span>    <span class="s1">'orphans'</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">'counts'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'edges'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'roots'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}}</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="n">svg</span> <span class="o">=</span> <span class="n">render</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="s1">'&lt;svg'</span> <span class="ow">in</span> <span class="n">svg</span> <span class="ow">and</span> <span class="s1">'boss'</span> <span class="ow">in</span> <span class="n">svg</span> <span class="ow">and</span> <span class="s1">'kid'</span> <span class="ow">in</span> <span class="n">svg</span>
+</span><span data-line="10"><span class="go">True</span>
+</span></pre></div>
+</div>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tree.FLEET_MIN" title="crowsnest.tree.FLEET_MIN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FLEET_MIN</span></code></a></p></td>
+<td><p>How many childless children a parent needs before they are drawn as a fleet.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tree.FLEET_SHOWN" title="crowsnest.tree.FLEET_SHOWN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FLEET_SHOWN</span></code></a></p></td>
+<td><p>How many of a fleet are drawn individually before the rest become one row.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tree.MAX_ROWS" title="crowsnest.tree.MAX_ROWS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_ROWS</span></code></a></p></td>
+<td><p>The most rows one figure draws.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tree.MAX_INDENT_DEPTH" title="crowsnest.tree.MAX_INDENT_DEPTH"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_INDENT_DEPTH</span></code></a></p></td>
+<td><p>How far right the drawing indents, however deep the tree goes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tree.CHAR" title="crowsnest.tree.CHAR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CHAR</span></code></a></p></td>
+<td><p>Roughly how wide one narrow character of the label font is, in user units.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tree.RIGHT_COLUMN" title="crowsnest.tree.RIGHT_COLUMN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RIGHT_COLUMN</span></code></a></p></td>
+<td><p>How many units the status column is allowed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tree.TREE_CSS" title="crowsnest.tree.TREE_CSS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TREE_CSS</span></code></a></p></td>
+<td><p>The figure's own styles.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tree.escape" title="crowsnest.tree.escape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">escape</span></code></a>(text)</p></td>
+<td><p>XML-escape: the default <code class="docutils literal notranslate"><span class="pre">text=</span></code> for <a class="reference internal" href="#crowsnest.tree.render" title="crowsnest.tree.render"><code class="xref py py-func docutils literal notranslate"><span class="pre">render()</span></code></a>, and the floor under any other.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tree.layout" title="crowsnest.tree.layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">layout</span></code></a>(found, *[, fleet_min, fleet_shown, ...])</p></td>
+<td><p>The forest as an ordered list of rows: depth-first, roots in order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tree.render" title="crowsnest.tree.render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render</span></code></a>(found, *[, layout, text, title])</p></td>
+<td><p>The forest as one <code class="docutils literal notranslate"><span class="pre">&lt;figure&gt;</span></code> holding inline SVG.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tree.Placed" title="crowsnest.tree.Placed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Placed</span></code></a>(name, label, depth, row[, kind, ...])</p></td>
+<td><p>One drawn row: a session, or the summary of a collapsed fleet.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.tree.CHAR">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">CHAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6.3</span></span><a class="headerlink" href="#crowsnest.tree.CHAR" title="Link to this definition">#</a></dt>
+<dd><p>Roughly how wide one narrow character of the label font is, in user units. Approximate
+on purpose – measuring text properly means a font metric this module has no business
+carrying – but wide enough to be safe rather than tight, because the failure it guards
+against is two strings drawn on top of each other.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.tree.FLEET_MIN">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">FLEET_MIN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></span><a class="headerlink" href="#crowsnest.tree.FLEET_MIN" title="Link to this definition">#</a></dt>
+<dd><p>How many childless children a parent needs before they are drawn as a fleet. Below this
+the rows are worth reading one by one; above it they are a wall.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.tree.FLEET_SHOWN">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">FLEET_SHOWN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#crowsnest.tree.FLEET_SHOWN" title="Link to this definition">#</a></dt>
+<dd><p>How many of a fleet are drawn individually before the rest become one row. They are the
+first in roster order, which is <em>most urgent first</em>, so what is kept is what needs a
+person.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.tree.MAX_INDENT_DEPTH">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">MAX_INDENT_DEPTH</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></span><a class="headerlink" href="#crowsnest.tree.MAX_INDENT_DEPTH" title="Link to this definition">#</a></dt>
+<dd><p>How far right the drawing indents, however deep the tree goes. Past this, depth stops
+buying indentation: a row at depth 24 would otherwise start beyond the figure’s own
+width and be drawn off the canvas entirely. Real lineage is a handful deep; this is for
+a cycle or a custom layout, where silently drawing nothing is the worst answer.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.tree.MAX_ROWS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">MAX_ROWS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">120</span></span><a class="headerlink" href="#crowsnest.tree.MAX_ROWS" title="Link to this definition">#</a></dt>
+<dd><p>The most rows one figure draws. A picture longer than this is not a picture; the text
+tree (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">lineage</span></code>) is the thing that scales, and the figure says so.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.tree.Placed">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">Placed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'session'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'idle'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_row</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tree.html#Placed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tree.Placed" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One drawn row: a session, or the summary of a collapsed fleet.</p>
+<p><code class="docutils literal notranslate"><span class="pre">parent_row</span></code> is the row the connector comes down from, <code class="docutils literal notranslate"><span class="pre">-1</span></code> for a root. Everything
+is in rows and depths rather than pixels, so a different renderer – or a test – can
+read the layout without knowing the geometry.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="crowsnest.tree.Placed.as_dict">
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tree.html#Placed.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tree.Placed.as_dict" title="Link to this definition">#</a></dt>
+<dd><p>JSON-ready form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.tree.RIGHT_COLUMN">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">RIGHT_COLUMN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">92</span></span><a class="headerlink" href="#crowsnest.tree.RIGHT_COLUMN" title="Link to this definition">#</a></dt>
+<dd><p>How many units the status column is allowed. Both columns are clipped to their budget:
+clipping only the label was the first draft’s bug, and it showed up on the <em>default</em>
+path, because a mixed fleet summarises as “2 waiting, 10 busy, 7 shell, 30 idle” – 40
+characters against a 60-unit budget, drawn right-to-left across every name.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.tree.TREE_CSS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">TREE_CSS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\n.spawn-tree{margin:0.9rem</span> <span class="pre">0</span> <span class="pre">0;overflow-x:auto;max-width:100%}\n.spawn-tree</span> <span class="pre">svg{display:block}\n.spawn-tree</span> <span class="pre">figcaption{margin-top:0.55rem;color:var(--ink-soft);font-size:0.82rem;\n</span>&#160; <span class="pre">max-width:34rem}\n.spawn-tree-alt{position:absolute;width:1px;height:1px;margin:-1px;padding:0;\n</span>&#160; <span class="pre">overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}\n'</span></span><a class="headerlink" href="#crowsnest.tree.TREE_CSS" title="Link to this definition">#</a></dt>
+<dd><p>The figure’s own styles. The SVG is drawn at a <strong>fixed</strong> size rather than stretched:
+scaling it to the column would render the labels at whatever size the column happened
+to imply – 18px on a desktop, 6px on a phone – and the one thing this figure has to
+be is readable. So the text is always 12px and the figure scrolls sideways in the rare
+case that it does not fit, which costs a narrow phone the right-hand column and nothing
+else: the names and their marks start at the left.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tree.escape">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">escape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tree.html#escape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tree.escape" title="Link to this definition">#</a></dt>
+<dd><p>XML-escape: the default <code class="docutils literal notranslate"><span class="pre">text=</span></code> for <a class="reference internal" href="#crowsnest.tree.render" title="crowsnest.tree.render"><code class="xref py py-func docutils literal notranslate"><span class="pre">render()</span></code></a>, and the floor under any other.</p>
+<p>A drawing that trusts its input is one edit away from being the hole, so this runs
+even when a caller has already sanitised – and a caller that sanitises passes its own
+function as <code class="docutils literal notranslate"><span class="pre">text=</span></code>, which escapes as well as scrubbing. See <a class="reference internal" href="#crowsnest.tree.render" title="crowsnest.tree.render"><code class="xref py py-func docutils literal notranslate"><span class="pre">render()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tree.layout">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">found</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fleet_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fleet_shown</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tree.html#layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tree.layout" title="Link to this definition">#</a></dt>
+<dd><p>The forest as an ordered list of rows: depth-first, roots in order.</p>
+<p>A parent’s childless children collapse into a fleet once there are more than
+<code class="docutils literal notranslate"><span class="pre">fleet_min</span></code> of them: the first <code class="docutils literal notranslate"><span class="pre">fleet_shown</span></code> are drawn, the rest become one row.
+Children that have children of their own are never collapsed – a subtree is structure,
+and structure is the thing the picture is for.</p>
+<p>Stops at <code class="docutils literal notranslate"><span class="pre">max_rows</span></code> and says so in the last row, rather than drawing a figure nobody
+can take in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.tree.Placed" title="crowsnest.tree.Placed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Placed</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tree.render">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">found</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">layout&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">escape&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Who</span> <span class="pre">started</span> <span class="pre">whom'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tree.html#render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tree.render" title="Link to this definition">#</a></dt>
+<dd><p>The forest as one <code class="docutils literal notranslate"><span class="pre">&lt;figure&gt;</span></code> holding inline SVG. Loads nothing from anywhere.</p>
+<p><code class="docutils literal notranslate"><span class="pre">layout</span></code> is the seam: anything returning <a class="reference internal" href="#crowsnest.tree.Placed" title="crowsnest.tree.Placed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Placed</span></code></a> rows draws through the same
+marks. Rows are placed by their <code class="docutils literal notranslate"><span class="pre">row</span></code> index, so a layout numbers them contiguously
+from zero or the figure is taller or shorter than what it drew.</p>
+<p><code class="docutils literal notranslate"><span class="pre">text</span></code> is what every string passes through on its way onto the canvas. It must both
+<strong>scrub and escape</strong> – the default <a class="reference internal" href="#crowsnest.tree.escape" title="crowsnest.tree.escape"><code class="xref py py-func docutils literal notranslate"><span class="pre">escape()</span></code></a> only escapes, which is right for a
+caller with nothing to hide, and <a class="reference internal" href="crowsnest.report.html#module-crowsnest.report" title="crowsnest.report"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.report</span></code></a> passes its page sanitiser so
+that a home path or a credential in a session’s name is treated here exactly as it is
+everywhere else on the page. A figure that skipped the sanitiser would be the one
+region of a published page that did.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">''</span></code> when there is nothing worth drawing – a forest with no edges is a list,
+and the roster above it is already that list.</p>
+<p>Colours come from the page’s own stylesheet tokens, which are defined for light and
+dark alike, so the figure follows the reader’s theme without a second palette; outside
+that page every one falls back to <code class="docutils literal notranslate"><span class="pre">currentColor</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.tools.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.tools</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.triage.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.triage</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

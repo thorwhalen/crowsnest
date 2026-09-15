@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "built_at": "2026-09-15T11:16:14Z",
+  "package": {
+    "name": "crowsnest",
+    "version": "0.0.32",
+    "display_name": "crowsnest",
+    "source": "pyproject.toml"
+  },
+  "git": {
+    "available": true,
+    "commit": "c8dd9f042decfe1fc9f6c9792dd0e311633b11f0",
+    "short_commit": "c8dd9f0",
+    "branch": "main",
+    "tags": [],
+    "dirty": false,
+    "remote_url": "https://github.com/thorwhalen/crowsnest",
+    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/c8dd9f042decfe1fc9f6c9792dd0e311633b11f0",
+    "error": null
+  },
+  "ci": {
+    "provider": "github",
+    "repository": "thorwhalen/crowsnest",
+    "sha": "c8dd9f042decfe1fc9f6c9792dd0e311633b11f0",
+    "sha_in_history": true,
+    "ref": "refs/heads/main",
+    "ref_name": "main",
+    "run_id": "34962250510",
+    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/34962250510",
+    "server_url": "https://github.com"
+  },
+  "tools": {
+    "epythet": "0.2.10",
+    "sphinx": "9.1.0",
+    "docutils": "0.22.4",
+    "python": "3.12.14"
+  },
+  "config": {
+    "theme": "auto",
+    "html_theme": "shibuya",
+    "accent": "#91390a",
+    "mode": "auto",
+    "api_generator": "autosummary",
+    "ignore": [
+      "tests/",
+      "scrap/",
+      "examples/"
+    ],
+    "agent_outputs": true,
+    "aggregates": [
+      "md"
+    ],
+    "ai_artifacts": true,
+    "provenance": true,
+    "docs_dir": "docsrc"
+  },
+  "site": {
+    "modules_documented": 18,
+    "objects_documented": 185
+  },
+  "pypi": {
+    "checked": true,
+    "latest": "0.0.32",
+    "relation": "same",
+    "error": null
+  },
+  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout c8dd9f042decfe1fc9f6c9792dd0e311633b11f0\npip install \"epythet==0.2.10\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "warnings": [],
+  "alignment": {
+    "aligned": true,
+    "notes": []
+  }
+}

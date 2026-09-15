@@ -1,389 +1,508 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
+<html lang="en" data-accent-color="orange" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to crowsnest’s documentation! &mdash; crowsnest 0.0.31 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API reference" href="api.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest"/>
+    <meta name="twitter:card" content="summary"/>
   
-      <script src="_static/jquery.js?v=5d32c60e"></script>
-      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=c5dbc6bb"></script>
+<link rel="alternate" type="text/markdown" href="index.html.md">
+<link rel="describedby" href="llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="#">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/crowsnest.html">crowsnest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#start-here">Start here</a></li>
+<li><a class="reference internal" href="#the-three-tiers">The three tiers</a></li>
+<li><a class="reference internal" href="#the-command">The command</a></li>
+<li><a class="reference internal" href="#what-needs-you-what-is-safe-to-close">What needs you, what is safe to close</a></li>
+<li><a class="reference internal" href="#every-reference-as-a-link">Every reference, as a link</a></li>
+<li><a class="reference internal" href="#who-started-whom">Who started whom</a></li>
+<li><a class="reference internal" href="#several-accounts-and-machines-in-one-roster">Several accounts and machines in one roster</a><ul>
+<li><a class="reference internal" href="#which-claude-gets-started">Which <code class="docutils literal notranslate"><span class="pre">claude</span></code> gets started</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-ledger-what-a-session-leaves-behind">The ledger: what a session leaves behind</a></li>
+<li><a class="reference internal" href="#being-told-instead-of-polling">Being told instead of polling</a></li>
+<li><a class="reference internal" href="#one-walk-end-to-end">One walk, end to end</a></li>
+<li><a class="reference internal" href="#what-it-ships-for-agents">What it ships for agents</a></li>
+<li><a class="reference internal" href="#what-the-hooks-add">What the hooks add</a></li>
+<li><a class="reference internal" href="#what-it-reads">What it reads</a></li>
+<li><a class="reference internal" href="#what-it-writes">What it writes</a></li>
+<li><a class="reference internal" href="#from-python">From Python</a></li>
+<li><a class="reference internal" href="#not-in-crowsnest">Not in crowsnest</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="#"><span itemprop="name">crowsnest</span></a>
+        <meta itemprop="position" content="1" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <!-- generated by epythet -->
+<section id="crowsnest">
+<h1>crowsnest<a class="headerlink" href="#crowsnest" title="Link to this heading">#</a></h1>
+<p><strong>One session that watches your other Claude Code sessions.</strong></p>
+<p>A machine running many Claude Code sessions has a question nobody answers: <em>what are they all doing, and which of them needs me?</em> Each session knows only itself, the terminal tabs are silent until you click them, and the answer lives in forty scrollbacks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span></code> reads what Claude Code already writes, the registry it keeps for every running session and the transcript each one appends to, and answers in three tiers, cheapest first. It can start a new named session (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code>), but it never sends into, kills, or otherwise writes into a session that already exists.</p>
+<section id="start-here">
+<h2>Start here<a class="headerlink" href="#start-here" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>crowsnest<span class="w">          </span><span class="c1"># Python 3.10+. Puts a `crowsnest` command on your PATH.</span>
+</span><span data-line="2">crowsnest<span class="w"> </span>install-skills<span class="w">       </span><span class="c1"># link the skills and the scout subagent into ~/.claude</span>
+</span><span data-line="3">crowsnest<span class="w"> </span>init<span class="w"> </span>--hooks<span class="w">         </span><span class="c1"># in the directory you will run the lookout from</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">init</span></code> writes that directory’s <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> (the rules that keep a watching session small enough to be cleared at any moment), creates <code class="docutils literal notranslate"><span class="pre">~/.local/share/crowsnest/</span></code>, and — with <code class="docutils literal notranslate"><span class="pre">--hooks</span></code> — adds three lines to your <code class="docutils literal notranslate"><span class="pre">settings.json</span></code>, after backing it up and removing nothing. Without <code class="docutils literal notranslate"><span class="pre">--hooks</span></code> it prints them for you to paste. The two that push events (<code class="docutils literal notranslate"><span class="pre">Stop</span></code>, <code class="docutils literal notranslate"><span class="pre">Notification</span></code>) are registered <code class="docutils literal notranslate"><span class="pre">async</span></code>, so watching costs the watched sessions no wall-clock; the <code class="docutils literal notranslate"><span class="pre">SessionStart</span></code> one blocks, because its roster is meant to be read.</p>
+<p>Then open a session, name it, and ask in whatever words you would have used anyway:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">claude<span class="w"> </span>-n<span class="w"> </span>lookout
+</span></pre></div>
+</div>
+<blockquote>
+<div><p><strong>what are my sessions doing, and is anything waiting on me?</strong></p>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">## Waiting on you
+</span><span data-line="2">- xa_needed_or_not (xa, 25m) — input needed
+</span><span data-line="3">
+</span><span data-line="4">## Just finished
+</span><span data-line="5">- monitor (proj, 10m) — "The sweep landed. It's the repo-side view, and it's complementary…"
+</span><span data-line="6">
+</span><span data-line="7">## Working
+</span><span data-line="8">- openloops: one session, mid-turn on the one-command test.
+</span><span data-line="9">
+</span><span data-line="10">## Headline
+</span><span data-line="11">1 waiting on you, 1 just finished, 1 working, 29 idle.
+</span></pre></div>
+</div>
+<p>That answer is a synthesis. Every row behind it is one the <code class="docutils literal notranslate"><span class="pre">crowsnest</span></code> command printed, and the skill tells the session how to go deeper when a row is not enough: read a session’s earlier turns, ask the session itself, or arm the event stream and be told.</p>
+</section>
+<section id="the-three-tiers">
+<h2>The three tiers<a class="headerlink" href="#the-three-tiers" title="Link to this heading">#</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Tier</p></th>
+<th class="head"><p>What</p></th>
+<th class="head"><p>Costs the watched session</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1. read</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">crowsnest</span></code>, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">show</span> <span class="pre">X</span></code>, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">turns</span> <span class="pre">X</span></code> — the registry and the transcript tail</p></td>
+<td><p>nothing</p></td>
+</tr>
+<tr class="row-odd"><td><p>2. ask</p></td>
+<td><p>message a running session (Claude Code’s <code class="docutils literal notranslate"><span class="pre">SendMessage</span></code>) and get an answer from its own context</p></td>
+<td><p>one turn of its context</p></td>
+</tr>
+<tr class="row-even"><td><p>3. be told</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code>, one line per change, fed to the watching session’s <code class="docutils literal notranslate"><span class="pre">Monitor</span></code> tool — pushed by Claude Code’s own hooks when they are wired up</p></td>
+<td><p>nothing</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The skill’s rule is to never spend a costlier tier when a cheaper one answers, and never to ask a session that is <code class="docutils literal notranslate"><span class="pre">busy</span></code> or <code class="docutils literal notranslate"><span class="pre">waiting</span></code>.</p>
+</section>
+<section id="the-command">
+<h2>The command<a class="headerlink" href="#the-command" title="Link to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">crowsnest</span>                          <span class="n">who</span> <span class="ow">is</span> <span class="n">alive</span><span class="p">:</span> <span class="n">waiting</span> <span class="n">on</span> <span class="n">you</span> <span class="n">first</span><span class="p">,</span> <span class="n">then</span> <span class="n">busy</span><span class="p">,</span> <span class="n">then</span> <span class="n">idle</span>
+</span><span data-line="2"><span class="n">crowsnest</span> <span class="n">show</span> <span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span>           <span class="n">one</span> <span class="n">session</span><span class="p">:</span> <span class="n">last</span> <span class="n">asked</span><span class="p">,</span> <span class="n">last</span> <span class="n">said</span><span class="p">,</span> <span class="n">running</span> <span class="n">now</span><span class="p">,</span> <span class="n">pending</span> <span class="n">question</span>
+</span><span data-line="3"><span class="n">crowsnest</span> <span class="n">turns</span> <span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">n</span> <span class="mi">5</span>     <span class="n">the</span> <span class="n">last</span> <span class="n">five</span> <span class="n">turns</span><span class="p">,</span> <span class="n">oldest</span> <span class="n">first</span><span class="p">;</span> <span class="o">--</span><span class="n">before</span> <span class="n">N</span> <span class="n">pages</span> <span class="n">back</span>
+</span><span data-line="4"><span class="n">crowsnest</span> <span class="n">brief</span> <span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span>          <span class="n">openloops</span><span class="s1">' dated digest for one session; reads no transcript</span>
+</span><span data-line="5"><span class="n">crowsnest</span> <span class="n">lineage</span>                  <span class="n">who</span> <span class="n">started</span> <span class="n">whom</span><span class="p">,</span> <span class="k">as</span> <span class="n">a</span> <span class="n">tree</span><span class="p">;</span> <span class="o">--</span><span class="n">backfill</span> <span class="n">recovers</span> <span class="n">it</span> <span class="kn">from</span><span class="w"> </span><span class="nn">transcripts</span> <span class="n">once</span>
+</span><span data-line="6"><span class="n">crowsnest</span> <span class="n">report</span> <span class="p">[</span><span class="o">--</span><span class="n">out</span> <span class="n">FILE</span><span class="p">]</span>      <span class="n">the</span> <span class="n">roster</span> <span class="k">as</span> <span class="n">one</span> <span class="n">phone</span><span class="o">-</span><span class="n">readable</span> <span class="n">HTML</span> <span class="n">page</span><span class="p">,</span> <span class="n">no</span> <span class="n">stylesheet</span> <span class="ow">or</span> <span class="n">script</span>
+</span><span data-line="7">                                   <span class="p">(</span><span class="o">--</span><span class="n">fragment</span><span class="p">:</span> <span class="n">without</span> <span class="n">the</span> <span class="n">document</span> <span class="n">wrapper</span><span class="p">,</span> <span class="k">for</span> <span class="n">publishing</span> <span class="k">as</span> <span class="n">an</span> <span class="n">artifact</span><span class="p">;</span>
+</span><span data-line="8">                                    <span class="o">--</span><span class="n">interactive</span><span class="p">:</span> <span class="n">buttons</span> <span class="n">per</span> <span class="n">row</span> <span class="ow">and</span> <span class="n">a</span> <span class="n">Refresh</span><span class="p">,</span> <span class="n">live</span> <span class="n">when</span> <span class="n">published</span> <span class="k">with</span> <span class="n">the</span> <span class="n">db</span> <span class="n">capability</span><span class="p">)</span>
+</span><span data-line="9"><span class="n">crowsnest</span> <span class="n">watch</span>                    <span class="n">one</span> <span class="n">line</span> <span class="n">per</span> <span class="n">change</span><span class="p">,</span> <span class="n">forever</span> <span class="p">(</span><span class="n">started</span><span class="p">,</span> <span class="n">exited</span><span class="p">,</span> <span class="n">idle</span><span class="p">,</span> <span class="n">busy</span><span class="p">,</span> <span class="n">waiting</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+</span><span data-line="10"><span class="n">crowsnest</span> <span class="n">ledger</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span><span class="p">]</span>       <span class="n">one</span> <span class="n">session</span><span class="s1">'s durable page, or all of them with ages</span>
+</span><span data-line="11"><span class="n">crowsnest</span> <span class="n">hook</span> <span class="o">&lt;</span><span class="n">event</span><span class="o">&gt;</span>             <span class="n">called</span> <span class="n">by</span> <span class="n">your</span> <span class="n">Stop</span> <span class="ow">and</span> <span class="n">Notification</span> <span class="n">hooks</span><span class="p">;</span> <span class="n">reads</span> <span class="n">their</span> <span class="n">JSON</span> <span class="n">on</span> <span class="n">stdin</span>
+</span><span data-line="12"><span class="n">crowsnest</span> <span class="n">spawn</span> <span class="o">&lt;</span><span class="n">name</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">cwd</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span> <span class="n">start</span> <span class="n">a</span> <span class="n">named</span> <span class="n">session</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="ow">and</span> <span class="n">wait</span> <span class="k">for</span> <span class="n">it</span> <span class="n">to</span> <span class="n">show</span> <span class="n">up</span>
+</span><span data-line="13">                                   <span class="p">(</span><span class="o">--</span><span class="n">profile</span> <span class="n">NAME</span><span class="p">:</span> <span class="n">on</span> <span class="n">another</span> <span class="n">account</span><span class="p">;</span> <span class="o">--</span><span class="n">binary</span> <span class="n">PATH</span><span class="p">:</span> <span class="n">another</span> <span class="n">claude</span><span class="p">)</span>
+</span><span data-line="14"><span class="n">crowsnest</span> <span class="nb">open</span> <span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span>           <span class="k">raise</span> <span class="n">its</span> <span class="n">terminal</span> <span class="n">on</span> <span class="n">the</span> <span class="n">desktop</span><span class="p">,</span> <span class="ow">or</span> <span class="n">say</span> <span class="n">where</span> <span class="n">it</span> <span class="n">runs</span>
+</span><span data-line="15"><span class="n">crowsnest</span> <span class="n">init</span>                     <span class="n">this</span> <span class="n">session</span><span class="s1">'s CLAUDE.md, the data directory, the hook lines</span>
+</span><span data-line="16"><span class="n">crowsnest</span> <span class="n">install</span><span class="o">-</span><span class="n">skills</span>           <span class="n">link</span> <span class="n">the</span> <span class="n">skills</span> <span class="ow">and</span> <span class="n">the</span> <span class="n">scout</span> <span class="n">subagent</span> <span class="n">into</span> <span class="o">~/.</span><span class="n">claude</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">open</span></code> is a desktop command – it looks for an iTerm tab or a tmux session and has nothing
+to raise from a web page, so a claude.ai artifact (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code>) can only tell you
+where a session runs, never bring its terminal to the front for you.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;session&gt;</span></code> is the name you gave the session with <code class="docutils literal notranslate"><span class="pre">claude</span> <span class="pre">-n</span> <span class="pre">&lt;name&gt;</span></code>, a unique prefix of one, a session-id prefix, or a pid.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">waiting  25m  xa_needed_or_not      xa           input needed · Let me split that into smaller steps.
+</span><span data-line="2">busy     14m  session_monitor       openloops    → Bash: Run the one-command test
+</span><span data-line="3">idle     10m  monitor               proj         "The sweep landed. It's the repo-side view…"
+</span><span data-line="4">-- 32 live: 1 waiting, 1 busy, 30 idle
+</span></pre></div>
+</div>
+</section>
+<section id="what-needs-you-what-is-safe-to-close">
+<h2>What needs you, what is safe to close<a class="headerlink" href="#what-needs-you-what-is-safe-to-close" title="Link to this heading">#</a></h2>
+<p>The roster is not the useful answer. Thirty sessions sorted by status is still thirty things to read; the question underneath it is always the same three.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">crowsnest</span> <span class="n">triage</span> <span class="o">--</span><span class="n">quiet</span>
+</span></pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">NEEDS YOU (5)
+</span><span data-line="2">  cn-mergeset          mergeset    [decision] The history rewrite and the PyPI deletions — awaiting go-ahead…
+</span><span data-line="3">  cosmo_3d_02          cosmograph  [action] attach the two GIFs to #604/#616 bodies (no API for that)…
+</span><span data-line="4">
+</span><span data-line="5">SAFE TO CLOSE (4)
+</span><span data-line="6">  cn-cosm-synth        cosm        Nothing outstanding
+</span><span data-line="7">
+</span><span data-line="8">WORKING (1)
+</span><span data-line="9">UNCLASSIFIED — has not said where it stands: 48
+</span><span data-line="10">
+</span><span data-line="11">-- 5 need you (1 to decide, 3 to do), 4 safe to close, 1 working, 48 unclassified
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">[decision]</span></code> is a minute of thought; <code class="docutils literal notranslate"><span class="pre">[action]</span></code> is a trip to another window. The reason is the session’s own words, so you can check the verdict without opening the session.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">unclassified</span></code> is the honest group, and it is the point.</strong> A wrong “safe to close” is the expensive error — somebody closes a terminal on unfinished work and nothing ever tells them — so a verdict is only reached on <em>positive</em> evidence. A session that has not said where it stands is reported as not having said. Nothing infers “finished” from silence, because silence is also what an interrupted session leaves behind.</p>
+<p>To be reported well, a session writes the ledger’s <code class="docutils literal notranslate"><span class="pre">open</span> <span class="pre">questions</span></code> field, or says “nothing outstanding” in its notes when it is done. The shipped <code class="docutils literal notranslate"><span class="pre">crowsnest-worker</span></code> skill teaches both, so the signal improves as sessions run.</p>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code> organises the page the same way: <strong>Needs you</strong> first, then <strong>Safe to close</strong>, then what is working and what is quiet.</p>
+</section>
+<section id="every-reference-as-a-link">
+<h2>Every reference, as a link<a class="headerlink" href="#every-reference-as-a-link" title="Link to this heading">#</a></h2>
+<p>A session working in <code class="docutils literal notranslate"><span class="pre">i2mint/mergeset</span></code> that writes <code class="docutils literal notranslate"><span class="pre">#17</span></code> means that repository’s issue 17. Nothing in the text says so — but crowsnest knows the session’s working directory, and that is enough to resolve the commonest, least resolvable reference a session writes. So the report renders references as links rather than as text you have to reconstruct a URL from: markdown links the session already wrote out, bare URLs typed by where they point (issue, pull request, discussion, commit, CI run, artifact, Slack), <code class="docutils literal notranslate"><span class="pre">owner/repo#N</span></code>, bare <code class="docutils literal notranslate"><span class="pre">#N</span></code>, and bare commit shas.</p>
+<p><code class="docutils literal notranslate"><span class="pre">#45</span></code> and a link to <code class="docutils literal notranslate"><span class="pre">pull/45</span></code> are one reference, not two, and collapse to the label its author chose. A discussion of the same number does not — it is a different object that happens to share a number. Nothing is fetched: a link is constructed from what the text says and what the directory implies, so a page of two hundred references still costs no network calls.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">crowsnest</span> <span class="n">show</span> <span class="o">&lt;</span><span class="n">session</span><span class="o">&gt;</span>       <span class="c1"># ends with a References section</span>
+</span><span data-line="2"><span class="n">crowsnest</span> <span class="n">report</span>               <span class="c1"># every row's references, linked</span>
+</span></pre></div>
+</div>
+</section>
+<section id="who-started-whom">
+<h2>Who started whom<a class="headerlink" href="#who-started-whom" title="Link to this heading">#</a></h2>
+<p>A fleet of forty reads as a list of forty until you can see that six of them are one dispatcher’s children. The registry does not record that, so <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> writes it down itself, at the one moment it is free and certain — the session that ran the command is the parent, and one <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line goes into <code class="docutils literal notranslate"><span class="pre">lineage.jsonl</span></code> naming both ends. That file is deliberately not the hook’s <code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>, which rotates at 4 MiB: a machine busy enough to have an interesting graph is exactly the machine whose graph would vanish.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">crowsnest</span> <span class="n">lineage</span>
+</span></pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">cn                                . idle    cn
+</span><span data-line="2">|-- cn-mergeset                   . idle    mergeset
+</span><span data-line="3">|-- cn-priv-manifest              . idle    priv
+</span><span data-line="4">`-- cn-cosm-align                 . idle    cosm
+</span><span data-line="5">    |-- cn-cosm-supply            . idle    cosm
+</span><span data-line="6">    `-- cn-cosm-synth             . idle    cosm
+</span><span data-line="7">crowsnest                         x gone
+</span><span data-line="8">`-- cn-c                          . idle    c ~
+</span><span data-line="9">    |-- c-surfaces                x gone     ~
+</span><span data-line="10">    `-- c-traversal               x gone     ~
+</span></pre></div>
+</div>
+<p>A parent that has exited stays in the picture (<code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">gone</span></code>) so its children stay a fleet rather than becoming unrelated roots.</p>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code> draws the same forest as <strong>inline SVG</strong>, laid out in Python — no graph library, no script, nothing fetched, which is what lets the page keep its offline promise. Sessions that started nobody and were started by nobody are left out (the roster above is already that list), a parent’s childless children collapse once there are more than a handful — <strong>the ones that need you kept, the rest summarised as “7 more · 7 idle”</strong> — and the figure is drawn at a fixed size so its labels are 12px whatever the screen, scrolling sideways inside its own box rather than shrinking.</p>
+<p>Recording only works forwards. For a machine that has been running sessions since before this shipped, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">lineage</span> <span class="pre">--backfill</span></code> recovers what it can, once, by scanning every transcript for the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> commands that created today’s sessions, and writes what it finds into <code class="docutils literal notranslate"><span class="pre">lineage.jsonl</span></code> so the cheap reader has it from then on. That is <em>inference</em> — the command may have failed — so those edges are marked <code class="docutils literal notranslate"><span class="pre">~</span></code> wherever they are shown, and a recorded edge is never overwritten by a guessed one. A <em>mention</em> is not a spawn: the command has to be the head of a shell segment, so grepping for the phrase or writing a commit message about it does not invent a parent. <code class="docutils literal notranslate"><span class="pre">--dry-run</span></code> says what it would add and writes nothing.</p>
+</section>
+<section id="several-accounts-and-machines-in-one-roster">
+<h2>Several accounts and machines in one roster<a class="headerlink" href="#several-accounts-and-machines-in-one-roster" title="Link to this heading">#</a></h2>
+<p>Reading crosses accounts and machines; messaging does not, so a crowsnest session operates the fleet of its own account and machine and can <em>read</em> all the others. What it spawns lands on its own account too: <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> starts the new session the way this one runs — same account (its <code class="docutils literal notranslate"><span class="pre">CLAUDE_CONFIG_DIR</span></code>, stated absolutely on the command line, because a <code class="docutils literal notranslate"><span class="pre">tmux</span></code> server hands a new session <em>its</em> environment rather than the client’s) and same <code class="docutils literal notranslate"><span class="pre">claude</span></code> binary (<code class="docutils literal notranslate"><span class="pre">$CLAUDE_CODE_EXECPATH</span></code>, not whatever a login shell’s <code class="docutils literal notranslate"><span class="pre">PATH</span></code> resolves) — so a second-account crowsnest never opens sessions under the default account by mistake, and <code class="docutils literal notranslate"><span class="pre">ANTHROPIC_API_KEY</span></code> is dropped so the child signs in as its account, not as an API bill. <code class="docutils literal notranslate"><span class="pre">--profile</span> <span class="pre">NAME</span></code> starts one on another account, <code class="docutils literal notranslate"><span class="pre">--home</span> <span class="pre">DIR</span></code> spells that home out, and <code class="docutils literal notranslate"><span class="pre">$CROWSNEST_PROFILE</span></code> is that choice made once. List the homes once:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># ~/.config/crowsnest/config.toml</span>
+</span><span data-line="2"><span class="k">[[homes]]</span>
+</span><span data-line="3"><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"main"</span>
+</span><span data-line="4"><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/.claude"</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="k">[[homes]]</span>
+</span><span data-line="7"><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"work"</span>
+</span><span data-line="8"><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/.claude-work"</span><span class="w">          </span><span class="c1"># a second account on this machine</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="k">[[homes]]</span>
+</span><span data-line="11"><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"server"</span>
+</span><span data-line="12"><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/.cache/xa/remotes/server"</span><span class="w">   </span><span class="c1"># a copy synced down with `xa sync`</span>
+</span><span data-line="13"><span class="n">remote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                         </span><span class="c1"># its pids are not ours: alive while fresh</span>
+</span></pre></div>
+</div>
+<p>Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">--all-homes</span></code> prints every home with a column saying which — which is also how a session spawned with <code class="docutils literal notranslate"><span class="pre">--profile</span></code> shows up, on the account it actually runs on — <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">show</span> <span class="pre">name&#64;home</span> <span class="pre">--all-homes</span></code> picks one when a name exists in two, and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span> <span class="pre">--all-homes</span></code> streams events from all of them, each tagged <code class="docutils literal notranslate"><span class="pre">name&#64;home</span></code>.</p>
+<p>A profile name is resolved against the <code class="docutils literal notranslate"><span class="pre">[[homes]]</span></code> names above first, then against a <code class="docutils literal notranslate"><span class="pre">claude-profile</span> <span class="pre">dir</span> <span class="pre">&lt;name&gt;</span></code> command on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> if you keep one; a name neither knows is an error, never a quiet fall back to the default account, and a home marked <code class="docutils literal notranslate"><span class="pre">remote</span></code> is refused — those are another machine’s, read-only.</p>
+<section id="which-claude-gets-started">
+<h3>Which <code class="docutils literal notranslate"><span class="pre">claude</span></code> gets started<a class="headerlink" href="#which-claude-gets-started" title="Link to this heading">#</a></h3>
+<p>By default, the one this session runs (<code class="docutils literal notranslate"><span class="pre">$CLAUDE_CODE_EXECPATH</span></code>) — so a spawned session is the same build, signed in the same way, even mid-upgrade. Say otherwise when your Claude Code is not the <code class="docutils literal notranslate"><span class="pre">claude</span></code> a login shell finds first:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">export</span><span class="w"> </span><span class="nv">CROWSNEST_CLAUDE_BIN</span><span class="o">=</span>/opt/claude-next<span class="w">     </span><span class="c1"># this shell</span>
+</span></pre></div>
+</div>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># ~/.config/crowsnest/config.toml — once and for all.</span>
+</span><span data-line="2"><span class="c1"># Above the first [[homes]]: TOML gives every key after a table header to that</span>
+</span><span data-line="3"><span class="c1"># table, so a claude_bin at the bottom of the file belongs to the last home and</span>
+</span><span data-line="4"><span class="c1"># does nothing. crowsnest refuses that arrangement rather than ignoring it.</span>
+</span><span data-line="5"><span class="n">claude_bin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"claude-next"</span>
+</span></pre></div>
+</div>
+<p>and <code class="docutils literal notranslate"><span class="pre">--binary</span> <span class="pre">PATH</span></code> names one for a single spawn. <code class="docutils literal notranslate"><span class="pre">--binary</span></code> is handed to the spawner <strong>verbatim and unchecked</strong>, because a spawner may run the line on another machine where this one’s <code class="docutils literal notranslate"><span class="pre">PATH</span></code> means nothing — so an absolute path or a name only the target resolves both survive it. The corollary is that <code class="docutils literal notranslate"><span class="pre">--binary</span> <span class="pre">claude</span></code> means <em>the bare name</em>, which a local spawner then resolves through the settings above; to force the plain one, say <code class="docutils literal notranslate"><span class="pre">--binary</span> <span class="pre">&quot;$(which</span> <span class="pre">claude)&quot;</span></code>.</p>
+<p>The two persistent settings are checked, because they are claims about <em>this</em> machine: <code class="docutils literal notranslate"><span class="pre">$CROWSNEST_CLAUDE_BIN</span></code> first, then <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code>, then the inherited binary.</p>
+<p>Either has to be something that can actually be executed — a script on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> or an absolute path (a relative path is refused in the config file, which is read from every directory). <strong>A shell alias is not.</strong> Aliases exist only inside an interactive shell, and a session is started by <code class="docutils literal notranslate"><span class="pre">tmux</span></code> or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints <code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">not</span> <span class="pre">found</span></code> and closes. If you have an alias you want to reuse, make it a two-line script instead.</p>
+<p>Before you do: a wrapper whose whole job is <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code> and <code class="docutils literal notranslate"><span class="pre">env</span> <span class="pre">-u</span> <span class="pre">ANTHROPIC_API_KEY</span></code> — the usual shape — has nothing to add, because <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> already does both.</p>
+</section>
+</section>
+<section id="the-ledger-what-a-session-leaves-behind">
+<h2>The ledger: what a session leaves behind<a class="headerlink" href="#the-ledger-what-a-session-leaves-behind" title="Link to this heading">#</a></h2>
+<p>The roster and the transcript both describe <em>now</em>. Neither survives a <code class="docutils literal notranslate"><span class="pre">/clear</span></code> in the watching session, and neither says what a session decided or what it is still waiting on you for. So each session gets a small markdown file — <code class="docutils literal notranslate"><span class="pre">~/.local/share/crowsnest/ledger/&lt;name&gt;.md</span></code> — that it writes and a watcher reads:</p>
+<div class="highlight-markdown notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gh"># lookout</span>
+</span><span data-line="2">
+</span><span data-line="3">state: working
+</span><span data-line="4">last asked: 2026-09-06T18:12:00+00:00 · fix the widget
+</span><span data-line="5">last said: 2026-09-06T18:14:22+00:00 · Fixed and merged; PR 12 is green.
+</span><span data-line="6">open questions:
+</span><span data-line="7"><span class="k">-</span><span class="w"> </span>squash or rebase for the release?
+</span><span data-line="8">decisions:
+</span><span data-line="9"><span class="k">-</span><span class="w"> </span>the ledger lives under ~/.local/share/crowsnest
+</span><span data-line="10">
+</span><span data-line="11"><span class="gu">## Notes</span>
+</span><span data-line="12">
+</span><span data-line="13">Anything at all. Nothing in crowsnest ever rewrites this part.
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">asked</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">said</span></code> are mechanical — the <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook below writes them from the transcript tail, so they are true without anyone deciding anything. <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">open</span> <span class="pre">questions</span></code> and <code class="docutils literal notranslate"><span class="pre">decisions</span></code> are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.</p>
+</section>
+<section id="being-told-instead-of-polling">
+<h2>Being told instead of polling<a class="headerlink" href="#being-told-instead-of-polling" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> notices a change within a poll and has to read a transcript to guess why. Claude Code knows both exactly and immediately, and will say so — if you give it a line to say it on:</p>
+<div class="highlight-jsonc notranslate"><div class="highlight"><pre><span></span><span data-line="1">// ~/.claude/settings.json
+</span><span data-line="2">"Stop":         [{"hooks": [{"type": "command", "command": "crowsnest hook stop", "async": true}]}],
+</span><span data-line="3">"Notification": [{"hooks": [{"type": "command", "command": "crowsnest hook notification", "async": true}]}]
+</span></pre></div>
+</div>
+<p>With those two lines, a turn ending becomes a <code class="docutils literal notranslate"><span class="pre">stopped</span></code> line in <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> carrying the session’s last words, and a permission prompt or a question becomes a <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code> prints nothing and exits 0 whatever happens; <code class="docutils literal notranslate"><span class="pre">async</span></code> means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> is exactly the registry diff it always was. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">init</span> <span class="pre">--hooks</span></code> writes all of this for you.</p>
+</section>
+<section id="one-walk-end-to-end">
+<h2>One walk, end to end<a class="headerlink" href="#one-walk-end-to-end" title="Link to this heading">#</a></h2>
+<p>A morning with a fleet, from the lookout session. Everything in italics is something you say; everything else it does.</p>
+<ol class="arabic simple">
+<li><p><strong>Open it.</strong> <code class="docutils literal notranslate"><span class="pre">claude</span> <span class="pre">-n</span> <span class="pre">lookout</span></code> in the directory you ran <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">init</span></code> in. Its <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> and the <code class="docutils literal notranslate"><span class="pre">SessionStart</span></code> hook put the roster in front of it before you type anything.</p></li>
+<li><p><em>what needs me?</em> — it sends the <code class="docutils literal notranslate"><span class="pre">crowsnest-scout</span></code> subagent, which reads the ledgers, then the roster, and hands back a page: who is waiting, who just finished, what is working. The rosters never enter the lookout’s own context.</p></li>
+<li><p><em>start something on the parser tests</em> — the <code class="docutils literal notranslate"><span class="pre">crowsnest-dispatch</span></code> skill: it names the session, writes a brief that is pointers rather than prose (the issue URL, the acceptance line, the reply contract), and runs <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span> <span class="pre">parser-tests</span> <span class="pre">--cwd</span> <span class="pre">~/proj/parser</span> <span class="pre">--prompt</span> <span class="pre">&quot;…&quot;</span></code>. A new terminal session appears, named, in that directory. It subscribes once with <code class="docutils literal notranslate"><span class="pre">notify_when_idle</span></code> and stops looking.</p></li>
+<li><p><strong>It is told when that finishes</strong> — from the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> stream under the <code class="docutils literal notranslate"><span class="pre">Monitor</span></code> tool, or from the one idle notice. Either way you hear about it without asking.</p></li>
+<li><p><em>what did it do?</em> — <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span> <span class="pre">parser-tests</span></code>. The worker wrote that file itself, under the <code class="docutils literal notranslate"><span class="pre">crowsnest-worker</span></code> skill, which every session on the machine has; the lookout only reads it. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">brief</span> <span class="pre">parser-tests</span></code> adds openloops’ dated digest of the same session, still without opening a transcript.</p></li>
+<li><p><em>give me a page</em> — the <code class="docutils literal notranslate"><span class="pre">crowsnest-report</span></code> skill: <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span> <span class="pre">--fragment</span> <span class="pre">--out</span> <span class="pre">fleet.html</span></code>, published with the <code class="docutils literal notranslate"><span class="pre">Artifact</span></code> tool, one link, stable across re-publishes.</p></li>
+<li><p><strong>From your phone</strong>, later: you highlight the row for <code class="docutils literal notranslate"><span class="pre">parser-tests</span></code>, comment <em>ask it what is left</em>, and send it to Claude. The lookout wakes on the comment, answers from the ledger, replies in the thread, resolves it, and re-publishes the page.</p></li>
+</ol>
+<p>At no point does the lookout edit a file in any of those repositories, or read a transcript itself. That is the whole design: the corpus sessions hold the context, and the lookout stays small enough to <code class="docutils literal notranslate"><span class="pre">/clear</span></code> at any moment.</p>
+</section>
+<section id="what-it-ships-for-agents">
+<h2>What it ships for agents<a class="headerlink" href="#what-it-ships-for-agents" title="Link to this heading">#</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>What it is for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">crowsnest</span></code> skill</p></td>
+<td><p>be the lookout: the three tiers, and the rules that keep it small</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">crowsnest-dispatch</span></code> skill</p></td>
+<td><p>hand a corpus of work to a session instead of doing it</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">crowsnest-report</span></code> skill</p></td>
+<td><p>the page, publishing it, and acting on comments left on it</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">crowsnest-worker</span></code> skill</p></td>
+<td><p>for every <em>other</em> session: answer a status request in five lines, keep your ledger</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">crowsnest-scout</span></code> subagent</p></td>
+<td><p>do the reading in a fresh context and return a page</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">install-skills</span></code> links all of them into <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code> (or <code class="docutils literal notranslate"><span class="pre">--target</span></code>) and never overwrites anything that is not already ours. The worker skill installs everywhere by default, because any session on the machine may be asked.</p>
+</section>
+<section id="what-the-hooks-add">
+<h2>What the hooks add<a class="headerlink" href="#what-the-hooks-add" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">init</span> <span class="pre">--hooks</span></code> registers two user-wide hooks, both asynchronous so they never delay a turn: <code class="docutils literal notranslate"><span class="pre">Stop</span></code> (a turn ended; the session’s last words go to its ledger and the event log) and <code class="docutils literal notranslate"><span class="pre">Notification</span></code> (a session asked for something). It puts the roster-on-start hook only in the crowsnest directory’s own <code class="docutils literal notranslate"><span class="pre">.claude/settings.json</span></code>, so no other session is handed a roster. An <code class="docutils literal notranslate"><span class="pre">idle_prompt</span></code> notification (a session merely sitting idle) is recorded but never streamed as <code class="docutils literal notranslate"><span class="pre">needs-you</span></code>.</p>
+</section>
+<section id="what-it-reads">
+<h2>What it reads<a class="headerlink" href="#what-it-reads" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.claude/sessions/&lt;pid&gt;.json</span></code>: written while a session runs. Name, session id, working directory, <code class="docutils literal notranslate"><span class="pre">busy</span></code> / <code class="docutils literal notranslate"><span class="pre">idle</span></code> / <code class="docutils literal notranslate"><span class="pre">waiting</span></code>, and when waiting, what for. Checked against a live process before it is reported, because a crash leaves the file behind.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.claude/projects/&lt;slug&gt;/&lt;session-id&gt;.jsonl</span></code>: the transcript. Read from the end, widening until one human prompt is in view; <code class="docutils literal notranslate"><span class="pre">turns</span></code> reads the whole file on request.</p></li>
+</ul>
+<p>What a transcript’s content <em>means</em> is <a class="reference external" href="https://github.com/thorwhalen/openloops">openloops</a>’ business, and crowsnest calls it rather than re-implementing it. openloops deliberately never looks at whether a process is running; crowsnest is that other half.</p>
+</section>
+<section id="what-it-writes">
+<h2>What it writes<a class="headerlink" href="#what-it-writes" title="Link to this heading">#</a></h2>
+<p>Nothing into another session, and nothing into a repository. Everything crowsnest writes is its own and lives under <code class="docutils literal notranslate"><span class="pre">~/.local/share/crowsnest</span></code> (<code class="docutils literal notranslate"><span class="pre">$CROWSNEST_DATA_DIR</span></code> or <code class="docutils literal notranslate"><span class="pre">$XDG_DATA_HOME</span></code> if you set either):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ledger/&lt;name&gt;.md</span></code>: one per session, as above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>: one line per hook event, append-only, rotated by size. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> tails it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hook.log</span></code>: one line for anything <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code> swallowed, so “the hook did nothing” is a question with an answer.</p></li>
+</ul>
+<p>The only other writes in the package are <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code>, which starts a session, and <code class="docutils literal notranslate"><span class="pre">install-skills</span></code>, which writes symlinks.</p>
+</section>
+<section id="from-python">
+<h2>From Python<a class="headerlink" href="#from-python" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span data-line="2">    <span class="n">roster</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">show</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">turns</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">brief</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">events</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">live_sessions</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">spawn</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">read_ledger</span><span class="p">,</span>
+</span><span data-line="10">    <span class="n">update_ledger</span><span class="p">,</span>
+</span><span data-line="11"><span class="p">)</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="n">roster</span><span class="p">()[</span><span class="s2">"counts"</span><span class="p">]</span>  <span class="c1"># {'waiting': 1, 'busy': 1, 'idle': 30, 'other': 0}</span>
+</span><span data-line="14"><span class="n">show</span><span class="p">(</span><span class="s2">"monitor"</span><span class="p">)[</span><span class="s2">"activity"</span><span class="p">][</span><span class="s2">"last_assistant_text"</span><span class="p">]</span>
+</span><span data-line="15"><span class="n">brief</span><span class="p">(</span><span class="s2">"monitor"</span><span class="p">)[</span><span class="s2">"digest"</span><span class="p">]</span>  <span class="c1"># openloops' dated digest, or None if there is none yet</span>
+</span><span data-line="16"><span class="n">update_ledger</span><span class="p">(</span><span class="s2">"monitor"</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s2">"working"</span><span class="p">,</span> <span class="n">open_questions</span><span class="o">=</span><span class="p">[</span><span class="s2">"squash or rebase?"</span><span class="p">])</span>
+</span><span data-line="17"><span class="n">read_ledger</span><span class="p">(</span><span class="s2">"monitor"</span><span class="p">)[</span><span class="s2">"fields"</span><span class="p">][</span><span class="s2">"last_said"</span><span class="p">]</span>
+</span><span data-line="18"><span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>  <span class="c1"># forever</span>
+</span><span data-line="19">    <span class="o">...</span>
+</span><span data-line="20"><span class="n">spawn</span><span class="p">(</span><span class="s2">"demo"</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="s2">"/path/to/repo"</span><span class="p">,</span> <span class="n">prompt</span><span class="o">=</span><span class="s2">"run the tests"</span><span class="p">)[</span><span class="s2">"pid"</span><span class="p">]</span>
+</span></pre></div>
+</div>
+<p>Every function takes <code class="docutils literal notranslate"><span class="pre">home=</span></code> (the Claude Code config directory; a synced copy of another machine’s works the same way), the readers take <code class="docutils literal notranslate"><span class="pre">is_alive=</span></code> (how a registry pid is confirmed running), and everything that writes takes <code class="docutils literal notranslate"><span class="pre">ledger_dir=</span></code> or <code class="docutils literal notranslate"><span class="pre">events_path=</span></code>.</p>
+</section>
+<section id="not-in-crowsnest">
+<h2>Not in crowsnest<a class="headerlink" href="#not-in-crowsnest" title="Link to this heading">#</a></h2>
+<p>Killing or resuming a session is <a class="reference external" href="https://github.com/thorwhalen/xa">xa</a>’s job (<code class="docutils literal notranslate"><span class="pre">xa</span> <span class="pre">spawn</span></code> is also the pointed replacement for <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code>’s spawner seam, adding hosts and a phone web UI). Asking a session a question is Claude Code’s own <code class="docutils literal notranslate"><span class="pre">SendMessage</span></code>; the skill says when.</p>
+<p class="epythet-aggregates">This documentation as a single file: <a href="crowsnest.md">crowsnest.md</a> (Markdown, for agents).</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-15 11:16 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/c8dd9f042decfe1fc9f6c9792dd0e311633b11f0">c8dd9f0</a> (main) · crowsnest 0.0.32 · <a href="about-this-build.html">about this build</a></p>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-next">
+    <a href="api.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">API reference</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=f2234cd1"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="crowsnest" href="module_docs/crowsnest.html" /> 
-</head>
-
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="#" class="icon icon-home">
-            crowsnest
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest.html">crowsnest</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/__main__.html">crowsnest.__main__</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/account.html">crowsnest.account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/activity.html">crowsnest.activity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/config.html">crowsnest.config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/hook.html">crowsnest.hook</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/init.html">crowsnest.init</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/ledger.html">crowsnest.ledger</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/lineage.html">crowsnest.lineage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/links.html">crowsnest.links</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/open.html">crowsnest.open</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/paths.html">crowsnest.paths</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/registry.html">crowsnest.registry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/report.html">crowsnest.report</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/skills.html">crowsnest.skills</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/spawn.html">crowsnest.spawn</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/tools.html">crowsnest.tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/tree.html">crowsnest.tree</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/triage.html">crowsnest.triage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/watch.html">crowsnest.watch</a></li>
-</ul>
-
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">crowsnest</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to crowsnest’s documentation!</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="welcome-to-crowsnest-s-documentation">
-<h1>Welcome to crowsnest’s documentation!<a class="headerlink" href="#welcome-to-crowsnest-s-documentation" title="Link to this heading"></a></h1>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest.html">crowsnest</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.Activity"><code class="docutils literal notranslate"><span class="pre">Activity</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.LiveSession"><code class="docutils literal notranslate"><span class="pre">LiveSession</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.Turn"><code class="docutils literal notranslate"><span class="pre">Turn</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.backfill_lineage"><code class="docutils literal notranslate"><span class="pre">backfill_lineage()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.brief"><code class="docutils literal notranslate"><span class="pre">brief()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.list_ledgers"><code class="docutils literal notranslate"><span class="pre">list_ledgers()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.live_sessions"><code class="docutils literal notranslate"><span class="pre">live_sessions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.read_activity"><code class="docutils literal notranslate"><span class="pre">read_activity()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.read_ledger"><code class="docutils literal notranslate"><span class="pre">read_ledger()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.read_turns"><code class="docutils literal notranslate"><span class="pre">read_turns()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.roster"><code class="docutils literal notranslate"><span class="pre">roster()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.show"><code class="docutils literal notranslate"><span class="pre">show()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.spawn"><code class="docutils literal notranslate"><span class="pre">spawn()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.turns"><code class="docutils literal notranslate"><span class="pre">turns()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest.html#crowsnest.update_ledger"><code class="docutils literal notranslate"><span class="pre">update_ledger()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/__main__.html">crowsnest.__main__</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/__main__.html#crowsnest.__main__.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/account.html">crowsnest.account</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.CLAUDE_BIN"><code class="docutils literal notranslate"><span class="pre">CLAUDE_BIN</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.CLAUDE_BIN_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">CLAUDE_BIN_ENV_VAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.DROPPED_VARS"><code class="docutils literal notranslate"><span class="pre">DROPPED_VARS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.EXEC_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">EXEC_ENV_VAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.PROFILE_CMD"><code class="docutils literal notranslate"><span class="pre">PROFILE_CMD</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.PROFILE_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">PROFILE_ENV_VAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.account_home"><code class="docutils literal notranslate"><span class="pre">account_home()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.claude_bin"><code class="docutils literal notranslate"><span class="pre">claude_bin()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.configured_claude_bin"><code class="docutils literal notranslate"><span class="pre">configured_claude_bin()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.profile_home"><code class="docutils literal notranslate"><span class="pre">profile_home()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/account.html#crowsnest.account.shell_profile_home"><code class="docutils literal notranslate"><span class="pre">shell_profile_home()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/activity.html">crowsnest.activity</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.Activity"><code class="docutils literal notranslate"><span class="pre">Activity</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.QUESTION_TOOL"><code class="docutils literal notranslate"><span class="pre">QUESTION_TOOL</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.RECENT_TOOLS"><code class="docutils literal notranslate"><span class="pre">RECENT_TOOLS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.TAIL_BYTES"><code class="docutils literal notranslate"><span class="pre">TAIL_BYTES</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.Turn"><code class="docutils literal notranslate"><span class="pre">Turn</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.describe_tool"><code class="docutils literal notranslate"><span class="pre">describe_tool()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.load_records"><code class="docutils literal notranslate"><span class="pre">load_records()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.read_activity"><code class="docutils literal notranslate"><span class="pre">read_activity()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.read_turns"><code class="docutils literal notranslate"><span class="pre">read_turns()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/activity.html#crowsnest.activity.tail_records"><code class="docutils literal notranslate"><span class="pre">tail_records()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/config.html">crowsnest.config</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/config.html#crowsnest.config.CLAUDE_BIN_KEY"><code class="docutils literal notranslate"><span class="pre">CLAUDE_BIN_KEY</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/config.html#crowsnest.config.CONFIG_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">CONFIG_ENV_VAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/config.html#crowsnest.config.DFLT_FRESH_SECONDS"><code class="docutils literal notranslate"><span class="pre">DFLT_FRESH_SECONDS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/config.html#crowsnest.config.Home"><code class="docutils literal notranslate"><span class="pre">Home</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/config.html#crowsnest.config.claude_bin_setting"><code class="docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/config.html#crowsnest.config.config_path"><code class="docutils literal notranslate"><span class="pre">config_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/config.html#crowsnest.config.homes"><code class="docutils literal notranslate"><span class="pre">homes()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/hook.html">crowsnest.hook</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.DETAIL_LIMIT"><code class="docutils literal notranslate"><span class="pre">DETAIL_LIMIT</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.EVENTS"><code class="docutils literal notranslate"><span class="pre">EVENTS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.EVENTS_FILENAME"><code class="docutils literal notranslate"><span class="pre">EVENTS_FILENAME</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.LOG_FILENAME"><code class="docutils literal notranslate"><span class="pre">LOG_FILENAME</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.MAX_EVENT_BYTES"><code class="docutils literal notranslate"><span class="pre">MAX_EVENT_BYTES</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.MAX_LOG_BYTES"><code class="docutils literal notranslate"><span class="pre">MAX_LOG_BYTES</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.append_event"><code class="docutils literal notranslate"><span class="pre">append_event()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.events_path"><code class="docutils literal notranslate"><span class="pre">events_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.handle"><code class="docutils literal notranslate"><span class="pre">handle()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.log_path"><code class="docutils literal notranslate"><span class="pre">log_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/hook.html#crowsnest.hook.rotate"><code class="docutils literal notranslate"><span class="pre">rotate()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/init.html">crowsnest.init</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.HOOKS"><code class="docutils literal notranslate"><span class="pre">HOOKS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.merged_hooks"><code class="docutils literal notranslate"><span class="pre">merged_hooks()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.settings_snippet"><code class="docutils literal notranslate"><span class="pre">settings_snippet()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.template_path"><code class="docutils literal notranslate"><span class="pre">template_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/init.html#crowsnest.init.template_text"><code class="docutils literal notranslate"><span class="pre">template_text()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/ledger.html">crowsnest.ledger</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.FIELDS"><code class="docutils literal notranslate"><span class="pre">FIELDS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.FREE_HEADING"><code class="docutils literal notranslate"><span class="pre">FREE_HEADING</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.LEDGER_DIRNAME"><code class="docutils literal notranslate"><span class="pre">LEDGER_DIRNAME</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.STAMP_SEP"><code class="docutils literal notranslate"><span class="pre">STAMP_SEP</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.ledger_dir"><code class="docutils literal notranslate"><span class="pre">ledger_dir()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.ledger_path"><code class="docutils literal notranslate"><span class="pre">ledger_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.list_ledgers"><code class="docutils literal notranslate"><span class="pre">list_ledgers()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.read_ledger"><code class="docutils literal notranslate"><span class="pre">read_ledger()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.safe_name"><code class="docutils literal notranslate"><span class="pre">safe_name()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.split_stamp"><code class="docutils literal notranslate"><span class="pre">split_stamp()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.stamped"><code class="docutils literal notranslate"><span class="pre">stamped()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/ledger.html#crowsnest.ledger.update_ledger"><code class="docutils literal notranslate"><span class="pre">update_ledger()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/lineage.html">crowsnest.lineage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.CONFIDENCE"><code class="docutils literal notranslate"><span class="pre">CONFIDENCE</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.LINEAGE_FILENAME"><code class="docutils literal notranslate"><span class="pre">LINEAGE_FILENAME</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.MAX_PPID_HOPS"><code class="docutils literal notranslate"><span class="pre">MAX_PPID_HOPS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SESSION_ID_VAR"><code class="docutils literal notranslate"><span class="pre">SESSION_ID_VAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SESSION_PID_VAR"><code class="docutils literal notranslate"><span class="pre">SESSION_PID_VAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SPAWN_COMMANDS"><code class="docutils literal notranslate"><span class="pre">SPAWN_COMMANDS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SPAWN_EVENT"><code class="docutils literal notranslate"><span class="pre">SPAWN_EVENT</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SPAWN_VALUE_FLAGS"><code class="docutils literal notranslate"><span class="pre">SPAWN_VALUE_FLAGS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.SpawnEdge"><code class="docutils literal notranslate"><span class="pre">SpawnEdge</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.append_edge"><code class="docutils literal notranslate"><span class="pre">append_edge()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.current_session"><code class="docutils literal notranslate"><span class="pre">current_session()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.dflt_sources"><code class="docutils literal notranslate"><span class="pre">dflt_sources()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_processes"><code class="docutils literal notranslate"><span class="pre">from_processes()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_records"><code class="docutils literal notranslate"><span class="pre">from_records()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.from_transcripts"><code class="docutils literal notranslate"><span class="pre">from_transcripts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.graph"><code class="docutils literal notranslate"><span class="pre">graph()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.lineage_path"><code class="docutils literal notranslate"><span class="pre">lineage_path()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.names_by_session_id"><code class="docutils literal notranslate"><span class="pre">names_by_session_id()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.record_spawn"><code class="docutils literal notranslate"><span class="pre">record_spawn()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/lineage.html#crowsnest.lineage.spawn_event"><code class="docutils literal notranslate"><span class="pre">spawn_event()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/links.html">crowsnest.links</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.DFLT_RESOLVERS"><code class="docutils literal notranslate"><span class="pre">DFLT_RESOLVERS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.Link"><code class="docutils literal notranslate"><span class="pre">Link</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.MAX_LINKS"><code class="docutils literal notranslate"><span class="pre">MAX_LINKS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.SECRET_URL_SHAPES"><code class="docutils literal notranslate"><span class="pre">SECRET_URL_SHAPES</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.from_commits"><code class="docutils literal notranslate"><span class="pre">from_commits()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.from_issue_refs"><code class="docutils literal notranslate"><span class="pre">from_issue_refs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.from_markdown_links"><code class="docutils literal notranslate"><span class="pre">from_markdown_links()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.from_repo_refs"><code class="docutils literal notranslate"><span class="pre">from_repo_refs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.from_urls"><code class="docutils literal notranslate"><span class="pre">from_urls()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.github_ref"><code class="docutils literal notranslate"><span class="pre">github_ref()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.identity"><code class="docutils literal notranslate"><span class="pre">identity()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.kind_of"><code class="docutils literal notranslate"><span class="pre">kind_of()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.label_for"><code class="docutils literal notranslate"><span class="pre">label_for()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.looks_like_a_secret"><code class="docutils literal notranslate"><span class="pre">looks_like_a_secret()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/links.html#crowsnest.links.without_written_out_links"><code class="docutils literal notranslate"><span class="pre">without_written_out_links()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/open.html">crowsnest.open</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/open.html#crowsnest.open.default_opener"><code class="docutils literal notranslate"><span class="pre">default_opener()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/open.html#crowsnest.open.open_session"><code class="docutils literal notranslate"><span class="pre">open_session()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/paths.html">crowsnest.paths</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/paths.html#crowsnest.paths.DATA_DIR_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">DATA_DIR_ENV_VAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/paths.html#crowsnest.paths.data_dir"><code class="docutils literal notranslate"><span class="pre">data_dir()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/registry.html">crowsnest.registry</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.CLAUDE_AI_SESSIONS"><code class="docutils literal notranslate"><span class="pre">CLAUDE_AI_SESSIONS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.HOME_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">HOME_ENV_VAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.LiveSession"><code class="docutils literal notranslate"><span class="pre">LiveSession</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.STATUSES"><code class="docutils literal notranslate"><span class="pre">STATUSES</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.claude_home"><code class="docutils literal notranslate"><span class="pre">claude_home()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.fresh_within"><code class="docutils literal notranslate"><span class="pre">fresh_within()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.live_sessions"><code class="docutils literal notranslate"><span class="pre">live_sessions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.pid_alive"><code class="docutils literal notranslate"><span class="pre">pid_alive()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.project_slug"><code class="docutils literal notranslate"><span class="pre">project_slug()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/registry.html#crowsnest.registry.transcript_path"><code class="docutils literal notranslate"><span class="pre">transcript_path()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/report.html">crowsnest.report</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/report.html#crowsnest.report.CONSOLE_CSS"><code class="docutils literal notranslate"><span class="pre">CONSOLE_CSS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/report.html#crowsnest.report.CONSOLE_SCRIPT"><code class="docutils literal notranslate"><span class="pre">CONSOLE_SCRIPT</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/report.html#crowsnest.report.render_report"><code class="docutils literal notranslate"><span class="pre">render_report()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/skills.html">crowsnest.skills</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/skills.html#crowsnest.skills.Asset"><code class="docutils literal notranslate"><span class="pre">Asset</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/skills.html#crowsnest.skills.bundled"><code class="docutils literal notranslate"><span class="pre">bundled()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/skills.html#crowsnest.skills.install_skills"><code class="docutils literal notranslate"><span class="pre">install_skills()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/spawn.html">crowsnest.spawn</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/spawn.html#crowsnest.spawn.ACCOUNT_VARS"><code class="docutils literal notranslate"><span class="pre">ACCOUNT_VARS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/spawn.html#crowsnest.spawn.SESSION_VARS"><code class="docutils literal notranslate"><span class="pre">SESSION_VARS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/spawn.html#crowsnest.spawn.child_env"><code class="docutils literal notranslate"><span class="pre">child_env()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/spawn.html#crowsnest.spawn.claude_argv"><code class="docutils literal notranslate"><span class="pre">claude_argv()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/spawn.html#crowsnest.spawn.default_spawner"><code class="docutils literal notranslate"><span class="pre">default_spawner()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/spawn.html#crowsnest.spawn.env_prefix"><code class="docutils literal notranslate"><span class="pre">env_prefix()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/spawn.html#crowsnest.spawn.local_argv"><code class="docutils literal notranslate"><span class="pre">local_argv()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/spawn.html#crowsnest.spawn.spawn"><code class="docutils literal notranslate"><span class="pre">spawn()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/tools.html">crowsnest.tools</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.backfill_lineage"><code class="docutils literal notranslate"><span class="pre">backfill_lineage()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.brief"><code class="docutils literal notranslate"><span class="pre">brief()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.lineage"><code class="docutils literal notranslate"><span class="pre">lineage()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.repo_url"><code class="docutils literal notranslate"><span class="pre">repo_url()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.report"><code class="docutils literal notranslate"><span class="pre">report()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.roster"><code class="docutils literal notranslate"><span class="pre">roster()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.sessions"><code class="docutils literal notranslate"><span class="pre">sessions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.show"><code class="docutils literal notranslate"><span class="pre">show()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.triage"><code class="docutils literal notranslate"><span class="pre">triage()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tools.html#crowsnest.tools.turns"><code class="docutils literal notranslate"><span class="pre">turns()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/tree.html">crowsnest.tree</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.CHAR"><code class="docutils literal notranslate"><span class="pre">CHAR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.FLEET_MIN"><code class="docutils literal notranslate"><span class="pre">FLEET_MIN</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.FLEET_SHOWN"><code class="docutils literal notranslate"><span class="pre">FLEET_SHOWN</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.MAX_INDENT_DEPTH"><code class="docutils literal notranslate"><span class="pre">MAX_INDENT_DEPTH</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.MAX_ROWS"><code class="docutils literal notranslate"><span class="pre">MAX_ROWS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.Placed"><code class="docutils literal notranslate"><span class="pre">Placed</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.RIGHT_COLUMN"><code class="docutils literal notranslate"><span class="pre">RIGHT_COLUMN</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.TREE_CSS"><code class="docutils literal notranslate"><span class="pre">TREE_CSS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.escape"><code class="docutils literal notranslate"><span class="pre">escape()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.layout"><code class="docutils literal notranslate"><span class="pre">layout()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/tree.html#crowsnest.tree.render"><code class="docutils literal notranslate"><span class="pre">render()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/triage.html">crowsnest.triage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.DFLT_OWNER"><code class="docutils literal notranslate"><span class="pre">DFLT_OWNER</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.GROUPS"><code class="docutils literal notranslate"><span class="pre">GROUPS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.REASON_LIMIT"><code class="docutils literal notranslate"><span class="pre">REASON_LIMIT</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.Verdict"><code class="docutils literal notranslate"><span class="pre">Verdict</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.WHYS"><code class="docutils literal notranslate"><span class="pre">WHYS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.classify"><code class="docutils literal notranslate"><span class="pre">classify()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.classify_row"><code class="docutils literal notranslate"><span class="pre">classify_row()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.dflt_verdicts"><code class="docutils literal notranslate"><span class="pre">dflt_verdicts()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.from_ledger"><code class="docutils literal notranslate"><span class="pre">from_ledger()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.from_registry"><code class="docutils literal notranslate"><span class="pre">from_registry()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.latest_section"><code class="docutils literal notranslate"><span class="pre">latest_section()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/triage.html#crowsnest.triage.without_code"><code class="docutils literal notranslate"><span class="pre">without_code()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/crowsnest/watch.html">crowsnest.watch</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.DFLT_INTERVAL"><code class="docutils literal notranslate"><span class="pre">DFLT_INTERVAL</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.HOOK_KINDS"><code class="docutils literal notranslate"><span class="pre">HOOK_KINDS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.QUIET_NOTIFICATIONS"><code class="docutils literal notranslate"><span class="pre">QUIET_NOTIFICATIONS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.WORKING"><code class="docutils literal notranslate"><span class="pre">WORKING</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.diff"><code class="docutils literal notranslate"><span class="pre">diff()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.hook_event"><code class="docutils literal notranslate"><span class="pre">hook_event()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.snapshot"><code class="docutils literal notranslate"><span class="pre">snapshot()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.tail_events"><code class="docutils literal notranslate"><span class="pre">tail_events()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/crowsnest/watch.html#crowsnest.watch.tail_position"><code class="docutils literal notranslate"><span class="pre">tail_position()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
-<p>Release: 0.0.31</p>
-<p>Last change: Sep 12, 2026</p>
-</section>
-
-
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="module_docs/crowsnest.html" class="btn btn-neutral float-right" title="crowsnest" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p></p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+      <script src="_static/copybutton.js?v=fd10adb8"></script>
+      <script src="_static/shibuya.js?v=50760d75"></script></body>
 </html>

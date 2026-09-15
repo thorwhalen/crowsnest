@@ -1,0 +1,26 @@
+crowsnest.watch
+===============
+
+.. automodule:: crowsnest.watch
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_INTERVAL
+      HOOK_KINDS
+      QUIET_NOTIFICATIONS
+      WORKING
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      diff
+      events
+      hook_event
+      snapshot
+      tail_events
+      tail_position
+   

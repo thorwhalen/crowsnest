@@ -1,4 +1,0 @@
-crowsnest.spawn
-===============
-.. automodule:: crowsnest.spawn
-   :members:

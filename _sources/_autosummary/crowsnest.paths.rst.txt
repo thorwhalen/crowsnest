@@ -1,0 +1,18 @@
+crowsnest.paths
+===============
+
+.. automodule:: crowsnest.paths
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DATA_DIR_ENV_VAR
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      data_dir
+   
