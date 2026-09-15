@@ -598,7 +598,7 @@ def test_probe_cli_plain_and_the_triage_toggle_render_without_attention(
     for name, extra in {
         "marked": [],
         "plain": ["--plain"],
-        "untriaged": ["--triage"],
+        "untriaged": ["--no-triage"],
     }.items():
         path = tmp_path / f"{name}.html"
         main(["report", "--home", str(home), "--out", str(path), *extra])
@@ -619,7 +619,8 @@ def test_probe_cli_plain_and_the_triage_toggle_render_without_attention(
 
 def test_probe_a_record_file_nested_too_deep_reads_as_no_record(tmp_path):
     """D3 through the default *file* store: `json.loads` raises RecursionError before
-    `Record.from_dict`'s one-level check runs, and `_record_or_none` catches ValueError only."""
+    `Record.from_dict`'s one-level check runs, and `_record_or_none` catches ValueError only.
+    """
     store = attention.dflt_store(tmp_path / "attention")
     r = row("deep", group="needs_you", why="question", reason="Q?", status="waiting")
     item = attention.item_id(r)

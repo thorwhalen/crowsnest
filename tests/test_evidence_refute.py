@@ -214,11 +214,6 @@ def test_the_reason_quotes_the_start_of_the_first_ask_as_the_docstring_says(text
 # --- #68: owner reaches every path that rebuilds a row and its revision ---------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="predates #67/#68: watch rebuilds rows without owner, ledger_dir or verdicts; "
-    "fixed with #74, which makes the row-building arguments reach every surface",
-)
 def test_the_watcher_rebuilds_a_later_item_for_the_owner_the_verbs_pinned(tmp_path, live):
     # `watch.attention_wakes` -> `_attention_row` -> `_item_row` with no owner (and no
     # ledger_dir or verdicts), so an item put off under `owner="ana"` reads as changed
@@ -232,3 +227,15 @@ def test_the_watcher_rebuilds_a_later_item_for_the_owner_the_verbs_pinned(tmp_pa
     store = {}
     tools.later("shipper", "change", home=home, owner="ana", store=store)
     assert watch.attention_wakes(store=store, home=home, owner="ana") == []
+
+
+def test_the_watcher_rebuilds_a_later_item_from_the_ledgers_the_verbs_read(
+    tmp_path, live
+):
+    # #74: the same gap for `ledger_dir`. Without it the watcher triaged from the default
+    # ledgers, found no request, and woke an item that had not changed.
+    home, ledger_dir = _session(tmp_path, "a", ledger=ASK)
+    store = {}
+    tools.later("shipper", "change", home=home, ledger_dir=ledger_dir, store=store)
+    assert watch.attention_wakes(store=store, home=home, ledger_dir=ledger_dir) == []
+    assert watch.attention_wakes(store=store, home=home, announced=set()) != []

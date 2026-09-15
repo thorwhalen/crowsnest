@@ -1,7 +1,9 @@
 """The attention verbs, end to end: a live session, the report's row, the store, the CLI."""
 
+import contextlib
 import io
 import json
+import re
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -9,6 +11,7 @@ from fixtures import ALIVE, demo_home
 
 from crowsnest import attention, registry, tools
 from crowsnest.__main__ import main
+from crowsnest.ledger import ledger_path
 from crowsnest.paths import data_dir
 
 
@@ -32,6 +35,45 @@ def _report_row(home, label):
 
 def _documents():
     return sorted((data_dir() / "attention").glob("*.json"))
+
+
+def test_a_verb_given_the_reports_ledger_dir_pins_the_row_that_page_shows(
+    home, tmp_path, capsys
+):
+    # #74: `crowsnest report --ledger-dir D` triages from D, and the verbs had no such
+    # flag, so they pinned the row triaged from the default ledgers instead.
+    idle = next(
+        r["label"]
+        for r in tools.roster(home=home, activity=False)["sessions"]
+        if r["status"] == "idle"
+    )
+    ledgers = tmp_path / "other-ledgers"
+    path = ledger_path(idle, ledger_dir=ledgers)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"# {idle}\n\n## For Thor\n\nPick the base branch.\n", encoding="utf-8"
+    )
+    main(["seen", idle, "--home", str(home), "--ledger-dir", str(ledgers)])
+    printed = json.loads(capsys.readouterr().out)
+    shown = tools._item_row(idle, home=home, ledger_dir=ledgers)
+    assert shown["verdict"]["group"] == "needs_you", shown["verdict"]
+    assert printed["seen_rev"] == attention.fingerprint(shown)
+    assert printed["seen_rev"] != attention.fingerprint(tools._item_row(idle, home=home))
+
+
+@pytest.mark.parametrize(
+    "command, switches",
+    [("report", ("triage", "lineage")), ("spawn", ("remote-control",))],
+)
+def test_a_switch_that_turns_something_off_is_spelled_no(command, switches, capsys):
+    # #74: `triage: bool = True` rendered as `--triage`, a flag that turned triage OFF,
+    # while the help text promised `--no-triage`.
+    with contextlib.suppress(SystemExit):  # the CLI swallows --help's exit; argh may not
+        main([command, "--help"])
+    usage = capsys.readouterr().out
+    for switch in switches:
+        assert f"--no-{switch}" in usage, usage
+        assert not re.search(rf"(?<![\w-])--{switch}\b", usage), usage
 
 
 def test_the_revision_a_verb_pins_is_the_one_the_report_row_carries(home):

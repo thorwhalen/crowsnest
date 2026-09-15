@@ -422,8 +422,8 @@ def report(
     all_homes: bool = False,
     fragment: bool = False,
     interactive: bool = False,
-    triage: bool = True,
-    lineage: bool = True,
+    no_triage: bool = False,
+    no_lineage: bool = False,
     ledger_dir: str | None = None,
     tz: str | None = None,
     plain: bool = False,
@@ -460,8 +460,8 @@ def report(
     result = tools.report(
         home=home,
         all_homes=all_homes,
-        triage=triage,
-        with_lineage=lineage,
+        triage=not no_triage,
+        with_lineage=not no_lineage,
         ledger_dir=ledger_dir,
         fragment=fragment,
         interactive=interactive,
@@ -480,17 +480,37 @@ def _doc(doc: dict) -> str:
     return _json.dumps(doc, indent=2)
 
 
-def seen(session: str, *, home: str | None = None, all_homes: bool = False):
+def seen(
+    session: str,
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    ledger_dir: str | None = None,
+):
     """Mark a session's item seen: dimmed on the page until what it asks for changes.
 
     Prints the stored attention record. `seen` also wakes an item you had put off.
+
+    `--ledger-dir` is the one the page was rendered with (`crowsnest report
+    --ledger-dir`), for this verb and every other: a verb pins the revision of the row
+    the report builds, and a row triaged from other ledgers reads as changed there.
     """
-    return _doc(tools.seen(session, home=home, all_homes=all_homes))
+    return _doc(
+        tools.seen(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+    )
 
 
-def unseen(session: str, *, home: str | None = None, all_homes: bool = False):
+def unseen(
+    session: str,
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    ledger_dir: str | None = None,
+):
     """Mark a session's item unread, so it shows as new again. Prints the stored record."""
-    return _doc(tools.unseen(session, home=home, all_homes=all_homes))
+    return _doc(
+        tools.unseen(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+    )
 
 
 def later(
@@ -501,6 +521,7 @@ def later(
     ignore_changes: bool = False,
     home: str | None = None,
     all_homes: bool = False,
+    ledger_dir: str | None = None,
 ):
     """Put a session's item off: `1h`, `evening`, `tomorrow`, or `change` (no time).
 
@@ -516,23 +537,49 @@ def later(
             on_change=not ignore_changes,
             home=home,
             all_homes=all_homes,
+            ledger_dir=ledger_dir,
         )
     )
 
 
-def done(session: str, *, home: str | None = None, all_homes: bool = False):
+def done(
+    session: str,
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    ledger_dir: str | None = None,
+):
     """Mark a session's item handled: hidden until what it asks for changes."""
-    return _doc(tools.done(session, home=home, all_homes=all_homes))
+    return _doc(
+        tools.done(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+    )
 
 
-def note(session: str, text: str, *, home: str | None = None, all_homes: bool = False):
+def note(
+    session: str,
+    text: str,
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    ledger_dir: str | None = None,
+):
     """Write a note on a session's item; `""` removes it. A note never changes its state."""
-    return _doc(tools.note(session, text, home=home, all_homes=all_homes))
+    return _doc(
+        tools.note(session, text, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+    )
 
 
-def undo(session: str, *, home: str | None = None, all_homes: bool = False):
+def undo(
+    session: str,
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    ledger_dir: str | None = None,
+):
     """Undo the last seen, unseen, later, done or note on a session's item. One level."""
-    return _doc(tools.undo(session, home=home, all_homes=all_homes))
+    return _doc(
+        tools.undo(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+    )
 
 
 def attention_export(*, since: str = ""):
@@ -574,10 +621,13 @@ def watch(
     home: str | None = None,
     all_homes: bool = False,
     json: bool = False,
+    ledger_dir: str | None = None,
 ):
     """Print one line per change, forever: started, exited, idle, busy, waiting, error.
 
     `--all-homes` watches every home in the config file; a row then reads `name@home`.
+    `--ledger-dir` is the one the verbs and the report were given, so a `woke` is
+    computed on the row they pinned.
 
     Plus `needs-you` and `stopped`, pushed by Claude Code's own hooks the moment they
     happen, when `crowsnest hook` is installed on them.
@@ -589,7 +639,9 @@ def watch(
     watching session. Stop with Ctrl-C.
     """
     try:
-        for event in _watch.events(interval=interval, home=home, all_homes=all_homes):
+        for event in _watch.events(
+            interval=interval, home=home, all_homes=all_homes, ledger_dir=ledger_dir
+        ):
             if json:
                 line = _json.dumps(event)
             else:
@@ -773,7 +825,7 @@ def spawn(
     prompt: str = "",
     model: str = "",
     effort: str = "",
-    remote_control: bool = True,
+    no_remote_control: bool = False,
     home: str | None = None,
     profile: str = "",
     binary: str = "",
@@ -798,6 +850,7 @@ def spawn(
 
     `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
     those directories too, which is how a fleet manager gets every repository of its fleet.
+    `--no-remote-control` starts it without Remote Control, so it has no claude.ai URL.
 
     `--model` and `--effort` are worth stating on every spawn: left out, the session
     inherits the account's default, which is the expensive one exactly when nobody was
@@ -813,7 +866,7 @@ def spawn(
         prompt=prompt,
         model=model,
         effort=effort,
-        remote_control=remote_control,
+        remote_control=not no_remote_control,
         home=home,
         profile=profile,
         binary=binary,
