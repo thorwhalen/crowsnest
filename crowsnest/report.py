@@ -31,7 +31,8 @@ figure is that same age. A row whose source gave no time says *time unknown*.
 **What the person decided about each row shows too** (:mod:`crowsnest.attention`,
 crowsnest#55): seen rows dim and sort below the rest of their register, rows put off fold
 into a collapsed *Later* block, rows handled and unchanged since are counted rather than
-shown. A store holding no readable record, and ``plain``, leave the page as it was.
+shown, and what has sat too long gathers in a collapsed *Review* block at the foot
+(crowsnest#59). A store holding no readable record, and ``plain``, leave the page as it was.
 
 Every string reaches the page through :class:`_Sanitizer`, which is
 :func:`openloops.egress.scrub` plus HTML escaping. A row's ``last_assistant_text`` or
@@ -159,6 +160,9 @@ ATTENTION_CSS = """
 .register--later>summary{cursor:pointer;list-style:none}
 .register--later>summary::-webkit-details-marker{display:none}
 .register--later .figure{color:var(--ink-soft)}
+.register--review>summary{cursor:pointer;list-style:none}
+.register--review>summary::-webkit-details-marker{display:none}
+.register--review .figure{color:var(--ink-soft)}
 """
 
 #: The console's styles, on top of the shared stylesheet's tokens. Interactive mode only.
@@ -185,6 +189,10 @@ CONSOLE_CSS = """
 .unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}
 .acts button,.later-sheet button,.seen-above,.toast button{min-height:2.75rem}
 .seen-above{margin-top:.5rem}
+.review-line .acts{grid-column:1/-1}
+.acts a.review-open{display:inline-flex;align-items:center;min-height:2.75rem;font-family:var(--mono);
+  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;
+  border:1px solid var(--accent);color:var(--accent);text-decoration:none}
 .later-sheet{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;width:100%;
   padding:.6rem;border:1px solid var(--rule);background:var(--surface)}
 .later-sheet p{width:100%;margin:0;color:var(--ink)}
@@ -645,8 +653,13 @@ CONSOLE_SCRIPT = r"""
     let writing = Promise.resolve();  // every write waits for the one before it
     let sheetRow = null, toastTimer = 0, undoable = [], lit = false;
     const at = (record) => (record && record.updated_at ? A.instant(record.updated_at) : -Infinity);
+    // The review band's lines (#59) name an item and carry its revision, but are not rows:
+    // nothing redraws or moves them, and an item handled and hidden has a line and no row.
+    const reviewLines = new Set([...document.querySelectorAll("li[data-item][data-review-rev]")]
+      .filter((el) => A.isItemId(el.dataset.item)));
     const rowsOf = (item) => rows.get(item) || [];
-    const isRow = (el) => Boolean(el) && rowsOf(el.dataset.item).includes(el);
+    const isRow = (el) => Boolean(el) && (rowsOf(el.dataset.item).includes(el) || reviewLines.has(el));
+    const revOf = (el) => el.dataset.rev || el.dataset.reviewRev;
     const recordOf = (el) => (known.get(el.dataset.item) || {}).record || null;
     const seenAsOf = (el) => A.seenAsOf(el.dataset.group, el.dataset.why);
 
@@ -808,7 +821,8 @@ CONSOLE_SCRIPT = r"""
     }
     // Apply `transition` once per item among `els`, and redraw every row of that item.
     // `display` (Undo's) says what each row is drawn from instead of the new record.
-    function act(els, transition, message, { undo = true, display = null } = {}) {
+    // A review line tapped dims until the page next loads; `resolve: false` (Undo's) lifts it.
+    function act(els, transition, message, { undo = true, display = null, resolve = true } = {}) {
       const now = Date.now();
       const acted = [], items = new Set();
       for (const el of els) {
@@ -820,14 +834,16 @@ CONSOLE_SCRIPT = r"""
         try { record = transition(before.record, el, now); } catch (e) { say("not done: " + codeOf(e)); continue; }
         const all = rowsOf(item);
         const entry = {
-          item, rows: all, record, before, failed: false,
+          item, el, line: reviewLines.has(el) ? el : null, rows: all, record, before, failed: false,
           shownBefore: new Map(all.map((row) => [row, displayed.has(row) ? displayed.get(row) : null])),
         };
         acted.push(entry);
         known.set(item, { record, ext: before.ext });
         for (const row of all) apply(row, display && display.has(row) ? display.get(row) : record);
+        if (entry.line) entry.line.classList.toggle("is-seen", resolve);
         save(item, record, before.ext).catch((error) => {
           entry.failed = true;
+          if (entry.line) entry.line.classList.toggle("is-seen", !resolve);
           const current = known.get(item);
           if (current && current.record === record) {
             known.set(item, before);
@@ -860,8 +876,8 @@ CONSOLE_SCRIPT = r"""
       if (!mine.length) { if (elsewhere) notify("Not undone: changed elsewhere since", []); return; }
       const display = new Map();
       mine.forEach((entry) => entry.shownBefore.forEach((shown, row) => display.set(row, shown)));
-      act(mine.map((entry) => entry.rows[0]), (record, el, now) => A.undo(record, now),
-        (n) => (n === 1 ? "Undone" : "Undone: " + n + " rows") + leftAlone, { undo: false, display });
+      act(mine.map((entry) => entry.el), (record, el, now) => A.undo(record, now),
+        (n) => (n === 1 ? "Undone" : "Undone: " + n + " rows") + leftAlone, { undo: false, display, resolve: false });
     });
 
     // Read: one subscription. A document redraws its rows only when it is newer than what
@@ -889,7 +905,7 @@ CONSOLE_SCRIPT = r"""
     function light() {
       if (lit) return;
       lit = true;
-      document.querySelectorAll("button[data-attend],button[data-seen-above]").forEach((button) => { button.hidden = false; });
+      document.querySelectorAll("button[data-attend],button[data-seen-above],button[data-review]").forEach((button) => { button.hidden = false; });
     }
     try {
       collection.onSnapshot((snap) => {
@@ -930,11 +946,14 @@ CONSOLE_SCRIPT = r"""
       const plan = sheet.querySelector("[data-plan]").value;
       closeSheet();
       if (!isRow(el) || preset === "cancel") return;
+      putOff(el, preset, onChange, plan);
+    }));
+    function putOff(el, preset, onChange, plan) {
       act([el], (record, row, now) => {
         const until = preset === "drop" ? null : A.laterUntil(preset, now, hours);
-        return A.later(record, row.dataset.rev, now, { until, onChange: until === null || onChange, plan, seenAs: seenAsOf(row) });
+        return A.later(record, revOf(row), now, { until, onChange: until === null || onChange, plan, seenAs: seenAsOf(row) });
       }, () => (preset === "drop" ? "Dropped: back only when it changes" : "Put off: in Later, below"));
-    }));
+    }
 
     function openNote(el) {
       const acts = el.querySelector(".acts");
@@ -964,6 +983,23 @@ CONSOLE_SCRIPT = r"""
         openSheet(el);
       } else if (kind === NOTE) {
         openNote(el);
+      }
+    }));
+
+    // The review band's resolutions (#59): a row's own transitions, on the item a line names,
+    // at the revision the line carries -- so an item handled and hidden can still be re-opened.
+    document.querySelectorAll("button[data-review]").forEach((button) => button.addEventListener("click", () => {
+      const line = button.closest("li[data-review-rev]");
+      if (!lit || !isRow(line)) return;
+      const kind = button.dataset.review;
+      if (kind === A.LATER) {
+        openSheet(line);
+      } else if (kind === "drop") {
+        putOff(line, "drop", true, "");
+      } else if (kind === A.DONE) {
+        act([line], (record, row, now) => A.done(record, revOf(row), now, seenAsOf(row)), () => "Done: hidden until it changes");
+      } else if (kind === "reopen") {
+        act([line], (record, row, now) => A.seen(record, revOf(row), now, seenAsOf(row)), () => "Re-opened: back on the page when it next loads");
       }
     }));
 
@@ -1015,6 +1051,29 @@ LATER_PRESETS = (
 #: The Later sheet's other two buttons: *Drop it*, which leads once an item has been put
 #: off ``max_snoozes`` times and is Later with no time, woken only by a change; and Cancel.
 DROP, CANCEL = "drop", "cancel"
+
+#: What a review line offers besides the row's own transitions: a link to the row, and
+#: *Undo* on an item handled here, which marks it seen at its revision so it is back.
+OPEN, REOPEN = "open", "reopen"
+
+#: The review band's one-tap resolutions by kind, in the order a line shows them (#59,
+#: triage-ux 2.7). ``ask`` and ``tell`` queue the console's intents, as a row's buttons do;
+#: ``drop``, ``later``, ``done`` and ``reopen`` write the record. An unclassified row's
+#: *Recap* is #58's intent: until it lands, the row offers Ask, which a recap answers.
+REVIEW_ACTIONS = {
+    _attention.SNOOZED: ((DROP, "Drop"), (_attention.LATER, "Later"), (OPEN, "Open")),
+    _attention.STALE: (
+        (OPEN, "Answer"),
+        (_attention.LATER, "Later"),
+        (_attention.DONE, "Done"),
+    ),
+    _attention.STUCK: (("ask", "Ask"), (_attention.LATER, "Later")),
+    _attention.UNMOVED: ((REOPEN, "Undo"), ("tell", "Tell")),
+    _attention.UNCLASSIFIED: (("ask", "Ask"), (_attention.LATER, "Later")),
+}
+
+#: The actions that queue an intent rather than write a record.
+_INTENT_ACTIONS = ("ask", "tell")
 
 #: How often the watching session reads the console, in seconds: the skill's ``/loop 30s``.
 #: The page calls crowsnest's heartbeat stale past two of these.
@@ -2344,6 +2403,189 @@ def _later_register(
     )
 
 
+#: The review band's headings by kind. Each states the ``[attention]`` threshold that put
+#: its rows there, so the page never holds a number the config file does not.
+_REVIEW_HEADINGS = {
+    _attention.SNOOZED: "Put off {max_snoozes} times or more",
+    _attention.STALE: "Seen, still waiting on you, untouched for over {stale}",
+    _attention.STUCK: "Working, with no change for over {stuck}",
+    _attention.UNMOVED: "Handled over {stuck} ago, and the session has not moved",
+    _attention.UNCLASSIFIED: "Has not said where it stands",
+}
+
+
+def _review_entries(
+    sessions: Sequence[Mapping[str, Any]],
+    view: _View,
+    clock: _Clock,
+    settings: AttentionSettings,
+) -> list[tuple[Mapping[str, Any], _Attended, dict]]:
+    """Every row :func:`crowsnest.attention.review_of` places, in page order.
+
+    From the item, revision and record this render already has: the band names and hashes
+    nothing itself, so it cannot disagree with the rows above it about a revision (#78).
+    """
+    moment = datetime.fromtimestamp(clock.now, tz=timezone.utc)
+    found = []
+    for row in sessions:
+        attended = view.of(row)
+        if attended is None:
+            continue
+        try:
+            kind = _attention.review_of(
+                row, attended.rev, attended.record, now=moment, config=settings
+            )
+        except (ValueError, OverflowError):
+            continue
+        if kind is not None:
+            found.append((row, attended, kind))
+    return found
+
+
+def _review_controls(safe: _Sanitizer, row: Mapping[str, Any], kind: str) -> str:
+    """A review line's resolutions, hidden like a row's console; empty in static mode.
+
+    *Open* and *Answer* are links to the row. Ask and Tell are the console's own buttons
+    in a console of the line's own, so the script queues them, and hides them on a row
+    from another account, exactly as on the row. The rest wait, hidden, for the page's
+    ``attention`` documents, as the row's Seen, Later and Done do.
+    """
+    if not _interactive.get():
+        return ""
+    ident = _slug(str(row.get("label") or row.get("session_id") or ""))
+    actions = REVIEW_ACTIONS[kind]
+    parts = []
+    for action, label in actions:
+        if action == OPEN:
+            parts.append(
+                f'<a class="review-open" href="#session-{ident}">{safe.text(label)}</a>'
+            )
+        elif action in _INTENT_ACTIONS:
+            parts.append(
+                f'<button type="button" data-kind="{action}">{safe.text(label)}</button>'
+            )
+        else:
+            parts.append(
+                f'<button type="button" data-review="{action}" hidden>{safe.text(label)}</button>'
+            )
+    if any(action == "tell" for action, _ in actions):
+        parts.append(
+            '<textarea hidden rows="2"></textarea>'
+            '<button type="button" data-kind="send" hidden>Send</button>'
+        )
+    reachable = "0" if row.get("home") else "1"
+    return (
+        f'<div class="acts" data-console hidden data-session="{safe.text(row.get("label"))}"'
+        f' data-home="{safe.text(row.get("home") or "")}" data-reachable="{reachable}">'
+        + "".join(parts)
+        + '<p class="unreachable" hidden>on another account — open it there</p>'
+        '<ul class="answers"></ul>'
+        "</div>"
+    )
+
+
+def _review_line(
+    safe: _Sanitizer,
+    row: Mapping[str, Any],
+    attended: _Attended,
+    kind: Mapping[str, Any],
+    clock: _Clock,
+) -> str:
+    """One thin line: how long it has sat, the session, and what put it here.
+
+    Not a row: it carries no ``session-`` id, because the row it names is above it (or,
+    handled and hidden, nowhere), and every session appears on the page exactly once. On
+    an interactive page it carries the item and its revision as ``data-review-rev``, which
+    the script's rows do not match.
+    """
+    name, count = kind["kind"], kind["count"]
+    if kind["since"]:
+        figure, unit = _since(clock.now - _attention.instant(kind["since"]).timestamp())
+    else:
+        figure, unit = _status_age(row, clock.now)
+    span = f"{figure}{unit}"
+    status = safe.text(row.get("status") or "?")
+    what = {
+        _attention.SNOOZED: f"put off {count} times",
+        _attention.STALE: f"seen {span} ago, untouched since",
+        _attention.STUCK: f"{status} for {span} with no change",
+        _attention.UNMOVED: f"marked handled {span} ago; the session has not moved",
+        _attention.UNCLASSIFIED: f"{status} for {span}",
+    }[name]
+    age = f"{count}×" if name == _attention.SNOOZED else span
+    sep = ' <span class="sep">·</span> '
+    home = row.get("home")
+    tail = f"{sep}{safe.text(home)}" if home else ""
+    attrs = ""
+    if _interactive.get():
+        attrs = (
+            f' data-item="{_html.escape(attended.item, quote=True)}"'
+            f' data-review-rev="{_html.escape(attended.rev, quote=True)}"'
+        )
+        if attended.now_as is not None:
+            attrs += (
+                f' data-group="{safe.text(attended.now_as.group)}"'
+                f' data-why="{safe.text(attended.now_as.why)}"'
+            )
+    return (
+        f'<li class="thin review-line"{attrs}>'
+        f'<span class="thin-age">{age}</span>'
+        f'<p class="thin-ask">{safe.text(row.get("label"))}{sep}{what}{tail}</p>'
+        f"{_review_controls(safe, row, name)}"
+        "</li>"
+    )
+
+
+def _review_register(
+    safe: _Sanitizer,
+    sessions: Sequence[Mapping[str, Any]],
+    view: _View,
+    clock: _Clock,
+    settings: AttentionSettings,
+) -> str:
+    """The review band (triage-ux 2.7, #59): closed, at the foot, one thin line per row.
+
+    Grouped by kind in :data:`crowsnest.attention.REVIEW_KINDS` order, under headings that
+    state the ``[attention]`` thresholds. Nothing when no row qualifies, and nothing on a
+    page that does not apply the store -- an empty store, ``plain``, no verdicts -- so those
+    pages keep their bytes. It re-alerts nobody: the title's count is computed from the
+    registers above and never reads the band.
+    """
+    if not view.on:
+        return ""
+    entries = _review_entries(sessions, view, clock, settings)
+    if not entries:
+        return ""
+    numbers = {
+        "max_snoozes": settings.max_snoozes,
+        "stale": _exactly(settings.stale_after.total_seconds()),
+        "stuck": _exactly(settings.stuck_after.total_seconds()),
+    }
+    groups = []
+    for name in _attention.REVIEW_KINDS:
+        lines = "".join(
+            _review_line(safe, row, attended, kind, clock)
+            for row, attended, kind in entries
+            if kind["kind"] == name
+        )
+        if lines:
+            heading = _REVIEW_HEADINGS[name].format(**numbers)
+            groups.append(
+                f'<p class="subhead">{heading}</p><ul class="thins">{lines}</ul>'
+            )
+    return (
+        '<details class="register register--review" id="review">'
+        '<summary class="register-head">'
+        f'<span class="figure">{len(entries)}</span>'
+        "<h2>Review</h2>"
+        "</summary>"
+        '<p class="rule">What has sat too long, gathered so you only decide. Nothing here '
+        "counts toward the title.</p>"
+        f"{''.join(groups)}"
+        "</details>"
+    )
+
+
 # --------------------------------------------------------------------------------
 # The document.
 # --------------------------------------------------------------------------------
@@ -2419,7 +2661,11 @@ def render_report(
       opens with how many sessions wait on the person; the ``<title>`` counts the new,
       changed and woke rows of that register; a row with a note shows its first line, and
       a row back from *Later* its plan; a *Needs you* row carries its reach, ``phone`` or
-      ``terminal``.
+      ``terminal``;
+    - what has sat too long gathers in a collapsed *Review* block at the foot, one line per
+      row, grouped by :func:`crowsnest.attention.review_of`'s kinds under the thresholds of
+      ``attention_settings``; on an interactive page each line offers its one-tap
+      resolutions (:data:`REVIEW_ACTIONS`). It counts toward nothing.
 
     **A store with no readable record changes nothing**: the page is byte for byte the
     page from before attention existed. Neither does ``plain=True``, which ignores the
@@ -2626,6 +2872,7 @@ def _render(
         _later_register(safe, put_off, view, clock),
         _lineage_register(safe, roster.get("lineage")),
         _quiet_register(safe, quiet, clock),
+        _review_register(safe, sessions, view, clock, settings),
         _footer(safe, stamp, handled=handled),
     ]
     # The badge (triage-ux 2.4): only what is unread in the register that needs the

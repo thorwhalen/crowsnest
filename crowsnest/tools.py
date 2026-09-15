@@ -597,12 +597,12 @@ def report(
     also what lets a test of this function not read the ledgers of whoever runs it.
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
-    # The `[attention]` table gives the stale age and, on an interactive page, the Later
-    # sheet's hours and snooze limit. It is read only when one of those is wanted, so a
-    # page that needs neither does not fail on a table it never uses.
-    settings = (
-        attention_settings(path=config) if stale_after is None or interactive else None
-    )
+    # The `[attention]` table gives the stale age, the review band's thresholds on a page
+    # that applies the store, and, on an interactive page, the Later sheet's hours and
+    # snooze limit. It is read only when one of those is wanted, so a page that needs none
+    # does not fail on a table it never uses.
+    wanted = stale_after is None or interactive or (triage and not plain)
+    settings = attention_settings(path=config) if wanted else None
     if stale_after is None:
         stale_after = settings.stale_after
     ctx = dflt_row_context(config=config) if row_context is None else row_context

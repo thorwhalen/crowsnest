@@ -49,6 +49,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
+import math
 import os
 import uuid
 import warnings
@@ -73,8 +74,14 @@ __all__ = [
     "NAMESPACE",
     "NEW",
     "PRESETS",
+    "REVIEW_KINDS",
     "SEEN",
+    "SNOOZED",
+    "STALE",
     "STATES",
+    "STUCK",
+    "UNCLASSIFIED",
+    "UNMOVED",
     "WOKE",
     "Later",
     "Note",
@@ -99,6 +106,8 @@ __all__ = [
     "reach",
     "read_doc",
     "read_record",
+    "review",
+    "review_of",
     "seen",
     "seen_as_of",
     "undo",
@@ -852,6 +861,181 @@ def undo(record: Record | None, *, now: datetime | None = None) -> Record:
     if record is None or record.prev is None:
         raise ValueError("nothing to undo")
     return replace(record.prev, prev=None, updated_at=_stamp(now))
+
+
+# --------------------------------------------------------------------------------------
+# Review: what has sat too long, prepared so the person only decides (triage-ux 2.7, #59)
+
+#: The review band's kinds, in the order the band lists them. A row is one kind at most:
+#: the first whose rule it meets, in this order.
+SNOOZED, STALE, STUCK, UNMOVED, UNCLASSIFIED = (
+    "snoozed",
+    "stale",
+    "stuck",
+    "unmoved",
+    "unclassified",
+)
+REVIEW_KINDS = (SNOOZED, STALE, STUCK, UNMOVED, UNCLASSIFIED)
+
+
+def _group_of(row: Mapping) -> str:
+    verdict = row.get("verdict")
+    group = verdict.get("group") if isinstance(verdict, Mapping) else ""
+    return group if isinstance(group, str) else ""
+
+
+def _touched(record: Record | None) -> datetime | None:
+    """When the person last acted on the item -- the record's ``updated_at`` -- or ``None``."""
+    if record is None or not record.updated_at:
+        return None
+    return instant(record.updated_at)
+
+
+def _moment_of_epoch(value) -> datetime | None:
+    """A row's ``status_since``, Unix seconds, as a datetime; ``None`` when it says nothing."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    if not math.isfinite(value) or value <= 0:
+        return None
+    try:
+        return datetime.fromtimestamp(value, tz=timezone.utc)
+    except (OverflowError, OSError, ValueError):
+        return None
+
+
+def review_of(
+    row: Mapping,
+    rev: str,
+    record: Record | None,
+    *,
+    now: datetime | None = None,
+    config: AttentionSettings | None = None,
+) -> dict | None:
+    """Which review row ``row`` is: ``{"kind", "since", "count"}``, or ``None``. Pure.
+
+    ``rev`` and ``record`` are the row's revision and record as the caller already has
+    them: this function never names or hashes a row, which is :mod:`crowsnest.rows`'s
+    job, so a page given a row context and its band cannot disagree about a revision.
+    ``config`` is the ``[attention]`` table (:func:`crowsnest.config.attention_settings`).
+    ``since`` is when the rule's clock started, stamped like ``updated_at`` (``''`` for a
+    rule with no clock); ``count`` is how often the item has been put off.
+
+    ================  ================================================  ==================
+    kind              rule                                              clock (``since``)
+    ================  ================================================  ==================
+    ``snoozed``       in ``later``, put off ``max_snoozes`` times or    none
+                      more, and back on the page (woke, or changed)
+    ``stale``         shows ``seen``, group ``needs_you``, untouched    the record's
+                      for longer than ``stale_after``                   ``updated_at``
+    ``stuck``         group ``working``, shown, in its status for       the row's
+                      longer than ``stuck_after``                       ``status_since``
+    ``unmoved``       shows ``done`` -- handled at this very revision   the record's
+                      -- for longer than ``stuck_after``                ``updated_at``
+    ``unclassified``  group ``unclassified``, shown                     none
+    ================  ================================================  ==================
+
+    **A row the person hid is in review only as unmoved.** Put off and asleep, or dropped,
+    it has had its decision, and Later and Drop are the decisions the band offers: tapping
+    one takes the row out of the band. An item put off yet again is back once it wakes.
+
+    **"No material change" for a working row is timed by its status**, not by a time the
+    store keeps per revision: a render that wrote one would turn attention on for a person
+    who never marked anything. A ``working`` row's default material is its group, which
+    stays the same exactly as long as the session stays in that status. A time nobody
+    knows is no time, so a row without ``status_since`` is never stuck. "Untouched" means
+    what it says: a note counts as touching an item.
+
+    >>> from datetime import datetime, timedelta, timezone
+    >>> now = datetime(2026, 2, 1, 12, tzinfo=timezone.utc)
+    >>> asks = {'verdict': {'group': 'needs_you', 'why': 'question', 'reason': 'Squash?'}}
+    >>> review_of(asks, 'r1', seen(None, 'r1', now=now - timedelta(days=2)), now=now)['kind']
+    'stale'
+    >>> review_of(asks, 'r1', seen(None, 'r1', now=now), now=now) is None
+    True
+    """
+    settings = AttentionSettings() if config is None else config
+    moment = _aware(now)
+    shown = present(rev, record, now=moment)
+    count = record.later.count if record is not None and record.later else 0
+
+    def found(kind: str, since: datetime | None = None) -> dict:
+        return {
+            "kind": kind,
+            "since": "" if since is None else _stamp(since),
+            "count": count,
+        }
+
+    if shown == DONE:
+        touched = _touched(record)
+        if touched is not None and moment - touched > settings.stuck_after:
+            return found(UNMOVED, touched)
+        return None
+    if shown in HIDDEN:
+        return None
+    if record is not None and record.state == LATER and count >= settings.max_snoozes:
+        return found(SNOOZED)
+    group = _group_of(row)
+    if shown == SEEN and group == "needs_you":
+        touched = _touched(record)
+        if touched is not None and moment - touched > settings.stale_after:
+            return found(STALE, touched)
+    if group == "working":
+        since = _moment_of_epoch(row.get("status_since"))
+        if since is not None and moment - since > settings.stuck_after:
+            return found(STUCK, since)
+    if group == "unclassified":
+        return found(UNCLASSIFIED)
+    return None
+
+
+def review(
+    rows: Iterable[Mapping],
+    *,
+    store: MutableMapping | None = None,
+    now: datetime | None = None,
+    config: AttentionSettings | None = None,
+    row_context=None,
+) -> list[dict]:
+    """The review band: every row of ``rows`` that :func:`review_of` places, grouped by kind.
+
+    Each entry is :func:`review_of`'s answer plus the row's ``item``, ``rev`` and the
+    ``row`` itself, in :data:`REVIEW_KINDS` order and in ``rows``' order within a kind.
+    ``row_context`` (:class:`crowsnest.rows.RowContext`; ``None`` is attention's own
+    defaults) names and hashes each row, and must be the one the rows were built with and
+    the verbs were given. A row with no identity, or one a revision cannot hash, is left
+    out; a record that cannot be read counts as none, as it does on the page.
+
+    It answers for any store. The page draws the band only once the store holds a record
+    (the degradation table in discussion #51), so an empty store changes nothing there.
+
+    >>> row = {'session_id': 'e7c1', 'status': 'idle',
+    ...        'verdict': {'group': 'unclassified', 'reason': 'said nothing'}}
+    >>> [entry['kind'] for entry in review([row], store={})]
+    ['unclassified']
+    """
+    from crowsnest.rows import RowContext  # `rows` imports this module
+
+    ctx = RowContext() if row_context is None else row_context
+    store = dflt_store() if store is None else store
+    moment = _aware(now)
+    found = []
+    for row in rows:
+        try:
+            item, rev = ctx.item(row), ctx.rev(row)
+        except ValueError:  # UnicodeEncodeError included
+            continue
+        try:
+            record = read_record(item, store=store)
+        except ValueError:
+            record = None
+        try:
+            kind = review_of(row, rev, record, now=moment, config=config)
+        except (ValueError, OverflowError):
+            continue
+        if kind is not None:
+            found.append({**kind, "item": item, "rev": rev, "row": row})
+    found.sort(key=lambda entry: REVIEW_KINDS.index(entry["kind"]))
+    return found
 
 
 # --------------------------------------------------------------------------------------

@@ -456,7 +456,9 @@ def report(
     What you marked shows too (`crowsnest seen|later|done|note`): seen rows dimmed below
     the rest of their register, rows put off folded into a closed *Later* block, rows
     handled and unchanged since left out and counted at the foot, and the title counting
-    what is new in *Needs you*. `--plain` leaves all of that out, for a copy to share.
+    what is new in *Needs you*; a closed *Review* block at the very foot gathers what has sat
+    too long, under the `[attention]` table's thresholds. `--plain` leaves all of that out,
+    for a copy to share.
     """
     result = tools.report(
         home=home,
