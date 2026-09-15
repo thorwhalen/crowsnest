@@ -56,7 +56,7 @@ from __future__ import annotations
 
 import unicodedata
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field, replace
 
 __all__ = [
     "CHAR",
@@ -124,8 +124,11 @@ TREE_CSS = """
 .spawn-tree svg{display:block}
 .spawn-tree figcaption{margin-top:0.55rem;color:var(--ink-soft);font-size:0.82rem;
   max-width:34rem}
-.spawn-tree-alt{position:absolute;width:1px;height:1px;margin:-1px;padding:0;
-  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.spawn-tree-list{margin-top:0.55rem;font-size:0.82rem}
+.spawn-tree-list summary{cursor:pointer;color:var(--ink-soft);font-family:var(--mono);
+  font-size:0.74rem}
+.spawn-tree-list ul{list-style:none;margin:0.4rem 0 0;padding:0;display:grid;gap:0.15rem}
+.spawn-tree-list li{overflow-wrap:anywhere}
 """
 
 #: Which stylesheet token colours which status. These are the page's own tokens (they are
@@ -163,6 +166,11 @@ class Placed:
     ``parent_row`` is the row the connector comes down from, ``-1`` for a root. Everything
     is in rows and depths rather than pixels, so a different renderer -- or a test -- can
     read the layout without knowing the geometry.
+
+    ``node`` is the graph node the row was laid out from (empty for a fleet's summary). The
+    drawing never reads it. It is there for ``render``'s ``entry=``, so that a caller can
+    put anything the node carries into the list under the figure (a link today, whatever
+    an item needs tomorrow) without this module learning a new field each time.
     """
 
     name: str
@@ -176,10 +184,13 @@ class Placed:
     detail: str = ""
     count: int = 1
     parent_row: int = -1
+    node: Mapping = field(default_factory=dict, compare=False, repr=False)
 
     def as_dict(self) -> dict:
-        """JSON-ready form."""
-        return asdict(self)
+        """JSON-ready form. ``node`` is copied into a plain ``dict`` first, because any
+        other mapping (a ``MappingProxyType``, say) is not something ``asdict`` can copy.
+        """
+        return asdict(replace(self, node=dict(self.node)))
 
 
 # --------------------------------------------------------------------------------------
@@ -262,6 +273,7 @@ def layout(
                 confidence=str(node.get("confidence") or ""),
                 detail=str(node.get("project") or ""),
                 parent_row=parent_row,
+                node=node,
             )
         )
         return row
@@ -431,6 +443,7 @@ def render(
     layout: Callable[[Mapping], Sequence[Placed]] = layout,
     text: Callable[[str], str] = escape,
     title: str = "Who started whom",
+    entry: Callable[[Placed], str] | None = None,
 ) -> str:
     """The forest as one ``<figure>`` holding inline SVG. Loads nothing from anywhere.
 
@@ -444,6 +457,15 @@ def render(
     that a home path or a credential in a session's name is treated here exactly as it is
     everywhere else on the page. A figure that skipped the sanitiser would be the one
     region of a published page that did.
+
+    ``entry`` is what a session's entry in the list under the drawing says before its
+    state, as markup that is ready to place. It receives the :class:`Placed` row, whose
+    ``node`` is the whole graph node. :mod:`crowsnest.report` passes a function that makes
+    the name an anchor to the session, or adds the command that reaches it. Left out,
+    names are text. Deciding whether a URL is fit to publish is the page sanitiser's job,
+    not the drawing's, so a caller with no sanitiser gets no links. **The SVG never
+    carries a link.** An anchor exists only in the list, which is ordinary HTML next to
+    the figure. A fleet's summary row is not a session and is never passed to ``entry``.
 
     Returns ``''`` when there is nothing worth drawing -- a forest with no edges is a list,
     and the roster above it is already that list.
@@ -463,7 +485,7 @@ def render(
         '<figure class="spawn-tree">'
         f'<svg role="img" aria-label="{escape(title)}: {escape(claim)}" '
         f'viewBox="0 0 {WIDTH} {height}" width="{WIDTH}" height="{height}">{marks}</svg>'
-        f"{_as_a_list(rows, text)}"
+        f"{_as_a_list(rows, text, entry)}"
         f"<figcaption>{caption}</figcaption>"
         "</figure>"
     )
@@ -511,19 +533,37 @@ def _what_it_shows(found: Mapping, rows: Sequence[Placed]) -> tuple[str, str]:
     return claim, caption
 
 
-def _as_a_list(rows: Sequence[Placed], text: Callable[[str], str]) -> str:
-    """The same rows as a nested list, for a reader who cannot see the figure.
+def _as_a_list(
+    rows: Sequence[Placed],
+    text: Callable[[str], str],
+    entry: Callable[[Placed], str] | None = None,
+) -> str:
+    """The same rows as a nested list: for a reader who cannot see the figure, and the one
+    place a name in the tree can lead to its session.
 
     An ``aria-label`` can carry the figure's *claim*; it cannot carry who started whom,
     which is the only thing the figure exists to say -- and that parentage appears nowhere
     else in the document. The drawing is already an ordered, indented list, so saying it
     as one costs a few hundred bytes and is the difference between the figure being
     readable and being decorative.
+
+    **A disclosure, not a visually hidden list.** It used to be hidden from sight, which
+    was fine while it only restated the drawing. Now it holds the tree's only links (the
+    SVG may carry none), and a link a sighted reader cannot reach does not help anyone.
+    ``<details>`` needs no script, a screen reader announces it as a button, and closed
+    it costs a phone one line instead of a second copy of the tree. Indentation is capped
+    at :data:`MAX_INDENT_DEPTH`, as the drawing's is, so a deep chain stays on a phone's
+    screen.
     """
     items = []
     for row in rows:
         said = text(_right_column(row))
-        items.append(
-            f'<li style="margin-left:{row.depth}rem">{text(row.label)} &mdash; {said}</li>'
+        named = (
+            entry(row) if entry is not None and row.kind == "session" else text(row.label)
         )
-    return f'<ul class="spawn-tree-alt">{"".join(items)}</ul>'
+        indent = min(max(row.depth, 0), MAX_INDENT_DEPTH)
+        items.append(f'<li style="margin-left:{indent}rem">{named} &mdash; {said}</li>')
+    return (
+        '<details class="spawn-tree-list"><summary>The same tree as a list</summary>'
+        f'<ul>{"".join(items)}</ul></details>'
+    )

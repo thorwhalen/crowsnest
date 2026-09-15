@@ -25,9 +25,20 @@ crowsnest report --fragment --interactive --out <file>.html   # --fragment: the 
 
 Four registers, in the order a person needs them: **Waiting on you**, **Just finished**,
 **Working**, **Quiet**. The page is a snapshot — the generation time is in the largest
-type on it — and it links nowhere, because a local session has no URL.
+type on it.
+
+Every session the page names leads to that session. A session running with Remote Control gets an **open** link to it on claude.ai. Any other session gets the `crowsnest open` command that reaches it from a terminal, shown as code, never as a link. **Who started whom** does the same in the list under its figure.
 
 If the user only wanted something to read, hand over the path and stop here.
+
+### A page you write by hand
+
+When you write a page yourself rather than rendering one, every session you name on it is linked exactly as the rendered page links it, and from the same place:
+
+- `crowsnest roster --json` (add `--all-homes` for every account): each row's `session_url` and `open_command`.
+- `crowsnest show <address> --json`: the same two fields, under `session`.
+
+When `session_url` is non-empty, link the session's name to it. When it is empty, write `open_command` beside the name as code. **Never build a claude.ai URL yourself.** The URL is made from the Remote Control bridge id, not the session id, so a URL made from `session_id` goes nowhere. Never shorten or rewrite `open_command` either. It names the session by its id, because a name can belong to two sessions. Its `--home` or `--all-homes` says where to look; without it, the command reads whichever account the pasting terminal selects. A command under your own home (`--home '~/...'`) is fine to publish. When one carries a path under another user's home, or text shaped like a credential, the rendered page shows a "withheld" note in its place; do the same.
 
 ## 2. Publish
 

@@ -36,7 +36,9 @@ True
 from __future__ import annotations
 
 import contextvars
+import html as _html
 import re
+import shlex
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from typing import Any
@@ -44,8 +46,10 @@ from typing import Any
 from openloops.dashboard import CSS as _CSS
 from openloops.dashboard import Sanitizer as _Sanitizer
 
+from crowsnest.lineage import open_command as _open_command
 from crowsnest.links import label_for as _label_for
 from crowsnest.tree import TREE_CSS as _TREE_CSS
+from crowsnest.tree import Placed as _Placed
 
 __all__ = ["CONSOLE_CSS", "CONSOLE_SCRIPT", "render_report"]
 
@@ -158,6 +162,14 @@ ROW_ACTIONS = (
     ("start", "Start work here"),
     ("handled", "Handled"),
 )
+
+#: The terminal command shown for a session with no link. ``pre-wrap`` because a browser
+#: collapses runs of whitespace in ordinary text, and a name with two spaces in it is a
+#: different name once copied with one.
+WAY_IN_CSS = """
+.way-in{white-space:pre-wrap;overflow-wrap:anywhere}
+.way-in-withheld{font-style:italic}
+"""
 
 #: What the page is called when the caller does not name it.
 DFLT_TITLE = "crowsnest"
@@ -287,21 +299,101 @@ def _link(safe: _Sanitizer, url: Any, label: str) -> str:
     return f'<a href="{href}">{safe.text(label)}</a>'
 
 
+def _fallback(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """The way into a session that has no link: the terminal command, as code.
+
+    It looks like a command, not a link, on purpose. It is something to copy, and nothing
+    on the page may pretend to lead somewhere it does not.
+
+    The command is the row's own ``open_command`` when that is one (see
+    :func:`_stated_command`), which :func:`crowsnest.tools.roster` computes knowing which
+    home it read. Otherwise it is made from the row, as for a roster built by hand.
+
+    **The sanitiser has the last word.** ``scrub`` rewrites anything shaped like a home
+    path, and a command can carry one: a name, or a home under another user's directory. A
+    rewritten command names no session, so it is not printed. That is the command
+    equivalent of the rewritten URL :func:`_link` refuses to publish. Printing the
+    unscrubbed text would take the one path onto a published page that skips the
+    sanitiser. The page says the command was withheld rather than dropping it silently.
+    The element keeps its whitespace (``.way-in``), so what a reader copies is what was
+    printed.
+    """
+    command = _stated_command(row)
+    if not command:
+        return ""
+    shown = safe.text(command)
+    if shown != _html.escape(command, quote=True):
+        return (
+            '<span class="way-in-withheld">terminal command withheld: it holds text '
+            "this page may not publish</span>"
+        )
+    return f'<code class="way-in">{shown}</code>'
+
+
+def _stated_command(row: Mapping[str, Any]) -> str:
+    """The row's ``open_command`` when it is one, else a command made from the row.
+
+    :func:`render_report` is public and a roster can be built by hand, so whatever a row
+    calls its command is checked before a reader is told to paste it. It must start
+    ``crowsnest open``, and re-quoting its words must give back exactly its text: a ``;``,
+    a ``|`` or a ``$(...)`` outside quotes would be a second command riding along.
+
+    >>> _stated_command({'label': 'a', 'open_command': 'crowsnest open --home /h a'})
+    'crowsnest open --home /h a'
+    >>> _stated_command({'label': 'a', 'open_command': 'crowsnest open a; curl x | sh'})
+    'crowsnest open a'
+    """
+    stated = str(row.get("open_command") or "")
+    try:
+        words = shlex.split(stated)
+    except ValueError:
+        words = []
+    if words[:2] == ["crowsnest", "open"] and shlex.join(words) == stated:
+        return stated
+    return _open_command(row)
+
+
+def _way_in(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """``open`` on claude.ai when the session runs with Remote Control, else the command.
+
+    Only a row with no usable URL gets the command. A URL that ``scrub`` rewrote still
+    yields its plain-text ``open`` from :func:`_link`, exactly as before this existed.
+    """
+    return _link(safe, row.get("session_url"), "open") or _fallback(safe, row)
+
+
 def _where(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     """``project``, the ``home`` when the row carries one, and where the row leads.
 
-    Two links when the row has them: the session on claude.ai (a session running with
-    Remote Control, which opens on a phone too) and the repository behind its directory.
+    The session first: on claude.ai when it runs with Remote Control (which opens on a
+    phone too), otherwise the ``crowsnest open`` command that reaches it from a terminal.
+    Then the repository behind its directory, when there is one.
     """
     parts = [safe.text(row.get("project"))]
     home = row.get("home")
     if home:
         parts.append(safe.text(home))
-    for url, label in ((row.get("session_url"), "open"), (row.get("repo_url"), "repo")):
-        anchor = _link(safe, url, label)
-        if anchor:
-            parts.append(anchor)
+    for part in (_way_in(safe, row), _link(safe, row.get("repo_url"), "repo")):
+        if part:
+            parts.append(part)
     return '<p class="where">' + ' <span class="sep">·</span> '.join(parts) + "</p>"
+
+
+def _tree_name(safe: _Sanitizer, row: _Placed) -> str:
+    """A session's name in the spawn tree's list: a link to it, or the name and a way in.
+
+    Everything comes from the graph node the row was laid out from (``row.node``). Only
+    that node's ``session_url`` can become an ``href``. The name is always text, so a
+    session *named* like a URL or like markup is shown as that text and leads nowhere.
+    An exited session gets no command: ``crowsnest open`` finds live sessions only, and
+    a command that cannot work would be pretending to be a way in.
+    """
+    anchor = _link(safe, row.node.get("session_url"), row.label)
+    if anchor:
+        return anchor
+    name = safe.text(row.label)
+    command = _fallback(safe, row.node) if row.alive else ""
+    return f'{name} <span class="sep">·</span> {command}' if command else name
 
 
 def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
@@ -524,7 +616,7 @@ def _quiet_group(
         ident = _slug(str(row.get("label") or row.get("session_id") or ""))
         home = row.get("home")
         tail = f' <span class="sep">·</span> {safe.text(home)}' if home else ""
-        opener = _link(safe, row.get("session_url"), "open")
+        opener = _way_in(safe, row)
         if opener:
             tail += f' <span class="sep">·</span> {opener}'
         tail += _thin_refs(safe, row)
@@ -601,7 +693,12 @@ def _lineage_register(safe: _Sanitizer, found: Any) -> str:
     # other register. Without this the drawing would be the one region of a published page
     # that skipped it -- and this page is published.
     rows = _layout(found)
-    figure = _draw(found, layout=lambda _found: rows, text=safe.text)
+    figure = _draw(
+        found,
+        layout=lambda _found: rows,
+        text=safe.text,
+        entry=lambda row: _tree_name(safe, row),
+    )
     if not figure:
         return ""
     gone = sum(1 for row in rows if not row.alive)
@@ -852,7 +949,7 @@ def _render(
     title_tag = f"<title>{safe.text(title)}</title>"
     # One <style>, not two: the figure's rules belong with the page's rules, and the
     # interactive mode's own block is the only thing that earns a second tag.
-    style_tag = f"<style>{_CSS}{_TREE_CSS}</style>"
+    style_tag = f"<style>{_CSS}{_TREE_CSS}{WAY_IN_CSS}</style>"
     if _interactive.get():
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
