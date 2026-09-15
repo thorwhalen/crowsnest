@@ -24,11 +24,24 @@ into a list of :class:`Home` records so that every reader can loop over them.
     path = "~/.cache/xa/remotes/server"   # a synced copy
     remote = true                         # liveness by freshness, no pid check
 
-The one non-``homes`` setting is ``claude_bin`` (:func:`claude_bin_setting`), for a
+The one other top-level setting is ``claude_bin`` (:func:`claude_bin_setting`), for a
 machine whose Claude Code is not the ``claude`` a login shell finds first. **It goes
 above the first** ``[[homes]]``: TOML gives every key after a table header to that
 table, so a ``claude_bin`` written at the bottom belongs to the last home and does
 nothing. :func:`claude_bin_setting` refuses that arrangement rather than ignoring it.
+
+The ``[attention]`` table (:func:`attention_settings`) holds the hours the *Later*
+presets land on and the ages at which something counts as stale or stuck
+(:mod:`crowsnest.attention`). Every key is optional; a key it does not know is an error.
+
+.. code-block:: toml
+
+    [attention]
+    evening_hour = 18      # "this evening", local time
+    morning_hour = 9       # "tomorrow morning", local time
+    max_snoozes = 3        # put off this often, and Drop is offered first
+    stale_after = "24h"    # a number is hours; or "90m", "2d"
+    stuck_after = "6h"
 
 On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML
 double-quoted string treats a backslash as an escape.
@@ -44,9 +57,12 @@ and nothing in this module pretends otherwise.
 
 from __future__ import annotations
 
+import math
 import os
+import re
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
+from datetime import timedelta
 from pathlib import Path
 
 from crowsnest.registry import claude_home
@@ -57,10 +73,13 @@ else:  # pragma: no cover
     import tomli as tomllib  # type: ignore[no-redef]
 
 __all__ = [
+    "ATTENTION_KEY",
     "CLAUDE_BIN_KEY",
     "CONFIG_ENV_VAR",
     "DFLT_FRESH_SECONDS",
+    "AttentionSettings",
     "Home",
+    "attention_settings",
     "claude_bin_setting",
     "config_path",
     "configured_homes",
@@ -141,21 +160,150 @@ def claude_bin_setting(*, path: str | Path | None = None) -> str:
 
 
 def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:
-    """Raise if ``claude_bin`` was written under a ``[[homes]]`` entry.
+    """Raise if ``claude_bin`` was written under a table: a ``[[homes]]`` entry, ``[attention]``.
 
     The easy mistake, and a silent one: TOML hands every key after a table header to
     that table, so a ``claude_bin`` added at the end of the file becomes a field of the
-    last home -- read by nothing, reported by nothing, and the launcher stays whatever
+    last table -- read by nothing, reported by nothing, and the launcher stays whatever
     it was. Cheaper to say so than to let someone re-read their own config file.
     """
-    for entry in data.get("homes") or []:
-        if isinstance(entry, dict) and CLAUDE_BIN_KEY in entry:
-            raise ValueError(
-                f"{config_path(path)}: {CLAUDE_BIN_KEY} is inside the "
-                f"[[homes]] entry {entry.get('name', '?')!r}, where it does nothing -- "
-                f"TOML gives every key after a table header to that table. Move it "
-                f"above the first [[homes]] line."
+    for key, value in data.items():
+        entries = value if isinstance(value, list) else [value]
+        for entry in entries:
+            if not (isinstance(entry, dict) and CLAUDE_BIN_KEY in entry):
+                continue
+            where = (
+                f"[[{key}]] entry {entry.get('name', '?')!r}"
+                if isinstance(value, list)
+                else f"[{key}] table"
             )
+            raise ValueError(
+                f"{config_path(path)}: {CLAUDE_BIN_KEY} is inside the {where}, where "
+                f"it does nothing -- TOML gives every key after a table header to that "
+                f"table. Move it above the first table header."
+            )
+
+
+#: The config table holding the attention settings.
+ATTENTION_KEY = "attention"
+
+#: The hour "this evening" lands on, local time. After it, the preset means tomorrow morning.
+DFLT_EVENING_HOUR = 18
+
+#: The hour "tomorrow morning" lands on, local time.
+DFLT_MORNING_HOUR = 9
+
+#: How often an item may be put off before the Later sheet offers Drop first.
+DFLT_MAX_SNOOZES = 3
+
+#: How long a seen item may wait on a person before the review band lists it.
+DFLT_STALE_AFTER = timedelta(hours=24)
+
+#: How long a working session may go without a material change before it counts as stuck.
+DFLT_STUCK_AFTER = timedelta(hours=6)
+
+_HOURS_IN_A_DAY = 24
+
+#: A duration written as text: a number and one unit.
+_DURATION = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*([mhd])\s*$")
+_DURATION_UNITS = {"m": "minutes", "h": "hours", "d": "days"}
+
+
+@dataclass(frozen=True)
+class AttentionSettings:
+    """The ``[attention]`` table, validated. Every field has the default the research suggests.
+
+    >>> AttentionSettings().evening_hour
+    18
+    >>> AttentionSettings(morning_hour=24)
+    Traceback (most recent call last):
+      ...
+    ValueError: morning_hour must be a whole hour from 0 to 23, not 24
+    """
+
+    evening_hour: int = DFLT_EVENING_HOUR
+    morning_hour: int = DFLT_MORNING_HOUR
+    max_snoozes: int = DFLT_MAX_SNOOZES
+    stale_after: timedelta = DFLT_STALE_AFTER
+    stuck_after: timedelta = DFLT_STUCK_AFTER
+
+    def __post_init__(self) -> None:
+        for key in ("evening_hour", "morning_hour"):
+            value = getattr(self, key)
+            if not _is_int(value) or not 0 <= value < _HOURS_IN_A_DAY:
+                raise ValueError(
+                    f"{key} must be a whole hour from 0 to {_HOURS_IN_A_DAY - 1}, "
+                    f"not {value!r}"
+                )
+        if not _is_int(self.max_snoozes) or self.max_snoozes < 1:
+            raise ValueError(
+                f"max_snoozes must be a whole number of at least 1, not {self.max_snoozes!r}"
+            )
+        for key in ("stale_after", "stuck_after"):
+            value = getattr(self, key)
+            if not isinstance(value, timedelta) or value <= timedelta(0):
+                raise ValueError(f"{key} must be a positive duration, not {value!r}")
+
+
+def _is_int(value) -> bool:
+    # `True` is an int to Python and a typo to a person writing `evening_hour = true`.
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _duration(value, *, key: str) -> timedelta:
+    """A config duration: a number of hours, or text like ``"90m"``, ``"24h"``, ``"2d"``.
+
+    >>> _duration(24, key='x'), _duration('90m', key='x')
+    (datetime.timedelta(days=1), datetime.timedelta(seconds=5400))
+    """
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        amount, unit = value, "h"
+    else:
+        found = _DURATION.match(value) if isinstance(value, str) else None
+        if not found:
+            raise ValueError(
+                f"{key} must be a number of hours or text like '90m', '24h' or '2d', "
+                f"not {value!r}"
+            )
+        amount, unit = float(found.group(1)), found.group(2)
+    # TOML has `inf` and `nan`, and timedelta raises OverflowError on a huge one.
+    try:
+        if not math.isfinite(amount):
+            raise OverflowError
+        return timedelta(**{_DURATION_UNITS[unit]: amount})
+    except OverflowError:
+        raise ValueError(f"{key} must be a finite duration, not {value!r}") from None
+
+
+def attention_settings(*, path: str | Path | None = None) -> AttentionSettings:
+    """The config file's ``[attention]`` table, or the defaults when it has none.
+
+    Refuses a key it does not know rather than ignoring it: a misspelt ``evening_hours``
+    that silently kept 18:00 would be found only by someone wondering why their evening
+    starts at six.
+    """
+    file = config_path(path)
+    table = _loaded(path).get(ATTENTION_KEY)
+    if table is None:
+        return AttentionSettings()
+    if not isinstance(table, dict):
+        # A config file is input; `crowsnest` reports bad input cleanly only as ValueError.
+        raise ValueError(f"{file}: [{ATTENTION_KEY}] must be a table")  # noqa: TRY004
+    known = {f.name for f in fields(AttentionSettings)}
+    unknown = sorted(set(table) - known)
+    if unknown:
+        raise ValueError(
+            f"{file}: [{ATTENTION_KEY}] has no {', '.join(unknown)}; "
+            f"it knows {', '.join(sorted(known))}"
+        )
+    values = dict(table)
+    try:
+        for key in ("stale_after", "stuck_after"):
+            if key in values:
+                values[key] = _duration(values[key], key=key)
+        return AttentionSettings(**values)
+    except ValueError as exc:
+        raise ValueError(f"{file}: [{ATTENTION_KEY}] {exc}") from None
 
 
 def _default_home() -> Home:

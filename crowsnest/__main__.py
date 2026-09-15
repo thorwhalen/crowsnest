@@ -424,6 +424,98 @@ def report(
     return f"wrote {len(result['html'].encode('utf-8'))} bytes to {path}"
 
 
+def _doc(doc: dict) -> str:
+    return _json.dumps(doc, indent=2)
+
+
+def seen(session: str, *, home: str | None = None, all_homes: bool = False):
+    """Mark a session's item seen: dimmed on the page until what it asks for changes.
+
+    Prints the stored attention record. `seen` also wakes an item you had put off.
+    """
+    return _doc(tools.seen(session, home=home, all_homes=all_homes))
+
+
+def unseen(session: str, *, home: str | None = None, all_homes: bool = False):
+    """Mark a session's item unread, so it shows as new again. Prints the stored record."""
+    return _doc(tools.unseen(session, home=home, all_homes=all_homes))
+
+
+def later(
+    session: str,
+    preset: str,
+    *,
+    plan: str = "",
+    ignore_changes: bool = False,
+    home: str | None = None,
+    all_homes: bool = False,
+):
+    """Put a session's item off: `1h`, `evening`, `tomorrow`, or `change` (no time).
+
+    It comes back at that time, or sooner if what it asks for changes -- unless
+    `--ignore-changes`. `--plan "after the deploy"` records the next step, shown when it
+    comes back. The hours are `[attention]` in the config file. Prints the stored record.
+    """
+    return _doc(
+        tools.later(
+            session,
+            preset,
+            plan=plan,
+            on_change=not ignore_changes,
+            home=home,
+            all_homes=all_homes,
+        )
+    )
+
+
+def done(session: str, *, home: str | None = None, all_homes: bool = False):
+    """Mark a session's item handled: hidden until what it asks for changes."""
+    return _doc(tools.done(session, home=home, all_homes=all_homes))
+
+
+def note(session: str, text: str, *, home: str | None = None, all_homes: bool = False):
+    """Write a note on a session's item; `""` removes it. A note never changes its state."""
+    return _doc(tools.note(session, text, home=home, all_homes=all_homes))
+
+
+def undo(session: str, *, home: str | None = None, all_homes: bool = False):
+    """Undo the last seen, unseen, later, done or note on a session's item. One level."""
+    return _doc(tools.undo(session, home=home, all_homes=all_homes))
+
+
+def attention_export(*, since: str = ""):
+    """Every attention record as JSON, oldest change first.
+
+    `--since` (an ISO time or date) keeps only the records changed after it.
+    """
+    return _json.dumps(tools.attention_export(since=since or None), indent=2)
+
+
+def attention_import():
+    """Read attention records as JSON on stdin -- a list, or one record -- into the store.
+
+    Each is kept unless the copy already here is as new or newer. A batch with one bad
+    record writes nothing.
+    """
+    raw = sys.stdin.read()
+    try:
+        docs = _json.loads(raw) if raw.strip() else []
+    except ValueError as exc:
+        raise ValueError(f"attention import: stdin is not JSON ({exc})") from None
+    if isinstance(docs, dict):
+        docs = [docs]
+    if not isinstance(docs, list):
+        # ValueError, not TypeError: `main` reports bad input cleanly only as ValueError.
+        raise ValueError(  # noqa: TRY004
+            "attention import: expected a JSON list of records, or one record"
+        )
+    counts = tools.attention_import(docs)
+    return (
+        f"imported {counts['total']}: {counts['written']} written, "
+        f"{counts['kept']} kept (the copy here was as new or newer)"
+    )
+
+
 def watch(
     *,
     interval: float = _watch.DFLT_INTERVAL,
@@ -709,6 +801,12 @@ _commands = [
     lineage,
     triage,
     report,
+    seen,
+    unseen,
+    later,
+    done,
+    note,
+    undo,
     watch,
     ledger,
     hook,
@@ -718,6 +816,10 @@ _commands = [
     install_skills,
 ]
 
+#: Commands under a group word. The attention verbs a person types are top-level; the
+#: machine side of the store (what a courier runs) sits under `crowsnest attention`.
+_groups = {"attention": {"export": attention_export, "import": attention_import}}
+
 
 def main(argv: list[str] | None = None) -> None:
     """Dispatch the ``crowsnest`` command. Bare ``crowsnest`` runs :func:`roster`."""
@@ -726,8 +828,12 @@ def main(argv: list[str] | None = None) -> None:
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0].startswith("-") and argv[0] not in ("-h", "--help"):
         argv = [DEFAULT_COMMAND, *argv]
+    # A group cannot sit in a list of commands, so the tree is a mapping: the list's own
+    # names, as cw derives them, plus the groups.
     parser = cw.mk_parser(
-        _commands, prog="crowsnest", description=__doc__.splitlines()[0]
+        {**cw.commands_from(_commands), **_groups},
+        prog="crowsnest",
+        description=__doc__.splitlines()[0],
     )
     try:
         code = cw.run(parser, argv)

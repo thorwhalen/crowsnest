@@ -34,17 +34,25 @@ from crowsnest.registry import (
 from crowsnest.report import DFLT_TITLE, render_report
 
 __all__ = [
+    "attention_export",
+    "attention_import",
     "backfill_lineage",
     "brief",
+    "done",
+    "later",
     "lineage",
+    "note",
     "repo_url",
     "report",
     "resolve",
     "roster",
+    "seen",
     "sessions",
     "show",
     "triage",
     "turns",
+    "undo",
+    "unseen",
 ]
 
 #: How many issue or PR references a roster row carries. The page shows them; ``show``
@@ -235,39 +243,69 @@ def roster(
         if _pages is not None
         else (_ledgers_for({s.label for s in found}, ledger_dir) if links else {})
     )
-    rows = []
-    for s in found:
-        row = s.as_dict()
-        row["open_command"] = _open_command(row, home_dir=read_from)
-        row["repo_url"] = repo_url(s.cwd)
-        if activity:
-            act = read_activity(s.transcript, session_id=s.session_id, recent=3)
-            row["activity"] = {
-                "last_event_at": act.last_event_at,
-                "last_user_prompt": _clip(act.last_user_prompt, text_limit),
-                "last_assistant_text": _clip(act.last_assistant_text, text_limit),
-                "recent_tools": list(act.recent_tools),
-                "in_flight": list(act.in_flight),
-                "pending_question": act.pending_question,
-                "turn_open": act.turn_open,
-                "errored": act.errored,
-                "git_branch": act.git_branch,
-                "last_text_at": act.last_text_at,
-                "tail_turns": act.tail_turns,
-                "locators": list(act.locators[-ROSTER_LOCATORS:]),
-            }
-        if links:
-            row["links"] = _links_of(
-                row,
-                ledger_dir=ledger_dir,
-                resolvers=resolvers,
-                limit=ROSTER_LINKS,
-                page=pages.get(s.label),
-            )
-        rows.append(row)
+    rows = [
+        _roster_row(
+            s,
+            activity=activity,
+            links=links,
+            ledger_dir=ledger_dir,
+            resolvers=resolvers,
+            text_limit=text_limit,
+            page=pages.get(s.label),
+            home_dir=read_from,
+        )
+        for s in found
+    ]
     counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}
     counts["other"] = len(rows) - sum(counts.values())
     return {"sessions": rows, "counts": counts}
+
+
+def _roster_row(
+    s: LiveSession,
+    *,
+    activity: bool = True,
+    links: bool = True,
+    ledger_dir=None,
+    resolvers=None,
+    text_limit: int = ROSTER_TEXT_LIMIT,
+    page: dict | None = None,
+    home_dir: Path | None = None,
+) -> dict:
+    """One roster row: the registry record, a clipped view of its activity, its links.
+
+    The one place a row is built, so that the attention verbs pin a revision computed from
+    exactly the row the page shows -- clipping and link cap included. ``home_dir`` is what
+    the row's ``open_command`` pins (:func:`_home_to_pin`).
+    """
+    row = s.as_dict()
+    row["open_command"] = _open_command(row, home_dir=home_dir)
+    row["repo_url"] = repo_url(s.cwd)
+    if activity:
+        act = read_activity(s.transcript, session_id=s.session_id, recent=3)
+        row["activity"] = {
+            "last_event_at": act.last_event_at,
+            "last_user_prompt": _clip(act.last_user_prompt, text_limit),
+            "last_assistant_text": _clip(act.last_assistant_text, text_limit),
+            "recent_tools": list(act.recent_tools),
+            "in_flight": list(act.in_flight),
+            "pending_question": act.pending_question,
+            "turn_open": act.turn_open,
+            "errored": act.errored,
+            "git_branch": act.git_branch,
+            "last_text_at": act.last_text_at,
+            "tail_turns": act.tail_turns,
+            "locators": list(act.locators[-ROSTER_LOCATORS:]),
+        }
+    if links:
+        row["links"] = _links_of(
+            row,
+            ledger_dir=ledger_dir,
+            resolvers=resolvers,
+            limit=ROSTER_LINKS,
+            page=page,
+        )
+    return row
 
 
 #: The resolvers that attach a loose reference to *this* session's repository. They are
@@ -412,6 +450,7 @@ def _verdicted(rows, ledger_dir, verdicts, owner="", *, pages=None) -> list[dict
                 row,
                 ledger=pages.get(str(row.get("label") or "")) or {},
                 verdicts=verdicts,
+                owner=owner,
             ),
         }
         for row in rows
@@ -699,6 +738,309 @@ def _ledger_names(ledger_dir: str | Path | None = None) -> set[str]:
         return {str(row["name"]) for row in list_ledgers(ledger_dir=ledger_dir)}
     except OSError:
         return set()
+
+
+def _item_row(
+    session: str,
+    *,
+    home=None,
+    all_homes: bool = False,
+    config=None,
+    ledger_dir=None,
+    resolvers=None,
+    verdicts=None,
+    owner: str = "",
+) -> dict:
+    """The row :func:`report` shows for ``session``, verdict included.
+
+    Built the way the report builds each of its rows -- the roster's clipping and link cap,
+    then triage -- because a record pinned to a revision the page never computes would
+    never read as seen.
+    """
+    s = resolve(session, home=home, all_homes=all_homes, config=config)
+    pages = _ledgers_for({s.label}, ledger_dir)
+    row = _roster_row(
+        s,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+        page=pages.get(s.label),
+        home_dir=_home_to_pin(home=home, all_homes=all_homes, config=config),
+    )
+    return _verdicted([row], ledger_dir, verdicts, owner, pages=pages)[0]
+
+
+def _attend(
+    session: str,
+    step,
+    *,
+    home=None,
+    all_homes: bool = False,
+    config=None,
+    ledger_dir=None,
+    resolvers=None,
+    verdicts=None,
+    owner: str = "",
+    identity=None,
+    material=None,
+    store=None,
+) -> dict:
+    """Apply ``step(record, rev)`` to ``session``'s attention record and store the result."""
+    from crowsnest import attention as _attention
+
+    row = _item_row(
+        session,
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+        verdicts=verdicts,
+        owner=owner,
+    )
+    item = _attention.item_id(row, identity=identity)
+    rev = _attention.fingerprint(row, material=material)
+    return _attention.update(item, lambda record: step(record, rev), store=store)
+
+
+# The attention verbs. Each takes a session reference the way `resolve` does, reads the
+# row the report would show for it, and returns the stored document. `ledger_dir`,
+# `resolvers`, `verdicts` and `owner` build that row, so they must match the report's;
+# `identity` and `material` are `crowsnest.attention`'s seams, and `store` is where the
+# record lives (default: one JSON file per item under the data directory).
+
+
+def seen(
+    session: str,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
+    verdicts=None,
+    owner: str = "",
+    identity=None,
+    material=None,
+    store=None,
+) -> dict:
+    """Mark ``session``'s item seen at its current revision: it dims until it changes."""
+    from crowsnest.attention import seen as _seen
+
+    return _attend(
+        session,
+        _seen,
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+        verdicts=verdicts,
+        owner=owner,
+        identity=identity,
+        material=material,
+        store=store,
+    )
+
+
+def unseen(
+    session: str,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
+    verdicts=None,
+    owner: str = "",
+    identity=None,
+    material=None,
+    store=None,
+) -> dict:
+    """Mark ``session``'s item unread: it shows as new again."""
+    from crowsnest.attention import unseen as _unseen
+
+    return _attend(
+        session,
+        lambda record, rev: _unseen(record),
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+        verdicts=verdicts,
+        owner=owner,
+        identity=identity,
+        material=material,
+        store=store,
+    )
+
+
+def later(
+    session: str,
+    preset: str,
+    *,
+    plan: str = "",
+    on_change: bool = True,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
+    verdicts=None,
+    owner: str = "",
+    identity=None,
+    material=None,
+    store=None,
+) -> dict:
+    """Put ``session``'s item off until a preset time, or until it changes, whichever first.
+
+    ``preset`` is one of :data:`crowsnest.attention.PRESETS` -- ``1h``, ``evening``,
+    ``tomorrow``, ``change`` -- with the hours from the config file's ``[attention]``
+    table. ``plan`` is the optional one-line next step; ``on_change=False`` keeps it asleep
+    through changes, which ``change`` (no time at all) refuses.
+    """
+    from crowsnest.attention import later as _later
+    from crowsnest.attention import later_until
+    from crowsnest.config import attention_settings
+
+    until = later_until(preset, config=attention_settings(path=config))
+    return _attend(
+        session,
+        lambda record, rev: _later(
+            record, rev, until=until, on_change=on_change, plan=plan
+        ),
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+        verdicts=verdicts,
+        owner=owner,
+        identity=identity,
+        material=material,
+        store=store,
+    )
+
+
+def done(
+    session: str,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
+    verdicts=None,
+    owner: str = "",
+    identity=None,
+    material=None,
+    store=None,
+) -> dict:
+    """Mark ``session``'s item handled: hidden until what it asks for changes."""
+    from crowsnest.attention import done as _done
+
+    return _attend(
+        session,
+        _done,
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+        verdicts=verdicts,
+        owner=owner,
+        identity=identity,
+        material=material,
+        store=store,
+    )
+
+
+def note(
+    session: str,
+    text: str,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
+    verdicts=None,
+    owner: str = "",
+    identity=None,
+    material=None,
+    store=None,
+) -> dict:
+    """Set the note on ``session``'s item; empty text removes it. Nothing reads a note as an
+    instruction."""
+    from crowsnest.attention import note as _note
+
+    return _attend(
+        session,
+        lambda record, rev: _note(record, text),
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+        verdicts=verdicts,
+        owner=owner,
+        identity=identity,
+        material=material,
+        store=store,
+    )
+
+
+def undo(
+    session: str,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    resolvers=None,
+    verdicts=None,
+    owner: str = "",
+    identity=None,
+    material=None,
+    store=None,
+) -> dict:
+    """Restore ``session``'s attention record to before its last change. One level deep;
+    raises ``ValueError`` when there is nothing to undo."""
+    from crowsnest.attention import undo as _undo
+
+    return _attend(
+        session,
+        lambda record, rev: _undo(record),
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        ledger_dir=ledger_dir,
+        resolvers=resolvers,
+        verdicts=verdicts,
+        owner=owner,
+        identity=identity,
+        material=material,
+        store=store,
+    )
+
+
+def attention_export(*, since: str | None = None, store=None) -> list[dict]:
+    """Every attention record as its document, oldest change first; ``since`` (an ISO time
+    or date) keeps only those changed after it. The shape :func:`attention_import` reads.
+    """
+    from crowsnest.attention import export_docs
+
+    return export_docs(since=since, store=store)
+
+
+def attention_import(docs: list[dict], *, store=None) -> dict:
+    """Take attention documents into the store, last write winning by ``updated_at``.
+
+    All are checked before any is written. Returns ``{"written", "kept", "total"}``.
+    """
+    from crowsnest.attention import import_docs
+
+    return import_docs(docs, store=store)
 
 
 def turns(
