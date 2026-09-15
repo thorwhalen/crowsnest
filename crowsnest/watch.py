@@ -291,6 +291,7 @@ def _attention_row(
     all_homes: bool = False,
     config: str | Path | None = None,
     ledger_dir: str | Path | None = None,
+    resolvers=None,
     owner: str = "",
     verdicts=None,
 ) -> dict | None:
@@ -298,8 +299,8 @@ def _attention_row(
     ``None`` when it has no ``session_id`` on record (:func:`crowsnest.tools._attend`
     keeps one in ``ext`` for exactly this) or that session is no longer live.
 
-    ``ledger_dir``, ``owner`` and ``verdicts`` build the row as the verbs did, so they
-    must be the ones the verbs were given (#74).
+    ``ledger_dir``, ``resolvers``, ``owner`` and ``verdicts`` build the row as the verbs
+    did, so they must be the ones the verbs were given (#74).
     """
     from crowsnest.tools import _item_row
 
@@ -314,6 +315,7 @@ def _attention_row(
             all_homes=all_homes,
             config=config,
             ledger_dir=ledger_dir,
+            resolvers=resolvers,
             owner=owner,
             verdicts=verdicts,
         )
@@ -350,6 +352,7 @@ def attention_wakes(
     announced: set[str] | None = None,
     now: datetime | None = None,
     ledger_dir: str | Path | None = None,
+    resolvers=None,
     owner: str = "",
     verdicts=None,
     material=None,
@@ -367,15 +370,21 @@ def attention_wakes(
     item once, which is the same acceptable-not-silent choice :func:`events` makes for a
     restarted watcher.
 
-    ``ledger_dir``, ``owner`` and ``verdicts`` build the default row, and ``material``
-    takes its revision. Like the report's, they must be the ones the verbs were given: a
+    ``ledger_dir``, ``resolvers``, ``owner`` and ``verdicts`` build the default row, and
+    ``material`` takes its revision. Like the report's, they must be the ones the verbs were given: a
     row built or hashed any other way reads as changed, and wakes on the first tick (#74).
     """
     from crowsnest import attention as _attention
 
     store = _attention.dflt_store() if store is None else store
     fetch = (
-        partial(_attention_row, ledger_dir=ledger_dir, owner=owner, verdicts=verdicts)
+        partial(
+            _attention_row,
+            ledger_dir=ledger_dir,
+            resolvers=resolvers,
+            owner=owner,
+            verdicts=verdicts,
+        )
         if row_of is None
         else row_of
     )
@@ -414,6 +423,7 @@ def events(
     config: str | Path | None = None,
     attention_store: MutableMapping[str, dict] | None = None,
     ledger_dir: str | Path | None = None,
+    resolvers=None,
     owner: str = "",
     verdicts=None,
     material=None,
@@ -422,7 +432,7 @@ def events(
 
     ``all_homes`` watches every configured home at once; registry events then carry the
     home's name. Hook events come from this machine's own hook log and carry none.
-    ``ledger_dir``, ``owner``, ``verdicts`` and ``material`` reach
+    ``ledger_dir``, ``resolvers``, ``owner``, ``verdicts`` and ``material`` reach
     :func:`attention_wakes`, and must be the ones the attention verbs were given.
 
     The first snapshot is the baseline and yields nothing, and the hook log is opened at
@@ -454,6 +464,7 @@ def events(
             config=config,
             announced=woken,
             ledger_dir=ledger_dir,
+            resolvers=resolvers,
             owner=owner,
             verdicts=verdicts,
             material=material,

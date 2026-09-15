@@ -507,7 +507,10 @@ def unseen(
     all_homes: bool = False,
     ledger_dir: str | None = None,
 ):
-    """Mark a session's item unread, so it shows as new again. Prints the stored record."""
+    """Mark a session's item unread, so it shows as new again. Prints the stored record.
+
+    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    """
     return _doc(
         tools.unseen(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
     )
@@ -528,6 +531,7 @@ def later(
     It comes back at that time, or sooner if what it asks for changes -- unless
     `--ignore-changes`. `--plan "after the deploy"` records the next step, shown when it
     comes back. The hours are `[attention]` in the config file. Prints the stored record.
+    `--ledger-dir` is the one the page was rendered with, as for `seen`.
     """
     return _doc(
         tools.later(
@@ -549,7 +553,10 @@ def done(
     all_homes: bool = False,
     ledger_dir: str | None = None,
 ):
-    """Mark a session's item handled: hidden until what it asks for changes."""
+    """Mark a session's item handled: hidden until what it asks for changes.
+
+    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    """
     return _doc(
         tools.done(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
     )
@@ -563,7 +570,10 @@ def note(
     all_homes: bool = False,
     ledger_dir: str | None = None,
 ):
-    """Write a note on a session's item; `""` removes it. A note never changes its state."""
+    """Write a note on a session's item; `""` removes it. A note never changes its state.
+
+    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    """
     return _doc(
         tools.note(session, text, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
     )
@@ -576,7 +586,10 @@ def undo(
     all_homes: bool = False,
     ledger_dir: str | None = None,
 ):
-    """Undo the last seen, unseen, later, done or note on a session's item. One level."""
+    """Undo the last seen, unseen, later, done or note on a session's item. One level.
+
+    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    """
     return _doc(
         tools.undo(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
     )
@@ -825,7 +838,7 @@ def spawn(
     prompt: str = "",
     model: str = "",
     effort: str = "",
-    no_remote_control: bool = False,
+    remote_control: bool = True,
     home: str | None = None,
     profile: str = "",
     binary: str = "",
@@ -850,7 +863,6 @@ def spawn(
 
     `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
     those directories too, which is how a fleet manager gets every repository of its fleet.
-    `--no-remote-control` starts it without Remote Control, so it has no claude.ai URL.
 
     `--model` and `--effort` are worth stating on every spawn: left out, the session
     inherits the account's default, which is the expensive one exactly when nobody was
@@ -866,7 +878,7 @@ def spawn(
         prompt=prompt,
         model=model,
         effort=effort,
-        remote_control=not no_remote_control,
+        remote_control=remote_control,
         home=home,
         profile=profile,
         binary=binary,

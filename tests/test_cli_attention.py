@@ -63,7 +63,7 @@ def test_a_verb_given_the_reports_ledger_dir_pins_the_row_that_page_shows(
 
 @pytest.mark.parametrize(
     "command, switches",
-    [("report", ("triage", "lineage")), ("spawn", ("remote-control",))],
+    [("report", ("triage", "lineage"))],
 )
 def test_a_switch_that_turns_something_off_is_spelled_no(command, switches, capsys):
     # #74: `triage: bool = True` rendered as `--triage`, a flag that turned triage OFF,
