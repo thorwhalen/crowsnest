@@ -440,8 +440,9 @@ def report(
     (accounts, synced machines); each row shows which when it does not match `home`.
     `--fragment` leaves out the document wrapper, which is what publishing the page as
     a claude.ai artifact wants (the publisher wraps it itself). `--interactive` adds the
-    console (buttons per row and a Refresh) that works when the page is published with
-    the `db` capability; without it the page is the static one.
+    console: Ask, Tell and Start work here on each row, and on a triaged page Seen, Later,
+    Done and Note too, Seen above on the registers, and a Refresh. It works when the page
+    is published with the `db` capability; without it the page is the static one.
 
     The page leads with what needs you and what is safe to close, read from each session's
     ledger. `--no-triage` renders the older page, organised by status alone, which is also

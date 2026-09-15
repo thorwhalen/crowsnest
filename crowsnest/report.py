@@ -61,13 +61,19 @@ from openloops.dashboard import Sanitizer as _Sanitizer
 
 import crowsnest.attention as _attention
 from crowsnest import said as _said
-from crowsnest.config import DFLT_STALE_AFTER
+from crowsnest.config import DFLT_STALE_AFTER, AttentionSettings
 from crowsnest.lineage import open_command as _open_command
 from crowsnest.links import label_for as _label_for
 from crowsnest.tree import TREE_CSS as _TREE_CSS
 from crowsnest.tree import Placed as _Placed
 
-__all__ = ["ATTENTION_CSS", "CONSOLE_CSS", "CONSOLE_SCRIPT", "render_report"]
+__all__ = [
+    "ATTENTION_CSS",
+    "ATTENTION_SCRIPT",
+    "CONSOLE_CSS",
+    "CONSOLE_SCRIPT",
+    "render_report",
+]
 
 #: Set for the duration of one :func:`render_report` call in interactive mode, so the row
 #: renderers add their controls without every signature growing a flag.
@@ -97,13 +103,16 @@ class _Attended:
 class _View:
     """What the person decided about every row of one render, keyed by the row object.
 
-    ``on`` says the store is applied. Rows are keyed by ``id(row)``, which is stable for
+    ``on`` says the store is applied. ``arm`` says the console's attention buttons render:
+    an interactive page with triage verdicts, whatever the store holds (crowsnest#56).
+    Rows are keyed by ``id(row)``, which is stable for
     the one render that holds the roster; a row with no identity (no ``session_id``, or
     text a revision cannot hash) has no entry and renders as it always did.
     """
 
     on: bool = False
     rows: Mapping[int, _Attended] = field(default_factory=dict)
+    arm: bool = False
 
     def of(self, row: Mapping[str, Any]) -> _Attended | None:
         return self.rows.get(id(row))
@@ -145,14 +154,20 @@ ATTENTION_CSS = """
 """
 
 #: The console's styles, on top of the shared stylesheet's tokens. Interactive mode only.
+#: The attention arm's classes are its own (``is-seen``, ``later-live``, ``live``): the
+#: static page's ``row--seen`` and ``register--later`` appear only once the store holds a
+#: record, and this stylesheet is on every interactive page. ``[hidden]`` is restated
+#: because a class that sets ``display`` outranks the attribute outside the viewer.
 CONSOLE_CSS = """
+[hidden]{display:none!important}
 .console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;
   font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
 .acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}
-.acts button,.console button{font:inherit;font-family:var(--mono);font-size:.68rem;
+.acts button,.console button,.seen-above{font:inherit;font-family:var(--mono);font-size:.68rem;
   letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer;
   border:1px solid var(--accent);background:transparent;color:var(--accent)}
-.acts button:hover,.console button:hover,.acts button:focus-visible,.console button:focus-visible{
+.acts button:hover,.console button:hover,.seen-above:hover,.acts button:focus-visible,
+.console button:focus-visible,.seen-above:focus-visible{
   background:var(--accent);color:var(--surface)}
 .acts textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;
   border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
@@ -160,29 +175,369 @@ CONSOLE_CSS = """
   font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}
 .answers li b{color:var(--ink);font-weight:500}
 .unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}
+.acts button,.later-sheet button,.seen-above,.toast button{min-height:2.75rem}
+.seen-above{margin-top:.5rem}
+.later-sheet{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;width:100%;
+  padding:.6rem;border:1px solid var(--rule);background:var(--surface)}
+.later-sheet p{width:100%;margin:0;color:var(--ink)}
+.later-sheet label{width:100%;display:flex;gap:.4rem;align-items:center}
+.later-sheet input[type=text]{width:100%;font:inherit;font-size:.9rem;padding:.4rem;
+  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
+.is-seen{opacity:.55}
+.live,.line.live .tag{color:var(--accent)}
+.later-live>summary{cursor:pointer;list-style:none}
+.later-live>summary::-webkit-details-marker{display:none}
+.toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:10;display:flex;
+  gap:.8rem;align-items:center;max-width:calc(100% - 2rem);padding:.55rem .8rem;
+  font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--surface)}
+.toast button{font:inherit;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .6rem;
+  cursor:pointer;border:1px solid var(--surface);background:transparent;color:var(--surface)}
+"""
+
+#: The person's attention record as the console's script keeps it: a transcription of
+#: :mod:`crowsnest.attention` -- reading a document, ``present``, the transitions,
+#: ``seen_as_of``, ``later_until`` -- with no DOM and no network, so
+#: ``tests/test_console_script.py`` can run it in node against the Python. **Change one,
+#: change the other.** It defines one global, ``cnAttention``, which :data:`CONSOLE_SCRIPT`
+#: reads; times are epoch milliseconds, stamped the way ``attention._stamp`` stamps them.
+ATTENTION_SCRIPT = r"""
+const cnAttention = (() => {
+  "use strict";
+  const ACTIVE = "active", LATER = "later", DONE = "done";
+  const STATES = [ACTIVE, LATER, DONE];
+  const NEW = "new", CHANGED = "changed", WOKE = "woke", SEEN = "seen";
+  const SOON = "1h", EVENING = "evening", TOMORROW = "tomorrow", ON_CHANGE = "change";
+  const SOON_MS = 60 * 60 * 1000;
+  const AGE_UNITS = [[86400, "d"], [3600, "h"], [60, "m"]];
+  const ITEM_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+  // A stored time as both writers stamp it: an ISO date and time with its offset. The
+  // calendar is checked in `instant`, because Date.parse takes impossible dates, hour 24,
+  // expanded years and prose, all of which Record.from_dict refuses. A spelling Python
+  // takes and this does not (an offset without its colon, say) reads as no record here,
+  // which leaves its row as the page drew it.
+  const STAMP = /^(\d{4})-(\d{2})-(\d{2})[Tt ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?(?:[Zz]|([+-])(\d{2}):(\d{2}))$/;
+  // Python's whitespace (str.isspace) and line breaks (str.splitlines), which \s is not.
+  const SPACE = "[\t\n\x0b\x0c\r\x1c-\x1f \x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]";
+  const EDGES = new RegExp("^" + SPACE + "+|" + SPACE + "+$", "g");
+  const RUNS = new RegExp(SPACE + "+");
+  const LINES = /\r\n|[\n\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]/;
+
+  class Unreadable extends Error {}
+  const refuse = (why) => { throw new Unreadable(why); };
+  const absent = (value) => value === null || value === undefined;
+  const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+  /** str.strip. */
+  const strip = (text) => String(text).replace(EDGES, "");
+
+  /** is_item_id: the lower-case uuid item_id spells, and nothing else. */
+  const isItemId = (key) => typeof key === "string" && ITEM_ID.test(key);
+
+  /** instant, for a stored time: epoch milliseconds, or NaN for anything _stored_instant refuses. */
+  function instant(stamp) {
+    if (typeof stamp !== "string") return NaN;
+    const m = STAMP.exec(strip(stamp));
+    if (!m) return NaN;
+    const [year, month, day, hour, minute] = m.slice(1, 6).map(Number);
+    const second = m[6] === undefined ? 0 : Number(m[6]);
+    const milli = m[7] === undefined ? 0 : Math.floor(Number((m[7] + "00000").slice(0, 6)) / 1000);
+    if (year < 1 || hour > 23 || minute > 59 || second > 59) return NaN;
+    const wall = new Date(0);
+    wall.setUTCFullYear(year, month - 1, day);
+    wall.setUTCHours(hour, minute, second, milli);
+    if (wall.getUTCFullYear() !== year || wall.getUTCMonth() !== month - 1 || wall.getUTCDate() !== day) return NaN;
+    let offset = 0;
+    if (m[8] !== undefined) {
+      const hours = Number(m[9]), minutes = Number(m[10]);
+      if (hours > 23 || minutes > 59) return NaN;
+      offset = (m[8] === "-" ? -1 : 1) * (hours * 60 + minutes) * 60000;
+    }
+    const utc = wall.getTime() - offset;
+    const utcYear = new Date(utc).getUTCFullYear();
+    return utcYear < 1 || utcYear > 9999 ? NaN : utc;
+  }
+
+  /** _stamp: YYYY-MM-DDTHH:MM:SS.mmmZ. */
+  const stamp = (ms) => new Date(ms).toISOString();
+
+  /** _field: doc[key] when it has the right JSON type; the fallback when absent or null. */
+  function field(doc, key, kind, fallback) {
+    const value = doc[key];
+    if (absent(value)) return fallback;
+    const fits = kind === "int" ? Number.isSafeInteger(value) : typeof value === kind;
+    if (!fits) refuse(key + " has the wrong type");
+    return value;
+  }
+
+  function checkInstant(value, what) {
+    if (Number.isNaN(instant(value))) refuse(what + " is not a time with an offset");
+  }
+
+  /** Later.from_dict. */
+  function readLater(doc) {
+    if (!isObject(doc)) refuse("later must be an object");
+    const later = {
+      until: field(doc, "until", "string", null),
+      on_change: field(doc, "on_change", "boolean", true),
+      rev_at: field(doc, "rev_at", "string", ""),
+      count: field(doc, "count", "int", 1),
+      plan: field(doc, "plan", "string", ""),
+    };
+    if (later.until !== null) checkInstant(later.until, "until");
+    if (later.until === null && !later.on_change) refuse("a Later that never wakes");
+    if (later.count < 1) refuse("count must be at least 1");
+    return later;
+  }
+
+  /** Note.from_dict. */
+  function readNote(doc) {
+    if (!isObject(doc)) refuse("note must be an object");
+    const note = {
+      text: field(doc, "text", "string", ""),
+      updated_at: field(doc, "updated_at", "string", ""),
+    };
+    if (note.updated_at) checkInstant(note.updated_at, "note.updated_at");
+    return note;
+  }
+
+  /** SeenAs.from_dict: a verdict's group and why, never its words. */
+  function readSeenAs(doc) {
+    if (!isObject(doc)) refuse("seen_as must be an object");
+    const seenAs = {
+      group: field(doc, "group", "string", ""),
+      why: field(doc, "why", "string", ""),
+    };
+    if (!seenAs.group) refuse("seen_as.group must be a non-empty string");
+    return seenAs;
+  }
+
+  /** Record.from_dict: keys it does not know are not part of the record. */
+  function readOrRefuse(doc) {
+    if (!isObject(doc)) refuse("a record must be an object");
+    if (isObject(doc.prev) && !absent(doc.prev.prev)) refuse("undo is one level deep");
+    const record = {
+      seen_rev: field(doc, "seen_rev", "string", null),
+      state: field(doc, "state", "string", ACTIVE),
+      later: absent(doc.later) ? null : readLater(doc.later),
+      done_rev: field(doc, "done_rev", "string", null),
+      note: absent(doc.note) ? null : readNote(doc.note),
+      prev: absent(doc.prev) ? null : readOrRefuse(doc.prev),
+      updated_at: field(doc, "updated_at", "string", ""),
+      // A label with no revision to describe is dropped unread, not refused: one such
+      // document must not block a courier's batch.
+      seen_as: absent(doc.seen_as) || absent(doc.seen_rev) ? null : readSeenAs(doc.seen_as),
+    };
+    if (!STATES.includes(record.state)) refuse("no state " + record.state);
+    if (record.state === LATER && record.later === null) refuse("a later record needs its later block");
+    if (record.state === DONE && !record.done_rev) refuse("a done record needs its done_rev");
+    if (record.updated_at) checkInstant(record.updated_at, "updated_at");
+    return record;
+  }
+
+  /** read_record over a document: the record, or null when it is not a readable one. */
+  function readRecord(doc) {
+    try {
+      return readOrRefuse(doc);
+    } catch (error) {
+      if (error instanceof Unreadable) return null;
+      throw error;
+    }
+  }
+
+  /** present: what the person sees of one item. Pure. Its case table is the Python's. */
+  function present(rev, record, nowMs) {
+    if (absent(record)) return NEW;
+    if (record.state === LATER && record.later !== null) {
+      const asleep = record.later.until === null || nowMs < instant(record.later.until);
+      const changed = rev !== record.later.rev_at;
+      if (asleep && !(record.later.on_change && changed)) return LATER;
+    }
+    if (record.state === DONE && rev === record.done_rev) return DONE;
+    if (record.seen_rev === null) return NEW;
+    if (record.seen_rev !== rev) return CHANGED;
+    if (record.state === LATER || record.state === DONE) return WOKE;
+    return SEEN;
+  }
+
+  const blank = () => ({
+    seen_rev: null, state: ACTIVE, later: null, done_rev: null, note: null, prev: null,
+    updated_at: "", seen_as: null,
+  });
+
+  function revision(rev) {
+    if (typeof rev !== "string" || !rev) throw new Error("a revision is a non-empty string");
+    return rev;
+  }
+
+  /** _label: the label given, checked; else the record's own when it describes this same
+   * revision; else none, so a label from an older revision never describes this one. */
+  function label(record, rev, seenAs) {
+    if (!absent(seenAs)) return readSeenAs(seenAs);
+    if (!absent(record) && record.seen_rev === rev) return record.seen_as;
+    return null;
+  }
+
+  /** seen_as_of, from the verdict's group and why as a row carries them. */
+  const seenAsOf = (group, why) => (
+    typeof group === "string" && group ? { group, why: typeof why === "string" ? why : "" } : null
+  );
+
+  /** _step: the change, the record before it as prev (one level deep), and the time. */
+  function step(record, nowMs, changes) {
+    const before = record || blank();
+    return { ...before, ...changes, prev: { ...before, prev: null }, updated_at: stamp(nowMs) };
+  }
+
+  const seen = (record, rev, nowMs, seenAs = null) => step(record, nowMs, {
+    seen_rev: revision(rev), seen_as: label(record, rev, seenAs), state: ACTIVE,
+  });
+
+  const unseen = (record, nowMs) => step(record, nowMs, { seen_rev: null, seen_as: null });
+
+  function later(record, rev, nowMs, { until = null, onChange = true, plan = "", seenAs = null } = {}) {
+    revision(rev);
+    if (until === null && !onChange) {
+      throw new Error("a Later that wakes on neither a time nor a change never wakes; that is done, not later");
+    }
+    const before = record || blank();
+    const deferral = {
+      until: until === null ? null : stamp(until),
+      on_change: Boolean(onChange),
+      rev_at: rev,
+      count: before.later ? before.later.count + 1 : 1,
+      plan: strip(plan || ""),
+    };
+    return step(record, nowMs, {
+      state: LATER, later: deferral, seen_rev: rev, seen_as: label(record, rev, seenAs),
+    });
+  }
+
+  const done = (record, rev, nowMs, seenAs = null) => step(record, nowMs, {
+    state: DONE, done_rev: revision(rev), seen_rev: rev, seen_as: label(record, rev, seenAs),
+  });
+
+  function note(record, text, nowMs) {
+    const kept = strip(text || "");
+    return step(record, nowMs, { note: kept ? { text: kept, updated_at: stamp(nowMs) } : null });
+  }
+
+  function undo(record, nowMs) {
+    if (absent(record) || absent(record.prev)) throw new Error("nothing to undo");
+    return { ...record.prev, prev: null, updated_at: stamp(nowMs) };
+  }
+
+  /** as_doc: the ext a newer writer added, then the record's fields and its id. */
+  const asDoc = (item, record, ext) => ({ ...(ext ? { ext } : {}), id: item, ...record });
+
+  /** _extras: the one key carried through beyond the record. */
+  const extOf = (doc) => (isObject(doc) && isObject(doc.ext) ? { ...doc.ext } : null);
+
+  /** later_until in the viewer's local time: a time for 1h, evening and tomorrow; null for change. */
+  function laterUntil(preset, nowMs, { eveningHour, morningHour }) {
+    const local = new Date(nowMs);
+    const wall = (days, hour) => new Date(
+      local.getFullYear(), local.getMonth(), local.getDate() + days, hour,
+    ).getTime();
+    if (preset === SOON) return nowMs + SOON_MS;
+    if (preset === ON_CHANGE) return null;
+    if (preset === EVENING && local.getHours() < eveningHour) return wall(0, eveningHour);
+    if (preset === EVENING || preset === TOMORROW) return wall(1, morningHour);
+    throw new Error("no Later preset " + preset);
+  }
+
+  /** From the evening hour on, "This evening" means tomorrow morning (triage-ux 2.5). */
+  const eveningIsOver = (nowMs, eveningHour) => new Date(nowMs).getHours() >= eveningHour;
+
+  /** _first_line: the first line with anything on it, its whitespace collapsed. */
+  function firstLine(text) {
+    for (const line of String(text || "").split(LINES)) {
+      if (strip(line)) return strip(line).split(RUNS).join(" ");
+    }
+    return "";
+  }
+
+  /** Python's "{:.0f}": the nearest whole number, a half to the even one. */
+  function roundHalfEven(x) {
+    const floor = Math.floor(x), rest = x - floor;
+    if (rest !== 0.5) return Math.round(x);
+    return floor % 2 === 0 ? floor : floor + 1;
+  }
+
+  /** _since: how long, in the largest whole unit that fits. */
+  function since(seconds) {
+    const s = Math.max(0, seconds);
+    for (const [size, unit] of AGE_UNITS) if (s >= size) return roundHalfEven(s / size) + " " + unit;
+    return roundHalfEven(s) + " s";
+  }
+
+  return {
+    ACTIVE, LATER, DONE, NEW, CHANGED, WOKE, SEEN, SOON, EVENING, TOMORROW, ON_CHANGE,
+    isItemId, instant, strip, readRecord, present, seenAsOf, seen, unseen, later, done, note,
+    undo, asDoc, extOf, laterUntil, eveningIsOver, firstLine, since,
+  };
+})();
 """
 
 #: The console's one script. It loads nothing from anywhere: the only thing it talks to
 #: is the host's ``db`` capability, and when that is absent it leaves the page exactly as
 #: the static one. Everything read back from the store is untrusted and rendered as text.
+#:
+#: Two halves. **Intents** (Ask, Tell, Start work here, Refresh) are instructions, queued in
+#: ``intents`` for the watching session. **Attention** (Seen, Later, Done, Note, Seen above)
+#: is the person's record, written whole to ``attention/<item id>`` and drawn at once,
+#: never waiting for the watcher (crowsnest#56). A document the page's ``db`` holds redraws
+#: its row only when it is newer than the record the page was rendered from. Nothing is
+#: re-sorted while the page is open: a row put off moves into *Later*, one marked done is
+#: hidden, and Undo puts either back where it stood.
 CONSOLE_SCRIPT = r"""
 (async () => {
+  const A = cnAttention;
+  const NOTE = "note";
   const status = document.getElementById("console-status");
   const say = (t) => { if (status) status.textContent = t; };
+  const codeOf = (e) => (e && (e.code || e.message)) || String(e);
+  const drafts = new WeakMap();  // .acts -> {kind: text}: what was typed for each kind
   const use = window.claude && window.claude.use;
   if (typeof use !== "function") { say("console off: this copy of the page is not in the claude.ai viewer"); return; }
   let db = null;
   try { db = await window.claude.use("db"); } catch (e) { db = null; }
   if (!db) { say("console off: open this page in the claude.ai viewer to act from it"); return; }
   document.querySelectorAll("[data-console]").forEach((el) => { el.hidden = false; });
-  say("console on: every action is queued for the crowsnest session, which polls while you use this page");
+  const arm = document.getElementById("attention-arm");
+  say(arm
+    ? "console on: Seen, Later, Done and Note are saved as you tap; Ask, Tell and Start are queued for the crowsnest session"
+    : "console on: every action is queued for the crowsnest session, which polls while you use this page");
+  const attention = attend(arm);
+  watchHeartbeat(document.getElementById("console-heartbeat"));
+
+  // A row's one text box serves Tell, Start and Note, and keeps a draft for each.
+  function openBox(acts, kind, placeholder, initial) {
+    const box = acts.querySelector("textarea"), send = acts.querySelector("[data-kind=send]");
+    if (!box || !send) return;
+    const saved = drafts.get(acts) || {};
+    if (acts.dataset.pending) saved[acts.dataset.pending] = box.value;
+    drafts.set(acts, saved);
+    acts.dataset.pending = kind;
+    box.value = Object.prototype.hasOwnProperty.call(saved, kind) ? saved[kind] : initial;
+    box.placeholder = placeholder;
+    box.hidden = false;
+    send.hidden = false;
+    box.focus();
+  }
+  function closeBox(acts) {
+    const box = acts.querySelector("textarea"), send = acts.querySelector("[data-kind=send]");
+    const saved = drafts.get(acts);
+    if (saved) delete saved[acts.dataset.pending || ""];
+    box.value = ""; box.hidden = true; send.hidden = true; acts.dataset.pending = "";
+  }
+
   const intents = db.collection("intents");
   async function submit(kind, session, home, text) {
     const at = new Date().toISOString();
     try {
       await intents.add({ kind, session, home, text, at, status: "queued" });
       say("queued " + kind + (session ? " for " + session : "") + " at " + at.slice(11, 19) + " UTC");
-    } catch (e) { say("could not queue: " + ((e && e.code) || e)); }
+    } catch (e) { say("could not queue: " + codeOf(e)); }
   }
   document.querySelectorAll(".acts").forEach((acts) => {
     const session = acts.dataset.session || "", home = acts.dataset.home || "";
@@ -190,23 +545,17 @@ CONSOLE_SCRIPT = r"""
       acts.querySelectorAll('button[data-kind="ask"],button[data-kind="tell"]').forEach((b) => { b.hidden = true; });
       const note = acts.querySelector(".unreachable"); if (note) note.hidden = false;
     }
-    const box = acts.querySelector("textarea"), send = acts.querySelector("[data-kind=send]");
-    let pending = "";
     acts.querySelectorAll("button[data-kind]").forEach((b) => b.addEventListener("click", () => {
-      const kind = b.dataset.kind;
+      const kind = b.dataset.kind, pending = acts.dataset.pending || "";
       if (kind === "tell" || kind === "start") {
-        pending = kind; box.hidden = false; send.hidden = false;
-        box.placeholder = kind === "tell" ? "what to tell " + session : "what to start in " + session + "'s directory";
-        box.focus(); return;
+        openBox(acts, kind, kind === "tell" ? "what to tell " + session : "what to start in " + session + "'s directory", "");
+        return;
       }
       if (kind === "send") {
+        const box = acts.querySelector("textarea");
+        if (pending === NOTE) { if (attention) attention.saveNote(acts.closest("li"), box.value); closeBox(acts); return; }
         const text = box.value.trim(); if (!text || !pending) return;
-        submit(pending, session, home, text);
-        box.value = ""; box.hidden = true; send.hidden = true; pending = ""; return;
-      }
-      if (kind === "handled") {
-        submit("handled", session, home, "");
-        const row = acts.closest("li"); if (row) row.style.opacity = "0.35"; return;
+        submit(pending, session, home, text); closeBox(acts); return;
       }
       submit(kind, session, home, "");
     }));
@@ -220,33 +569,451 @@ CONSOLE_SCRIPT = r"""
     const line = (d.kind || "?") + " · " + (d.status || "queued") + (d.text ? " · " + d.text : "") + (d.answer ? " — " + d.answer : "");
     let home = null;
     if (d.session) {
-      const sel = '.acts[data-session="' + String(d.session).replace(/["\]/g, "\$&") + '"] .answers';
-      home = document.querySelector(sel);
+      const key = window.CSS && CSS.escape ? CSS.escape(String(d.session)) : String(d.session).replace(/["\\]/g, "\\$&");
+      try { home = document.querySelector('.acts[data-session="' + key + '"] .answers'); } catch (e) { home = null; }
     }
     if (!home) home = log;
     if (!home) return;
     let li = document.getElementById(id);
     if (!li) { li = document.createElement("li"); li.id = id; home.prepend(li); }
-    li.textContent = ""; const b = document.createElement("b"); b.textContent = (d.at || "").slice(11, 16) + " "; li.appendChild(b);
+    li.textContent = ""; const b = document.createElement("b"); b.textContent = String(d.at || "").slice(11, 16) + " "; li.appendChild(b);
     li.appendChild(document.createTextNode(line));
   }
   try {
     intents.orderBy("at", "desc").limit(60).onSnapshot((snap) => {
       const docs = snap && snap.docs ? snap.docs : [];
       if (docs.length) docs.forEach(paint); else if (snap && typeof snap.forEach === "function") snap.forEach(paint);
-    }, (err) => say("console lost its feed: " + ((err && err.code) || err)));
-  } catch (e) { say("console cannot subscribe: " + ((e && e.code) || e)); }
+    }, (err) => say("console lost its feed: " + codeOf(err)));
+  } catch (e) { say("console cannot subscribe: " + codeOf(e)); }
+
+  // When crowsnest last looked: the page's console/heartbeat document, judged against the
+  // tick the page carries. Absent, older than two ticks, or dated ahead of this device's
+  // clock, the line says what waits.
+  function watchHeartbeat(line) {
+    const tick = line ? Number(line.dataset.tickSeconds) : NaN;
+    if (!line || !(tick > 0)) return;
+    let read = false, last = NaN;
+    const paintBeat = () => {
+      if (!read) return;
+      if (Number.isNaN(last)) {
+        line.textContent = "crowsnest has not looked at this page yet: terminal changes and queued actions wait";
+        return;
+      }
+      const age = (Date.now() - last) / 1000;
+      if (age < -tick) {
+        line.textContent = "crowsnest's last look is dated " + A.since(-age)
+          + " ahead of this device's clock, so it cannot tell whether crowsnest is looking: terminal changes and queued actions may wait";
+        return;
+      }
+      line.textContent = "crowsnest last looked " + A.since(age) + " ago"
+        + (age < 2 * tick ? "" : ": terminal changes and queued actions wait");
+    };
+    const lost = (error) => { read = false; line.textContent = "cannot tell when crowsnest last looked: " + codeOf(error); };
+    try {
+      db.doc("console/heartbeat").onSnapshot((snap) => {
+        const data = snap && snap.exists && typeof snap.data === "function" ? snap.data() : null;
+        read = true;
+        last = data ? A.instant(data.at) : NaN;
+        paintBeat();
+      }, lost);
+    } catch (e) { lost(e); return; }
+    setInterval(paintBeat, tick * 1000);
+  }
+
+  // The attention arm. Returns null, and leaves its buttons hidden, on a page without it.
+  function attend(arm) {
+    const sheet = document.getElementById("later-sheet");
+    const toast = document.getElementById("attention-toast");
+    if (!arm || !sheet || !toast) return null;
+    const hours = { eveningHour: Number(sheet.dataset.eveningHour), morningHour: Number(sheet.dataset.morningHour) };
+    const maxSnoozes = Number(sheet.dataset.maxSnoozes);
+    const toastMs = Number(toast.dataset.seconds) * 1000;
+    const collection = db.collection("attention");
+    const rows = new Map();       // item id -> its rows, in page order (an identity may give several)
+    const drawn = new Map();      // row -> how the page rendered it
+    const known = new Map();      // item id -> {record, ext}: the newest document read or written
+    const displayed = new Map();  // row -> the record it is drawn from now; absent: as rendered
+    const slots = new Map();      // row -> where it stood before this page put it off
+    let writing = Promise.resolve();  // every write waits for the one before it
+    let sheetRow = null, toastTimer = 0, undoable = [], lit = false;
+    const at = (record) => (record && record.updated_at ? A.instant(record.updated_at) : -Infinity);
+    const rowsOf = (item) => rows.get(item) || [];
+    const isRow = (el) => Boolean(el) && rowsOf(el.dataset.item).includes(el);
+    const recordOf = (el) => (known.get(el.dataset.item) || {}).record || null;
+    const seenAsOf = (el) => A.seenAsOf(el.dataset.group, el.dataset.why);
+
+    document.querySelectorAll("li[data-item][data-rev]").forEach((el) => {
+      const item = el.dataset.item;
+      if (!A.isItemId(item)) return;
+      rows.set(item, [...rowsOf(item), el]);
+      drawn.set(el, {
+        className: el.className,
+        shown: el.dataset.shown || A.NEW,
+        updated: el.dataset.updated ? A.instant(el.dataset.updated) : -Infinity,
+      });
+    });
+
+    // What the page drew from the record it was rendered with: the dot, a full row's
+    // back/plan/note lines, and a one-line row's marks (`data-drawn`).
+    const RENDERED = ["back", "plan", "note"];
+    function renderedMarks(el) {
+      const marks = [...el.querySelectorAll(".dot, [data-drawn]")];
+      el.querySelectorAll(".body > p.line:not(.live)").forEach((line) => {
+        const tag = line.querySelector(".tag");
+        if (tag && RENDERED.includes(tag.textContent)) marks.push(line);
+      });
+      return marks;
+    }
+    function recount(block) {
+      if (!block) return;
+      const count = [...block.querySelectorAll("li[id^='session-']")].filter((li) => !li.hidden).length;
+      const figure = block.querySelector(".figure");
+      if (figure) figure.textContent = String(count);
+      if (block.classList.contains("later-live")) block.hidden = count === 0;
+    }
+    function laterBlock() {
+      const found = document.getElementById("later");
+      if (found) return found;
+      const block = document.createElement("details");
+      block.className = "register later-live";
+      block.id = "later";
+      const summary = document.createElement("summary");
+      summary.className = "register-head";
+      const figure = document.createElement("span");
+      figure.className = "figure";
+      const name = document.createElement("h2");
+      name.textContent = "Later";
+      summary.append(figure, name);
+      const rule = document.createElement("p");
+      rule.className = "rule";
+      rule.textContent = "Put off from this page. Each row says when it comes back.";
+      block.append(summary, rule);
+      const working = document.getElementById("working");
+      if (working) working.after(block); else document.querySelector("main").append(block);
+      return block;
+    }
+    function listIn(block, el) {
+      const thin = el.classList.contains("thin");
+      let list = block.querySelector(thin ? "ul.thins" : "ol.ledger");
+      if (!list) {
+        list = document.createElement(thin ? "ul" : "ol");
+        list.className = thin ? "thins" : "ledger";
+        block.append(list);
+      }
+      return list;
+    }
+    function putAway(el) {
+      if (slots.has(el) || drawn.get(el).shown === A.LATER) return;
+      const slot = document.createComment("put off from this page");
+      el.before(slot);
+      slots.set(el, slot);
+      listIn(laterBlock(), el).append(el);
+    }
+    function bringBack(el) {
+      const slot = slots.get(el);
+      if (!slot) return;
+      slot.replaceWith(el);
+      slots.delete(el);
+    }
+    function clock(ms) {
+      const when = new Date(ms), today = new Date();
+      const two = (n) => String(n).padStart(2, "0");
+      const time = two(when.getHours()) + ":" + two(when.getMinutes());
+      if (when.toDateString() === today.toDateString()) return time;
+      return when.getFullYear() + "-" + two(when.getMonth() + 1) + "-" + two(when.getDate()) + " " + time;
+    }
+    function wakes(later) {
+      if (later.until === null) return "put off until it changes";
+      return "put off until " + clock(A.instant(later.until)) + (later.on_change ? " or it changes" : "");
+    }
+    function addLive(el, shown, record) {
+      let said = "";
+      if (drawn.get(el).shown === A.LATER && shown !== A.LATER) said = "back: it returns to its register when this page next loads";
+      else if (shown === A.CHANGED) said = "changed since you last looked";
+      else if (shown === A.WOKE) said = "back from later";
+      else if (shown === A.LATER) said = wakes(record.later);
+      const back = shown === A.CHANGED || shown === A.WOKE;
+      const plan = back && record.state === A.LATER && record.later ? record.later.plan : "";
+      const note = record.note ? A.firstLine(record.note.text) : "";
+      const lines = [["state", said], ["plan", plan], ["note", note]].filter(([, text]) => text);
+      const body = el.querySelector(".body");
+      if (!body) {
+        const line = el.querySelector(".thin-ask") || el;
+        for (const [tag, text] of lines) {
+          const mark = document.createElement("span");
+          mark.className = "live";
+          mark.textContent = " · " + (tag === "state" ? "" : tag + " ") + text;
+          line.append(mark);
+        }
+        return;
+      }
+      const acts = body.querySelector(".acts");
+      for (const [tag, text] of lines) {
+        const line = document.createElement("p");
+        line.className = "line live";
+        const label = document.createElement("span");
+        label.className = "tag";
+        label.textContent = tag;
+        const value = document.createElement("code");
+        value.textContent = text;
+        line.append(label, value);
+        body.insertBefore(line, acts);
+      }
+    }
+
+    // Draw a row from `record`, or as the page rendered it when `record` is null.
+    function apply(el, record) {
+      const from = el.closest(".register");
+      el.querySelectorAll(".live").forEach((node) => node.remove());
+      if (record === null) {
+        displayed.delete(el);
+        bringBack(el);
+        el.className = drawn.get(el).className;
+        el.hidden = false;
+        delete el.dataset.live;
+        renderedMarks(el).forEach((node) => { node.hidden = false; });
+      } else {
+        const shown = A.present(el.dataset.rev, record, Date.now());
+        // An open sheet moves with its row; it closes only when the row leaves the page.
+        if (sheetRow === el && shown === A.DONE) closeSheet();
+        displayed.set(el, record);
+        el.dataset.live = shown;
+        renderedMarks(el).forEach((node) => { node.hidden = true; });
+        for (const state of [A.SEEN, A.CHANGED, A.WOKE]) {
+          el.classList.remove("row--" + state);
+          el.classList.toggle("is-" + state, shown === state);
+        }
+        el.hidden = shown === A.DONE;
+        if (shown === A.LATER) putAway(el); else bringBack(el);
+        addLive(el, shown, record);
+      }
+      recount(from);
+      recount(el.closest(".register"));
+    }
+
+    // Write the whole document; every write waits for the one before it.
+    function save(item, record, ext) {
+      const body = A.asDoc(item, record, ext);
+      const next = writing.catch(() => undefined).then(() => collection.doc(item).set(body));
+      writing = next;
+      return next;
+    }
+    // Apply `transition` once per item among `els`, and redraw every row of that item.
+    // `display` (Undo's) says what each row is drawn from instead of the new record.
+    function act(els, transition, message, { undo = true, display = null } = {}) {
+      const now = Date.now();
+      const acted = [], items = new Set();
+      for (const el of els) {
+        const item = el.dataset.item;
+        if (items.has(item)) continue;
+        items.add(item);
+        const before = known.get(item) || { record: null, ext: null };
+        let record;
+        try { record = transition(before.record, el, now); } catch (e) { say("not done: " + codeOf(e)); continue; }
+        const all = rowsOf(item);
+        const entry = {
+          item, rows: all, record, before, failed: false,
+          shownBefore: new Map(all.map((row) => [row, displayed.has(row) ? displayed.get(row) : null])),
+        };
+        acted.push(entry);
+        known.set(item, { record, ext: before.ext });
+        for (const row of all) apply(row, display && display.has(row) ? display.get(row) : record);
+        save(item, record, before.ext).catch((error) => {
+          entry.failed = true;
+          const current = known.get(item);
+          if (current && current.record === record) {
+            known.set(item, before);
+            for (const row of all) apply(row, entry.shownBefore.get(row));
+          }
+          say("not saved, so put back: " + codeOf(error));
+          notify("Not saved, so put back: " + codeOf(error), []);
+        });
+      }
+      if (acted.length) notify(message(acted.length), undo ? acted : []);
+    }
+    function notify(text, entries) {
+      undoable = entries;
+      toast.querySelector("span").textContent = text;
+      toast.querySelector("button").hidden = entries.length === 0;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; undoable = []; }, toastMs);
+    }
+    toast.querySelector("button").addEventListener("click", () => {
+      const saved = undoable.filter((entry) => !entry.failed);
+      undoable = [];
+      clearTimeout(toastTimer);
+      toast.hidden = true;
+      // Undo restores what this tap replaced, so it leaves alone an item written since,
+      // from another device or another tab.
+      const mine = saved.filter((entry) => (known.get(entry.item) || {}).record === entry.record);
+      const elsewhere = saved.length - mine.length;
+      const leftAlone = elsewhere ? "; " + elsewhere + " changed elsewhere since, left as it is" : "";
+      if (!mine.length) { if (elsewhere) notify("Not undone: changed elsewhere since", []); return; }
+      const display = new Map();
+      mine.forEach((entry) => entry.shownBefore.forEach((shown, row) => display.set(row, shown)));
+      act(mine.map((entry) => entry.rows[0]), (record, el, now) => A.undo(record, now),
+        (n) => (n === 1 ? "Undone" : "Undone: " + n + " rows") + leftAlone, { undo: false, display });
+    });
+
+    // Read: one subscription. A document redraws its rows only when it is newer than what
+    // this page knows and than the record the page was rendered from; a deleted one draws
+    // them as rendered.
+    function take(doc, removed) {
+      const item = doc && doc.id;
+      if (!A.isItemId(item)) return;
+      if (removed) {
+        known.set(item, { record: null, ext: null });
+        rowsOf(item).forEach((el) => apply(el, null));
+        return;
+      }
+      const data = typeof doc.data === "function" ? doc.data() : undefined;
+      const record = A.readRecord(data);
+      const mine = known.get(item);
+      if (record === null) { if (!mine) known.set(item, { record: null, ext: null }); return; }
+      if (mine && mine.record && (mine.record.updated_at === record.updated_at || at(mine.record) > at(record))) return;
+      known.set(item, { record, ext: A.extOf(data) });
+      for (const el of rowsOf(item)) {
+        if (drawn.get(el).updated > at(record)) continue;
+        apply(el, record);
+      }
+    }
+    function light() {
+      if (lit) return;
+      lit = true;
+      document.querySelectorAll("button[data-attend],button[data-seen-above]").forEach((button) => { button.hidden = false; });
+    }
+    try {
+      collection.onSnapshot((snap) => {
+        if (snap && typeof snap.docChanges === "function") {
+          snap.docChanges().forEach((change) => take(change.doc, change.type === "removed"));
+        } else {
+          ((snap && snap.docs) || []).forEach((doc) => take(doc, false));
+        }
+        // A snapshot from the cache may not hold every document yet: a tap then would
+        // start from a record the page has not read. The buttons wait for the store's own.
+        if (!(snap && snap.metadata && snap.metadata.fromCache)) light();
+      }, (error) => say("attention lost its feed: " + codeOf(error)));
+    } catch (e) { say("attention cannot subscribe: " + codeOf(e)); return null; }
+
+    function openSheet(el) {
+      const acts = el.querySelector(".acts");
+      if (!acts) return;
+      closeSheet();
+      const record = recordOf(el);
+      const count = record && record.later ? record.later.count : 0;
+      sheet.querySelector('[data-preset="drop"]').hidden = count < maxSnoozes;
+      const evening = sheet.querySelector('[data-preset="' + A.EVENING + '"]');
+      evening.textContent = A.eveningIsOver(Date.now(), hours.eveningHour) ? evening.dataset.afterEvening : evening.dataset.label;
+      sheet.querySelector("[data-on-change]").checked = true;
+      sheet.querySelector("[data-plan]").value = "";
+      acts.append(sheet);
+      sheetRow = el;
+      sheet.hidden = false;
+    }
+    function closeSheet() {
+      sheet.hidden = true;
+      arm.append(sheet);
+      sheetRow = null;
+    }
+    sheet.querySelectorAll("button[data-preset]").forEach((button) => button.addEventListener("click", () => {
+      const el = sheetRow, preset = button.dataset.preset;
+      const onChange = sheet.querySelector("[data-on-change]").checked;
+      const plan = sheet.querySelector("[data-plan]").value;
+      closeSheet();
+      if (!isRow(el) || preset === "cancel") return;
+      act([el], (record, row, now) => {
+        const until = preset === "drop" ? null : A.laterUntil(preset, now, hours);
+        return A.later(record, row.dataset.rev, now, { until, onChange: until === null || onChange, plan, seenAs: seenAsOf(row) });
+      }, () => (preset === "drop" ? "Dropped: back only when it changes" : "Put off: in Later, below"));
+    }));
+
+    function openNote(el) {
+      const acts = el.querySelector(".acts");
+      if (!acts) return;
+      const record = recordOf(el);
+      openBox(acts, NOTE, "a note to yourself; crowsnest never acts on it. Empty removes it",
+        record && record.note ? record.note.text : "");
+    }
+    function saveNote(el, text) {
+      if (!isRow(el)) return;
+      const kept = A.strip(text || ""), record = recordOf(el);
+      if (!kept && !(record && record.note)) return;
+      act([el], (before, row, now) => A.note(before, text, now), () => (kept ? "Note saved" : "Note removed"));
+    }
+
+    // Until the store has answered, a press is refused even if it reaches a hidden button
+    // (a script, an assistive tool): it would start from a record the page has not read.
+    document.querySelectorAll("button[data-attend]").forEach((button) => button.addEventListener("click", () => {
+      const el = button.closest("li[data-item]");
+      if (!lit || !isRow(el)) return;
+      const kind = button.dataset.attend;
+      if (kind === A.SEEN) {
+        act([el], (record, row, now) => A.seen(record, row.dataset.rev, now, seenAsOf(row)), () => "Seen: dimmed until it changes");
+      } else if (kind === A.DONE) {
+        act([el], (record, row, now) => A.done(record, row.dataset.rev, now, seenAsOf(row)), () => "Done: hidden until it changes");
+      } else if (kind === A.LATER) {
+        openSheet(el);
+      } else if (kind === NOTE) {
+        openNote(el);
+      }
+    }));
+
+    // Seen above: every row before the button that is on the page and not seen yet. A
+    // register head's button leaves its own rows alone; the one at the foot of Quiet takes
+    // every row there is.
+    document.querySelectorAll("button[data-seen-above]").forEach((button) => button.addEventListener("click", () => {
+      if (!lit) return;
+      const above = [...rows.values()].flat().filter((el) =>
+        (el.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+        && !el.hidden && !el.closest("#later")
+        && (el.dataset.live || drawn.get(el).shown) !== A.SEEN);
+      if (!above.length) { notify("Nothing above is unseen", []); return; }
+      act(above, (record, row, now) => A.seen(record, row.dataset.rev, now, seenAsOf(row)),
+        (n) => "Seen: " + n + (n === 1 ? " item" : " items") + " above");
+    }));
+
+    return { saveNote };
+  }
 })();
 """
 
 #: The actions a row offers. ``kind`` is what the intent document carries; the watching
-#: session's ``crowsnest-report`` skill says what each one does.
+#: session's ``crowsnest-report`` skill says what each one does. *Handled* is now the
+#: attention arm's *Done*, which writes the record rather than queueing an intent (#56).
 ROW_ACTIONS = (
     ("ask", "Ask"),
     ("tell", "Tell"),
     ("start", "Start work here"),
-    ("handled", "Handled"),
 )
+
+#: What a row offers beside them on a page with the attention arm. Each writes the person's
+#: record straight to the page's ``db`` at ``attention/<item id>``, never an intent.
+ATTENTION_ACTIONS = (
+    (_attention.SEEN, "Seen"),
+    (_attention.LATER, "Later"),
+    (_attention.DONE, "Done"),
+    ("note", "Note"),
+)
+
+#: The Later sheet's presets, in the order it shows them (triage-ux 2.5).
+LATER_PRESETS = (
+    (_attention.SOON, "In 1 hour"),
+    (_attention.EVENING, "This evening"),
+    (_attention.TOMORROW, "Tomorrow morning"),
+    (_attention.ON_CHANGE, "Until it changes"),
+)
+
+#: The Later sheet's other two buttons: *Drop it*, which leads once an item has been put
+#: off ``max_snoozes`` times and is Later with no time, woken only by a change; and Cancel.
+DROP, CANCEL = "drop", "cancel"
+
+#: How often the watching session reads the console, in seconds: the skill's ``/loop 30s``.
+#: The page calls crowsnest's heartbeat stale past two of these.
+CONSOLE_TICK_SECONDS = 30
+
+#: How long the undo toast stays on screen, in seconds.
+TOAST_SECONDS = 8
 
 #: The terminal command shown for a session with no link. ``pre-wrap`` because a browser
 #: collapses runs of whitespace in ordinary text, and a name with two spaces in it is a
@@ -540,14 +1307,30 @@ def _rail(chip: str, tone: str, figure: str, unit: str, *, reach: str = "") -> s
     )
 
 
+#: The console's *Seen above*: every unseen row before it is marked seen (#56).
+_SEEN_ABOVE = (
+    '<button type="button" class="seen-above" data-seen-above hidden>Seen above</button>'
+)
+
+
 def _register(
-    *, ident: str, name: str, figure: str, tone: str, rule: str, body: str
+    *,
+    ident: str,
+    name: str,
+    figure: str,
+    tone: str,
+    rule: str,
+    body: str,
+    seen_above: bool = False,
 ) -> str:
+    # `seen_above`: the head offers the console's "Seen above" (#56), which marks every
+    # row above it seen -- on a page with the attention arm only, hidden until it lights.
+    above = _SEEN_ABOVE if seen_above and _view.get().arm else ""
     return (
         f'<section class="register register--{tone}" id="{ident}">'
         f'<div class="register-head">'
         f'<p class="figure">{figure}</p>'
-        f'<div><h2>{name}</h2><p class="rule">{rule}</p></div>'
+        f'<div><h2>{name}</h2><p class="rule">{rule}</p>{above}</div>'
         f"</div>{body}</section>"
     )
 
@@ -746,7 +1529,7 @@ def _row(
     ]
     return (
         f'<li class="row row--{tone}{_state_class(attended)}" id="session-{ident}"'
-        f"{_item_attrs(attended)}>"
+        f"{_item_attrs(safe, attended)}>"
         + _rail(chip, tone, figure, unit, reach=reach)
         + '<div class="body">'
         + "".join(body)
@@ -766,19 +1549,36 @@ def _state_class(attended: _Attended | None) -> str:
     return _STATE_CLASSES.get(attended.shown, "") if attended else ""
 
 
-def _item_attrs(attended: _Attended | None) -> str:
+def _item_attrs(safe: _Sanitizer, attended: _Attended | None) -> str:
     """``data-item`` and ``data-rev``, for the console's script: interactive pages only.
 
     The static page has no script to read them, and carrying them there would make a page
     from an empty store differ from the page before attention existed. Both values are
     derived here -- a uuid and a hex digest -- and never text a session wrote.
+
+    The console's attention arm needs three more things (crowsnest#56). ``data-group`` and
+    ``data-why`` are the verdict's group and why, which every mark stores as ``seen_as``
+    (#73): labels, never the reason. A custom ``verdicts=`` reader chooses them, so they
+    reach the page through the sanitiser like any other text. And on a page that applied
+    the store, ``data-shown`` and ``data-updated`` say how the row was drawn and from the
+    record of which moment, so the script redraws it only from a newer document.
     """
     if attended is None or not _interactive.get():
         return ""
-    return (
+    attrs = (
         f' data-item="{_html.escape(attended.item, quote=True)}"'
         f' data-rev="{_html.escape(attended.rev, quote=True)}"'
     )
+    if _view.get().arm and attended.now_as is not None:
+        attrs += (
+            f' data-group="{safe.text(attended.now_as.group)}"'
+            f' data-why="{safe.text(attended.now_as.why)}"'
+        )
+    if attended.shown:
+        attrs += f' data-shown="{_html.escape(attended.shown, quote=True)}"'
+    if attended.record is not None and attended.record.updated_at:
+        attrs += f' data-updated="{_html.escape(attended.record.updated_at, quote=True)}"'
+    return attrs
 
 
 def _dot(attended: _Attended | None, *, loud: bool) -> str:
@@ -928,6 +1728,9 @@ def _thin_marks(safe: _Sanitizer, attended: _Attended | None) -> str:
     for tag, text in (("plan", _plan(attended)), ("note", _note(attended))):
         if text:
             marks += f'{sep}<span class="note-mark">{tag}</span> {safe.text(text)}'
+    if marks and _interactive.get():
+        # What the console hides when it redraws the row from a newer record (#56).
+        return f"<span data-drawn>{marks}</span>"
     return marks
 
 
@@ -940,6 +1743,11 @@ def _controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     "own home" argument is needed here (crowsnest#52). The script hides **Ask** and
     **Tell** on an unreachable row and shows the ``.unreachable`` line in their place --
     a session under one config directory cannot message one under another (crowsnest#9).
+
+    On a page with the attention arm, a row with an identity also offers **Seen**,
+    **Later**, **Done** and **Note** (crowsnest#56). They start hidden even inside a
+    console that has lit up: the script shows them once the page's ``attention`` documents
+    have arrived, so a first tap never starts from a record it has not read.
     """
     if not _interactive.get():
         return ""
@@ -948,6 +1756,12 @@ def _controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
         f'<button type="button" data-kind="{kind}">{safe.text(label)}</button>'
         for kind, label in ROW_ACTIONS
     )
+    view = _view.get()
+    if view.arm and view.of(row) is not None:
+        buttons += "".join(
+            f'<button type="button" data-attend="{kind}" hidden>{safe.text(label)}</button>'
+            for kind, label in ATTENTION_ACTIONS
+        )
     return (
         f'<div class="acts" data-console hidden data-session="{safe.text(row.get("label"))}"'
         f' data-home="{safe.text(row.get("home") or "")}" data-reachable="{reachable}">'
@@ -1088,7 +1902,7 @@ def _quiet_group(
         tail += _thin_marks(safe, attended)
         items.append(
             f'<li class="thin{_state_class(attended)}" id="session-{ident}"'
-            f"{_item_attrs(attended)}>"
+            f"{_item_attrs(safe, attended)}>"
             f'<span class="thin-age">{figure}{unit}</span>'
             f'<p class="thin-ask">{safe.text(row.get("label"))}'
             f"{_dot(attended, loud=False)}{tail}</p>"
@@ -1112,6 +1926,7 @@ def _register_from_rows(
     rule: str,
     empty: str,
     lead: str = "",
+    seen_above: bool = False,
 ) -> str:
     """A register of full rows. ``lead`` is markup that opens its body (the WIP line)."""
     figure = str(len(rows))
@@ -1121,7 +1936,13 @@ def _register_from_rows(
     else:
         body = lead + _empty(empty)
     return _register(
-        ident=ident, name=name, figure=figure, tone=tone, rule=rule, body=body
+        ident=ident,
+        name=name,
+        figure=figure,
+        tone=tone,
+        rule=rule,
+        body=body,
+        seen_above=seen_above,
     )
 
 
@@ -1134,6 +1955,10 @@ def _quiet_register(
             _quiet_group(safe, project, group_rows, clock)
             for project, group_rows in _by_project(rows)
         )
+        if _view.get().arm:
+            # Quiet's head leaves Quiet's own rows alone, and most sessions end up here:
+            # the foot's Seen above reaches them (review of #56).
+            body += f'<p class="seen-above-foot">{_SEEN_ABOVE}</p>'
     else:
         body = _empty("Nothing else is alive.")
     return _register(
@@ -1143,6 +1968,7 @@ def _quiet_register(
         tone="done",
         rule="Everything else, grouped by project.",
         body=body,
+        seen_above=True,
     )
 
 
@@ -1190,7 +2016,13 @@ def _lineage_register(safe: _Sanitizer, found: Any) -> str:
 
 
 def _masthead(
-    safe: _Sanitizer, counts: Mapping[str, Any], stamp: str, title: str, *, zone: str
+    safe: _Sanitizer,
+    counts: Mapping[str, Any],
+    stamp: str,
+    title: str,
+    *,
+    zone: str,
+    settings: AttentionSettings,
 ) -> str:
     tally = [
         ("Waiting", counts.get("waiting", 0), "needs"),
@@ -1213,20 +2045,71 @@ def _masthead(
         f'<p class="claim">Times on the rows are in {safe.text(zone)}. Each is when the '
         "words beside it were said, taken from where they were said, never the time this "
         "page was made.</p>"
-        f'<div class="tally">{cells}</div>' + _console() + "</header>"
+        f'<div class="tally">{cells}</div>' + _console(settings) + "</header>"
     )
 
 
-def _console() -> str:
-    """Refresh, the status line, and the log of intents that belong to no row."""
+def _console(settings: AttentionSettings) -> str:
+    """Refresh, the status line, when crowsnest last looked, the log of intents that belong
+    to no row, and -- on a page with the attention arm -- its Later sheet and undo toast.
+
+    The heartbeat line reads the page's ``console/heartbeat`` document and carries the tick
+    it is judged against, so the script holds no interval of its own.
+    """
     if not _interactive.get():
         return ""
     return (
         '<div class="console">'
         '<button type="button" data-kind="refresh" data-console hidden>Refresh</button>'
         '<span id="console-status">console: connecting to this page\'s store…</span>'
+        '<span id="console-heartbeat" data-console hidden'
+        f' data-tick-seconds="{CONSOLE_TICK_SECONDS}"></span>'
         "</div>"
         '<ul class="answers" id="console-log" data-console hidden></ul>'
+        + _attention_arm(settings)
+    )
+
+
+def _attention_arm(settings: AttentionSettings) -> str:
+    """The Later sheet and the undo toast, one of each per page; the script moves the sheet
+    to the row being put off. Empty unless the page has the attention arm.
+
+    The hours and the snooze limit are the ``[attention]`` table's, rendered as data
+    attributes, so the script holds none of its own (triage-ux 2.5). *This evening* also
+    carries the label it takes from the evening hour on, when it means tomorrow morning.
+    *Drop it* comes first and hidden: the script shows it once the item has been put off
+    ``max_snoozes`` times. Everything starts hidden.
+    """
+    if not _view.get().arm:
+        return ""
+    labels = dict(LATER_PRESETS)
+    evening = (
+        f' data-label="{labels[_attention.EVENING]}"'
+        f' data-after-evening="{labels[_attention.TOMORROW]}"'
+    )
+    presets = "".join(
+        f'<button type="button" data-preset="{key}"'
+        f'{evening if key == _attention.EVENING else ""}>{label}</button>'
+        for key, label in LATER_PRESETS
+    )
+    return (
+        '<div id="attention-arm">'
+        '<div class="later-sheet" id="later-sheet" hidden'
+        f' data-evening-hour="{settings.evening_hour}"'
+        f' data-morning-hour="{settings.morning_hour}"'
+        f' data-max-snoozes="{settings.max_snoozes}">'
+        "<p>Put it off until</p>"
+        f'<button type="button" data-preset="{DROP}" hidden>Drop it</button>'
+        f"{presets}"
+        '<label><input type="checkbox" data-on-change checked> or when it changes</label>'
+        '<input type="text" data-plan aria-label="next step"'
+        ' placeholder="next step, if you like: after the deploy, answer the rebase question">'
+        f'<button type="button" data-preset="{CANCEL}">Cancel</button>'
+        "</div>"
+        '<div class="toast" id="attention-toast" role="status" aria-live="polite" hidden'
+        f' data-seconds="{TOAST_SECONDS}"><span></span><button type="button">Undo</button>'
+        "</div>"
+        "</div>"
     )
 
 
@@ -1290,10 +2173,15 @@ def _attention_view(
     that cannot be read, or that :func:`crowsnest.attention.present` cannot place, counts
     as no record, so its row is shown rather than hidden.
     """
-    applied = not plain and any(_group_of(row) for row in sessions)
+    triaged = any(_group_of(row) for row in sessions)
+    applied = not plain and triaged
     if applied and store is None:
         store = _attention.dflt_store()
     on = applied and _holds_a_record(store)
+    # The console's attention arm needs ids and triaged revisions, not this machine's store:
+    # it reads and writes the page's own `db`. So `plain`, which leaves the store out, leaves
+    # the arm in, and an interactive page from an empty store is still its plain copy.
+    arm = with_ids and triaged
     if not (on or with_ids):
         return _View()
     moment = datetime.fromtimestamp(now, tz=timezone.utc)
@@ -1304,16 +2192,19 @@ def _attention_view(
             rev = _attention.fingerprint(row, material=material)
         except ValueError:  # UnicodeEncodeError included
             continue
+        # What the row is now, as `seen_as` would record it: the static page's "was:" line
+        # compares it with the record, and the console writes it with every mark (#73).
+        now_as = _attention.seen_as_of(row)
         if not on:
-            rows[id(row)] = _Attended(item, rev)
+            rows[id(row)] = _Attended(item, rev, now_as=now_as)
             continue
         record = _record_or_none(item, store)
         try:
             shown = _attention.present(rev, record, now=moment)
         except (ValueError, OverflowError):
             record, shown = None, _attention.NEW
-        rows[id(row)] = _Attended(item, rev, shown, record, _attention.seen_as_of(row))
-    return _View(on=on, rows=rows)
+        rows[id(row)] = _Attended(item, rev, shown, record, now_as)
+    return _View(on=on, rows=rows, arm=arm)
 
 
 def _holds_a_record(store: Mapping[str, dict]) -> bool:
@@ -1410,10 +2301,15 @@ def _later_line(
     if later.plan:
         parts.append(safe.text(later.plan))
     parts.append("put off once" if later.count == 1 else f"put off {later.count} times")
+    label, rest = parts[0], sep + sep.join(parts[1:])
+    if _interactive.get():
+        # When it comes back, as rendered: the console hides it when it redraws the row
+        # from a newer record, rather than show two wake times (#56).
+        rest = f"<span data-drawn>{rest}</span>"
     return (
-        f'<li class="thin" id="session-{ident}"{_item_attrs(attended)}>'
+        f'<li class="thin" id="session-{ident}"{_item_attrs(safe, attended)}>'
         f'<span class="thin-age">{age}</span>'
-        f'<p class="thin-ask">{sep.join(parts)}{_thin_marks(safe, attended)}</p>'
+        f'<p class="thin-ask">{label}{rest}{_thin_marks(safe, attended)}</p>'
         "</li>"
     )
 
@@ -1459,6 +2355,7 @@ def render_report(
     plain: bool = False,
     identity: Callable[[Mapping], Iterable[str]] | None = None,
     material: Callable[[Mapping], Iterable] | None = None,
+    attention_settings: AttentionSettings | None = None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -1479,10 +2376,17 @@ def render_report(
     the configured value.
 
     ``interactive=True`` adds the console: per-row buttons and a Refresh, hidden until the
-    page's ``db`` capability resolves in the claude.ai viewer, and one inline script that
-    queues each press as an intent document for the watching session to act on (see the
-    ``crowsnest-report`` skill). It still loads nothing from anywhere; without ``db`` it
-    renders exactly as the static page. The static page carries no script at all.
+    page's ``db`` capability resolves in the claude.ai viewer, and one inline script. Ask,
+    Tell and Start work here queue an intent document for the watching session to act on
+    (see the ``crowsnest-report`` skill). On a page with triage verdicts the console also
+    carries the attention arm (crowsnest#56): Seen, Later, Done and Note on each full row,
+    Seen above on every register head below the first, a Later sheet whose hours and
+    snooze limit come from ``attention_settings`` (the ``[attention]`` table; its defaults
+    when ``None``), and an undo toast. Those write the person's record straight to the
+    page's ``db`` and redraw the row at once, by :func:`crowsnest.attention.present`
+    transcribed into the script (:data:`ATTENTION_SCRIPT`). It still loads nothing from
+    anywhere; without ``db`` it renders exactly as the static page. The static page
+    carries no script at all.
 
     ``fragment=True`` returns the page the way a host that wraps it in its own document
     wants it -- the claude.ai artifact publisher does: the ``<title>``, then the
@@ -1539,6 +2443,11 @@ def render_report(
                 title=title,
                 fragment=fragment,
                 view=view,
+                settings=(
+                    AttentionSettings()
+                    if attention_settings is None
+                    else attention_settings
+                ),
             )
         finally:
             _view.reset(view_token)
@@ -1553,6 +2462,7 @@ def _render(
     title: str,
     fragment: bool,
     view: _View,
+    settings: AttentionSettings,
 ) -> str:
     safe = _Sanitizer()
     sessions = list(roster.get("sessions") or [])
@@ -1655,7 +2565,7 @@ def _render(
     )
 
     parts = [
-        _masthead(safe, counts, stamp, title, zone=_zone_name(clock)),
+        _masthead(safe, counts, stamp, title, zone=_zone_name(clock), settings=settings),
         _since_line(shown, view),
         head,
     ]
@@ -1672,6 +2582,7 @@ def _render(
                 rule="Said in its own words that nothing is outstanding. Anything that "
                 "did not say so is below, not here.",
                 empty="No session has said it is finished.",
+                seen_above=True,
             )
         )
     parts += [
@@ -1685,6 +2596,7 @@ def _render(
             tone="free",
             rule="Idle within the last hour, with its last words.",
             empty="No session went idle in the last hour.",
+            seen_above=True,
         ),
         _register_from_rows(
             safe,
@@ -1696,6 +2608,7 @@ def _render(
             tone="flight",
             rule="Busy, with the tool call in flight.",
             empty="No session is running a tool right now.",
+            seen_above=True,
         ),
         _later_register(safe, put_off, view, clock),
         _lineage_register(safe, roster.get("lineage")),
@@ -1716,7 +2629,7 @@ def _render(
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
     if _interactive.get():
-        body += f"<script>{CONSOLE_SCRIPT}</script>"
+        body += f"<script>{ATTENTION_SCRIPT}{CONSOLE_SCRIPT}</script>"
     if fragment:
         return f"{title_tag}\n{style_tag}\n{body}\n"
     head = (
