@@ -72,16 +72,20 @@ def _age_of(stamp: str) -> str:
 def _when(said_at: str) -> str:
     """When an item's words were said, from its ``said_at``: ``(14:02, 2h)``, with the date
     when it is not today, the date alone when the source gave only a day, or
-    ``(time unknown)``. This is the page's time in a terminal's width."""
-    found = _said.parse(said_at)
+    ``(time unknown)``. A time later than now also reads as unknown, since it names a
+    plan and not when anything was said. :func:`crowsnest.said.when_said` decides, as it
+    does for the page."""
+    now = datetime.now(timezone.utc)
+    found = _said.when_said(said_at, now=now.timestamp())
     if found is None:
         return "(time unknown)"
-    today = datetime.now().astimezone().date()
-    if isinstance(found, datetime):
-        local = found.astimezone()
-        shown = local.strftime("%H:%M" if local.date() == today else "%Y-%m-%d %H:%M")
-        return f"({shown}, {_age(found.timestamp())})"
-    return f"({found.isoformat()}, {max(0, (today - found).days)}d)"
+    epoch, day = found
+    today = now.astimezone().date()
+    if day is not None:
+        return f"({day.isoformat()}, {max(0, (today - day).days)}d)"
+    local = datetime.fromtimestamp(epoch, tz=timezone.utc).astimezone()
+    shown = local.strftime("%H:%M" if local.date() == today else "%Y-%m-%d %H:%M")
+    return f"({shown}, {_age(epoch)})"
 
 
 def _row_detail(row: dict, limit: int) -> str:

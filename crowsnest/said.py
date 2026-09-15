@@ -41,10 +41,12 @@ from __future__ import annotations
 import math
 import re
 from collections.abc import Mapping
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time, timedelta, timezone, tzinfo
 
 __all__ = [
+    "BARE_DATE_ZONE",
     "BASES",
+    "CLOCK_SLACK",
     "LEDGER_SECTION",
     "LEDGER_WRITTEN",
     "QUOTING_GROUPS",
@@ -56,6 +58,7 @@ __all__ = [
     "of_activity",
     "of_row",
     "parse",
+    "when_said",
     "with_said",
 ]
 
@@ -74,13 +77,29 @@ QUOTING_GROUPS = ("needs_you", "safe_to_close")
 
 _UNKNOWN = ("", "")
 
-#: A date in a heading, with an optional time of day and zone. A time of day is kept only
-#: together with a zone: "09:40" with no zone could be anyone's morning.
+#: Where a bare date's day begins when its age is counted. The writer's zone is unknown,
+#: so no choice is exact. The reader's zone would make "stale" depend on who reads, so it
+#: is out. The earliest zone (UTC+14) would call a section dated this morning stale by
+#: lunchtime. UTC is the same for every reader and is off by at most the writer's offset.
+BARE_DATE_ZONE = timezone.utc
+
+#: How far past "now" a time may fall and still count as now. A page's time is taken a
+#: moment before the transcripts it quotes are read, so a fresh stamp can be ahead of it.
+CLOCK_SLACK = timedelta(minutes=5)
+
+#: A heading's date counts only when it **opens** the heading, which is the shape the
+#: ``crowsnest-worker`` skill teaches (``### 2026-09-15 — what changed``). A date further
+#: in names something else, as in "Follow-up to the 2026-01-10 outage". A time of day is
+#: kept only together with a zone: "09:40" with no zone could be anyone's morning.
 _HEADING_DATE = re.compile(
-    r"(?<![\w-])(\d{4}-\d{2}-\d{2})"
+    r"^[\s#>*_~\[(]*(\d{4}-\d{2}-\d{2})"
     r"(?:[T ](\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?)[ ]?(Z|[+-]\d{2}:?\d{2})?)?"
     r"(?![\w-])"
 )
+
+#: Unix time starts in this year. A heading dated earlier is a placeholder or a typo,
+#: not when anything was written.
+_FIRST_YEAR = 1970
 _DATE_ONLY = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
@@ -132,11 +151,10 @@ def _instant(text) -> datetime | None:
     value = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", value)
     try:
         found = datetime.fromisoformat(value)
-    except ValueError:
+        # A stamp at the edge of the calendar overflows when moved to UTC.
+        return found.astimezone(timezone.utc) if found.tzinfo is not None else None
+    except (OverflowError, ValueError):
         return None
-    if found.tzinfo is None:
-        return None
-    return found.astimezone(timezone.utc)
 
 
 def parse(said_at) -> datetime | date | None:
@@ -159,7 +177,9 @@ def parse(said_at) -> datetime | date | None:
 
 
 def heading_date(heading: str) -> str:
-    """The first real date in a heading, as ``said_at``. A time is kept only with a zone.
+    """The date that opens a heading, as ``said_at``; ``''`` when it does not open with one.
+
+    A time is kept only with a zone. A date before 1970 is not taken.
 
     >>> heading_date('### 2026-09-12 — all four stages landed')
     '2026-09-12'
@@ -167,21 +187,64 @@ def heading_date(heading: str) -> str:
     '2026-09-12T09:40:00+00:00'
     >>> heading_date('## 2026-09-12 09:40 no zone given')
     '2026-09-12'
-    >>> heading_date('## Stage 1: merged'), heading_date('## 2026-13-45 not a date')
+    >>> heading_date('### Follow-up to the 2026-01-10 outage')
+    ''
+    >>> heading_date('## 2026-13-45 not a date'), heading_date('## 0001-01-01 notes')
     ('', '')
     """
-    for found in _HEADING_DATE.finditer(heading or ""):
-        day, clock, zone = found.groups()
-        try:
-            date.fromisoformat(day)
-        except ValueError:
-            continue
-        if clock and zone:
-            instant = from_stamp(f"{day}T{clock}{zone}")
-            if instant:
-                return instant
-        return day
-    return ""
+    found = _HEADING_DATE.match(heading or "")
+    if not found:
+        return ""
+    day, clock, zone = found.groups()
+    try:
+        if date.fromisoformat(day).year < _FIRST_YEAR:
+            return ""
+    except ValueError:
+        return ""
+    return (from_stamp(f"{day}T{clock}{zone}") if clock and zone else "") or day
+
+
+def when_said(
+    said_at, *, now: float, zone: tzinfo | None = None
+) -> tuple[float, date | None] | None:
+    """Where an item's age counts from: ``(epoch, day)``. ``day`` is the bare date when
+    only a day is known. ``None`` means the time is unknown, or cannot be when anything
+    was said.
+
+    A bare date counts from 00:00 in :data:`BARE_DATE_ZONE`, so whether it is stale does
+    not depend on the reader's zone. Three things count as
+    unknown rather than as "today". The first is a time later than ``now`` by more than
+    :data:`CLOCK_SLACK`. The second is a date later than ``now``'s day in ``zone``
+    (``None`` means this machine's zone); a future date names a plan or a deadline. The
+    third is anything before 1970.
+
+    >>> now = 1767268800.0  # 2026-01-01T12:00:00Z
+    >>> when_said('2026-01-01T11:00:00+00:00', now=now)
+    (1767265200.0, None)
+    >>> when_said('2026-01-01', now=now, zone=timezone.utc)
+    (1767225600.0, datetime.date(2026, 1, 1))
+    >>> when_said('2026-01-02', now=now, zone=timezone.utc) is None
+    True
+    >>> when_said('2026-01-01T20:00:00+00:00', now=now) is None
+    True
+    """
+    found = parse(said_at)
+    try:
+        if isinstance(found, datetime):
+            epoch, day = found.timestamp(), None
+        elif isinstance(found, date):
+            today = datetime.fromtimestamp(now, tz=timezone.utc).astimezone(zone).date()
+            if found > today:
+                return None
+            epoch = datetime.combine(found, time(), tzinfo=BARE_DATE_ZONE).timestamp()
+            day = found
+        else:
+            return None
+    except (OverflowError, OSError, ValueError):
+        return None
+    if epoch <= 0 or epoch > now + CLOCK_SLACK.total_seconds():
+        return None
+    return epoch, day
 
 
 def of_activity(row: Mapping) -> tuple[str, str]:

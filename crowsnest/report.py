@@ -43,12 +43,12 @@ from __future__ import annotations
 
 import contextvars
 import html as _html
+import os
 import re
 import shlex
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone, tzinfo
-from datetime import time as _time
 from typing import Any
 
 from openloops.dashboard import CSS as _CSS
@@ -266,15 +266,28 @@ class _Clock:
     def local(self, epoch: float) -> datetime:
         return datetime.fromtimestamp(epoch, tz=timezone.utc).astimezone(self.zone)
 
-    def midnight(self, day: date) -> float:
-        start = datetime.combine(day, _time())
-        # `astimezone` reads a naive datetime as this machine's local time.
-        aware = start.replace(tzinfo=self.zone) if self.zone else start.astimezone()
-        return aware.timestamp()
+
+def _local_zone() -> tzinfo | None:
+    """This machine's zone by its IANA name, when that can be found: ``$TZ``, or where
+    ``/etc/localtime`` points. A named zone gives the right offset on both sides of a DST
+    change, and it is something the masthead can name. Otherwise ``None``, which means
+    ``astimezone``'s local rules with no name."""
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    key = os.environ.get("TZ", "").lstrip(":")
+    if not key:
+        _, found, key = os.path.realpath("/etc/localtime").partition("zoneinfo/")
+        key = key if found else ""
+    if not key:
+        return None
+    try:
+        return ZoneInfo(key)
+    except (ZoneInfoNotFoundError, ValueError, OSError):
+        return None
 
 
 def _zone(tz: tzinfo | str | None) -> tzinfo | None:
-    """``tz`` as a ``tzinfo``. ``None`` stays this machine's zone, and a name is looked up.
+    """``tz`` as a ``tzinfo``. A name is looked up; ``None`` is this machine's own zone.
 
     >>> _zone('UTC') is timezone.utc
     True
@@ -283,7 +296,9 @@ def _zone(tz: tzinfo | str | None) -> tzinfo | None:
       ...
     ValueError: unknown time zone 'Mars/Olympus'; name one like 'Europe/Paris' or 'UTC'
     """
-    if tz is None or isinstance(tz, tzinfo):
+    if tz is None:
+        return _local_zone()
+    if isinstance(tz, tzinfo):
         return tz
     name = str(tz).strip()
     if name.upper() in ("UTC", "Z"):
@@ -309,52 +324,66 @@ def _clock(
 
 
 def _zone_name(clock: _Clock) -> str:
-    """The zone the rows' times are in, as a reader knows it: ``CEST (UTC+02:00)``.
+    """The zone the rows' times are in, by a name that holds for every row: an IANA key,
+    a fixed offset's own name, or "this machine's local time". It is never the offset at
+    ``made_at``, because a row from the other side of a DST change is shown at a
+    different offset.
 
     >>> _zone_name(_Clock(0.0, timezone.utc))
     'UTC'
     >>> _zone_name(_Clock(0.0, timezone(-timedelta(hours=5, minutes=30))))
     'UTC-05:30'
     """
-    moment = clock.local(clock.now)
-    minutes = round((moment.utcoffset() or timedelta(0)).total_seconds() / 60)
-    hours, rest = divmod(abs(minutes), 60)
-    utc = f"UTC{'-' if minutes < 0 else '+'}{hours:02d}:{rest:02d}" if minutes else "UTC"
-    names = [
-        name
-        for name in dict.fromkeys((getattr(clock.zone, "key", ""), moment.tzname() or ""))
-        if name and name != utc
-    ]
-    return f"{', '.join(names)} ({utc})" if names else utc
+    if clock.zone is None:
+        return "this machine's local time"
+    return getattr(clock.zone, "key", "") or clock.zone.tzname(None) or "UTC"
 
 
 def _said_of(row: Mapping[str, Any]) -> tuple[str, str]:
-    """The row's ``said_at`` and its basis: the row's own fields when it has them, else
-    computed from the row by :func:`crowsnest.said.of_row`, the same function
-    :func:`crowsnest.tools.roster` uses."""
-    if "said_at" in row:
-        return str(row.get("said_at") or ""), str(row.get("said_at_basis") or "")
-    return _said.of_row(row)
+    """The row's ``said_at`` and its basis.
 
-
-def _when(row: Mapping[str, Any], clock: _Clock) -> tuple[float, bool, str] | None:
-    """When the row's item was said: ``(epoch, time of day known, basis)``, or ``None``.
-
-    A bare date counts from the start of its day in the page's zone, which puts it at its
-    oldest. That leans toward calling it stale, which is the cheap mistake: it costs a
-    re-read. The opposite mistake repeats an old claim as current.
+    A verdict that quotes its reason always decides, through
+    :func:`crowsnest.said.of_row`. The row's own fields may have been set before that
+    verdict was attached, in which case they are the time of other words. Otherwise the
+    row's own fields are used when it has them, and :func:`crowsnest.said.of_row` (the
+    function :func:`crowsnest.tools.roster` uses) when it does not.
     """
+    verdict = row.get("verdict")
+    quoting = (
+        isinstance(verdict, Mapping) and verdict.get("group") in _said.QUOTING_GROUPS
+    )
+    if quoting or "said_at" not in row:
+        return _said.of_row(row)
+    return str(row.get("said_at") or ""), str(row.get("said_at_basis") or "")
+
+
+def _when(row: Mapping[str, Any], clock: _Clock) -> tuple[float, date | None, str] | None:
+    """When the row's item was said: ``(epoch, day, basis)``, where ``day`` is the bare
+    date when only a day is known; ``None`` when unknown. :func:`crowsnest.said.when_said`
+    decides. A bare date's staleness is therefore the same in every zone, and a time
+    after ``made_at`` is unknown rather than "today"."""
     at, basis = _said_of(row)
-    found = _said.parse(at)
-    if isinstance(found, datetime):
-        return found.timestamp(), True, basis
-    if isinstance(found, date):
-        return clock.midnight(found), False, basis
-    return None
+    found = _said.when_said(at, now=clock.now, zone=clock.zone)
+    return None if found is None else (*found, basis)
 
 
-def _days_before(epoch: float, clock: _Clock) -> int:
-    return max(0, (clock.local(clock.now).date() - clock.local(epoch).date()).days)
+def _days_before(day: date, clock: _Clock) -> int:
+    return max(0, (clock.local(clock.now).date() - day).days)
+
+
+def _exactly(seconds: float) -> str:
+    """A duration in whole units with nothing rounded away, for stating a threshold.
+
+    >>> _exactly(5400), _exactly(86400), _exactly(129600), _exactly(45)
+    ('1 h 30 m', '1 d', '1 d 12 h', '45 s')
+    """
+    rest = round(seconds)
+    parts = []
+    for size, unit in (*_AGE_UNITS, (1.0, "s")):
+        count, rest = divmod(rest, int(size))
+        if count:
+            parts.append(f"{count} {unit}")
+    return " ".join(parts) or "0 s"
 
 
 def _said_age(row: Mapping[str, Any], clock: _Clock) -> tuple[str, str]:
@@ -366,8 +395,10 @@ def _said_age(row: Mapping[str, Any], clock: _Clock) -> tuple[str, str]:
     when = _when(row, clock)
     if when is None:
         return "?", ""
-    epoch, timed, _ = when
-    return _since(clock.now - epoch) if timed else (str(_days_before(epoch, clock)), "d")
+    epoch, day, _ = when
+    if day is not None:
+        return str(_days_before(day, clock)), "d"
+    return _since(clock.now - epoch)
 
 
 def _when_line(row: Mapping[str, Any], clock: _Clock) -> str:
@@ -380,24 +411,24 @@ def _when_line(row: Mapping[str, Any], clock: _Clock) -> str:
             '<p class="line when"><span class="tag">said</span>'
             "<span>time unknown</span></p>"
         )
-    epoch, timed, basis = when
-    local = clock.local(epoch)
-    if timed:
+    epoch, day, basis = when
+    if day is None:
+        local = clock.local(epoch)
         same_day = local.date() == clock.local(clock.now).date()
         shown = local.strftime("%H:%M" if same_day else "%Y-%m-%d %H:%M")
         machine = datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat("T", "seconds")
         figure, unit = _since(clock.now - epoch)
         ago = f"{figure} {unit} ago"
     else:
-        shown = machine = local.date().isoformat()
-        days = _days_before(epoch, clock)
+        shown = machine = day.isoformat()
+        days = _days_before(day, clock)
         ago = f"{days} d ago" if days else "today"
     parts = [f'<time datetime="{machine}">{shown}</time>', ago]
     if basis == _said.LEDGER_WRITTEN:
         parts.append("undated: when the ledger was last written, the words may be older")
     if clock.now - epoch > clock.stale_after:
-        figure, unit = _since(clock.stale_after)
-        parts.append(f'<strong class="stale">stale: older than {figure} {unit}</strong>')
+        limit = _exactly(clock.stale_after)
+        parts.append(f'<strong class="stale">stale: older than {limit}</strong>')
     return (
         f'<p class="line when"><span class="tag">{_BASIS_TAGS.get(basis, "said")}</span>'
         "<span>" + ' <span class="sep">·</span> '.join(parts) + "</span></p>"

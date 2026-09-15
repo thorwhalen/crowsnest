@@ -165,6 +165,13 @@ _OPENERS = (
     r"open|outstanding|left|remaining|needs?|decision|question|blocked|waiting|todo|to do"
 )
 
+#: A date that may open such a heading, and the separator after it. This is the shape the
+#: ``crowsnest-worker`` skill teaches: ``### 2026-09-15 — Open for Thor``.
+_LEADING_DATE = (
+    r"(?:\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?"
+    r"[\s—–:,-]+)?"
+)
+
 
 def _person_patterns(owner: str) -> tuple[re.Pattern, ...]:
     r"""Every way the real ledger directory says "this one needs a person".
@@ -184,6 +191,8 @@ def _person_patterns(owner: str) -> tuple[re.Pattern, ...]:
     True
     >>> any(x.search('Blocked on Thor (priv#145)') for x in p)
     True
+    >>> any(x.search('### 2026-02-01 — Open for Thor') for x in p)
+    True
     >>> any(x.search('for thorough testing, run the suite') for x in p)
     False
     """
@@ -193,7 +202,8 @@ def _person_patterns(owner: str) -> tuple[re.Pattern, ...]:
         # A heading or lead-in that opens a section: "## Open, for Thor",
         # "**Decisions for the user (nothing done):**", "Outstanding for Thor:"
         re.compile(
-            rf"(?im)^[\s>*#_-]*(?:(?:{_OPENERS})[^\n:]{{0,40}})?\bfor\s+{person}\b(?![\w-])"
+            rf"(?im)^[\s>*#_-]*{_LEADING_DATE}(?:(?:{_OPENERS})[^\n:]{{0,40}})?"
+            rf"\bfor\s+{person}\b(?![\w-])"
         ),
         # A statement anywhere: "needs Thor", "blocked on the user", "only you can"
         re.compile(
@@ -297,25 +307,32 @@ def _written(ledger: Mapping) -> tuple[str, str]:
 def _said_in(ledger: Mapping, text: str, offset: int) -> tuple[str, str]:
     """When the ledger words at ``offset`` in ``text`` were written.
 
-    Only the heading of the section the words sit in counts. A date in an earlier
-    section's heading belongs to earlier words, so it is not borrowed. With no dated
-    heading of its own, the words take the ledger's last write. That time is an upper
-    bound, and the basis says so.
+    Only the headings of the sections the words sit in count. First the section's own
+    heading, then each heading that encloses it: a request under ``### Open for Thor``
+    inside ``## 2026-02-01`` was written that day. A sibling section's date belongs to
+    other words, so it is not borrowed. With no dated heading around them, the words take
+    the ledger's last write, which is an upper bound, and the basis says so.
 
     >>> _said_in({}, '## Mon\\n\\n## 2026-02-01 handoff\\n\\nattach the GIF', 30)
     ('2026-02-01', 'ledger section')
     >>> _said_in({}, '## 2026-02-01 start\\n\\n## Later\\n\\nattach the GIF', 30)
     ('', '')
+    >>> _said_in({}, '## 2026-02-01\\n\\n### Open for Thor\\n\\nattach the GIF', 30)
+    ('2026-02-01', 'ledger section')
     """
-    heading = ""
+    chain: list[tuple[int, str]] = []  # the enclosing headings, outermost first
     for found in _SECTION.finditer(text or ""):
         if found.start() > offset:
             break
         end = text.find("\n", found.start())
-        heading = text[found.start() : end if end >= 0 else len(text)]
-    dated = heading_date(heading)
-    if dated and not _after_the_write(dated, ledger):
-        return dated, LEDGER_SECTION
+        line = text[found.start() : end if end >= 0 else len(text)].lstrip(" \t")
+        level = len(line) - len(line.lstrip("#"))
+        chain = [(depth, head) for depth, head in chain if depth < level]
+        chain.append((level, line))
+    for _, heading in reversed(chain):
+        dated = heading_date(heading)
+        if dated and not _after_the_write(dated, ledger):
+            return dated, LEDGER_SECTION
     return _written(ledger)
 
 
