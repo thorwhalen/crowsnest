@@ -24,7 +24,7 @@ needs_node = pytest.mark.skipif(_cs.NODE is None, reason="no node on PATH")
 STAMP = "2026-02-01T12:00:00Z"
 NOW = attention.instant(STAMP)
 ITEM = attention.item_id({"session_id": "e7c1"})
-SEEN_ABOVE = 'data-seen-above hidden>Seen above</button>'
+SEEN_ABOVE = "data-seen-above hidden>Seen above</button>"
 
 
 def ms(moment: datetime) -> int:
@@ -52,7 +52,12 @@ def fleet():
         row("asker", group="needs_you", why="question", reason="Squash or rebase?"),
         row("closer", group="safe_to_close", reason="Merged; nothing pending."),
         row("finisher", group="unclassified", reason="said nothing"),
-        row("runner", group="working", status="busy", activity={"in_flight": ["Bash: pytest"]}),
+        row(
+            "runner",
+            group="working",
+            status="busy",
+            activity={"in_flight": ["Bash: pytest"]},
+        ),
         row("sleeper", group="unclassified", reason="said nothing", ago=7200),
     ]
 
@@ -110,7 +115,11 @@ def test_a_tap_never_writes_a_document_python_cannot_read(tmp_path):
         tmp_path,
         "const r = A.readRecord(input.doc); if (r === null) return null;"
         " return A.asDoc(input.item, A.done(r, 'r1', input.now, null), null);",
-        {"doc": {"seen_rev": "r1", "updated_at": "2026-02-30T12:00:00Z"}, "item": ITEM, "now": ms(NOW)},
+        {
+            "doc": {"seen_rev": "r1", "updated_at": "2026-02-30T12:00:00Z"},
+            "item": ITEM,
+            "now": ms(NOW),
+        },
     )
     if got is not None:
         attention.Record.from_dict(got)
@@ -121,22 +130,61 @@ def test_random_documents_read_the_same_in_python_and_the_script(tmp_path):
     """Pins: over well-formed stamps, 2000 randomly shaped documents (wrong types, nulls,
     empty strings, floats, nesting) are refused by both sides or read to the same record."""
     rnd = random.Random(56)
-    stamps = ["2026-02-01T12:00:00.000Z", "2026-02-01T13:00:00+01:00", "2026-02-01T12:00:00"]
-    vals = [None, "", "r1", "r2", 0, 1, 2, 1.5, -1, True, False, [], {}, "later", "done",
-            "active", "bogus", *stamps, {"group": "g"}, {"group": ""}, {"group": "g", "why": 3}]
+    stamps = [
+        "2026-02-01T12:00:00.000Z",
+        "2026-02-01T13:00:00+01:00",
+        "2026-02-01T12:00:00",
+    ]
+    vals = [
+        None,
+        "",
+        "r1",
+        "r2",
+        0,
+        1,
+        2,
+        1.5,
+        -1,
+        True,
+        False,
+        [],
+        {},
+        "later",
+        "done",
+        "active",
+        "bogus",
+        *stamps,
+        {"group": "g"},
+        {"group": ""},
+        {"group": "g", "why": 3},
+    ]
 
     def maybe(keys, pool):
         return {k: rnd.choice(pool) for k in keys if rnd.random() < 0.55}
 
     docs = []
     for _ in range(2000):
-        doc = maybe(["seen_rev", "state", "later", "done_rev", "note", "prev", "updated_at", "seen_as"], vals)
+        doc = maybe(
+            [
+                "seen_rev",
+                "state",
+                "later",
+                "done_rev",
+                "note",
+                "prev",
+                "updated_at",
+                "seen_as",
+            ],
+            vals,
+        )
         if rnd.random() < 0.4:
             doc["later"] = maybe(["until", "on_change", "rev_at", "count", "plan"], vals)
         if rnd.random() < 0.3:
             doc["note"] = maybe(["text", "updated_at"], vals)
         if rnd.random() < 0.3:
-            doc["prev"] = maybe(["seen_rev", "state", "updated_at", "prev", "seen_as"], vals)
+            doc["prev"] = maybe(
+                ["seen_rev", "state", "updated_at", "prev", "seen_as"], vals
+            )
         docs.append(doc)
 
     def python(doc):
@@ -279,7 +327,12 @@ def test_the_script_keeps_and_drops_seen_as_as_python_does(tmp_path):
         " A.asDoc(input.item, A.seen(b, 'r1', t)), A.asDoc(input.item, A.seen(b, 'r2', t)),"
         " A.asDoc(input.item, A.later(b, 'r1', t, { until: null })),"
         " A.asDoc(input.item, A.done(b, 'r2', t)), A.asDoc(input.item, A.unseen(b, t))]};",
-        {"docs": docs, "base": attention.as_doc(ITEM, base), "item": ITEM, "now": ms(later)},
+        {
+            "docs": docs,
+            "base": attention.as_doc(ITEM, base),
+            "item": ITEM,
+            "now": ms(later),
+        },
     )
     assert got == expected
 
@@ -323,13 +376,24 @@ def test_the_static_page_carries_no_arm_even_when_the_store_holds_records():
     store = {}
     attention.update(
         attention.item_id(rows[0]),
-        lambda r: attention.seen(r, attention.fingerprint(rows[0]), now=NOW - timedelta(hours=1)),
+        lambda r: attention.seen(
+            r, attention.fingerprint(rows[0]), now=NOW - timedelta(hours=1)
+        ),
         store=store,
     )
     html = page(rows, store=store)
     assert "row--seen" in html  # the store was applied
-    for marker in ("<script", "data-attend", "later-sheet", "attention-toast", "data-item",
-                   "data-group", "data-seen-above", "console-heartbeat", "is-seen"):
+    for marker in (
+        "<script",
+        "data-attend",
+        "later-sheet",
+        "attention-toast",
+        "data-item",
+        "data-group",
+        "data-seen-above",
+        "console-heartbeat",
+        "is-seen",
+    ):
         assert marker not in html, marker
 
 

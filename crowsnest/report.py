@@ -2089,7 +2089,7 @@ def _attention_arm(settings: AttentionSettings) -> str:
     )
     presets = "".join(
         f'<button type="button" data-preset="{key}"'
-        f'{evening if key == _attention.EVENING else ""}>{label}</button>'
+        f"{evening if key == _attention.EVENING else ''}>{label}</button>"
         for key, label in LATER_PRESETS
     )
     return (
