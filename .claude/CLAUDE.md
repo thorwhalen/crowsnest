@@ -20,6 +20,9 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 | `verdicts=` in `triage.classify`, ordered `(row, ledger) -> Verdict \| None`; first non-`None` wins. Reachable from `tools.triage(verdicts=)` and `tools.report(verdicts=)` | `(from_registry, from_ledger)` — the live waiting signal, then the ledger's field and its "for <person>" prose | `from_digest` over openloops' digest, whose store is already the `store=` seam below |
 | `layout=` in `tree.render`, `(graph) -> [Placed]` | the indented depth-first walk, fleets collapsed, childless roots dropped | a real graph library behind `--interactive`, which already permits script |
 | `store=` in `brief` | the openloops digest store | any mapping of session id to digest |
+| `identity=` in `attention.item_id`, `(row) -> tuple[str, ...]`, kind first | `("session", session_id)`, `uuid5(NAMESPACE, ":".join(...))`; only the last component may hold a colon | `("ask", session_id, ask)` once triage emits several asks; `("ref", url)` for an item several sessions share |
+| `material=` in `attention.fingerprint`, `(row) -> tuple` | `(group, why, normalised reason, sorted link urls)`; a `working` row's reason (the tool in flight) left out; unverdicted rows `(status,)` plus an idle row's last words | a tighter or looser tuple once resurfacing is measured (K2 in discussion #51) |
+| `store=` on every `attention` function and `tools.seen`/`unseen`/`later`/`done`/`note`/`undo`/`attention_export`/`attention_import`, a `MutableMapping[str, dict]` keyed by item id | `attention.dflt_store()`: one JSON file per item under `data_dir()/attention/` (`dol`, UTF-8, atomic writes; a key that is not an item id never becomes a file) | the page's `db` mirror (#57); a synced data dir; an S3 mapping |
 
 Surfaces built: the `cw` CLI (`__main__.py` renders, `tools.py` is the JSON core), the
 shipped skills (`crowsnest`, `-dispatch`, `-report`, `-worker`) and the `crowsnest-scout`
@@ -27,6 +30,14 @@ subagent, the HTML report (openloops dashboard design, published as a claude.ai 
 Not seams: rendering, the status vocabulary, tail size, the ledger's field names.
 
 ## Rules of the repo
+
+- **Attention ids and revisions are stored data.** Once a record is in a store, a page's
+  `db` or an export, changing `attention.NAMESPACE`, the identity join, or how
+  `fingerprint` encodes and hashes orphans it or resurfaces every item at once. Change
+  them only with a migration; `tests/test_attention.py` pins the id derivation.
+- The attention verbs pin the revision of the row `tools._item_row` builds, which is the
+  row `report` renders (`_roster_row`, then triage). Build a page row any other way and
+  every seen item reads as changed.
 
 - Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
 - `links.py` never fetches. A link is constructed from the text plus the session's cwd remote;

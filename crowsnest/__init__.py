@@ -47,10 +47,15 @@ Reading the others is the whole point, but the watching session also needs to *c
 the sessions it will then watch: :func:`crowsnest.spawn.spawn` starts one, named, in a
 directory, and waits for the registry to see it.
 
+One record belongs to the person rather than to any session: **attention**
+(:mod:`crowsnest.attention`) -- which items they have seen, put off until later, marked
+done or written a note on, each pinned to a revision of the item so it comes back when
+what it asks for changes. ``crowsnest seen|later|done|note|undo`` write it.
+
 Those are the writes, and they are all of them: a session started, and files that are
 crowsnest's own and live outside any repository -- the ledgers, the hook event log, the
-spawn records (all three under :func:`crowsnest.paths.data_dir`), and the symlinks the
-skill installer makes.
+spawn records, the attention records (all four under :func:`crowsnest.paths.data_dir`),
+and the symlinks the skill installer makes.
 crowsnest never sends into, kills, or writes into a session that already exists.
 
 >>> from crowsnest import live_sessions, roster
