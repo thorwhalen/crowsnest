@@ -241,7 +241,8 @@ def roster(
     no source gives a time. Every surface renders the time from these two fields.
     """
     links = activity if links is None else links
-    ledger_dir = _configured_ledgers(ledger_dir, config=config)
+    if links:  # the only use of a ledger; `--brief` reads no config table it does not use
+        ledger_dir = _configured_ledgers(ledger_dir, config=config)
     found = sessions(home=home, all_homes=all_homes, config=config)
     # Every row carries the command that reaches it from a terminal, pinned to the home it
     # was read from -- otherwise it reads whichever account the pasting shell selects.
@@ -502,7 +503,8 @@ def show(
     every :func:`roster` row does -- the two things a page naming the session links it by.
     """
     s = resolve(session, home=home, all_homes=all_homes, config=config)
-    ledger_dir = _configured_ledgers(ledger_dir, config=config)
+    if links:  # the only use of a ledger here, as in `roster`
+        ledger_dir = _configured_ledgers(ledger_dir, config=config)
     act = read_activity(s.transcript, session_id=s.session_id, recent=recent)
     record = s.as_dict()
     row = {
@@ -613,11 +615,9 @@ def report(
         pages=ctx.pages({s.label for s in found}),
         triage=triage,
     )
-    if not links:
-        # Left off the page, not unresolved: a verdict reader may read a row's links, and
-        # the verbs pin the row with them. Resolving nothing is `RowContext(resolvers=())`,
-        # which the verbs are then given too.
-        rows = [{k: v for k, v in row.items() if k != "links"} for row in rows]
+    # `links=False` is the renderer's to honour: the rows keep their links, because a verdict
+    # reader or a `material` may read them and the verbs pin the row with them. Resolving
+    # nothing is `RowContext(resolvers=())`, which the verbs are then given too.
     data = {"sessions": rows, "counts": _counts(rows)}
     if with_lineage:
         # The rows the roster already read, not a second sweep of the registry: reading
@@ -651,6 +651,7 @@ def report(
         store=store,
         plain=plain,
         row_context=ctx,
+        links=links,
         attention_settings=settings,
     )
     return {

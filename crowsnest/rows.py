@@ -35,6 +35,7 @@ True
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -72,14 +73,15 @@ class RowContext:
             if value is None or isinstance(value, tuple):
                 continue
             # A lone reader, or a reader's name, would fail on the first row of a page (or
-            # become a tuple of characters) with an error that names nothing.
+            # become a tuple of characters) with an error that names nothing. A set has no
+            # order, and the first reader to answer wins.
             if (
                 callable(value)
-                or isinstance(value, (str, bytes, Mapping))
+                or isinstance(value, (str, bytes, Mapping, AbstractSet))
                 or not (isinstance(value, Iterable))
             ):
                 raise TypeError(
-                    f"RowContext.{name} is a sequence of readers, not {value!r}; "
+                    f"RowContext.{name} is an ordered sequence of readers, not {value!r}; "
                     f"a single one goes in a tuple: ({name}=(reader,))"
                 )
             object.__setattr__(self, name, tuple(value))

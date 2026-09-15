@@ -265,3 +265,49 @@ def test_a_lone_reader_is_refused_by_name_when_the_context_is_built(given):
     # "'function' object is not iterable" without saying which field.
     with pytest.raises(TypeError, match="verdicts"):
         RowContext(verdicts=given)
+
+
+# --- Re-verification of ca11b87 ------------------------------------------------------------
+
+
+def test_a_links_false_page_carries_the_revision_a_links_reading_material_pins(
+    tmp_path, live
+):
+    # ca11b87 resolves links and strips them from the rows before `render_report`, which
+    # takes each revision from the stripped row. A `material` that reads links (the seam
+    # permits it) then hashes a different row on the page than the one the verbs pinned.
+    home, ledgers = _world(tmp_path)
+    ctx = RowContext(
+        ledger_dir=ledgers, material=lambda row: (len(row.get("links") or []),)
+    )
+    doc = tools.seen("shipper", home=home, row_context=ctx, store={})
+    page = _page_ids(
+        tools.report(
+            home=home,
+            row_context=ctx,
+            links=False,
+            interactive=True,
+            with_lineage=False,
+            store={},
+        )["html"]
+    )
+    assert page[doc["id"]] == doc["seen_rev"]
+
+
+def test_a_brief_roster_does_not_fail_on_a_report_table_it_never_uses(
+    tmp_path, live, monkeypatch
+):
+    # `roster(activity=False)` promises "instant" and reads no ledger, yet ca11b87 parses
+    # `[report]` first, so a mistyped key takes down `crowsnest roster --brief`. The report
+    # itself reads `[attention]` only "when one of those is wanted".
+    home, _ = _world(tmp_path)
+    _config(tmp_path, monkeypatch, "[report]\nledger_dirs = '/x'\n")
+    rows = tools.roster(home=home, activity=False)["sessions"]
+    assert {row["session_id"] for row in rows} == {SHIPPER, FIXER}
+
+
+def test_readers_given_as_a_set_are_refused():
+    # Readers are ordered ("first non-None wins"); a set of functions iterates in an order
+    # that changes between runs, so the same row could get a different verdict and revision.
+    with pytest.raises(TypeError, match="verdicts"):
+        RowContext(verdicts={_fixed_verdict, _by_links})
