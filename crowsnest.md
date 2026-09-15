@@ -1,4 +1,4 @@
-> built 2026-09-15 12:18 UTC from 3a11c7f (main) · crowsnest 0.0.36. Details: build_info.json
+> built 2026-09-15 12:32 UTC from 82328e9 (main) · crowsnest 0.0.37. Details: build_info.json
 
 # index.html.md
 
@@ -758,7 +758,7 @@ Three seams, one keyword argument each:
 | [`seen`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.seen)(record, rev, \*[, now])                    | The person has looked at the item at `rev`: it dims until it changes.                                                           |
 | [`undo`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.undo)(record, \*[, now])                         | Restore the record before the last transition.                                                                                  |
 | [`unseen`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.unseen)(record, \*[, now])                       | Mark unread: the item shows as `new` again, wherever it is not hidden.                                                          |
-| [`update`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.update)(item, step, \*[, store])                 | Apply `step` to `item`'s record and store the result; return the document.                                                      |
+| [`update`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.update)(item, step, \*[, store, ext])            | Apply `step` to `item`'s record and store the result; return the document.                                                      |
 | [`write_record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.write_record)(item, record, \*[, store, extras]) | Store `record` as `item`'s document, with `extras` carried along; return it.                                                    |
 
 ### Classes
@@ -1129,13 +1129,15 @@ Mark unread: the item shows as `new` again, wherever it is not hidden.
 * **Return type:**
   [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
 
-### crowsnest.attention.update(item, step, , store=None)
+### crowsnest.attention.update(item, step, , store=None, ext=None)
 
 Apply `step` to `item`’s record and store the result; return the document.
 
-The stored document’s `ext` object is kept. A document
-that cannot be read counts as no record and is replaced, with a warning: a verb that
-refused to overwrite a broken file would leave that item stuck for good.
+The stored document’s `ext` object is kept, merged under `ext` when given –
+identifying fields (a session id, say) that a caller wants findable from the document
+alone, since an item id is a one-way hash of its identity. A document that cannot be
+read counts as no record and is replaced, with a warning: a verb that refused to
+overwrite a broken file would leave that item stuck for good.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -1676,7 +1678,7 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None)
+### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 
@@ -4220,6 +4222,16 @@ a guess at it – so when a hook `stopped` and a polled `idle` describe the same
 ending, the polled one is dropped and the hook’s line is the one that is yielded. With no
 hooks installed the file never appears and the stream is exactly the registry diff.
 
+**The attention store.** A person can put an item off ([`crowsnest.attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention)’s
+`later`) until a time, or until it changes. Nobody schedules that wake – discussion
+#51 is explicit that there is no cron for a snooze – so [`attention_wakes()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.attention_wakes) asks
+the same pure [`crowsnest.attention.present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) the static page and the console
+already use, once a tick, for every item still in state `later`. An item that
+[`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) would no longer show as `later` (because its time
+passed, or because it changed while `on_change`) yields one `woke` event, exactly
+once: the tick keeps what it has already announced in memory, so a restarted watcher
+announcing a wake twice is acceptable, and announcing it never is not.
+
 `crowsnest watch` prints this stream one line per event, which is the shape Claude
 Code’s own `Monitor` tool consumes: each line becomes a notification in the watching
 session’s conversation.
@@ -4240,8 +4252,9 @@ session’s conversation.
 
 ### Functions
 
-| [`diff`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.         |
+| [`attention_wakes`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.attention_wakes)(\*[, store, row_of, home, ...])    | One `woke` event per attention item that just left `later`.                         |
 |-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`diff`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.         |
 | [`events`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events)(\*[, interval, home, is_alive, sleep, ...]) | Yield one dict per change, forever -- or for `ticks` snapshots when given.          |
 | [`hook_event`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.hook_event)(record)                                 | One line of the hook log as an event, or `None` for an event kind we do not stream. |
 | [`snapshot`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.snapshot)(\*[, home, is_alive, all_homes, config])  | The live sessions right now, keyed by session id.                                   |
@@ -4274,6 +4287,24 @@ news; a move in or out of the pair still is.
 * **Type:**
   Statuses that mean the same thing to a watcher
 
+### crowsnest.watch.attention_wakes(, store=None, row_of=None, home=None, all_homes=False, config=None, announced=None, now=None)
+
+One `woke` event per attention item that just left `later`.
+
+Every item still in state `later` is re-read through [`crowsnest.attention.present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present),
+the same pure function the static page and the console use, with the item’s *current*
+revision – `row_of` is how that row is rebuilt from the document alone (default
+`_attention_row()`; a test hands a synthetic row instead of a live session). An
+item [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) no longer shows as `later` – its time
+passed, or it changed while `on_change` – has woken; one that a prior call already
+announced is not repeated. `announced` is that bookkeeping, kept by the caller
+across ticks ([`events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events) keeps its own); a fresh one announces every already-woken
+item once, which is the same acceptable-not-silent choice [`events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events) makes for a
+restarted watcher.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
 ### crowsnest.watch.diff(before, after, \*, activity=<function <lambda>>)
 
 The events between two snapshots: started, exited, and every status change.
@@ -4286,7 +4317,7 @@ session whose last words were an error banner is reported as `error` instead.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
-### crowsnest.watch.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None)
+### crowsnest.watch.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 
@@ -4369,18 +4400,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-15 12:18 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/3a11c7faef93ca586a9fd09e5ab5b76fe551105f"><code>3a11c7f</code></a> on branch <code>main</code>, for **crowsnest 0.0.36** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-15 12:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb"><code>82328e9</code></a> on branch <code>main</code>, for **crowsnest 0.0.37** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.36) is behind the latest release on PyPI (0.0.37): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/3a11c7faef93ca586a9fd09e5ab5b76fe551105f"><code>3a11c7faef93ca586a9fd09e5ab5b76fe551105f</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb"><code>82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -4391,9 +4420,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34967926890">34967926890</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34969260646">34969260646</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>3a11c7faef93ca586a9fd09e5ab5b76fe551105f</code> (in the history of the built commit) |
+| Event commit | <code>82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4418,13 +4447,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.37/">0.0.37</a>, newer than the documented version (0.0.36).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.37/">0.0.37</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 3a11c7faef93ca586a9fd09e5ab5b76fe551105f
+git checkout 82328e9a51c2fb096f9b7cd2432b3bb12d5f4cdb
 pip install "epythet==0.2.11"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

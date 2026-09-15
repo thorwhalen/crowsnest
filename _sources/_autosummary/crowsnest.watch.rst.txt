@@ -17,6 +17,7 @@ crowsnest.watch
 
    .. autosummary::
    
+      attention_wakes
       diff
       events
       hook_event

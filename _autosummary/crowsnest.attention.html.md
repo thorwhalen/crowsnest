@@ -77,7 +77,7 @@ Three seams, one keyword argument each:
 | [`seen`](#crowsnest.attention.seen)(record, rev, \*[, now])                    | The person has looked at the item at `rev`: it dims until it changes.                                                           |
 | [`undo`](#crowsnest.attention.undo)(record, \*[, now])                         | Restore the record before the last transition.                                                                                  |
 | [`unseen`](#crowsnest.attention.unseen)(record, \*[, now])                       | Mark unread: the item shows as `new` again, wherever it is not hidden.                                                          |
-| [`update`](#crowsnest.attention.update)(item, step, \*[, store])                 | Apply `step` to `item`'s record and store the result; return the document.                                                      |
+| [`update`](#crowsnest.attention.update)(item, step, \*[, store, ext])            | Apply `step` to `item`'s record and store the result; return the document.                                                      |
 | [`write_record`](#crowsnest.attention.write_record)(item, record, \*[, store, extras]) | Store `record` as `item`'s document, with `extras` carried along; return it.                                                    |
 
 ### Classes
@@ -448,13 +448,15 @@ Mark unread: the item shows as `new` again, wherever it is not hidden.
 * **Return type:**
   [`Record`](#crowsnest.attention.Record)
 
-### crowsnest.attention.update(item, step, , store=None)
+### crowsnest.attention.update(item, step, , store=None, ext=None)
 
 Apply `step` to `item`’s record and store the result; return the document.
 
-The stored document’s `ext` object is kept. A document
-that cannot be read counts as no record and is replaced, with a warning: a verb that
-refused to overwrite a broken file would leave that item stuck for good.
+The stored document’s `ext` object is kept, merged under `ext` when given –
+identifying fields (a session id, say) that a caller wants findable from the document
+alone, since an item id is a one-way hash of its identity. A document that cannot be
+read counts as no record and is replaced, with a warning: a verb that refused to
+overwrite a broken file would leave that item stuck for good.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

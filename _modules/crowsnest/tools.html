@@ -958,319 +958,324 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="799">    <span class="p">)</span>
 </span><span data-line="800">    <span class="n">item</span> <span class="o">=</span> <span class="n">_attention</span><span class="o">.</span><span class="n">item_id</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">)</span>
 </span><span data-line="801">    <span class="n">rev</span> <span class="o">=</span> <span class="n">_attention</span><span class="o">.</span><span class="n">fingerprint</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">)</span>
-</span><span data-line="802">    <span class="k">return</span> <span class="n">_attention</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">step</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">),</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
-</span><span data-line="803">
-</span><span data-line="804">
-</span><span data-line="805"><span class="c1"># The attention verbs. Each takes a session reference the way `resolve` does, reads the</span>
-</span><span data-line="806"><span class="c1"># row the report would show for it, and returns the stored document. `ledger_dir`,</span>
-</span><span data-line="807"><span class="c1"># `resolvers`, `verdicts` and `owner` build that row, so they must match the report's;</span>
-</span><span data-line="808"><span class="c1"># `identity` and `material` are `crowsnest.attention`'s seams, and `store` is where the</span>
-</span><span data-line="809"><span class="c1"># record lives (default: one JSON file per item under the data directory).</span>
-</span><span data-line="810">
-</span><span data-line="811">
+</span><span data-line="802">    <span class="c1"># `watch.attention_wakes` rebuilds this row from the store alone, to say a `later`</span>
+</span><span data-line="803">    <span class="c1"># item woke -- and an item id cannot be inverted back to a session id, so it is kept</span>
+</span><span data-line="804">    <span class="c1"># here, in the one place every attention verb already writes.</span>
+</span><span data-line="805">    <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="806">    <span class="n">ext</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">}</span> <span class="k">if</span> <span class="n">session_id</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="807">    <span class="k">return</span> <span class="n">_attention</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">record</span><span class="p">:</span> <span class="n">step</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">),</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="n">ext</span><span class="p">)</span>
+</span><span data-line="808">
+</span><span data-line="809">
+</span><span data-line="810"><span class="c1"># The attention verbs. Each takes a session reference the way `resolve` does, reads the</span>
+</span><span data-line="811"><span class="c1"># row the report would show for it, and returns the stored document. `ledger_dir`,</span>
+</span><span data-line="812"><span class="c1"># `resolvers`, `verdicts` and `owner` build that row, so they must match the report's;</span>
+</span><span data-line="813"><span class="c1"># `identity` and `material` are `crowsnest.attention`'s seams, and `store` is where the</span>
+</span><span data-line="814"><span class="c1"># record lives (default: one JSON file per item under the data directory).</span>
+</span><span data-line="815">
+</span><span data-line="816">
 <div class="viewcode-block" id="seen">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.seen">[docs]</a>
-</span><span data-line="812"><span class="k">def</span><span class="w"> </span><span class="nf">seen</span><span class="p">(</span>
-</span><span data-line="813">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="814">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="815">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="816">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="817">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="818">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="819">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="820">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="821">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="822">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="823">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="824">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="825"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="826"><span class="w">    </span><span class="sd">"""Mark ``session``'s item seen at its current revision: it dims until it changes."""</span>
-</span><span data-line="827">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">seen</span> <span class="k">as</span> <span class="n">_seen</span>
-</span><span data-line="828">
-</span><span data-line="829">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="830">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="831">        <span class="n">_seen</span><span class="p">,</span>
-</span><span data-line="832">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="833">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="834">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="835">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
-</span><span data-line="836">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
-</span><span data-line="837">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
-</span><span data-line="838">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
-</span><span data-line="839">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
-</span><span data-line="840">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
-</span><span data-line="841">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="842">    <span class="p">)</span></div>
+</span><span data-line="817"><span class="k">def</span><span class="w"> </span><span class="nf">seen</span><span class="p">(</span>
+</span><span data-line="818">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="819">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="820">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="821">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="822">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="823">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="824">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="825">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="826">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="827">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="828">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="829">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="830"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="831"><span class="w">    </span><span class="sd">"""Mark ``session``'s item seen at its current revision: it dims until it changes."""</span>
+</span><span data-line="832">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">seen</span> <span class="k">as</span> <span class="n">_seen</span>
+</span><span data-line="833">
+</span><span data-line="834">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="835">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="836">        <span class="n">_seen</span><span class="p">,</span>
+</span><span data-line="837">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="838">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="839">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="840">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+</span><span data-line="841">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+</span><span data-line="842">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
+</span><span data-line="843">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+</span><span data-line="844">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
+</span><span data-line="845">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
+</span><span data-line="846">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="847">    <span class="p">)</span></div>
 
-</span><span data-line="843">
-</span><span data-line="844">
+</span><span data-line="848">
+</span><span data-line="849">
 <div class="viewcode-block" id="unseen">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.unseen">[docs]</a>
-</span><span data-line="845"><span class="k">def</span><span class="w"> </span><span class="nf">unseen</span><span class="p">(</span>
-</span><span data-line="846">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="847">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="848">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="849">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="850">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="851">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="852">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="853">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="854">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="855">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="856">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="857">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="858"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="859"><span class="w">    </span><span class="sd">"""Mark ``session``'s item unread: it shows as new again."""</span>
-</span><span data-line="860">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">unseen</span> <span class="k">as</span> <span class="n">_unseen</span>
-</span><span data-line="861">
-</span><span data-line="862">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="863">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="864">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="n">_unseen</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
-</span><span data-line="865">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="866">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="867">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="868">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
-</span><span data-line="869">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
-</span><span data-line="870">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
-</span><span data-line="871">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
-</span><span data-line="872">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
-</span><span data-line="873">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
-</span><span data-line="874">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="875">    <span class="p">)</span></div>
+</span><span data-line="850"><span class="k">def</span><span class="w"> </span><span class="nf">unseen</span><span class="p">(</span>
+</span><span data-line="851">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="852">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="853">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="854">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="855">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="856">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="857">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="858">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="859">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="860">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="861">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="862">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="863"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="864"><span class="w">    </span><span class="sd">"""Mark ``session``'s item unread: it shows as new again."""</span>
+</span><span data-line="865">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">unseen</span> <span class="k">as</span> <span class="n">_unseen</span>
+</span><span data-line="866">
+</span><span data-line="867">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="868">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="869">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="n">_unseen</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
+</span><span data-line="870">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="871">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="872">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="873">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+</span><span data-line="874">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+</span><span data-line="875">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
+</span><span data-line="876">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+</span><span data-line="877">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
+</span><span data-line="878">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
+</span><span data-line="879">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="880">    <span class="p">)</span></div>
 
-</span><span data-line="876">
-</span><span data-line="877">
+</span><span data-line="881">
+</span><span data-line="882">
 <div class="viewcode-block" id="later">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.later">[docs]</a>
-</span><span data-line="878"><span class="k">def</span><span class="w"> </span><span class="nf">later</span><span class="p">(</span>
-</span><span data-line="879">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="880">    <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="881">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="882">    <span class="n">plan</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="883">    <span class="n">on_change</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="884">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="885">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="886">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="887">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="888">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="889">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="890">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="891">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="892">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="893">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="894"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="895"><span class="w">    </span><span class="sd">"""Put ``session``'s item off until a preset time, or until it changes, whichever first.</span>
-</span><span data-line="896">
-</span><span data-line="897"><span class="sd">    ``preset`` is one of :data:`crowsnest.attention.PRESETS` -- ``1h``, ``evening``,</span>
-</span><span data-line="898"><span class="sd">    ``tomorrow``, ``change`` -- with the hours from the config file's ``[attention]``</span>
-</span><span data-line="899"><span class="sd">    table. ``plan`` is the optional one-line next step; ``on_change=False`` keeps it asleep</span>
-</span><span data-line="900"><span class="sd">    through changes, which ``change`` (no time at all) refuses.</span>
-</span><span data-line="901"><span class="sd">    """</span>
-</span><span data-line="902">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">later</span> <span class="k">as</span> <span class="n">_later</span>
-</span><span data-line="903">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">later_until</span>
-</span><span data-line="904">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">attention_settings</span>
-</span><span data-line="905">
-</span><span data-line="906">    <span class="n">until</span> <span class="o">=</span> <span class="n">later_until</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">attention_settings</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">))</span>
-</span><span data-line="907">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="908">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="909">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="n">_later</span><span class="p">(</span>
-</span><span data-line="910">            <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">until</span><span class="o">=</span><span class="n">until</span><span class="p">,</span> <span class="n">on_change</span><span class="o">=</span><span class="n">on_change</span><span class="p">,</span> <span class="n">plan</span><span class="o">=</span><span class="n">plan</span>
-</span><span data-line="911">        <span class="p">),</span>
-</span><span data-line="912">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="913">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="914">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="915">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
-</span><span data-line="916">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
-</span><span data-line="917">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
-</span><span data-line="918">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
-</span><span data-line="919">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
-</span><span data-line="920">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
-</span><span data-line="921">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="922">    <span class="p">)</span></div>
+</span><span data-line="883"><span class="k">def</span><span class="w"> </span><span class="nf">later</span><span class="p">(</span>
+</span><span data-line="884">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="885">    <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="886">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="887">    <span class="n">plan</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="888">    <span class="n">on_change</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="889">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="890">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="891">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="892">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="893">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="894">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="895">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="896">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="897">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="898">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="899"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="900"><span class="w">    </span><span class="sd">"""Put ``session``'s item off until a preset time, or until it changes, whichever first.</span>
+</span><span data-line="901">
+</span><span data-line="902"><span class="sd">    ``preset`` is one of :data:`crowsnest.attention.PRESETS` -- ``1h``, ``evening``,</span>
+</span><span data-line="903"><span class="sd">    ``tomorrow``, ``change`` -- with the hours from the config file's ``[attention]``</span>
+</span><span data-line="904"><span class="sd">    table. ``plan`` is the optional one-line next step; ``on_change=False`` keeps it asleep</span>
+</span><span data-line="905"><span class="sd">    through changes, which ``change`` (no time at all) refuses.</span>
+</span><span data-line="906"><span class="sd">    """</span>
+</span><span data-line="907">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">later</span> <span class="k">as</span> <span class="n">_later</span>
+</span><span data-line="908">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">later_until</span>
+</span><span data-line="909">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">attention_settings</span>
+</span><span data-line="910">
+</span><span data-line="911">    <span class="n">until</span> <span class="o">=</span> <span class="n">later_until</span><span class="p">(</span><span class="n">preset</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">attention_settings</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">))</span>
+</span><span data-line="912">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="913">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="914">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="n">_later</span><span class="p">(</span>
+</span><span data-line="915">            <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">until</span><span class="o">=</span><span class="n">until</span><span class="p">,</span> <span class="n">on_change</span><span class="o">=</span><span class="n">on_change</span><span class="p">,</span> <span class="n">plan</span><span class="o">=</span><span class="n">plan</span>
+</span><span data-line="916">        <span class="p">),</span>
+</span><span data-line="917">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="918">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="919">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="920">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+</span><span data-line="921">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+</span><span data-line="922">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
+</span><span data-line="923">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+</span><span data-line="924">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
+</span><span data-line="925">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
+</span><span data-line="926">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="927">    <span class="p">)</span></div>
 
-</span><span data-line="923">
-</span><span data-line="924">
+</span><span data-line="928">
+</span><span data-line="929">
 <div class="viewcode-block" id="done">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.done">[docs]</a>
-</span><span data-line="925"><span class="k">def</span><span class="w"> </span><span class="nf">done</span><span class="p">(</span>
-</span><span data-line="926">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="927">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="928">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="929">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="930">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="931">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="932">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="933">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="934">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="935">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="936">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="937">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="938"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="939"><span class="w">    </span><span class="sd">"""Mark ``session``'s item handled: hidden until what it asks for changes."""</span>
-</span><span data-line="940">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">done</span> <span class="k">as</span> <span class="n">_done</span>
-</span><span data-line="941">
-</span><span data-line="942">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="943">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="944">        <span class="n">_done</span><span class="p">,</span>
-</span><span data-line="945">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="946">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="947">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="948">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
-</span><span data-line="949">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
-</span><span data-line="950">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
-</span><span data-line="951">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
-</span><span data-line="952">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
-</span><span data-line="953">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
-</span><span data-line="954">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="955">    <span class="p">)</span></div>
+</span><span data-line="930"><span class="k">def</span><span class="w"> </span><span class="nf">done</span><span class="p">(</span>
+</span><span data-line="931">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="932">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="933">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="934">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="935">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="936">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="937">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="938">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="939">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="940">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="941">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="942">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="943"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="944"><span class="w">    </span><span class="sd">"""Mark ``session``'s item handled: hidden until what it asks for changes."""</span>
+</span><span data-line="945">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">done</span> <span class="k">as</span> <span class="n">_done</span>
+</span><span data-line="946">
+</span><span data-line="947">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="948">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="949">        <span class="n">_done</span><span class="p">,</span>
+</span><span data-line="950">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="951">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="952">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="953">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+</span><span data-line="954">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+</span><span data-line="955">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
+</span><span data-line="956">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+</span><span data-line="957">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
+</span><span data-line="958">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
+</span><span data-line="959">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="960">    <span class="p">)</span></div>
 
-</span><span data-line="956">
-</span><span data-line="957">
+</span><span data-line="961">
+</span><span data-line="962">
 <div class="viewcode-block" id="note">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.note">[docs]</a>
-</span><span data-line="958"><span class="k">def</span><span class="w"> </span><span class="nf">note</span><span class="p">(</span>
-</span><span data-line="959">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="960">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="961">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="962">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="963">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="964">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="965">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="966">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="967">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="968">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="969">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="970">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="971">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="972"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="973"><span class="w">    </span><span class="sd">"""Set the note on ``session``'s item; empty text removes it. Nothing reads a note as an</span>
-</span><span data-line="974"><span class="sd">    instruction."""</span>
-</span><span data-line="975">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">note</span> <span class="k">as</span> <span class="n">_note</span>
-</span><span data-line="976">
-</span><span data-line="977">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="978">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="979">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="n">_note</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">text</span><span class="p">),</span>
-</span><span data-line="980">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="981">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="982">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="983">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
-</span><span data-line="984">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
-</span><span data-line="985">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
-</span><span data-line="986">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
-</span><span data-line="987">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
-</span><span data-line="988">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
-</span><span data-line="989">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="990">    <span class="p">)</span></div>
+</span><span data-line="963"><span class="k">def</span><span class="w"> </span><span class="nf">note</span><span class="p">(</span>
+</span><span data-line="964">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="965">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="966">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="967">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="968">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="969">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="970">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="971">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="972">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="973">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="974">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="975">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="976">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="977"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="978"><span class="w">    </span><span class="sd">"""Set the note on ``session``'s item; empty text removes it. Nothing reads a note as an</span>
+</span><span data-line="979"><span class="sd">    instruction."""</span>
+</span><span data-line="980">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">note</span> <span class="k">as</span> <span class="n">_note</span>
+</span><span data-line="981">
+</span><span data-line="982">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="983">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="984">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="n">_note</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">text</span><span class="p">),</span>
+</span><span data-line="985">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="986">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="987">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="988">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+</span><span data-line="989">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+</span><span data-line="990">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
+</span><span data-line="991">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+</span><span data-line="992">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
+</span><span data-line="993">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
+</span><span data-line="994">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="995">    <span class="p">)</span></div>
 
-</span><span data-line="991">
-</span><span data-line="992">
+</span><span data-line="996">
+</span><span data-line="997">
 <div class="viewcode-block" id="undo">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.undo">[docs]</a>
-</span><span data-line="993"><span class="k">def</span><span class="w"> </span><span class="nf">undo</span><span class="p">(</span>
-</span><span data-line="994">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="995">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="996">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="997">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="998">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="999">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1000">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1001">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1002">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1003">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1004">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1005">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1006"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1007"><span class="w">    </span><span class="sd">"""Restore ``session``'s attention record to before its last change. One level deep;</span>
-</span><span data-line="1008"><span class="sd">    raises ``ValueError`` when there is nothing to undo."""</span>
-</span><span data-line="1009">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">undo</span> <span class="k">as</span> <span class="n">_undo</span>
-</span><span data-line="1010">
-</span><span data-line="1011">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
-</span><span data-line="1012">        <span class="n">session</span><span class="p">,</span>
-</span><span data-line="1013">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="n">_undo</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
-</span><span data-line="1014">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="1015">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="1016">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="1017">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
-</span><span data-line="1018">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
-</span><span data-line="1019">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
-</span><span data-line="1020">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
-</span><span data-line="1021">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
-</span><span data-line="1022">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
-</span><span data-line="1023">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
-</span><span data-line="1024">    <span class="p">)</span></div>
+</span><span data-line="998"><span class="k">def</span><span class="w"> </span><span class="nf">undo</span><span class="p">(</span>
+</span><span data-line="999">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1000">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1001">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1002">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1003">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1004">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1005">    <span class="n">resolvers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1006">    <span class="n">verdicts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1007">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1008">    <span class="n">identity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1009">    <span class="n">material</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1010">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1011"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1012"><span class="w">    </span><span class="sd">"""Restore ``session``'s attention record to before its last change. One level deep;</span>
+</span><span data-line="1013"><span class="sd">    raises ``ValueError`` when there is nothing to undo."""</span>
+</span><span data-line="1014">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">undo</span> <span class="k">as</span> <span class="n">_undo</span>
+</span><span data-line="1015">
+</span><span data-line="1016">    <span class="k">return</span> <span class="n">_attend</span><span class="p">(</span>
+</span><span data-line="1017">        <span class="n">session</span><span class="p">,</span>
+</span><span data-line="1018">        <span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">rev</span><span class="p">:</span> <span class="n">_undo</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
+</span><span data-line="1019">        <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="1020">        <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="1021">        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="1022">        <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">,</span>
+</span><span data-line="1023">        <span class="n">resolvers</span><span class="o">=</span><span class="n">resolvers</span><span class="p">,</span>
+</span><span data-line="1024">        <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span>
+</span><span data-line="1025">        <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">,</span>
+</span><span data-line="1026">        <span class="n">identity</span><span class="o">=</span><span class="n">identity</span><span class="p">,</span>
+</span><span data-line="1027">        <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
+</span><span data-line="1028">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span><span data-line="1029">    <span class="p">)</span></div>
 
-</span><span data-line="1025">
-</span><span data-line="1026">
+</span><span data-line="1030">
+</span><span data-line="1031">
 <div class="viewcode-block" id="attention_export">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.attention_export">[docs]</a>
-</span><span data-line="1027"><span class="k">def</span><span class="w"> </span><span class="nf">attention_export</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">since</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-</span><span data-line="1028"><span class="w">    </span><span class="sd">"""Every attention record as its document, oldest change first; ``since`` (an ISO time</span>
-</span><span data-line="1029"><span class="sd">    or date) keeps only those changed after it. The shape :func:`attention_import` reads.</span>
-</span><span data-line="1030"><span class="sd">    """</span>
-</span><span data-line="1031">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_docs</span>
-</span><span data-line="1032">
-</span><span data-line="1033">    <span class="k">return</span> <span class="n">export_docs</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span></div>
+</span><span data-line="1032"><span class="k">def</span><span class="w"> </span><span class="nf">attention_export</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">since</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="1033"><span class="w">    </span><span class="sd">"""Every attention record as its document, oldest change first; ``since`` (an ISO time</span>
+</span><span data-line="1034"><span class="sd">    or date) keeps only those changed after it. The shape :func:`attention_import` reads.</span>
+</span><span data-line="1035"><span class="sd">    """</span>
+</span><span data-line="1036">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_docs</span>
+</span><span data-line="1037">
+</span><span data-line="1038">    <span class="k">return</span> <span class="n">export_docs</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span></div>
 
-</span><span data-line="1034">
-</span><span data-line="1035">
+</span><span data-line="1039">
+</span><span data-line="1040">
 <div class="viewcode-block" id="attention_import">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.attention_import">[docs]</a>
-</span><span data-line="1036"><span class="k">def</span><span class="w"> </span><span class="nf">attention_import</span><span class="p">(</span><span class="n">docs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1037"><span class="w">    </span><span class="sd">"""Take attention documents into the store, last write winning by ``updated_at``.</span>
-</span><span data-line="1038">
-</span><span data-line="1039"><span class="sd">    All are checked before any is written. Returns ``{"written", "kept", "total"}``.</span>
-</span><span data-line="1040"><span class="sd">    """</span>
-</span><span data-line="1041">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_docs</span>
-</span><span data-line="1042">
-</span><span data-line="1043">    <span class="k">return</span> <span class="n">import_docs</span><span class="p">(</span><span class="n">docs</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span></div>
+</span><span data-line="1041"><span class="k">def</span><span class="w"> </span><span class="nf">attention_import</span><span class="p">(</span><span class="n">docs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1042"><span class="w">    </span><span class="sd">"""Take attention documents into the store, last write winning by ``updated_at``.</span>
+</span><span data-line="1043">
+</span><span data-line="1044"><span class="sd">    All are checked before any is written. Returns ``{"written", "kept", "total"}``.</span>
+</span><span data-line="1045"><span class="sd">    """</span>
+</span><span data-line="1046">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_docs</span>
+</span><span data-line="1047">
+</span><span data-line="1048">    <span class="k">return</span> <span class="n">import_docs</span><span class="p">(</span><span class="n">docs</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span></div>
 
-</span><span data-line="1044">
-</span><span data-line="1045">
+</span><span data-line="1049">
+</span><span data-line="1050">
 <div class="viewcode-block" id="turns">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.turns">[docs]</a>
-</span><span data-line="1046"><span class="k">def</span><span class="w"> </span><span class="nf">turns</span><span class="p">(</span>
-</span><span data-line="1047">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="1048">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1049">    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-</span><span data-line="1050">    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1051">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1052">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1053">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1054"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1055"><span class="w">    </span><span class="sd">"""The last ``last`` turns of a session, oldest first; ``before=N`` pages back from turn N."""</span>
-</span><span data-line="1056">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1057">    <span class="n">found</span> <span class="o">=</span> <span class="n">read_turns</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
-</span><span data-line="1058">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]}</span></div>
+</span><span data-line="1051"><span class="k">def</span><span class="w"> </span><span class="nf">turns</span><span class="p">(</span>
+</span><span data-line="1052">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1053">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1054">    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span data-line="1055">    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1056">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1057">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1058">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1059"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1060"><span class="w">    </span><span class="sd">"""The last ``last`` turns of a session, oldest first; ``before=N`` pages back from turn N."""</span>
+</span><span data-line="1061">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1062">    <span class="n">found</span> <span class="o">=</span> <span class="n">read_turns</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
+</span><span data-line="1063">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]}</span></div>
 
-</span><span data-line="1059">
-</span><span data-line="1060">
+</span><span data-line="1064">
+</span><span data-line="1065">
 <div class="viewcode-block" id="brief">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.brief">[docs]</a>
-</span><span data-line="1061"><span class="k">def</span><span class="w"> </span><span class="nf">brief</span><span class="p">(</span>
-</span><span data-line="1062">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="1063">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1064">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1065">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1066">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1067">    <span class="n">digests_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1068"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1069"><span class="w">    </span><span class="sd">"""openloops' digest for one live session: what it has been doing, dated, in its words.</span>
-</span><span data-line="1070">
-</span><span data-line="1071"><span class="sd">    A digest is written by openloops when a session's turn ends, so this answers "what has</span>
-</span><span data-line="1072"><span class="sd">    this session been up to" without reading a transcript at all, and without spending a</span>
-</span><span data-line="1073"><span class="sd">    turn of that session's context. It is a lookup, not a second reader: the digest's</span>
-</span><span data-line="1074"><span class="sd">    content is openloops' business, and ``digests_store`` is the seam it reads from.</span>
+</span><span data-line="1066"><span class="k">def</span><span class="w"> </span><span class="nf">brief</span><span class="p">(</span>
+</span><span data-line="1067">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1068">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1069">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1070">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1071">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1072">    <span class="n">digests_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1073"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1074"><span class="w">    </span><span class="sd">"""openloops' digest for one live session: what it has been doing, dated, in its words.</span>
 </span><span data-line="1075">
-</span><span data-line="1076"><span class="sd">    ``digest`` is ``None`` when openloops has not digested this session yet -- a normal</span>
-</span><span data-line="1077"><span class="sd">    state for a session started minutes ago -- and ``why`` says so.</span>
-</span><span data-line="1078"><span class="sd">    """</span>
-</span><span data-line="1079">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1080">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="1081">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
-</span><span data-line="1082">    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="1083">        <span class="n">why</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-</span><span data-line="1084">        <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">why</span><span class="p">}</span>
-</span><span data-line="1085">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="n">digest</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span></div>
+</span><span data-line="1076"><span class="sd">    A digest is written by openloops when a session's turn ends, so this answers "what has</span>
+</span><span data-line="1077"><span class="sd">    this session been up to" without reading a transcript at all, and without spending a</span>
+</span><span data-line="1078"><span class="sd">    turn of that session's context. It is a lookup, not a second reader: the digest's</span>
+</span><span data-line="1079"><span class="sd">    content is openloops' business, and ``digests_store`` is the seam it reads from.</span>
+</span><span data-line="1080">
+</span><span data-line="1081"><span class="sd">    ``digest`` is ``None`` when openloops has not digested this session yet -- a normal</span>
+</span><span data-line="1082"><span class="sd">    state for a session started minutes ago -- and ``why`` says so.</span>
+</span><span data-line="1083"><span class="sd">    """</span>
+</span><span data-line="1084">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1085">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="1086">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
+</span><span data-line="1087">    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="1088">        <span class="n">why</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+</span><span data-line="1089">        <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">why</span><span class="p">}</span>
+</span><span data-line="1090">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="n">digest</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -1299,7 +1304,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=0e525676"></script>
+      <script src="../../_static/documentation_options.js?v=aa2ad26f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

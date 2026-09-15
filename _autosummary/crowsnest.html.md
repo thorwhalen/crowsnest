@@ -170,7 +170,7 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None)
+### crowsnest.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 

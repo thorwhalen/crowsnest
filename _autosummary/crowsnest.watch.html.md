@@ -23,6 +23,16 @@ a guess at it – so when a hook `stopped` and a polled `idle` describe the same
 ending, the polled one is dropped and the hook’s line is the one that is yielded. With no
 hooks installed the file never appears and the stream is exactly the registry diff.
 
+**The attention store.** A person can put an item off ([`crowsnest.attention`](crowsnest.attention.html.md#module-crowsnest.attention)’s
+`later`) until a time, or until it changes. Nobody schedules that wake – discussion
+#51 is explicit that there is no cron for a snooze – so [`attention_wakes()`](#crowsnest.watch.attention_wakes) asks
+the same pure [`crowsnest.attention.present()`](crowsnest.attention.html.md#crowsnest.attention.present) the static page and the console
+already use, once a tick, for every item still in state `later`. An item that
+[`present()`](crowsnest.attention.html.md#crowsnest.attention.present) would no longer show as `later` (because its time
+passed, or because it changed while `on_change`) yields one `woke` event, exactly
+once: the tick keeps what it has already announced in memory, so a restarted watcher
+announcing a wake twice is acceptable, and announcing it never is not.
+
 `crowsnest watch` prints this stream one line per event, which is the shape Claude
 Code’s own `Monitor` tool consumes: each line becomes a notification in the watching
 session’s conversation.
@@ -43,8 +53,9 @@ session’s conversation.
 
 ### Functions
 
-| [`diff`](#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.         |
+| [`attention_wakes`](#crowsnest.watch.attention_wakes)(\*[, store, row_of, home, ...])    | One `woke` event per attention item that just left `later`.                         |
 |-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`diff`](#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.         |
 | [`events`](#crowsnest.watch.events)(\*[, interval, home, is_alive, sleep, ...]) | Yield one dict per change, forever -- or for `ticks` snapshots when given.          |
 | [`hook_event`](#crowsnest.watch.hook_event)(record)                                 | One line of the hook log as an event, or `None` for an event kind we do not stream. |
 | [`snapshot`](#crowsnest.watch.snapshot)(\*[, home, is_alive, all_homes, config])  | The live sessions right now, keyed by session id.                                   |
@@ -77,6 +88,24 @@ news; a move in or out of the pair still is.
 * **Type:**
   Statuses that mean the same thing to a watcher
 
+### crowsnest.watch.attention_wakes(, store=None, row_of=None, home=None, all_homes=False, config=None, announced=None, now=None)
+
+One `woke` event per attention item that just left `later`.
+
+Every item still in state `later` is re-read through [`crowsnest.attention.present()`](crowsnest.attention.html.md#crowsnest.attention.present),
+the same pure function the static page and the console use, with the item’s *current*
+revision – `row_of` is how that row is rebuilt from the document alone (default
+`_attention_row()`; a test hands a synthetic row instead of a live session). An
+item [`present()`](crowsnest.attention.html.md#crowsnest.attention.present) no longer shows as `later` – its time
+passed, or it changed while `on_change` – has woken; one that a prior call already
+announced is not repeated. `announced` is that bookkeeping, kept by the caller
+across ticks ([`events()`](#crowsnest.watch.events) keeps its own); a fresh one announces every already-woken
+item once, which is the same acceptable-not-silent choice [`events()`](#crowsnest.watch.events) makes for a
+restarted watcher.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
 ### crowsnest.watch.diff(before, after, \*, activity=<function <lambda>>)
 
 The events between two snapshots: started, exited, and every status change.
@@ -89,7 +118,7 @@ session whose last words were an error banner is reported as `error` instead.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
-### crowsnest.watch.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None)
+### crowsnest.watch.events(\*, interval=5.0, home=None, is_alive=<function pid_alive>, sleep=<built-in function sleep>, ticks=None, events_path=None, all_homes=False, config=None, attention_store=None)
 
 Yield one dict per change, forever – or for `ticks` snapshots when given.
 

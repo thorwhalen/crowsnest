@@ -342,7 +342,7 @@ data dir; an S3 mapping</p></td>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.unseen" title="crowsnest.attention.unseen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unseen</span></code></a>(record, *[, now])</p></td>
 <td><p>Mark unread: the item shows as <code class="docutils literal notranslate"><span class="pre">new</span></code> again, wherever it is not hidden.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.update" title="crowsnest.attention.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a>(item, step, *[, store])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.update" title="crowsnest.attention.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a>(item, step, *[, store, ext])</p></td>
 <td><p>Apply <code class="docutils literal notranslate"><span class="pre">step</span></code> to <code class="docutils literal notranslate"><span class="pre">item</span></code>'s record and store the result; return the document.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.write_record" title="crowsnest.attention.write_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_record</span></code></a>(item, record, *[, store, extras])</p></td>
@@ -829,11 +829,13 @@ named, it is the way to wake one early.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.attention.update">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.update" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.update" title="Link to this definition">#</a></dt>
 <dd><p>Apply <code class="docutils literal notranslate"><span class="pre">step</span></code> to <code class="docutils literal notranslate"><span class="pre">item</span></code>’s record and store the result; return the document.</p>
-<p>The stored document’s <code class="docutils literal notranslate"><span class="pre">ext</span></code> object is kept. A document
-that cannot be read counts as no record and is replaced, with a warning: a verb that
-refused to overwrite a broken file would leave that item stuck for good.</p>
+<p>The stored document’s <code class="docutils literal notranslate"><span class="pre">ext</span></code> object is kept, merged under <code class="docutils literal notranslate"><span class="pre">ext</span></code> when given –
+identifying fields (a session id, say) that a caller wants findable from the document
+alone, since an item id is a one-way hash of its identity. A document that cannot be
+read counts as no record and is replaced, with a warning: a verb that refused to
+overwrite a broken file would leave that item stuck for good.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -894,7 +896,7 @@ refused to overwrite a broken file would leave that item stuck for good.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=0e525676"></script>
+      <script src="../_static/documentation_options.js?v=aa2ad26f"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
