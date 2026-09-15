@@ -290,35 +290,24 @@ def _attention_row(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    owner: str = "",
-    verdicts=None,
+    row_context=None,
 ) -> dict | None:
     """The row :func:`crowsnest.tools.report` would show for ``doc``'s session, or
     ``None`` when it has no ``session_id`` on record (:func:`crowsnest.tools._attend`
     keeps one in ``ext`` for exactly this) or that session is no longer live.
 
-    ``ledger_dir``, ``resolvers``, ``owner`` and ``verdicts`` build the row as the verbs
-    did, so they must be the ones the verbs were given (#74).
+    ``row_context`` builds it (:class:`crowsnest.rows.RowContext`), and must be the one the
+    verbs were given (#74, #78).
     """
-    from crowsnest.tools import _item_row
+    from crowsnest.rows import dflt_row_context
 
     ext = doc.get("ext")
     session_id = str(ext.get("session_id") or "") if isinstance(ext, Mapping) else ""
     if not session_id:
         return None
+    ctx = dflt_row_context(config=config) if row_context is None else row_context
     try:
-        return _item_row(
-            session_id,
-            home=home,
-            all_homes=all_homes,
-            config=config,
-            ledger_dir=ledger_dir,
-            resolvers=resolvers,
-            owner=owner,
-            verdicts=verdicts,
-        )
+        return ctx.row(session_id, home=home, all_homes=all_homes, config=config)
     except KeyError:
         return None
 
@@ -351,11 +340,7 @@ def attention_wakes(
     config: str | Path | None = None,
     announced: set[str] | None = None,
     now: datetime | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    owner: str = "",
-    verdicts=None,
-    material=None,
+    row_context=None,
 ) -> list[dict]:
     """One ``woke`` event per attention item that just left ``later``.
 
@@ -370,24 +355,17 @@ def attention_wakes(
     item once, which is the same acceptable-not-silent choice :func:`events` makes for a
     restarted watcher.
 
-    ``ledger_dir``, ``resolvers``, ``owner`` and ``verdicts`` build the default row, and
-    ``material`` takes its revision. Like the report's, they must be the ones the verbs were given: a
-    row built or hashed any other way reads as changed, and wakes on the first tick (#74).
+    ``row_context`` builds the default row and takes every revision
+    (:class:`crowsnest.rows.RowContext`; by default the config file's). Like the report's,
+    it must be the one the verbs were given: a row built or hashed any other way reads as
+    changed, and wakes on the first tick (#74, #78).
     """
     from crowsnest import attention as _attention
+    from crowsnest.rows import dflt_row_context
 
     store = _attention.dflt_store() if store is None else store
-    fetch = (
-        partial(
-            _attention_row,
-            ledger_dir=ledger_dir,
-            resolvers=resolvers,
-            owner=owner,
-            verdicts=verdicts,
-        )
-        if row_of is None
-        else row_of
-    )
+    ctx = dflt_row_context(config=config) if row_context is None else row_context
+    fetch = partial(_attention_row, row_context=ctx) if row_of is None else row_of
     seen = set() if announced is None else announced
     found: list[dict] = []
     for item in list(store):
@@ -402,7 +380,7 @@ def attention_wakes(
         row = fetch(doc, home=home, all_homes=all_homes, config=config)
         if row is None:
             continue
-        rev = _attention.fingerprint(row, material=material)
+        rev = ctx.rev(row)
         if _attention.present(rev, record, now=now) == _attention.LATER:
             continue
         if item not in seen:
@@ -422,25 +400,25 @@ def events(
     all_homes: bool = False,
     config: str | Path | None = None,
     attention_store: MutableMapping[str, dict] | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    owner: str = "",
-    verdicts=None,
-    material=None,
+    row_context=None,
 ) -> Iterator[dict]:
     """Yield one dict per change, forever -- or for ``ticks`` snapshots when given.
 
     ``all_homes`` watches every configured home at once; registry events then carry the
     home's name. Hook events come from this machine's own hook log and carry none.
-    ``ledger_dir``, ``resolvers``, ``owner``, ``verdicts`` and ``material`` reach
-    :func:`attention_wakes`, and must be the ones the attention verbs were given.
+    ``row_context`` reaches :func:`attention_wakes` (:class:`crowsnest.rows.RowContext`),
+    and must be the one the attention verbs were given. By default it is the config
+    file's, read once when the stream starts.
 
     The first snapshot is the baseline and yields nothing, and the hook log is opened at
     its end: a monitor that starts up is not told about forty sessions that were already
     there, nor about yesterday's events. ``sleep`` and ``ticks`` exist so a test can drive
     the loop; nothing else should pass them.
     """
+    from crowsnest.rows import dflt_row_context
+
     log = _events_path(events_path)
+    ctx = dflt_row_context(config=config) if row_context is None else row_context
     before = snapshot(home=home, is_alive=is_alive, all_homes=all_homes, config=config)
     position = tail_position(log)
     woken: set[str] = set()
@@ -463,11 +441,7 @@ def events(
             all_homes=all_homes,
             config=config,
             announced=woken,
-            ledger_dir=ledger_dir,
-            resolvers=resolvers,
-            owner=owner,
-            verdicts=verdicts,
-            material=material,
+            row_context=ctx,
         )
         before = after
         taken += 1

@@ -23,6 +23,7 @@ from openloops.egress import scan
 from crowsnest import attention, registry, tools
 from crowsnest.__main__ import main
 from crowsnest.report import render_report
+from crowsnest.rows import RowContext
 
 STAMP = "2026-02-01T12:00:00Z"
 NOW = attention.instant(STAMP)
@@ -544,9 +545,9 @@ def test_every_open_tag_is_closed_with_attention_markup():
     stack: list[str] = []
     for closing, name in re.findall(r"<(/?)([a-z0-9]+)", body):
         if closing:
-            assert stack and stack[-1] == name, (
-                f"{name} closed out of order: {stack[-3:]}"
-            )
+            assert (
+                stack and stack[-1] == name
+            ), f"{name} closed out of order: {stack[-3:]}"
             stack.pop()
         elif name not in void:
             stack.append(name)
@@ -617,9 +618,12 @@ def test_identity_and_material_reach_the_page():
     )
     moved = renamed(asker, reason="Something else entirely")
     rows = [moved if r["label"] == "asker" else r for r in rows]
-    html = page(rows, store, identity=by_label, material=only_group)
+    html = page(
+        rows, store, row_context=RowContext(identity=by_label, material=only_group)
+    )
     assert "row--seen" in li(html, "asker")
-    assert "row--changed" in li(page(rows, store, identity=by_label), "asker")
+    by_label_only = RowContext(identity=by_label)
+    assert "row--changed" in li(page(rows, store, row_context=by_label_only), "asker")
 
 
 # --------------------------------------------------------------------------------

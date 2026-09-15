@@ -421,12 +421,12 @@ def test_the_registry_only_roster_stays_instant():
 def test_report_can_reach_the_resolver_seam(tmp_path):
     """The surface the feature exists for must be able to reach the seam it renders."""
     from crowsnest import tools
+    from crowsnest.rows import RowContext
 
     done = tools.report(
         home="/nonexistent",
         made_at="2026-01-01T00:00:00Z",
-        ledger_dir=tmp_path,
-        resolvers=[],
+        row_context=RowContext(ledger_dir=tmp_path, resolvers=[]),
         links=False,
     )
     assert "<title>" in done["html"]

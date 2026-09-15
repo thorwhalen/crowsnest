@@ -61,7 +61,7 @@ def item(html: str, label: str = "fixer") -> str:
 
 def test_roster_row_with_a_verdict_attached_afterwards_shows_the_verdicts_time():
     # A row as tools.roster returns it (said_at from its last words), then a verdict
-    # attached by a caller that did not go through tools._verdicted / triage.classify.
+    # attached by a caller that did not go through RowContext.rows / triage.classify.
     base = said.with_said(
         row(
             activity={"last_text_at": "2026-02-06T11:00:00Z", "last_assistant_text": "ok"}

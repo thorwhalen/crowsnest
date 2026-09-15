@@ -13,6 +13,7 @@ from crowsnest import attention, registry, tools
 from crowsnest.__main__ import main
 from crowsnest.ledger import ledger_path
 from crowsnest.paths import data_dir
+from crowsnest.rows import RowContext
 
 
 @pytest.fixture
@@ -28,8 +29,9 @@ def home(tmp_path, monkeypatch):
 
 
 def _report_row(home, label):
-    """The row `tools.report` renders for `label`: the roster's rows, then triage."""
-    rows = tools._verdicted(tools.roster(home=home)["sessions"], None, None)
+    """The row `tools.report` renders for `label`, built the way it builds them."""
+    pin = tools._home_to_pin(home=home, all_homes=False, config=None)
+    rows = RowContext().rows(tools.sessions(home=home), home_dir=pin)
     return next(r for r in rows if r["label"] == label)
 
 
@@ -55,10 +57,10 @@ def test_a_verb_given_the_reports_ledger_dir_pins_the_row_that_page_shows(
     )
     main(["seen", idle, "--home", str(home), "--ledger-dir", str(ledgers)])
     printed = json.loads(capsys.readouterr().out)
-    shown = tools._item_row(idle, home=home, ledger_dir=ledgers)
+    shown = RowContext(ledger_dir=ledgers).row(idle, home=home)
     assert shown["verdict"]["group"] == "needs_you", shown["verdict"]
     assert printed["seen_rev"] == attention.fingerprint(shown)
-    assert printed["seen_rev"] != attention.fingerprint(tools._item_row(idle, home=home))
+    assert printed["seen_rev"] != attention.fingerprint(RowContext().row(idle, home=home))
 
 
 @pytest.mark.parametrize(

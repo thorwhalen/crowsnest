@@ -135,6 +135,16 @@ crowsnest undo shipper                              one step back
 
 Items are keyed by session id, not name, so a resumed session keeps its record and a new session given an old name starts fresh. The hours behind `evening` and `tomorrow` are an `[attention]` table in the config file (`evening_hour = 18`, `morning_hour = 9`). `crowsnest attention export` and `import` move the records as JSON, the newer `updated_at` winning, which is how a published page's copy and this machine's are kept in step. The report page showing this record is the next step ([#55](https://github.com/thorwhalen/crowsnest/issues/55)).
 
+A mark holds only if the page, the verbs and `crowsnest watch` read the item the same way, and that includes the ledgers each session is triaged from. If yours are not in the default place, name them once rather than passing `--ledger-dir` to every command:
+
+```toml
+# ~/.config/crowsnest/config.toml
+[report]
+ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
+```
+
+In Python the same agreement is one value, `crowsnest.rows.RowContext` (the ledger directory, link resolvers, triage readers, and attention's identity and material), handed whole as `row_context=` to `tools.report`, the verbs and `watch.events`.
+
 ## Every reference, as a link
 
 A session working in `i2mint/mergeset` that writes `#17` means that repository's issue 17. Nothing in the text says so — but crowsnest knows the session's working directory, and that is enough to resolve the commonest, least resolvable reference a session writes. So the report renders references as links rather than as text you have to reconstruct a URL from: markdown links the session already wrote out, bare URLs typed by where they point (issue, pull request, discussion, commit, CI run, artifact, Slack), `owner/repo#N`, bare `#N`, and bare commit shas.

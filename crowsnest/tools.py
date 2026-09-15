@@ -32,6 +32,7 @@ from crowsnest.registry import (
     live_sessions,
 )
 from crowsnest.report import DFLT_TITLE, render_report
+from crowsnest.rows import RowContext, dflt_row_context
 
 __all__ = [
     "attention_export",
@@ -261,11 +262,16 @@ def roster(
         )
         for s in found
     ]
-    counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}
-    counts["other"] = len(rows) - sum(counts.values())
     from crowsnest.said import with_said
 
-    return {"sessions": [with_said(r) for r in rows], "counts": counts}
+    return {"sessions": [with_said(r) for r in rows], "counts": _counts(rows)}
+
+
+def _counts(rows) -> dict:
+    """How many rows are in each registry status, and how many in none of them."""
+    counts = {status: sum(r["status"] == status for r in rows) for status in STATUSES}
+    counts["other"] = len(rows) - sum(counts.values())
+    return counts
 
 
 def _roster_row(
@@ -444,30 +450,6 @@ def triage(
     return {**found, "made_at": _now()}
 
 
-def _verdicted(rows, ledger_dir, verdicts, owner="", *, pages=None) -> list[dict]:
-    """``rows`` with each one's triage verdict attached, order untouched, and each row's
-    ``said_at`` set again from its verdict."""
-    from crowsnest.said import with_said
-    from crowsnest.triage import classify_row
-
-    if pages is None:
-        pages = _ledgers_for({str(r.get("label") or "") for r in rows}, ledger_dir)
-    return [
-        with_said(
-            {
-                **row,
-                "verdict": classify_row(
-                    row,
-                    ledger=pages.get(str(row.get("label") or "")) or {},
-                    verdicts=verdicts,
-                    owner=owner,
-                ),
-            }
-        )
-        for row in rows
-    ]
-
-
 def _ledgers_for(labels, ledger_dir) -> dict:
     """The ledger page of each named session, read once. A session with no ledger gets an
     empty page rather than no entry, so a caller can tell "read it, there was nothing"
@@ -534,19 +516,14 @@ def report(
     fragment: bool = False,
     interactive: bool = False,
     links: bool = True,
-    ledger_dir: str | Path | None = None,
     lineage_path: str | Path | None = None,
-    resolvers=None,
     triage: bool = True,
-    verdicts=None,
-    owner: str = "",
     with_lineage: bool = True,
     tz=None,
     stale_after=None,
     store=None,
     plain: bool = False,
-    identity=None,
-    material=None,
+    row_context: RowContext | None = None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -566,12 +543,18 @@ def report(
     block, rows handled and unchanged since are left out and counted, and the title counts
     what is new, changed or woke in *Needs you*. A store that holds no readable record
     renders the page exactly as it was before attention existed. ``plain`` ignores the
-    store, for a copy to share. ``identity`` and ``material`` are that module's seams, and
-    must be the ones the verbs were given, or every seen item reads as changed.
+    store, for a copy to share.
+
+    ``row_context`` is how every row is built and hashed (:class:`crowsnest.rows.RowContext`:
+    the ledger directory, link resolvers, triage readers and owner, and attention's
+    ``identity`` and ``material``). It must be the one the verbs and the watcher were
+    given, or every seen item reads as changed; by default all three read it from the
+    config file (:func:`crowsnest.rows.dflt_row_context`), so they agree unless told
+    otherwise.
 
     ``triage=False`` ignores the store as well, because :func:`render_report` never applies
     it to a page without verdicts: the verbs pin the revision of the *triaged* row
-    (:func:`_item_row`), so there every seen item would read as changed.
+    (:meth:`crowsnest.rows.RowContext.row`), so there every seen item would read as changed.
 
     ``made_at`` is the moment the snapshot claims to be from; it defaults to now, but a
     caller that wants byte-stable output passes it explicitly -- this is the one
@@ -601,28 +584,18 @@ def report(
     )
     if stale_after is None:
         stale_after = settings.stale_after
-    # One read per ledger for the whole page: `links` and `triage` both want the same
-    # file, and the roster is built before either of them asks for it.
-    pages = _ledgers_for(
-        {s.label for s in sessions(home=home, all_homes=all_homes, config=config)},
-        ledger_dir,
-    )
-    data = roster(
-        home=home,
-        all_homes=all_homes,
-        config=config,
+    ctx = dflt_row_context(config=config) if row_context is None else row_context
+    found = sessions(home=home, all_homes=all_homes, config=config)
+    # The rows the verbs pin and the watcher rebuilds, built the one way they build them.
+    # Every ledger is read once for the whole page: `links` and `triage` want the same file.
+    rows = ctx.rows(
+        found,
+        home_dir=_home_to_pin(home=home, all_homes=all_homes, config=config),
+        pages=ctx.pages({s.label for s in found}),
         links=links,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        _pages=pages,
+        triage=triage,
     )
-    if triage:
-        data = {
-            **data,
-            "sessions": _verdicted(
-                data["sessions"], ledger_dir, verdicts, owner, pages=pages
-            ),
-        }
+    data = {"sessions": rows, "counts": _counts(rows)}
     if with_lineage:
         # The rows the roster already read, not a second sweep of the registry: reading
         # twice costs a `ps` and a registry listing, and lets the two halves of one
@@ -654,8 +627,7 @@ def report(
         stale_after=stale_after,
         store=store,
         plain=plain,
-        identity=identity,
-        material=material,
+        row_context=ctx,
         attention_settings=settings,
     )
     return {
@@ -797,35 +769,6 @@ def _ledger_names(ledger_dir: str | Path | None = None) -> set[str]:
         return set()
 
 
-def _item_row(
-    session: str,
-    *,
-    home=None,
-    all_homes: bool = False,
-    config=None,
-    ledger_dir=None,
-    resolvers=None,
-    verdicts=None,
-    owner: str = "",
-) -> dict:
-    """The row :func:`report` shows for ``session``, verdict included.
-
-    Built the way the report builds each of its rows -- the roster's clipping and link cap,
-    then triage -- because a record pinned to a revision the page never computes would
-    never read as seen.
-    """
-    s = resolve(session, home=home, all_homes=all_homes, config=config)
-    pages = _ledgers_for({s.label}, ledger_dir)
-    row = _roster_row(
-        s,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        page=pages.get(s.label),
-        home_dir=_home_to_pin(home=home, all_homes=all_homes, config=config),
-    )
-    return _verdicted([row], ledger_dir, verdicts, owner, pages=pages)[0]
-
-
 def _attend(
     session: str,
     step,
@@ -833,33 +776,23 @@ def _attend(
     home=None,
     all_homes: bool = False,
     config=None,
-    ledger_dir=None,
-    resolvers=None,
-    verdicts=None,
-    owner: str = "",
-    identity=None,
-    material=None,
+    row_context: RowContext | None = None,
     store=None,
 ) -> dict:
     """Apply ``step(record, rev, seen_as)`` to ``session``'s attention record and store it.
 
-    ``seen_as`` is :func:`crowsnest.attention.seen_as_of` the row the revision is taken
-    from, for the steps that pin a revision to keep beside it (#73).
+    The row is the one :func:`report` shows for ``session``, built and hashed by
+    ``row_context`` (:class:`crowsnest.rows.RowContext`; by default the config file's), so
+    the record is pinned to the revision the page computes. ``seen_as`` is
+    :func:`crowsnest.attention.seen_as_of` that row, for the steps that pin a revision to
+    keep beside it (#73).
     """
     from crowsnest import attention as _attention
 
-    row = _item_row(
-        session,
-        home=home,
-        all_homes=all_homes,
-        config=config,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        verdicts=verdicts,
-        owner=owner,
-    )
-    item = _attention.item_id(row, identity=identity)
-    rev = _attention.fingerprint(row, material=material)
+    ctx = dflt_row_context(config=config) if row_context is None else row_context
+    row = ctx.row(session, home=home, all_homes=all_homes, config=config)
+    item = ctx.item(row)
+    rev = ctx.rev(row)
     # `watch.attention_wakes` rebuilds this row from the store alone, to say a `later`
     # item woke -- and an item id cannot be inverted back to a session id, so it is kept
     # here, in the one place every attention verb already writes.
@@ -872,10 +805,10 @@ def _attend(
 
 
 # The attention verbs. Each takes a session reference the way `resolve` does, reads the
-# row the report would show for it, and returns the stored document. `ledger_dir`,
-# `resolvers`, `verdicts` and `owner` build that row, so they must match the report's;
-# `identity` and `material` are `crowsnest.attention`'s seams, and `store` is where the
-# record lives (default: one JSON file per item under the data directory).
+# row the report would show for it, and returns the stored document. `row_context` builds
+# and hashes that row (`crowsnest.rows.RowContext`), so it must be the report's; by default
+# both read it from the config file. `store` is where the record lives (default: one JSON
+# file per item under the data directory).
 
 
 def seen(
@@ -884,12 +817,7 @@ def seen(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    verdicts=None,
-    owner: str = "",
-    identity=None,
-    material=None,
+    row_context: RowContext | None = None,
     store=None,
 ) -> dict:
     """Mark ``session``'s item seen at its current revision: it dims until it changes."""
@@ -901,12 +829,7 @@ def seen(
         home=home,
         all_homes=all_homes,
         config=config,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        verdicts=verdicts,
-        owner=owner,
-        identity=identity,
-        material=material,
+        row_context=row_context,
         store=store,
     )
 
@@ -917,12 +840,7 @@ def unseen(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    verdicts=None,
-    owner: str = "",
-    identity=None,
-    material=None,
+    row_context: RowContext | None = None,
     store=None,
 ) -> dict:
     """Mark ``session``'s item unread: it shows as new again."""
@@ -934,12 +852,7 @@ def unseen(
         home=home,
         all_homes=all_homes,
         config=config,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        verdicts=verdicts,
-        owner=owner,
-        identity=identity,
-        material=material,
+        row_context=row_context,
         store=store,
     )
 
@@ -953,12 +866,7 @@ def later(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    verdicts=None,
-    owner: str = "",
-    identity=None,
-    material=None,
+    row_context: RowContext | None = None,
     store=None,
 ) -> dict:
     """Put ``session``'s item off until a preset time, or until it changes, whichever first.
@@ -981,12 +889,7 @@ def later(
         home=home,
         all_homes=all_homes,
         config=config,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        verdicts=verdicts,
-        owner=owner,
-        identity=identity,
-        material=material,
+        row_context=row_context,
         store=store,
     )
 
@@ -997,12 +900,7 @@ def done(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    verdicts=None,
-    owner: str = "",
-    identity=None,
-    material=None,
+    row_context: RowContext | None = None,
     store=None,
 ) -> dict:
     """Mark ``session``'s item handled: hidden until what it asks for changes."""
@@ -1014,12 +912,7 @@ def done(
         home=home,
         all_homes=all_homes,
         config=config,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        verdicts=verdicts,
-        owner=owner,
-        identity=identity,
-        material=material,
+        row_context=row_context,
         store=store,
     )
 
@@ -1031,12 +924,7 @@ def note(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    verdicts=None,
-    owner: str = "",
-    identity=None,
-    material=None,
+    row_context: RowContext | None = None,
     store=None,
 ) -> dict:
     """Set the note on ``session``'s item; empty text removes it. Nothing reads a note as an
@@ -1049,12 +937,7 @@ def note(
         home=home,
         all_homes=all_homes,
         config=config,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        verdicts=verdicts,
-        owner=owner,
-        identity=identity,
-        material=material,
+        row_context=row_context,
         store=store,
     )
 
@@ -1065,12 +948,7 @@ def undo(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
-    ledger_dir: str | Path | None = None,
-    resolvers=None,
-    verdicts=None,
-    owner: str = "",
-    identity=None,
-    material=None,
+    row_context: RowContext | None = None,
     store=None,
 ) -> dict:
     """Restore ``session``'s attention record to before its last change. One level deep;
@@ -1083,12 +961,7 @@ def undo(
         home=home,
         all_homes=all_homes,
         config=config,
-        ledger_dir=ledger_dir,
-        resolvers=resolvers,
-        verdicts=verdicts,
-        owner=owner,
-        identity=identity,
-        material=material,
+        row_context=row_context,
         store=store,
     )
 

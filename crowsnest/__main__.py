@@ -25,6 +25,7 @@ from crowsnest import skills as _skills
 from crowsnest import tools
 from crowsnest import watch as _watch
 from crowsnest.open import open_session as _open_session
+from crowsnest.rows import RowContext
 from crowsnest.spawn import DFLT_WAIT
 from crowsnest.spawn import spawn as _spawn
 
@@ -462,7 +463,7 @@ def report(
         all_homes=all_homes,
         triage=not no_triage,
         with_lineage=not no_lineage,
-        ledger_dir=ledger_dir,
+        row_context=_row_context(ledger_dir),
         fragment=fragment,
         interactive=interactive,
         tz=tz,
@@ -480,6 +481,13 @@ def _doc(doc: dict) -> str:
     return _json.dumps(doc, indent=2)
 
 
+def _row_context(ledger_dir: str | None) -> RowContext | None:
+    """What a `--ledger-dir` flag says about how rows are built: the config file's context
+    with that directory, or `None` without the flag, which leaves the config file's whole.
+    """
+    return RowContext.from_config(ledger_dir=ledger_dir) if ledger_dir else None
+
+
 def seen(
     session: str,
     *,
@@ -491,12 +499,19 @@ def seen(
 
     Prints the stored attention record. `seen` also wakes an item you had put off.
 
-    `--ledger-dir` is the one the page was rendered with (`crowsnest report
-    --ledger-dir`), for this verb and every other: a verb pins the revision of the row
-    the report builds, and a row triaged from other ledgers reads as changed there.
+    A verb pins the revision of the row the report builds, and a row triaged from other
+    ledgers reads as changed on the page. So every verb, the report and `crowsnest watch`
+    read the ledger directory from `[report] ledger_dir` in the config file, and agree
+    with no flag. `--ledger-dir` overrides it for one command, and must then be the one
+    the page was rendered with (`crowsnest report --ledger-dir`).
     """
     return _doc(
-        tools.seen(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+        tools.seen(
+            session,
+            home=home,
+            all_homes=all_homes,
+            row_context=_row_context(ledger_dir),
+        )
     )
 
 
@@ -509,10 +524,15 @@ def unseen(
 ):
     """Mark a session's item unread, so it shows as new again. Prints the stored record.
 
-    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    `--ledger-dir` overrides `[report] ledger_dir`, as for `seen`.
     """
     return _doc(
-        tools.unseen(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+        tools.unseen(
+            session,
+            home=home,
+            all_homes=all_homes,
+            row_context=_row_context(ledger_dir),
+        )
     )
 
 
@@ -531,7 +551,7 @@ def later(
     It comes back at that time, or sooner if what it asks for changes -- unless
     `--ignore-changes`. `--plan "after the deploy"` records the next step, shown when it
     comes back. The hours are `[attention]` in the config file. Prints the stored record.
-    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    `--ledger-dir` overrides `[report] ledger_dir`, as for `seen`.
     """
     return _doc(
         tools.later(
@@ -541,7 +561,7 @@ def later(
             on_change=not ignore_changes,
             home=home,
             all_homes=all_homes,
-            ledger_dir=ledger_dir,
+            row_context=_row_context(ledger_dir),
         )
     )
 
@@ -555,10 +575,15 @@ def done(
 ):
     """Mark a session's item handled: hidden until what it asks for changes.
 
-    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    `--ledger-dir` overrides `[report] ledger_dir`, as for `seen`.
     """
     return _doc(
-        tools.done(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+        tools.done(
+            session,
+            home=home,
+            all_homes=all_homes,
+            row_context=_row_context(ledger_dir),
+        )
     )
 
 
@@ -572,10 +597,16 @@ def note(
 ):
     """Write a note on a session's item; `""` removes it. A note never changes its state.
 
-    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    `--ledger-dir` overrides `[report] ledger_dir`, as for `seen`.
     """
     return _doc(
-        tools.note(session, text, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+        tools.note(
+            session,
+            text,
+            home=home,
+            all_homes=all_homes,
+            row_context=_row_context(ledger_dir),
+        )
     )
 
 
@@ -588,10 +619,15 @@ def undo(
 ):
     """Undo the last seen, unseen, later, done or note on a session's item. One level.
 
-    `--ledger-dir` is the one the page was rendered with, as for `seen`.
+    `--ledger-dir` overrides `[report] ledger_dir`, as for `seen`.
     """
     return _doc(
-        tools.undo(session, home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+        tools.undo(
+            session,
+            home=home,
+            all_homes=all_homes,
+            row_context=_row_context(ledger_dir),
+        )
     )
 
 
@@ -639,8 +675,9 @@ def watch(
     """Print one line per change, forever: started, exited, idle, busy, waiting, error.
 
     `--all-homes` watches every home in the config file; a row then reads `name@home`.
-    `--ledger-dir` is the one the verbs and the report were given, so a `woke` is
-    computed on the row they pinned.
+    A `woke` is computed on the row the verbs pinned, triaged from `[report] ledger_dir`
+    in the config file, as they and the report are. `--ledger-dir` overrides it, and must
+    then be the one the verbs and the report were given.
 
     Plus `needs-you` and `stopped`, pushed by Claude Code's own hooks the moment they
     happen, when `crowsnest hook` is installed on them.
@@ -653,7 +690,10 @@ def watch(
     """
     try:
         for event in _watch.events(
-            interval=interval, home=home, all_homes=all_homes, ledger_dir=ledger_dir
+            interval=interval,
+            home=home,
+            all_homes=all_homes,
+            row_context=_row_context(ledger_dir),
         ):
             if json:
                 line = _json.dumps(event)

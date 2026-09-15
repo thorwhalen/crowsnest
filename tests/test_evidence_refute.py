@@ -1,7 +1,7 @@
 """Adversarial probes against verdict evidence and the ask-as-material change (#67, #68).
 
 Each test asserts the CORRECT behaviour, so a failing test is a defect found by review.
-Rows are built the way the report builds them (``tools._item_row``) from synthetic
+Rows are built the way the report builds them (``RowContext.row``) from synthetic
 fixtures only; a few probes go straight to ``triage.classify_row``.
 """
 
@@ -18,6 +18,7 @@ from fixtures import (
 from crowsnest import attention as att
 from crowsnest import registry, tools, watch
 from crowsnest.ledger import ledger_path
+from crowsnest.rows import RowContext
 from crowsnest.triage import classify_row
 
 SID = "11111111-2222-3333-4444-555555555555"
@@ -58,7 +59,7 @@ def _session(tmp_path, tag, *, ledger=None, name="shipper", last_words="Waiting.
 
 def _row(tmp_path, tag, **kw):
     home, ledger_dir = _session(tmp_path, tag, **kw)
-    return tools._item_row(kw.get("name", "shipper"), home=home, ledger_dir=ledger_dir)
+    return RowContext(ledger_dir=ledger_dir).row(kw.get("name", "shipper"), home=home)
 
 
 def _material_as_65_shipped(row):
@@ -225,8 +226,9 @@ def test_the_watcher_rebuilds_a_later_item_for_the_owner_the_verbs_pinned(tmp_pa
         "# shipper\n\n## For Ana\n\nPick the base branch.\n", encoding="utf-8"
     )
     store = {}
-    tools.later("shipper", "change", home=home, owner="ana", store=store)
-    assert watch.attention_wakes(store=store, home=home, owner="ana") == []
+    ana = RowContext(owner="ana")
+    tools.later("shipper", "change", home=home, row_context=ana, store=store)
+    assert watch.attention_wakes(store=store, home=home, row_context=ana) == []
 
 
 def test_the_watcher_rebuilds_a_later_item_from_the_ledgers_the_verbs_read(
@@ -236,6 +238,7 @@ def test_the_watcher_rebuilds_a_later_item_from_the_ledgers_the_verbs_read(
     # ledgers, found no request, and woke an item that had not changed.
     home, ledger_dir = _session(tmp_path, "a", ledger=ASK)
     store = {}
-    tools.later("shipper", "change", home=home, ledger_dir=ledger_dir, store=store)
-    assert watch.attention_wakes(store=store, home=home, ledger_dir=ledger_dir) == []
+    read_here = RowContext(ledger_dir=ledger_dir)
+    tools.later("shipper", "change", home=home, row_context=read_here, store=store)
+    assert watch.attention_wakes(store=store, home=home, row_context=read_here) == []
     assert watch.attention_wakes(store=store, home=home, announced=set()) != []

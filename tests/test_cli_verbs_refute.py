@@ -9,6 +9,7 @@ page carries (`data-rev`), not with a row rebuilt by the same helper the verb us
 import inspect
 import json
 import re
+from dataclasses import replace
 
 import pytest
 from fixtures import (
@@ -25,6 +26,7 @@ from crowsnest import registry, tools, watch
 from crowsnest.__main__ import main
 from crowsnest.config import CONFIG_ENV_VAR
 from crowsnest.ledger import ledger_path
+from crowsnest.rows import RowContext
 from crowsnest.triage import Verdict
 
 SID = "11111111-2222-3333-4444-555555555555"
@@ -84,7 +86,10 @@ def test_probe_cli_seen_pins_the_rev_the_page_rendered_from_that_ledger_dir_carr
     main(["seen", "shipper", "--home", str(home), "--ledger-dir", str(ledgers)])
     doc = _printed(capsys)
     page = tools.report(
-        home=home, ledger_dir=ledgers, interactive=True, with_lineage=False
+        home=home,
+        row_context=RowContext(ledger_dir=ledgers),
+        interactive=True,
+        with_lineage=False,
     )
     assert _page_rev(page["html"], doc["id"]) == doc["seen_rev"]
     # The ledger directory is what decided the revision, so the probe means something.
@@ -107,7 +112,10 @@ def test_probe_cli_seen_across_homes_pins_the_rev_the_all_homes_page_carries(
     main(["seen", "shipper@one", "--all-homes", "--ledger-dir", str(ledgers)])
     doc = _printed(capsys)
     page = tools.report(
-        all_homes=True, ledger_dir=ledgers, interactive=True, with_lineage=False
+        all_homes=True,
+        row_context=RowContext(ledger_dir=ledgers),
+        interactive=True,
+        with_lineage=False,
     )
     assert _page_rev(page["html"], doc["id"]) == doc["seen_rev"]
     elsewhere = tools.report(all_homes=True, interactive=True, with_lineage=False)
@@ -157,20 +165,18 @@ def test_probe_the_watcher_rebuilds_the_row_with_the_resolvers_the_verbs_used(
             "needs_you", why="decision", reason=f"{count} references to review"
         )
 
-    readers = [by_links]
-    built = {"home": home, "ledger_dir": ledgers, "verdicts": readers}
+    built = RowContext(ledger_dir=ledgers, verdicts=[by_links])
+    bare = replace(built, resolvers=())
     assert (
-        tools._item_row("shipper", **built)["verdict"]["reason"]
-        != tools._item_row("shipper", resolvers=(), **built)["verdict"]["reason"]
+        built.row("shipper", home=home)["verdict"]["reason"]
+        != bare.row("shipper", home=home)["verdict"]["reason"]
     )
     store = {}
-    tools.later("shipper", "change", resolvers=(), store=store, **built)
-    params = inspect.signature(watch.attention_wakes).parameters
-    assert "resolvers" in params, (
-        "the verbs' resolvers build the row; the watcher has none"
-    )
-    assert "resolvers" in inspect.signature(watch.events).parameters
-    assert watch.attention_wakes(store=store, resolvers=(), **built) == []
+    tools.later("shipper", "change", home=home, row_context=bare, store=store)
+    # #78: the watcher takes the verbs' whole row context, resolvers included.
+    assert "row_context" in inspect.signature(watch.attention_wakes).parameters
+    assert "row_context" in inspect.signature(watch.events).parameters
+    assert watch.attention_wakes(store=store, home=home, row_context=bare) == []
 
 
 # --- Claim 3: the renamed switches -------------------------------------------------------
