@@ -381,7 +381,9 @@ that supplies its own (the artifact publisher).</p>
 <code class="docutils literal notranslate"><span class="pre">None</span></code> for this machine’s). <code class="docutils literal notranslate"><span class="pre">stale_after</span></code> is the age, as a <code class="docutils literal notranslate"><span class="pre">timedelta</span></code>, past
 which an item is called stale. By default it is the <code class="docutils literal notranslate"><span class="pre">[attention]</span></code> table’s
 <code class="docutils literal notranslate"><span class="pre">stale_after</span></code> (<a class="reference internal" href="crowsnest.config.html#crowsnest.config.attention_settings" title="crowsnest.config.attention_settings"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.config.attention_settings()</span></code></a>), the same number that
-table gives everything else, so there is no second setting for it.</p>
+table gives everything else, so there is no second setting for it. <code class="docutils literal notranslate"><span class="pre">interactive</span></code>
+adds the console, whose Later sheet takes its hours and snooze limit from that same
+table.</p>
 <p><code class="docutils literal notranslate"><span class="pre">store</span></code> is the person’s attention store (<a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.attention</span></code></a>; by default one
 JSON file per item under the data directory), and the page applies it: seen rows dim
 and sort below the rest of their register, rows put off fold into a collapsed <em>Later</em>
@@ -597,7 +599,7 @@ raises <code class="docutils literal notranslate"><span class="pre">ValueError</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=84bd753f"></script>
+      <script src="../_static/documentation_options.js?v=20c5f126"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

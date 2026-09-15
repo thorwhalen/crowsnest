@@ -158,7 +158,9 @@ that supplies its own (the artifact publisher).
 `None` for this machine’s). `stale_after` is the age, as a `timedelta`, past
 which an item is called stale. By default it is the `[attention]` table’s
 `stale_after` ([`crowsnest.config.attention_settings()`](crowsnest.config.html.md#crowsnest.config.attention_settings)), the same number that
-table gives everything else, so there is no second setting for it.
+table gives everything else, so there is no second setting for it. `interactive`
+adds the console, whose Later sheet takes its hours and snooze limit from that same
+table.
 
 `store` is the person’s attention store ([`crowsnest.attention`](crowsnest.attention.html.md#module-crowsnest.attention); by default one
 JSON file per item under the data directory), and the page applies it: seen rows dim
