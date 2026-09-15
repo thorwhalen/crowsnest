@@ -94,7 +94,9 @@ def annotate(store, r, text):
 
 def page(rows, store, **kw):
     kw.setdefault("tz", "UTC")
-    return render_report({"sessions": rows, "counts": {}}, made_at=STAMP, store=store, **kw)
+    return render_report(
+        {"sessions": rows, "counts": {}}, made_at=STAMP, store=store, **kw
+    )
 
 
 def register(html, ident):
@@ -232,7 +234,9 @@ def test_a_later_row_is_in_the_collapsed_later_block_and_not_in_its_register():
         "put off once",
     ):
         assert text in block, text
-    assert html.index('id="working"') < html.index('id="later"') < html.index('id="quiet"')
+    assert (
+        html.index('id="working"') < html.index('id="later"') < html.index('id="quiet"')
+    )
     assert html.count('id="session-decider"') == 1
 
 
@@ -242,7 +246,10 @@ def test_the_later_block_summary_holds_only_a_figure_and_a_heading():
     mark(store, named(rows, "decider"), attention.later, until=None)
     html = page(rows, store)
     summary = html.split(LATER_BLOCK, 1)[1].split("</summary>", 1)[0]
-    assert summary == '<summary class="register-head"><span class="figure">1</span><h2>Later</h2>'
+    assert (
+        summary
+        == '<summary class="register-head"><span class="figure">1</span><h2>Later</h2>'
+    )
 
 
 def test_the_later_block_says_when_a_deferral_ignores_changes_and_counts_put_offs():
@@ -370,13 +377,17 @@ def test_since_you_last_looked_counts_new_changed_woke_and_landed():
     html = page(rows, store)
     line = html.split('<p class="since">', 1)[1].split("</p>", 1)[0]
     assert line == "Since you last looked: 2 new, 1 changed, 1 woke, 1 landed"
-    assert html.index("</header>") < html.index('class="since"') < html.index(
-        'id="needs-you"'
+    assert (
+        html.index("</header>")
+        < html.index('class="since"')
+        < html.index('id="needs-you"')
     )
 
 
 def test_an_idle_session_that_said_something_new_since_it_was_seen_has_landed():
-    wrapper = quiet_row("wrapper", ago=300, activity={"last_assistant_text": "Tests pass."})
+    wrapper = quiet_row(
+        "wrapper", ago=300, activity={"last_assistant_text": "Tests pass."}
+    )
     store = {}
     mark(store, wrapper, attention.seen)
     after = {**wrapper, "activity": {"last_assistant_text": "Merged."}}
@@ -510,7 +521,9 @@ def test_every_open_tag_is_closed_with_attention_markup():
     stack: list[str] = []
     for closing, name in re.findall(r"<(/?)([a-z0-9]+)", body):
         if closing:
-            assert stack and stack[-1] == name, f"{name} closed out of order: {stack[-3:]}"
+            assert stack and stack[-1] == name, (
+                f"{name} closed out of order: {stack[-3:]}"
+            )
             stack.pop()
         elif name not in void:
             stack.append(name)
@@ -574,7 +587,9 @@ def test_identity_and_material_reach_the_page():
     asker = named(rows, "asker")
     attention.update(
         attention.item_id(asker, identity=by_label),
-        lambda rec: attention.seen(rec, attention.fingerprint(asker, material=only_group)),
+        lambda rec: attention.seen(
+            rec, attention.fingerprint(asker, material=only_group)
+        ),
         store=store,
     )
     moved = renamed(asker, reason="Something else entirely")
@@ -597,7 +612,9 @@ def test_the_core_refuses_a_snapshot_of_a_snapshot_without_recursing():
         attention.Record.from_dict(doc)
 
 
-@pytest.mark.parametrize("until", ["0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59-14:00"])
+@pytest.mark.parametrize(
+    "until", ["0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59-14:00"]
+)
 def test_the_core_refuses_a_time_outside_the_calendar(until):
     with pytest.raises(ValueError, match="outside the calendar"):
         attention.Record.from_dict(

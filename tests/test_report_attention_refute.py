@@ -142,12 +142,19 @@ ROSTERS = {
         {"label": "x", "session_id": "   ", "status": "waiting"},
     ],
     "no_session_ids": [
-        {k: v for k, v in row("a", group="needs_you", why="action").items() if k != "session_id"},
+        {
+            k: v
+            for k, v in row("a", group="needs_you", why="action").items()
+            if k != "session_id"
+        },
         {k: v for k, v in row("b", status="busy").items() if k != "session_id"},
     ],
     "duplicate_labels": [
         row("dup", group="needs_you", why="question", reason="one"),
-        {**row("dup", group="needs_you", why="question", reason="two"), "session_id": "other"},
+        {
+            **row("dup", group="needs_you", why="question", reason="two"),
+            "session_id": "other",
+        },
         row("twin", status="idle", ago=9000),
         row("twin", status="idle", ago=9000),
     ],
@@ -240,7 +247,10 @@ def test_probe_static_page_with_a_store_in_use_survives_a_lone_surrogate():
     good = row("g", group="safe_to_close", reason="done")
     store = {}
     mark(store, good, attention.seen)
-    assert outcome(render_report, {"sessions": [bad, good], "counts": {}}, store=store)[0] == "ok"
+    assert (
+        outcome(render_report, {"sessions": [bad, good], "counts": {}}, store=store)[0]
+        == "ok"
+    )
 
 
 # --------------------------------------------------------------------------------
@@ -256,7 +266,9 @@ def _random_page(seed):
     rows = []
     for i in range(36):
         group = groups[i % len(groups)]
-        status = {"working": "busy", "needs_you": "waiting"}.get(group, rnd.choice(["idle", "busy"]))
+        status = {"working": "busy", "needs_you": "waiting"}.get(
+            group, rnd.choice(["idle", "busy"])
+        )
         rows.append(
             row(
                 f"r{i}",
@@ -273,7 +285,17 @@ def _random_page(seed):
     final = []
     for r in rows:
         action = rnd.choice(
-            ["none", "seen", "later+", "later-", "later~", "done", "done~", "seen~", "note"]
+            [
+                "none",
+                "seen",
+                "later+",
+                "later-",
+                "later~",
+                "done",
+                "done~",
+                "seen~",
+                "note",
+            ]
         )
         if action in ("seen", "seen~"):
             mark(store, r, attention.seen)
@@ -286,19 +308,27 @@ def _random_page(seed):
         elif action in ("done", "done~"):
             mark(store, r, attention.done)
         elif action == "note":
-            attention.update(attention.item_id(r), lambda rec: attention.note(rec, "n"), store=store)
+            attention.update(
+                attention.item_id(r), lambda rec: attention.note(rec, "n"), store=store
+            )
         if action.endswith("~"):
             if "verdict" in r:
                 r = {**r, "verdict": {**r["verdict"], "reason": "asked again"}}
             else:
-                r = {**r, "status": "idle", "activity": {"last_assistant_text": "new words"}}
+                r = {
+                    **r,
+                    "status": "idle",
+                    "activity": {"last_assistant_text": "new words"},
+                }
         final.append(r)
     return final, store
 
 
 def _presented(r, store):
     return attention.present(
-        attention.fingerprint(r), attention.read_record(attention.item_id(r), store=store), now=NOW
+        attention.fingerprint(r),
+        attention.read_record(attention.item_id(r), store=store),
+        now=NOW,
     )
 
 
@@ -319,14 +349,18 @@ def test_probe_every_session_once_seen_last_and_register_order_under_random_mark
             assert f'id="session-{r["label"]}"' in register(html, "later")
     if handled:
         assert f"{handled} handled and unchanged since" in html
-    at = [html.index(f'id="{ident}"') for ident in REGISTER_ORDER if f'id="{ident}"' in html]
+    at = [
+        html.index(f'id="{ident}"') for ident in REGISTER_ORDER if f'id="{ident}"' in html
+    ]
     assert at == sorted(at)
     assert 'id="waiting"' not in html  # still the triaged page
     for ident in ("needs-you", "safe-to-close", "finished", "working"):
         tags = re.findall(r"<li [^>]*>", register(html, ident))
         flags = ["row--seen" in t for t in tags]
         assert flags == sorted(flags), ident
-        found = re.search(rf'id="{ident}"><div class="register-head"><p class="figure">(\d+)<', html)
+        found = re.search(
+            rf'id="{ident}"><div class="register-head"><p class="figure">(\d+)<', html
+        )
         assert int(found.group(1)) == len(tags), ident
     quiet = register(html, "quiet")
     subheads = re.findall(r'<p class="subhead">([^<]*)</p>', quiet)
@@ -343,7 +377,9 @@ def test_probe_hiding_every_verdict_row_keeps_the_triaged_page_and_counts():
     store = {}
     mark(store, ask, attention.later, until=NOW + timedelta(hours=1))
     mark(store, act, attention.done)
-    html = render_report({"sessions": [ask, act, bare], "counts": {}}, made_at=STAMP, store=store)
+    html = render_report(
+        {"sessions": [ask, act, bare], "counts": {}}, made_at=STAMP, store=store
+    )
     assert 'id="needs-you"' in html and 'id="waiting"' not in html
     assert '<p class="wip">1 session is waiting on you, put off</p>' in html
     assert "<title>crowsnest</title>" in html
@@ -366,7 +402,9 @@ def test_probe_a_record_nested_too_deep_reads_as_no_record():
     assert got[0] == "ok", got
 
 
-@pytest.mark.parametrize("until", ["0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59-14:00"])
+@pytest.mark.parametrize(
+    "until", ["0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59-14:00"]
+)
 def test_probe_a_later_until_off_the_calendar_reads_as_no_record(until):
     r = row("far", group="needs_you", why="question", reason="Q?", status="waiting")
     rev = attention.fingerprint(r)
@@ -390,7 +428,9 @@ def test_probe_working_to_needs_you_is_a_counted_change():
     before = row("mover", group="working", status="busy")
     store = {}
     mark(store, before, attention.seen)
-    after = row("mover", group="needs_you", why="decision", reason="Ship?", status="waiting")
+    after = row(
+        "mover", group="needs_you", why="decision", reason="Ship?", status="waiting"
+    )
     html = render_report({"sessions": [after], "counts": {}}, made_at=STAMP, store=store)
     assert "<title>crowsnest (1)</title>" in html
     assert "Since you last looked: 0 new, 1 changed, 0 woke, 0 landed" in html
@@ -412,7 +452,9 @@ def test_probe_needs_you_resolving_to_safe_to_close_lands_quietly():
 def test_probe_a_woken_quiet_row_shows_its_plan():
     """#55 / triage-ux 2.8: a plan is shown when the item comes back. A quiet row woke."""
     # Unclassified, as a quiet session is: a roster with no verdicts ignores the store.
-    r = row("sleepy", group="unclassified", reason="said nothing", status="idle", ago=7200)
+    r = row(
+        "sleepy", group="unclassified", reason="said nothing", status="idle", ago=7200
+    )
     store = {}
     mark(store, r, attention.later, until=NOW - timedelta(hours=1), plan="call Ana first")
     html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP, store=store)
@@ -433,7 +475,9 @@ def test_probe_a_long_note_never_publishes_part_of_a_credential():
     r = row("n", group="working", status="busy")
     store = {}
     text = "a" * 200 + " " + TOKEN
-    attention.update(attention.item_id(r), lambda rec: attention.note(rec, text), store=store)
+    attention.update(
+        attention.item_id(r), lambda rec: attention.note(rec, text), store=store
+    )
     html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP, store=store)
     assert TOKEN[:24] not in html
 
@@ -443,12 +487,31 @@ def test_probe_hostile_labels_plans_notes_and_titles_stay_text(interactive):
     evil = '"><img src=x onerror=alert(1)><script>x</script>'
     home_path = "/Users/someone/secret/plan.txt"
     a = row(evil, group="needs_you", why="question", reason="Q?", status="waiting")
-    b = {**row("b" + evil, group="needs_you", why="action", reason="R", status="waiting"), "session_id": "sid-b"}
+    b = {
+        **row("b" + evil, group="needs_you", why="action", reason="R", status="waiting"),
+        "session_id": "sid-b",
+    }
     c = {**row("c" + evil, status="idle", ago=9000), "session_id": "sid-c"}
     store = {}
-    mark(store, a, attention.later, until=NOW + timedelta(hours=1), plan=f"{evil} {TOKEN} {home_path}")
-    mark(store, b, attention.later, until=NOW - timedelta(hours=1), plan=f"{evil} {home_path}")
-    attention.update(attention.item_id(c), lambda rec: attention.note(rec, f"{evil} {TOKEN}"), store=store)
+    mark(
+        store,
+        a,
+        attention.later,
+        until=NOW + timedelta(hours=1),
+        plan=f"{evil} {TOKEN} {home_path}",
+    )
+    mark(
+        store,
+        b,
+        attention.later,
+        until=NOW - timedelta(hours=1),
+        plan=f"{evil} {home_path}",
+    )
+    attention.update(
+        attention.item_id(c),
+        lambda rec: attention.note(rec, f"{evil} {TOKEN}"),
+        store=store,
+    )
     html = render_report(
         {"sessions": [a, b, c], "counts": {}},
         made_at=STAMP,
@@ -493,7 +556,9 @@ def test_probe_every_revision_the_page_carries_is_the_one_the_verbs_pin(home):
     for label in LABELS:
         doc = tools.seen(label, home=home)
         tag = li(before, label)
-        assert f'data-item="{doc["id"]}"' in tag and f'data-rev="{doc["seen_rev"]}"' in tag
+        assert (
+            f'data-item="{doc["id"]}"' in tag and f'data-rev="{doc["seen_rev"]}"' in tag
+        )
     after = tools.report(home=home)["html"]
     for label in LABELS:
         assert "row--seen" in li(after, label), label
@@ -516,17 +581,25 @@ def test_probe_identity_and_material_reach_through_tools_report(home):
 
     store = {}
     tools.seen("shipper", home=home, identity=by_label, material=by_status, store=store)
-    html = tools.report(home=home, identity=by_label, material=by_status, store=store)["html"]
+    html = tools.report(home=home, identity=by_label, material=by_status, store=store)[
+        "html"
+    ]
     assert "row--seen" in li(html, "shipper")
     assert "row--seen" not in li(tools.report(home=home, store=store)["html"], "shipper")
 
 
-def test_probe_cli_plain_and_the_triage_toggle_render_without_attention(home, tmp_path, capsys):
+def test_probe_cli_plain_and_the_triage_toggle_render_without_attention(
+    home, tmp_path, capsys
+):
     main(["done", "fixer", "--home", str(home)])
     main(["seen", "shipper", "--home", str(home)])
     capsys.readouterr()
     outs = {}
-    for name, extra in {"marked": [], "plain": ["--plain"], "untriaged": ["--triage"]}.items():
+    for name, extra in {
+        "marked": [],
+        "plain": ["--plain"],
+        "untriaged": ["--triage"],
+    }.items():
         path = tmp_path / f"{name}.html"
         main(["report", "--home", str(home), "--out", str(path), *extra])
         outs[name] = path.read_text()
@@ -550,7 +623,9 @@ def test_probe_a_record_file_nested_too_deep_reads_as_no_record(tmp_path):
     store = attention.dflt_store(tmp_path / "attention")
     r = row("deep", group="needs_you", why="question", reason="Q?", status="waiting")
     item = attention.item_id(r)
-    attention.write_record(item, attention.seen(None, attention.fingerprint(r)), store=store)
+    attention.write_record(
+        item, attention.seen(None, attention.fingerprint(r)), store=store
+    )
     (tmp_path / "attention" / f"{item}.json").write_text("[" * 200_000 + "]" * 200_000)
     got = outcome(render_report, {"sessions": [r], "counts": {}}, store=store)
     assert got[0] == "ok", got
