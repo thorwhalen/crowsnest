@@ -166,9 +166,9 @@ def test_probe_the_watcher_rebuilds_the_row_with_the_resolvers_the_verbs_used(
     store = {}
     tools.later("shipper", "change", resolvers=(), store=store, **built)
     params = inspect.signature(watch.attention_wakes).parameters
-    assert (
-        "resolvers" in params
-    ), "the verbs' resolvers build the row; the watcher has none"
+    assert "resolvers" in params, (
+        "the verbs' resolvers build the row; the watcher has none"
+    )
     assert "resolvers" in inspect.signature(watch.events).parameters
     assert watch.attention_wakes(store=store, resolvers=(), **built) == []
 
