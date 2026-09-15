@@ -256,7 +256,9 @@ def _lineage_lines(found: dict) -> list[str]:
         guess = " ~" if node["confidence"] == "inferred" else ""
         room = max(0, _LINEAGE_NAME_COLUMN - len(stem) - len(node["name"]))
         where = node["project"] or ""
-        out.append(f"{stem}{node['name']}{' ' * room} {mark:<10}{where}{guess}".rstrip())
+        out.append(
+            f"{stem}{node['name']}{' ' * room} {mark:<10}{where}{guess}".rstrip()
+        )
         kids = node["children"]
         below = pad if top else pad + ("    " if last else "|   ")
         for i, kid in enumerate(kids):
@@ -496,7 +498,9 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
     pages = [_ledger.read_ledger(one, ledger_dir=ledger_dir) for one in name]
     if json:
         return _json.dumps(pages if len(pages) > 1 else pages[0], indent=2)
-    known = ", ".join(row["name"] for row in _ledger.list_ledgers(ledger_dir=ledger_dir))
+    known = ", ".join(
+        row["name"] for row in _ledger.list_ledgers(ledger_dir=ledger_dir)
+    )
     return "\n\n".join(
         (
             page["text"].rstrip()
@@ -599,7 +603,9 @@ def install_skills(
 ):
     """Link the bundled skills and the subagent into ~/.claude (or `--target`). Idempotent."""
     names = [n for n in (only or "").split(",") if n.strip()] or None
-    plan = _skills.install_skills(target=target, only=names, force=force, dry_run=dry_run)
+    plan = _skills.install_skills(
+        target=target, only=names, force=force, dry_run=dry_run
+    )
     lines = [f"{'would install' if dry_run else 'installed'} into {plan['target']}"]
     for row in plan["actions"]:
         how = f" ({row['method']})" if row["method"] else ""
@@ -651,6 +657,12 @@ def spawn(
 
     `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
     those directories too, which is how a fleet manager gets every repository of its fleet.
+
+    `--model` and `--effort` are worth stating on every spawn: left out, the session
+    inherits the account's default, which is the expensive one exactly when nobody was
+    thinking about cost. Procedural work -- a sweep, a migration, applying a skill across
+    repositories -- belongs on a small model at moderate effort; the big models are for
+    design, architecture and novel debugging. The printed row echoes what was chosen.
     """
     if not cwd:
         raise ValueError("spawn requires --cwd <dir>")
@@ -668,11 +680,17 @@ def spawn(
         add_dirs=_dir_list(add_dirs),
     )
     where = f" in {result['home']}" if result.get("home") else ""
+    # The model is echoed because choosing it is the one decision a dispatcher makes by
+    # copying the previous command line, and an unstated `--model` inherits the user's
+    # default -- so the row says what this session will actually cost to run.
+    how = " · ".join(
+        filter(None, (model or "default model", effort and f"effort {effort}"))
+    )
     if not result["pid"]:
-        return f"{result['name']}: not confirmed ({result['how']}){where}"
+        return f"{result['name']}: not confirmed ({result['how']}, {how}){where}"
     return (
         f"{result['name']:<20}pid {result['pid']:<8}"
-        f"session {result['session_id'][:8]}  ({result['how']}){where}"
+        f"session {result['session_id'][:8]}  {how}  ({result['how']}){where}"
     )
 
 
