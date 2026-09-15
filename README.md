@@ -109,7 +109,7 @@ UNCLASSIFIED — has not said where it stands: 48
 -- 5 need you (1 to decide, 3 to do), 4 safe to close, 1 working, 48 unclassified
 ```
 
-`[decision]` is a minute of thought; `[action]` is a trip to another window. The reason is the session's own words, so you can check the verdict without opening the session.
+`[decision]` is a minute of thought; `[action]` is a trip to another window. The reason is the session's own words, so you can check the verdict without opening the session. JSON verdicts also carry `evidence`, the whole text a verdict was read from, of which `reason` quotes the start: for a ledger, every request for a person it holds. That whole text is what decides whether an item you marked seen or done has changed.
 
 Every item says **when its words were said**, taken from where they were said. For last words that is the transcript's time. For a waiting session it is when the registry says it began waiting. For a ledger request it is the date in the heading of the section it comes from. An undated section only has the ledger's last write, which is an upper bound, and the item says so. `crowsnest report` shows the same time on every row, in your local zone (`--tz` for another), and marks an item *stale* once it is older than `stale_after` in the config file's `[attention]` table. JSON rows carry it as `said_at` and `said_at_basis`. A session that relays a claim keeps the claim's own time and never restamps it with its own, because a restamped claim reads as current long after it stopped being true.
 

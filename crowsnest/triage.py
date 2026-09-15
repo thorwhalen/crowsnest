@@ -59,6 +59,14 @@ ledger's last write, which is only an upper bound. A reader never borrows anothe
 so a verdict with no source time has an empty ``said_at``. That is what stops a claim
 five days old from being repeated as current (crowsnest#66).
 
+**Every verdict carries its evidence.** ``reason`` quotes the start of what a verdict was
+read from, clipped to :data:`REASON_LIMIT` so a page stays a page. ``evidence`` is all of
+it: the question asked, the field, the paragraph a statement sits in -- and, for ledger
+prose, every request for a person the file holds, in the order written. It is what
+:func:`crowsnest.attention.fingerprint` reads, so a link changed in the sentence after the
+reason, a second request appended later, or a change past the clip is a change to the item
+(crowsnest#67).
+
 ``verdicts=`` is the seam: an ordered sequence of ``(row, ledger) -> Verdict | None``,
 first non-``None`` winning. The default pair is the live registry signal -- which is
 authoritative for *right now*, because a session that is `waiting` is waiting whatever its
@@ -80,6 +88,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime, time, timedelta, timezone
 from functools import partial
+from typing import NamedTuple
 
 from crowsnest.said import (
     LEDGER_SECTION,
@@ -133,6 +142,11 @@ class Verdict:
     ``said_at_basis`` names that source (one of :data:`crowsnest.said.BASES`). Both are
     empty when no source time is known. They are never filled with the time of reading.
 
+    ``evidence`` is the whole of what the verdict was read from, unclipped: ``reason``
+    quotes its start. For a request in ledger prose it is every request for a person the
+    file holds, the one ``reason`` quotes first among them. Empty when a reader has
+    nothing to quote.
+
     >>> Verdict('needs_you', why='decision', reason='squash or rebase?').as_dict()['group']
     'needs_you'
     """
@@ -143,6 +157,7 @@ class Verdict:
     source: str = ""
     said_at: str = ""
     said_at_basis: str = ""
+    evidence: str = ""
 
     def as_dict(self) -> dict[str, str]:
         """JSON-ready form."""
@@ -416,9 +431,16 @@ _ACTION = re.compile(
 )
 
 
-def _section_after(text: str, match: re.Match) -> str:
-    """The block of prose a "for <person>" heading opens: up to the next heading or gap."""
-    rest = text[match.end() :]
+def _section_span(text: str, match: re.Match) -> tuple[int, int]:
+    """Where the block of prose a "for <person>" heading opens lies: up to the next
+    heading or gap.
+
+    >>> text = '**Open for Thor:** attach the GIF\\n\\n## Notes'
+    >>> text[slice(*_section_span(text, _for_person('thor').search(text)))]
+    'attach the GIF'
+    """
+    start = match.end()
+    rest = text[start:]
     end = len(rest)
     for stop in (
         re.search(r"\n[\s>*#_-]*#{1,6}\s", rest),
@@ -428,7 +450,8 @@ def _section_after(text: str, match: re.Match) -> str:
             end = stop.start()
     # The heading's own trailing punctuation and decoration is not the section:
     # `**Open for Thor:** attach the GIF` should read back as `attach the GIF`.
-    return rest[:end].lstrip(":*_)-— \t\r\n")
+    body = rest[:end]
+    return start + len(body) - len(body.lstrip(":*_)-— \t\r\n")), start + end
 
 
 def _sentence_at(text: str, match: re.Match) -> str:
@@ -446,6 +469,94 @@ def _sentence_at(text: str, match: re.Match) -> str:
         if 0 <= stop < end:
             end = stop + 1
     return text[start:end].strip()
+
+
+#: A blank line: where a paragraph ends.
+_BLANK = re.compile(r"\n[ \t]*\n")
+
+
+def _paragraph_span(text: str, match: re.Match) -> tuple[int, int]:
+    """Where the paragraph a statement sits in lies: between the blank lines or headings
+    around it.
+
+    A statement's reason is its sentence, and what it asks for is often the next one --
+    "Blocked on Thor. Please approve pull/45." -- so its evidence is the paragraph.
+
+    >>> text = '## Notes\\nBlocked on Thor. Approve pull/45.\\n\\nparser tidied'
+    >>> text[slice(*_paragraph_span(text, re.search('Blocked', text)))]
+    'Blocked on Thor. Approve pull/45.'
+    """
+    start = 0
+    for gap in _BLANK.finditer(text, 0, match.start()):
+        start = gap.end()
+    for heading in _SECTION.finditer(text, start, match.start()):
+        line_end = text.find("\n", heading.start())
+        if 0 <= line_end < match.start():
+            start = line_end + 1
+    end = len(text)
+    for stop in (_BLANK.search(text, match.end()), _SECTION.search(text, match.end())):
+        if stop and stop.start() < end:
+            end = stop.start()
+    body = text[start:end]
+    return start + len(body) - len(body.lstrip()), start + len(body.rstrip())
+
+
+class _Request(NamedTuple):
+    """One request for a person in a ledger's free part."""
+
+    wanted: str  # the section or sentence a reason quotes
+    at: int  # where its words begin, for when they were said
+    span: tuple[int, int]  # what it is evidence from: the section, or the paragraph
+
+
+def _requests(free: str, owner: str) -> list[_Request]:
+    """Every request for a person in ``free``: headings first, then statements, each in
+    file order -- the order the reason is chosen by.
+
+    Needing a person is read from the WHOLE file: a request written on Monday and never
+    withdrawn is still open on Wednesday, and a stale one costs a glance.
+    """
+    found = []
+    for index, pattern in enumerate(_person_patterns(owner)):
+        for opened in pattern.finditer(free):
+            if _NOT_REALLY.search(free[: opened.start()].rsplit("\n", 1)[-1]):
+                continue  # "so no manual-task issue" is the absence of one
+            # A heading opens a section; a statement mid-paragraph opens a sentence, and
+            # the paragraph around it is its evidence.
+            if index == 0:
+                span = _section_span(free, opened)
+                wanted = free[span[0] : span[1]]
+            else:
+                wanted = _sentence_at(free, opened)
+                span = _paragraph_span(free, opened)
+            # A section headed "For Thor" whose content is itself an all-clear is a
+            # session reporting that it needs nothing, in the place it would have said
+            # what it needed. Reading that as a request is the same error as reading
+            # silence as completion, pointing the other way.
+            if (
+                _substantive(wanted)
+                and not _opens_with_nothing(wanted)
+                and not _is_a_real_all_clear(wanted)
+            ):
+                # `end`, not `start`: a heading pattern may begin on the blank lines
+                # above its own line, which belong to the section before.
+                found.append(_Request(wanted, opened.end(), span))
+    return found
+
+
+def _joined(text: str, spans) -> str:
+    """The text of ``spans`` in the order it is written, overlapping spans read once.
+
+    >>> _joined('abcdefgh', [(4, 6), (0, 3), (1, 2)])
+    'abc\\n\\nef'
+    """
+    merged: list[list[int]] = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    return "\n\n".join(text[start:end] for start, end in merged)
 
 
 def _why(text: str) -> str:
@@ -499,7 +610,8 @@ def from_registry(row: Mapping, ledger: Mapping) -> Verdict | None:
     if status == "waiting":
         act = row.get("activity") or {}
         asked = str(act.get("pending_question") or "") if isinstance(act, Mapping) else ""
-        reason = asked or str(row.get("waiting_for") or "") or "waiting for input"
+        said = asked or str(row.get("waiting_for") or "")
+        reason = said or "waiting for input"
         return Verdict(
             "needs_you",
             _why(reason) if asked else "question",
@@ -507,6 +619,7 @@ def from_registry(row: Mapping, ledger: Mapping) -> Verdict | None:
             "registry",
             said_at,
             basis,
+            evidence=said,
         )
     if status in ("busy", "shell"):
         act = row.get("activity") or {}
@@ -519,6 +632,7 @@ def from_registry(row: Mapping, ledger: Mapping) -> Verdict | None:
             source="registry",
             said_at=said_at,
             said_at_basis=basis,
+            evidence=running,
         )
     return None
 
@@ -537,6 +651,10 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
 
     Each verdict carries the time of the words it quotes (:func:`_said_in`). The fields
     carry no date of their own, so they take the ledger's last write.
+
+    A request's ``evidence`` is every request for a person the free part holds
+    (:func:`_requests`), not only the one its ``reason`` quotes: a request appended after
+    the first is still something the session needs.
     """
     fields = ledger.get("fields") or {}
     free = without_code(str(ledger.get("free") or ""))
@@ -550,48 +668,35 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
             _one_line(asked),
             "ledger:open questions",
             *_written(ledger),
+            evidence=asked,
         )
 
-    # Needing a person is read from the WHOLE file: a request written on Monday and never
-    # withdrawn is still open on Wednesday, and a stale one costs a glance.
-    for index, pattern in enumerate(_person_patterns(owner)):
-        for opened in pattern.finditer(free):
-            if _NOT_REALLY.search(free[: opened.start()].rsplit("\n", 1)[-1]):
-                continue  # "so no manual-task issue" is the absence of one
-            # A heading opens a section; a statement mid-paragraph opens a sentence.
-            wanted = (
-                _section_after(free, opened) if index == 0 else _sentence_at(free, opened)
-            )
-            # A section headed "For Thor" whose content is itself an all-clear is a
-            # session reporting that it needs nothing, in the place it would have said
-            # what it needed. Reading that as a request is the same error as reading
-            # silence as completion, pointing the other way.
-            if (
-                _substantive(wanted)
-                and not _opens_with_nothing(wanted)
-                and not _is_a_real_all_clear(wanted)
-            ):
-                return Verdict(
-                    "needs_you",
-                    _why(wanted),
-                    _one_line(wanted),
-                    "ledger:for a person",
-                    # `end`, not `start`: a heading pattern may begin on the blank lines
-                    # above its own line, which belong to the section before.
-                    *_said_in(ledger, free, opened.end()),
-                )
+    requests = _requests(free, owner)
+    if requests:
+        first = requests[0]
+        return Verdict(
+            "needs_you",
+            _why(first.wanted),
+            _one_line(first.wanted),
+            "ledger:for a person",
+            *_said_in(ledger, free, first.at),
+            evidence=_joined(free, [found.span for found in requests]),
+        )
 
     # Being finished is read only from what the session said LAST. See the module
     # docstring: an all-clear in the middle of an append-only file is a report about
     # Monday, and today is not Monday.
-    stated = _is_a_real_all_clear(str(fields.get("state") or ""))
+    state = str(fields.get("state") or "")
+    stated = _is_a_real_all_clear(state)
     if stated:
+        said_at, basis = _written(ledger)
         return Verdict(
             "safe_to_close",
             reason=_one_line(stated.group(0)),
             source="ledger:state",
-            said_at=_written(ledger)[0],
-            said_at_basis=_written(ledger)[1],
+            said_at=said_at,
+            said_at_basis=basis,
+            evidence=state.strip(),
         )
     latest = latest_section(free)
     ending = _is_a_real_all_clear(latest)
@@ -603,6 +708,7 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
             source="ledger:last section",
             said_at=said_at,
             said_at_basis=basis,
+            evidence=_sentence_at(latest, ending),
         )
     return None
 
@@ -749,12 +855,18 @@ def classify(
     the roster's own -- most urgent first. Each row's ``said_at`` and ``said_at_basis``
     are set again once its verdict is known (:func:`crowsnest.said.with_said`), so a row
     and its verdict never disagree about when the thing it quotes was said.
+
+    ``owner`` is whose attention "for <person>" is about (:func:`dflt_verdicts`), passed
+    to every row as :func:`classify_row` takes it; readers given as ``verdicts`` bind
+    their own.
     """
     ledgers = {} if ledgers is None else ledgers
     groups: dict[str, list[dict]] = {group: [] for group in GROUPS}
     for row in rows:
         label = str(row.get("label") or "")
-        verdict = classify_row(row, ledger=ledgers.get(label) or {}, verdicts=verdicts)
+        verdict = classify_row(
+            row, ledger=ledgers.get(label) or {}, verdicts=verdicts, owner=owner
+        )
         groups[verdict["group"] if verdict["group"] in groups else "unclassified"].append(
             with_said({**row, "verdict": verdict})
         )

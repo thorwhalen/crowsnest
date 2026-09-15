@@ -26,7 +26,7 @@ seam           default                                 replacement it exists for
                                                        triage emits several asks;
                                                        ``("ref", url)`` for an issue
                                                        several sessions point at
-``material=``  ``(group, why, normalised reason)``     a tighter or looser tuple, once
+``material=``  ``(group, why, normalised ask)``        a tighter or looser tuple, once
                                                        resurfacing is measured (K2)
 ``store=``     one JSON file per item under            the page's ``db`` mirror; a synced
                ``data_dir()/attention``                data dir; an S3 mapping
@@ -144,6 +144,11 @@ _TERMINAL_WHYS = ("action",)
 #: reason, and a revision over it would change on every tool call.
 _REASON_IS_WHAT_RUNS = ("working",)
 
+#: Groups whose verdict's ``evidence`` is an ask, fingerprinted whole. A ``needs_you``
+#: reason clips its request at :data:`crowsnest.triage.REASON_LIMIT` and quotes only the
+#: first one, and what the person must decide is all of them (#67).
+_EVIDENCE_IS_THE_ASK = ("needs_you",)
+
 #: Groups whose verdict says nothing: ``unclassified`` carries one fixed reason, so a row
 #: in it is fingerprinted like a row with no verdict at all.
 _VERDICT_SAYS_NOTHING = ("unclassified",)
@@ -223,10 +228,13 @@ def _activity(row: Mapping) -> Mapping:
     return act if isinstance(act, Mapping) else {}
 
 
-def _reason(row: Mapping, verdict: Mapping) -> str:
-    """The ask, normalised: the verdict's reason, else the pending question, else waiting-for."""
+def _ask(row: Mapping, verdict: Mapping) -> str:
+    """The ask, normalised: a request's whole evidence, else the verdict's reason, else the
+    pending question, else waiting-for."""
+    whole = verdict.get("group") in _EVIDENCE_IS_THE_ASK
     return _normalise(
-        verdict.get("reason")
+        (verdict.get("evidence") if whole else "")
+        or verdict.get("reason")
         or _activity(row).get("pending_question")
         or row.get("waiting_for")
     )
@@ -235,30 +243,44 @@ def _reason(row: Mapping, verdict: Mapping) -> str:
 def dflt_material(row: Mapping) -> tuple:
     """What counts as a change to an item: what the person would have to decide again.
 
-    With a verdict that says something: ``(group, why, normalised reason)`` -- except
-    that a ``working`` row's reason is left out, because it is the tool in flight.
-    Otherwise (no verdict, or ``unclassified``): ``(status,)``, plus the normalised last
-    words for an ``idle`` row, so a session that finished and said so is news.
+    With a verdict that says something: ``(group, why, normalised ask)``. For a
+    ``needs_you`` verdict the ask is its whole ``evidence``
+    (:class:`crowsnest.triage.Verdict`): the question unclipped, or every request for a
+    person its ledger holds. So a link changed in the sentence after the reason, a
+    second request appended later, and a change past the reason's clip are each a change
+    (#67). For any other group, or a verdict with no evidence (a custom ``verdicts=``
+    reader's), the ask is the reason, and a ``working`` row's is left out, because it is
+    the tool in flight. Otherwise (no verdict, or ``unclassified``): ``(status,)``, plus
+    the normalised last words for an ``idle`` row, so a session that finished and said so
+    is news.
 
     **The row's links are not part of it.** They are the page's reference list, resolved
     from the session's latest words, the ledger line the hook rewrites on every turn, and
     its recent pull requests; they move with chatter, and a revision over them made every
-    "committed 7d30838" a change. The ask's own words are material, but only as far as
-    the verdict's reason quotes them: a link in the sentence after it, a second ask
-    appended later, or a change past the reason's clip is not seen yet (#67).
+    "committed 7d30838" a change. A link inside the ask is material as the ask's words.
+
+    **Revisions stored before #67 still hold** wherever the evidence is what the reason
+    already quoted -- one request, within the clip -- because the tuple and its
+    normalisation did not change, and every other group hashes exactly as before. A
+    ``needs_you`` item whose evidence is wider shows ``changed`` once: those are exactly
+    the items whose old revision missed part of their ask. Ids are untouched. Both halves
+    are tests in ``tests/test_attention_refute.py``.
 
     >>> dflt_material({'status': 'busy', 'activity': {'last_assistant_text': 'hi'}})
     ('busy',)
     >>> dflt_material({'status': 'idle', 'activity': {'last_assistant_text': 'Merged.'},
     ...                'verdict': {'group': 'unclassified', 'reason': 'nothing said'}})
     ('idle', 'merged.')
+    >>> asks = {'group': 'needs_you', 'why': 'decision', 'reason': 'Squash?'}
+    >>> dflt_material({'verdict': {**asks, 'evidence': 'Squash?  The PR is #45.'}})
+    ('needs_you', 'decision', 'squash? the pr is #45.')
     """
     verdict = row.get("verdict")
     group = str(verdict.get("group") or "") if isinstance(verdict, Mapping) else ""
     if group and group not in _VERDICT_SAYS_NOTHING:
         why = str(verdict.get("why") or "")
-        reason = "" if group in _REASON_IS_WHAT_RUNS else _reason(row, verdict)
-        return (group, why, reason)
+        ask = "" if group in _REASON_IS_WHAT_RUNS else _ask(row, verdict)
+        return (group, why, ask)
     status = str(row.get("status") or "")
     if status in _LAST_WORDS_ARE_MATERIAL:
         return (status, _normalise(_activity(row).get("last_assistant_text")))

@@ -11,6 +11,7 @@ import pytest
 
 from crowsnest.triage import (
     GROUPS,
+    REASON_LIMIT,
     Verdict,
     classify,
     classify_row,
@@ -183,6 +184,53 @@ def test_whichever_was_asked_for_first_wins():
 
 
 # --------------------------------------------------------------------------------------
+# Evidence: what a verdict was read from, whole (#67)
+
+
+def test_the_reason_is_clipped_and_the_evidence_is_not():
+    ask = "which base branch? " + "Some context on why. " * 12 + "The PR is o/r#46."
+    found = classify_row(_row(), ledger=_ledger(f"## For Thor\n\n{ask}"))
+    assert len(found["reason"]) <= REASON_LIMIT and "o/r#46" not in found["reason"]
+    assert found["evidence"] == ask
+
+
+def test_a_statements_evidence_is_the_paragraph_it_sits_in():
+    said = "Blocked on Thor. Please approve https://github.com/o/r/pull/45 first."
+    found = classify_row(_row(), ledger=_ledger(f"{said}\n\n## Notes\n\nparser tidied"))
+    assert found["reason"] == "Blocked on Thor."
+    assert found["evidence"] == said
+
+
+def test_every_request_in_the_file_is_evidence_and_nothing_else_is():
+    text = (
+        "## For Thor\n\nwhich base branch?\n\n## Notes\n\nparser tidied\n\n"
+        "## For Thor\n\nattach the GIF"
+    )
+    found = classify_row(_row(), ledger=_ledger(text))
+    assert found["reason"] == "which base branch?"
+    assert found["evidence"] == "which base branch?\n\nattach the GIF"
+
+
+def test_a_request_inside_a_request_is_evidence_once():
+    text = "## For Thor\n\nonly you can approve the spend."
+    found = classify_row(_row(), ledger=_ledger(text))
+    assert found["evidence"] == "only you can approve the spend."
+
+
+def test_a_waiting_sessions_evidence_is_the_question_it_asked_whole():
+    asked = "Squash or rebase? " + "Some context on why. " * 12
+    found = classify_row(_row(status="waiting", activity={"pending_question": asked}))
+    assert found["evidence"] == asked and len(found["reason"]) <= REASON_LIMIT
+
+
+def test_classify_reads_ledgers_for_the_owner_it_is_given():
+    # #68: `classify` took `owner` and never passed it on.
+    ledgers = {"a": _ledger("## For Ana\n\npick the base branch")}
+    assert classify([_row("a")], ledgers=ledgers, owner="ana")["counts"]["needs_you"] == 1
+    assert classify([_row("a")], ledgers=ledgers)["counts"]["needs_you"] == 0
+
+
+# --------------------------------------------------------------------------------------
 # The seam
 
 
@@ -198,6 +246,7 @@ def test_verdicts_is_the_seam():
         "source": "test",
         "said_at": "",
         "said_at_basis": "",
+        "evidence": "",
     }
 
 

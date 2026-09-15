@@ -197,6 +197,100 @@ def test_owner_reaches_the_verdict_the_verbs_pin(tmp_path, live):
     assert row["verdict"]["group"] == "needs_you", row["verdict"]
 
 
+def test_triage_honours_owner_and_agrees_with_the_revision_the_verbs_pin(tmp_path, live):
+    # #68: `triage.classify` dropped `owner`, so `crowsnest triage` and `crowsnest seen`
+    # disagreed about the verdict, and with it the revision.
+    home, ledger_dir = _session(
+        tmp_path, "a", ledger="## For Ana\n\nPick the base branch for the release.\n"
+    )
+    needs_you = tools.triage(home=home, ledger_dir=ledger_dir, owner="ana")["groups"][
+        "needs_you"
+    ]
+    assert len(needs_you) == 1, needs_you
+    pinned = tools.seen(
+        "shipper", home=home, ledger_dir=ledger_dir, owner="ana", store={}
+    )
+    assert pinned["seen_rev"] == att.fingerprint(needs_you[0])
+
+
+# --- claim 2b: the whole ask is material, not the reason's quote of it (#67) ----------
+
+STATEMENT = (
+    "## Notes\n\nBlocked on Thor. Please approve https://github.com/o/r/pull/{n} "
+    "before the deploy.\n"
+)
+SECOND_ASK = "\n## For Thor\n\nAlso rotate the deploy token before Friday.\n"
+
+
+def _long_ask(n):
+    return (
+        "## For Thor\n\nSquash or rebase the release branch? "
+        + "Some context on why it matters. " * 8
+        + f"The PR is https://github.com/o/r/pull/{n}\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "before, after",
+    [
+        pytest.param(
+            STATEMENT.format(n=45), STATEMENT.format(n=46), id="link-after-the-reason"
+        ),
+        pytest.param(ASK, ASK + SECOND_ASK, id="second-ask-appended"),
+        pytest.param(_long_ask(45), _long_ask(46), id="change-past-the-clip"),
+    ],
+)
+def test_a_change_to_the_ask_that_the_reason_does_not_quote_is_a_change(
+    tmp_path, live, before, after
+):
+    a = _row(tmp_path, "a", ledger=before, last_words="Waiting for your call.")
+    b = _row(tmp_path, "b", ledger=after, last_words="Waiting for your call.")
+    assert a["verdict"]["group"] == b["verdict"]["group"] == "needs_you"
+    assert a["verdict"]["reason"] == b["verdict"]["reason"], "the probe must hide it"
+    assert att.fingerprint(a) != att.fingerprint(b), (a["verdict"], b["verdict"])
+
+
+def _material_as_65_shipped(row):
+    """#65's default material for a row with a verdict, spelled out here so this test
+    does not move with the code it guards."""
+    verdict = row["verdict"]
+    said = (
+        verdict.get("reason")
+        or (row.get("activity") or {}).get("pending_question")
+        or row.get("waiting_for")
+    )
+    normalised = " ".join(str(said or "").split()).casefold()
+    return (verdict["group"], verdict.get("why") or "", normalised)
+
+
+@pytest.mark.parametrize(
+    "ledger",
+    [
+        pytest.param(ASK, id="one-short-ask"),
+        pytest.param("## Wrap-up\n\nEverything is merged.\n", id="safe-to-close"),
+    ],
+)
+def test_a_revision_stored_before_67_holds_when_the_reason_was_the_whole_ask(
+    tmp_path, live, ledger
+):
+    row = _row(tmp_path, "a", ledger=ledger, last_words="Waiting for your call.")
+    assert row["verdict"]["group"] in ("needs_you", "safe_to_close"), row["verdict"]
+    record = att.seen(None, att.fingerprint(row, material=_material_as_65_shipped))
+    assert att.present(att.fingerprint(row), record) == "seen"
+
+
+def test_a_revision_stored_before_67_resurfaces_once_when_the_ask_was_wider(
+    tmp_path, live
+):
+    # The one-time cost of #67, stated rather than accidental: an item whose stored
+    # revision missed part of its ask shows `changed` once, and pins the whole ask after.
+    row = _row(tmp_path, "a", ledger=STATEMENT.format(n=45), last_words="Waiting.")
+    record = att.done(None, att.fingerprint(row, material=_material_as_65_shipped))
+    assert att.present(att.fingerprint(row), record) == "changed"
+    again = att.done(record, att.fingerprint(row))
+    assert att.present(att.fingerprint(row), again) == "done"
+
+
 # --- the record, the store, import and export -----------------------------------------
 
 
