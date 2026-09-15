@@ -817,6 +817,16 @@ CONSOLE_SCRIPT = r"""
       recount(el.closest(".register"));
     }
 
+    // A review line tapped stays dim while resolved, or while its item is put off or done on
+    // the page however that came about (a row's own Later, say, before an undone line tap).
+    function dimLines(entry, resolved) {
+      const away = entry.rows.some((row) => {
+        const shown = row.dataset.live || drawn.get(row).shown;
+        return shown === A.LATER || shown === A.DONE;
+      });
+      entry.lines.forEach((line) => line.classList.toggle("is-seen", resolved || away));
+    }
+
     // Write the whole document; every write waits for the one before it.
     function save(item, record, ext) {
       const body = A.asDoc(item, record, ext);
@@ -845,15 +855,15 @@ CONSOLE_SCRIPT = r"""
         acted.push(entry);
         known.set(item, { record, ext: before.ext });
         for (const row of all) apply(row, display && display.has(row) ? display.get(row) : record);
-        entry.lines.forEach((line) => line.classList.toggle("is-seen", resolve));
+        dimLines(entry, resolve);
         save(item, record, before.ext).catch((error) => {
           entry.failed = true;
-          entry.lines.forEach((line) => line.classList.toggle("is-seen", !resolve));
           const current = known.get(item);
           if (current && current.record === record) {
             known.set(item, before);
             for (const row of all) apply(row, entry.shownBefore.get(row));
           }
+          dimLines(entry, !resolve);
           say("not saved, so put back: " + codeOf(error));
           notify("Not saved, so put back: " + codeOf(error), []);
         });
@@ -2691,11 +2701,12 @@ def render_report(
     is still taken from the whole row, because that is the row the verbs pin.
     """
     settings = AttentionSettings() if attention_settings is None else attention_settings
-    if stale_after is None and attention_settings is not None:
-        stale_after = attention_settings.stale_after
+    if stale_after is None:
+        stale_after = settings.stale_after
     clock = _clock(made_at, tz=tz, stale_after=stale_after)
     # One stale threshold per page: the rows' "stale" and the review band's read the same.
-    settings = replace(settings, stale_after=timedelta(seconds=clock.stale_after))
+    # The timedelta itself, never a float round trip, which overflows `timedelta.max`.
+    settings = replace(settings, stale_after=stale_after)
     sessions = list(roster.get("sessions") or [])
     token = _interactive.set(interactive)
     links_token = _links_shown.set(links)

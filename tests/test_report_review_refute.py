@@ -113,3 +113,34 @@ def test_the_footer_does_not_say_not_shown_about_a_row_the_band_shows():
     html = page(rows.values(), marked(rows), attention_settings=CONFIG)
     listed = re.findall(r'class="thin-ask">([^ <]+)', band(html))
     assert not ("so not shown here" in html and "closer" in listed)
+
+
+# --- Round 2: against ec8e601's fixes ------------------------------------------------------
+
+
+def test_a_page_never_stale_renders_as_it_did():
+    """`render_report(stale_after=timedelta.max)` rendered before ec8e601.
+
+    `replace(settings, stale_after=timedelta(seconds=clock.stale_after))` round-trips
+    through a float, which rounds timedelta.max up past the largest timedelta.
+    """
+    r = row("asker", group="needs_you", why="decision", reason="Ship?")
+    html = page([r], {}, stale_after=timedelta.max)
+    assert "Needs you" in html
+
+
+def test_a_page_with_no_sessions_does_not_open_the_default_store(tmp_path, monkeypatch):
+    """tools.report opens `dflt_store()` for `triage and not plain` before it knows whether
+    any row is triaged; render_report opens it only for a roster with verdicts."""
+    monkeypatch.setattr(
+        tools,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(is_alive=lambda pid: False, **kw),
+    )
+
+    def refuse(*a, **k):
+        raise AssertionError("the default attention store was opened")
+
+    monkeypatch.setattr(attention, "dflt_store", refuse)
+    home = demo_home(tmp_path)
+    tools.report(home=home, with_lineage=False, tz="UTC")
