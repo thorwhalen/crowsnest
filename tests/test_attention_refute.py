@@ -220,15 +220,18 @@ def test_stamps_are_in_the_ecmascript_date_time_string_format():
     assert shape.match(record.later.until), record.later.until
 
 
-def test_import_keeps_keys_a_newer_writer_added():
+def test_import_keeps_what_a_newer_writer_added():
+    # First found as import erasing unknown keys; the re-review then found that carrying
+    # every unknown key sends a mirror's own bookkeeping back out. The contract settled on:
+    # a newer writer's fields travel in `ext`.
     item = att.item_id({"session_id": "z"})
     doc = {
         **att.as_doc(item, att.seen(None, "ab", now=T0)),
-        "seen_at": "2026-01-05T12:00:00.000Z",
+        "ext": {"seen_at": "2026-01-05T12:00:00.000Z"},
     }
     store = {}
     att.import_docs([doc], store=store)
-    assert store[item].get("seen_at") == doc["seen_at"]
+    assert store[item].get("ext") == doc["ext"]
 
 
 def test_one_unreadable_document_does_not_block_exporting_the_rest(tmp_path):

@@ -53,7 +53,7 @@ import os
 import uuid
 import warnings
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
-from dataclasses import asdict, dataclass, fields, replace
+from dataclasses import asdict, dataclass, replace
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import ClassVar
@@ -243,7 +243,9 @@ def dflt_material(row: Mapping) -> tuple:
     **The row's links are not part of it.** They are the page's reference list, resolved
     from the session's latest words, the ledger line the hook rewrites on every turn, and
     its recent pull requests; they move with chatter, and a revision over them made every
-    "committed 7d30838" a change. The links of the ask itself are in its words, which are.
+    "committed 7d30838" a change. The ask's own words are material, but only as far as
+    the verdict's reason quotes them: a link in the sentence after it, a second ask
+    appended later, or a change past the reason's clip is not seen yet (#67).
 
     >>> dflt_material({'status': 'busy', 'activity': {'last_assistant_text': 'hi'}})
     ('busy',)
@@ -530,9 +532,9 @@ class Record:
     def from_dict(cls, doc: Mapping) -> Record:
         """Read a record back, refusing a wrong type rather than coercing it.
 
-        Keys it does not know -- ``id``, a newer page's field -- are not part of the
-        record; the store functions carry them through (:func:`update`,
-        :func:`import_docs`), so a document from a newer writer loses nothing here.
+        Keys it does not know are not part of the record. A newer writer keeps its own
+        fields in the document's ``ext`` object, which the store functions carry through
+        (:func:`update`, :func:`import_docs`); any other unknown key is dropped.
         """
         doc = _mapping(doc, "a record")
         return cls(
@@ -546,8 +548,10 @@ class Record:
         )
 
 
-#: The top-level keys a document holds for this version: the record's fields and ``id``.
-_DOC_KEYS = frozenset(f.name for f in fields(Record)) | {"id"}
+#: The one top-level key a document may carry beyond the record: an object a newer writer
+#: keeps its own fields in. Every other unknown key -- a mirror's ``version``, its
+#: bookkeeping -- is dropped, so it never travels back out as data.
+EXT_KEY = "ext"
 
 
 # --------------------------------------------------------------------------------------
@@ -771,15 +775,16 @@ def dflt_store(rootdir: str | Path | None = None) -> MutableMapping[str, dict]:
 
 
 def _extras(doc: Mapping | None) -> dict:
-    """The top-level keys of ``doc`` this version does not know, to be carried through."""
-    return {k: v for k, v in (doc or {}).items() if k not in _DOC_KEYS}
+    """What of ``doc`` is carried through beyond the record: its ``ext`` object, if any."""
+    ext = (doc or {}).get(EXT_KEY)
+    return {EXT_KEY: dict(ext)} if isinstance(ext, Mapping) else {}
 
 
 def as_doc(item: str, record: Record, *, extras: Mapping | None = None) -> dict:
     """The stored document: ``extras``, then the record's fields and its ``id``.
 
-    This is the export shape. ``extras`` are keys a newer writer added; the record's own
-    fields always win over them.
+    This is the export shape. ``extras`` is the ``ext`` object a newer writer added; the
+    record's own fields always win over it.
     """
     return {**(extras or {}), "id": item, **record.as_dict()}
 
@@ -830,7 +835,7 @@ def update(
 ) -> dict:
     """Apply ``step`` to ``item``'s record and store the result; return the document.
 
-    Keys the stored document holds and this version does not know are kept. A document
+    The stored document's ``ext`` object is kept. A document
     that cannot be read counts as no record and is replaced, with a warning: a verb that
     refused to overwrite a broken file would leave that item stuck for good.
     """
@@ -860,11 +865,11 @@ def export_docs(
     """Every record as its document, oldest change first; with ``since``, only later changes.
 
     ``since`` is an ISO time or date (read as UTC without an offset) or a datetime, and is
-    exclusive. A write is stamped before it is stored, so one can land in the store after
-    a courier's export with a stamp older than that export: a courier passes a ``since``
-    with a margin before its last push rather than the push time itself, and resending
-    what the far side already has costs nothing, because :func:`import_docs` keeps a copy
-    that is as new. A document that cannot be read is skipped with a warning rather than
+    exclusive. A write is stamped before it is stored, and the page's clock is not this
+    machine's, so a write can land after a courier's export with a stamp older than it. A
+    courier therefore notes the time *before* it lists, and next passes that time minus a
+    margin of minutes -- never the push time itself. Resending what the far side already
+    has costs nothing, because :func:`import_docs` keeps a copy that is as new. A document that cannot be read is skipped with a warning rather than
     stopping every other record from moving.
     """
     store = dflt_store() if store is None else store
@@ -891,8 +896,8 @@ def import_docs(docs: Iterable[Mapping], *, store: MutableMapping | None = None)
 
     Every document is checked before any is written, so a batch with one bad document
     changes nothing. A tie keeps the copy already here: the same write arriving twice is a
-    no-op. A local copy that cannot be read is replaced. Keys this version does not know
-    travel with the winning document. Returns ``{"written", "kept", "total"}``.
+    no-op. A local copy that cannot be read is replaced. The winning document's ``ext``
+    object travels with it; any other key a mirror adds (its own ``version``, say) does not. Returns ``{"written", "kept", "total"}``.
     """
     store = dflt_store() if store is None else store
     parsed = []

@@ -453,13 +453,31 @@ def test_an_unreadable_document_names_the_item_and_export_skips_it_aloud(tmp_pat
         assert att.export_docs(store=att.dflt_store(root)) == []
 
 
-def test_update_keeps_keys_this_version_does_not_know():
+def test_update_keeps_a_newer_writers_ext_object():
     store = {}
     item = att.item_id(row())
-    store[item] = {**att.as_doc(item, att.seen(None, R1, now=T0)), "seen_at": "kept"}
+    ext = {"seen_at": "2026-01-05T12:00:00.000Z"}
+    store[item] = {**att.as_doc(item, att.seen(None, R1, now=T0)), "ext": ext}
     doc = att.update(item, lambda record: att.done(record, R1, now=T0), store=store)
-    assert doc["seen_at"] == "kept" and doc["state"] == "done"
-    assert att.export_docs(store=store)[0]["seen_at"] == "kept"
+    assert doc["ext"] == ext and doc["state"] == "done"
+    assert att.export_docs(store=store)[0]["ext"] == ext
+
+
+def test_a_mirrors_bookkeeping_is_dropped_on_the_way_in():
+    # A page db document can carry its own `version` and reserved names; carried through,
+    # they would travel back out to the mirror as data.
+    item = att.item_id(row())
+    doc = {
+        **att.as_doc(item, att.seen(None, R1, now=T0)),
+        "version": 7,
+        "__name__": "x",
+        "ext": {"seen_at": "t"},
+    }
+    store = {}
+    att.import_docs([doc], store=store)
+    (out,) = att.export_docs(store=store)
+    assert out["ext"] == {"seen_at": "t"}
+    assert "version" not in out and "__name__" not in out
 
 
 def _filled(store, *moments):
