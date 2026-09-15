@@ -597,14 +597,6 @@ def report(
     also what lets a test of this function not read the ledgers of whoever runs it.
     """
     made_at = made_at or datetime.now(timezone.utc).isoformat()
-    # The `[attention]` table gives the stale age and, on an interactive page, the Later
-    # sheet's hours and snooze limit. It is read only when one of those is wanted, so a
-    # page that needs neither does not fail on a table it never uses.
-    settings = (
-        attention_settings(path=config) if stale_after is None or interactive else None
-    )
-    if stale_after is None:
-        stale_after = settings.stale_after
     ctx = dflt_row_context(config=config) if row_context is None else row_context
     found = sessions(home=home, all_homes=all_homes, config=config)
     # The rows the verbs pin and the watcher rebuilds, built the one way they build them.
@@ -615,6 +607,25 @@ def report(
         pages=ctx.pages({s.label for s in found}),
         triage=triage,
     )
+    # The `[attention]` table gives the stale age, the review band's thresholds on a page
+    # that may draw one, and, on an interactive page, the Later sheet's hours and snooze
+    # limit. It is read only when one of those is wanted, so a page that needs none does
+    # not fail on a table it never uses. A band needs rows with verdicts, `plain` off, and
+    # a store holding a record -- when `render_report` applies the store -- and the store
+    # is opened only once the rows say it could be.
+    from crowsnest import attention as _attention
+
+    band = not plain and any(
+        isinstance(row.get("verdict"), Mapping) and row["verdict"].get("group")
+        for row in rows
+    )
+    if band:
+        store = _attention.dflt_store() if store is None else store
+        band = _attention.holds_a_record(store)
+    wanted = stale_after is None or interactive or band
+    settings = attention_settings(path=config) if wanted else None
+    if stale_after is None:
+        stale_after = settings.stale_after
     # `links=False` is the renderer's to honour: the rows keep their links, because a verdict
     # reader or a `material` may read them and the verbs pin the row with them. Resolving
     # nothing is `RowContext(resolvers=())`, which the verbs are then given too.
