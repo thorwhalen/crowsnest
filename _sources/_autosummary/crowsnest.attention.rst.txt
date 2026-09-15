@@ -42,6 +42,7 @@ crowsnest.attention
       read_doc
       read_record
       seen
+      seen_as_of
       undo
       unseen
       update
@@ -54,4 +55,5 @@ crowsnest.attention
       Later
       Note
       Record
+      SeenAs
    

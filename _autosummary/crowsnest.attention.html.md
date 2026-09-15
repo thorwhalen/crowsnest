@@ -24,7 +24,7 @@ Three seams, one keyword argument each:
 | seam        | default                                                 | replacement it exists for                                                                                                    |
 |-------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | `identity=` | `("session", session_id)`                               | `("ask", session_id, ask)` once<br/>triage emits several asks;<br/>`("ref", url)` for an issue<br/>several sessions point at |
-| `material=` | `(group, why, normalised reason)`                       | a tighter or looser tuple, once<br/>resurfacing is measured (K2)                                                             |
+| `material=` | `(group, why, *normalised asks)`                        | a tighter or looser tuple, once<br/>resurfacing is measured (K2)                                                             |
 | `store=`    | one JSON file per item under<br/>`data_dir()/attention` | the page’s `db` mirror; a synced<br/>data dir; an S3 mapping                                                                 |
 ```pycon
 >>> row = {'session_id': 'e7c1', 'status': 'waiting',
@@ -60,7 +60,7 @@ Three seams, one keyword argument each:
 | [`dflt_identity`](#crowsnest.attention.dflt_identity)(row)                              | `("session", session_id)`: one item per session, by the id that is the same everywhere.                                         |
 | [`dflt_material`](#crowsnest.attention.dflt_material)(row)                              | What counts as a change to an item: what the person would have to decide again.                                                 |
 | [`dflt_store`](#crowsnest.attention.dflt_store)([rootdir])                           | One JSON file per item, keyed by item id, under [`attention_dir()`](#crowsnest.attention.attention_dir).               |
-| [`done`](#crowsnest.attention.done)(record, rev, \*[, now])                    | The person did their part at `rev`: hidden until the item's revision changes.                                                   |
+| [`done`](#crowsnest.attention.done)(record, rev, \*[, seen_as, now])           | The person did their part at `rev`: hidden until the item's revision changes.                                                   |
 | [`export_docs`](#crowsnest.attention.export_docs)(\*[, since, store])                 | Every record as its document, oldest change first; with `since`, only later changes.                                            |
 | [`fingerprint`](#crowsnest.attention.fingerprint)(row, \*[, material])                | The item's revision: a short hash over `material(row)`.                                                                         |
 | [`import_docs`](#crowsnest.attention.import_docs)(docs, \*[, store])                  | Take documents into the store, last write winning by `updated_at`.                                                              |
@@ -74,7 +74,8 @@ Three seams, one keyword argument each:
 | [`reach`](#crowsnest.attention.reach)(row)                                      | `phone` for a question or a decision, `terminal` for an action, else `''`.                                                      |
 | [`read_doc`](#crowsnest.attention.read_doc)(item, \*[, store])                     | `item`'s stored document as it is, or `None` when there is none.                                                                |
 | [`read_record`](#crowsnest.attention.read_record)(item, \*[, store])                  | The record for `item`, or `None` when the person has never acted on it.                                                         |
-| [`seen`](#crowsnest.attention.seen)(record, rev, \*[, now])                    | The person has looked at the item at `rev`: it dims until it changes.                                                           |
+| [`seen`](#crowsnest.attention.seen)(record, rev, \*[, seen_as, now])           | The person has looked at the item at `rev`: it dims until it changes.                                                           |
+| [`seen_as_of`](#crowsnest.attention.seen_as_of)(row)                                 | What a row is, as [`SeenAs`](#crowsnest.attention.SeenAs) records it: its verdict's group and why, or `None`.   |
 | [`undo`](#crowsnest.attention.undo)(record, \*[, now])                         | Restore the record before the last transition.                                                                                  |
 | [`unseen`](#crowsnest.attention.unseen)(record, \*[, now])                       | Mark unread: the item shows as `new` again, wherever it is not hidden.                                                          |
 | [`update`](#crowsnest.attention.update)(item, step, \*[, store, ext])            | Apply `step` to `item`'s record and store the result; return the document.                                                      |
@@ -86,6 +87,7 @@ Three seams, one keyword argument each:
 |---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
 | [`Note`](#crowsnest.attention.Note)(text, updated_at)                           | The person's note on an item: never read as an instruction, never a change of state. |
 | [`Record`](#crowsnest.attention.Record)([seen_rev, state, later, done_rev, ...])  | The person's attention to one item.                                                  |
+| [`SeenAs`](#crowsnest.attention.SeenAs)(group[, why])                             | What an item was when the person last looked: its verdict's group and why, no words. |
 
 ### crowsnest.attention.ACTIVE *= 'active'*
 
@@ -135,14 +137,17 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 The person’s note on an item: never read as an instruction, never a change of state.
 
-### *class* crowsnest.attention.Record(seen_rev=None, state='active', later=None, done_rev=None, note=None, prev=None, updated_at='')
+### *class* crowsnest.attention.Record(seen_rev=None, state='active', later=None, done_rev=None, note=None, prev=None, updated_at='', seen_as=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 The person’s attention to one item. JSON both ways: [`as_dict()`](#crowsnest.attention.Record.as_dict), [`from_dict()`](#crowsnest.attention.Record.from_dict).
 
 `prev` is the snapshot [`undo()`](#crowsnest.attention.undo) restores, one level deep. `updated_at` is what
-last-write-wins compares when the store and a page’s mirror disagree.
+last-write-wins compares when the store and a page’s mirror disagree. `seen_as` is
+what the item was at `seen_rev` ([`SeenAs`](#crowsnest.attention.SeenAs)); a record written before the field
+existed has none, and still reads. A document whose `seen_as` has no `seen_rev` to
+describe reads without it (#56’s page may write one); built in Python, it is refused.
 
 ```pycon
 >>> Record.from_dict(Record(seen_rev='ab').as_dict()) == Record(seen_rev='ab')
@@ -170,6 +175,23 @@ fields in the document’s `ext` object, which the store functions carry through
 ### crowsnest.attention.SEEN *= 'seen'*
 
 What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names.
+
+### *class* crowsnest.attention.SeenAs(group, why='')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What an item was when the person last looked: its verdict’s group and why, no words.
+
+Kept beside `seen_rev` so an item that changed can say what it was (#73): a revision
+is a hash and cannot be read back. The ask’s words are in the revision
+([`fingerprint()`](#crowsnest.attention.fingerprint)); this is the part of it a person can be told. Never the reason,
+the asks or any other text, because the record is mirrored into a page’s `db`, which
+anyone who can open the page can read.
+
+```pycon
+>>> SeenAs.from_dict({'group': 'needs_you', 'why': 'question'})
+SeenAs(group='needs_you', why='question')
+```
 
 ### crowsnest.attention.WOKE *= 'woke'*
 
@@ -209,17 +231,30 @@ terminal, so a record made before it stays with the conversation that was cleare
 
 What counts as a change to an item: what the person would have to decide again.
 
-With a verdict that says something: `(group, why, normalised reason)` – except
-that a `working` row’s reason is left out, because it is the tool in flight.
-Otherwise (no verdict, or `unclassified`): `(status,)`, plus the normalised last
-words for an `idle` row, so a session that finished and said so is news.
+With a verdict that says something: `(group, why, *normalised asks)`. For a
+`needs_you` verdict those are its `asks` ([`crowsnest.triage.Ask`](crowsnest.triage.html.md#crowsnest.triage.Ask)), each
+whole: the question unclipped, or the request its reason quotes and every other “for
+<person>” section its ledger holds. So a link changed in the sentence after the
+reason, a second section appended later, and a change past the reason’s clip are
+each a change (#67). For any other group, or a verdict with no asks (a custom
+`verdicts=` reader’s), the one ask is the reason, and a `working` row’s is left
+out, because it is the tool in flight. Otherwise (no verdict, or `unclassified`):
+`(status,)`, plus the normalised last words for an `idle` row, so a session that
+finished and said so is news.
+
+**Where an ask begins and ends is triage’s reading** ([`crowsnest.triage.from_ledger()`](crowsnest.triage.html.md#crowsnest.triage.from_ledger)),
+and so part of every stored revision: a change to it resurfaces the items it touches.
 
 **The row’s links are not part of it.** They are the page’s reference list, resolved
 from the session’s latest words, the ledger line the hook rewrites on every turn, and
 its recent pull requests; they move with chatter, and a revision over them made every
-“committed 7d30838” a change. The ask’s own words are material, but only as far as
-the verdict’s reason quotes them: a link in the sentence after it, a second ask
-appended later, or a change past the reason’s clip is not seen yet (#67).
+“committed 7d30838” a change. A link inside an ask is material as the ask’s words.
+
+**Revisions stored before #67 still hold** for every group but `needs_you`, and for
+a `needs_you` item with one ask whose text is what its reason already quoted,
+because one ask makes the same three-part tuple. Any other `needs_you` item shows
+`changed` once: those are the items whose old revision missed part of what they
+ask. Ids are untouched. Both halves are tests in `tests/test_attention_refute.py`.
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
@@ -230,6 +265,13 @@ appended later, or a change past the reason’s clip is not seen yet (#67).
 >>> dflt_material({'status': 'idle', 'activity': {'last_assistant_text': 'Merged.'},
 ...                'verdict': {'group': 'unclassified', 'reason': 'nothing said'}})
 ('idle', 'merged.')
+>>> asked = {'group': 'needs_you', 'why': 'decision', 'reason': 'Squash?'}
+>>> whole = [{'text': 'Squash?  The PR is #45.'}]
+>>> dflt_material({'verdict': {**asked, 'asks': whole}})
+('needs_you', 'decision', 'squash? the pr is #45.')
+>>> two = [{'text': 'Squash?'}, {'text': 'Rotate the key.'}]
+>>> dflt_material({'verdict': {**asked, 'asks': two}})
+('needs_you', 'decision', 'squash?', 'rotate the key.')
 ```
 
 ### crowsnest.attention.dflt_store(rootdir=None)
@@ -244,7 +286,7 @@ documents – a temporary write, a stray note – are not keys.
 * **Return type:**
   [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
-### crowsnest.attention.done(record, rev, , now=None)
+### crowsnest.attention.done(record, rev, , seen_as=None, now=None)
 
 The person did their part at `rev`: hidden until the item’s revision changes.
 
@@ -342,14 +384,14 @@ default is hashed as literally `session:<id>`.
 True
 ```
 
-### crowsnest.attention.later(record, rev, , until, on_change=True, plan='', now=None)
+### crowsnest.attention.later(record, rev, , until, on_change=True, plan='', seen_as=None, now=None)
 
 Put the item off until `until`, or until it changes when `on_change`, whichever first.
 
 `until=None` with `on_change` is *Drop*: no time, back only when it changes.
 `count` goes up by one each time. Putting something off is also having seen it, so
-`seen_rev` is pinned too – which is what lets it come back as `woke` rather than
-as `new` when its time passes.
+`seen_rev` and `seen_as` are pinned too – which is what lets it come back as
+`woke` rather than as `new` when its time passes.
 
 * **Return type:**
   [`Record`](#crowsnest.attention.Record)
@@ -422,7 +464,7 @@ The record for `item`, or `None` when the person has never acted on it.
 * **Return type:**
   [`Record`](#crowsnest.attention.Record) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### crowsnest.attention.seen(record, rev, , now=None)
+### crowsnest.attention.seen(record, rev, , seen_as=None, now=None)
 
 The person has looked at the item at `rev`: it dims until it changes.
 
@@ -431,8 +473,29 @@ it woke, or it changed after Done – and a look that left it in `later` or `don
 would show it as `woke` forever. From a terminal, where a sleeping item can be
 named, it is the way to wake one early.
 
+`seen_as` is what the item was at `rev` ([`seen_as_of()`](#crowsnest.attention.seen_as_of) the row the revision
+came from). `later` and `done` take it too. Given none, the record keeps the label
+it has for this same revision, and otherwise none: a label from an older revision
+must not describe this one.
+
 * **Return type:**
   [`Record`](#crowsnest.attention.Record)
+
+### crowsnest.attention.seen_as_of(row)
+
+What a row is, as [`SeenAs`](#crowsnest.attention.SeenAs) records it: its verdict’s group and why, or `None`.
+
+The same whatever `material=` a caller uses: it describes the verdict, not the hash.
+
+* **Return type:**
+  [`SeenAs`](#crowsnest.attention.SeenAs) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+```pycon
+>>> seen_as_of({'verdict': {'group': 'needs_you', 'why': 'action', 'reason': 'attach'}})
+SeenAs(group='needs_you', why='action')
+>>> seen_as_of({'status': 'idle'}) is None
+True
+```
 
 ### crowsnest.attention.undo(record, , now=None)
 

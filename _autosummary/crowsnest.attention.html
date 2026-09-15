@@ -116,6 +116,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#crowsnest.attention.SEEN"><code class="docutils literal notranslate"><span class="pre">SEEN</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.attention.SeenAs"><code class="docutils literal notranslate"><span class="pre">SeenAs</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.attention.WOKE"><code class="docutils literal notranslate"><span class="pre">WOKE</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.attention.as_doc"><code class="docutils literal notranslate"><span class="pre">as_doc()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.attention.attention_dir"><code class="docutils literal notranslate"><span class="pre">attention_dir()</span></code></a></li>
@@ -137,6 +138,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.attention.read_doc"><code class="docutils literal notranslate"><span class="pre">read_doc()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.attention.read_record"><code class="docutils literal notranslate"><span class="pre">read_record()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.attention.seen"><code class="docutils literal notranslate"><span class="pre">seen()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.attention.seen_as_of"><code class="docutils literal notranslate"><span class="pre">seen_as_of()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.attention.undo"><code class="docutils literal notranslate"><span class="pre">undo()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.attention.unseen"><code class="docutils literal notranslate"><span class="pre">unseen()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.attention.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
@@ -214,7 +216,7 @@ triage emits several asks;
 several sessions point at</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">material=</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">(group,</span> <span class="pre">why,</span> <span class="pre">normalised</span> <span class="pre">reason)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(group,</span> <span class="pre">why,</span> <span class="pre">*normalised</span> <span class="pre">asks)</span></code></p></td>
 <td><p>a tighter or looser tuple, once
 resurfacing is measured (K2)</p></td>
 </tr>
@@ -292,7 +294,7 @@ data dir; an S3 mapping</p></td>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.dflt_store" title="crowsnest.attention.dflt_store"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_store</span></code></a>([rootdir])</p></td>
 <td><p>One JSON file per item, keyed by item id, under <a class="reference internal" href="#crowsnest.attention.attention_dir" title="crowsnest.attention.attention_dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">attention_dir()</span></code></a>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.done" title="crowsnest.attention.done"><code class="xref py py-obj docutils literal notranslate"><span class="pre">done</span></code></a>(record, rev, *[, now])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.done" title="crowsnest.attention.done"><code class="xref py py-obj docutils literal notranslate"><span class="pre">done</span></code></a>(record, rev, *[, seen_as, now])</p></td>
 <td><p>The person did their part at <code class="docutils literal notranslate"><span class="pre">rev</span></code>: hidden until the item's revision changes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.export_docs" title="crowsnest.attention.export_docs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export_docs</span></code></a>(*[, since, store])</p></td>
@@ -334,19 +336,22 @@ data dir; an S3 mapping</p></td>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.read_record" title="crowsnest.attention.read_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_record</span></code></a>(item, *[, store])</p></td>
 <td><p>The record for <code class="docutils literal notranslate"><span class="pre">item</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when the person has never acted on it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.seen" title="crowsnest.attention.seen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seen</span></code></a>(record, rev, *[, now])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.seen" title="crowsnest.attention.seen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seen</span></code></a>(record, rev, *[, seen_as, now])</p></td>
 <td><p>The person has looked at the item at <code class="docutils literal notranslate"><span class="pre">rev</span></code>: it dims until it changes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.undo" title="crowsnest.attention.undo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">undo</span></code></a>(record, *[, now])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.seen_as_of" title="crowsnest.attention.seen_as_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seen_as_of</span></code></a>(row)</p></td>
+<td><p>What a row is, as <a class="reference internal" href="#crowsnest.attention.SeenAs" title="crowsnest.attention.SeenAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeenAs</span></code></a> records it: its verdict's group and why, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.undo" title="crowsnest.attention.undo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">undo</span></code></a>(record, *[, now])</p></td>
 <td><p>Restore the record before the last transition.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.unseen" title="crowsnest.attention.unseen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unseen</span></code></a>(record, *[, now])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.unseen" title="crowsnest.attention.unseen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unseen</span></code></a>(record, *[, now])</p></td>
 <td><p>Mark unread: the item shows as <code class="docutils literal notranslate"><span class="pre">new</span></code> again, wherever it is not hidden.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.update" title="crowsnest.attention.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a>(item, step, *[, store, ext])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.update" title="crowsnest.attention.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a>(item, step, *[, store, ext])</p></td>
 <td><p>Apply <code class="docutils literal notranslate"><span class="pre">step</span></code> to <code class="docutils literal notranslate"><span class="pre">item</span></code>'s record and store the result; return the document.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.write_record" title="crowsnest.attention.write_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_record</span></code></a>(item, record, *[, store, extras])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.write_record" title="crowsnest.attention.write_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_record</span></code></a>(item, record, *[, store, extras])</p></td>
 <td><p>Store <code class="docutils literal notranslate"><span class="pre">record</span></code> as <code class="docutils literal notranslate"><span class="pre">item</span></code>'s document, with <code class="docutils literal notranslate"><span class="pre">extras</span></code> carried along; return it.</p></td>
 </tr>
 </tbody>
@@ -364,6 +369,9 @@ data dir; an S3 mapping</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.attention.Record" title="crowsnest.attention.Record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Record</span></code></a>([seen_rev, state, later, done_rev, ...])</p></td>
 <td><p>The person's attention to one item.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.attention.SeenAs" title="crowsnest.attention.SeenAs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SeenAs</span></code></a>(group[, why])</p></td>
+<td><p>What an item was when the person last looked: its verdict's group and why, no words.</p></td>
 </tr>
 </tbody>
 </table>
@@ -439,11 +447,14 @@ store, a page’s <code class="docutils literal notranslate"><span class="pre">d
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.attention.Record">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">Record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seen_rev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'active'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">later</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done_rev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updated_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#Record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.Record" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">Record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seen_rev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'active'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">later</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">done_rev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updated_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seen_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#Record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.Record" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The person’s attention to one item. JSON both ways: <a class="reference internal" href="#crowsnest.attention.Record.as_dict" title="crowsnest.attention.Record.as_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">as_dict()</span></code></a>, <a class="reference internal" href="#crowsnest.attention.Record.from_dict" title="crowsnest.attention.Record.from_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_dict()</span></code></a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">prev</span></code> is the snapshot <a class="reference internal" href="#crowsnest.attention.undo" title="crowsnest.attention.undo"><code class="xref py py-func docutils literal notranslate"><span class="pre">undo()</span></code></a> restores, one level deep. <code class="docutils literal notranslate"><span class="pre">updated_at</span></code> is what
-last-write-wins compares when the store and a page’s mirror disagree.</p>
+last-write-wins compares when the store and a page’s mirror disagree. <code class="docutils literal notranslate"><span class="pre">seen_as</span></code> is
+what the item was at <code class="docutils literal notranslate"><span class="pre">seen_rev</span></code> (<a class="reference internal" href="#crowsnest.attention.SeenAs" title="crowsnest.attention.SeenAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeenAs</span></code></a>); a record written before the field
+existed has none, and still reads. A document whose <code class="docutils literal notranslate"><span class="pre">seen_as</span></code> has no <code class="docutils literal notranslate"><span class="pre">seen_rev</span></code> to
+describe reads without it (#56’s page may write one); built in Python, it is refused.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">Record</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">Record</span><span class="p">(</span><span class="n">seen_rev</span><span class="o">=</span><span class="s1">'ab'</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span> <span class="o">==</span> <span class="n">Record</span><span class="p">(</span><span class="n">seen_rev</span><span class="o">=</span><span class="s1">'ab'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">True</span>
 </span></pre></div>
@@ -481,6 +492,24 @@ fields in the document’s <code class="docutils literal notranslate"><span clas
 <dt class="sig sig-object py" id="crowsnest.attention.SEEN">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">SEEN</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'seen'</span></span><a class="headerlink" href="#crowsnest.attention.SEEN" title="Link to this definition">#</a></dt>
 <dd><p>What <a class="reference internal" href="#crowsnest.attention.present" title="crowsnest.attention.present"><code class="xref py py-func docutils literal notranslate"><span class="pre">present()</span></code></a> returns besides the two hidden states, which share the state names.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.attention.SeenAs">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">SeenAs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">why</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#SeenAs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.SeenAs" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>What an item was when the person last looked: its verdict’s group and why, no words.</p>
+<p>Kept beside <code class="docutils literal notranslate"><span class="pre">seen_rev</span></code> so an item that changed can say what it was (#73): a revision
+is a hash and cannot be read back. The ask’s words are in the revision
+(<a class="reference internal" href="#crowsnest.attention.fingerprint" title="crowsnest.attention.fingerprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">fingerprint()</span></code></a>); this is the part of it a person can be told. Never the reason,
+the asks or any other text, because the record is mirrored into a page’s <code class="docutils literal notranslate"><span class="pre">db</span></code>, which
+anyone who can open the page can read.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">SeenAs</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'needs_you'</span><span class="p">,</span> <span class="s1">'why'</span><span class="p">:</span> <span class="s1">'question'</span><span class="p">})</span>
+</span><span data-line="2"><span class="go">SeenAs(group='needs_you', why='question')</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 <dl class="py data">
@@ -533,16 +562,27 @@ terminal, so a record made before it stays with the conversation that was cleare
 <dt class="sig sig-object py" id="crowsnest.attention.dflt_material">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">dflt_material</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#dflt_material"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.dflt_material" title="Link to this definition">#</a></dt>
 <dd><p>What counts as a change to an item: what the person would have to decide again.</p>
-<p>With a verdict that says something: <code class="docutils literal notranslate"><span class="pre">(group,</span> <span class="pre">why,</span> <span class="pre">normalised</span> <span class="pre">reason)</span></code> – except
-that a <code class="docutils literal notranslate"><span class="pre">working</span></code> row’s reason is left out, because it is the tool in flight.
-Otherwise (no verdict, or <code class="docutils literal notranslate"><span class="pre">unclassified</span></code>): <code class="docutils literal notranslate"><span class="pre">(status,)</span></code>, plus the normalised last
-words for an <code class="docutils literal notranslate"><span class="pre">idle</span></code> row, so a session that finished and said so is news.</p>
+<p>With a verdict that says something: <code class="docutils literal notranslate"><span class="pre">(group,</span> <span class="pre">why,</span> <span class="pre">*normalised</span> <span class="pre">asks)</span></code>. For a
+<code class="docutils literal notranslate"><span class="pre">needs_you</span></code> verdict those are its <code class="docutils literal notranslate"><span class="pre">asks</span></code> (<a class="reference internal" href="crowsnest.triage.html#crowsnest.triage.Ask" title="crowsnest.triage.Ask"><code class="xref py py-class docutils literal notranslate"><span class="pre">crowsnest.triage.Ask</span></code></a>), each
+whole: the question unclipped, or the request its reason quotes and every other “for
+&lt;person&gt;” section its ledger holds. So a link changed in the sentence after the
+reason, a second section appended later, and a change past the reason’s clip are
+each a change (#67). For any other group, or a verdict with no asks (a custom
+<code class="docutils literal notranslate"><span class="pre">verdicts=</span></code> reader’s), the one ask is the reason, and a <code class="docutils literal notranslate"><span class="pre">working</span></code> row’s is left
+out, because it is the tool in flight. Otherwise (no verdict, or <code class="docutils literal notranslate"><span class="pre">unclassified</span></code>):
+<code class="docutils literal notranslate"><span class="pre">(status,)</span></code>, plus the normalised last words for an <code class="docutils literal notranslate"><span class="pre">idle</span></code> row, so a session that
+finished and said so is news.</p>
+<p><strong>Where an ask begins and ends is triage’s reading</strong> (<a class="reference internal" href="crowsnest.triage.html#crowsnest.triage.from_ledger" title="crowsnest.triage.from_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.triage.from_ledger()</span></code></a>),
+and so part of every stored revision: a change to it resurfaces the items it touches.</p>
 <p><strong>The row’s links are not part of it.</strong> They are the page’s reference list, resolved
 from the session’s latest words, the ledger line the hook rewrites on every turn, and
 its recent pull requests; they move with chatter, and a revision over them made every
-“committed 7d30838” a change. The ask’s own words are material, but only as far as
-the verdict’s reason quotes them: a link in the sentence after it, a second ask
-appended later, or a change past the reason’s clip is not seen yet (#67).</p>
+“committed 7d30838” a change. A link inside an ask is material as the ask’s words.</p>
+<p><strong>Revisions stored before #67 still hold</strong> for every group but <code class="docutils literal notranslate"><span class="pre">needs_you</span></code>, and for
+a <code class="docutils literal notranslate"><span class="pre">needs_you</span></code> item with one ask whose text is what its reason already quoted,
+because one ask makes the same three-part tuple. Any other <code class="docutils literal notranslate"><span class="pre">needs_you</span></code> item shows
+<code class="docutils literal notranslate"><span class="pre">changed</span></code> once: those are the items whose old revision missed part of what they
+ask. Ids are untouched. Both halves are tests in <code class="docutils literal notranslate"><span class="pre">tests/test_attention_refute.py</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span></p>
@@ -553,6 +593,13 @@ appended later, or a change past the reason’s clip is not seen yet (#67).</p>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">dflt_material</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'activity'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'last_assistant_text'</span><span class="p">:</span> <span class="s1">'Merged.'</span><span class="p">},</span>
 </span><span data-line="4"><span class="gp">... </span>               <span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'unclassified'</span><span class="p">,</span> <span class="s1">'reason'</span><span class="p">:</span> <span class="s1">'nothing said'</span><span class="p">}})</span>
 </span><span data-line="5"><span class="go">('idle', 'merged.')</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">asked</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'needs_you'</span><span class="p">,</span> <span class="s1">'why'</span><span class="p">:</span> <span class="s1">'decision'</span><span class="p">,</span> <span class="s1">'reason'</span><span class="p">:</span> <span class="s1">'Squash?'</span><span class="p">}</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">whole</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'Squash?  The PR is #45.'</span><span class="p">}]</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="n">dflt_material</span><span class="p">({</span><span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">asked</span><span class="p">,</span> <span class="s1">'asks'</span><span class="p">:</span> <span class="n">whole</span><span class="p">}})</span>
+</span><span data-line="9"><span class="go">('needs_you', 'decision', 'squash? the pr is #45.')</span>
+</span><span data-line="10"><span class="gp">&gt;&gt;&gt; </span><span class="n">two</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'Squash?'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'text'</span><span class="p">:</span> <span class="s1">'Rotate the key.'</span><span class="p">}]</span>
+</span><span data-line="11"><span class="gp">&gt;&gt;&gt; </span><span class="n">dflt_material</span><span class="p">({</span><span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">asked</span><span class="p">,</span> <span class="s1">'asks'</span><span class="p">:</span> <span class="n">two</span><span class="p">}})</span>
+</span><span data-line="12"><span class="go">('needs_you', 'decision', 'squash?', 'rotate the key.')</span>
 </span></pre></div>
 </div>
 </dd></dl>
@@ -574,7 +621,7 @@ documents – a temporary write, a stray note – are not keys.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.attention.done">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.done" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">seen_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.done" title="Link to this definition">#</a></dt>
 <dd><p>The person did their part at <code class="docutils literal notranslate"><span class="pre">rev</span></code>: hidden until the item’s revision changes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -691,12 +738,12 @@ default is hashed as literally <code class="docutils literal notranslate"><span 
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.attention.later">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">later</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">until</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#later"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.later" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">later</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">until</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_change</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seen_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#later"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.later" title="Link to this definition">#</a></dt>
 <dd><p>Put the item off until <code class="docutils literal notranslate"><span class="pre">until</span></code>, or until it changes when <code class="docutils literal notranslate"><span class="pre">on_change</span></code>, whichever first.</p>
 <p><code class="docutils literal notranslate"><span class="pre">until=None</span></code> with <code class="docutils literal notranslate"><span class="pre">on_change</span></code> is <em>Drop</em>: no time, back only when it changes.
 <code class="docutils literal notranslate"><span class="pre">count</span></code> goes up by one each time. Putting something off is also having seen it, so
-<code class="docutils literal notranslate"><span class="pre">seen_rev</span></code> is pinned too – which is what lets it come back as <code class="docutils literal notranslate"><span class="pre">woke</span></code> rather than
-as <code class="docutils literal notranslate"><span class="pre">new</span></code> when its time passes.</p>
+<code class="docutils literal notranslate"><span class="pre">seen_rev</span></code> and <code class="docutils literal notranslate"><span class="pre">seen_as</span></code> are pinned too – which is what lets it come back as
+<code class="docutils literal notranslate"><span class="pre">woke</span></code> rather than as <code class="docutils literal notranslate"><span class="pre">new</span></code> when its time passes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.attention.Record" title="crowsnest.attention.Record"><code class="xref py py-class docutils literal notranslate"><span class="pre">Record</span></code></a></span></p>
@@ -793,17 +840,39 @@ item shows what the restored snapshot shows.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.attention.seen">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">seen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#seen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.seen" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">seen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">seen_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#seen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.seen" title="Link to this definition">#</a></dt>
 <dd><p>The person has looked at the item at <code class="docutils literal notranslate"><span class="pre">rev</span></code>: it dims until it changes.</p>
 <p>It also makes the item <code class="docutils literal notranslate"><span class="pre">active</span></code> again. An item the person can see is not asleep –
 it woke, or it changed after Done – and a look that left it in <code class="docutils literal notranslate"><span class="pre">later</span></code> or <code class="docutils literal notranslate"><span class="pre">done</span></code>
 would show it as <code class="docutils literal notranslate"><span class="pre">woke</span></code> forever. From a terminal, where a sleeping item can be
 named, it is the way to wake one early.</p>
+<p><code class="docutils literal notranslate"><span class="pre">seen_as</span></code> is what the item was at <code class="docutils literal notranslate"><span class="pre">rev</span></code> (<a class="reference internal" href="#crowsnest.attention.seen_as_of" title="crowsnest.attention.seen_as_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">seen_as_of()</span></code></a> the row the revision
+came from). <code class="docutils literal notranslate"><span class="pre">later</span></code> and <code class="docutils literal notranslate"><span class="pre">done</span></code> take it too. Given none, the record keeps the label
+it has for this same revision, and otherwise none: a label from an older revision
+must not describe this one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.attention.Record" title="crowsnest.attention.Record"><code class="xref py py-class docutils literal notranslate"><span class="pre">Record</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.attention.seen_as_of">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">seen_as_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#seen_as_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.seen_as_of" title="Link to this definition">#</a></dt>
+<dd><p>What a row is, as <a class="reference internal" href="#crowsnest.attention.SeenAs" title="crowsnest.attention.SeenAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeenAs</span></code></a> records it: its verdict’s group and why, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>The same whatever <code class="docutils literal notranslate"><span class="pre">material=</span></code> a caller uses: it describes the verdict, not the hash.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.attention.SeenAs" title="crowsnest.attention.SeenAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeenAs</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">seen_as_of</span><span class="p">({</span><span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'needs_you'</span><span class="p">,</span> <span class="s1">'why'</span><span class="p">:</span> <span class="s1">'action'</span><span class="p">,</span> <span class="s1">'reason'</span><span class="p">:</span> <span class="s1">'attach'</span><span class="p">}})</span>
+</span><span data-line="2"><span class="go">SeenAs(group='needs_you', why='action')</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">seen_as_of</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">})</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="4"><span class="go">True</span>
+</span></pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -897,7 +966,7 @@ overwrite a broken file would leave that item stuck for good.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=e648f5b4"></script>
+      <script src="../_static/documentation_options.js?v=84bd753f"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

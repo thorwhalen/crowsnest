@@ -29,5 +29,6 @@ crowsnest.triage
 
    .. autosummary::
    
+      Ask
       Verdict
    

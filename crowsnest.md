@@ -1,4 +1,4 @@
-> built 2026-09-15 13:26 UTC from 41fe7a4 (main) · crowsnest 0.0.39. Details: build_info.json
+> built 2026-09-15 14:20 UTC from 5389eff (main) · crowsnest 0.0.40. Details: build_info.json
 
 # index.html.md
 
@@ -114,7 +114,7 @@ UNCLASSIFIED — has not said where it stands: 48
 -- 5 need you (1 to decide, 3 to do), 4 safe to close, 1 working, 48 unclassified
 ```
 
-`[decision]` is a minute of thought; `[action]` is a trip to another window. The reason is the session’s own words, so you can check the verdict without opening the session.
+`[decision]` is a minute of thought; `[action]` is a trip to another window. The reason is the session’s own words, so you can check the verdict without opening the session. A `needs_you` verdict in JSON also carries `asks`: each thing the session asks of you, unclipped and with its own `said_at`. The first is the request `reason` quotes, and the rest are the other “for <you>” sections in its ledger. The asks decide whether an item you marked seen or done has changed.
 
 Every item says **when its words were said**, taken from where they were said. For last words that is the transcript’s time. For a waiting session it is when the registry says it began waiting. For a ledger request it is the date in the heading of the section it comes from. An undated section only has the ledger’s last write, which is an upper bound, and the item says so. `crowsnest report` shows the same time on every row, in your local zone (`--tz` for another), and marks an item *stale* once it is older than `stale_after` in the config file’s `[attention]` table. JSON rows carry it as `said_at` and `said_at_basis`. A session that relays a claim keeps the claim’s own time and never restamps it with its own, because a restamped claim reads as current long after it stopped being true.
 
@@ -708,7 +708,7 @@ Three seams, one keyword argument each:
 | seam        | default                                                 | replacement it exists for                                                                                                    |
 |-------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | `identity=` | `("session", session_id)`                               | `("ask", session_id, ask)` once<br/>triage emits several asks;<br/>`("ref", url)` for an issue<br/>several sessions point at |
-| `material=` | `(group, why, normalised reason)`                       | a tighter or looser tuple, once<br/>resurfacing is measured (K2)                                                             |
+| `material=` | `(group, why, *normalised asks)`                        | a tighter or looser tuple, once<br/>resurfacing is measured (K2)                                                             |
 | `store=`    | one JSON file per item under<br/>`data_dir()/attention` | the page’s `db` mirror; a synced<br/>data dir; an S3 mapping                                                                 |
 ```pycon
 >>> row = {'session_id': 'e7c1', 'status': 'waiting',
@@ -744,7 +744,7 @@ Three seams, one keyword argument each:
 | [`dflt_identity`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.dflt_identity)(row)                              | `("session", session_id)`: one item per session, by the id that is the same everywhere.                                         |
 | [`dflt_material`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.dflt_material)(row)                              | What counts as a change to an item: what the person would have to decide again.                                                 |
 | [`dflt_store`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.dflt_store)([rootdir])                           | One JSON file per item, keyed by item id, under [`attention_dir()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.attention_dir).               |
-| [`done`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.done)(record, rev, \*[, now])                    | The person did their part at `rev`: hidden until the item's revision changes.                                                   |
+| [`done`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.done)(record, rev, \*[, seen_as, now])           | The person did their part at `rev`: hidden until the item's revision changes.                                                   |
 | [`export_docs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.export_docs)(\*[, since, store])                 | Every record as its document, oldest change first; with `since`, only later changes.                                            |
 | [`fingerprint`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.fingerprint)(row, \*[, material])                | The item's revision: a short hash over `material(row)`.                                                                         |
 | [`import_docs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.import_docs)(docs, \*[, store])                  | Take documents into the store, last write winning by `updated_at`.                                                              |
@@ -758,7 +758,8 @@ Three seams, one keyword argument each:
 | [`reach`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.reach)(row)                                      | `phone` for a question or a decision, `terminal` for an action, else `''`.                                                      |
 | [`read_doc`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.read_doc)(item, \*[, store])                     | `item`'s stored document as it is, or `None` when there is none.                                                                |
 | [`read_record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.read_record)(item, \*[, store])                  | The record for `item`, or `None` when the person has never acted on it.                                                         |
-| [`seen`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.seen)(record, rev, \*[, now])                    | The person has looked at the item at `rev`: it dims until it changes.                                                           |
+| [`seen`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.seen)(record, rev, \*[, seen_as, now])           | The person has looked at the item at `rev`: it dims until it changes.                                                           |
+| [`seen_as_of`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.seen_as_of)(row)                                 | What a row is, as [`SeenAs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.SeenAs) records it: its verdict's group and why, or `None`.   |
 | [`undo`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.undo)(record, \*[, now])                         | Restore the record before the last transition.                                                                                  |
 | [`unseen`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.unseen)(record, \*[, now])                       | Mark unread: the item shows as `new` again, wherever it is not hidden.                                                          |
 | [`update`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.update)(item, step, \*[, store, ext])            | Apply `step` to `item`'s record and store the result; return the document.                                                      |
@@ -770,6 +771,7 @@ Three seams, one keyword argument each:
 |---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
 | [`Note`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Note)(text, updated_at)                           | The person's note on an item: never read as an instruction, never a change of state. |
 | [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)([seen_rev, state, later, done_rev, ...])  | The person's attention to one item.                                                  |
+| [`SeenAs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.SeenAs)(group[, why])                             | What an item was when the person last looked: its verdict's group and why, no words. |
 
 ### crowsnest.attention.ACTIVE *= 'active'*
 
@@ -819,14 +821,17 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 The person’s note on an item: never read as an instruction, never a change of state.
 
-### *class* crowsnest.attention.Record(seen_rev=None, state='active', later=None, done_rev=None, note=None, prev=None, updated_at='')
+### *class* crowsnest.attention.Record(seen_rev=None, state='active', later=None, done_rev=None, note=None, prev=None, updated_at='', seen_as=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 The person’s attention to one item. JSON both ways: [`as_dict()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record.as_dict), [`from_dict()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record.from_dict).
 
 `prev` is the snapshot [`undo()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.undo) restores, one level deep. `updated_at` is what
-last-write-wins compares when the store and a page’s mirror disagree.
+last-write-wins compares when the store and a page’s mirror disagree. `seen_as` is
+what the item was at `seen_rev` ([`SeenAs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.SeenAs)); a record written before the field
+existed has none, and still reads. A document whose `seen_as` has no `seen_rev` to
+describe reads without it (#56’s page may write one); built in Python, it is refused.
 
 ```pycon
 >>> Record.from_dict(Record(seen_rev='ab').as_dict()) == Record(seen_rev='ab')
@@ -854,6 +859,23 @@ fields in the document’s `ext` object, which the store functions carry through
 ### crowsnest.attention.SEEN *= 'seen'*
 
 What [`present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present) returns besides the two hidden states, which share the state names.
+
+### *class* crowsnest.attention.SeenAs(group, why='')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What an item was when the person last looked: its verdict’s group and why, no words.
+
+Kept beside `seen_rev` so an item that changed can say what it was (#73): a revision
+is a hash and cannot be read back. The ask’s words are in the revision
+([`fingerprint()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.fingerprint)); this is the part of it a person can be told. Never the reason,
+the asks or any other text, because the record is mirrored into a page’s `db`, which
+anyone who can open the page can read.
+
+```pycon
+>>> SeenAs.from_dict({'group': 'needs_you', 'why': 'question'})
+SeenAs(group='needs_you', why='question')
+```
 
 ### crowsnest.attention.WOKE *= 'woke'*
 
@@ -893,17 +915,30 @@ terminal, so a record made before it stays with the conversation that was cleare
 
 What counts as a change to an item: what the person would have to decide again.
 
-With a verdict that says something: `(group, why, normalised reason)` – except
-that a `working` row’s reason is left out, because it is the tool in flight.
-Otherwise (no verdict, or `unclassified`): `(status,)`, plus the normalised last
-words for an `idle` row, so a session that finished and said so is news.
+With a verdict that says something: `(group, why, *normalised asks)`. For a
+`needs_you` verdict those are its `asks` ([`crowsnest.triage.Ask`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Ask)), each
+whole: the question unclipped, or the request its reason quotes and every other “for
+<person>” section its ledger holds. So a link changed in the sentence after the
+reason, a second section appended later, and a change past the reason’s clip are
+each a change (#67). For any other group, or a verdict with no asks (a custom
+`verdicts=` reader’s), the one ask is the reason, and a `working` row’s is left
+out, because it is the tool in flight. Otherwise (no verdict, or `unclassified`):
+`(status,)`, plus the normalised last words for an `idle` row, so a session that
+finished and said so is news.
+
+**Where an ask begins and ends is triage’s reading** ([`crowsnest.triage.from_ledger()`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.from_ledger)),
+and so part of every stored revision: a change to it resurfaces the items it touches.
 
 **The row’s links are not part of it.** They are the page’s reference list, resolved
 from the session’s latest words, the ledger line the hook rewrites on every turn, and
 its recent pull requests; they move with chatter, and a revision over them made every
-“committed 7d30838” a change. The ask’s own words are material, but only as far as
-the verdict’s reason quotes them: a link in the sentence after it, a second ask
-appended later, or a change past the reason’s clip is not seen yet (#67).
+“committed 7d30838” a change. A link inside an ask is material as the ask’s words.
+
+**Revisions stored before #67 still hold** for every group but `needs_you`, and for
+a `needs_you` item with one ask whose text is what its reason already quoted,
+because one ask makes the same three-part tuple. Any other `needs_you` item shows
+`changed` once: those are the items whose old revision missed part of what they
+ask. Ids are untouched. Both halves are tests in `tests/test_attention_refute.py`.
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
@@ -914,6 +949,13 @@ appended later, or a change past the reason’s clip is not seen yet (#67).
 >>> dflt_material({'status': 'idle', 'activity': {'last_assistant_text': 'Merged.'},
 ...                'verdict': {'group': 'unclassified', 'reason': 'nothing said'}})
 ('idle', 'merged.')
+>>> asked = {'group': 'needs_you', 'why': 'decision', 'reason': 'Squash?'}
+>>> whole = [{'text': 'Squash?  The PR is #45.'}]
+>>> dflt_material({'verdict': {**asked, 'asks': whole}})
+('needs_you', 'decision', 'squash? the pr is #45.')
+>>> two = [{'text': 'Squash?'}, {'text': 'Rotate the key.'}]
+>>> dflt_material({'verdict': {**asked, 'asks': two}})
+('needs_you', 'decision', 'squash?', 'rotate the key.')
 ```
 
 ### crowsnest.attention.dflt_store(rootdir=None)
@@ -928,7 +970,7 @@ documents – a temporary write, a stray note – are not keys.
 * **Return type:**
   [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
-### crowsnest.attention.done(record, rev, , now=None)
+### crowsnest.attention.done(record, rev, , seen_as=None, now=None)
 
 The person did their part at `rev`: hidden until the item’s revision changes.
 
@@ -1026,14 +1068,14 @@ default is hashed as literally `session:<id>`.
 True
 ```
 
-### crowsnest.attention.later(record, rev, , until, on_change=True, plan='', now=None)
+### crowsnest.attention.later(record, rev, , until, on_change=True, plan='', seen_as=None, now=None)
 
 Put the item off until `until`, or until it changes when `on_change`, whichever first.
 
 `until=None` with `on_change` is *Drop*: no time, back only when it changes.
 `count` goes up by one each time. Putting something off is also having seen it, so
-`seen_rev` is pinned too – which is what lets it come back as `woke` rather than
-as `new` when its time passes.
+`seen_rev` and `seen_as` are pinned too – which is what lets it come back as
+`woke` rather than as `new` when its time passes.
 
 * **Return type:**
   [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
@@ -1106,7 +1148,7 @@ The record for `item`, or `None` when the person has never acted on it.
 * **Return type:**
   [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### crowsnest.attention.seen(record, rev, , now=None)
+### crowsnest.attention.seen(record, rev, , seen_as=None, now=None)
 
 The person has looked at the item at `rev`: it dims until it changes.
 
@@ -1115,8 +1157,29 @@ it woke, or it changed after Done – and a look that left it in `later` or `don
 would show it as `woke` forever. From a terminal, where a sleeping item can be
 named, it is the way to wake one early.
 
+`seen_as` is what the item was at `rev` ([`seen_as_of()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.seen_as_of) the row the revision
+came from). `later` and `done` take it too. Given none, the record keeps the label
+it has for this same revision, and otherwise none: a label from an older revision
+must not describe this one.
+
 * **Return type:**
   [`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.Record)
+
+### crowsnest.attention.seen_as_of(row)
+
+What a row is, as [`SeenAs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.SeenAs) records it: its verdict’s group and why, or `None`.
+
+The same whatever `material=` a caller uses: it describes the verdict, not the hash.
+
+* **Return type:**
+  [`SeenAs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.SeenAs) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+```pycon
+>>> seen_as_of({'verdict': {'group': 'needs_you', 'why': 'action', 'reason': 'attach'}})
+SeenAs(group='needs_you', why='action')
+>>> seen_as_of({'status': 'idle'}) is None
+True
+```
 
 ### crowsnest.attention.undo(record, , now=None)
 
@@ -4324,6 +4387,16 @@ ledger’s last write, which is only an upper bound. A reader never borrows anot
 so a verdict with no source time has an empty `said_at`. That is what stops a claim
 five days old from being repeated as current (crowsnest#66).
 
+**A request carries its asks, whole.** `reason` quotes the start of one request, clipped
+to [`REASON_LIMIT`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.REASON_LIMIT) so a page stays a page. A `needs_you` verdict’s `asks`
+([`Ask`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Ask)) are what it asks of a person, each unclipped and dated: first the request
+its reason quotes (the question, the field, a statement to the end of its sentence and
+block, or a section), then every other “for <person>” section in the file. A statement
+elsewhere is not an ask. [`crowsnest.attention.fingerprint()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.fingerprint) reads them, so a link changed
+after the reason, a second section appended later, or a change past the clip is a change
+to the item (crowsnest#67). That makes this module’s reading of an ask part of every
+stored revision: a change to where an ask begins or ends resurfaces the items it touches.
+
 `verdicts=` is the seam: an ordered sequence of `(row, ledger) -> Verdict | None`,
 first non-`None` winning. The default pair is the live registry signal – which is
 authoritative for *right now*, because a session that is `waiting` is waiting whatever its
@@ -4360,8 +4433,24 @@ whose own store is already a seam) is the reader this exists to make room for.
 
 ### Classes
 
-| [`Verdict`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Verdict)(group[, why, reason, source, ...])   | One session's classification, and the evidence for it.   |
-|-----------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| [`Ask`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Ask)(text[, said_at, said_at_basis])        | One thing a session asks of a person, whole: never clipped, and dated from its source.   |
+|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| [`Verdict`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Verdict)(group[, why, reason, source, ...]) | One session's classification, and the evidence for it.                                   |
+
+### *class* crowsnest.triage.Ask(text, said_at='', said_at_basis='')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One thing a session asks of a person, whole: never clipped, and dated from its source.
+
+`said_at` and `said_at_basis` are when these words were said, as a
+[`Verdict`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Verdict)’s are for its reason ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)), and empty when no
+source gives a time.
+
+```pycon
+>>> Ask('attach the GIF').text
+'attach the GIF'
+```
 
 ### crowsnest.triage.DFLT_OWNER *= 'thor'*
 
@@ -4378,7 +4467,7 @@ the residue, not a finding.
 How much of the sentence that decided a verdict is quoted back. Enough to recognise
 the thing, not enough to make the report into the ledger.
 
-### *class* crowsnest.triage.Verdict(group, why='', reason='', source='', said_at='', said_at_basis='')
+### *class* crowsnest.triage.Verdict(group, why='', reason='', source='', said_at='', said_at_basis='', asks=())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -4393,6 +4482,10 @@ be traced to the thing that produced it.
 `said_at_basis` names that source (one of [`crowsnest.said.BASES`](_autosummary/crowsnest.said.html.md#crowsnest.said.BASES)). Both are
 empty when no source time is known. They are never filled with the time of reading.
 
+`asks` are what a `needs_you` verdict asks of a person, each whole and with its own
+time ([`Ask`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Ask)). The first is the request `reason` quotes. Other verdicts have
+none.
+
 ```pycon
 >>> Verdict('needs_you', why='decision', reason='squash or rebase?').as_dict()['group']
 'needs_you'
@@ -4400,10 +4493,10 @@ empty when no source time is known. They are never filled with the time of readi
 
 #### as_dict()
 
-JSON-ready form.
+JSON-ready form, the asks as a list of dicts.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.triage.WHYS *= ('question', 'decision', 'action')*
 
@@ -4425,6 +4518,10 @@ fell into it, each with a `verdict`. Rows keep the order they arrived in, which 
 the roster’s own – most urgent first. Each row’s `said_at` and `said_at_basis`
 are set again once its verdict is known ([`crowsnest.said.with_said()`](_autosummary/crowsnest.said.html.md#crowsnest.said.with_said)), so a row
 and its verdict never disagree about when the thing it quotes was said.
+
+`owner` is whose attention “for <person>” is about ([`dflt_verdicts()`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.dflt_verdicts)), passed
+to every row as [`classify_row()`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.classify_row) takes it; readers given as `verdicts` bind
+their own.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -4471,6 +4568,10 @@ exactly what an interrupted session leaves behind.
 
 Each verdict carries the time of the words it quotes (`_said_in()`). The fields
 carry no date of their own, so they take the ledger’s last write.
+
+A request’s `asks` are the one its reason quotes and every other “for <person>”
+section in the file (`_asks()`): a section appended after the first is still
+something the session needs.
 
 * **Return type:**
   [`Verdict`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.Verdict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
@@ -4732,7 +4833,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-15 13:26 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/41fe7a4a25275085294c23e47243a9592a3df33a"><code>41fe7a4</code></a> on branch <code>main</code>, for **crowsnest 0.0.39** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-15 14:20 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/5389effef9e135d94f7f36d4fc7dcb3fdb6767ea"><code>5389eff</code></a> on branch <code>main</code>, for **crowsnest 0.0.40** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4741,7 +4842,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/41fe7a4a25275085294c23e47243a9592a3df33a"><code>41fe7a4a25275085294c23e47243a9592a3df33a</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/5389effef9e135d94f7f36d4fc7dcb3fdb6767ea"><code>5389effef9e135d94f7f36d4fc7dcb3fdb6767ea</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -4752,9 +4853,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34974835331">34974835331</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34980789453">34980789453</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>41fe7a4a25275085294c23e47243a9592a3df33a</code> (in the history of the built commit) |
+| Event commit | <code>5389effef9e135d94f7f36d4fc7dcb3fdb6767ea</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4779,13 +4880,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.39/">0.0.39</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.40/">0.0.40</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 41fe7a4a25275085294c23e47243a9592a3df33a
+git checkout 5389effef9e135d94f7f36d4fc7dcb3fdb6767ea
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

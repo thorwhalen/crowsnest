@@ -56,6 +56,16 @@ ledger’s last write, which is only an upper bound. A reader never borrows anot
 so a verdict with no source time has an empty `said_at`. That is what stops a claim
 five days old from being repeated as current (crowsnest#66).
 
+**A request carries its asks, whole.** `reason` quotes the start of one request, clipped
+to [`REASON_LIMIT`](#crowsnest.triage.REASON_LIMIT) so a page stays a page. A `needs_you` verdict’s `asks`
+([`Ask`](#crowsnest.triage.Ask)) are what it asks of a person, each unclipped and dated: first the request
+its reason quotes (the question, the field, a statement to the end of its sentence and
+block, or a section), then every other “for <person>” section in the file. A statement
+elsewhere is not an ask. [`crowsnest.attention.fingerprint()`](crowsnest.attention.html.md#crowsnest.attention.fingerprint) reads them, so a link changed
+after the reason, a second section appended later, or a change past the clip is a change
+to the item (crowsnest#67). That makes this module’s reading of an ask part of every
+stored revision: a change to where an ask begins or ends resurfaces the items it touches.
+
 `verdicts=` is the seam: an ordered sequence of `(row, ledger) -> Verdict | None`,
 first non-`None` winning. The default pair is the live registry signal – which is
 authoritative for *right now*, because a session that is `waiting` is waiting whatever its
@@ -92,8 +102,24 @@ whose own store is already a seam) is the reader this exists to make room for.
 
 ### Classes
 
-| [`Verdict`](#crowsnest.triage.Verdict)(group[, why, reason, source, ...])   | One session's classification, and the evidence for it.   |
-|-----------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| [`Ask`](#crowsnest.triage.Ask)(text[, said_at, said_at_basis])        | One thing a session asks of a person, whole: never clipped, and dated from its source.   |
+|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| [`Verdict`](#crowsnest.triage.Verdict)(group[, why, reason, source, ...]) | One session's classification, and the evidence for it.                                   |
+
+### *class* crowsnest.triage.Ask(text, said_at='', said_at_basis='')
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One thing a session asks of a person, whole: never clipped, and dated from its source.
+
+`said_at` and `said_at_basis` are when these words were said, as a
+[`Verdict`](#crowsnest.triage.Verdict)’s are for its reason ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said)), and empty when no
+source gives a time.
+
+```pycon
+>>> Ask('attach the GIF').text
+'attach the GIF'
+```
 
 ### crowsnest.triage.DFLT_OWNER *= 'thor'*
 
@@ -110,7 +136,7 @@ the residue, not a finding.
 How much of the sentence that decided a verdict is quoted back. Enough to recognise
 the thing, not enough to make the report into the ledger.
 
-### *class* crowsnest.triage.Verdict(group, why='', reason='', source='', said_at='', said_at_basis='')
+### *class* crowsnest.triage.Verdict(group, why='', reason='', source='', said_at='', said_at_basis='', asks=())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -125,6 +151,10 @@ be traced to the thing that produced it.
 `said_at_basis` names that source (one of [`crowsnest.said.BASES`](crowsnest.said.html.md#crowsnest.said.BASES)). Both are
 empty when no source time is known. They are never filled with the time of reading.
 
+`asks` are what a `needs_you` verdict asks of a person, each whole and with its own
+time ([`Ask`](#crowsnest.triage.Ask)). The first is the request `reason` quotes. Other verdicts have
+none.
+
 ```pycon
 >>> Verdict('needs_you', why='decision', reason='squash or rebase?').as_dict()['group']
 'needs_you'
@@ -132,10 +162,10 @@ empty when no source time is known. They are never filled with the time of readi
 
 #### as_dict()
 
-JSON-ready form.
+JSON-ready form, the asks as a list of dicts.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.triage.WHYS *= ('question', 'decision', 'action')*
 
@@ -157,6 +187,10 @@ fell into it, each with a `verdict`. Rows keep the order they arrived in, which 
 the roster’s own – most urgent first. Each row’s `said_at` and `said_at_basis`
 are set again once its verdict is known ([`crowsnest.said.with_said()`](crowsnest.said.html.md#crowsnest.said.with_said)), so a row
 and its verdict never disagree about when the thing it quotes was said.
+
+`owner` is whose attention “for <person>” is about ([`dflt_verdicts()`](#crowsnest.triage.dflt_verdicts)), passed
+to every row as [`classify_row()`](#crowsnest.triage.classify_row) takes it; readers given as `verdicts` bind
+their own.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -203,6 +237,10 @@ exactly what an interrupted session leaves behind.
 
 Each verdict carries the time of the words it quotes (`_said_in()`). The fields
 carry no date of their own, so they take the ledger’s last write.
+
+A request’s `asks` are the one its reason quotes and every other “for <person>”
+section in the file (`_asks()`): a section appended after the first is still
+something the session needs.
 
 * **Return type:**
   [`Verdict`](#crowsnest.triage.Verdict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)

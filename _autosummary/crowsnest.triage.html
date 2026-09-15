@@ -101,6 +101,7 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.triage.Ask"><code class="docutils literal notranslate"><span class="pre">Ask</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.triage.DFLT_OWNER"><code class="docutils literal notranslate"><span class="pre">DFLT_OWNER</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.triage.GROUPS"><code class="docutils literal notranslate"><span class="pre">GROUPS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.triage.REASON_LIMIT"><code class="docutils literal notranslate"><span class="pre">REASON_LIMIT</span></code></a></li>
@@ -222,6 +223,15 @@ the heading of the section the words sit in, or, when that heading has no date, 
 ledger’s last write, which is only an upper bound. A reader never borrows another time,
 so a verdict with no source time has an empty <code class="docutils literal notranslate"><span class="pre">said_at</span></code>. That is what stops a claim
 five days old from being repeated as current (crowsnest#66).</p>
+<p><strong>A request carries its asks, whole.</strong> <code class="docutils literal notranslate"><span class="pre">reason</span></code> quotes the start of one request, clipped
+to <a class="reference internal" href="#crowsnest.triage.REASON_LIMIT" title="crowsnest.triage.REASON_LIMIT"><code class="xref py py-data docutils literal notranslate"><span class="pre">REASON_LIMIT</span></code></a> so a page stays a page. A <code class="docutils literal notranslate"><span class="pre">needs_you</span></code> verdict’s <code class="docutils literal notranslate"><span class="pre">asks</span></code>
+(<a class="reference internal" href="#crowsnest.triage.Ask" title="crowsnest.triage.Ask"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ask</span></code></a>) are what it asks of a person, each unclipped and dated: first the request
+its reason quotes (the question, the field, a statement to the end of its sentence and
+block, or a section), then every other “for &lt;person&gt;” section in the file. A statement
+elsewhere is not an ask. <a class="reference internal" href="crowsnest.attention.html#crowsnest.attention.fingerprint" title="crowsnest.attention.fingerprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.attention.fingerprint()</span></code></a> reads them, so a link changed
+after the reason, a second section appended later, or a change past the clip is a change
+to the item (crowsnest#67). That makes this module’s reading of an ask part of every
+stored revision: a change to where an ask begins or ends resurfaces the items it touches.</p>
 <p><code class="docutils literal notranslate"><span class="pre">verdicts=</span></code> is the seam: an ordered sequence of <code class="docutils literal notranslate"><span class="pre">(row,</span> <span class="pre">ledger)</span> <span class="pre">-&gt;</span> <span class="pre">Verdict</span> <span class="pre">|</span> <span class="pre">None</span></code>,
 first non-<code class="docutils literal notranslate"><span class="pre">None</span></code> winning. The default pair is the live registry signal – which is
 authoritative for <em>right now</em>, because a session that is <code class="code docutils literal notranslate"><span class="pre">waiting</span></code> is waiting whatever its
@@ -286,12 +296,31 @@ whose own store is already a seam) is the reader this exists to make room for.</
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Verdict</span></code></a>(group[, why, reason, source, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.Ask" title="crowsnest.triage.Ask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ask</span></code></a>(text[, said_at, said_at_basis])</p></td>
+<td><p>One thing a session asks of a person, whole: never clipped, and dated from its source.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Verdict</span></code></a>(group[, why, reason, source, ...])</p></td>
 <td><p>One session's classification, and the evidence for it.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.triage.Ask">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">Ask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">said_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">said_at_basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/triage.html#Ask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.Ask" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One thing a session asks of a person, whole: never clipped, and dated from its source.</p>
+<p><code class="docutils literal notranslate"><span class="pre">said_at</span></code> and <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code> are when these words were said, as a
+<a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><code class="xref py py-class docutils literal notranslate"><span class="pre">Verdict</span></code></a>’s are for its reason (<a class="reference internal" href="crowsnest.said.html#module-crowsnest.said" title="crowsnest.said"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.said</span></code></a>), and empty when no
+source gives a time.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">Ask</span><span class="p">(</span><span class="s1">'attach the GIF'</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+</span><span data-line="2"><span class="go">'attach the GIF'</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.triage.DFLT_OWNER">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">DFLT_OWNER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'thor'</span></span><a class="headerlink" href="#crowsnest.triage.DFLT_OWNER" title="Link to this definition">#</a></dt>
@@ -315,7 +344,7 @@ the thing, not enough to make the report into the ledger.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.triage.Verdict">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">Verdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">why</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">said_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">said_at_basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/triage.html#Verdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.Verdict" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">Verdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">why</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">said_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">said_at_basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/triage.html#Verdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.Verdict" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One session’s classification, and the evidence for it.</p>
 <p><code class="docutils literal notranslate"><span class="pre">reason</span></code> is the session’s own words wherever possible: a triage a person cannot
@@ -325,6 +354,9 @@ be traced to the thing that produced it.</p>
 <p><code class="docutils literal notranslate"><span class="pre">said_at</span></code> is when the words in <code class="docutils literal notranslate"><span class="pre">reason</span></code> were said, taken from their source, and
 <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code> names that source (one of <a class="reference internal" href="crowsnest.said.html#crowsnest.said.BASES" title="crowsnest.said.BASES"><code class="xref py py-data docutils literal notranslate"><span class="pre">crowsnest.said.BASES</span></code></a>). Both are
 empty when no source time is known. They are never filled with the time of reading.</p>
+<p><code class="docutils literal notranslate"><span class="pre">asks</span></code> are what a <code class="docutils literal notranslate"><span class="pre">needs_you</span></code> verdict asks of a person, each whole and with its own
+time (<a class="reference internal" href="#crowsnest.triage.Ask" title="crowsnest.triage.Ask"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ask</span></code></a>). The first is the request <code class="docutils literal notranslate"><span class="pre">reason</span></code> quotes. Other verdicts have
+none.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">Verdict</span><span class="p">(</span><span class="s1">'needs_you'</span><span class="p">,</span> <span class="n">why</span><span class="o">=</span><span class="s1">'decision'</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s1">'squash or rebase?'</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()[</span><span class="s1">'group'</span><span class="p">]</span>
 </span><span data-line="2"><span class="go">'needs_you'</span>
 </span></pre></div>
@@ -334,10 +366,10 @@ empty when no source time is known. They are never filled with the time of readi
 <dl class="py method">
 <dt class="sig sig-object py" id="crowsnest.triage.Verdict.as_dict">
 <span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/triage.html#Verdict.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.Verdict.as_dict" title="Link to this definition">#</a></dt>
-<dd><p>JSON-ready form.</p>
+<dd><p>JSON-ready form, the asks as a list of dicts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -365,6 +397,9 @@ fell into it, each with a <code class="docutils literal notranslate"><span class
 the roster’s own – most urgent first. Each row’s <code class="docutils literal notranslate"><span class="pre">said_at</span></code> and <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code>
 are set again once its verdict is known (<a class="reference internal" href="crowsnest.said.html#crowsnest.said.with_said" title="crowsnest.said.with_said"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.said.with_said()</span></code></a>), so a row
 and its verdict never disagree about when the thing it quotes was said.</p>
+<p><code class="docutils literal notranslate"><span class="pre">owner</span></code> is whose attention “for &lt;person&gt;” is about (<a class="reference internal" href="#crowsnest.triage.dflt_verdicts" title="crowsnest.triage.dflt_verdicts"><code class="xref py py-func docutils literal notranslate"><span class="pre">dflt_verdicts()</span></code></a>), passed
+to every row as <a class="reference internal" href="#crowsnest.triage.classify_row" title="crowsnest.triage.classify_row"><code class="xref py py-func docutils literal notranslate"><span class="pre">classify_row()</span></code></a> takes it; readers given as <code class="docutils literal notranslate"><span class="pre">verdicts</span></code> bind
+their own.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -417,6 +452,9 @@ reason this is honest. Inferring “finished” from silence would be inferring 
 exactly what an interrupted session leaves behind.</p>
 <p>Each verdict carries the time of the words it quotes (<code class="xref py py-func docutils literal notranslate"><span class="pre">_said_in()</span></code>). The fields
 carry no date of their own, so they take the ledger’s last write.</p>
+<p>A request’s <code class="docutils literal notranslate"><span class="pre">asks</span></code> are the one its reason quotes and every other “for &lt;person&gt;”
+section in the file (<code class="xref py py-func docutils literal notranslate"><span class="pre">_asks()</span></code>): a section appended after the first is still
+something the session needs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.triage.Verdict" title="crowsnest.triage.Verdict"><code class="xref py py-class docutils literal notranslate"><span class="pre">Verdict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
@@ -521,7 +559,7 @@ short ledger and harmless for a long one that never structured itself.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=e648f5b4"></script>
+      <script src="../_static/documentation_options.js?v=84bd753f"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
