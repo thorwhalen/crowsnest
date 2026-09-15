@@ -3,7 +3,7 @@
 The second review of PR #72, after ``tests/test_evidence_refute.py`` reviewed the first
 design. Each test asserts the CORRECT behaviour, so a failing test is a defect found by
 review. Synthetic fixtures only. Triage probes go straight to ``triage.classify_row``,
-which is what ``tools._item_row`` runs; a ``needs_you`` revision depends only on the
+which is what ``RowContext.row`` runs; a ``needs_you`` revision depends only on the
 verdict, so ``att.fingerprint({"verdict": ...})`` is the revision a verb would pin.
 """
 

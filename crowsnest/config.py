@@ -43,6 +43,15 @@ presets land on and the ages at which something counts as stale or stuck
     stale_after = "24h"    # a number is hours; or "90m", "2d"
     stuck_after = "6h"
 
+The ``[report]`` table (:func:`report_settings`) names the ledger directory the report's
+rows are triaged from. The attention verbs and ``crowsnest watch`` read the same table, so
+all three build a row the same way without a flag each (:mod:`crowsnest.rows`).
+
+.. code-block:: toml
+
+    [report]
+    ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
+
 On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML
 double-quoted string treats a backslash as an escape.
 
@@ -77,13 +86,16 @@ __all__ = [
     "CLAUDE_BIN_KEY",
     "CONFIG_ENV_VAR",
     "DFLT_FRESH_SECONDS",
+    "REPORT_KEY",
     "AttentionSettings",
     "Home",
+    "ReportSettings",
     "attention_settings",
     "claude_bin_setting",
     "config_path",
     "configured_homes",
     "homes",
+    "report_settings",
 ]
 
 #: The top-level config key naming the command that starts a session. See
@@ -304,6 +316,63 @@ def attention_settings(*, path: str | Path | None = None) -> AttentionSettings:
         return AttentionSettings(**values)
     except ValueError as exc:
         raise ValueError(f"{file}: [{ATTENTION_KEY}] {exc}") from None
+
+
+#: The config table saying how the report's rows are built.
+REPORT_KEY = "report"
+
+
+@dataclass(frozen=True)
+class ReportSettings:
+    """The ``[report]`` table, validated: how the report builds its rows, which the attention
+    verbs and the watcher must build the same way (:class:`crowsnest.rows.RowContext`).
+
+    >>> ReportSettings().ledger_dir is None
+    True
+    """
+
+    ledger_dir: Path | None = None
+
+
+def report_settings(*, path: str | Path | None = None) -> ReportSettings:
+    """The config file's ``[report]`` table, or the defaults when it has none.
+
+    .. code-block:: toml
+
+        [report]
+        ledger_dir = "~/sync/crowsnest/ledger"   # the ledgers rows are triaged from
+
+    ``ledger_dir`` must be absolute or start with ``~``. A relative one would name a
+    different directory for each command run from a different place -- the report from one,
+    ``crowsnest watch`` from another -- which is the disagreement this setting exists to
+    end. A key the table does not know is an error, as in ``[attention]``.
+    """
+    file = config_path(path)
+    table = _loaded(path).get(REPORT_KEY)
+    if table is None:
+        return ReportSettings()
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{REPORT_KEY}] must be a table")  # noqa: TRY004
+    known = {f.name for f in fields(ReportSettings)}
+    unknown = sorted(set(table) - known)
+    if unknown:
+        raise ValueError(
+            f"{file}: [{REPORT_KEY}] has no {', '.join(unknown)}; "
+            f"it knows {', '.join(sorted(known))}"
+        )
+    raw = table.get("ledger_dir")
+    if raw is None:
+        return ReportSettings()
+    if not isinstance(raw, str) or not raw.strip():
+        raise ValueError(f"{file}: [{REPORT_KEY}] ledger_dir must be a path, not {raw!r}")
+    found = Path(raw.strip()).expanduser()
+    if not found.is_absolute():
+        raise ValueError(
+            f"{file}: [{REPORT_KEY}] ledger_dir must be absolute or start with ~, not "
+            f"{raw!r}: a relative one names a different directory from every directory "
+            f"a command runs in"
+        )
+    return ReportSettings(ledger_dir=found)
 
 
 def _default_home() -> Home:

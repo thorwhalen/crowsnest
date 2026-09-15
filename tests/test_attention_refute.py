@@ -1,7 +1,7 @@
 """Adversarial probes against the attention core (#53). Each asserts the CORRECT behaviour.
 
 A failing test here is a defect found by review, not a flaky test. Rows are built the way
-the report builds them (``tools._item_row``: roster row, links, triage verdict) from
+the report builds them (``RowContext.row``: roster row, links, triage verdict) from
 synthetic fixtures only -- never from a unit test's hand-made row.
 """
 
@@ -29,6 +29,7 @@ from crowsnest.__main__ import main
 from crowsnest.config import attention_settings, claude_bin_setting, homes
 from crowsnest.ledger import ledger_path
 from crowsnest.paths import data_dir
+from crowsnest.rows import RowContext
 
 UTC = timezone.utc
 T0 = datetime(2026, 1, 5, 12, 0, tzinfo=UTC)
@@ -92,7 +93,7 @@ def _session(
 
 def _row(tmp_path, tag, **kw):
     home, ledger_dir = _session(tmp_path, tag, **kw)
-    return tools._item_row(kw.get("name", "shipper"), home=home, ledger_dir=ledger_dir)
+    return RowContext(ledger_dir=ledger_dir).row(kw.get("name", "shipper"), home=home)
 
 
 # --- claim 1: identity ----------------------------------------------------------------
@@ -111,7 +112,7 @@ def test_identity_join_is_unambiguous_across_component_counts():
 def test_a_resumed_session_under_a_new_pid_and_name_keeps_its_record(tmp_path, live):
     store = {}
     h1, l1 = _session(tmp_path, "before", name="alpha", pid=401, last_words="ok")
-    tools.seen("alpha", home=h1, ledger_dir=l1, store=store)
+    tools.seen("alpha", home=h1, row_context=RowContext(ledger_dir=l1), store=store)
     row = _row(tmp_path, "after", name="beta", pid=402, last_words="ok")
     record = att.read_record(att.item_id(row), store=store)
     assert att.present(att.fingerprint(row), record) == "seen"
@@ -184,7 +185,9 @@ def test_a_handled_item_stays_hidden_while_its_session_merely_works(tmp_path, li
 
 def test_the_revision_does_not_depend_on_whether_links_were_resolved(tmp_path, live):
     home, ledger_dir = _session(tmp_path, "a", ledger=ASK, last_words="Waiting.")
-    pinned = tools.seen("shipper", home=home, ledger_dir=ledger_dir, store={})
+    pinned = tools.seen(
+        "shipper", home=home, row_context=RowContext(ledger_dir=ledger_dir), store={}
+    )
     rows = tools.triage(home=home, ledger_dir=ledger_dir)["groups"]["needs_you"]
     assert pinned["seen_rev"] == att.fingerprint(rows[0])
 
@@ -193,7 +196,7 @@ def test_owner_reaches_the_verdict_the_verbs_pin(tmp_path, live):
     home, ledger_dir = _session(
         tmp_path, "a", ledger="## For Ana\n\nPick the base branch for the release.\n"
     )
-    row = tools._item_row("shipper", home=home, ledger_dir=ledger_dir, owner="ana")
+    row = RowContext(ledger_dir=ledger_dir, owner="ana").row("shipper", home=home)
     assert row["verdict"]["group"] == "needs_you", row["verdict"]
 
 
@@ -208,7 +211,10 @@ def test_triage_honours_owner_and_agrees_with_the_revision_the_verbs_pin(tmp_pat
     ]
     assert len(needs_you) == 1, needs_you
     pinned = tools.seen(
-        "shipper", home=home, ledger_dir=ledger_dir, owner="ana", store={}
+        "shipper",
+        home=home,
+        row_context=RowContext(ledger_dir=ledger_dir, owner="ana"),
+        store={},
     )
     assert pinned["seen_rev"] == att.fingerprint(needs_you[0])
 

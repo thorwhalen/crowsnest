@@ -20,6 +20,7 @@ from fixtures import (
 from crowsnest import attention as att
 from crowsnest import registry, tools
 from crowsnest.ledger import ledger_path
+from crowsnest.rows import RowContext
 
 T0 = datetime(2026, 1, 5, 12, 0, tzinfo=timezone.utc)
 ASKED = att.SeenAs("needs_you", "question")
@@ -145,7 +146,7 @@ def asker(tmp_path, monkeypatch):
         "# shipper\n\n## For Thor\n\nAttach the GIF to the release notes.\n",
         encoding="utf-8",
     )
-    return {"home": home, "ledger_dir": ledger_dir}
+    return {"home": home, "row_context": RowContext(ledger_dir=ledger_dir)}
 
 
 @pytest.mark.parametrize("verb", ["seen", "done"])

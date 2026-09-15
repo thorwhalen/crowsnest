@@ -51,7 +51,7 @@ import html as _html
 import os
 import re
 import shlex
-from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone, tzinfo
 from typing import Any
@@ -64,6 +64,7 @@ from crowsnest import said as _said
 from crowsnest.config import DFLT_STALE_AFTER, AttentionSettings
 from crowsnest.lineage import open_command as _open_command
 from crowsnest.links import label_for as _label_for
+from crowsnest.rows import RowContext
 from crowsnest.tree import TREE_CSS as _TREE_CSS
 from crowsnest.tree import Placed as _Placed
 
@@ -79,6 +80,13 @@ __all__ = [
 #: renderers add their controls without every signature growing a flag.
 _interactive: contextvars.ContextVar[bool] = contextvars.ContextVar(
     "crowsnest_report_interactive", default=False
+)
+
+#: Whether a row's resolved ``links`` are drawn, for one :func:`render_report` call. Off, a
+#: row renders as one built without links would; its revision is still taken from the
+#: whole row, which is the row the verbs pin (#78).
+_links_shown: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "crowsnest_report_links_shown", default=True
 )
 
 
@@ -1479,7 +1487,7 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     Each is named the way a person says it (``mergeset#12``, ``crowsnest@7d30838``)
     rather than shown as a URL, and the label is escaped like everything else.
     """
-    found = row.get("links")
+    found = row.get("links") if _links_shown.get() else None
     if not found:
         act = row.get("activity") or {}
         found = act.get("locators") or ()
@@ -1867,7 +1875,7 @@ def _thin_refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     """
     anchors = []
     seen: set[str] = set()
-    for loc in row.get("links") or ():
+    for loc in (row.get("links") if _links_shown.get() else None) or ():
         if not isinstance(loc, Mapping):
             continue
         url = str(loc.get("url") or "")
@@ -2155,8 +2163,7 @@ def _attention_view(
     now: float,
     store: MutableMapping[str, dict] | None,
     plain: bool,
-    identity: Callable[[Mapping], Iterable[str]] | None,
-    material: Callable[[Mapping], Iterable] | None,
+    row_context: RowContext,
     with_ids: bool,
 ) -> _View:
     """Every row's item, revision and presentation, for one render.
@@ -2188,8 +2195,8 @@ def _attention_view(
     rows: dict[int, _Attended] = {}
     for row in sessions:
         try:
-            item = _attention.item_id(row, identity=identity)
-            rev = _attention.fingerprint(row, material=material)
+            item = row_context.item(row)
+            rev = row_context.rev(row)
         except ValueError:  # UnicodeEncodeError included
             continue
         # What the row is now, as `seen_as` would record it: the static page's "was:" line
@@ -2353,8 +2360,8 @@ def render_report(
     stale_after: timedelta | None = None,
     store: MutableMapping[str, dict] | None = None,
     plain: bool = False,
-    identity: Callable[[Mapping], Iterable[str]] | None = None,
-    material: Callable[[Mapping], Iterable] | None = None,
+    row_context: RowContext | None = None,
+    links: bool = True,
     attention_settings: AttentionSettings | None = None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
@@ -2417,22 +2424,27 @@ def render_report(
     **A store with no readable record changes nothing**: the page is byte for byte the
     page from before attention existed. Neither does ``plain=True``, which ignores the
     store -- a copy to share -- nor a roster without triage verdicts, whose rows carry
-    revisions no verb pinned. ``identity`` and ``material`` are
-    :mod:`crowsnest.attention`'s seams, and must be the ones the verbs were given. An
-    interactive page carries ``data-item`` and ``data-rev`` for its script on every row
-    that has an identity, whatever the store holds.
+    revisions no verb pinned. ``row_context`` names and hashes each row
+    (:meth:`crowsnest.rows.RowContext.item` and :meth:`~crowsnest.rows.RowContext.rev`;
+    ``None`` is attention's defaults), and must be the one the rows were built with and
+    the verbs were given. An interactive page carries ``data-item`` and ``data-rev`` for
+    its script on every row that has an identity, whatever the store holds.
+
+    ``links=False`` leaves each row's resolved references off the page: it renders as a
+    row built without them would, the transcript's own locators included. Its revision
+    is still taken from the whole row, because that is the row the verbs pin.
     """
     clock = _clock(made_at, tz=tz, stale_after=stale_after)
     sessions = list(roster.get("sessions") or [])
     token = _interactive.set(interactive)
+    links_token = _links_shown.set(links)
     try:
         view = _attention_view(
             sessions,
             now=clock.now,
             store=store,
             plain=plain,
-            identity=identity,
-            material=material,
+            row_context=RowContext() if row_context is None else row_context,
             with_ids=interactive,
         )
         view_token = _view.set(view)
@@ -2453,6 +2465,7 @@ def render_report(
             _view.reset(view_token)
     finally:
         _interactive.reset(token)
+        _links_shown.reset(links_token)
 
 
 def _render(

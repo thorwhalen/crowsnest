@@ -20,6 +20,7 @@ from openloops.egress import scan
 from crowsnest import attention, registry, tools
 from crowsnest.__main__ import main
 from crowsnest.report import render_report
+from crowsnest.rows import RowContext
 
 STAMP = "2026-02-01T12:00:00Z"
 NOW = attention.instant(STAMP)
@@ -580,10 +581,9 @@ def test_probe_identity_and_material_reach_through_tools_report(home):
         return (r.get("status"),)
 
     store = {}
-    tools.seen("shipper", home=home, identity=by_label, material=by_status, store=store)
-    html = tools.report(home=home, identity=by_label, material=by_status, store=store)[
-        "html"
-    ]
+    ctx = RowContext(identity=by_label, material=by_status)
+    tools.seen("shipper", home=home, row_context=ctx, store=store)
+    html = tools.report(home=home, row_context=ctx, store=store)["html"]
     assert "row--seen" in li(html, "shipper")
     assert "row--seen" not in li(tools.report(home=home, store=store)["html"], "shipper")
 
