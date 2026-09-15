@@ -121,6 +121,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.lineage.graph"><code class="docutils literal notranslate"><span class="pre">graph()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.lineage.lineage_path"><code class="docutils literal notranslate"><span class="pre">lineage_path()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.lineage.names_by_session_id"><code class="docutils literal notranslate"><span class="pre">names_by_session_id()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.lineage.open_command"><code class="docutils literal notranslate"><span class="pre">open_command()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.lineage.record_spawn"><code class="docutils literal notranslate"><span class="pre">record_spawn()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.lineage.spawn_event"><code class="docutils literal notranslate"><span class="pre">spawn_event()</span></code></a></li>
 </ul>
@@ -269,10 +270,13 @@ long-lived dispatcher ever started would sit on the graph forever.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.lineage.names_by_session_id" title="crowsnest.lineage.names_by_session_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">names_by_session_id</span></code></a>(*[, events_path, ...])</p></td>
 <td><p>Every session id these two logs have ever named, mapped to that name.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.lineage.record_spawn" title="crowsnest.lineage.record_spawn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_spawn</span></code></a>(child, *[, child_session_id, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.lineage.open_command" title="crowsnest.lineage.open_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open_command</span></code></a>(row, *[, home_dir])</p></td>
+<td><p>What to type in a terminal to reach one session: <a href="#id1"><span class="problematic" id="id2">``</span></a>crowsnest open .</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.lineage.record_spawn" title="crowsnest.lineage.record_spawn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_spawn</span></code></a>(child, *[, child_session_id, ...])</p></td>
 <td><p>Write the <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line for a session just created.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.lineage.spawn_event" title="crowsnest.lineage.spawn_event"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_event</span></code></a>(child, *[, child_session_id, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.lineage.spawn_event" title="crowsnest.lineage.spawn_event"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_event</span></code></a>(child, *[, child_session_id, ...])</p></td>
 <td><p>One <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line for the event log, shaped like every other line in it.</p></td>
 </tr>
 </tbody>
@@ -529,10 +533,15 @@ would stay on the graph forever.</p>
 are read), which is the spelling <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">show</span></code> accepts, and is what keeps two
 machines’ identically-named sessions apart.</p>
 <p>Returns <code class="docutils literal notranslate"><span class="pre">{&quot;nodes&quot;,</span> <span class="pre">&quot;edges&quot;,</span> <span class="pre">&quot;roots&quot;,</span> <span class="pre">&quot;orphans&quot;,</span> <span class="pre">&quot;counts&quot;}</span></code>, all JSON-able. Each node
-carries <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">session_id</span></code>, <code class="docutils literal notranslate"><span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">home</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>,
-<code class="docutils literal notranslate"><span class="pre">status_since</span></code>, <code class="docutils literal notranslate"><span class="pre">alive</span></code>, <code class="docutils literal notranslate"><span class="pre">parent</span></code>, <code class="docutils literal notranslate"><span class="pre">confidence</span></code>, <code class="docutils literal notranslate"><span class="pre">depth</span></code>, <code class="docutils literal notranslate"><span class="pre">children</span></code> and
-<code class="docutils literal notranslate"><span class="pre">at</span></code> (when its parent link was recorded) – enough for a renderer to lay out, group
-and age the tree without going back to the roster.</p>
+carries <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">session_id</span></code>, <code class="docutils literal notranslate"><span class="pre">session_url</span></code>, <code class="docutils literal notranslate"><span class="pre">open_command</span></code>,
+<code class="docutils literal notranslate"><span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">home</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">status_since</span></code>, <code class="docutils literal notranslate"><span class="pre">alive</span></code>, <code class="docutils literal notranslate"><span class="pre">parent</span></code>,
+<code class="docutils literal notranslate"><span class="pre">confidence</span></code>, <code class="docutils literal notranslate"><span class="pre">depth</span></code>, <code class="docutils literal notranslate"><span class="pre">children</span></code> and <code class="docutils literal notranslate"><span class="pre">at</span></code> (when its parent link was
+recorded) – enough for a renderer to lay out, group, age and link the tree without
+going back to the roster. <code class="docutils literal notranslate"><span class="pre">open_command</span></code> is passed on from the row, which
+<a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.roster()</span></code></a> computes knowing which home it read; it is <code class="docutils literal notranslate"><span class="pre">''</span></code> for
+an exited node and for rows that carry none.</p>
+<p>A live node’s <code class="docutils literal notranslate"><span class="pre">home</span></code> is its row’s, and only an exited one’s is read back out of its
+address: a session named <code class="docutils literal notranslate"><span class="pre">a&#64;b</span></code> on the one home read has no home called <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -571,6 +580,54 @@ was last called – which is what a person reading a graph today expects to see.
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.open_command">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">open_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/lineage.html#open_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.open_command" title="Link to this definition">#</a></dt>
+<dd><p>What to type in a terminal to reach one session: <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">open</span> <span class="pre">...</span> <span class="pre">&lt;session&gt;</span></code>.</p>
+<p>The way in for a session with no <code class="docutils literal notranslate"><span class="pre">session_url</span></code> (one not running with Remote
+Control). It is a command and never a link, and it has to reach <em>that</em> session from
+any of the user’s terminals on this machine, whichever account a terminal is set to.
+(Another user’s terminal is not covered: <code class="docutils literal notranslate"><span class="pre">~/</span></code> expands to <em>that</em> user’s home.)</p>
+<ul>
+<li><p><strong>The session, by its id.</strong> A name does not pick out one session: two sessions may
+share a name (crowsnest issue #42), an unnamed session’s label is the head of its id
+and matches a session <em>named</em> after that head first, and a name can hold an <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>
+that reads as a home. The whole <code class="docutils literal notranslate"><span class="pre">session_id</span></code> has none of those problems.
+<a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.resolve" title="crowsnest.tools.resolve"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.resolve()</span></code></a> matches it exactly, and it needs no quoting. Only a</p>
+<blockquote>
+<div><p>row with no id (a roster built by hand) is addressed as <code class="docutils literal notranslate"><span class="pre">label</span></code> / <code class="docutils literal notranslate"><span class="pre">label&#64;home</span></code>.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Where to look, pinned.</strong> <code class="docutils literal notranslate"><span class="pre">home_dir</span></code> goes in as <code class="docutils literal notranslate"><span class="pre">--home</span></code>. Without it the command
+reads whichever account the <em>pasting</em> shell selects (<code class="docutils literal notranslate"><span class="pre">$CLAUDE_CONFIG_DIR</span></code>), which
+on a machine with two accounts is the wrong one. A directory under the user’s own
+home is written <code class="docutils literal notranslate"><span class="pre">~/...</span></code> (<code class="docutils literal notranslate"><span class="pre">--home</span></code> expands it), so the page names no user. With
+no <code class="docutils literal notranslate"><span class="pre">home_dir</span></code>, a row carrying a home <em>name</em> gets <code class="docutils literal notranslate"><span class="pre">--all-homes</span></code>, which reads the
+homes the config file names: the same file whichever account runs it.</p></li>
+<li><p><strong>Nothing else runs.</strong> Everything variable is quoted for a POSIX shell (not Windows
+<code class="docutils literal notranslate"><span class="pre">cmd</span></code>), and an address starting with <code class="docutils literal notranslate"><span class="pre">-</span></code> goes after <code class="docutils literal notranslate"><span class="pre">--</span></code>, or it would be read
+as a flag.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">''</span></code> for a row with nothing to address.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">open_command</span><span class="p">({</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'cn'</span><span class="p">,</span> <span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'3f2a-77'</span><span class="p">},</span> <span class="n">home_dir</span><span class="o">=</span><span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s1">'.cq'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">"crowsnest open --home '~/.cq' 3f2a-77"</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">open_command</span><span class="p">({</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'cn'</span><span class="p">,</span> <span class="s1">'home'</span><span class="p">:</span> <span class="s1">'server'</span><span class="p">,</span> <span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'3f2a-77'</span><span class="p">})</span>
+</span><span data-line="4"><span class="go">'crowsnest open --all-homes 3f2a-77'</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">open_command</span><span class="p">({</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'cn'</span><span class="p">,</span> <span class="s1">'home'</span><span class="p">:</span> <span class="s1">'server'</span><span class="p">})</span>
+</span><span data-line="6"><span class="go">'crowsnest open --all-homes cn@server'</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">open_command</span><span class="p">({</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'fix; rm -rf ~'</span><span class="p">})</span>
+</span><span data-line="8"><span class="go">"crowsnest open 'fix; rm -rf ~'"</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="n">open_command</span><span class="p">({</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'-x'</span><span class="p">})</span>
+</span><span data-line="10"><span class="go">'crowsnest open -- -x'</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -659,7 +716,7 @@ that a reader can tell “spawned by nobody we could name” (<code class="docut
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=9dd25805"></script>
+      <script src="../_static/documentation_options.js?v=39aadc1c"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

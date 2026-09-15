@@ -31,7 +31,7 @@ and the tmux one only reports the attach command; there is nothing to focus.
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`LiveSession`](crowsnest.registry.html.md#crowsnest.registry.LiveSession)], [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]
 
-### crowsnest.open.open_session(session, , home=None, all_homes=False, opener=None)
+### crowsnest.open.open_session(session, , home=None, all_homes=False, opener=None, config=None)
 
 Raise `session`’s terminal, or say where it runs when none can be found.
 
@@ -42,6 +42,11 @@ sends keys into the session; only selects and focuses what is already there.
 
 Returns `{"name", "how", "detail"}`; `how` is `"not found"` when no strategy
 matched, with the pid and cwd in `detail` so the caller can say where it runs.
+
+**A session in a remote home is never handed to the opener.** Its registry is a synced
+copy of another machine’s, so it has no terminal here. The opener matches terminals
+by *name*, so it would raise whichever local tab happened to share that name.
+`how` is then `"remote"` and `detail` says which home it runs on.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

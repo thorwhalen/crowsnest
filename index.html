@@ -228,9 +228,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="16"><span class="n">crowsnest</span> <span class="n">install</span><span class="o">-</span><span class="n">skills</span>           <span class="n">link</span> <span class="n">the</span> <span class="n">skills</span> <span class="ow">and</span> <span class="n">the</span> <span class="n">scout</span> <span class="n">subagent</span> <span class="n">into</span> <span class="o">~/.</span><span class="n">claude</span>
 </span></pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">open</span></code> is a desktop command – it looks for an iTerm tab or a tmux session and has nothing
-to raise from a web page, so a claude.ai artifact (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code>) can only tell you
-where a session runs, never bring its terminal to the front for you.</p>
+<p><code class="docutils literal notranslate"><span class="pre">open</span></code> is a desktop command – it looks for an iTerm tab or a tmux session and has nothing to raise from a web page. So wherever <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code> cannot link a session (no Remote Control, so no claude.ai URL), the page shows the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">open</span></code> command that reaches it. You paste that into a terminal; the page never brings the terminal to the front for you.</p>
 <p><code class="docutils literal notranslate"><span class="pre">&lt;session&gt;</span></code> is the name you gave the session with <code class="docutils literal notranslate"><span class="pre">claude</span> <span class="pre">-n</span> <span class="pre">&lt;name&gt;</span></code>, a unique prefix of one, a session-id prefix, or a pid.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">waiting  25m  xa_needed_or_not      xa           input needed · Let me split that into smaller steps.
 </span><span data-line="2">busy     14m  session_monitor       openloops    → Bash: Run the one-command test
@@ -312,7 +310,7 @@ where a session runs, never bring its terminal to the front for you.</p>
 </span><span data-line="13"><span class="n">remote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                         </span><span class="c1"># its pids are not ours: alive while fresh</span>
 </span></pre></div>
 </div>
-<p>Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">--all-homes</span></code> prints every home with a column saying which — which is also how a session spawned with <code class="docutils literal notranslate"><span class="pre">--profile</span></code> shows up, on the account it actually runs on — <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">show</span> <span class="pre">name&#64;home</span> <span class="pre">--all-homes</span></code> picks one when a name exists in two, and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span> <span class="pre">--all-homes</span></code> streams events from all of them, each tagged <code class="docutils literal notranslate"><span class="pre">name&#64;home</span></code>.</p>
+<p>Every report row links to the session on claude.ai when it runs with Remote Control, and otherwise shows the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">open</span></code> command that reaches it. The spawn tree’s list does the same for every session it names. Rows also link to the session’s repository, and to the issues and pull requests it mentioned. Then <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">--all-homes</span></code> prints every home with a column saying which — which is also how a session spawned with <code class="docutils literal notranslate"><span class="pre">--profile</span></code> shows up, on the account it actually runs on — <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">show</span> <span class="pre">name&#64;home</span> <span class="pre">--all-homes</span></code> picks one when a name exists in two, and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span> <span class="pre">--all-homes</span></code> streams events from all of them, each tagged <code class="docutils literal notranslate"><span class="pre">name&#64;home</span></code>.</p>
 <p>A profile name is resolved against the <code class="docutils literal notranslate"><span class="pre">[[homes]]</span></code> names above first, then against a <code class="docutils literal notranslate"><span class="pre">claude-profile</span> <span class="pre">dir</span> <span class="pre">&lt;name&gt;</span></code> command on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> if you keep one; a name neither knows is an error, never a quiet fall back to the default account, and a home marked <code class="docutils literal notranslate"><span class="pre">remote</span></code> is refused — those are another machine’s, read-only.</p>
 <section id="which-claude-gets-started">
 <h3>Which <code class="docutils literal notranslate"><span class="pre">claude</span></code> gets started<a class="headerlink" href="#which-claude-gets-started" title="Link to this heading">#</a></h3>
@@ -464,7 +462,7 @@ where a session runs, never bring its terminal to the front for you.</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-15 11:32 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/b654f427c3005e394ba5f37ec9e6fc03e0346816">b654f42</a> (main) · crowsnest 0.0.34 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-15 11:42 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/b0665f622ffdd925a622da750a3427f79869b531">b0665f6</a> (main) · crowsnest 0.0.35 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -499,7 +497,7 @@ where a session runs, never bring its terminal to the front for you.</p>
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=9dd25805"></script>
+      <script src="_static/documentation_options.js?v=39aadc1c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

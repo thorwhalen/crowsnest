@@ -57,7 +57,8 @@ and nothing in this module pretends otherwise.
 | [`claude_bin_setting`](#crowsnest.config.claude_bin_setting)(\*[, path])   | The `claude_bin` the config file names, or `''` when it names none.              |
 |-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
 | [`config_path`](#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
-| [`homes`](#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when there is no config file.           |
+| [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
+| [`homes`](#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
 
 ### Classes
 
@@ -105,9 +106,26 @@ the one that fails needs to say so in terms of the command.
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
+### crowsnest.config.configured_homes(, path=None)
+
+The homes the config file’s `[[homes]]` entries name; `[]` when it names none.
+
+[`homes()`](#crowsnest.config.homes) falls back to the default home, whose path is whatever
+`$CLAUDE_CONFIG_DIR` the *running* process has. That is right for reading, and
+wrong for anything that must mean the same home in another account’s terminal: a
+command printed for later pasting ([`crowsnest.lineage.open_command()`](crowsnest.lineage.html.md#crowsnest.lineage.open_command)), say.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](#crowsnest.config.Home)]
+
+```pycon
+>>> configured_homes(path='/nonexistent-config-for-doctest')
+[]
+```
+
 ### crowsnest.config.homes(, path=None)
 
-The configured homes, or the default one when there is no config file.
+The configured homes, or the default one when the config file names none.
 
 A config file that cannot be parsed is an error worth seeing, not a silent fallback:
 a person who wrote one meant it.

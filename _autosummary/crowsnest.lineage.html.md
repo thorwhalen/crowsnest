@@ -75,6 +75,7 @@ long-lived dispatcher ever started would sit on the graph forever.
 | [`graph`](#crowsnest.lineage.graph)(\*[, sessions, sources, home, ...])        | The spawn forest: every live session as a node, every parent link as an edge.                                          |
 | [`lineage_path`](#crowsnest.lineage.lineage_path)([path])                             | Where recorded edges live: `path` when given, else `<data dir>/lineage.jsonl`.                                         |
 | [`names_by_session_id`](#crowsnest.lineage.names_by_session_id)(\*[, events_path, ...])      | Every session id these two logs have ever named, mapped to that name.                                                  |
+| [`open_command`](#crowsnest.lineage.open_command)(row, \*[, home_dir])                | What to type in a terminal to reach one session: <br/><br/>```<br/>``<br/>```<br/><br/>crowsnest open .                |
 | [`record_spawn`](#crowsnest.lineage.record_spawn)(child, \*[, child_session_id, ...]) | Write the `spawn` line for a session just created.                                                                     |
 | [`spawn_event`](#crowsnest.lineage.spawn_event)(child, \*[, child_session_id, ...])  | One `spawn` line for the event log, shaped like every other line in it.                                                |
 
@@ -295,10 +296,16 @@ are read), which is the spelling `crowsnest show` accepts, and is what keeps two
 machines’ identically-named sessions apart.
 
 Returns `{"nodes", "edges", "roots", "orphans", "counts"}`, all JSON-able. Each node
-carries `name`, `label`, `session_id`, `project`, `home`, `status`,
-`status_since`, `alive`, `parent`, `confidence`, `depth`, `children` and
-`at` (when its parent link was recorded) – enough for a renderer to lay out, group
-and age the tree without going back to the roster.
+carries `name`, `label`, `session_id`, `session_url`, `open_command`,
+`project`, `home`, `status`, `status_since`, `alive`, `parent`,
+`confidence`, `depth`, `children` and `at` (when its parent link was
+recorded) – enough for a renderer to lay out, group, age and link the tree without
+going back to the roster. `open_command` is passed on from the row, which
+[`crowsnest.tools.roster()`](crowsnest.tools.html.md#crowsnest.tools.roster) computes knowing which home it read; it is `''` for
+an exited node and for rows that carry none.
+
+A live node’s `home` is its row’s, and only an exited one’s is read back out of its
+address: a session named `a@b` on the one home read has no home called `b`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -333,6 +340,49 @@ was last called – which is what a person reading a graph today expects to see.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.lineage.open_command(row, , home_dir=None)
+
+What to type in a terminal to reach one session: `crowsnest open ... <session>`.
+
+The way in for a session with no `session_url` (one not running with Remote
+Control). It is a command and never a link, and it has to reach *that* session from
+any of the user’s terminals on this machine, whichever account a terminal is set to.
+(Another user’s terminal is not covered: `~/` expands to *that* user’s home.)
+
+- **The session, by its id.** A name does not pick out one session: two sessions may
+  share a name (crowsnest issue #42), an unnamed session’s label is the head of its id
+  and matches a session *named* after that head first, and a name can hold an `@`
+  that reads as a home. The whole `session_id` has none of those problems.
+  [`crowsnest.tools.resolve()`](crowsnest.tools.html.md#crowsnest.tools.resolve) matches it exactly, and it needs no quoting. Only a
+  > row with no id (a roster built by hand) is addressed as `label` / `label@home`.
+- **Where to look, pinned.** `home_dir` goes in as `--home`. Without it the command
+  reads whichever account the *pasting* shell selects (`$CLAUDE_CONFIG_DIR`), which
+  on a machine with two accounts is the wrong one. A directory under the user’s own
+  home is written `~/...` (`--home` expands it), so the page names no user. With
+  no `home_dir`, a row carrying a home *name* gets `--all-homes`, which reads the
+  homes the config file names: the same file whichever account runs it.
+- **Nothing else runs.** Everything variable is quoted for a POSIX shell (not Windows
+  `cmd`), and an address starting with `-` goes after `--`, or it would be read
+  as a flag.
+
+`''` for a row with nothing to address.
+
+```pycon
+>>> open_command({'label': 'cn', 'session_id': '3f2a-77'}, home_dir=Path.home() / '.cq')
+"crowsnest open --home '~/.cq' 3f2a-77"
+>>> open_command({'label': 'cn', 'home': 'server', 'session_id': '3f2a-77'})
+'crowsnest open --all-homes 3f2a-77'
+>>> open_command({'label': 'cn', 'home': 'server'})
+'crowsnest open --all-homes cn@server'
+>>> open_command({'label': 'fix; rm -rf ~'})
+"crowsnest open 'fix; rm -rf ~'"
+>>> open_command({'label': '-x'})
+'crowsnest open -- -x'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.lineage.record_spawn(child, , child_session_id='', project='', home=None, environ=None, lineage_path=None, at='')
 

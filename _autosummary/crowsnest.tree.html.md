@@ -71,7 +71,7 @@ True
 | [`escape`](#crowsnest.tree.escape)(text)                                     | XML-escape: the default `text=` for [`render()`](#crowsnest.tree.render), and the floor under any other.   |
 |---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | [`layout`](#crowsnest.tree.layout)(found, \*[, fleet_min, fleet_shown, ...]) | The forest as an ordered list of rows: depth-first, roots in order.                                                             |
-| [`render`](#crowsnest.tree.render)(found, \*[, layout, text, title])         | The forest as one `<figure>` holding inline SVG.                                                                                |
+| [`render`](#crowsnest.tree.render)(found, \*[, layout, text, title, entry])  | The forest as one `<figure>` holding inline SVG.                                                                                |
 
 ### Classes
 
@@ -108,7 +108,7 @@ a cycle or a custom layout, where silently drawing nothing is the worst answer.
 The most rows one figure draws. A picture longer than this is not a picture; the text
 tree (`crowsnest lineage`) is the thing that scales, and the figure says so.
 
-### *class* crowsnest.tree.Placed(name, label, depth, row, kind='session', status='idle', alive=True, confidence='', detail='', count=1, parent_row=-1)
+### *class* crowsnest.tree.Placed(name, label, depth, row, kind='session', status='idle', alive=True, confidence='', detail='', count=1, parent_row=-1, node=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -118,9 +118,15 @@ One drawn row: a session, or the summary of a collapsed fleet.
 is in rows and depths rather than pixels, so a different renderer – or a test – can
 read the layout without knowing the geometry.
 
+`node` is the graph node the row was laid out from (empty for a fleet’s summary). The
+drawing never reads it. It is there for `render`’s `entry=`, so that a caller can
+put anything the node carries into the list under the figure (a link today, whatever
+an item needs tomorrow) without this module learning a new field each time.
+
 #### as_dict()
 
-JSON-ready form.
+JSON-ready form. `node` is copied into a plain `dict` first, because any
+other mapping (a `MappingProxyType`, say) is not something `asdict` can copy.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -132,7 +138,7 @@ clipping only the label was the first draft’s bug, and it showed up on the *de
 path, because a mixed fleet summarises as “2 waiting, 10 busy, 7 shell, 30 idle” – 40
 characters against a 60-unit budget, drawn right-to-left across every name.
 
-### crowsnest.tree.TREE_CSS *= '\\n.spawn-tree{margin:0.9rem 0 0;overflow-x:auto;max-width:100%}\\n.spawn-tree svg{display:block}\\n.spawn-tree figcaption{margin-top:0.55rem;color:var(--ink-soft);font-size:0.82rem;\\n  max-width:34rem}\\n.spawn-tree-alt{position:absolute;width:1px;height:1px;margin:-1px;padding:0;\\n  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}\\n'*
+### crowsnest.tree.TREE_CSS *= '\\n.spawn-tree{margin:0.9rem 0 0;overflow-x:auto;max-width:100%}\\n.spawn-tree svg{display:block}\\n.spawn-tree figcaption{margin-top:0.55rem;color:var(--ink-soft);font-size:0.82rem;\\n  max-width:34rem}\\n.spawn-tree-list{margin-top:0.55rem;font-size:0.82rem}\\n.spawn-tree-list summary{cursor:pointer;color:var(--ink-soft);font-family:var(--mono);\\n  font-size:0.74rem}\\n.spawn-tree-list ul{list-style:none;margin:0.4rem 0 0;padding:0;display:grid;gap:0.15rem}\\n.spawn-tree-list li{overflow-wrap:anywhere}\\n'*
 
 The figure’s own styles. The SVG is drawn at a **fixed** size rather than stretched:
 scaling it to the column would render the labels at whatever size the column happened
@@ -167,7 +173,7 @@ can take in.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Placed`](#crowsnest.tree.Placed)]
 
-### crowsnest.tree.render(found, \*, layout=<function layout>, text=<function escape>, title='Who started whom')
+### crowsnest.tree.render(found, \*, layout=<function layout>, text=<function escape>, title='Who started whom', entry=None)
 
 The forest as one `<figure>` holding inline SVG. Loads nothing from anywhere.
 
@@ -181,6 +187,15 @@ caller with nothing to hide, and [`crowsnest.report`](crowsnest.report.html.md#m
 that a home path or a credential in a session’s name is treated here exactly as it is
 everywhere else on the page. A figure that skipped the sanitiser would be the one
 region of a published page that did.
+
+`entry` is what a session’s entry in the list under the drawing says before its
+state, as markup that is ready to place. It receives the [`Placed`](#crowsnest.tree.Placed) row, whose
+`node` is the whole graph node. [`crowsnest.report`](crowsnest.report.html.md#module-crowsnest.report) passes a function that makes
+the name an anchor to the session, or adds the command that reaches it. Left out,
+names are text. Deciding whether a URL is fit to publish is the page sanitiser’s job,
+not the drawing’s, so a caller with no sanitiser gets no links. \*\*The SVG never
+carries a link.\*\* An anchor exists only in the list, which is ordinary HTML next to
+the figure. A fleet’s summary row is not a session and is never passed to `entry`.
 
 Returns `''` when there is nothing worth drawing – a forest with no edges is a list,
 and the roster above it is already that list.

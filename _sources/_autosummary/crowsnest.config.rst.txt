@@ -18,6 +18,7 @@ crowsnest.config
    
       claude_bin_setting
       config_path
+      configured_homes
       homes
    
    .. rubric:: Classes

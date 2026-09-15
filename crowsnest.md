@@ -1,4 +1,4 @@
-> built 2026-09-15 11:32 UTC from b654f42 (main) · crowsnest 0.0.34. Details: build_info.json
+> built 2026-09-15 11:42 UTC from b0665f6 (main) · crowsnest 0.0.35. Details: build_info.json
 
 # index.html.md
 
@@ -76,9 +76,7 @@ crowsnest init                     this session's CLAUDE.md, the data directory,
 crowsnest install-skills           link the skills and the scout subagent into ~/.claude
 ```
 
-`open` is a desktop command – it looks for an iTerm tab or a tmux session and has nothing
-to raise from a web page, so a claude.ai artifact (`crowsnest report`) can only tell you
-where a session runs, never bring its terminal to the front for you.
+`open` is a desktop command – it looks for an iTerm tab or a tmux session and has nothing to raise from a web page. So wherever `crowsnest report` cannot link a session (no Remote Control, so no claude.ai URL), the page shows the `crowsnest open` command that reaches it. You paste that into a terminal; the page never brings the terminal to the front for you.
 
 `<session>` is the name you gave the session with `claude -n <name>`, a unique prefix of one, a session-id prefix, or a pid.
 
@@ -177,7 +175,7 @@ path = "~/.cache/xa/remotes/server"   # a copy synced down with `xa sync`
 remote = true                         # its pids are not ours: alive while fresh
 ```
 
-Every report row links to the session on claude.ai (when it runs with Remote Control), to its repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which — which is also how a session spawned with `--profile` shows up, on the account it actually runs on — `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`.
+Every report row links to the session on claude.ai when it runs with Remote Control, and otherwise shows the `crowsnest open` command that reaches it. The spawn tree’s list does the same for every session it names. Rows also link to the session’s repository, and to the issues and pull requests it mentioned. Then `crowsnest --all-homes` prints every home with a column saying which — which is also how a session spawned with `--profile` shows up, on the account it actually runs on — `crowsnest show name@home --all-homes` picks one when a name exists in two, and `crowsnest watch --all-homes` streams events from all of them, each tagged `name@home`.
 
 A profile name is resolved against the `[[homes]]` names above first, then against a `claude-profile dir <name>` command on your `PATH` if you keep one; a name neither knows is an error, never a quiet fall back to the default account, and a home marked `remote` is refused — those are another machine’s, read-only.
 
@@ -719,7 +717,8 @@ and nothing in this module pretends otherwise.
 | [`claude_bin_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)(\*[, path])   | The `claude_bin` the config file names, or `''` when it names none.              |
 |-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
 | [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
-| [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when there is no config file.           |
+| [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
+| [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
 
 ### Classes
 
@@ -767,9 +766,26 @@ the one that fails needs to say so in terms of the command.
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
+### crowsnest.config.configured_homes(, path=None)
+
+The homes the config file’s `[[homes]]` entries name; `[]` when it names none.
+
+[`homes()`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes) falls back to the default home, whose path is whatever
+`$CLAUDE_CONFIG_DIR` the *running* process has. That is right for reading, and
+wrong for anything that must mean the same home in another account’s terminal: a
+command printed for later pasting ([`crowsnest.lineage.open_command()`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.open_command)), say.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)]
+
+```pycon
+>>> configured_homes(path='/nonexistent-config-for-doctest')
+[]
+```
+
 ### crowsnest.config.homes(, path=None)
 
-The configured homes, or the default one when there is no config file.
+The configured homes, or the default one when the config file names none.
 
 A config file that cannot be parsed is an error worth seeing, not a silent fallback:
 a person who wrote one meant it.
@@ -1195,10 +1211,14 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 
 The live session a human means by `session`.
 
-Tried in order: the exact registry name, a unique name prefix, a unique session-id
-prefix, the pid. `name@home` names a session in one home when several homes are
-read. Raises `KeyError` naming the candidates when nothing or too much matches –
-an ambiguous pick is a wrong pick half the time.
+Tried in order: the exact session id, the exact registry name, a unique name prefix, a
+unique session-id prefix, the pid. `name@home` names a session in one home when
+several homes are read. Raises `KeyError` naming the candidates when nothing or too
+much matches – an ambiguous pick is a wrong pick half the time.
+
+The exact id comes first because it is what a printed `crowsnest open` names
+([`crowsnest.lineage.open_command()`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.open_command)), and a whole id must not lose to its own
+prefix: an id that happens to begin another session’s id would otherwise be ambiguous.
 
 * **Return type:**
   [`LiveSession`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession)
@@ -1232,6 +1252,10 @@ One session in full: its registry record, its activity unclipped, and its links.
 words – into a URL, a bare `#17` included ([`crowsnest.links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)). Unlike the
 roster’s, this list is not cut short: a person asking about one session wants all of
 them.
+
+`session` carries `session_url` (claude.ai, when the session runs with Remote
+Control) and `open_command` (the terminal command that reaches it either way), as
+every [`roster()`](_autosummary/crowsnest.html.md#crowsnest.roster) row does – the two things a page naming the session links it by.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -1750,6 +1774,7 @@ long-lived dispatcher ever started would sit on the graph forever.
 | [`graph`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.graph)(\*[, sessions, sources, home, ...])        | The spawn forest: every live session as a node, every parent link as an edge.                                          |
 | [`lineage_path`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.lineage_path)([path])                             | Where recorded edges live: `path` when given, else `<data dir>/lineage.jsonl`.                                         |
 | [`names_by_session_id`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.names_by_session_id)(\*[, events_path, ...])      | Every session id these two logs have ever named, mapped to that name.                                                  |
+| [`open_command`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.open_command)(row, \*[, home_dir])                | What to type in a terminal to reach one session: <br/><br/>```<br/>``<br/>```<br/><br/>crowsnest open .                |
 | [`record_spawn`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.record_spawn)(child, \*[, child_session_id, ...]) | Write the `spawn` line for a session just created.                                                                     |
 | [`spawn_event`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.spawn_event)(child, \*[, child_session_id, ...])  | One `spawn` line for the event log, shaped like every other line in it.                                                |
 
@@ -1970,10 +1995,16 @@ are read), which is the spelling `crowsnest show` accepts, and is what keeps two
 machines’ identically-named sessions apart.
 
 Returns `{"nodes", "edges", "roots", "orphans", "counts"}`, all JSON-able. Each node
-carries `name`, `label`, `session_id`, `project`, `home`, `status`,
-`status_since`, `alive`, `parent`, `confidence`, `depth`, `children` and
-`at` (when its parent link was recorded) – enough for a renderer to lay out, group
-and age the tree without going back to the roster.
+carries `name`, `label`, `session_id`, `session_url`, `open_command`,
+`project`, `home`, `status`, `status_since`, `alive`, `parent`,
+`confidence`, `depth`, `children` and `at` (when its parent link was
+recorded) – enough for a renderer to lay out, group, age and link the tree without
+going back to the roster. `open_command` is passed on from the row, which
+[`crowsnest.tools.roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) computes knowing which home it read; it is `''` for
+an exited node and for rows that carry none.
+
+A live node’s `home` is its row’s, and only an exited one’s is read back out of its
+address: a session named `a@b` on the one home read has no home called `b`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2008,6 +2039,49 @@ was last called – which is what a person reading a graph today expects to see.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.lineage.open_command(row, , home_dir=None)
+
+What to type in a terminal to reach one session: `crowsnest open ... <session>`.
+
+The way in for a session with no `session_url` (one not running with Remote
+Control). It is a command and never a link, and it has to reach *that* session from
+any of the user’s terminals on this machine, whichever account a terminal is set to.
+(Another user’s terminal is not covered: `~/` expands to *that* user’s home.)
+
+- **The session, by its id.** A name does not pick out one session: two sessions may
+  share a name (crowsnest issue #42), an unnamed session’s label is the head of its id
+  and matches a session *named* after that head first, and a name can hold an `@`
+  that reads as a home. The whole `session_id` has none of those problems.
+  [`crowsnest.tools.resolve()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.resolve) matches it exactly, and it needs no quoting. Only a
+  > row with no id (a roster built by hand) is addressed as `label` / `label@home`.
+- **Where to look, pinned.** `home_dir` goes in as `--home`. Without it the command
+  reads whichever account the *pasting* shell selects (`$CLAUDE_CONFIG_DIR`), which
+  on a machine with two accounts is the wrong one. A directory under the user’s own
+  home is written `~/...` (`--home` expands it), so the page names no user. With
+  no `home_dir`, a row carrying a home *name* gets `--all-homes`, which reads the
+  homes the config file names: the same file whichever account runs it.
+- **Nothing else runs.** Everything variable is quoted for a POSIX shell (not Windows
+  `cmd`), and an address starting with `-` goes after `--`, or it would be read
+  as a flag.
+
+`''` for a row with nothing to address.
+
+```pycon
+>>> open_command({'label': 'cn', 'session_id': '3f2a-77'}, home_dir=Path.home() / '.cq')
+"crowsnest open --home '~/.cq' 3f2a-77"
+>>> open_command({'label': 'cn', 'home': 'server', 'session_id': '3f2a-77'})
+'crowsnest open --all-homes 3f2a-77'
+>>> open_command({'label': 'cn', 'home': 'server'})
+'crowsnest open --all-homes cn@server'
+>>> open_command({'label': 'fix; rm -rf ~'})
+"crowsnest open 'fix; rm -rf ~'"
+>>> open_command({'label': '-x'})
+'crowsnest open -- -x'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.lineage.record_spawn(child, , child_session_id='', project='', home=None, environ=None, lineage_path=None, at='')
 
@@ -2435,7 +2509,7 @@ and the tmux one only reports the attach command; there is nothing to focus.
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`LiveSession`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession)], [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]
 
-### crowsnest.open.open_session(session, , home=None, all_homes=False, opener=None)
+### crowsnest.open.open_session(session, , home=None, all_homes=False, opener=None, config=None)
 
 Raise `session`’s terminal, or say where it runs when none can be found.
 
@@ -2446,6 +2520,11 @@ sends keys into the session; only selects and focuses what is already there.
 
 Returns `{"name", "how", "detail"}`; `how` is `"not found"` when no strategy
 matched, with the pid and cwd in `detail` so the caller can say where it runs.
+
+**A session in a remote home is never handed to the opener.** Its registry is a synced
+copy of another machine’s, so it has no terminal here. The opener matches terminals
+by *name*, so it would raise whichever local tab happened to share that name.
+`how` is then `"remote"` and `detail` says which home it runs on.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2958,10 +3037,14 @@ ledgers of whoever is running it.
 
 The live session a human means by `session`.
 
-Tried in order: the exact registry name, a unique name prefix, a unique session-id
-prefix, the pid. `name@home` names a session in one home when several homes are
-read. Raises `KeyError` naming the candidates when nothing or too much matches –
-an ambiguous pick is a wrong pick half the time.
+Tried in order: the exact session id, the exact registry name, a unique name prefix, a
+unique session-id prefix, the pid. `name@home` names a session in one home when
+several homes are read. Raises `KeyError` naming the candidates when nothing or too
+much matches – an ambiguous pick is a wrong pick half the time.
+
+The exact id comes first because it is what a printed `crowsnest open` names
+([`crowsnest.lineage.open_command()`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.open_command)), and a whole id must not lose to its own
+prefix: an id that happens to begin another session’s id would otherwise be ambiguous.
 
 * **Return type:**
   [`LiveSession`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession)
@@ -3006,6 +3089,10 @@ One session in full: its registry record, its activity unclipped, and its links.
 words – into a URL, a bare `#17` included ([`crowsnest.links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)). Unlike the
 roster’s, this list is not cut short: a person asking about one session wants all of
 them.
+
+`session` carries `session_url` (claude.ai, when the session runs with Remote
+Control) and `open_command` (the terminal command that reaches it either way), as
+every [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) row does – the two things a page naming the session links it by.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -3109,7 +3196,7 @@ True
 | [`escape`](_autosummary/crowsnest.tree.html.md#crowsnest.tree.escape)(text)                                     | XML-escape: the default `text=` for [`render()`](_autosummary/crowsnest.tree.html.md#crowsnest.tree.render), and the floor under any other.   |
 |---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | [`layout`](_autosummary/crowsnest.tree.html.md#crowsnest.tree.layout)(found, \*[, fleet_min, fleet_shown, ...]) | The forest as an ordered list of rows: depth-first, roots in order.                                                             |
-| [`render`](_autosummary/crowsnest.tree.html.md#crowsnest.tree.render)(found, \*[, layout, text, title])         | The forest as one `<figure>` holding inline SVG.                                                                                |
+| [`render`](_autosummary/crowsnest.tree.html.md#crowsnest.tree.render)(found, \*[, layout, text, title, entry])  | The forest as one `<figure>` holding inline SVG.                                                                                |
 
 ### Classes
 
@@ -3146,7 +3233,7 @@ a cycle or a custom layout, where silently drawing nothing is the worst answer.
 The most rows one figure draws. A picture longer than this is not a picture; the text
 tree (`crowsnest lineage`) is the thing that scales, and the figure says so.
 
-### *class* crowsnest.tree.Placed(name, label, depth, row, kind='session', status='idle', alive=True, confidence='', detail='', count=1, parent_row=-1)
+### *class* crowsnest.tree.Placed(name, label, depth, row, kind='session', status='idle', alive=True, confidence='', detail='', count=1, parent_row=-1, node=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -3156,9 +3243,15 @@ One drawn row: a session, or the summary of a collapsed fleet.
 is in rows and depths rather than pixels, so a different renderer – or a test – can
 read the layout without knowing the geometry.
 
+`node` is the graph node the row was laid out from (empty for a fleet’s summary). The
+drawing never reads it. It is there for `render`’s `entry=`, so that a caller can
+put anything the node carries into the list under the figure (a link today, whatever
+an item needs tomorrow) without this module learning a new field each time.
+
 #### as_dict()
 
-JSON-ready form.
+JSON-ready form. `node` is copied into a plain `dict` first, because any
+other mapping (a `MappingProxyType`, say) is not something `asdict` can copy.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -3170,7 +3263,7 @@ clipping only the label was the first draft’s bug, and it showed up on the *de
 path, because a mixed fleet summarises as “2 waiting, 10 busy, 7 shell, 30 idle” – 40
 characters against a 60-unit budget, drawn right-to-left across every name.
 
-### crowsnest.tree.TREE_CSS *= '\\n.spawn-tree{margin:0.9rem 0 0;overflow-x:auto;max-width:100%}\\n.spawn-tree svg{display:block}\\n.spawn-tree figcaption{margin-top:0.55rem;color:var(--ink-soft);font-size:0.82rem;\\n  max-width:34rem}\\n.spawn-tree-alt{position:absolute;width:1px;height:1px;margin:-1px;padding:0;\\n  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}\\n'*
+### crowsnest.tree.TREE_CSS *= '\\n.spawn-tree{margin:0.9rem 0 0;overflow-x:auto;max-width:100%}\\n.spawn-tree svg{display:block}\\n.spawn-tree figcaption{margin-top:0.55rem;color:var(--ink-soft);font-size:0.82rem;\\n  max-width:34rem}\\n.spawn-tree-list{margin-top:0.55rem;font-size:0.82rem}\\n.spawn-tree-list summary{cursor:pointer;color:var(--ink-soft);font-family:var(--mono);\\n  font-size:0.74rem}\\n.spawn-tree-list ul{list-style:none;margin:0.4rem 0 0;padding:0;display:grid;gap:0.15rem}\\n.spawn-tree-list li{overflow-wrap:anywhere}\\n'*
 
 The figure’s own styles. The SVG is drawn at a **fixed** size rather than stretched:
 scaling it to the column would render the labels at whatever size the column happened
@@ -3205,7 +3298,7 @@ can take in.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Placed`](_autosummary/crowsnest.tree.html.md#crowsnest.tree.Placed)]
 
-### crowsnest.tree.render(found, \*, layout=<function layout>, text=<function escape>, title='Who started whom')
+### crowsnest.tree.render(found, \*, layout=<function layout>, text=<function escape>, title='Who started whom', entry=None)
 
 The forest as one `<figure>` holding inline SVG. Loads nothing from anywhere.
 
@@ -3219,6 +3312,15 @@ caller with nothing to hide, and [`crowsnest.report`](_autosummary/crowsnest.rep
 that a home path or a credential in a session’s name is treated here exactly as it is
 everywhere else on the page. A figure that skipped the sanitiser would be the one
 region of a published page that did.
+
+`entry` is what a session’s entry in the list under the drawing says before its
+state, as markup that is ready to place. It receives the [`Placed`](_autosummary/crowsnest.tree.html.md#crowsnest.tree.Placed) row, whose
+`node` is the whole graph node. [`crowsnest.report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report) passes a function that makes
+the name an anchor to the session, or adds the command that reaches it. Left out,
+names are text. Deciding whether a URL is fit to publish is the page sanitiser’s job,
+not the drawing’s, so a caller with no sanitiser gets no links. \*\*The SVG never
+carries a link.\*\* An anchor exists only in the list, which is ordinary HTML next to
+the figure. A fleet’s summary row is not a session and is never passed to `entry`.
 
 Returns `''` when there is nothing worth drawing – a forest with no edges is a list,
 and the roster above it is already that list.
@@ -3649,18 +3751,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-15 11:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/b654f427c3005e394ba5f37ec9e6fc03e0346816"><code>b654f42</code></a> on branch <code>main</code>, for **crowsnest 0.0.34** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-15 11:42 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/b0665f622ffdd925a622da750a3427f79869b531"><code>b0665f6</code></a> on branch <code>main</code>, for **crowsnest 0.0.35** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.34) is behind the latest release on PyPI (0.0.35): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/b654f427c3005e394ba5f37ec9e6fc03e0346816"><code>b654f427c3005e394ba5f37ec9e6fc03e0346816</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/b0665f622ffdd925a622da750a3427f79869b531"><code>b0665f622ffdd925a622da750a3427f79869b531</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -3671,15 +3771,15 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34963638214">34963638214</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/34964572765">34964572765</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>b654f427c3005e394ba5f37ec9e6fc03e0346816</code> (in the history of the built commit) |
+| Event commit | <code>b0665f622ffdd925a622da750a3427f79869b531</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.10  |
+| epythet  | 0.2.11  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
 | Python   | 3.12.14 |
@@ -3698,14 +3798,14 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.35/">0.0.35</a>, newer than the documented version (0.0.34).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.35/">0.0.35</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout b654f427c3005e394ba5f37ec9e6fc03e0346816
-pip install "epythet==0.2.10"
+git checkout b0665f622ffdd925a622da750a3427f79869b531
+pip install "epythet==0.2.11"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

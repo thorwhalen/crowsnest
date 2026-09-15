@@ -243,10 +243,14 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 
 The live session a human means by `session`.
 
-Tried in order: the exact registry name, a unique name prefix, a unique session-id
-prefix, the pid. `name@home` names a session in one home when several homes are
-read. Raises `KeyError` naming the candidates when nothing or too much matches –
-an ambiguous pick is a wrong pick half the time.
+Tried in order: the exact session id, the exact registry name, a unique name prefix, a
+unique session-id prefix, the pid. `name@home` names a session in one home when
+several homes are read. Raises `KeyError` naming the candidates when nothing or too
+much matches – an ambiguous pick is a wrong pick half the time.
+
+The exact id comes first because it is what a printed `crowsnest open` names
+([`crowsnest.lineage.open_command()`](crowsnest.lineage.html.md#crowsnest.lineage.open_command)), and a whole id must not lose to its own
+prefix: an id that happens to begin another session’s id would otherwise be ambiguous.
 
 * **Return type:**
   [`LiveSession`](crowsnest.registry.html.md#crowsnest.registry.LiveSession)
@@ -280,6 +284,10 @@ One session in full: its registry record, its activity unclipped, and its links.
 words – into a URL, a bare `#17` included ([`crowsnest.links`](crowsnest.links.html.md#module-crowsnest.links)). Unlike the
 roster’s, this list is not cut short: a person asking about one session wants all of
 them.
+
+`session` carries `session_url` (claude.ai, when the session runs with Remote
+Control) and `open_command` (the terminal command that reaches it either way), as
+every [`roster()`](#crowsnest.roster) row does – the two things a page naming the session links it by.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

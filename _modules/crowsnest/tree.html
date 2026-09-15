@@ -187,7 +187,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="56">
 </span><span data-line="57"><span class="kn">import</span><span class="w"> </span><span class="nn">unicodedata</span>
 </span><span data-line="58"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
-</span><span data-line="59"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+</span><span data-line="59"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
 </span><span data-line="60">
 </span><span data-line="61"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
 </span><span data-line="62">    <span class="s2">"CHAR"</span><span class="p">,</span>
@@ -255,424 +255,464 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="124"><span class="s2">.spawn-tree svg{display:block}</span>
 </span><span data-line="125"><span class="s2">.spawn-tree figcaption{margin-top:0.55rem;color:var(--ink-soft);font-size:0.82rem;</span>
 </span><span data-line="126"><span class="s2">  max-width:34rem}</span>
-</span><span data-line="127"><span class="s2">.spawn-tree-alt{position:absolute;width:1px;height:1px;margin:-1px;padding:0;</span>
-</span><span data-line="128"><span class="s2">  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}</span>
-</span><span data-line="129"><span class="s2">"""</span>
-</span><span data-line="130">
-</span><span data-line="131"><span class="c1">#: Which stylesheet token colours which status. These are the page's own tokens (they are</span>
-</span><span data-line="132"><span class="c1">#: defined for light and dark alike in ``openloops.dashboard.CSS``), so the figure is</span>
-</span><span data-line="133"><span class="c1">#: theme-aware for free and cannot drift from the chips beside it. ``currentColor`` is the</span>
-</span><span data-line="134"><span class="c1">#: fallback for a figure rendered outside that page.</span>
-</span><span data-line="135"><span class="n">_TONES</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="136">    <span class="s2">"waiting"</span><span class="p">:</span> <span class="s2">"--needs"</span><span class="p">,</span>
-</span><span data-line="137">    <span class="s2">"busy"</span><span class="p">:</span> <span class="s2">"--waits"</span><span class="p">,</span>
-</span><span data-line="138">    <span class="s2">"shell"</span><span class="p">:</span> <span class="s2">"--waits"</span><span class="p">,</span>
-</span><span data-line="139">    <span class="s2">"idle"</span><span class="p">:</span> <span class="s2">"--free"</span><span class="p">,</span>
-</span><span data-line="140">    <span class="s2">"gone"</span><span class="p">:</span> <span class="s2">"--ink-soft"</span><span class="p">,</span>
-</span><span data-line="141"><span class="p">}</span>
-</span><span data-line="142">
-</span><span data-line="143">
-</span><span data-line="144"><span class="k">def</span><span class="w"> </span><span class="nf">_column</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-</span><span data-line="145"><span class="w">    </span><span class="sd">"""Where a row at this depth puts its mark, never past :data:`MAX_INDENT_DEPTH`.</span>
+</span><span data-line="127"><span class="s2">.spawn-tree-list{margin-top:0.55rem;font-size:0.82rem}</span>
+</span><span data-line="128"><span class="s2">.spawn-tree-list summary{cursor:pointer;color:var(--ink-soft);font-family:var(--mono);</span>
+</span><span data-line="129"><span class="s2">  font-size:0.74rem}</span>
+</span><span data-line="130"><span class="s2">.spawn-tree-list ul{list-style:none;margin:0.4rem 0 0;padding:0;display:grid;gap:0.15rem}</span>
+</span><span data-line="131"><span class="s2">.spawn-tree-list li{overflow-wrap:anywhere}</span>
+</span><span data-line="132"><span class="s2">"""</span>
+</span><span data-line="133">
+</span><span data-line="134"><span class="c1">#: Which stylesheet token colours which status. These are the page's own tokens (they are</span>
+</span><span data-line="135"><span class="c1">#: defined for light and dark alike in ``openloops.dashboard.CSS``), so the figure is</span>
+</span><span data-line="136"><span class="c1">#: theme-aware for free and cannot drift from the chips beside it. ``currentColor`` is the</span>
+</span><span data-line="137"><span class="c1">#: fallback for a figure rendered outside that page.</span>
+</span><span data-line="138"><span class="n">_TONES</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="139">    <span class="s2">"waiting"</span><span class="p">:</span> <span class="s2">"--needs"</span><span class="p">,</span>
+</span><span data-line="140">    <span class="s2">"busy"</span><span class="p">:</span> <span class="s2">"--waits"</span><span class="p">,</span>
+</span><span data-line="141">    <span class="s2">"shell"</span><span class="p">:</span> <span class="s2">"--waits"</span><span class="p">,</span>
+</span><span data-line="142">    <span class="s2">"idle"</span><span class="p">:</span> <span class="s2">"--free"</span><span class="p">,</span>
+</span><span data-line="143">    <span class="s2">"gone"</span><span class="p">:</span> <span class="s2">"--ink-soft"</span><span class="p">,</span>
+</span><span data-line="144"><span class="p">}</span>
+</span><span data-line="145">
 </span><span data-line="146">
-</span><span data-line="147"><span class="sd">    &gt;&gt;&gt; _column(0) &lt; _column(3) == _column(3)</span>
-</span><span data-line="148"><span class="sd">    True</span>
-</span><span data-line="149"><span class="sd">    &gt;&gt;&gt; _column(24) == _column(MAX_INDENT_DEPTH)</span>
-</span><span data-line="150"><span class="sd">    True</span>
-</span><span data-line="151"><span class="sd">    """</span>
-</span><span data-line="152">    <span class="k">return</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">DOT_X</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">MAX_INDENT_DEPTH</span><span class="p">)</span> <span class="o">*</span> <span class="n">INDENT</span>
-</span><span data-line="153">
-</span><span data-line="154">
-</span><span data-line="155"><span class="k">def</span><span class="w"> </span><span class="nf">_tone</span><span class="p">(</span><span class="n">status</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="156">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"var(</span><span class="si">{</span><span class="n">_TONES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="s1">'--ink-soft'</span><span class="p">)</span><span class="si">}</span><span class="s2">, currentColor)"</span>
+</span><span data-line="147"><span class="k">def</span><span class="w"> </span><span class="nf">_column</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+</span><span data-line="148"><span class="w">    </span><span class="sd">"""Where a row at this depth puts its mark, never past :data:`MAX_INDENT_DEPTH`.</span>
+</span><span data-line="149">
+</span><span data-line="150"><span class="sd">    &gt;&gt;&gt; _column(0) &lt; _column(3) == _column(3)</span>
+</span><span data-line="151"><span class="sd">    True</span>
+</span><span data-line="152"><span class="sd">    &gt;&gt;&gt; _column(24) == _column(MAX_INDENT_DEPTH)</span>
+</span><span data-line="153"><span class="sd">    True</span>
+</span><span data-line="154"><span class="sd">    """</span>
+</span><span data-line="155">    <span class="k">return</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">DOT_X</span> <span class="o">+</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">depth</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">MAX_INDENT_DEPTH</span><span class="p">)</span> <span class="o">*</span> <span class="n">INDENT</span>
+</span><span data-line="156">
 </span><span data-line="157">
-</span><span data-line="158">
+</span><span data-line="158"><span class="k">def</span><span class="w"> </span><span class="nf">_tone</span><span class="p">(</span><span class="n">status</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="159">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"var(</span><span class="si">{</span><span class="n">_TONES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="s1">'--ink-soft'</span><span class="p">)</span><span class="si">}</span><span class="s2">, currentColor)"</span>
+</span><span data-line="160">
+</span><span data-line="161">
 <div class="viewcode-block" id="Placed">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tree.html#crowsnest.tree.Placed">[docs]</a>
-</span><span data-line="159"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="160"><span class="k">class</span><span class="w"> </span><span class="nc">Placed</span><span class="p">:</span>
-</span><span data-line="161"><span class="w">    </span><span class="sd">"""One drawn row: a session, or the summary of a collapsed fleet.</span>
-</span><span data-line="162">
-</span><span data-line="163"><span class="sd">    ``parent_row`` is the row the connector comes down from, ``-1`` for a root. Everything</span>
-</span><span data-line="164"><span class="sd">    is in rows and depths rather than pixels, so a different renderer -- or a test -- can</span>
-</span><span data-line="165"><span class="sd">    read the layout without knowing the geometry.</span>
-</span><span data-line="166"><span class="sd">    """</span>
-</span><span data-line="167">
-</span><span data-line="168">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="169">    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="170">    <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span>
-</span><span data-line="171">    <span class="n">row</span><span class="p">:</span> <span class="nb">int</span>
-</span><span data-line="172">    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"session"</span>
-</span><span data-line="173">    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"idle"</span>
-</span><span data-line="174">    <span class="n">alive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="175">    <span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="176">    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="177">    <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
-</span><span data-line="178">    <span class="n">parent_row</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-</span><span data-line="179">
+</span><span data-line="162"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="163"><span class="k">class</span><span class="w"> </span><span class="nc">Placed</span><span class="p">:</span>
+</span><span data-line="164"><span class="w">    </span><span class="sd">"""One drawn row: a session, or the summary of a collapsed fleet.</span>
+</span><span data-line="165">
+</span><span data-line="166"><span class="sd">    ``parent_row`` is the row the connector comes down from, ``-1`` for a root. Everything</span>
+</span><span data-line="167"><span class="sd">    is in rows and depths rather than pixels, so a different renderer -- or a test -- can</span>
+</span><span data-line="168"><span class="sd">    read the layout without knowing the geometry.</span>
+</span><span data-line="169">
+</span><span data-line="170"><span class="sd">    ``node`` is the graph node the row was laid out from (empty for a fleet's summary). The</span>
+</span><span data-line="171"><span class="sd">    drawing never reads it. It is there for ``render``'s ``entry=``, so that a caller can</span>
+</span><span data-line="172"><span class="sd">    put anything the node carries into the list under the figure (a link today, whatever</span>
+</span><span data-line="173"><span class="sd">    an item needs tomorrow) without this module learning a new field each time.</span>
+</span><span data-line="174"><span class="sd">    """</span>
+</span><span data-line="175">
+</span><span data-line="176">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="177">    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="178">    <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span>
+</span><span data-line="179">    <span class="n">row</span><span class="p">:</span> <span class="nb">int</span>
+</span><span data-line="180">    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"session"</span>
+</span><span data-line="181">    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"idle"</span>
+</span><span data-line="182">    <span class="n">alive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="183">    <span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="184">    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="185">    <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span data-line="186">    <span class="n">parent_row</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span data-line="187">    <span class="n">node</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="188">
 <div class="viewcode-block" id="Placed.as_dict">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tree.html#crowsnest.tree.Placed.as_dict">[docs]</a>
-</span><span data-line="180">    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="181"><span class="w">        </span><span class="sd">"""JSON-ready form."""</span>
-</span><span data-line="182">        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</span><span data-line="189">    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="190"><span class="w">        </span><span class="sd">"""JSON-ready form. ``node`` is copied into a plain ``dict`` first, because any</span>
+</span><span data-line="191"><span class="sd">        other mapping (a ``MappingProxyType``, say) is not something ``asdict`` can copy.</span>
+</span><span data-line="192"><span class="sd">        """</span>
+</span><span data-line="193">        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="p">)))</span></div>
 </div>
 
-</span><span data-line="183">
-</span><span data-line="184">
-</span><span data-line="185"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="186"><span class="c1"># The layout</span>
-</span><span data-line="187">
-</span><span data-line="188">
-</span><span data-line="189"><span class="k">def</span><span class="w"> </span><span class="nf">_fleet_detail</span><span class="p">(</span><span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="190"><span class="w">    </span><span class="sd">"""What a collapsed fleet is doing, as a count per status, busiest first.</span>
-</span><span data-line="191">
-</span><span data-line="192"><span class="sd">    &gt;&gt;&gt; _fleet_detail([{'status': 'idle'}] * 3 + [{'status': 'waiting'}])</span>
-</span><span data-line="193"><span class="sd">    '1 waiting, 3 idle'</span>
-</span><span data-line="194"><span class="sd">    &gt;&gt;&gt; _fleet_detail([{'status': s} for s in ('waiting', 'busy', 'shell', 'idle', 'gone')])</span>
-</span><span data-line="195"><span class="sd">    '1 waiting, 1 busy +3'</span>
-</span><span data-line="196"><span class="sd">    """</span>
-</span><span data-line="197">    <span class="n">order</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">,</span> <span class="s2">"gone"</span><span class="p">)</span>
-</span><span data-line="198">    <span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span data-line="199">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
-</span><span data-line="200">        <span class="n">counts</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="201">            <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-</span><span data-line="202">        <span class="p">)</span>
-</span><span data-line="203">    <span class="n">ranked</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-</span><span data-line="204">        <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">order</span> <span class="k">else</span> <span class="mi">9</span>
-</span><span data-line="205">    <span class="p">)</span>
-</span><span data-line="206">    <span class="c1"># Two statuses and a tally, not five: the column is 92 units wide, and "2 waiting,</span>
-</span><span data-line="207">    <span class="c1"># 10 busy, 7 shell, 30 idle, 8 gone" is 40 characters drawn across every name beside</span>
-</span><span data-line="208">    <span class="c1"># it. The two kept are the two that need a person soonest.</span>
-</span><span data-line="209">    <span class="n">shown</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">status</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ranked</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
-</span><span data-line="210">    <span class="n">rest</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ranked</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
-</span><span data-line="211">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s2"> +</span><span class="si">{</span><span class="n">rest</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">rest</span> <span class="k">else</span> <span class="n">shown</span>
-</span><span data-line="212">
-</span><span data-line="213">
-</span><span data-line="214"><span class="c1">#: The order a fleet's children are kept in when only a few can be drawn: what needs a</span>
-</span><span data-line="215"><span class="c1">#: person, then what is running, then what is resting. The same order the roster uses, for</span>
-</span><span data-line="216"><span class="c1">#: the same reason.</span>
-</span><span data-line="217"><span class="n">_URGENCY</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">,</span> <span class="s2">"gone"</span><span class="p">)</span>
-</span><span data-line="218">
-</span><span data-line="219">
-</span><span data-line="220"><span class="k">def</span><span class="w"> </span><span class="nf">_urgency</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
-</span><span data-line="221"><span class="w">    </span><span class="sd">"""Sort key: most urgent first, then by name so the picture is stable between runs."""</span>
-</span><span data-line="222">    <span class="n">status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">)</span>
-</span><span data-line="223">    <span class="n">rank</span> <span class="o">=</span> <span class="n">_URGENCY</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">_URGENCY</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">_URGENCY</span><span class="p">)</span>
-</span><span data-line="224">    <span class="k">return</span> <span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
-</span><span data-line="225">
-</span><span data-line="226">
+</span><span data-line="194">
+</span><span data-line="195">
+</span><span data-line="196"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="197"><span class="c1"># The layout</span>
+</span><span data-line="198">
+</span><span data-line="199">
+</span><span data-line="200"><span class="k">def</span><span class="w"> </span><span class="nf">_fleet_detail</span><span class="p">(</span><span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="201"><span class="w">    </span><span class="sd">"""What a collapsed fleet is doing, as a count per status, busiest first.</span>
+</span><span data-line="202">
+</span><span data-line="203"><span class="sd">    &gt;&gt;&gt; _fleet_detail([{'status': 'idle'}] * 3 + [{'status': 'waiting'}])</span>
+</span><span data-line="204"><span class="sd">    '1 waiting, 3 idle'</span>
+</span><span data-line="205"><span class="sd">    &gt;&gt;&gt; _fleet_detail([{'status': s} for s in ('waiting', 'busy', 'shell', 'idle', 'gone')])</span>
+</span><span data-line="206"><span class="sd">    '1 waiting, 1 busy +3'</span>
+</span><span data-line="207"><span class="sd">    """</span>
+</span><span data-line="208">    <span class="n">order</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">,</span> <span class="s2">"gone"</span><span class="p">)</span>
+</span><span data-line="209">    <span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="210">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+</span><span data-line="211">        <span class="n">counts</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="212">            <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span data-line="213">        <span class="p">)</span>
+</span><span data-line="214">    <span class="n">ranked</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+</span><span data-line="215">        <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="n">order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">order</span> <span class="k">else</span> <span class="mi">9</span>
+</span><span data-line="216">    <span class="p">)</span>
+</span><span data-line="217">    <span class="c1"># Two statuses and a tally, not five: the column is 92 units wide, and "2 waiting,</span>
+</span><span data-line="218">    <span class="c1"># 10 busy, 7 shell, 30 idle, 8 gone" is 40 characters drawn across every name beside</span>
+</span><span data-line="219">    <span class="c1"># it. The two kept are the two that need a person soonest.</span>
+</span><span data-line="220">    <span class="n">shown</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">status</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ranked</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+</span><span data-line="221">    <span class="n">rest</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ranked</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+</span><span data-line="222">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s2"> +</span><span class="si">{</span><span class="n">rest</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">rest</span> <span class="k">else</span> <span class="n">shown</span>
+</span><span data-line="223">
+</span><span data-line="224">
+</span><span data-line="225"><span class="c1">#: The order a fleet's children are kept in when only a few can be drawn: what needs a</span>
+</span><span data-line="226"><span class="c1">#: person, then what is running, then what is resting. The same order the roster uses, for</span>
+</span><span data-line="227"><span class="c1">#: the same reason.</span>
+</span><span data-line="228"><span class="n">_URGENCY</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">,</span> <span class="s2">"gone"</span><span class="p">)</span>
+</span><span data-line="229">
+</span><span data-line="230">
+</span><span data-line="231"><span class="k">def</span><span class="w"> </span><span class="nf">_urgency</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+</span><span data-line="232"><span class="w">    </span><span class="sd">"""Sort key: most urgent first, then by name so the picture is stable between runs."""</span>
+</span><span data-line="233">    <span class="n">status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">)</span>
+</span><span data-line="234">    <span class="n">rank</span> <span class="o">=</span> <span class="n">_URGENCY</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">_URGENCY</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">_URGENCY</span><span class="p">)</span>
+</span><span data-line="235">    <span class="k">return</span> <span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+</span><span data-line="236">
+</span><span data-line="237">
 <div class="viewcode-block" id="layout">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tree.html#crowsnest.tree.layout">[docs]</a>
-</span><span data-line="227"><span class="k">def</span><span class="w"> </span><span class="nf">layout</span><span class="p">(</span>
-</span><span data-line="228">    <span class="n">found</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
-</span><span data-line="229">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="230">    <span class="n">fleet_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">FLEET_MIN</span><span class="p">,</span>
-</span><span data-line="231">    <span class="n">fleet_shown</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">FLEET_SHOWN</span><span class="p">,</span>
-</span><span data-line="232">    <span class="n">max_rows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">MAX_ROWS</span><span class="p">,</span>
-</span><span data-line="233"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Placed</span><span class="p">]:</span>
-</span><span data-line="234"><span class="w">    </span><span class="sd">"""The forest as an ordered list of rows: depth-first, roots in order.</span>
-</span><span data-line="235">
-</span><span data-line="236"><span class="sd">    A parent's childless children collapse into a fleet once there are more than</span>
-</span><span data-line="237"><span class="sd">    ``fleet_min`` of them: the first ``fleet_shown`` are drawn, the rest become one row.</span>
-</span><span data-line="238"><span class="sd">    Children that have children of their own are never collapsed -- a subtree is structure,</span>
-</span><span data-line="239"><span class="sd">    and structure is the thing the picture is for.</span>
-</span><span data-line="240">
-</span><span data-line="241"><span class="sd">    Stops at ``max_rows`` and says so in the last row, rather than drawing a figure nobody</span>
-</span><span data-line="242"><span class="sd">    can take in.</span>
-</span><span data-line="243"><span class="sd">    """</span>
-</span><span data-line="244">    <span class="n">by_name</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)):</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()}</span>
-</span><span data-line="245">    <span class="n">placed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Placed</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="246">    <span class="c1"># `lineage.graph` returns a forest, so this never fires on the default path. It fires</span>
-</span><span data-line="247">    <span class="c1"># the moment anything else builds the mapping: a node listing itself as its own child,</span>
-</span><span data-line="248">    <span class="c1"># two parents claiming one child, A and B claiming each other. Without it the walk</span>
-</span><span data-line="249">    <span class="c1"># draws the same session over and over until it hits `max_rows`.</span>
-</span><span data-line="250">    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span><span data-line="238"><span class="k">def</span><span class="w"> </span><span class="nf">layout</span><span class="p">(</span>
+</span><span data-line="239">    <span class="n">found</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+</span><span data-line="240">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="241">    <span class="n">fleet_min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">FLEET_MIN</span><span class="p">,</span>
+</span><span data-line="242">    <span class="n">fleet_shown</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">FLEET_SHOWN</span><span class="p">,</span>
+</span><span data-line="243">    <span class="n">max_rows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">MAX_ROWS</span><span class="p">,</span>
+</span><span data-line="244"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Placed</span><span class="p">]:</span>
+</span><span data-line="245"><span class="w">    </span><span class="sd">"""The forest as an ordered list of rows: depth-first, roots in order.</span>
+</span><span data-line="246">
+</span><span data-line="247"><span class="sd">    A parent's childless children collapse into a fleet once there are more than</span>
+</span><span data-line="248"><span class="sd">    ``fleet_min`` of them: the first ``fleet_shown`` are drawn, the rest become one row.</span>
+</span><span data-line="249"><span class="sd">    Children that have children of their own are never collapsed -- a subtree is structure,</span>
+</span><span data-line="250"><span class="sd">    and structure is the thing the picture is for.</span>
 </span><span data-line="251">
-</span><span data-line="252">    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">parent_row</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="253">        <span class="n">row</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">placed</span><span class="p">)</span>
-</span><span data-line="254">        <span class="n">placed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="255">            <span class="n">Placed</span><span class="p">(</span>
-</span><span data-line="256">                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="257">                <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="258">                <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span>
-</span><span data-line="259">                <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
-</span><span data-line="260">                <span class="n">status</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">),</span>
-</span><span data-line="261">                <span class="n">alive</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"alive"</span><span class="p">)),</span>
-</span><span data-line="262">                <span class="n">confidence</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"confidence"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="263">                <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="264">                <span class="n">parent_row</span><span class="o">=</span><span class="n">parent_row</span><span class="p">,</span>
-</span><span data-line="265">            <span class="p">)</span>
-</span><span data-line="266">        <span class="p">)</span>
-</span><span data-line="267">        <span class="k">return</span> <span class="n">row</span>
-</span><span data-line="268">
-</span><span data-line="269">    <span class="k">def</span><span class="w"> </span><span class="nf">walk</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">parent_row</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="270">        <span class="n">node</span> <span class="o">=</span> <span class="n">by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="271">        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">placed</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_rows</span><span class="p">:</span>
-</span><span data-line="272">            <span class="k">return</span>
-</span><span data-line="273">        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="274">        <span class="n">row</span> <span class="o">=</span> <span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">parent_row</span><span class="p">)</span>
-</span><span data-line="275">        <span class="n">kids</span> <span class="o">=</span> <span class="p">[</span><span class="n">by_name</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">by_name</span><span class="p">]</span>
-</span><span data-line="276">        <span class="n">branches</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kids</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">)]</span>
-</span><span data-line="277">        <span class="c1"># Most urgent first, so that when only a few of a fleet can be drawn, the few</span>
-</span><span data-line="278">        <span class="c1"># drawn are the ones a person would have wanted to see.</span>
-</span><span data-line="279">        <span class="n">leaves</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kids</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">_urgency</span><span class="p">)</span>
-</span><span data-line="280">        <span class="n">shown</span> <span class="o">=</span> <span class="n">leaves</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">leaves</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">fleet_min</span> <span class="k">else</span> <span class="n">leaves</span><span class="p">[:</span><span class="n">fleet_shown</span><span class="p">]</span>
-</span><span data-line="281">        <span class="k">for</span> <span class="n">kid</span> <span class="ow">in</span> <span class="n">branches</span><span class="p">:</span>
-</span><span data-line="282">            <span class="n">walk</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">kid</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)),</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
-</span><span data-line="283">        <span class="k">for</span> <span class="n">kid</span> <span class="ow">in</span> <span class="n">shown</span><span class="p">:</span>
-</span><span data-line="284">            <span class="n">walk</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">kid</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)),</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
-</span><span data-line="285">        <span class="n">rest</span> <span class="o">=</span> <span class="n">leaves</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">shown</span><span class="p">)</span> <span class="p">:]</span>
-</span><span data-line="286">        <span class="k">if</span> <span class="n">rest</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">placed</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_rows</span><span class="p">:</span>
-</span><span data-line="287">            <span class="n">placed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="288">                <span class="n">Placed</span><span class="p">(</span>
-</span><span data-line="289">                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">:fleet"</span><span class="p">,</span>
-</span><span data-line="290">                    <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span><span class="si">}</span><span class="s2"> more"</span><span class="p">,</span>
-</span><span data-line="291">                    <span class="n">depth</span><span class="o">=</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
-</span><span data-line="292">                    <span class="n">row</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">placed</span><span class="p">),</span>
-</span><span data-line="293">                    <span class="n">kind</span><span class="o">=</span><span class="s2">"fleet"</span><span class="p">,</span>
-</span><span data-line="294">                    <span class="n">status</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rest</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"idle"</span><span class="p">),</span>
-</span><span data-line="295">                    <span class="n">detail</span><span class="o">=</span><span class="n">_fleet_detail</span><span class="p">(</span><span class="n">rest</span><span class="p">),</span>
-</span><span data-line="296">                    <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">),</span>
-</span><span data-line="297">                    <span class="n">parent_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
-</span><span data-line="298">                <span class="p">)</span>
-</span><span data-line="299">            <span class="p">)</span>
-</span><span data-line="300">
-</span><span data-line="301">    <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"roots"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
-</span><span data-line="302">        <span class="n">node</span> <span class="o">=</span> <span class="n">by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">))</span>
-</span><span data-line="303">        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">):</span>
-</span><span data-line="304">            <span class="n">walk</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="305">    <span class="k">return</span> <span class="n">placed</span></div>
+</span><span data-line="252"><span class="sd">    Stops at ``max_rows`` and says so in the last row, rather than drawing a figure nobody</span>
+</span><span data-line="253"><span class="sd">    can take in.</span>
+</span><span data-line="254"><span class="sd">    """</span>
+</span><span data-line="255">    <span class="n">by_name</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)):</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()}</span>
+</span><span data-line="256">    <span class="n">placed</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Placed</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="257">    <span class="c1"># `lineage.graph` returns a forest, so this never fires on the default path. It fires</span>
+</span><span data-line="258">    <span class="c1"># the moment anything else builds the mapping: a node listing itself as its own child,</span>
+</span><span data-line="259">    <span class="c1"># two parents claiming one child, A and B claiming each other. Without it the walk</span>
+</span><span data-line="260">    <span class="c1"># draws the same session over and over until it hits `max_rows`.</span>
+</span><span data-line="261">    <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span><span data-line="262">
+</span><span data-line="263">    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">parent_row</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="264">        <span class="n">row</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">placed</span><span class="p">)</span>
+</span><span data-line="265">        <span class="n">placed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="266">            <span class="n">Placed</span><span class="p">(</span>
+</span><span data-line="267">                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="268">                <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="269">                <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span>
+</span><span data-line="270">                <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
+</span><span data-line="271">                <span class="n">status</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"gone"</span><span class="p">),</span>
+</span><span data-line="272">                <span class="n">alive</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"alive"</span><span class="p">)),</span>
+</span><span data-line="273">                <span class="n">confidence</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"confidence"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="274">                <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="275">                <span class="n">parent_row</span><span class="o">=</span><span class="n">parent_row</span><span class="p">,</span>
+</span><span data-line="276">                <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span>
+</span><span data-line="277">            <span class="p">)</span>
+</span><span data-line="278">        <span class="p">)</span>
+</span><span data-line="279">        <span class="k">return</span> <span class="n">row</span>
+</span><span data-line="280">
+</span><span data-line="281">    <span class="k">def</span><span class="w"> </span><span class="nf">walk</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">parent_row</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="282">        <span class="n">node</span> <span class="o">=</span> <span class="n">by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="283">        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">placed</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_rows</span><span class="p">:</span>
+</span><span data-line="284">            <span class="k">return</span>
+</span><span data-line="285">        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="286">        <span class="n">row</span> <span class="o">=</span> <span class="n">emit</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">parent_row</span><span class="p">)</span>
+</span><span data-line="287">        <span class="n">kids</span> <span class="o">=</span> <span class="p">[</span><span class="n">by_name</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">by_name</span><span class="p">]</span>
+</span><span data-line="288">        <span class="n">branches</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kids</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">)]</span>
+</span><span data-line="289">        <span class="c1"># Most urgent first, so that when only a few of a fleet can be drawn, the few</span>
+</span><span data-line="290">        <span class="c1"># drawn are the ones a person would have wanted to see.</span>
+</span><span data-line="291">        <span class="n">leaves</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kids</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">_urgency</span><span class="p">)</span>
+</span><span data-line="292">        <span class="n">shown</span> <span class="o">=</span> <span class="n">leaves</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">leaves</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">fleet_min</span> <span class="k">else</span> <span class="n">leaves</span><span class="p">[:</span><span class="n">fleet_shown</span><span class="p">]</span>
+</span><span data-line="293">        <span class="k">for</span> <span class="n">kid</span> <span class="ow">in</span> <span class="n">branches</span><span class="p">:</span>
+</span><span data-line="294">            <span class="n">walk</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">kid</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)),</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+</span><span data-line="295">        <span class="k">for</span> <span class="n">kid</span> <span class="ow">in</span> <span class="n">shown</span><span class="p">:</span>
+</span><span data-line="296">            <span class="n">walk</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">kid</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)),</span> <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+</span><span data-line="297">        <span class="n">rest</span> <span class="o">=</span> <span class="n">leaves</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">shown</span><span class="p">)</span> <span class="p">:]</span>
+</span><span data-line="298">        <span class="k">if</span> <span class="n">rest</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">placed</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_rows</span><span class="p">:</span>
+</span><span data-line="299">            <span class="n">placed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="300">                <span class="n">Placed</span><span class="p">(</span>
+</span><span data-line="301">                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">:fleet"</span><span class="p">,</span>
+</span><span data-line="302">                    <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span><span class="si">}</span><span class="s2"> more"</span><span class="p">,</span>
+</span><span data-line="303">                    <span class="n">depth</span><span class="o">=</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+</span><span data-line="304">                    <span class="n">row</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">placed</span><span class="p">),</span>
+</span><span data-line="305">                    <span class="n">kind</span><span class="o">=</span><span class="s2">"fleet"</span><span class="p">,</span>
+</span><span data-line="306">                    <span class="n">status</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rest</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"idle"</span><span class="p">),</span>
+</span><span data-line="307">                    <span class="n">detail</span><span class="o">=</span><span class="n">_fleet_detail</span><span class="p">(</span><span class="n">rest</span><span class="p">),</span>
+</span><span data-line="308">                    <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">),</span>
+</span><span data-line="309">                    <span class="n">parent_row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
+</span><span data-line="310">                <span class="p">)</span>
+</span><span data-line="311">            <span class="p">)</span>
+</span><span data-line="312">
+</span><span data-line="313">    <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"roots"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
+</span><span data-line="314">        <span class="n">node</span> <span class="o">=</span> <span class="n">by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">))</span>
+</span><span data-line="315">        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"children"</span><span class="p">):</span>
+</span><span data-line="316">            <span class="n">walk</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="317">    <span class="k">return</span> <span class="n">placed</span></div>
 
-</span><span data-line="306">
-</span><span data-line="307">
-</span><span data-line="308"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="309"><span class="c1"># The drawing</span>
-</span><span data-line="310">
-</span><span data-line="311">
+</span><span data-line="318">
+</span><span data-line="319">
+</span><span data-line="320"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="321"><span class="c1"># The drawing</span>
+</span><span data-line="322">
+</span><span data-line="323">
 <div class="viewcode-block" id="escape">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tree.html#crowsnest.tree.escape">[docs]</a>
-</span><span data-line="312"><span class="k">def</span><span class="w"> </span><span class="nf">escape</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="313"><span class="w">    </span><span class="sd">"""XML-escape: the default ``text=`` for :func:`render`, and the floor under any other.</span>
-</span><span data-line="314">
-</span><span data-line="315"><span class="sd">    A drawing that trusts its input is one edit away from being the hole, so this runs</span>
-</span><span data-line="316"><span class="sd">    even when a caller has already sanitised -- and a caller that sanitises passes its own</span>
-</span><span data-line="317"><span class="sd">    function as ``text=``, which escapes as well as scrubbing. See :func:`render`.</span>
-</span><span data-line="318"><span class="sd">    """</span>
-</span><span data-line="319">    <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="320">        <span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="321">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&amp;"</span><span class="p">,</span> <span class="s2">"&amp;amp;"</span><span class="p">)</span>
-</span><span data-line="322">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&lt;"</span><span class="p">,</span> <span class="s2">"&amp;lt;"</span><span class="p">)</span>
-</span><span data-line="323">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"&amp;gt;"</span><span class="p">)</span>
-</span><span data-line="324">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s2">"&amp;quot;"</span><span class="p">)</span>
-</span><span data-line="325">    <span class="p">)</span></div>
-
+</span><span data-line="324"><span class="k">def</span><span class="w"> </span><span class="nf">escape</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="325"><span class="w">    </span><span class="sd">"""XML-escape: the default ``text=`` for :func:`render`, and the floor under any other.</span>
 </span><span data-line="326">
-</span><span data-line="327">
-</span><span data-line="328"><span class="k">def</span><span class="w"> </span><span class="nf">_elbow</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Placed</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Placed</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="329"><span class="w">    </span><span class="sd">"""The connector from a row's parent: down its column, then across to its dot."""</span>
-</span><span data-line="330">    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">parent_row</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">row</span><span class="o">.</span><span class="n">parent_row</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
-</span><span data-line="331">        <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="332">    <span class="n">parent</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">parent_row</span><span class="p">]</span>
-</span><span data-line="333">    <span class="n">x</span> <span class="o">=</span> <span class="n">_column</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span>
-</span><span data-line="334">    <span class="n">y0</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">parent</span><span class="o">.</span><span class="n">row</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span> <span class="o">+</span> <span class="n">ROW_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span>
-</span><span data-line="335">    <span class="n">y1</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">row</span><span class="o">.</span><span class="n">row</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span> <span class="o">+</span> <span class="n">ROW_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span>
-</span><span data-line="336">    <span class="n">x1</span> <span class="o">=</span> <span class="n">_column</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span>
-</span><span data-line="337">    <span class="n">dash</span> <span class="o">=</span> <span class="s1">' stroke-dasharray="2 2"'</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">confidence</span> <span class="o">==</span> <span class="s2">"inferred"</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="338">    <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="339">        <span class="sa">f</span><span class="s1">'&lt;path d="M</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">y0</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1"> V</span><span class="si">{</span><span class="n">y1</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1"> H</span><span class="si">{</span><span class="n">x1</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" fill="none" '</span>
-</span><span data-line="340">        <span class="sa">f</span><span class="s1">'stroke="var(--rule, currentColor)" stroke-width="1" opacity="0.8"</span><span class="si">{</span><span class="n">dash</span><span class="si">}</span><span class="s1">/&gt;'</span>
-</span><span data-line="341">    <span class="p">)</span>
-</span><span data-line="342">
-</span><span data-line="343">
-</span><span data-line="344"><span class="k">def</span><span class="w"> </span><span class="nf">_dot</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Placed</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="345"><span class="w">    </span><span class="sd">"""A session's mark: filled while it is alive, hollow once it has exited."""</span>
-</span><span data-line="346">    <span class="n">x</span> <span class="o">=</span> <span class="n">_column</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span>
-</span><span data-line="347">    <span class="n">y</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">row</span><span class="o">.</span><span class="n">row</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span> <span class="o">+</span> <span class="n">ROW_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span>
-</span><span data-line="348">    <span class="n">tone</span> <span class="o">=</span> <span class="n">_tone</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
-</span><span data-line="349">    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"fleet"</span><span class="p">:</span>
-</span><span data-line="350">        <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="351">            <span class="sa">f</span><span class="s1">'&lt;rect x="</span><span class="si">{</span><span class="n">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">3.5</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" y="</span><span class="si">{</span><span class="n">y</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">3.5</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" width="7" height="7" rx="1.5" '</span>
-</span><span data-line="352">            <span class="sa">f</span><span class="s1">'fill="none" stroke="</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">" stroke-width="1.5"/&gt;'</span>
-</span><span data-line="353">        <span class="p">)</span>
-</span><span data-line="354">    <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">alive</span><span class="p">:</span>
-</span><span data-line="355">        <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;circle cx="</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" r="3.5" fill="none" stroke="</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">" stroke-width="1.5"/&gt;'</span>
-</span><span data-line="356">    <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;circle cx="</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" r="3.5" fill="</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">"/&gt;'</span>
-</span><span data-line="357">
-</span><span data-line="358">
-</span><span data-line="359"><span class="k">def</span><span class="w"> </span><span class="nf">_label</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Placed</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="360"><span class="w">    </span><span class="sd">"""The name, then what it is doing, in the page's own type colours."""</span>
-</span><span data-line="361">    <span class="n">x</span> <span class="o">=</span> <span class="n">_column</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span> <span class="o">+</span> <span class="mi">9</span>
-</span><span data-line="362">    <span class="n">y</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">row</span><span class="o">.</span><span class="n">row</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span> <span class="o">+</span> <span class="n">ROW_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span>
-</span><span data-line="363">    <span class="n">room</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">CHAR</span><span class="p">,</span> <span class="n">WIDTH</span> <span class="o">-</span> <span class="n">PAD</span> <span class="o">-</span> <span class="n">RIGHT_COLUMN</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
-</span><span data-line="364">    <span class="n">name</span> <span class="o">=</span> <span class="n">text</span><span class="p">(</span><span class="n">_clip</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">room</span><span class="p">))</span>
-</span><span data-line="365">    <span class="n">weight</span> <span class="o">=</span> <span class="s1">' font-weight="500"'</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="366">    <span class="c1"># The right-hand column says whatever is *not* already obvious. A dot's colour carries</span>
-</span><span data-line="367">    <span class="c1"># the status, and colour alone is not a signal every reader has -- so a session that</span>
-</span><span data-line="368">    <span class="c1"># is doing something says so in words, and only a resting one spends the column on</span>
-</span><span data-line="369">    <span class="c1"># where it is working.</span>
-</span><span data-line="370">    <span class="n">said</span> <span class="o">=</span> <span class="n">text</span><span class="p">(</span><span class="n">_clip</span><span class="p">(</span><span class="n">_right_column</span><span class="p">(</span><span class="n">row</span><span class="p">),</span> <span class="n">RIGHT_COLUMN</span> <span class="o">-</span> <span class="n">CHAR</span><span class="p">))</span>
-</span><span data-line="371">    <span class="n">mark</span> <span class="o">=</span> <span class="s2">" ~"</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">confidence</span> <span class="o">==</span> <span class="s2">"inferred"</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="372">    <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="373">        <span class="sa">f</span><span class="s1">'&lt;text x="</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" y="</span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" font-size="</span><span class="si">{</span><span class="n">FONT</span><span class="si">}</span><span class="s1">" '</span>
-</span><span data-line="374">        <span class="sa">f</span><span class="s1">'fill="var(--ink, currentColor)"</span><span class="si">{</span><span class="n">weight</span><span class="si">}</span><span class="s1">&gt;</span><span class="si">{</span><span class="n">name</span><span class="si">}{</span><span class="n">mark</span><span class="si">}</span><span class="s1">&lt;/text&gt;'</span>
-</span><span data-line="375">        <span class="sa">f</span><span class="s1">'&lt;text x="</span><span class="si">{</span><span class="n">WIDTH</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">PAD</span><span class="si">}</span><span class="s1">" y="</span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" font-size="</span><span class="si">{</span><span class="n">FONT</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">" text-anchor="end" '</span>
-</span><span data-line="376">        <span class="sa">f</span><span class="s1">'fill="var(--ink-soft, currentColor)" opacity="0.8"&gt;</span><span class="si">{</span><span class="n">said</span><span class="si">}</span><span class="s1">&lt;/text&gt;'</span>
-</span><span data-line="377">    <span class="p">)</span>
-</span><span data-line="378">
-</span><span data-line="379">
-</span><span data-line="380"><span class="k">def</span><span class="w"> </span><span class="nf">_units</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-</span><span data-line="381"><span class="w">    </span><span class="sd">"""About how wide ``text`` draws, counting a double-width character as two.</span>
-</span><span data-line="382">
-</span><span data-line="383"><span class="sd">    A CJK name passes a codepoint-count check and draws twice as wide as the check</span>
-</span><span data-line="384"><span class="sd">    believed, which is the same overlap by another route.</span>
-</span><span data-line="385">
-</span><span data-line="386"><span class="sd">    &gt;&gt;&gt; _units('abc') &lt; _units('\u4e00\u4e8c\u4e09')</span>
-</span><span data-line="387"><span class="sd">    True</span>
-</span><span data-line="388"><span class="sd">    """</span>
-</span><span data-line="389">    <span class="n">wide</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">east_asian_width</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"W"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">))</span>
-</span><span data-line="390">    <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">+</span> <span class="n">wide</span><span class="p">)</span> <span class="o">*</span> <span class="n">CHAR</span>
+</span><span data-line="327"><span class="sd">    A drawing that trusts its input is one edit away from being the hole, so this runs</span>
+</span><span data-line="328"><span class="sd">    even when a caller has already sanitised -- and a caller that sanitises passes its own</span>
+</span><span data-line="329"><span class="sd">    function as ``text=``, which escapes as well as scrubbing. See :func:`render`.</span>
+</span><span data-line="330"><span class="sd">    """</span>
+</span><span data-line="331">    <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="332">        <span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="333">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&amp;"</span><span class="p">,</span> <span class="s2">"&amp;amp;"</span><span class="p">)</span>
+</span><span data-line="334">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&lt;"</span><span class="p">,</span> <span class="s2">"&amp;lt;"</span><span class="p">)</span>
+</span><span data-line="335">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&gt;"</span><span class="p">,</span> <span class="s2">"&amp;gt;"</span><span class="p">)</span>
+</span><span data-line="336">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s2">"&amp;quot;"</span><span class="p">)</span>
+</span><span data-line="337">    <span class="p">)</span></div>
+
+</span><span data-line="338">
+</span><span data-line="339">
+</span><span data-line="340"><span class="k">def</span><span class="w"> </span><span class="nf">_elbow</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Placed</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Placed</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="341"><span class="w">    </span><span class="sd">"""The connector from a row's parent: down its column, then across to its dot."""</span>
+</span><span data-line="342">    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">parent_row</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">row</span><span class="o">.</span><span class="n">parent_row</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+</span><span data-line="343">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="344">    <span class="n">parent</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">parent_row</span><span class="p">]</span>
+</span><span data-line="345">    <span class="n">x</span> <span class="o">=</span> <span class="n">_column</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span>
+</span><span data-line="346">    <span class="n">y0</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">parent</span><span class="o">.</span><span class="n">row</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span> <span class="o">+</span> <span class="n">ROW_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span>
+</span><span data-line="347">    <span class="n">y1</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">row</span><span class="o">.</span><span class="n">row</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span> <span class="o">+</span> <span class="n">ROW_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span>
+</span><span data-line="348">    <span class="n">x1</span> <span class="o">=</span> <span class="n">_column</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span>
+</span><span data-line="349">    <span class="n">dash</span> <span class="o">=</span> <span class="s1">' stroke-dasharray="2 2"'</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">confidence</span> <span class="o">==</span> <span class="s2">"inferred"</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="350">    <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="351">        <span class="sa">f</span><span class="s1">'&lt;path d="M</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">y0</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1"> V</span><span class="si">{</span><span class="n">y1</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1"> H</span><span class="si">{</span><span class="n">x1</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" fill="none" '</span>
+</span><span data-line="352">        <span class="sa">f</span><span class="s1">'stroke="var(--rule, currentColor)" stroke-width="1" opacity="0.8"</span><span class="si">{</span><span class="n">dash</span><span class="si">}</span><span class="s1">/&gt;'</span>
+</span><span data-line="353">    <span class="p">)</span>
+</span><span data-line="354">
+</span><span data-line="355">
+</span><span data-line="356"><span class="k">def</span><span class="w"> </span><span class="nf">_dot</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Placed</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="357"><span class="w">    </span><span class="sd">"""A session's mark: filled while it is alive, hollow once it has exited."""</span>
+</span><span data-line="358">    <span class="n">x</span> <span class="o">=</span> <span class="n">_column</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span>
+</span><span data-line="359">    <span class="n">y</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">row</span><span class="o">.</span><span class="n">row</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span> <span class="o">+</span> <span class="n">ROW_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span>
+</span><span data-line="360">    <span class="n">tone</span> <span class="o">=</span> <span class="n">_tone</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+</span><span data-line="361">    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"fleet"</span><span class="p">:</span>
+</span><span data-line="362">        <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="363">            <span class="sa">f</span><span class="s1">'&lt;rect x="</span><span class="si">{</span><span class="n">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">3.5</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" y="</span><span class="si">{</span><span class="n">y</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">3.5</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" width="7" height="7" rx="1.5" '</span>
+</span><span data-line="364">            <span class="sa">f</span><span class="s1">'fill="none" stroke="</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">" stroke-width="1.5"/&gt;'</span>
+</span><span data-line="365">        <span class="p">)</span>
+</span><span data-line="366">    <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">alive</span><span class="p">:</span>
+</span><span data-line="367">        <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;circle cx="</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" r="3.5" fill="none" stroke="</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">" stroke-width="1.5"/&gt;'</span>
+</span><span data-line="368">    <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;circle cx="</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" cy="</span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" r="3.5" fill="</span><span class="si">{</span><span class="n">tone</span><span class="si">}</span><span class="s1">"/&gt;'</span>
+</span><span data-line="369">
+</span><span data-line="370">
+</span><span data-line="371"><span class="k">def</span><span class="w"> </span><span class="nf">_label</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Placed</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="372"><span class="w">    </span><span class="sd">"""The name, then what it is doing, in the page's own type colours."""</span>
+</span><span data-line="373">    <span class="n">x</span> <span class="o">=</span> <span class="n">_column</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span> <span class="o">+</span> <span class="mi">9</span>
+</span><span data-line="374">    <span class="n">y</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">+</span> <span class="n">row</span><span class="o">.</span><span class="n">row</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span> <span class="o">+</span> <span class="n">ROW_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span>
+</span><span data-line="375">    <span class="n">room</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">CHAR</span><span class="p">,</span> <span class="n">WIDTH</span> <span class="o">-</span> <span class="n">PAD</span> <span class="o">-</span> <span class="n">RIGHT_COLUMN</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
+</span><span data-line="376">    <span class="n">name</span> <span class="o">=</span> <span class="n">text</span><span class="p">(</span><span class="n">_clip</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">room</span><span class="p">))</span>
+</span><span data-line="377">    <span class="n">weight</span> <span class="o">=</span> <span class="s1">' font-weight="500"'</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="378">    <span class="c1"># The right-hand column says whatever is *not* already obvious. A dot's colour carries</span>
+</span><span data-line="379">    <span class="c1"># the status, and colour alone is not a signal every reader has -- so a session that</span>
+</span><span data-line="380">    <span class="c1"># is doing something says so in words, and only a resting one spends the column on</span>
+</span><span data-line="381">    <span class="c1"># where it is working.</span>
+</span><span data-line="382">    <span class="n">said</span> <span class="o">=</span> <span class="n">text</span><span class="p">(</span><span class="n">_clip</span><span class="p">(</span><span class="n">_right_column</span><span class="p">(</span><span class="n">row</span><span class="p">),</span> <span class="n">RIGHT_COLUMN</span> <span class="o">-</span> <span class="n">CHAR</span><span class="p">))</span>
+</span><span data-line="383">    <span class="n">mark</span> <span class="o">=</span> <span class="s2">" ~"</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">confidence</span> <span class="o">==</span> <span class="s2">"inferred"</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="384">    <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="385">        <span class="sa">f</span><span class="s1">'&lt;text x="</span><span class="si">{</span><span class="n">x</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" y="</span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" font-size="</span><span class="si">{</span><span class="n">FONT</span><span class="si">}</span><span class="s1">" '</span>
+</span><span data-line="386">        <span class="sa">f</span><span class="s1">'fill="var(--ink, currentColor)"</span><span class="si">{</span><span class="n">weight</span><span class="si">}</span><span class="s1">&gt;</span><span class="si">{</span><span class="n">name</span><span class="si">}{</span><span class="n">mark</span><span class="si">}</span><span class="s1">&lt;/text&gt;'</span>
+</span><span data-line="387">        <span class="sa">f</span><span class="s1">'&lt;text x="</span><span class="si">{</span><span class="n">WIDTH</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">PAD</span><span class="si">}</span><span class="s1">" y="</span><span class="si">{</span><span class="n">y</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1">" font-size="</span><span class="si">{</span><span class="n">FONT</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">" text-anchor="end" '</span>
+</span><span data-line="388">        <span class="sa">f</span><span class="s1">'fill="var(--ink-soft, currentColor)" opacity="0.8"&gt;</span><span class="si">{</span><span class="n">said</span><span class="si">}</span><span class="s1">&lt;/text&gt;'</span>
+</span><span data-line="389">    <span class="p">)</span>
+</span><span data-line="390">
 </span><span data-line="391">
-</span><span data-line="392">
-</span><span data-line="393"><span class="k">def</span><span class="w"> </span><span class="nf">_clip</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">room</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="394"><span class="w">    </span><span class="sd">"""``text`` cut, with an ellipsis, to about ``room`` user units.</span>
-</span><span data-line="395">
-</span><span data-line="396"><span class="sd">    &gt;&gt;&gt; _clip('cn-a-very-long-session-name', 12 * CHAR)</span>
-</span><span data-line="397"><span class="sd">    'cn-a-very-l\u2026'</span>
-</span><span data-line="398"><span class="sd">    &gt;&gt;&gt; _clip('short', 999)</span>
-</span><span data-line="399"><span class="sd">    'short'</span>
+</span><span data-line="392"><span class="k">def</span><span class="w"> </span><span class="nf">_units</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+</span><span data-line="393"><span class="w">    </span><span class="sd">"""About how wide ``text`` draws, counting a double-width character as two.</span>
+</span><span data-line="394">
+</span><span data-line="395"><span class="sd">    A CJK name passes a codepoint-count check and draws twice as wide as the check</span>
+</span><span data-line="396"><span class="sd">    believed, which is the same overlap by another route.</span>
+</span><span data-line="397">
+</span><span data-line="398"><span class="sd">    &gt;&gt;&gt; _units('abc') &lt; _units('\u4e00\u4e8c\u4e09')</span>
+</span><span data-line="399"><span class="sd">    True</span>
 </span><span data-line="400"><span class="sd">    """</span>
-</span><span data-line="401">    <span class="k">if</span> <span class="n">_units</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">room</span><span class="p">:</span>
-</span><span data-line="402">        <span class="k">return</span> <span class="n">text</span>
-</span><span data-line="403">    <span class="n">out</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="404">    <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
-</span><span data-line="405">        <span class="k">if</span> <span class="n">_units</span><span class="p">(</span><span class="n">out</span> <span class="o">+</span> <span class="n">ch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">room</span> <span class="o">-</span> <span class="n">CHAR</span><span class="p">:</span>
-</span><span data-line="406">            <span class="k">break</span>
-</span><span data-line="407">        <span class="n">out</span> <span class="o">+=</span> <span class="n">ch</span>
-</span><span data-line="408">    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"-_ "</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\u2026</span><span class="s2">"</span>
-</span><span data-line="409">
-</span><span data-line="410">
-</span><span data-line="411"><span class="k">def</span><span class="w"> </span><span class="nf">_right_column</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Placed</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="412"><span class="w">    </span><span class="sd">"""What to print at the right of a row: its state when that is news, else its project.</span>
-</span><span data-line="413">
-</span><span data-line="414"><span class="sd">    &gt;&gt;&gt; _right_column(Placed('a', 'a', 0, 0, status='waiting', detail='demo'))</span>
-</span><span data-line="415"><span class="sd">    'waiting'</span>
-</span><span data-line="416"><span class="sd">    &gt;&gt;&gt; _right_column(Placed('a', 'a', 0, 0, status='idle', detail='demo'))</span>
-</span><span data-line="417"><span class="sd">    'demo'</span>
-</span><span data-line="418"><span class="sd">    """</span>
-</span><span data-line="419">    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"fleet"</span><span class="p">:</span>
-</span><span data-line="420">        <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">detail</span>
-</span><span data-line="421">    <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">alive</span><span class="p">:</span>
-</span><span data-line="422">        <span class="k">return</span> <span class="s2">"exited"</span>
-</span><span data-line="423">    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="s2">"idle"</span><span class="p">:</span>
-</span><span data-line="424">        <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">status</span>
-</span><span data-line="425">    <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">detail</span> <span class="ow">or</span> <span class="s2">"idle"</span>
-</span><span data-line="426">
-</span><span data-line="427">
+</span><span data-line="401">    <span class="n">wide</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">east_asian_width</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"W"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">))</span>
+</span><span data-line="402">    <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">+</span> <span class="n">wide</span><span class="p">)</span> <span class="o">*</span> <span class="n">CHAR</span>
+</span><span data-line="403">
+</span><span data-line="404">
+</span><span data-line="405"><span class="k">def</span><span class="w"> </span><span class="nf">_clip</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">room</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="406"><span class="w">    </span><span class="sd">"""``text`` cut, with an ellipsis, to about ``room`` user units.</span>
+</span><span data-line="407">
+</span><span data-line="408"><span class="sd">    &gt;&gt;&gt; _clip('cn-a-very-long-session-name', 12 * CHAR)</span>
+</span><span data-line="409"><span class="sd">    'cn-a-very-l\u2026'</span>
+</span><span data-line="410"><span class="sd">    &gt;&gt;&gt; _clip('short', 999)</span>
+</span><span data-line="411"><span class="sd">    'short'</span>
+</span><span data-line="412"><span class="sd">    """</span>
+</span><span data-line="413">    <span class="k">if</span> <span class="n">_units</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">room</span><span class="p">:</span>
+</span><span data-line="414">        <span class="k">return</span> <span class="n">text</span>
+</span><span data-line="415">    <span class="n">out</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="416">    <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+</span><span data-line="417">        <span class="k">if</span> <span class="n">_units</span><span class="p">(</span><span class="n">out</span> <span class="o">+</span> <span class="n">ch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">room</span> <span class="o">-</span> <span class="n">CHAR</span><span class="p">:</span>
+</span><span data-line="418">            <span class="k">break</span>
+</span><span data-line="419">        <span class="n">out</span> <span class="o">+=</span> <span class="n">ch</span>
+</span><span data-line="420">    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"-_ "</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\u2026</span><span class="s2">"</span>
+</span><span data-line="421">
+</span><span data-line="422">
+</span><span data-line="423"><span class="k">def</span><span class="w"> </span><span class="nf">_right_column</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Placed</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="424"><span class="w">    </span><span class="sd">"""What to print at the right of a row: its state when that is news, else its project.</span>
+</span><span data-line="425">
+</span><span data-line="426"><span class="sd">    &gt;&gt;&gt; _right_column(Placed('a', 'a', 0, 0, status='waiting', detail='demo'))</span>
+</span><span data-line="427"><span class="sd">    'waiting'</span>
+</span><span data-line="428"><span class="sd">    &gt;&gt;&gt; _right_column(Placed('a', 'a', 0, 0, status='idle', detail='demo'))</span>
+</span><span data-line="429"><span class="sd">    'demo'</span>
+</span><span data-line="430"><span class="sd">    """</span>
+</span><span data-line="431">    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"fleet"</span><span class="p">:</span>
+</span><span data-line="432">        <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">detail</span>
+</span><span data-line="433">    <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">alive</span><span class="p">:</span>
+</span><span data-line="434">        <span class="k">return</span> <span class="s2">"exited"</span>
+</span><span data-line="435">    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="s2">"idle"</span><span class="p">:</span>
+</span><span data-line="436">        <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">status</span>
+</span><span data-line="437">    <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">detail</span> <span class="ow">or</span> <span class="s2">"idle"</span>
+</span><span data-line="438">
+</span><span data-line="439">
 <div class="viewcode-block" id="render">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tree.html#crowsnest.tree.render">[docs]</a>
-</span><span data-line="428"><span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span>
-</span><span data-line="429">    <span class="n">found</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
-</span><span data-line="430">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="431">    <span class="n">layout</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Placed</span><span class="p">]]</span> <span class="o">=</span> <span class="n">layout</span><span class="p">,</span>
-</span><span data-line="432">    <span class="n">text</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">escape</span><span class="p">,</span>
-</span><span data-line="433">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Who started whom"</span><span class="p">,</span>
-</span><span data-line="434"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="435"><span class="w">    </span><span class="sd">"""The forest as one ``&lt;figure&gt;`` holding inline SVG. Loads nothing from anywhere.</span>
-</span><span data-line="436">
-</span><span data-line="437"><span class="sd">    ``layout`` is the seam: anything returning :class:`Placed` rows draws through the same</span>
-</span><span data-line="438"><span class="sd">    marks. Rows are placed by their ``row`` index, so a layout numbers them contiguously</span>
-</span><span data-line="439"><span class="sd">    from zero or the figure is taller or shorter than what it drew.</span>
-</span><span data-line="440">
-</span><span data-line="441"><span class="sd">    ``text`` is what every string passes through on its way onto the canvas. It must both</span>
-</span><span data-line="442"><span class="sd">    **scrub and escape** -- the default :func:`escape` only escapes, which is right for a</span>
-</span><span data-line="443"><span class="sd">    caller with nothing to hide, and :mod:`crowsnest.report` passes its page sanitiser so</span>
-</span><span data-line="444"><span class="sd">    that a home path or a credential in a session's name is treated here exactly as it is</span>
-</span><span data-line="445"><span class="sd">    everywhere else on the page. A figure that skipped the sanitiser would be the one</span>
-</span><span data-line="446"><span class="sd">    region of a published page that did.</span>
-</span><span data-line="447">
-</span><span data-line="448"><span class="sd">    Returns ``''`` when there is nothing worth drawing -- a forest with no edges is a list,</span>
-</span><span data-line="449"><span class="sd">    and the roster above it is already that list.</span>
-</span><span data-line="450">
-</span><span data-line="451"><span class="sd">    Colours come from the page's own stylesheet tokens, which are defined for light and</span>
-</span><span data-line="452"><span class="sd">    dark alike, so the figure follows the reader's theme without a second palette; outside</span>
-</span><span data-line="453"><span class="sd">    that page every one falls back to ``currentColor``.</span>
-</span><span data-line="454"><span class="sd">    """</span>
-</span><span data-line="455">    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">layout</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
-</span><span data-line="456">    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"edges"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()):</span>
-</span><span data-line="457">        <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="458">    <span class="n">by_row</span> <span class="o">=</span> <span class="p">{</span><span class="n">row</span><span class="o">.</span><span class="n">row</span><span class="p">:</span> <span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">}</span>
-</span><span data-line="459">    <span class="n">height</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span>
-</span><span data-line="460">    <span class="n">marks</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_elbow</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">by_row</span><span class="p">)</span> <span class="o">+</span> <span class="n">_dot</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="n">_label</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span>
-</span><span data-line="461">    <span class="n">claim</span><span class="p">,</span> <span class="n">caption</span> <span class="o">=</span> <span class="n">_what_it_shows</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
-</span><span data-line="462">    <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="463">        <span class="s1">'&lt;figure class="spawn-tree"&gt;'</span>
-</span><span data-line="464">        <span class="sa">f</span><span class="s1">'&lt;svg role="img" aria-label="</span><span class="si">{</span><span class="n">escape</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">escape</span><span class="p">(</span><span class="n">claim</span><span class="p">)</span><span class="si">}</span><span class="s1">" '</span>
-</span><span data-line="465">        <span class="sa">f</span><span class="s1">'viewBox="0 0 </span><span class="si">{</span><span class="n">WIDTH</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">height</span><span class="si">}</span><span class="s1">" width="</span><span class="si">{</span><span class="n">WIDTH</span><span class="si">}</span><span class="s1">" height="</span><span class="si">{</span><span class="n">height</span><span class="si">}</span><span class="s1">"&gt;</span><span class="si">{</span><span class="n">marks</span><span class="si">}</span><span class="s1">&lt;/svg&gt;'</span>
-</span><span data-line="466">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_as_a_list</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="467">        <span class="sa">f</span><span class="s2">"&lt;figcaption&gt;</span><span class="si">{</span><span class="n">caption</span><span class="si">}</span><span class="s2">&lt;/figcaption&gt;"</span>
-</span><span data-line="468">        <span class="s2">"&lt;/figure&gt;"</span>
-</span><span data-line="469">    <span class="p">)</span></div>
+</span><span data-line="440"><span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span>
+</span><span data-line="441">    <span class="n">found</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+</span><span data-line="442">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="443">    <span class="n">layout</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Placed</span><span class="p">]]</span> <span class="o">=</span> <span class="n">layout</span><span class="p">,</span>
+</span><span data-line="444">    <span class="n">text</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">escape</span><span class="p">,</span>
+</span><span data-line="445">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Who started whom"</span><span class="p">,</span>
+</span><span data-line="446">    <span class="n">entry</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Placed</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="447"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="448"><span class="w">    </span><span class="sd">"""The forest as one ``&lt;figure&gt;`` holding inline SVG. Loads nothing from anywhere.</span>
+</span><span data-line="449">
+</span><span data-line="450"><span class="sd">    ``layout`` is the seam: anything returning :class:`Placed` rows draws through the same</span>
+</span><span data-line="451"><span class="sd">    marks. Rows are placed by their ``row`` index, so a layout numbers them contiguously</span>
+</span><span data-line="452"><span class="sd">    from zero or the figure is taller or shorter than what it drew.</span>
+</span><span data-line="453">
+</span><span data-line="454"><span class="sd">    ``text`` is what every string passes through on its way onto the canvas. It must both</span>
+</span><span data-line="455"><span class="sd">    **scrub and escape** -- the default :func:`escape` only escapes, which is right for a</span>
+</span><span data-line="456"><span class="sd">    caller with nothing to hide, and :mod:`crowsnest.report` passes its page sanitiser so</span>
+</span><span data-line="457"><span class="sd">    that a home path or a credential in a session's name is treated here exactly as it is</span>
+</span><span data-line="458"><span class="sd">    everywhere else on the page. A figure that skipped the sanitiser would be the one</span>
+</span><span data-line="459"><span class="sd">    region of a published page that did.</span>
+</span><span data-line="460">
+</span><span data-line="461"><span class="sd">    ``entry`` is what a session's entry in the list under the drawing says before its</span>
+</span><span data-line="462"><span class="sd">    state, as markup that is ready to place. It receives the :class:`Placed` row, whose</span>
+</span><span data-line="463"><span class="sd">    ``node`` is the whole graph node. :mod:`crowsnest.report` passes a function that makes</span>
+</span><span data-line="464"><span class="sd">    the name an anchor to the session, or adds the command that reaches it. Left out,</span>
+</span><span data-line="465"><span class="sd">    names are text. Deciding whether a URL is fit to publish is the page sanitiser's job,</span>
+</span><span data-line="466"><span class="sd">    not the drawing's, so a caller with no sanitiser gets no links. **The SVG never</span>
+</span><span data-line="467"><span class="sd">    carries a link.** An anchor exists only in the list, which is ordinary HTML next to</span>
+</span><span data-line="468"><span class="sd">    the figure. A fleet's summary row is not a session and is never passed to ``entry``.</span>
+</span><span data-line="469">
+</span><span data-line="470"><span class="sd">    Returns ``''`` when there is nothing worth drawing -- a forest with no edges is a list,</span>
+</span><span data-line="471"><span class="sd">    and the roster above it is already that list.</span>
+</span><span data-line="472">
+</span><span data-line="473"><span class="sd">    Colours come from the page's own stylesheet tokens, which are defined for light and</span>
+</span><span data-line="474"><span class="sd">    dark alike, so the figure follows the reader's theme without a second palette; outside</span>
+</span><span data-line="475"><span class="sd">    that page every one falls back to ``currentColor``.</span>
+</span><span data-line="476"><span class="sd">    """</span>
+</span><span data-line="477">    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">layout</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
+</span><span data-line="478">    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"edges"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()):</span>
+</span><span data-line="479">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="480">    <span class="n">by_row</span> <span class="o">=</span> <span class="p">{</span><span class="n">row</span><span class="o">.</span><span class="n">row</span><span class="p">:</span> <span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">}</span>
+</span><span data-line="481">    <span class="n">height</span> <span class="o">=</span> <span class="n">PAD</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ROW_HEIGHT</span>
+</span><span data-line="482">    <span class="n">marks</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_elbow</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">by_row</span><span class="p">)</span> <span class="o">+</span> <span class="n">_dot</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="n">_label</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span>
+</span><span data-line="483">    <span class="n">claim</span><span class="p">,</span> <span class="n">caption</span> <span class="o">=</span> <span class="n">_what_it_shows</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+</span><span data-line="484">    <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="485">        <span class="s1">'&lt;figure class="spawn-tree"&gt;'</span>
+</span><span data-line="486">        <span class="sa">f</span><span class="s1">'&lt;svg role="img" aria-label="</span><span class="si">{</span><span class="n">escape</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">escape</span><span class="p">(</span><span class="n">claim</span><span class="p">)</span><span class="si">}</span><span class="s1">" '</span>
+</span><span data-line="487">        <span class="sa">f</span><span class="s1">'viewBox="0 0 </span><span class="si">{</span><span class="n">WIDTH</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">height</span><span class="si">}</span><span class="s1">" width="</span><span class="si">{</span><span class="n">WIDTH</span><span class="si">}</span><span class="s1">" height="</span><span class="si">{</span><span class="n">height</span><span class="si">}</span><span class="s1">"&gt;</span><span class="si">{</span><span class="n">marks</span><span class="si">}</span><span class="s1">&lt;/svg&gt;'</span>
+</span><span data-line="488">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_as_a_list</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="489">        <span class="sa">f</span><span class="s2">"&lt;figcaption&gt;</span><span class="si">{</span><span class="n">caption</span><span class="si">}</span><span class="s2">&lt;/figcaption&gt;"</span>
+</span><span data-line="490">        <span class="s2">"&lt;/figure&gt;"</span>
+</span><span data-line="491">    <span class="p">)</span></div>
 
-</span><span data-line="470">
-</span><span data-line="471">
-</span><span data-line="472"><span class="k">def</span><span class="w"> </span><span class="nf">_what_it_shows</span><span class="p">(</span><span class="n">found</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Placed</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="473"><span class="w">    </span><span class="sd">"""The figure's claim and its caption -- **about the picture, not about the data**.</span>
-</span><span data-line="474">
-</span><span data-line="475"><span class="sd">    The first draft took both from the forest's counts, so a figure showing two roots and</span>
-</span><span data-line="476"><span class="sd">    nine connectors announced "15 started by another; 44 by nobody", and a caption said</span>
-</span><span data-line="477"><span class="sd">    fifty orphans were "still drawn under it" above three of them. A caption that</span>
-</span><span data-line="478"><span class="sd">    describes something other than what is on the canvas is worse than none: it is the</span>
-</span><span data-line="479"><span class="sd">    part a reader trusts when they cannot count the rows themselves.</span>
-</span><span data-line="480"><span class="sd">    """</span>
-</span><span data-line="481">    <span class="n">drawn</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"session"</span><span class="p">]</span>
-</span><span data-line="482">    <span class="n">fleets</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"fleet"</span><span class="p">]</span>
-</span><span data-line="483">    <span class="n">linked</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">parent_row</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span data-line="484">    <span class="n">hidden</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">count</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">fleets</span><span class="p">)</span>
-</span><span data-line="485">    <span class="n">claim</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="486">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">linked</span><span class="si">}</span><span class="s2"> session(s) drawn under the one that started them, "</span>
-</span><span data-line="487">        <span class="sa">f</span><span class="s2">"in </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">drawn</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">r</span><span class="o">.</span><span class="n">parent_row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> tree(s)"</span>
-</span><span data-line="488">    <span class="p">)</span>
-</span><span data-line="489">    <span class="n">caption</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="490">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">claim</span><span class="si">}</span><span class="s2">. A hollow mark is a session that has exited but whose children are "</span>
-</span><span data-line="491">        <span class="s2">"still running; a dashed line and &lt;code&gt;~&lt;/code&gt; mark a link recovered from a "</span>
-</span><span data-line="492">        <span class="s2">"transcript rather than recorded."</span>
-</span><span data-line="493">    <span class="p">)</span>
-</span><span data-line="494">    <span class="k">if</span> <span class="n">fleets</span><span class="p">:</span>
-</span><span data-line="495">        <span class="n">caption</span> <span class="o">+=</span> <span class="p">(</span>
-</span><span data-line="496">            <span class="sa">f</span><span class="s2">" A square stands for a parent's remaining children, collapsed: "</span>
-</span><span data-line="497">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">hidden</span><span class="si">}</span><span class="s2"> more session(s) are counted but not drawn, the ones needing you "</span>
-</span><span data-line="498">            <span class="s2">"kept above it."</span>
-</span><span data-line="499">        <span class="p">)</span>
-</span><span data-line="500">    <span class="n">lonely</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"roots"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">drawn</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">parent_row</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
-</span><span data-line="501">    <span class="k">if</span> <span class="n">lonely</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="502">        <span class="n">caption</span> <span class="o">+=</span> <span class="p">(</span>
-</span><span data-line="503">            <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">lonely</span><span class="si">}</span><span class="s2"> session(s) started nobody and were started by nobody, and are "</span>
-</span><span data-line="504">            <span class="s2">"left out; every one of them is in the registers above."</span>
-</span><span data-line="505">        <span class="p">)</span>
-</span><span data-line="506">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">MAX_ROWS</span><span class="p">:</span>
-</span><span data-line="507">        <span class="n">caption</span> <span class="o">+=</span> <span class="p">(</span>
-</span><span data-line="508">            <span class="sa">f</span><span class="s2">" The figure stops at </span><span class="si">{</span><span class="n">MAX_ROWS</span><span class="si">}</span><span class="s2"> rows; &lt;code&gt;crowsnest lineage&lt;/code&gt; prints "</span>
-</span><span data-line="509">            <span class="s2">"the whole forest."</span>
-</span><span data-line="510">        <span class="p">)</span>
-</span><span data-line="511">    <span class="k">return</span> <span class="n">claim</span><span class="p">,</span> <span class="n">caption</span>
-</span><span data-line="512">
-</span><span data-line="513">
-</span><span data-line="514"><span class="k">def</span><span class="w"> </span><span class="nf">_as_a_list</span><span class="p">(</span><span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Placed</span><span class="p">],</span> <span class="n">text</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="515"><span class="w">    </span><span class="sd">"""The same rows as a nested list, for a reader who cannot see the figure.</span>
-</span><span data-line="516">
-</span><span data-line="517"><span class="sd">    An ``aria-label`` can carry the figure's *claim*; it cannot carry who started whom,</span>
-</span><span data-line="518"><span class="sd">    which is the only thing the figure exists to say -- and that parentage appears nowhere</span>
-</span><span data-line="519"><span class="sd">    else in the document. The drawing is already an ordered, indented list, so saying it</span>
-</span><span data-line="520"><span class="sd">    as one costs a few hundred bytes and is the difference between the figure being</span>
-</span><span data-line="521"><span class="sd">    readable and being decorative.</span>
-</span><span data-line="522"><span class="sd">    """</span>
-</span><span data-line="523">    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="524">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
-</span><span data-line="525">        <span class="n">said</span> <span class="o">=</span> <span class="n">text</span><span class="p">(</span><span class="n">_right_column</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
-</span><span data-line="526">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="527">            <span class="sa">f</span><span class="s1">'&lt;li style="margin-left:</span><span class="si">{</span><span class="n">row</span><span class="o">.</span><span class="n">depth</span><span class="si">}</span><span class="s1">rem"&gt;</span><span class="si">{</span><span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">label</span><span class="p">)</span><span class="si">}</span><span class="s1"> &amp;mdash; </span><span class="si">{</span><span class="n">said</span><span class="si">}</span><span class="s1">&lt;/li&gt;'</span>
-</span><span data-line="528">        <span class="p">)</span>
-</span><span data-line="529">    <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;ul class="spawn-tree-alt"&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/ul&gt;'</span>
+</span><span data-line="492">
+</span><span data-line="493">
+</span><span data-line="494"><span class="k">def</span><span class="w"> </span><span class="nf">_what_it_shows</span><span class="p">(</span><span class="n">found</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Placed</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="495"><span class="w">    </span><span class="sd">"""The figure's claim and its caption -- **about the picture, not about the data**.</span>
+</span><span data-line="496">
+</span><span data-line="497"><span class="sd">    The first draft took both from the forest's counts, so a figure showing two roots and</span>
+</span><span data-line="498"><span class="sd">    nine connectors announced "15 started by another; 44 by nobody", and a caption said</span>
+</span><span data-line="499"><span class="sd">    fifty orphans were "still drawn under it" above three of them. A caption that</span>
+</span><span data-line="500"><span class="sd">    describes something other than what is on the canvas is worse than none: it is the</span>
+</span><span data-line="501"><span class="sd">    part a reader trusts when they cannot count the rows themselves.</span>
+</span><span data-line="502"><span class="sd">    """</span>
+</span><span data-line="503">    <span class="n">drawn</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"session"</span><span class="p">]</span>
+</span><span data-line="504">    <span class="n">fleets</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"fleet"</span><span class="p">]</span>
+</span><span data-line="505">    <span class="n">linked</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">parent_row</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span data-line="506">    <span class="n">hidden</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">count</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">fleets</span><span class="p">)</span>
+</span><span data-line="507">    <span class="n">claim</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="508">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">linked</span><span class="si">}</span><span class="s2"> session(s) drawn under the one that started them, "</span>
+</span><span data-line="509">        <span class="sa">f</span><span class="s2">"in </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">drawn</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">r</span><span class="o">.</span><span class="n">parent_row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> tree(s)"</span>
+</span><span data-line="510">    <span class="p">)</span>
+</span><span data-line="511">    <span class="n">caption</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="512">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">claim</span><span class="si">}</span><span class="s2">. A hollow mark is a session that has exited but whose children are "</span>
+</span><span data-line="513">        <span class="s2">"still running; a dashed line and &lt;code&gt;~&lt;/code&gt; mark a link recovered from a "</span>
+</span><span data-line="514">        <span class="s2">"transcript rather than recorded."</span>
+</span><span data-line="515">    <span class="p">)</span>
+</span><span data-line="516">    <span class="k">if</span> <span class="n">fleets</span><span class="p">:</span>
+</span><span data-line="517">        <span class="n">caption</span> <span class="o">+=</span> <span class="p">(</span>
+</span><span data-line="518">            <span class="sa">f</span><span class="s2">" A square stands for a parent's remaining children, collapsed: "</span>
+</span><span data-line="519">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">hidden</span><span class="si">}</span><span class="s2"> more session(s) are counted but not drawn, the ones needing you "</span>
+</span><span data-line="520">            <span class="s2">"kept above it."</span>
+</span><span data-line="521">        <span class="p">)</span>
+</span><span data-line="522">    <span class="n">lonely</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"roots"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">drawn</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">parent_row</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span data-line="523">    <span class="k">if</span> <span class="n">lonely</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="524">        <span class="n">caption</span> <span class="o">+=</span> <span class="p">(</span>
+</span><span data-line="525">            <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">lonely</span><span class="si">}</span><span class="s2"> session(s) started nobody and were started by nobody, and are "</span>
+</span><span data-line="526">            <span class="s2">"left out; every one of them is in the registers above."</span>
+</span><span data-line="527">        <span class="p">)</span>
+</span><span data-line="528">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">MAX_ROWS</span><span class="p">:</span>
+</span><span data-line="529">        <span class="n">caption</span> <span class="o">+=</span> <span class="p">(</span>
+</span><span data-line="530">            <span class="sa">f</span><span class="s2">" The figure stops at </span><span class="si">{</span><span class="n">MAX_ROWS</span><span class="si">}</span><span class="s2"> rows; &lt;code&gt;crowsnest lineage&lt;/code&gt; prints "</span>
+</span><span data-line="531">            <span class="s2">"the whole forest."</span>
+</span><span data-line="532">        <span class="p">)</span>
+</span><span data-line="533">    <span class="k">return</span> <span class="n">claim</span><span class="p">,</span> <span class="n">caption</span>
+</span><span data-line="534">
+</span><span data-line="535">
+</span><span data-line="536"><span class="k">def</span><span class="w"> </span><span class="nf">_as_a_list</span><span class="p">(</span>
+</span><span data-line="537">    <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Placed</span><span class="p">],</span>
+</span><span data-line="538">    <span class="n">text</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="539">    <span class="n">entry</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Placed</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="540"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="541"><span class="w">    </span><span class="sd">"""The same rows as a nested list: for a reader who cannot see the figure, and the one</span>
+</span><span data-line="542"><span class="sd">    place a name in the tree can lead to its session.</span>
+</span><span data-line="543">
+</span><span data-line="544"><span class="sd">    An ``aria-label`` can carry the figure's *claim*; it cannot carry who started whom,</span>
+</span><span data-line="545"><span class="sd">    which is the only thing the figure exists to say -- and that parentage appears nowhere</span>
+</span><span data-line="546"><span class="sd">    else in the document. The drawing is already an ordered, indented list, so saying it</span>
+</span><span data-line="547"><span class="sd">    as one costs a few hundred bytes and is the difference between the figure being</span>
+</span><span data-line="548"><span class="sd">    readable and being decorative.</span>
+</span><span data-line="549">
+</span><span data-line="550"><span class="sd">    **A disclosure, not a visually hidden list.** It used to be hidden from sight, which</span>
+</span><span data-line="551"><span class="sd">    was fine while it only restated the drawing. Now it holds the tree's only links (the</span>
+</span><span data-line="552"><span class="sd">    SVG may carry none), and a link a sighted reader cannot reach does not help anyone.</span>
+</span><span data-line="553"><span class="sd">    ``&lt;details&gt;`` needs no script, a screen reader announces it as a button, and closed</span>
+</span><span data-line="554"><span class="sd">    it costs a phone one line instead of a second copy of the tree. Indentation is capped</span>
+</span><span data-line="555"><span class="sd">    at :data:`MAX_INDENT_DEPTH`, as the drawing's is, so a deep chain stays on a phone's</span>
+</span><span data-line="556"><span class="sd">    screen.</span>
+</span><span data-line="557"><span class="sd">    """</span>
+</span><span data-line="558">    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="559">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+</span><span data-line="560">        <span class="n">said</span> <span class="o">=</span> <span class="n">text</span><span class="p">(</span><span class="n">_right_column</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+</span><span data-line="561">        <span class="n">named</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="562">            <span class="n">entry</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">row</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"session"</span> <span class="k">else</span> <span class="n">text</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+</span><span data-line="563">        <span class="p">)</span>
+</span><span data-line="564">        <span class="n">indent</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">MAX_INDENT_DEPTH</span><span class="p">)</span>
+</span><span data-line="565">        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;li style="margin-left:</span><span class="si">{</span><span class="n">indent</span><span class="si">}</span><span class="s1">rem"&gt;</span><span class="si">{</span><span class="n">named</span><span class="si">}</span><span class="s1"> &amp;mdash; </span><span class="si">{</span><span class="n">said</span><span class="si">}</span><span class="s1">&lt;/li&gt;'</span><span class="p">)</span>
+</span><span data-line="566">    <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="567">        <span class="s1">'&lt;details class="spawn-tree-list"&gt;&lt;summary&gt;The same tree as a list&lt;/summary&gt;'</span>
+</span><span data-line="568">        <span class="sa">f</span><span class="s1">'&lt;ul&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/ul&gt;&lt;/details&gt;'</span>
+</span><span data-line="569">    <span class="p">)</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -700,7 +740,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=9dd25805"></script>
+      <script src="../../_static/documentation_options.js?v=39aadc1c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

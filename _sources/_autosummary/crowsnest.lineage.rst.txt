@@ -30,6 +30,7 @@ crowsnest.lineage
       graph
       lineage_path
       names_by_session_id
+      open_command
       record_spawn
       spawn_event
    
