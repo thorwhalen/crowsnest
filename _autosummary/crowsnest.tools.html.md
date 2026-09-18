@@ -21,7 +21,9 @@ here prints, exits, or knows which surface called it.
 | [`done`](#crowsnest.tools.done)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item handled: hidden until what it asks for changes.                                                                                                                                                                     |
 | [`later`](#crowsnest.tools.later)(session, preset, \*[, plan, on_change, ...]) | Put `session`'s item off until a preset time, or until it changes, whichever first.                                                                                                                                                       |
 | [`lineage`](#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
+| [`live`](#crowsnest.tools.live)(\*[, home, all_homes, config, activity, ...]) | What every live session is doing now, as the page's `live/roster` document.                                                                                                                                                               |
 | [`note`](#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
+| [`recap`](#crowsnest.tools.recap)(session, \*[, home, all_homes, config, ...]) | Five lines about one live session, read from disk: the answer to a `recap` intent.                                                                                                                                                        |
 | [`repo_url`](#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](#crowsnest.tools.roster) returns. |
 | [`resolve`](#crowsnest.tools.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                                                                                                                                                              |
@@ -130,10 +132,43 @@ before crowsnest recorded parents, or this answers with the edges of today only.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### crowsnest.tools.live(, home=None, all_homes=False, config=None, activity=True, as_of=None)
+
+What every live session is doing now, as the page’s `live/roster` document.
+
+[`crowsnest.live.live_roster()`](crowsnest.live.html.md#crowsnest.live.live_roster): per session its `address`, `status`, `since`,
+`waiting_for` and at most one call `in_flight`, plus `as_of`, every string
+already through the page’s sanitiser. The courier writes it once per tick, and the page
+paints a status chip per row from it (crowsnest#58).
+
+Cheaper than [`roster()`](#crowsnest.tools.roster), because it runs every tick: no links, no ledgers, no
+`git`, and a transcript tail is read only for a session that can have a call in
+flight (waiting, busy, or in a shell). `activity=False` reads no tail at all, and
+every `in_flight` is empty. `as_of` defaults to now, taken before the registry is
+read, so the document never claims to be fresher than what it holds.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### crowsnest.tools.note(session, text, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Set the note on `session`’s item; empty text removes it. Nothing reads a note as an
 instruction.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.recap(session, , home=None, all_homes=False, config=None, digests_store=None)
+
+Five lines about one live session, read from disk: the answer to a `recap` intent.
+
+[`crowsnest.live.recap_lines()`](crowsnest.live.html.md#crowsnest.live.recap_lines) over its registry record, the tail of its transcript
+and openloops’ digest (`digests_store` is [`brief()`](#crowsnest.tools.brief)’s seam). It sends the session
+nothing and costs it no turn, which is the difference from an `ask`. Every line is
+already through the page’s sanitiser, because the watcher writes them into the page’s
+`db`. Raises `KeyError` when no live session matches, as [`resolve()`](#crowsnest.tools.resolve) does.
+
+Returns `{"session", "lines", "made_at"}`, `session` being its sanitised address.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

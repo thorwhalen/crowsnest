@@ -10,6 +10,7 @@ crowsnest.report
    
       ATTENTION_CSS
       CONSOLE_CSS
+      LIVE_SCRIPT
       ATTENTION_SCRIPT
       CONSOLE_SCRIPT
    

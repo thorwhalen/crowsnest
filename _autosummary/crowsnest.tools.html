@@ -74,6 +74,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.live.html">crowsnest.live</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
@@ -109,7 +110,9 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.tools.done"><code class="docutils literal notranslate"><span class="pre">done()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.later"><code class="docutils literal notranslate"><span class="pre">later()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.lineage"><code class="docutils literal notranslate"><span class="pre">lineage()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tools.live"><code class="docutils literal notranslate"><span class="pre">live()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.note"><code class="docutils literal notranslate"><span class="pre">note()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tools.recap"><code class="docutils literal notranslate"><span class="pre">recap()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.repo_url"><code class="docutils literal notranslate"><span class="pre">repo_url()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.report"><code class="docutils literal notranslate"><span class="pre">report()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.resolve"><code class="docutils literal notranslate"><span class="pre">resolve()</span></code></a></li>
@@ -194,8 +197,14 @@ here prints, exits, or knows which surface called it.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.lineage" title="crowsnest.tools.lineage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lineage</span></code></a>(*[, home, all_homes, config, ...])</p></td>
 <td><p>Who started whom: the live sessions as a forest of <code class="docutils literal notranslate"><span class="pre">parent</span> <span class="pre">-&gt;</span> <span class="pre">child</span></code> edges.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.note" title="crowsnest.tools.note"><code class="xref py py-obj docutils literal notranslate"><span class="pre">note</span></code></a>(session, text, *[, home, all_homes, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.live" title="crowsnest.tools.live"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live</span></code></a>(*[, home, all_homes, config, activity, ...])</p></td>
+<td><p>What every live session is doing now, as the page's <code class="docutils literal notranslate"><span class="pre">live/roster</span></code> document.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.note" title="crowsnest.tools.note"><code class="xref py py-obj docutils literal notranslate"><span class="pre">note</span></code></a>(session, text, *[, home, all_homes, ...])</p></td>
 <td><p>Set the note on <code class="docutils literal notranslate"><span class="pre">session</span></code>'s item; empty text removes it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.recap" title="crowsnest.tools.recap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recap</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
+<td><p>Five lines about one live session, read from disk: the answer to a <code class="docutils literal notranslate"><span class="pre">recap</span></code> intent.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.repo_url" title="crowsnest.tools.repo_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_url</span></code></a>(cwd)</p></td>
 <td><p>The browser URL of the repository at <code class="docutils literal notranslate"><span class="pre">cwd</span></code>'s <code class="docutils literal notranslate"><span class="pre">origin</span></code>, or <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p></td>
@@ -348,10 +357,47 @@ before crowsnest recorded parents, or this answers with the edges of today only.
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tools.live">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">live</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_of</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tools.html#live"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.live" title="Link to this definition">#</a></dt>
+<dd><p>What every live session is doing now, as the page’s <code class="docutils literal notranslate"><span class="pre">live/roster</span></code> document.</p>
+<p><a class="reference internal" href="crowsnest.live.html#crowsnest.live.live_roster" title="crowsnest.live.live_roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.live.live_roster()</span></code></a>: per session its <code class="docutils literal notranslate"><span class="pre">address</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">since</span></code>,
+<code class="docutils literal notranslate"><span class="pre">waiting_for</span></code> and at most one call <code class="docutils literal notranslate"><span class="pre">in_flight</span></code>, plus <code class="docutils literal notranslate"><span class="pre">as_of</span></code>, every string
+already through the page’s sanitiser. The courier writes it once per tick, and the page
+paints a status chip per row from it (crowsnest#58).</p>
+<p>Cheaper than <a class="reference internal" href="#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">roster()</span></code></a>, because it runs every tick: no links, no ledgers, no
+<code class="docutils literal notranslate"><span class="pre">git</span></code>, and a transcript tail is read only for a session that can have a call in
+flight (waiting, busy, or in a shell). <code class="docutils literal notranslate"><span class="pre">activity=False</span></code> reads no tail at all, and
+every <code class="docutils literal notranslate"><span class="pre">in_flight</span></code> is empty. <code class="docutils literal notranslate"><span class="pre">as_of</span></code> defaults to now, taken before the registry is
+read, so the document never claims to be fresher than what it holds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.tools.note">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">note</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tools.html#note"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.note" title="Link to this definition">#</a></dt>
 <dd><p>Set the note on <code class="docutils literal notranslate"><span class="pre">session</span></code>’s item; empty text removes it. Nothing reads a note as an
 instruction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tools.recap">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">recap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">digests_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tools.html#recap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.recap" title="Link to this definition">#</a></dt>
+<dd><p>Five lines about one live session, read from disk: the answer to a <code class="docutils literal notranslate"><span class="pre">recap</span></code> intent.</p>
+<p><a class="reference internal" href="crowsnest.live.html#crowsnest.live.recap_lines" title="crowsnest.live.recap_lines"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.live.recap_lines()</span></code></a> over its registry record, the tail of its transcript
+and openloops’ digest (<code class="docutils literal notranslate"><span class="pre">digests_store</span></code> is <a class="reference internal" href="#crowsnest.tools.brief" title="crowsnest.tools.brief"><code class="xref py py-func docutils literal notranslate"><span class="pre">brief()</span></code></a>’s seam). It sends the session
+nothing and costs it no turn, which is the difference from an <code class="docutils literal notranslate"><span class="pre">ask</span></code>. Every line is
+already through the page’s sanitiser, because the watcher writes them into the page’s
+<code class="docutils literal notranslate"><span class="pre">db</span></code>. Raises <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> when no live session matches, as <a class="reference internal" href="#crowsnest.tools.resolve" title="crowsnest.tools.resolve"><code class="xref py py-func docutils literal notranslate"><span class="pre">resolve()</span></code></a> does.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">{&quot;session&quot;,</span> <span class="pre">&quot;lines&quot;,</span> <span class="pre">&quot;made_at&quot;}</span></code>, <code class="docutils literal notranslate"><span class="pre">session</span></code> being its sanitised address.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -608,7 +654,7 @@ raises <code class="docutils literal notranslate"><span class="pre">ValueError</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=dcb4eb81"></script>
+      <script src="../_static/documentation_options.js?v=eb4c61eb"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

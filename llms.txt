@@ -17,6 +17,7 @@
 - [crowsnest.ledger](_autosummary/crowsnest.ledger.html.md): The ledger: the durable page a session leaves for the watcher, one file per session.
 - [crowsnest.lineage](_autosummary/crowsnest.lineage.html.md): Who started whom: the spawn graph, as data.
 - [crowsnest.links](_autosummary/crowsnest.links.html.md): References in a session’s own words, turned into links you can click.
+- [crowsnest.live](_autosummary/crowsnest.live.html.md): What a published page may know about the sessions *now*: one small document, and a recap.
 - [crowsnest.open](_autosummary/crowsnest.open.html.md): Bring a live session’s terminal to the front, or say where it runs.
 - [crowsnest.paths](_autosummary/crowsnest.paths.html.md): Where crowsnest keeps what is not code: the data directory, and nothing else.
 - [crowsnest.registry](_autosummary/crowsnest.registry.html.md): Who is alive right now, read from the registry Claude Code keeps while a session runs.
@@ -29,7 +30,7 @@
 - [crowsnest.triage](_autosummary/crowsnest.triage.html.md): Which sessions need you, which are safe to close, and which are still going.
 - [crowsnest.watch](_autosummary/crowsnest.watch.html.md): A stream of what changed, so a monitor is told instead of made to poll.
 - [For AI agents](ai-agents.html.md): `crowsnest` ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on **2026-09-15 16:26 UTC** from commit <a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on **2026-09-18 12:54 UTC** from commit <a href="https://github.com/tho...
 
 ---
 

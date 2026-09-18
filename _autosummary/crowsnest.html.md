@@ -388,6 +388,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`ledger`](crowsnest.ledger.html.md#module-crowsnest.ledger)       | The ledger: the durable page a session leaves for the watcher, one file per session.                  |
 | [`lineage`](crowsnest.lineage.html.md#module-crowsnest.lineage)     | Who started whom: the spawn graph, as data.                                                           |
 | [`links`](crowsnest.links.html.md#module-crowsnest.links)         | References in a session's own words, turned into links you can click.                                 |
+| [`live`](crowsnest.live.html.md#module-crowsnest.live)           | What a published page may know about the sessions *now*: one small document, and a recap.             |
 | [`open`](crowsnest.open.html.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                   |
 | [`paths`](crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
 | [`registry`](crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |

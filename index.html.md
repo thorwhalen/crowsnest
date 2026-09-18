@@ -58,6 +58,8 @@ crowsnest                          who is alive: waiting on you first, then busy
 crowsnest show <session>           one session: last asked, last said, running now, pending question
 crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
 crowsnest brief <session>          openloops' dated digest for one session; reads no transcript
+crowsnest recap <session>          five lines on one session from disk; costs it no turn
+crowsnest live [--out FILE]        what every session is doing now, as the page's live status
 crowsnest lineage                  who started whom, as a tree; --backfill recovers it from transcripts once
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
                                    (--fragment: without the document wrapper, for publishing as an artifact;

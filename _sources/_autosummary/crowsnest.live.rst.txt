@@ -1,0 +1,26 @@
+crowsnest.live
+==============
+
+.. automodule:: crowsnest.live
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      LIVE_FIELDS
+      LIVE_TEXT_LIMIT
+      RECAP_TEXT_LIMIT
+      RECAP_LINES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      live_roster
+      live_row
+      publishable
+      reads_in_flight
+      recap_lines
+      uncut
+   

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.live - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.open" href="crowsnest.open.html" /><link rel="prev" title="crowsnest.links" href="crowsnest.links.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.live"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.live.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.live</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.live.LIVE_FIELDS"><code class="docutils literal notranslate"><span class="pre">LIVE_FIELDS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.LIVE_TEXT_LIMIT"><code class="docutils literal notranslate"><span class="pre">LIVE_TEXT_LIMIT</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.RECAP_LINES"><code class="docutils literal notranslate"><span class="pre">RECAP_LINES</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.RECAP_TEXT_LIMIT"><code class="docutils literal notranslate"><span class="pre">RECAP_TEXT_LIMIT</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.live_roster"><code class="docutils literal notranslate"><span class="pre">live_roster()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.live_row"><code class="docutils literal notranslate"><span class="pre">live_row()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.publishable"><code class="docutils literal notranslate"><span class="pre">publishable()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.reads_in_flight"><code class="docutils literal notranslate"><span class="pre">reads_in_flight()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.recap_lines"><code class="docutils literal notranslate"><span class="pre">recap_lines()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.live.uncut"><code class="docutils literal notranslate"><span class="pre">uncut()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.live</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.live">
+<span id="crowsnest-live"></span><h1>crowsnest.live<a class="headerlink" href="#module-crowsnest.live" title="Link to this heading">#</a></h1>
+<p>What a published page may know about the sessions <em>now</em>: one small document, and a recap.</p>
+<p>A report is a snapshot. Between two publishes, a person who has the page open wants two
+things it cannot give them: what each session is doing <strong>now</strong>, and what one that is not
+running has been up to, <strong>without waking it</strong> (crowsnest#58). Both reach the page the only
+way anything does, through its <code class="docutils literal notranslate"><span class="pre">db</span></code> (discussion #51, “How the pieces talk”): the watching
+session writes them, the page reads them.</p>
+<p><strong>Live status</strong> is one document, <code class="docutils literal notranslate"><span class="pre">live/roster</span></code>, written once per courier tick. It holds
+per session exactly <a class="reference internal" href="#crowsnest.live.LIVE_FIELDS" title="crowsnest.live.LIVE_FIELDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">LIVE_FIELDS</span></code></a> and, at the top, <code class="docutils literal notranslate"><span class="pre">as_of</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span><span class="nt">"as_of"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-09-15T14:02:00+00:00"</span><span class="p">,</span>
+</span><span data-line="2"><span class="w"> </span><span class="nt">"sessions"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"parser"</span><span class="p">,</span><span class="w"> </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"busy"</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">               </span><span class="nt">"since"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-09-15T13:58:10+00:00"</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">               </span><span class="nt">"waiting_for"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w"> </span><span class="nt">"in_flight"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Bash: Run the suite"</span><span class="p">]}]}</span>
+</span></pre></div>
+</div>
+<p>The page matches a row to its entry by <code class="docutils literal notranslate"><span class="pre">address</span></code> (<code class="docutils literal notranslate"><span class="pre">label</span></code>, or <code class="docutils literal notranslate"><span class="pre">label&#64;home</span></code>: the name
+the rest of crowsnest uses, <code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.lineage.address()</span></code>) and paints a chip with the
+entry’s age. One document per tick is the whole budget (kill criterion K3): measured for 77
+sessions it is 6.3 KB, and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">live</span> <span class="pre">--out</span></code> writes it to a file the <code class="docutils literal notranslate"><span class="pre">Artifact</span></code>
+tool sends as it is, so the document never passes through the watcher’s context.</p>
+<p><strong>A recap</strong> is five lines about one session, read from disk: the status, the last prompt
+and reply with their own times, what is in flight, and openloops’ digest. The watcher
+writes them as the answer to a <code class="docutils literal notranslate"><span class="pre">recap</span></code> intent. Nothing here sends a session anything.</p>
+<p><strong>Both are sanitised here, in Python, by the page’s own sanitiser</strong> (the egress choke point
+never moves into the page’s script). Every string goes through
+<code class="xref py py-class docutils literal notranslate"><span class="pre">openloops.dashboard.Sanitizer</span></code> exactly as it would onto the page, so a home path is
+rewritten and credential-shaped text is withheld; then it is clipped, and sanitised again,
+because a clip can cut text into a shape the first pass did not match. Neither carries a
+session’s words unclipped: live status carries none of its prose at all, and a recap’s
+lines are clipped to <a class="reference internal" href="#crowsnest.live.RECAP_TEXT_LIMIT" title="crowsnest.live.RECAP_TEXT_LIMIT"><code class="xref py py-data docutils literal notranslate"><span class="pre">RECAP_TEXT_LIMIT</span></code></a>. The <code class="docutils literal notranslate"><span class="pre">db</span></code> is readable by anyone who can open
+the artifact, so what is not on the page is not in the <code class="docutils literal notranslate"><span class="pre">db</span></code> either.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="n">live_roster</span><span class="p">([{</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'parser'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">:</span> <span class="s1">'busy'</span><span class="p">,</span> <span class="s1">'status_since'</span><span class="p">:</span> <span class="mi">1767225600</span><span class="p">,</span>
+</span><span data-line="2"><span class="gp">... </span>                    <span class="s1">'activity'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'in_flight'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Read: /Users/ana/secret/plan.md'</span><span class="p">]}}],</span>
+</span><span data-line="3"><span class="gp">... </span>                   <span class="n">as_of</span><span class="o">=</span><span class="s1">'2026-01-01T00:05:00+00:00'</span><span class="p">)</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">doc</span><span class="p">[</span><span class="s1">'sessions'</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">LIVE_FIELDS</span><span class="p">)</span>
+</span><span data-line="5"><span class="go">True</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span><span class="p">[</span><span class="s1">'sessions'</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">'since'</span><span class="p">],</span> <span class="s1">'/Users/ana'</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+</span><span data-line="7"><span class="go">('2026-01-01T00:00:00+00:00', False)</span>
+</span></pre></div>
+</div>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.live.LIVE_FIELDS" title="crowsnest.live.LIVE_FIELDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LIVE_FIELDS</span></code></a></p></td>
+<td><p>Every field one session's entry in <code class="docutils literal notranslate"><span class="pre">live/roster</span></code> has, and nothing else.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.live.LIVE_TEXT_LIMIT" title="crowsnest.live.LIVE_TEXT_LIMIT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LIVE_TEXT_LIMIT</span></code></a></p></td>
+<td><p>How much of <code class="docutils literal notranslate"><span class="pre">waiting_for</span></code> and of the call in flight an entry carries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.live.RECAP_TEXT_LIMIT" title="crowsnest.live.RECAP_TEXT_LIMIT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RECAP_TEXT_LIMIT</span></code></a></p></td>
+<td><p>How long one recap line may be.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.live.RECAP_LINES" title="crowsnest.live.RECAP_LINES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RECAP_LINES</span></code></a></p></td>
+<td><p>How many lines a recap has.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.live.live_roster" title="crowsnest.live.live_roster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live_roster</span></code></a>(rows, *, as_of[, text_limit])</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">live/roster</span></code> document for <code class="docutils literal notranslate"><span class="pre">rows</span></code>, stamped <code class="docutils literal notranslate"><span class="pre">as_of</span></code> (an ISO instant).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.live.live_row" title="crowsnest.live.live_row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live_row</span></code></a>(row, *[, text_limit])</p></td>
+<td><p>One session's entry in <code class="docutils literal notranslate"><span class="pre">live/roster</span></code>: <a class="reference internal" href="#crowsnest.live.LIVE_FIELDS" title="crowsnest.live.LIVE_FIELDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">LIVE_FIELDS</span></code></a>, each sanitised.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.live.publishable" title="crowsnest.live.publishable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publishable</span></code></a>(value, *[, limit])</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">value</span></code> as the page's sanitiser puts it on the page, as text rather than markup.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.live.reads_in_flight" title="crowsnest.live.reads_in_flight"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reads_in_flight</span></code></a>(status)</p></td>
+<td><p>Whether a session in <code class="docutils literal notranslate"><span class="pre">status</span></code> has its tail read for the call in flight.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.live.recap_lines" title="crowsnest.live.recap_lines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recap_lines</span></code></a>(session, activity, digest, *[, ...])</p></td>
+<td><p>Five sanitised lines about one session, each item with the time of its own source.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.live.uncut" title="crowsnest.live.uncut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncut</span></code></a>(text)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">text</span></code> without its last word, when an earlier clip may have cut that word.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.live.LIVE_FIELDS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">LIVE_FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('address',</span> <span class="pre">'status',</span> <span class="pre">'since',</span> <span class="pre">'waiting_for',</span> <span class="pre">'in_flight')</span></span><a class="headerlink" href="#crowsnest.live.LIVE_FIELDS" title="Link to this definition">#</a></dt>
+<dd><p>Every field one session’s entry in <code class="docutils literal notranslate"><span class="pre">live/roster</span></code> has, and nothing else.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.live.LIVE_TEXT_LIMIT">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">LIVE_TEXT_LIMIT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">60</span></span><a class="headerlink" href="#crowsnest.live.LIVE_TEXT_LIMIT" title="Link to this definition">#</a></dt>
+<dd><p>How much of <code class="docutils literal notranslate"><span class="pre">waiting_for</span></code> and of the call in flight an entry carries. A chip is a word
+or two; this keeps a hundred sessions well inside one document.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.live.RECAP_LINES">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">RECAP_LINES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#crowsnest.live.RECAP_LINES" title="Link to this definition">#</a></dt>
+<dd><p>How many lines a recap has.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.live.RECAP_TEXT_LIMIT">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">RECAP_TEXT_LIMIT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">200</span></span><a class="headerlink" href="#crowsnest.live.RECAP_TEXT_LIMIT" title="Link to this definition">#</a></dt>
+<dd><p>How long one recap line may be. About the roster’s clip of a reply, less the line’s head.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.live.live_roster">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">live_roster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_of</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/live.html#live_roster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.live.live_roster" title="Link to this definition">#</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">live/roster</span></code> document for <code class="docutils literal notranslate"><span class="pre">rows</span></code>, stamped <code class="docutils literal notranslate"><span class="pre">as_of</span></code> (an ISO instant).</p>
+<p><code class="docutils literal notranslate"><span class="pre">as_of</span></code> is when the rows were read, taken <em>before</em> reading them, so the document
+never claims to be fresher than what it holds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.live.live_row">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">live_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/live.html#live_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.live.live_row" title="Link to this definition">#</a></dt>
+<dd><p>One session’s entry in <code class="docutils literal notranslate"><span class="pre">live/roster</span></code>: <a class="reference internal" href="#crowsnest.live.LIVE_FIELDS" title="crowsnest.live.LIVE_FIELDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">LIVE_FIELDS</span></code></a>, each sanitised.</p>
+<p><code class="docutils literal notranslate"><span class="pre">row</span></code> is a roster row (<code class="xref py py-meth docutils literal notranslate"><span class="pre">crowsnest.registry.LiveSession.as_dict()</span></code>, with an
+<code class="docutils literal notranslate"><span class="pre">activity</span></code> when its tail was read). <code class="docutils literal notranslate"><span class="pre">since</span></code> is when the registry says the session
+entered its status, <code class="docutils literal notranslate"><span class="pre">''</span></code> when it does not say.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.live.publishable">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">publishable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/live.html#publishable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.live.publishable" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">value</span></code> as the page’s sanitiser puts it on the page, as text rather than markup.</p>
+<p>The page’s <code class="xref py py-class docutils literal notranslate"><span class="pre">openloops.dashboard.Sanitizer</span></code> scrubs and HTML-escapes; this undoes
+only the escaping, so a script that sets <code class="docutils literal notranslate"><span class="pre">textContent</span></code> shows exactly what the page’s
+markup would. <code class="docutils literal notranslate"><span class="pre">limit</span></code> clips the result’s whitespace-collapsed text to that many
+characters, and the clip is sanitised again.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">publishable</span><span class="p">(</span><span class="s1">'a &lt; b'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">'a &lt; b'</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">publishable</span><span class="p">(</span><span class="s1">'token='</span> <span class="o">+</span> <span class="s1">'ghp_'</span> <span class="o">+</span> <span class="s1">'A'</span> <span class="o">*</span> <span class="mi">36</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">'[withheld: credential-shaped text (github_token)]'</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">publishable</span><span class="p">(</span><span class="s1">'one   two three'</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</span><span data-line="6"><span class="go">'one two…'</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.live.reads_in_flight">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">reads_in_flight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/live.html#reads_in_flight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.live.reads_in_flight" title="Link to this definition">#</a></dt>
+<dd><p>Whether a session in <code class="docutils literal notranslate"><span class="pre">status</span></code> has its tail read for the call in flight.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">reads_in_flight</span><span class="p">(</span><span class="s1">'busy'</span><span class="p">),</span> <span class="n">reads_in_flight</span><span class="p">(</span><span class="s1">'idle'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">(True, False)</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.live.recap_lines">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">recap_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">digest</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/live.html#recap_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.live.recap_lines" title="Link to this definition">#</a></dt>
+<dd><p>Five sanitised lines about one session, each item with the time of its own source.</p>
+<p><code class="docutils literal notranslate"><span class="pre">session</span></code> is the registry record (<code class="xref py py-meth docutils literal notranslate"><span class="pre">crowsnest.registry.LiveSession.as_dict()</span></code>),
+<code class="docutils literal notranslate"><span class="pre">activity</span></code> what <a class="reference internal" href="crowsnest.activity.html#crowsnest.activity.read_activity" title="crowsnest.activity.read_activity"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.activity.read_activity()</span></code></a> read of its tail (as a dict),
+and <code class="docutils literal notranslate"><span class="pre">digest</span></code> openloops’ digest of it (<code class="xref py py-func docutils literal notranslate"><span class="pre">openloops.tools.show()</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+The lines, in order: status; what it was asked last; what it said last; what is in
+flight or what it asks; the digest.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span> <span class="o">=</span> <span class="n">recap_lines</span><span class="p">({</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'fixer'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'status_since'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+</span><span data-line="2"><span class="gp">... </span>                    <span class="p">{</span><span class="s1">'last_assistant_text'</span><span class="p">:</span> <span class="s1">'Shipped.'</span><span class="p">,</span>
+</span><span data-line="3"><span class="gp">... </span>                     <span class="s1">'last_text_at'</span><span class="p">:</span> <span class="s1">'2026-01-01T09:30:00Z'</span><span class="p">},</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</span><span data-line="5"><span class="go">(5, 'said 2026-01-01 09:30 UTC: Shipped.')</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.live.uncut">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">uncut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/live.html#uncut"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.live.uncut" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">text</span></code> without its last word, when an earlier clip may have cut that word.</p>
+<p>Some text is clipped before it reaches a sanitiser: a tool call’s argument is, in
+<a class="reference internal" href="crowsnest.activity.html#crowsnest.activity.describe_tool" title="crowsnest.activity.describe_tool"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.activity.describe_tool()</span></code></a>. A token or a home path cut there is a shape
+the sanitiser no longer recognises, so publishing the cut word publishes most of the
+secret. A text ending in an ellipsis therefore loses the word the ellipsis ends; the
+ellipsis stays, to say something was left out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">uncut</span><span class="p">(</span><span class="s1">'Bash: use ghp_AAAAAAAA…'</span><span class="p">),</span> <span class="n">uncut</span><span class="p">(</span><span class="s1">'Read: notes.md'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">('Bash: use …', 'Read: notes.md')</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.links.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.links</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.open.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.open</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=eb4c61eb"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

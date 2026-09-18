@@ -15,7 +15,9 @@ crowsnest.tools
       done
       later
       lineage
+      live
       note
+      recap
       repo_url
       report
       resolve
