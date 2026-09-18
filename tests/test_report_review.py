@@ -285,7 +285,7 @@ def test_each_kind_offers_its_own_resolutions_on_an_interactive_page():
         "asker": ["review-open", "later", "done"],
         "runner": ["ask", "later"],
         "closer": ["reopen", "tell", "send"],
-        "sleeper": ["ask", "later"],
+        "sleeper": ["recap", "later"],  # read it from disk before spending its turn (#58)
     }
     assert 'href="#session-asker"' in lines(html)["asker"]
     # Writes wait, hidden, for the page's store; intents are the console's, hidden with it.

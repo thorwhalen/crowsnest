@@ -129,17 +129,19 @@ The buttons come in two kinds, and only one of them reaches you.
 
 **Seen, Later, Done and Note are the user's own record, not instructions.** Each tap writes that item's attention document whole into the page's `db` at `attention/<item id>`, the same document `crowsnest attention export|import` reads and writes, and redraws the row at once. Seen dims it. Later opens a sheet (*In 1 hour*, *This evening*, *Tomorrow morning*, *Until it changes*, "or when it changes", an optional next step; after `max_snoozes` put-offs it leads with *Drop it*) and folds the row into **Later**. Done hides the row until it changes. Note keeps a line for the user. **Seen above**, on each register's head below the first, marks every row above it seen, and a toast offers **Undo**. None of it writes an intent and none of it is yours to act on: a note is never an instruction. The sheet's hours are the config file's `[attention]` table. These buttons appear only on a page with triage verdicts, so a `--no-triage` page has none.
 
-**The Review block's lines carry the same buttons, scoped to what each kind needs** (#59): Drop, Later, Open on something put off too often; Answer (a link to the row), Later, Done on a stale ask; Ask, Later on a stuck or unclassified session; Re-open (back on the page, seen) and Tell on something handled that never moved. Drop, Later, Done and Re-open write the record as above. Ask and Tell queue the same intents a row's buttons do, so handle them the same way. A line tapped dims, and so does every line of an item put off or done from its row; it leaves the block when the page is next rendered.
+**The Review block's lines carry the same buttons, scoped to what each kind needs** (#59): Drop, Later, Open on something put off too often; Answer (a link to the row), Later, Done on a stale ask; Ask, Later on a stuck session; Recap, Later on an unclassified one; Re-open (back on the page, seen) and Tell on something handled that never moved. Drop, Later, Done and Re-open write the record as above. Ask, Recap and Tell queue the same intents a row's buttons do, so handle them the same way. A line tapped dims, and so does every line of an item put off or done from its row; it leaves the block when the page is next rendered.
 
-**Ask, Tell and Start work here are instructions.** Each press writes one document into the artifact's `intents` collection; nothing on the page runs a command.
+**Recap, Ask, Tell and Start work here are instructions.** Each press writes one document into the artifact's `intents` collection; nothing on the page runs a command. **Recap** is the cheap one: you answer it from disk and the session never hears of it. **Ask** is labelled *Ask (costs it a turn)*, because it does.
 
 The status line says when the `db` is missing. A second line reads the page's `console/heartbeat` document (`{at}`): when it is absent or older than two ticks, it says crowsnest has not looked lately and that terminal changes and queued actions wait.
+
+**Live status chips** (#58). A third line reads the page's `live/roster` document, which you write each tick (step 3 below), and every row gets a chip beside the snapshot's: `now busy · for 4 m`, matched by the row's address. When the document is older than two ticks, or dated ahead of the viewer's clock, every chip greys and says how old it is (`was busy, 3 m ago`). A row whose session is not in the document says `not in live status`, and a name two sessions share reads as unknown. No document: no chips, only the snapshot's. The chips never need a republish, so do not republish to refresh a status.
 
 A `db` write does **not** wake this session; only a comment sent to Claude does. So
 while the user is operating from the page, poll:
 
 ```
-/loop 30s Read the report console: sync attention and act on queued intents per the crowsnest-report skill, section 5.
+/loop 30s Read the report console: sync attention, write live status and act on queued intents per the crowsnest-report skill, section 5.
 ```
 
 and stop the loop when they say they are done.
@@ -158,10 +160,15 @@ acting on intents:
    to the page. Note the time *before* listing, and next tick pass that time minus a
    few minutes' margin, never the push time itself — `import_docs` is a no-op on a
    document it already holds as new, so resending costs nothing.
-3. `write_db` `set` `console/heartbeat` `{at: now}`. The page's status line reads it.
-4. Prune `intents` documents older than a day with `status` `done` or `failed` — the
+3. `crowsnest live --out <scratch>/live.json`, with the same `--home` or `--all-homes`
+   the page was rendered with, then `write_db` `set` `live/roster` with `file_path`
+   pointing at that file. Pass the file, never the document inline: it is several KB
+   and would enter your context every tick (kill criterion K3). Every string in it is
+   already sanitised; do not edit it. One write per tick is the whole budget.
+4. `write_db` `set` `console/heartbeat` `{at: now}`. The page's status line reads it.
+5. Prune `intents` documents older than a day with `status` `done` or `failed` — the
    artifact holds at most 5,000 documents.
-5. Republish (`--fragment --interactive`) when a register's membership changed since
+6. Republish (`--fragment --interactive`) when a register's membership changed since
    the last publish, rate-limited as section 4 already says.
 
 **Reconciliation is last-write-wins by `updated_at`, in both directions**; `attention
@@ -178,6 +185,12 @@ Then act on queued intents. Each tick:
    query: { where: [["status", "==", "queued"]], order_by: { field: "at" } } })`.
 2. For each intent, first `write_db` `update` it to `status: "working"`, then act by
    `kind`:
+   - `recap`: `crowsnest recap <session>` (`<session>@<home>` with `--all-homes` when
+     the intent has a `home`, else the page's own home flags); write `status: "done"`
+     and `answer` with its five lines, verbatim. It reads from disk only: never
+     `SendMessage` the session for a recap, and never answer one from your own memory
+     of it. When the command fails (the session has exited), `status: "failed"` and its
+     message. Every line is already sanitised; do not add to it.
    - `ask`: the tier-2 status request to `session` (five lines); when the reply
      arrives, write `status: "done"` and `answer` with the reply, verbatim.
    - `tell`: `SendMessage` the `text` to `session`; write `status: "done"`,
