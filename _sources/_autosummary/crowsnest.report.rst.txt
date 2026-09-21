@@ -13,6 +13,7 @@ crowsnest.report
       LIVE_SCRIPT
       ATTENTION_SCRIPT
       CONSOLE_SCRIPT
+      REGISTER_CSS
    
    .. rubric:: Functions
 
