@@ -17,6 +17,19 @@ last words clipped), **Working** (busy, with the tool call in flight), and **Qui
 (everything else, grouped by project). Every row carries an ``id="session-<name>"`` so a
 comment on the published page can anchor to it (crowsnest issue #4).
 
+**Every register is a ``<details>``, and only the one that needs the person opens open**
+(crowsnest#86). A machine with twenty quiet sessions is otherwise a page of scrolling; a
+closed register still says how much is in it, because the count is in the ``<summary>``.
+It is the browser's own disclosure -- no script, and a register with nothing in it stays
+a plain ``<section>``, since there is nothing there to hide.
+
+A row inside a closed register is **hidden, not omitted**: it keeps its
+``id="session-<name>"``, so a published comment's anchor and a find-in-page still address
+it. Whether they *reveal* it is the browser's to decide: Blink and WebKit are documented
+to expand a closed ``<details>`` for a fragment and for find-in-page and Gecko is not, but
+none of that has been measured here, and the page has no script to do it for them.
+crowsnest#93 is the measurement, unmade as this is written.
+
 Like the openloops dashboard, **the page is a snapshot, and it says so in its largest
 type.** ``made_at`` is a required-in-practice argument rather than a hidden ``now()``,
 which is also what lets a test compare bytes: the same roster, ``made_at`` and ``tz``
@@ -77,6 +90,7 @@ __all__ = [
     "CONSOLE_CSS",
     "CONSOLE_SCRIPT",
     "LIVE_SCRIPT",
+    "REGISTER_CSS",
     "render_report",
 ]
 
@@ -160,11 +174,7 @@ ATTENTION_CSS = """
 .wip{font-family:var(--mono);font-size:.78rem;color:var(--needs);padding:.8rem 0 .1rem}
 .note-mark{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--accent)}
-.register--later>summary{cursor:pointer;list-style:none}
-.register--later>summary::-webkit-details-marker{display:none}
 .register--later .figure{color:var(--ink-soft)}
-.register--review>summary{cursor:pointer;list-style:none}
-.register--review>summary::-webkit-details-marker{display:none}
 .register--review .figure{color:var(--ink-soft)}
 """
 
@@ -204,8 +214,7 @@ CONSOLE_CSS = """
   border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
 .is-seen{opacity:.55}
 .live,.line.live .tag{color:var(--accent)}
-.later-live>summary{cursor:pointer;list-style:none}
-.later-live>summary::-webkit-details-marker{display:none}
+.later-live .figure{color:var(--ink-soft)}
 .toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:10;display:flex;
   gap:.8rem;align-items:center;max-width:calc(100% - 2rem);padding:.55rem .8rem;
   font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--surface)}
@@ -858,11 +867,13 @@ CONSOLE_SCRIPT = r"""
       figure.className = "figure";
       const name = document.createElement("h2");
       name.textContent = "Later";
-      summary.append(figure, name);
-      const rule = document.createElement("p");
+      // The rule goes INSIDE the summary, as `_register` writes it: REGISTER_CSS places
+      // it with a child combinator, and a sibling <p> falls out of the head's grid.
+      const rule = document.createElement("span");
       rule.className = "rule";
       rule.textContent = "Put off from this page. Each row says when it comes back.";
-      block.append(summary, rule);
+      summary.append(figure, name, rule);
+      block.append(summary);
       const working = document.getElementById("working");
       if (working) working.after(block); else document.querySelector("main").append(block);
       return block;
@@ -1171,18 +1182,30 @@ CONSOLE_SCRIPT = r"""
       }
     }));
 
-    // Seen above: every row before the button that is on the page and not seen yet. A
-    // register head's button leaves its own rows alone; the one at the foot of Quiet takes
-    // every row there is.
+    // Seen above: every row before the button that the person can SEE and has not seen
+    // yet. A register head's button leaves its own rows alone; the one at the foot of
+    // Quiet takes every row there is. Registers fold (#86), so a row inside a closed one
+    // is skipped however far above it sits: marking work seen that was never on screen
+    // dims it, drops it from the badge, and nothing says it happened.
     document.querySelectorAll("button[data-seen-above]").forEach((button) => button.addEventListener("click", () => {
       if (!lit) return;
-      const above = [...rows.values()].flat().filter((el) =>
+      const unseen = [...rows.values()].flat().filter((el) =>
         (el.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
         && !el.hidden && !el.closest("#later")
         && (el.dataset.live || drawn.get(el).shown) !== A.SEEN);
-      if (!above.length) { notify("Nothing above is unseen", []); return; }
+      const folded = unseen.filter((el) => el.closest("details:not([open])"));
+      const away = new Set(folded);
+      const above = unseen.filter((el) => !away.has(el));
+      // Whatever a closed register kept back is said either way: a count the person
+      // cannot see is the same silence, whether or not anything else was marked.
+      const kept = folded.length ? " (" + folded.length + " left folded)" : "";
+      if (!above.length) {
+        notify(folded.length ? "Nothing open above is unseen; closed registers left alone"
+                             : "Nothing above is unseen", []);
+        return;
+      }
       act(above, (record, row, now) => A.seen(record, row.dataset.rev, now, seenAsOf(row)),
-        (n) => "Seen: " + n + (n === 1 ? " item" : " items") + " above");
+        (n) => "Seen: " + n + (n === 1 ? " item" : " items") + " above" + kept);
     }));
 
     return { saveNote };
@@ -1271,6 +1294,31 @@ TOAST_SECONDS = 8
 WAY_IN_CSS = """
 .way-in{white-space:pre-wrap;overflow-wrap:anywhere}
 .way-in-withheld{font-style:italic}
+"""
+
+#: What makes a register's head a disclosure (#86). Every register but the one that needs
+#: the person is closed, so the head has to *look* openable: the browser's own marker is
+#: suppressed (it sits where the figure does and breaks the head's grid) and the heading
+#: carries a caret drawn in borders -- no glyph, so no font to miss it, and it takes its
+#: colour from the page's tokens in either theme.
+#:
+#: The rest holds the head's shape. The shared stylesheet lays a register head out as
+#: ``auto 1fr``, figure beside a block holding the heading and the rule; a ``<summary>``
+#: may not hold that block (it takes phrasing content and a heading only), so the three
+#: are placed directly: the figure down the first column, the heading and the rule down
+#: the second. Without this the rule falls below the head's hairline, at the page's left
+#: edge, on every register that folds.
+REGISTER_CSS = """
+.register>summary{cursor:pointer;list-style:none;grid-template-rows:auto auto}
+.register>summary::-webkit-details-marker{display:none}
+.register>summary>.figure{grid-row:1/3}
+.register>summary>h2,.register>summary>.rule{grid-column:2}
+.register>summary>.rule{display:block}
+.register>summary h2::after{content:"";display:inline-block;margin-left:.5rem;
+  border:.3rem solid transparent;border-left-color:var(--ink-soft);
+  transform:translateY(-.05em)}
+.register[open]>summary h2::after{border-left-color:transparent;
+  border-top-color:var(--ink-soft);transform:translateY(-.25em)}
 """
 
 #: What the page is called when the caller does not name it.
@@ -1575,10 +1623,34 @@ def _register(
     rule: str,
     body: str,
     seen_above: bool = False,
+    folds: bool = False,
+    start_open: bool = False,
 ) -> str:
+    """One register. ``folds``: a ``<details>`` a person can close, open or not (#86).
+
+    A ``<summary>`` may hold phrasing content and a heading only, so the figure and the
+    rule are ``<span>``s rather than ``<p>``s and the "Seen above" button -- interactive
+    content, which a summary may not hold -- opens the body instead, where it still heads
+    the register's rows. The head keeps the shape it had: :data:`REGISTER_CSS` places the
+    figure beside a heading with the rule under it, and the hairline under all three.
+
+    A register with nothing in it does not fold: there is nothing to hide, and a
+    ``<details>`` whose body is "Nothing is waiting on you" costs a tap to read one line.
+    """
     # `seen_above`: the head offers the console's "Seen above" (#56), which marks every
     # row above it seen -- on a page with the attention arm only, hidden until it lights.
     above = _SEEN_ABOVE if seen_above and _view.get().arm else ""
+    if folds:
+        return (
+            f'<details class="register register--{tone}" id="{ident}"'
+            f"{' open' if start_open else ''}>"
+            f'<summary class="register-head">'
+            f'<span class="figure">{figure}</span>'
+            f"<h2>{name}</h2>"
+            f'<span class="rule">{rule}</span>'
+            "</summary>"
+            f"{above}{body}</details>"
+        )
     return (
         f'<section class="register register--{tone}" id="{ident}">'
         f'<div class="register-head">'
@@ -2197,6 +2269,7 @@ def _register_from_rows(
     empty: str,
     lead: str = "",
     seen_above: bool = False,
+    start_open: bool = False,
 ) -> str:
     """A register of full rows. ``lead`` is markup that opens its body (the WIP line)."""
     figure = str(len(rows))
@@ -2213,6 +2286,8 @@ def _register_from_rows(
         rule=rule,
         body=body,
         seen_above=seen_above,
+        folds=bool(rows),
+        start_open=start_open,
     )
 
 
@@ -2239,6 +2314,7 @@ def _quiet_register(
         rule="Everything else, grouped by project.",
         body=body,
         seen_above=True,
+        folds=bool(rows),
     )
 
 
@@ -2282,6 +2358,7 @@ def _lineage_register(safe: _Sanitizer, found: Any) -> str:
         tone="done",
         rule=rule,
         body=figure,
+        folds=True,
     )
 
 
@@ -2584,23 +2661,18 @@ def _later_line(
 def _later_register(
     safe: _Sanitizer, rows: Sequence[Mapping[str, Any]], view: _View, clock: _Clock
 ) -> str:
-    """The rows the person put off, closed by default, one line each; nothing when none.
-
-    A ``<summary>`` may hold phrasing content and a heading only, so the figure is a
-    ``<span>`` and the rule sits under the summary rather than inside it.
-    """
+    """The rows the person put off, closed by default, one line each; nothing when none."""
     if not rows:
         return ""
     items = "".join(_later_line(safe, row, view, clock) for row in rows)
-    return (
-        '<details class="register register--later" id="later">'
-        '<summary class="register-head">'
-        f'<span class="figure">{len(rows)}</span>'
-        "<h2>Later</h2>"
-        "</summary>"
-        '<p class="rule">Put off by you. Each line says when it comes back.</p>'
-        f'<ul class="thins">{items}</ul>'
-        "</details>"
+    return _register(
+        ident="later",
+        name="Later",
+        figure=str(len(rows)),
+        tone="later",
+        rule="Put off by you. Each line says when it comes back.",
+        body=f'<ul class="thins">{items}</ul>',
+        folds=True,
     )
 
 
@@ -2779,16 +2851,15 @@ def _review_register(
             groups.append(
                 f'<p class="subhead">{heading}</p><ul class="thins">{lines}</ul>'
             )
-    return (
-        '<details class="register register--review" id="review">'
-        '<summary class="register-head">'
-        f'<span class="figure">{len(entries)}</span>'
-        "<h2>Review</h2>"
-        "</summary>"
-        '<p class="rule">What has sat too long, gathered so you only decide. Nothing here '
-        "counts toward the title.</p>"
-        f"{''.join(groups)}"
-        "</details>"
+    return _register(
+        ident="review",
+        name="Review",
+        figure=str(len(entries)),
+        tone="review",
+        rule="What has sat too long, gathered so you only decide. Nothing here counts "
+        "toward the title.",
+        body="".join(groups),
+        folds=True,
     )
 
 
@@ -3017,6 +3088,7 @@ def _render(
             "something only you can do.",
             empty=nothing_needs_you,
             lead=_wip(waiting_on_you, waiting_on_you - len(needs_you)) if view.on else "",
+            start_open=True,
         )
         if triaged
         else _register_from_rows(
@@ -3029,6 +3101,7 @@ def _render(
             tone="needs",
             rule="Holding for an answer, with the question it asked verbatim.",
             empty="Nothing is waiting on you.",
+            start_open=True,
         )
     )
 
@@ -3093,7 +3166,8 @@ def _render(
     # One <style>, not two: the figure's rules belong with the page's rules, and the
     # interactive mode's own block is the only thing that earns a second tag.
     attention_css = ATTENTION_CSS if view.on else ""
-    style_tag = f"<style>{_CSS}{_TREE_CSS}{WAY_IN_CSS}{WHEN_CSS}{attention_css}</style>"
+    sheet = f"{_CSS}{_TREE_CSS}{REGISTER_CSS}{WAY_IN_CSS}{WHEN_CSS}{attention_css}"
+    style_tag = f"<style>{sheet}</style>"
     if _interactive.get():
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
