@@ -280,7 +280,11 @@ const cnLive = (() => {
     const ahead = age < 0;
     const stale = !ahead && age >= 2 * tickSeconds;
     let line = "live status as of " + A.since(age) + " ago";
-    if (ahead) line = "live status is dated " + A.since(-age) + " ahead of this device's clock, so how old it is is unknown: every chip is greyed";
+    // No figure under a second: A.since rounds it to "0 s", and "dated 0 s ahead ... so
+    // how old it is is unknown" says two things that cannot both be true. Sub-second skew
+    // between a courier and a phone is the ordinary case now that any negative age greys.
+    if (ahead) line = "live status is dated " + (age > -1 ? "" : A.since(-age) + " ")
+      + "ahead of this device's clock, so how old it is is unknown: every chip is greyed";
     else if (stale) line = "live status is " + A.since(age) + " old, older than two ticks: every chip is greyed and says how old it is";
     const chips = addresses.map((address) => {
       if (!address) {
@@ -726,8 +730,8 @@ CONSOLE_SCRIPT = r"""
       // tick fast reads as "crowsnest last looked 0 s ago", which is the docstring's
       // "dated ahead of this device's clock" case saying the opposite of what it means.
       if (age < 0) {
-        line.textContent = "crowsnest's last look is dated " + A.since(-age)
-          + " ahead of this device's clock, so it cannot tell whether crowsnest is looking: terminal changes and queued actions may wait";
+        line.textContent = "crowsnest's last look is dated " + (age > -1 ? "" : A.since(-age) + " ")
+          + "ahead of this device's clock, so it cannot tell whether crowsnest is looking: terminal changes and queued actions may wait";
         return;
       }
       line.textContent = "crowsnest last looked " + A.since(age) + " ago"

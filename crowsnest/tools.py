@@ -149,20 +149,21 @@ def _tag(session: LiveSession) -> str:
 
 
 def _candidates(sessions_: Iterable[LiveSession]) -> list[str]:
-    """The candidates of an ambiguity, one per session, each addressing one of them.
+    """The candidates of an ambiguity: one per session, and each one pasteable back in.
 
     Two sessions sharing a name *within* one home share a tag (crowsnest#42's family), so
     a set of tags would answer an ambiguity with a single candidate. Where the tag does
-    not tell them apart, the session id -- what ``crowsnest open`` names -- does. A
-    session is addressed by home *and* id, because a synced home holds another machine's
-    ids: the same id under two homes is two rows, and its two tags already differ.
+    not tell them apart, the session id does -- and the id, not a tag with the id in
+    parentheses, because every candidate here is an argument the person is about to
+    re-run: ``resolve`` takes a whole id before anything else, and ids are unique within
+    a home, so no two candidates can come out the same.
+
+    A session is addressed by home *and* id, because a synced home holds another
+    machine's ids: the same id under two homes is two rows, and its two tags differ.
     """
     found = {(s.home, s.session_id): s for s in sessions_}.values()
     shared = Counter(_tag(s) for s in found)
-    return sorted(
-        _tag(s) if shared[_tag(s)] == 1 else f"{_tag(s)} ({s.session_id[:8]})"
-        for s in found
-    )
+    return sorted(_tag(s) if shared[_tag(s)] == 1 else s.session_id for s in found)
 
 
 def _home_to_pin(

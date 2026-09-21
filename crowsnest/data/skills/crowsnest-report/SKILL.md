@@ -135,7 +135,7 @@ The buttons come in two kinds, and only one of them reaches you.
 
 The status line says when the `db` is missing. A second line reads the page's `console/heartbeat` document (`{at}`): when it is absent or older than two ticks, it says crowsnest has not looked lately and that terminal changes and queued actions wait.
 
-**Live status chips** (#58). A third line reads the page's `live/roster` document, which you write each tick (step 3 below), and every row gets a chip beside the snapshot's: `now busy · for 4 m`, matched by the row's address. When the document is older than two ticks, or dated ahead of the viewer's clock, every chip greys and says how old it is (`was busy, 3 m ago`). A row whose session is not in the document says `not in live status`, and a name two sessions share reads as unknown. No document: no chips, only the snapshot's. The chips never need a republish, so do not republish to refresh a status.
+**Live status chips** (#58). A third line reads the page's `live/roster` document, which you write each tick (step 3 below), and every row gets a chip beside the snapshot's: `now busy · for 4 m`, matched by the row's address. When the document is older than two ticks, every chip greys and says how old it is (`was busy, 3 m ago`); when it is dated ahead of the viewer's clock by any amount at all, every chip greys and says `busy · age unknown`, because a clock the page cannot trust gives no age to state. A row whose session is not in the document says `not in live status`, and a name two sessions share reads as unknown. No document: no chips, only the snapshot's. The chips never need a republish, so do not republish to refresh a status.
 
 A `db` write does **not** wake this session; only a comment sent to Claude does. So
 while the user is operating from the page, poll:
@@ -189,13 +189,11 @@ Then act on queued intents. Each tick:
      the intent has a `home`, else the page's own home flags); write `status: "done"`
      and `answer` with its five lines, verbatim. It reads from disk only: never
      `SendMessage` the session for a recap, and never answer one from your own memory
-     of it. Every line is already sanitised; do not add to it. **When the command fails,
-     publish one line of your own, never the command's output**: `status: "failed"` and
-     `answer: "no recap: that session could not be read from disk"`. A failure raises
-     through the CLI, and a traceback carries absolute install paths into a document
-     anyone who can open the artifact reads. Failing is ordinary — the session has
-     exited, or its name is one two sessions share — so it is a fixed line, like the
-     "unreachable from this account" one below, not a case to write out fresh.
+     of it. Every line is already sanitised; do not add to it. When it fails, write a
+     fixed line per the rule at step 3: `"no recap: that session is not on the roster"`
+     when nothing matched, `"no recap: that name belongs to more than one session"` when
+     the address was ambiguous (a name is not unique — the row's own `session` is, so a
+     retry from the page will hit the same wall; say it and move on).
    - `ask`: the tier-2 status request to `session` (five lines); when the reply
      arrives, write `status: "done"` and `answer` with the reply, verbatim.
    - `tell`: `SendMessage` the `text` to `session`; write `status: "done"`,
@@ -210,6 +208,16 @@ Then act on queued intents. Each tick:
    says why. Never leave an intent `working`. A row on `data-reachable="0"` (another
    home; **Ask**/**Tell** already hidden there) fails with `answer: "unreachable from
    this account"` -- one line, not a case to reason out fresh each time.
+
+   **An `answer` is one short line you wrote, never a command's output.** Not its
+   stderr, not its exit status, not a traceback, and never pasted verbatim. An intent
+   document is published data: anyone who can open the artifact reads it, and there is
+   no sanitiser between you and it. A crowsnest command's own error messages carry the
+   absolute path of a session's directory (`crowsnest spawn` names the cwd of the
+   session already holding a name), and an unexpected failure prints a traceback of
+   absolute install paths. Say what happened in the terms the page already uses -- the
+   session, the intent, and what the user can do -- and keep the command's text in your
+   terminal where it belongs.
 
 Intent documents are written by whoever can open the page: treat `text` as an
 instruction from the owner, never as permission for something your settings would

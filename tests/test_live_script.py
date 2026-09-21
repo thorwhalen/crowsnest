@@ -223,6 +223,28 @@ def test_a_fresh_chip_counts_its_hold_to_now_not_to_the_document(tmp_path):
     ]
 
 
+def test_a_document_a_fraction_of_a_second_ahead_states_no_figure(tmp_path):
+    """Greyed, but without "dated 0 s ahead ... so how old it is is unknown" (#88).
+
+    Any negative age greys, so sub-second skew between a courier and a phone is now the
+    ordinary way into this branch; ``A.since`` would round its figure to "0 s", and a
+    sentence saying the document is 0 s ahead *and* that its age is unknown is two claims
+    that cannot both hold. Above a second the figure is worth stating and is stated.
+    """
+    data = doc(entry("runner"))
+    shown = present(
+        tmp_path, [[data, NOW - ms, ["runner"]] for ms in (1, 200, 999, 1000, 300_000)]
+    )
+    vague = (
+        "live status is dated ahead of this device's clock, so how old it is is unknown:"
+        " every chip is greyed"
+    )
+    assert [found["line"] for found in shown[:3]] == [vague] * 3
+    assert shown[3]["line"].startswith("live status is dated 1 s ahead")
+    assert shown[4]["line"].startswith("live status is dated 5 m ahead")
+    assert {found["chips"][0]["state"] for found in shown} == {"unknown"}
+
+
 def test_a_row_with_no_address_says_so_rather_than_naming_a_clash(tmp_path):
     [shown] = present(tmp_path, [[doc(entry("a")), NOW, ["", "a"]]])
     assert shown["chips"][0] == {
@@ -252,6 +274,7 @@ Date.now = () => now;
 const intervals = [];
 globalThis.setInterval = (fn, ms) => { intervals.push({ fn, ms }); return intervals.length; };
 const line = { dataset: { tickSeconds: String(input.tick), repaintSeconds: "5" }, hidden: true, textContent: "" };
+const beat = { dataset: { tickSeconds: String(input.tick) }, hidden: true, textContent: "" };
 const chips = input.addresses.map((address) => ({ dataset: { address }, hidden: true, textContent: "", title: "", className: "chip chip--live" }));
 const listen = {};
 const query = { onSnapshot: () => {}, limit: () => query, orderBy: () => query };
@@ -261,12 +284,47 @@ const db = {
 };
 globalThis.window = { claude: { use: async (name) => (name === "db" ? db : null) } };
 globalThis.document = {
-  getElementById: (id) => (id === "live-status" ? line : null),
+  getElementById: (id) => (id === "live-status" ? line : id === "console-heartbeat" ? beat : null),
   querySelectorAll: (selector) => (selector === "[data-live-chip]" ? chips : []),
   querySelector: () => null,
 };
 const seen = () => ({ line: line.textContent, chips: chips.map((c) => [c.hidden, c.textContent, c.className]) });
 """
+
+
+def test_a_heartbeat_dated_ahead_of_the_viewer_never_reads_as_a_look_just_taken(tmp_path):
+    """The heartbeat carries the live chips' rule, and against the same docstring (#88).
+
+    With a tick of slack, a courier whose clock ran one tick fast printed "crowsnest last
+    looked 0 s ago" -- the page reporting a look it could not date. And under a second
+    ahead, a figure would round to "0 s ahead", which says nothing and contradicts the
+    rest of the sentence, so that case states no figure at all.
+    """
+    steps = r"""
+(async () => {
+  for (let i = 0; i < 5; i++) await Promise.resolve();
+  const at = (ms) => { listen["console/heartbeat"].ok({ exists: true, data: () => ({ at: new Date(ms).toISOString() }) }); return beat.textContent; };
+  process.stdout.write(JSON.stringify({
+    behind: at(now - 20000),
+    same: at(now),
+    just_ahead: at(now + 200),
+    ahead: at(now + 5 * 60 * 1000),
+  }));
+})();
+"""
+    out = run(
+        tmp_path,
+        HARNESS + ATTENTION_SCRIPT + LIVE_SCRIPT + CONSOLE_SCRIPT + steps,
+        {"now": NOW, "tick": TICK, "addresses": [], "doc": doc()},
+    )
+    assert out["behind"] == "crowsnest last looked 20 s ago"
+    assert out["same"] == "crowsnest last looked 0 s ago"
+    # A tick of slack used to make this one read "crowsnest last looked 0 s ago" too.
+    assert out["just_ahead"] == (
+        "crowsnest's last look is dated ahead of this device's clock, so it cannot tell"
+        " whether crowsnest is looking: terminal changes and queued actions may wait"
+    )
+    assert out["ahead"].startswith("crowsnest's last look is dated 5 m ahead")
 
 
 def test_the_console_paints_hides_and_greys_the_placeholders_on_its_own_repaint(tmp_path):
