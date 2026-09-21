@@ -5,19 +5,19 @@
 
 ## Pages
 
-- [crowsnest](index.html.md): **One session that watches your other Claude Code sessions.**
-- [API reference](api.html.md): | [`crowsnest`](_autosummary/crowsnest.html.md#module-crowsnest)   | One session that watches the ot...
+- [crowsnest](index.html.md): &#42;&#42;One session that watches your other Claude Code sessions.&#42;&#42;
+- [API reference](api.html.md): | &#96;crowsnest&#96;   | One session that watches the others.   |
 - [crowsnest](_autosummary/crowsnest.html.md): One session that watches the others.
-- [crowsnest.account](_autosummary/crowsnest.account.html.md): Which account a new session runs under, and which `claude` binary starts it.
+- [crowsnest.account](_autosummary/crowsnest.account.html.md): Which account a new session runs under, and which &#96;claude&#96; binary starts it.
 - [crowsnest.activity](_autosummary/crowsnest.activity.html.md): What a session is doing right now, read from the tail of its transcript.
 - [crowsnest.attention](_autosummary/crowsnest.attention.html.md): What the person did about each item the report shows: seen, put off, done, a note.
-- [crowsnest.config](_autosummary/crowsnest.config.html.md): The homes a roster covers, and the `claude` a spawn starts – what a config file says.
+- [crowsnest.config](_autosummary/crowsnest.config.html.md): The homes a roster covers, and the &#96;claude&#96; a spawn starts – what a config file says.
 - [crowsnest.hook](_autosummary/crowsnest.hook.html.md): The push half of the stream: what Claude Code’s own hooks tell crowsnest.
 - [crowsnest.init](_autosummary/crowsnest.init.html.md): Everything a crowsnest session needs before it can be one, set up in one command.
 - [crowsnest.ledger](_autosummary/crowsnest.ledger.html.md): The ledger: the durable page a session leaves for the watcher, one file per session.
 - [crowsnest.lineage](_autosummary/crowsnest.lineage.html.md): Who started whom: the spawn graph, as data.
 - [crowsnest.links](_autosummary/crowsnest.links.html.md): References in a session’s own words, turned into links you can click.
-- [crowsnest.live](_autosummary/crowsnest.live.html.md): What a published page may know about the sessions *now*: one small document, and a recap.
+- [crowsnest.live](_autosummary/crowsnest.live.html.md): What a published page may know about the sessions &#42;now&#42;: one small document, and a recap.
 - [crowsnest.open](_autosummary/crowsnest.open.html.md): Bring a live session’s terminal to the front, or say where it runs.
 - [crowsnest.paths](_autosummary/crowsnest.paths.html.md): Where crowsnest keeps what is not code: the data directory, and nothing else.
 - [crowsnest.registry](_autosummary/crowsnest.registry.html.md): Who is alive right now, read from the registry Claude Code keeps while a session runs.
@@ -29,12 +29,12 @@
 - [crowsnest.tree](_autosummary/crowsnest.tree.html.md): The spawn forest as a picture: laid out in Python, drawn as inline SVG.
 - [crowsnest.triage](_autosummary/crowsnest.triage.html.md): Which sessions need you, which are safe to close, and which are still going.
 - [crowsnest.watch](_autosummary/crowsnest.watch.html.md): A stream of what changed, so a monitor is told instead of made to poll.
-- [For AI agents](ai-agents.html.md): `crowsnest` ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on **2026-09-18 12:54 UTC** from commit <a href="https://github.com/tho...
+- [For AI agents](ai-agents.html.md): &#96;crowsnest&#96; ships artifacts for coding agents alongside its code. This page lists
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-09-21 11:41 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
----
+## Optional
 
-For more comprehensive documentation, see [crowsnest.md](crowsnest.md)
+- [crowsnest.md](crowsnest.md): Complete documentation in a single file.
 
 ## Build
 

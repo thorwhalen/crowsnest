@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-09-18T12:54:23Z",
+  "built_at": "2026-09-21T11:41:47Z",
   "package": {
     "name": "crowsnest",
-    "version": "0.0.46",
+    "version": "0.0.47",
     "display_name": "crowsnest",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "71e83559b84d1ff676c86f318d9d4ba99f5df6c8",
-    "short_commit": "71e8355",
+    "commit": "05fc374b33c4c2de0d607f293222e17c61855f0b",
+    "short_commit": "05fc374",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/crowsnest",
-    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/71e83559b84d1ff676c86f318d9d4ba99f5df6c8",
+    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/05fc374b33c4c2de0d607f293222e17c61855f0b",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/crowsnest",
-    "sha": "71e83559b84d1ff676c86f318d9d4ba99f5df6c8",
+    "sha": "05fc374b33c4c2de0d607f293222e17c61855f0b",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "35347010986",
-    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/35347010986",
+    "run_id": "35595282145",
+    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/35595282145",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -60,11 +60,11 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.46",
+    "latest": "0.0.47",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 71e83559b84d1ff676c86f318d9d4ba99f5df6c8\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 05fc374b33c4c2de0d607f293222e17c61855f0b\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,

@@ -1,0 +1,33 @@
+# crowsnest
+
+> One session that watches your other Claude Code sessions: who is busy, who is waiting on you, what each one just said, and how to ask one directly
+
+
+## Pages in this subsection
+
+- [crowsnest](crowsnest.html.md): One session that watches the others.
+- [crowsnest.account](crowsnest.account.html.md): Which account a new session runs under, and which &#96;claude&#96; binary starts it.
+- [crowsnest.activity](crowsnest.activity.html.md): What a session is doing right now, read from the tail of its transcript.
+- [crowsnest.attention](crowsnest.attention.html.md): What the person did about each item the report shows: seen, put off, done, a note.
+- [crowsnest.config](crowsnest.config.html.md): The homes a roster covers, and the &#96;claude&#96; a spawn starts – what a config file says.
+- [crowsnest.hook](crowsnest.hook.html.md): The push half of the stream: what Claude Code’s own hooks tell crowsnest.
+- [crowsnest.init](crowsnest.init.html.md): Everything a crowsnest session needs before it can be one, set up in one command.
+- [crowsnest.ledger](crowsnest.ledger.html.md): The ledger: the durable page a session leaves for the watcher, one file per session.
+- [crowsnest.lineage](crowsnest.lineage.html.md): Who started whom: the spawn graph, as data.
+- [crowsnest.links](crowsnest.links.html.md): References in a session’s own words, turned into links you can click.
+- [crowsnest.live](crowsnest.live.html.md): What a published page may know about the sessions &#42;now&#42;: one small document, and a recap.
+- [crowsnest.open](crowsnest.open.html.md): Bring a live session’s terminal to the front, or say where it runs.
+- [crowsnest.paths](crowsnest.paths.html.md): Where crowsnest keeps what is not code: the data directory, and nothing else.
+- [crowsnest.registry](crowsnest.registry.html.md): Who is alive right now, read from the registry Claude Code keeps while a session runs.
+- [crowsnest.report](crowsnest.report.html.md): The live roster as one self-contained HTML page: no stylesheet, script, font, or
+- [crowsnest.rows](crowsnest.rows.html.md): How an item’s row is built and hashed: one value, taken whole by every surface that pins it.
+- [crowsnest.said](crowsnest.said.html.md): When the thing an item quotes was said: its own time, taken from its own source.
+- [crowsnest.skills](crowsnest.skills.html.md): The agent-facing surface: the skills, the subagent, and the command that installs them.
+- [crowsnest.tools](crowsnest.tools.html.md): The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.
+- [crowsnest.tree](crowsnest.tree.html.md): The spawn forest as a picture: laid out in Python, drawn as inline SVG.
+- [crowsnest.triage](crowsnest.triage.html.md): Which sessions need you, which are safe to close, and which are still going.
+- [crowsnest.watch](crowsnest.watch.html.md): A stream of what changed, so a monitor is told instead of made to poll.
+
+## Optional
+
+- [Top-level llms.txt](../llms.txt): Complete documentation index.
