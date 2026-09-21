@@ -166,10 +166,14 @@ def test_seen_above_leaves_alone_what_a_closed_register_hides():
     handler = CONSOLE_SCRIPT.split('querySelectorAll("button[data-seen-above]")', 1)[
         1
     ].split("}));", 1)[0]
-    # The whole expression, negation included: `details[open]` would invert the guard and
-    # an invalid selector would throw inside the handler, and node --check reads neither.
-    assert '!el.closest("details:not([open])")' in handler
-    assert 'closest("details:not([open])")' in handler.split("folded", 1)[1]
+    # Whole lines, not substrings: an inverted `details[open]`, a dropped `!`, or an
+    # invalid selector (which would throw inside the handler and silently kill the button)
+    # all read the same to `node --check`, which is all the suite runs over the script.
+    assert (
+        'const folded = unseen.filter((el) => el.closest("details:not([open])"));'
+        in handler
+    )
+    assert "const above = unseen.filter((el) => !away.has(el));" in handler
 
 
 def test_rows_carry_their_verdict_and_how_the_page_drew_them_for_the_script():

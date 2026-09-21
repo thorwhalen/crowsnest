@@ -214,6 +214,7 @@ CONSOLE_CSS = """
   border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
 .is-seen{opacity:.55}
 .live,.line.live .tag{color:var(--accent)}
+.later-live .figure{color:var(--ink-soft)}
 .toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:10;display:flex;
   gap:.8rem;align-items:center;max-width:calc(100% - 2rem);padding:.55rem .8rem;
   font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--surface)}
@@ -1188,21 +1189,23 @@ CONSOLE_SCRIPT = r"""
     // dims it, drops it from the badge, and nothing says it happened.
     document.querySelectorAll("button[data-seen-above]").forEach((button) => button.addEventListener("click", () => {
       if (!lit) return;
-      const above = [...rows.values()].flat().filter((el) =>
+      const unseen = [...rows.values()].flat().filter((el) =>
         (el.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-        && !el.hidden && !el.closest("#later") && !el.closest("details:not([open])")
+        && !el.hidden && !el.closest("#later")
         && (el.dataset.live || drawn.get(el).shown) !== A.SEEN);
+      const folded = unseen.filter((el) => el.closest("details:not([open])"));
+      const away = new Set(folded);
+      const above = unseen.filter((el) => !away.has(el));
+      // Whatever a closed register kept back is said either way: a count the person
+      // cannot see is the same silence, whether or not anything else was marked.
+      const kept = folded.length ? " (" + folded.length + " left folded)" : "";
       if (!above.length) {
-        const folded = [...rows.values()].flat().some((el) =>
-          (el.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-          && !el.hidden && !el.closest("#later") && el.closest("details:not([open])")
-          && (el.dataset.live || drawn.get(el).shown) !== A.SEEN);
-        notify(folded ? "Nothing open above is unseen; closed registers left alone"
-                      : "Nothing above is unseen", []);
+        notify(folded.length ? "Nothing open above is unseen; closed registers left alone"
+                             : "Nothing above is unseen", []);
         return;
       }
       act(above, (record, row, now) => A.seen(record, row.dataset.rev, now, seenAsOf(row)),
-        (n) => "Seen: " + n + (n === 1 ? " item" : " items") + " above");
+        (n) => "Seen: " + n + (n === 1 ? " item" : " items") + " above" + kept);
     }));
 
     return { saveNote };
