@@ -69,6 +69,7 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
   `cnLive` only paints. A new field goes in `LIVE_FIELDS` and through `publishable`, and
   `tests/test_live.py` walks every string. One document per tick is the budget (K3).
 
+- **Every register is a `<details>`, built by `_register`** (#86) -- *Later* and *Review* included. Only the register that needs the person carries `open`; a register with no rows stays a `<section>`, because there is nothing to hide. A new register passes `folds=` and nothing else, and `tests/test_report.py` pins both halves.
 - Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
 - `links.py` never fetches. A link is constructed from the text plus the session's cwd remote;
   a resolver that checked GitHub would turn one report into hundreds of network calls.

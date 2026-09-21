@@ -118,6 +118,80 @@ def test_the_home_field_is_shown_only_when_the_row_carries_one():
 
 
 # --------------------------------------------------------------------------------
+# Collapsing (#86). A busy machine's page is mostly scrolling, so every register but
+# the one that needs the person opens closed -- native `<details>`, no script.
+# --------------------------------------------------------------------------------
+
+#: The registers a roster of live sessions always renders, in page order.
+FOLDING = ("waiting", "finished", "working", "quiet")
+
+
+def full_roster():
+    """A roster with one row in every register, so each one has something to fold."""
+    return roster(
+        row(label="shipper", status="waiting", waiting_for="ok", status_since=since(10)),
+        row(
+            label="ender",
+            status="idle",
+            status_since=since(300),
+            activity={"last_assistant_text": "Done."},
+        ),
+        row(
+            label="runner",
+            status="busy",
+            status_since=since(60),
+            activity={"in_flight": ["Bash: the suite"]},
+        ),
+        row(label="dozer", project="widget", status="idle", status_since=since(7200)),
+    )
+
+
+def head_of(html, ident):
+    """A register's opening tag and its head, up to the end of the head."""
+    start = re.search(rf'<(?:section|details) [^>]*id="{ident}"[^>]*>', html)
+    assert start, ident
+    end = html.index("</h2>", start.start())
+    return html[start.start() : end]
+
+
+def test_every_register_folds_and_only_the_one_that_needs_you_starts_open():
+    html = render_report(full_roster(), made_at=STAMP)
+    assert '<details class="register register--needs" id="waiting" open>' in html
+    for ident in FOLDING[1:]:
+        head = head_of(html, ident)
+        assert head.startswith("<details "), ident
+        assert " open>" not in head, ident
+
+
+def test_a_folded_registers_summary_carries_its_count():
+    html = render_report(full_roster(), made_at=STAMP)
+    for ident in FOLDING:
+        head = head_of(html, ident)
+        assert '<summary class="register-head">' in head, ident
+        assert '<span class="figure">1</span>' in head, ident
+
+
+def test_an_empty_register_does_not_fold_onto_nothing():
+    html = render_report(roster(), made_at=STAMP)
+    for ident in FOLDING:
+        assert head_of(html, ident).startswith("<section "), ident
+    assert "<details" not in html
+
+
+def test_the_plain_page_folds_the_same_way():
+    full = full_roster()
+    assert render_report(full, made_at=STAMP, plain=True) == render_report(
+        full, made_at=STAMP
+    )
+
+
+def test_a_folded_page_still_reaches_nowhere():
+    html = render_report(full_roster(), made_at=STAMP)
+    for forbidden in ("<script", "<link", "<iframe", "@import", "src=", "http://"):
+        assert forbidden not in html, forbidden
+
+
+# --------------------------------------------------------------------------------
 # Egress. The page is meant to be published, and is an export surface.
 # --------------------------------------------------------------------------------
 

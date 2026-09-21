@@ -360,7 +360,10 @@ def test_probe_every_session_once_seen_last_and_register_order_under_random_mark
         flags = ["row--seen" in t for t in tags]
         assert flags == sorted(flags), ident
         found = re.search(
-            rf'id="{ident}"><div class="register-head"><p class="figure">(\d+)<', html
+            rf'id="{ident}"(?: open)?>'
+            rf'<(?:div|summary) class="register-head">'
+            rf'<(?:p|span) class="figure">(\d+)<',
+            html,
         )
         assert int(found.group(1)) == len(tags), ident
     quiet = register(html, "quiet")

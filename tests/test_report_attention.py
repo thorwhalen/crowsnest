@@ -113,7 +113,10 @@ def li(html, label):
 
 def figure(html, ident):
     found = re.search(
-        rf'id="{ident}"><div class="register-head"><p class="figure">(\d+)<', html
+        rf'id="{ident}"(?: open)?>'
+        rf'<(?:div|summary) class="register-head">'
+        rf'<(?:p|span) class="figure">(\d+)<',
+        html,
     )
     return int(found.group(1))
 
