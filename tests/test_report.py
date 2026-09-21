@@ -191,6 +191,150 @@ def test_a_folded_page_still_reaches_nowhere():
 
 
 # --------------------------------------------------------------------------------
+# The shared kit (#87 / openloops#12). The register and the rail are built by
+# openloops, beside the stylesheet that dresses them, so a class renamed there cannot
+# leave this page styling nothing. A copy would drift and nothing would fail.
+# --------------------------------------------------------------------------------
+
+
+def test_a_register_head_is_openloops_own_markup_not_a_copy():
+    from openloops.dashboard import register
+
+    html = render_report(full_roster(), made_at=STAMP)
+    head = register(
+        ident="waiting",
+        name="Waiting on you",
+        figure="1",
+        tone="needs",
+        rule="Holding for an answer, with the question it asked verbatim.",
+        body="",
+        folds=True,
+        start_open=True,
+    ).split("</summary>")[0]
+    assert head in html
+
+
+def test_an_empty_register_head_is_openloops_own_markup_too():
+    from openloops.dashboard import register
+
+    html = render_report(roster(), made_at=STAMP)
+    head = register(
+        ident="waiting",
+        name="Waiting on you",
+        figure="0",
+        tone="needs",
+        rule="Holding for an answer, with the question it asked verbatim.",
+        body="",
+    ).split("</div></div>")[0]
+    assert head in html
+
+
+def test_seen_above_sits_in_the_head_of_a_register_too_empty_to_fold():
+    """`folds=False` with a console control: the one combination nothing else reaches.
+
+    Every register with rows folds, and the button then opens the body -- a `<summary>`
+    may not hold it. An *empty* register does not fold, so on a triaged interactive page
+    the button lands in the `<section>` head instead, inside the div the rule is in, or
+    it falls out of the head's `auto 1fr` grid as a third child.
+    """
+    from openloops.dashboard import register
+
+    # One needs-you row and nothing else: triaged (so the arm is on) and every register
+    # that offers "Seen above" is empty.
+    only_needs = roster(
+        row(
+            label="asker",
+            status="waiting",
+            status_since=since(10),
+            verdict={"group": "needs_you", "why": "question", "reason": "Squash?"},
+        )
+    )
+    html = render_report(only_needs, made_at=STAMP, interactive=True)
+    button = (
+        '<button type="button" class="seen-above" data-seen-above hidden>'
+        "Seen above</button>"
+    )
+    assert button in html
+    head = register(
+        ident="safe-to-close",
+        name="Safe to close",
+        figure="0",
+        tone="free",
+        rule="Said in its own words that nothing is outstanding. Anything that did not "
+        "say so is below, not here.",
+        body="",
+        extra=button,
+    ).split("</div></div>")[0]
+    assert head in html
+
+
+def test_a_rows_rail_is_openloops_own_markup_carrying_this_pages_chips():
+    from openloops.dashboard import rail
+
+    from crowsnest.report import _rail
+
+    live = '<span class="chip chip--live" data-live-chip hidden></span>'
+    assert _rail("said", "needs", "40", "s", reach="phone", live=live) == rail(
+        "said",
+        "needs",
+        "40",
+        "s",
+        extra=f'<span class="chip chip--reach">phone</span>{live}',
+    )
+    # And the rail on the page is that function's, unit and all.
+    html = render_report(full_roster(), made_at=STAMP)
+    assert '<div class="rail"><span class="chip chip--needs">waiting</span>' in html
+
+
+def test_every_register_on_the_page_goes_through_openloops_builder(monkeypatch):
+    """The invariant the banned-strings test below cannot reach.
+
+    Asserting that the page contains what ``register`` returns passes against an inline
+    copy emitting the same bytes -- the very drift this closes. Replacing the name this
+    module bound at import does not: a copy would not call it, whatever markup it wrote.
+    """
+    from crowsnest import report
+
+    monkeypatch.setattr(
+        report, "_ol_register", lambda **kw: f"[REGISTER {kw['ident']}]{kw['body']}"
+    )
+    monkeypatch.setattr(report, "_ol_rail", lambda *a, **kw: "[RAIL]")
+    html = render_report(full_roster(), made_at=STAMP)
+    for ident in ("waiting", "finished", "working", "quiet"):
+        assert f"[REGISTER {ident}]" in html, ident
+    assert "[RAIL]" in html
+    # No band wrote a head of its own; the stylesheet's `.register-head{` is not markup.
+    assert '<section class="register' not in html
+    assert '<details class="register' not in html
+
+
+def test_no_builder_copied_from_openloops_is_left_in_the_module():
+    """The markup strings live in one package; this one may only pass through them.
+
+    ``inspect.getsource`` rather than a path off ``__file__``: under a ``PYTHONPATH``
+    that loads crowsnest from somewhere else, reading the neighbouring file would audit
+    a module that is not the one under test.
+
+    A string is banned wherever it appears, prose and page script included. If a later
+    change legitimately needs one -- crowsnest#94 would, if it builds the console's
+    Later head as markup rather than DOM -- that is a head built outside openloops'
+    builder again, and the right move is to say why here, not to shorten this tuple.
+    """
+    import inspect
+
+    from crowsnest import report
+
+    source = inspect.getsource(report)
+    for copied in (
+        '<section class="register register--',
+        '<summary class="register-head">',
+        '<div class="register-head">',
+        '<div class="rail">',
+    ):
+        assert copied not in source, copied
+
+
+# --------------------------------------------------------------------------------
 # Egress. The page is meant to be published, and is an export surface.
 # --------------------------------------------------------------------------------
 
