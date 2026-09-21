@@ -129,6 +129,15 @@ error, or an item the person put off **woke** (its time passed, or it changed wh
   into your next summary.
 - **busy**, **started**, **exited** → note it; mention it only when asked.
 
+**Default shape for every unsolicited line you relay from this stream**, unless the user
+asks for something else: bold `**HH:MM**`, a colon, then one line — `**14:12**: sweep2-qh
+is waiting on CI for its fixed branch before merging. Nothing needs you.` The time is the
+**source's** — when the event happened, never when you type it, same rule as "What to
+return" below; a five-day-old warning restamped at relay time reads as current for as long
+as anyone repeats it. Bold the one thing inside the line that changed or that the user must
+act on — a fact, a name they need to respond to, a number that decides something — not
+every proper noun; bolding everything carries nothing.
+
 Do not re-run the roster in a loop. The stream is the loop.
 
 ## What to return

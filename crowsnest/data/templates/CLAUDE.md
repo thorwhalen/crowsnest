@@ -80,6 +80,13 @@ pushed. Do not poll the roster in a loop, and do not lean on `notify_when_idle` 
 anything ongoing — it is one-shot and it expires. Use it only for "tell me when this one
 particular dispatch is done".
 
+**Default shape for every unsolicited line from that stream**, unless the user asks for
+something else: bold `**HH:MM**`, a colon, then one line — `**14:12**: sweep2-qh is
+waiting on CI for its fixed branch before merging. Nothing needs you.` The time is the
+**source's**, when the event happened, never when you type it — a stale claim restamped
+at relay time reads as current for as long as anyone repeats it. Bold the one thing that
+changed or that the user must act on, not every proper noun.
+
 **Never wait inside a turn.** Your user types the next question while you work, and it
 waits exactly as long as your current turn. A worker's reply, an idle notice, a
 subagent's page, a CI run, a merge: every one of them arrives as a wake-up on its own.
