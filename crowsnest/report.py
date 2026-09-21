@@ -4,12 +4,14 @@ request to anywhere.
 The person operating the fleet often reads from a phone, and a terminal roster does not
 read well there. :func:`render_report` takes what :func:`crowsnest.tools.roster` returns
 and renders it in the same design language as ``ol dashboard`` in
-:mod:`openloops.dashboard` -- the two pages are meant to read as siblings. The stylesheet
-and the sanitizer are that module's own, imported by their public names (``CSS`` and
-``Sanitizer``, public since openloops 0.1.9, which is why that is the floor in
-``pyproject.toml``): one stylesheet, so the two pages cannot drift apart, and one egress
-choke point, so a home path or a credential in a session's last words is rewritten or
-withheld here exactly as it is there.
+:mod:`openloops.dashboard` -- the two pages are meant to read as siblings. The stylesheet,
+the sanitizer and the two builders that write a register and a row's rail are that
+module's own, imported by their public names (``CSS`` and ``Sanitizer`` since openloops
+0.1.9, ``register`` and ``rail`` since 0.1.11, which is why that is the floor in
+``pyproject.toml``): one stylesheet, so the two pages cannot drift apart, one markup
+builder for the parts that stylesheet dresses, so a class renamed there cannot silently
+break this page, and one egress choke point, so a home path or a credential in a
+session's last words is rewritten or withheld here exactly as it is there.
 
 Four registers, in the order a person needs them: **Waiting on you** (a session holding
 for an answer, with the question verbatim), **Just finished** (idle within the last hour,
@@ -72,6 +74,8 @@ from typing import Any
 
 from openloops.dashboard import CSS as _CSS
 from openloops.dashboard import Sanitizer as _Sanitizer
+from openloops.dashboard import rail as _ol_rail
+from openloops.dashboard import register as _ol_register
 
 import crowsnest.attention as _attention
 from crowsnest import said as _said
@@ -1587,25 +1591,26 @@ def _slug(text: str) -> str:
 # --------------------------------------------------------------------------------
 # Fragments. Each returns a string; none of them touch the outside world.
 #
-# `_rail` and `_register` are adapted from openloops.dashboard's private helpers (small
-# enough to adapt rather than import): the same markup, generalised so the age is not
-# always a day count -- crowsnest's durations run from seconds to days.
+# The register and the rail are openloops' own (`openloops.dashboard.register` and
+# `.rail`, public since 0.1.11): the markup lives beside the stylesheet that dresses it,
+# so a class renamed there cannot leave this page styling nothing. What is below is the
+# crowsnest half of each -- the chips this page has and that one does not, and the
+# console control a register head offers.
 # --------------------------------------------------------------------------------
 
 
 def _rail(
     chip: str, tone: str, figure: str, unit: str, *, reach: str = "", live: str = ""
 ) -> str:
+    """openloops' rail, carrying the two chips only a live-session row has.
+
+    ``figure`` arrives already written, because crowsnest's durations run from seconds
+    to days rather than always counting days; ``unit`` says which it is.
+    """
     # `reach` is one of attention's two literals, `phone` or `terminal`, never row text.
     # `live` is the row's live status placeholder (`_live_chip`), already markup.
     reach_chip = f'<span class="chip chip--reach">{reach}</span>' if reach else ""
-    return (
-        f'<div class="rail">'
-        f'<span class="chip chip--{tone}">{chip}</span>'
-        f"{reach_chip}{live}"
-        f'<span class="age"><b>{figure}</b><i>{unit}</i></span>'
-        f"</div>"
-    )
+    return _ol_rail(chip, tone, figure, unit=unit, extra=f"{reach_chip}{live}")
 
 
 #: The console's *Seen above*: every unseen row before it is marked seen (#56).
@@ -1626,37 +1631,33 @@ def _register(
     folds: bool = False,
     start_open: bool = False,
 ) -> str:
-    """One register. ``folds``: a ``<details>`` a person can close, open or not (#86).
+    """openloops' register, deciding whether this page's head offers "Seen above".
 
-    A ``<summary>`` may hold phrasing content and a heading only, so the figure and the
-    rule are ``<span>``s rather than ``<p>``s and the "Seen above" button -- interactive
-    content, which a summary may not hold -- opens the body instead, where it still heads
-    the register's rows. The head keeps the shape it had: :data:`REGISTER_CSS` places the
-    figure beside a heading with the rule under it, and the hairline under all three.
+    ``folds`` makes it a ``<details>`` a person can close, ``start_open`` opening it
+    anyway (#86); both are passed straight through. A register with nothing in it does
+    not fold -- there is nothing to hide, and a ``<details>`` whose body is "Nothing is
+    waiting on you" costs a tap to read one line -- which is why the decision is the
+    caller's, and :func:`_register_from_rows` makes it.
 
-    A register with nothing in it does not fold: there is nothing to hide, and a
-    ``<details>`` whose body is "Nothing is waiting on you" costs a tap to read one line.
+    ``seen_above`` is the one thing openloops has no equivalent of: the console's button
+    (#56), which marks every row above it seen. It goes in the builder's ``extra`` slot,
+    which is under the rule in a plain head and inside the body in a folding one --
+    a ``<summary>`` may not hold interactive content, and it still heads the rows there.
+    :data:`REGISTER_CSS` places the folding head's three children in the ``auto 1fr``
+    grid :data:`openloops.dashboard.CSS` lays ``.register-head`` out as.
     """
-    # `seen_above`: the head offers the console's "Seen above" (#56), which marks every
-    # row above it seen -- on a page with the attention arm only, hidden until it lights.
+    # On a page with the attention arm only, and hidden until it lights.
     above = _SEEN_ABOVE if seen_above and _view.get().arm else ""
-    if folds:
-        return (
-            f'<details class="register register--{tone}" id="{ident}"'
-            f"{' open' if start_open else ''}>"
-            f'<summary class="register-head">'
-            f'<span class="figure">{figure}</span>'
-            f"<h2>{name}</h2>"
-            f'<span class="rule">{rule}</span>'
-            "</summary>"
-            f"{above}{body}</details>"
-        )
-    return (
-        f'<section class="register register--{tone}" id="{ident}">'
-        f'<div class="register-head">'
-        f'<p class="figure">{figure}</p>'
-        f'<div><h2>{name}</h2><p class="rule">{rule}</p>{above}</div>'
-        f"</div>{body}</section>"
+    return _ol_register(
+        ident=ident,
+        name=name,
+        figure=figure,
+        tone=tone,
+        rule=rule,
+        body=body,
+        folds=folds,
+        start_open=start_open,
+        extra=above,
     )
 
 

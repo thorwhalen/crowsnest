@@ -27,7 +27,7 @@ classifiers = [
 # minute. `cw` builds the CLI from the same functions the library exposes. `dol` is the
 # attention store's file mapping; it already arrives with openloops, and is named here
 # because crowsnest imports it directly.
-dependencies = ["openloops>=0.1.9", "cw>=0.1.1,<0.2", "dol>=0.3.65"]
+dependencies = ["openloops>=0.1.11,<0.2", "cw>=0.1.1,<0.2", "dol>=0.3.65"]
 
 [project.scripts]
 crowsnest = "crowsnest.__main__:main"
