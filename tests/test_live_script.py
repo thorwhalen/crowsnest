@@ -127,7 +127,9 @@ def test_a_fresh_document_paints_status_time_in_it_tone_and_detail(tmp_path):
             "title": "running: Bash: Run the suite",
         },
         {
-            "text": "now waiting · for 30 s",
+            # 30 s held when the document was written, 20 s before this device's clock:
+            # the chip says "now", so it counts to now (#88).
+            "text": "now waiting · for 50 s",
             "tone": "needs",
             "state": "fresh",
             "title": "waiting for: input needed",
@@ -165,15 +167,21 @@ def test_at_two_ticks_every_chip_greys_and_says_how_old_it_is(tmp_path):
 
 
 def test_never_a_fresh_chip_from_a_document_two_ticks_old_or_dated_ahead(tmp_path):
+    """Fresh is exactly ``0 <= age < 2 * TICK``: no skew tolerance at either end (#88).
+
+    A courier whose clock runs one tick fast used to buy a third tick of freshness here,
+    because ``ahead`` began at ``-TICK`` rather than at zero -- and this test asserted
+    that window instead of the behaviour its name promises.
+    """
     data = doc(entry("runner"))
-    offsets = range(-5 * TICK, 5 * TICK + 1, 7)
+    offsets = [*range(-5 * TICK, 5 * TICK + 1, 7), -1, 0, 1]
     shown = present(tmp_path, [[data, NOW + s * 1000, ["runner"]] for s in offsets])
     for seconds, found in zip(offsets, shown):
         chip = found["chips"][0]
-        fresh = -TICK <= seconds < 2 * TICK
+        fresh = 0 <= seconds < 2 * TICK
         assert (chip["state"] == "fresh") == fresh, (seconds, chip)
         assert (chip["tone"] != "") == fresh, (seconds, chip)
-        if seconds < -TICK:
+        if seconds < 0:
             assert chip == {
                 "text": "busy · age unknown",
                 "tone": "",
@@ -200,6 +208,30 @@ def test_a_name_two_sessions_share_reads_as_unknown(tmp_path):
     }
     assert shown[0]["chips"][0] == unknown and shown[0]["chips"][1]["state"] == "fresh"
     assert shown[1]["chips"][:2] == [unknown, unknown]
+
+
+def test_a_fresh_chip_counts_its_hold_to_now_not_to_the_document(tmp_path):
+    """A chip that says "now" measures to now: a document a tick old is not a stopped clock."""
+    data = doc(entry("runner", since_s=4 * 60 + 1))
+    shown = present(
+        tmp_path, [[data, NOW + s * 1000, ["runner"]] for s in (0, 59, 2 * TICK - 1)]
+    )
+    assert [found["chips"][0]["text"] for found in shown] == [
+        "now busy · for 4 m",
+        "now busy · for 5 m",
+        "now busy · for 5 m",
+    ]
+
+
+def test_a_row_with_no_address_says_so_rather_than_naming_a_clash(tmp_path):
+    [shown] = present(tmp_path, [[doc(entry("a")), NOW, ["", "a"]]])
+    assert shown["chips"][0] == {
+        "text": "status unknown: this row has no address",
+        "tone": "",
+        "state": "unknown",
+        "title": "",
+    }
+    assert shown["chips"][1]["state"] == "fresh"
 
 
 def test_a_since_after_the_document_is_unknown_not_negative(tmp_path):

@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import re
 import subprocess
-from collections.abc import Mapping
+from collections import Counter
+from collections.abc import Iterable, Mapping
 from dataclasses import replace
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -147,6 +148,23 @@ def _tag(session: LiveSession) -> str:
     return f"{session.label}@{session.home}" if session.home else session.label
 
 
+def _candidates(sessions_: Iterable[LiveSession]) -> list[str]:
+    """The candidates of an ambiguity, one per session, each addressing one of them.
+
+    Two sessions sharing a name *within* one home share a tag (crowsnest#42's family), so
+    a set of tags would answer an ambiguity with a single candidate. Where the tag does
+    not tell them apart, the session id -- what ``crowsnest open`` names -- does. A
+    session is addressed by home *and* id, because a synced home holds another machine's
+    ids: the same id under two homes is two rows, and its two tags already differ.
+    """
+    found = {(s.home, s.session_id): s for s in sessions_}.values()
+    shared = Counter(_tag(s) for s in found)
+    return sorted(
+        _tag(s) if shared[_tag(s)] == 1 else f"{_tag(s)} ({s.session_id[:8]})"
+        for s in found
+    )
+
+
 def _home_to_pin(
     *, home: str | Path | None, all_homes: bool, config: str | Path | None
 ) -> Path | None:
@@ -199,7 +217,7 @@ def resolve(
     for group in (by_name, by_id, by_pid):
         if len(group) == 1:
             return group[0]
-    matches = sorted({_tag(s) for s in exact + by_name + by_id + by_pid})
+    matches = _candidates(exact + by_name + by_id + by_pid)
     if matches:
         raise KeyError(f"{wanted!r} is ambiguous: {', '.join(matches)}")
     raise KeyError(f"no live session matches {wanted!r}")

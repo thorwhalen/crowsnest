@@ -182,11 +182,21 @@ def test_no_string_in_the_document_escapes_the_page_sanitiser(tmp_path, alive):
 
 
 def test_a_word_an_upstream_clip_cut_is_never_published():
-    from crowsnest.activity import describe_tool
+    """A token or a home path straddling ``activity._ARG_LIMIT`` is still caught.
 
-    for pad in range(45):
+    The range must carry *both* halves past that limit: with ``range(45)`` the path half
+    reached 79 characters against a limit of 80 and clipped in none of its 45 iterations,
+    so the assertion it is named for never ran (crowsnest#88). The clip counts below fail
+    if that happens again.
+    """
+    from crowsnest.activity import _ARG_LIMIT, describe_tool
+
+    clipped = {"token": 0, "path": 0}
+    for pad in range(_ARG_LIMIT + 20):
         call = describe_tool("Bash", {"description": "x" * pad + " " + TOKEN})
         path = describe_tool("Bash", {"description": "y" * pad + " " + FOREIGN + "/a.md"})
+        clipped["token"] += call.endswith("…")
+        clipped["path"] += path.endswith("…")
         entry = live_row(
             {"label": "x", "status": "busy", "activity": {"in_flight": [call]}}
         )
@@ -198,6 +208,7 @@ def test_a_word_an_upstream_clip_cut_is_never_published():
         )
         assert "ghp_" not in entry["in_flight"][0] + lines[3], (pad, entry)
         assert "/Users" not in other["in_flight"][0], (pad, other)
+    assert clipped["token"] > 0 and clipped["path"] > 0, clipped
 
 
 def test_a_clip_never_publishes_what_the_sanitiser_would_have_caught():

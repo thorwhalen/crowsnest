@@ -189,8 +189,13 @@ Then act on queued intents. Each tick:
      the intent has a `home`, else the page's own home flags); write `status: "done"`
      and `answer` with its five lines, verbatim. It reads from disk only: never
      `SendMessage` the session for a recap, and never answer one from your own memory
-     of it. When the command fails (the session has exited), `status: "failed"` and its
-     message. Every line is already sanitised; do not add to it.
+     of it. Every line is already sanitised; do not add to it. **When the command fails,
+     publish one line of your own, never the command's output**: `status: "failed"` and
+     `answer: "no recap: that session could not be read from disk"`. A failure raises
+     through the CLI, and a traceback carries absolute install paths into a document
+     anyone who can open the artifact reads. Failing is ordinary — the session has
+     exited, or its name is one two sessions share — so it is a fixed line, like the
+     "unreachable from this account" one below, not a case to write out fresh.
    - `ask`: the tier-2 status request to `session` (five lines); when the reply
      arrives, write `status: "done"` and `answer` with the reply, verbatim.
    - `tell`: `SendMessage` the `text` to `session`; write `status: "done"`,
