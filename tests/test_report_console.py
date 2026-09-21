@@ -166,7 +166,10 @@ def test_seen_above_leaves_alone_what_a_closed_register_hides():
     handler = CONSOLE_SCRIPT.split('querySelectorAll("button[data-seen-above]")', 1)[
         1
     ].split("}));", 1)[0]
-    assert 'closest("details:not([open])")' in handler
+    # The whole expression, negation included: `details[open]` would invert the guard and
+    # an invalid selector would throw inside the handler, and node --check reads neither.
+    assert '!el.closest("details:not([open])")' in handler
+    assert 'closest("details:not([open])")' in handler.split("folded", 1)[1]
 
 
 def test_rows_carry_their_verdict_and_how_the_page_drew_them_for_the_script():

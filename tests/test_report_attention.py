@@ -255,7 +255,8 @@ def test_the_later_block_summary_holds_a_figure_a_heading_and_its_rule():
         '<summary class="register-head"><span class="figure">1</span><h2>Later</h2>'
         '<span class="rule">'
     )
-    for forbidden in ("<p ", "<div", "<ul", "<ol", "<button"):
+    # Flow content and interactive content, the two things a summary may not hold.
+    for forbidden in ("<p", "<div", "<ul", "<ol", "<button", "<a "):
         assert forbidden not in summary, forbidden
 
 

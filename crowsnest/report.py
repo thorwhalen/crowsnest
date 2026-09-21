@@ -25,9 +25,10 @@ a plain ``<section>``, since there is nothing there to hide.
 
 A row inside a closed register is **hidden, not omitted**: it keeps its
 ``id="session-<name>"``, so a published comment's anchor and a find-in-page still address
-it. Whether they *reveal* it is the browser's to decide -- Blink and WebKit expand a closed
-``<details>`` for a fragment and for find-in-page, Gecko does not -- and the page has no
-script to do it for them. crowsnest#93 holds the measurement.
+it. Whether they *reveal* it is the browser's to decide: Blink and WebKit are documented
+to expand a closed ``<details>`` for a fragment and for find-in-page and Gecko is not, but
+none of that has been measured here, and the page has no script to do it for them.
+crowsnest#93 is the measurement, unmade as this is written.
 
 Like the openloops dashboard, **the page is a snapshot, and it says so in its largest
 type.** ``made_at`` is a required-in-practice argument rather than a hidden ``now()``,
@@ -865,11 +866,13 @@ CONSOLE_SCRIPT = r"""
       figure.className = "figure";
       const name = document.createElement("h2");
       name.textContent = "Later";
-      summary.append(figure, name);
-      const rule = document.createElement("p");
+      // The rule goes INSIDE the summary, as `_register` writes it: REGISTER_CSS places
+      // it with a child combinator, and a sibling <p> falls out of the head's grid.
+      const rule = document.createElement("span");
       rule.className = "rule";
       rule.textContent = "Put off from this page. Each row says when it comes back.";
-      block.append(summary, rule);
+      summary.append(figure, name, rule);
+      block.append(summary);
       const working = document.getElementById("working");
       if (working) working.after(block); else document.querySelector("main").append(block);
       return block;
@@ -1189,7 +1192,15 @@ CONSOLE_SCRIPT = r"""
         (el.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
         && !el.hidden && !el.closest("#later") && !el.closest("details:not([open])")
         && (el.dataset.live || drawn.get(el).shown) !== A.SEEN);
-      if (!above.length) { notify("Nothing above is unseen", []); return; }
+      if (!above.length) {
+        const folded = [...rows.values()].flat().some((el) =>
+          (el.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+          && !el.hidden && !el.closest("#later") && el.closest("details:not([open])")
+          && (el.dataset.live || drawn.get(el).shown) !== A.SEEN);
+        notify(folded ? "Nothing open above is unseen; closed registers left alone"
+                      : "Nothing above is unseen", []);
+        return;
+      }
       act(above, (record, row, now) => A.seen(record, row.dataset.rev, now, seenAsOf(row)),
         (n) => "Seen: " + n + (n === 1 ? " item" : " items") + " above");
     }));
