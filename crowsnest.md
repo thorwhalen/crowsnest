@@ -1,4 +1,4 @@
-> built 2026-09-21 12:43 UTC from 3494d1c (main) · crowsnest 0.0.49. Details: build_info.json
+> built 2026-09-21 13:13 UTC from a74b114 (main) · crowsnest 0.0.50. Details: build_info.json
 
 # index.html.md
 
@@ -3749,12 +3749,14 @@ request to anywhere.
 The person operating the fleet often reads from a phone, and a terminal roster does not
 read well there. [`render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report) takes what [`crowsnest.tools.roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns
 and renders it in the same design language as `ol dashboard` in
-`openloops.dashboard` – the two pages are meant to read as siblings. The stylesheet
-and the sanitizer are that module’s own, imported by their public names (`CSS` and
-`Sanitizer`, public since openloops 0.1.9, which is why that is the floor in
-`pyproject.toml`): one stylesheet, so the two pages cannot drift apart, and one egress
-choke point, so a home path or a credential in a session’s last words is rewritten or
-withheld here exactly as it is there.
+`openloops.dashboard` – the two pages are meant to read as siblings. The stylesheet,
+the sanitizer and the two builders that write a register and a row’s rail are that
+module’s own, imported by their public names (`CSS` and `Sanitizer` since openloops
+0.1.9, `register` and `rail` since 0.1.11, which is why that is the floor in
+`pyproject.toml`): one stylesheet, so the two pages cannot drift apart, one markup
+builder for the parts that stylesheet dresses, so a class renamed there cannot silently
+break this page, and one egress choke point, so a home path or a credential in a
+session’s last words is rewritten or withheld here exactly as it is there.
 
 Four registers, in the order a person needs them: **Waiting on you** (a session holding
 for an answer, with the question verbatim), **Just finished** (idle within the last hour,
@@ -5483,16 +5485,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-21 12:43 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/3494d1cc94b14e5e497372c9e4e7104a1c6cc194"><code>3494d1c</code></a> on branch <code>main</code>, for **crowsnest 0.0.49** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-21 13:13 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/a74b1140c4d46c46a654095e14c0633fe375be5a"><code>a74b114</code></a> on branch <code>main</code>, for **crowsnest 0.0.50** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.50) is behind the latest release on PyPI (0.0.51): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/3494d1cc94b14e5e497372c9e4e7104a1c6cc194"><code>3494d1cc94b14e5e497372c9e4e7104a1c6cc194</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/a74b1140c4d46c46a654095e14c0633fe375be5a"><code>a74b1140c4d46c46a654095e14c0633fe375be5a</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -5503,9 +5507,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35601011570">35601011570</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35603980445">35603980445</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>3494d1cc94b14e5e497372c9e4e7104a1c6cc194</code> (in the history of the built commit) |
+| Event commit | <code>a74b1140c4d46c46a654095e14c0633fe375be5a</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5530,13 +5534,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.49/">0.0.49</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.51/">0.0.51</a>, newer than the documented version (0.0.50).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 3494d1cc94b14e5e497372c9e4e7104a1c6cc194
+git checkout a74b1140c4d46c46a654095e14c0633fe375be5a
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

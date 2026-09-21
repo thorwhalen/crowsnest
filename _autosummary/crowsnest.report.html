@@ -155,12 +155,14 @@ request to anywhere.</p>
 <p>The person operating the fleet often reads from a phone, and a terminal roster does not
 read well there. <a class="reference internal" href="#crowsnest.report.render_report" title="crowsnest.report.render_report"><code class="xref py py-func docutils literal notranslate"><span class="pre">render_report()</span></code></a> takes what <a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.roster()</span></code></a> returns
 and renders it in the same design language as <code class="docutils literal notranslate"><span class="pre">ol</span> <span class="pre">dashboard</span></code> in
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">openloops.dashboard</span></code> – the two pages are meant to read as siblings. The stylesheet
-and the sanitizer are that module’s own, imported by their public names (<code class="docutils literal notranslate"><span class="pre">CSS</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Sanitizer</span></code>, public since openloops 0.1.9, which is why that is the floor in
-<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>): one stylesheet, so the two pages cannot drift apart, and one egress
-choke point, so a home path or a credential in a session’s last words is rewritten or
-withheld here exactly as it is there.</p>
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">openloops.dashboard</span></code> – the two pages are meant to read as siblings. The stylesheet,
+the sanitizer and the two builders that write a register and a row’s rail are that
+module’s own, imported by their public names (<code class="docutils literal notranslate"><span class="pre">CSS</span></code> and <code class="docutils literal notranslate"><span class="pre">Sanitizer</span></code> since openloops
+0.1.9, <code class="docutils literal notranslate"><span class="pre">register</span></code> and <code class="docutils literal notranslate"><span class="pre">rail</span></code> since 0.1.11, which is why that is the floor in
+<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>): one stylesheet, so the two pages cannot drift apart, one markup
+builder for the parts that stylesheet dresses, so a class renamed there cannot silently
+break this page, and one egress choke point, so a home path or a credential in a
+session’s last words is rewritten or withheld here exactly as it is there.</p>
 <p>Four registers, in the order a person needs them: <strong>Waiting on you</strong> (a session holding
 for an answer, with the question verbatim), <strong>Just finished</strong> (idle within the last hour,
 last words clipped), <strong>Working</strong> (busy, with the tool call in flight), and <strong>Quiet</strong>
@@ -440,7 +442,7 @@ is still taken from the whole row, because that is the row the verbs pin.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=0356c229"></script>
+      <script src="../_static/documentation_options.js?v=e072a57b"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

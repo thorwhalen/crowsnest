@@ -6,12 +6,14 @@ request to anywhere.
 The person operating the fleet often reads from a phone, and a terminal roster does not
 read well there. [`render_report()`](#crowsnest.report.render_report) takes what [`crowsnest.tools.roster()`](crowsnest.tools.md#crowsnest.tools.roster) returns
 and renders it in the same design language as `ol dashboard` in
-`openloops.dashboard` – the two pages are meant to read as siblings. The stylesheet
-and the sanitizer are that module’s own, imported by their public names (`CSS` and
-`Sanitizer`, public since openloops 0.1.9, which is why that is the floor in
-`pyproject.toml`): one stylesheet, so the two pages cannot drift apart, and one egress
-choke point, so a home path or a credential in a session’s last words is rewritten or
-withheld here exactly as it is there.
+`openloops.dashboard` – the two pages are meant to read as siblings. The stylesheet,
+the sanitizer and the two builders that write a register and a row’s rail are that
+module’s own, imported by their public names (`CSS` and `Sanitizer` since openloops
+0.1.9, `register` and `rail` since 0.1.11, which is why that is the floor in
+`pyproject.toml`): one stylesheet, so the two pages cannot drift apart, one markup
+builder for the parts that stylesheet dresses, so a class renamed there cannot silently
+break this page, and one egress choke point, so a home path or a credential in a
+session’s last words is rewritten or withheld here exactly as it is there.
 
 Four registers, in the order a person needs them: **Waiting on you** (a session holding
 for an answer, with the question verbatim), **Just finished** (idle within the last hour,
