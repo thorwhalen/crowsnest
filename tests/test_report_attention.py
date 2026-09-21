@@ -244,16 +244,19 @@ def test_a_later_row_is_in_the_collapsed_later_block_and_not_in_its_register():
     assert html.count('id="session-decider"') == 1
 
 
-def test_the_later_block_summary_holds_only_a_figure_and_a_heading():
+def test_the_later_block_summary_holds_a_figure_a_heading_and_its_rule():
+    """A ``<summary>`` takes phrasing content and a heading -- no block, no button."""
     rows = fleet()
     store = {}
     mark(store, named(rows, "decider"), attention.later, until=None)
     html = page(rows, store)
     summary = html.split(LATER_BLOCK, 1)[1].split("</summary>", 1)[0]
-    assert (
-        summary
-        == '<summary class="register-head"><span class="figure">1</span><h2>Later</h2>'
+    assert summary.startswith(
+        '<summary class="register-head"><span class="figure">1</span><h2>Later</h2>'
+        '<span class="rule">'
     )
+    for forbidden in ("<p ", "<div", "<ul", "<ol", "<button"):
+        assert forbidden not in summary, forbidden
 
 
 def test_the_later_block_says_when_a_deferral_ignores_changes_and_counts_put_offs():

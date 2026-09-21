@@ -175,7 +175,7 @@ def test_an_empty_register_does_not_fold_onto_nothing():
     html = render_report(roster(), made_at=STAMP)
     for ident in FOLDING:
         assert head_of(html, ident).startswith("<section "), ident
-    assert "<details" not in html
+    assert '<details class="register' not in html
 
 
 def test_the_plain_page_folds_the_same_way():

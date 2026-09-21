@@ -19,6 +19,7 @@ from crowsnest import attention, registry, tools
 from crowsnest.config import AttentionSettings
 from crowsnest.report import (
     ATTENTION_ACTIONS,
+    CONSOLE_SCRIPT,
     CONSOLE_TICK_SECONDS,
     LATER_PRESETS,
     TOAST_SECONDS,
@@ -147,14 +148,25 @@ def test_without_settings_the_sheet_carries_the_attention_defaults():
 
 
 def test_seen_above_heads_every_register_below_the_first():
+    """First thing after the head, not in it: a ``<summary>`` may not hold a button."""
     html = page(fleet(), interactive=True)
     assert SEEN_ABOVE not in register(html, "needs-you")
     for ident in ("safe-to-close", "finished", "working", "quiet"):
-        head = register(html, ident).split("</div></div>", 1)[0]
-        assert SEEN_ABOVE in head, ident
+        block = register(html, ident)
+        head, body = block.split("</summary>", 1)
+        assert SEEN_ABOVE not in head, ident
+        assert body.startswith(SEEN_ABOVE), ident
     # And one at the foot of Quiet, the only control that reaches Quiet's own rows.
     assert SEEN_ABOVE in register(html, "quiet").rsplit("</ul>", 1)[1]
     assert html.count(SEEN_ABOVE) == 5
+
+
+def test_seen_above_leaves_alone_what_a_closed_register_hides():
+    """A row nobody could see is not marked seen (#86): the filter skips closed folds."""
+    handler = CONSOLE_SCRIPT.split('querySelectorAll("button[data-seen-above]")', 1)[
+        1
+    ].split("}));", 1)[0]
+    assert 'closest("details:not([open])")' in handler
 
 
 def test_rows_carry_their_verdict_and_how_the_page_drew_them_for_the_script():

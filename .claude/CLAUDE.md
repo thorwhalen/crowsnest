@@ -69,7 +69,7 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
   `cnLive` only paints. A new field goes in `LIVE_FIELDS` and through `publishable`, and
   `tests/test_live.py` walks every string. One document per tick is the budget (K3).
 
-- **Every register is a `<details>`, built by `_register`** (#86) -- *Later* and *Review* included. Only the register that needs the person carries `open`; a register with no rows stays a `<section>`, because there is nothing to hide. A new register passes `folds=` and nothing else, and `tests/test_report.py` pins both halves.
+- **Every register is a `<details>`, built by `_register`** (#86) -- *Later* and *Review* included. A register with rows folds; one with none stays a `<section>`, because there is nothing to hide. `_register_from_rows` decides that (`folds=bool(rows)`) and a new register passes only `start_open=`, which the one that needs the person carries. Two things a `<summary>` may not hold: a block, so the rule is a `<span>` placed by `REGISTER_CSS`, and interactive content, so *Seen above* opens the body instead. **A folded register hides its rows from the person, not from the script**: anything that acts on rows in bulk (that button) must skip `details:not([open])`, or it decides for work nobody saw. `tests/test_report.py` and `tests/test_report_console.py` pin these.
 - Transcript *content* parsing is openloops' `parse_session`; never re-implement it here.
 - `links.py` never fetches. A link is constructed from the text plus the session's cwd remote;
   a resolver that checked GitHub would turn one report into hundreds of network calls.
