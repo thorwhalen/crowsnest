@@ -220,12 +220,15 @@ CONSOLE_CSS = """
 """
 
 #: The live status chips as the console's script paints them (crowsnest#58), with no DOM
-#: and no network, so ``tests/test_console_script.py`` runs it in node. It defines one
+#: and no network, so ``tests/test_live_script.py`` runs it in node. It defines one
 #: global, ``cnLive``, whose ``present`` turns the page's ``live/roster`` document (written
 #: by :func:`crowsnest.tools.live`, already sanitised) into the live-status line and one
 #: chip per placeholder. **A chip never looks fresh from a stale document**: a document
-#: older than two ticks, or dated ahead of this device's clock, greys every chip and says
-#: so, and a name two sessions share, on the page or in the document, reads as unknown.
+#: older than two ticks, or dated ahead of this device's clock *by any amount*, greys every
+#: chip and says so, and a name two sessions share, on the page or in the document, reads
+#: as unknown. There is no skew tolerance: a courier whose clock runs one tick fast would
+#: otherwise stretch the fresh window to three ticks, and the line would assert a
+#: freshness it cannot support (crowsnest#88).
 LIVE_SCRIPT = r"""
 const cnLive = (() => {
   "use strict";
@@ -272,13 +275,22 @@ const cnLive = (() => {
     const onPage = new Map();
     addresses.forEach((address) => onPage.set(address, (onPage.get(address) || 0) + 1));
     const age = (nowMs - doc.asOf) / 1000;
-    const ahead = age < -tickSeconds;
+    // Any negative age at all, not a tick's worth of slack: a tolerance here is a wider
+    // fresh window, and the line would claim an age the clock cannot support (#88).
+    const ahead = age < 0;
     const stale = !ahead && age >= 2 * tickSeconds;
     let line = "live status as of " + A.since(age) + " ago";
-    if (ahead) line = "live status is dated " + A.since(-age) + " ahead of this device's clock, so how old it is is unknown: every chip is greyed";
+    // No figure under a second: A.since rounds it to "0 s", and "dated 0 s ahead ... so
+    // how old it is is unknown" says two things that cannot both be true. Sub-second skew
+    // between a courier and a phone is the ordinary case now that any negative age greys.
+    if (ahead) line = "live status is dated " + (age > -1 ? "" : A.since(-age) + " ")
+      + "ahead of this device's clock, so how old it is is unknown: every chip is greyed";
     else if (stale) line = "live status is " + A.since(age) + " old, older than two ticks: every chip is greyed and says how old it is";
     const chips = addresses.map((address) => {
-      if (!address || onPage.get(address) > 1 || (doc.counts.get(address) || 0) > 1) {
+      if (!address) {
+        return { text: "status unknown: this row has no address", tone: "", state: UNKNOWN, title: "" };
+      }
+      if (onPage.get(address) > 1 || (doc.counts.get(address) || 0) > 1) {
         return { text: "status unknown: two sessions share this name", tone: "", state: UNKNOWN, title: "" };
       }
       const row = doc.rows.get(address);
@@ -292,8 +304,11 @@ const cnLive = (() => {
       }
       if (!row) return { text: "not in live status", tone: "", state: GONE, title };
       const since = A.instant(row.since);
+      // Held to *now*, because the chip says "now": measured to the document's own as_of,
+      // a chip a tick old would read "for 4 m" where the figure is 5 m (#88). What the
+      // document could not have known -- a since after its as_of -- is still unknown.
       const held = Number.isNaN(since) || since - doc.asOf > tickSeconds * 1000
-        ? "since unknown" : "for " + A.since((doc.asOf - since) / 1000);
+        ? "since unknown" : "for " + A.since((nowMs - since) / 1000);
       const tone = Object.prototype.hasOwnProperty.call(TONES, row.status) ? TONES[row.status] : "";
       return { text: "now " + (row.status || "unknown") + " · " + held, tone, state: FRESH, title };
     });
@@ -711,9 +726,12 @@ CONSOLE_SCRIPT = r"""
         return;
       }
       const age = (Date.now() - last) / 1000;
-      if (age < -tick) {
-        line.textContent = "crowsnest's last look is dated " + A.since(-age)
-          + " ahead of this device's clock, so it cannot tell whether crowsnest is looking: terminal changes and queued actions may wait";
+      // Any negative age, as with the live chips (#88): with a tick of slack a clock one
+      // tick fast reads as "crowsnest last looked 0 s ago", which is the docstring's
+      // "dated ahead of this device's clock" case saying the opposite of what it means.
+      if (age < 0) {
+        line.textContent = "crowsnest's last look is dated " + (age > -1 ? "" : A.since(-age) + " ")
+          + "ahead of this device's clock, so it cannot tell whether crowsnest is looking: terminal changes and queued actions may wait";
         return;
       }
       line.textContent = "crowsnest last looked " + A.since(age) + " ago"

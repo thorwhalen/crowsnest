@@ -258,6 +258,45 @@ def test_all_homes_reads_every_configured_home_with_a_column(
     assert "home two" in capsys.readouterr().out
 
 
+def test_two_sessions_sharing_a_name_in_one_home_each_get_a_candidate(
+    tmp_path, monkeypatch, capsys
+):
+    """An ambiguity answers with one candidate per session, and each one pasteable (#88).
+
+    Names are not unique *within* a home either (#42's family), and the candidates used
+    to be a set of ``label@home``, so the two sessions here collapsed to the single
+    candidate ``fixer`` -- an ambiguity answered by repeating the word that caused it.
+    Where the name does not separate them the session id does, and it is given bare,
+    because a candidate is an argument the person is about to re-run.
+    """
+    from fixtures import (
+        finished_session,
+        registry_record,
+        write_registry,
+        write_transcript,
+    )
+
+    home = demo_home(tmp_path)
+    write_transcript(home, "/w/demo", "s4", finished_session("s4"))
+    write_registry(home, registry_record(104, "s4", name="fixer", status="idle"))
+    alive = ALIVE | {104}
+    monkeypatch.setattr(registry, "pid_alive", lambda pid: pid in alive)
+    monkeypatch.setattr(
+        tools,
+        "live_sessions",
+        lambda **kw: registry.live_sessions(
+            **{"is_alive": lambda pid: pid in alive, **kw}
+        ),
+    )
+    with pytest.raises(SystemExit):
+        main(["show", "fixer", "--home", str(home)])
+    err = capsys.readouterr().err
+    assert "'fixer' is ambiguous: s1, s4" in err
+    # and each candidate, pasted back, resolves to exactly one session
+    for candidate in ("s1", "s4"):
+        assert tools.resolve(candidate, home=home).session_id == candidate
+
+
 def test_spawn_profile_picks_the_home_and_says_which(tmp_path, monkeypatch, capsys):
     import sys
 
