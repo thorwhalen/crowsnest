@@ -56,7 +56,7 @@ The skill’s rule is to never spend a costlier tier when a cheaper one answers,
 ```default
 crowsnest                          who is alive: waiting on you first, then busy, then idle
 crowsnest show <session>           one session: last asked, last said, running now, pending question
-crowsnest turns <session> -n 5     the last five turns, oldest first; --before N pages back
+crowsnest turns <session> -l 5     the last five turns, oldest first; --before N pages back
 crowsnest brief <session>          openloops' dated digest for one session; reads no transcript
 crowsnest recap <session>          five lines on one session from disk; costs it no turn
 crowsnest live [--out FILE]        what every session is doing now, as the page's live status
