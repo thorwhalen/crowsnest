@@ -60,8 +60,8 @@ crowsnest                     # roster: waiting on you first, then busy, then id
 crowsnest ledger              # what each corpus session wrote down, with age
 crowsnest show <session>      # one session: last asked, last said, running now, pending question
 crowsnest brief <session>     # openloops' dated digest of that session, no transcript read
-crowsnest turns <session> -n 5          # the last five turns, oldest first
-crowsnest turns <session> -n 5 --before 12   # page further back
+crowsnest turns <session> -l 5          # the last five turns, oldest first
+crowsnest turns <session> -l 5 --before 12   # page further back
 ```
 
 `<session>` is the name the user gave the session (`-n name`), a unique prefix of one,

@@ -1,7 +1,16 @@
 import json
 
 import pytest
-from fixtures import ALIVE, demo_home
+from fixtures import (
+    ALIVE,
+    assistant,
+    demo_home,
+    stamp,
+    tool_result,
+    tool_use,
+    user,
+    write_transcript,
+)
 
 from crowsnest import registry, tools
 from crowsnest.__main__ import main
@@ -51,6 +60,33 @@ def test_turns_prints_prompts_and_replies(home, capsys):
     main(["turns", "fixer", "--home", str(home)])
     out = capsys.readouterr().out
     assert "## turn 1" in out and "> fix the widget" in out and "Fixed and merged" in out
+
+
+def test_turns_before_pages_back_through_the_cli(home, capsys):
+    # Regression for #63: `--before` has no default, so cw hands it over as the raw
+    # string typed on the command line. A prior version crashed with a TypeError
+    # comparing an int turn index to that string.
+    write_transcript(
+        home,
+        "/w/demo",
+        "s1",
+        [
+            user("fix the widget", at=stamp(1, 9, 0), session="s1"),
+            assistant(
+                at=stamp(1, 9, 1),
+                session="s1",
+                blocks=[tool_use("Bash", {"command": "pytest"}, call_id="c1")],
+            ),
+            tool_result("c1", at=stamp(1, 9, 2), session="s1"),
+            assistant("Fixed and merged.", at=stamp(1, 9, 3), session="s1"),
+            user("now the other widget", at=stamp(1, 9, 4), session="s1"),
+            assistant("Also fixed.", at=stamp(1, 9, 5), session="s1"),
+        ],
+    )
+    main(["turns", "fixer", "--home", str(home), "-l", "1", "--before", "2"])
+    out = capsys.readouterr().out
+    assert "## turn 1" in out and "> fix the widget" in out
+    assert "turn 2" not in out
 
 
 def test_unknown_session_is_a_clean_error(home, capsys):
