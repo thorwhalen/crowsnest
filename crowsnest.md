@@ -1,4 +1,4 @@
-> built 2026-09-22 13:13 UTC from 2e07d79 (main) · crowsnest 0.0.53. Details: build_info.json
+> built 2026-09-22 13:15 UTC from bd29e36 (main) · crowsnest 0.0.54. Details: build_info.json
 
 # index.html.md
 
@@ -5485,20 +5485,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-22 13:13 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/2e07d79cd207bea4815d830a7a51b079bc27514a"><code>2e07d79</code></a> on branch <code>main</code>, for **crowsnest 0.0.53** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-22 13:15 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/bd29e36a049817e19fcd3cec29de9df68cae9679"><code>bd29e36</code></a> on branch <code>main</code>, for **crowsnest 0.0.54** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.53) is behind the latest release on PyPI (0.0.54): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/2e07d79cd207bea4815d830a7a51b079bc27514a"><code>2e07d79cd207bea4815d830a7a51b079bc27514a</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/bd29e36a049817e19fcd3cec29de9df68cae9679"><code>bd29e36a049817e19fcd3cec29de9df68cae9679</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
-| Tags at this commit | none                                                                                                                                                        |
+| Tags at this commit | <code>0.0.54</code>                                                                                                                                         |
 | Working tree        | clean                                                                                                                                                       |
 | Remote              | <code>https://github.com/thorwhalen/crowsnest</code>                                                                                                        |
 
@@ -5507,9 +5505,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35731918051">35731918051</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35732099188">35732099188</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>2e07d79cd207bea4815d830a7a51b079bc27514a</code> (in the history of the built commit) |
+| Event commit | <code>33d7dfdd0c13b02d4e126d56267bf94287880e3b</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5534,13 +5532,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.54/">0.0.54</a>, newer than the documented version (0.0.53).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.54/">0.0.54</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 2e07d79cd207bea4815d830a7a51b079bc27514a
+git checkout bd29e36a049817e19fcd3cec29de9df68cae9679
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
