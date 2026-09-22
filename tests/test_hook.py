@@ -171,14 +171,22 @@ def test_rotation_leaves_a_small_log_alone(data):
 
 
 def test_a_stop_on_a_real_sized_transcript_is_well_under_a_tenth_of_a_second(data, home):
+    # Best-of-5, not one sample: a shared CI runner adds latency (a noisy neighbour,
+    # a scheduling hiccup) but never subtracts it, so the fastest of several back-to-back
+    # calls is the true cost of the work and a real regression still fails every one of
+    # them. A single sample was flaky enough on hosted CI to withhold a release (#91).
     transcript = big_transcript(home / "projects" / "-w-demo" / "big.jsonl", session="s1")
     assert transcript.stat().st_size > 1_000_000, "not a real-sized transcript"
     payload = hook_payload(session="s1", transcript=str(transcript))
     hook.handle("stop", payload, home=home)  # warm the import and the page cache
+    best = min(_timed_stop(payload, home=home) for _ in range(5))
+    assert best < 0.1, f"the hook took {best * 1000:.0f} ms (best of 5)"
+
+
+def _timed_stop(payload, **kwargs):
     started = time.perf_counter()
-    hook.handle("stop", payload, home=home)
-    took = time.perf_counter() - started
-    assert took < 0.1, f"the hook took {took * 1000:.0f} ms"
+    hook.handle("stop", payload, **kwargs)
+    return time.perf_counter() - started
 
 
 def test_the_explicit_keywords_win_over_the_data_directory(tmp_path, home):
