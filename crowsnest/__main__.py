@@ -236,6 +236,12 @@ def turns(
     json: bool = False,
 ):
     """The last few turns of a session, oldest first. `--before N` pages back from turn N."""
+    # `before`'s default is None, so cw's default-value guesser (which infers a flag's
+    # type from a non-None default, same as `last`'s) has nothing to infer from and this
+    # module's `from __future__ import annotations` hides the `int | None` hint from it
+    # too (see cw.grammar._hints_of) -- argparse hands `before` over as the raw string
+    # typed on the command line. Coerce it here, at the one place a string can arrive (#63).
+    before = int(before) if before is not None else None
     result = tools.turns(
         session, last=last, before=before, home=home, all_homes=all_homes
     )

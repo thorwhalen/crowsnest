@@ -28,7 +28,7 @@ crowsnest                          # then the roster. Waiting first, then busy, 
 crowsnest ledger <name>            # one in full, for a session the question is about
 crowsnest show <session>           # only where the ledger is stale or missing and the
                                    # roster line is not enough to judge
-crowsnest turns <session> -n 5     # only when asked for history, or the tail is
+crowsnest turns <session> -l 5     # only when asked for history, or the tail is
                                    # ambiguous. Whole-file read; do not run it for every row.
 ```
 
