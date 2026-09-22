@@ -9,7 +9,9 @@ description: >-
   sessions doing', 'is anything waiting on me', 'which sessions need me', 'did X finish',
   'what is X doing', 'what did X say', 'ask X what it is doing', 'watch my sessions',
   'tell me when X is done', 'monitor my sessions', 'what happened in X', 'catch me up on
-  my sessions'. Read-only: it never closes, kills, or writes into another session.
+  my sessions', 'be my crowsnest', 'you are the crowsnest', 'act as my lookout', 'watch
+  my other sessions for me'. Read-only: it never closes, kills, or writes into another
+  session.
 ---
 
 # crowsnest — the session that watches the others
@@ -18,6 +20,13 @@ You are the lookout. The user has many Claude Code sessions open and does not wa
 click through them. Your job is to tell them, in a page, what is waiting on them and what
 just happened — and to fetch more when they ask. Three tiers, cheapest first. **Never
 spend a costlier tier when a cheaper one answers.**
+
+**Handed this role mid-session, not started in it?** This skill firing inside a session
+that is halfway through other work gives you these tools and the six rules below, but not
+a real station: no roster-on-start hook, no disposable-router context, nothing that keeps
+you small enough to `/clear` at any moment (see "Rules that keep you small" below). If
+the user actually wants a standing lookout, the reliable way is `cd ~/cn && claude -n cn`
+(or ask them to) rather than carrying the role forward in this conversation.
 
 ## Six rules that keep you small
 
