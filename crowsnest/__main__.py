@@ -974,6 +974,13 @@ def spawn(
     thinking about cost. Procedural work -- a sweep, a migration, applying a skill across
     repositories -- belongs on a small model at moderate effort; the big models are for
     design, architecture and novel debugging. The printed row echoes what was chosen.
+
+    `--remote-control` **turns Remote Control off** -- the flag inverts its own name
+    (`remote_control` defaults `True`; cw renders a `bool = True` keyword as a
+    `store_false` switch that keeps the parameter's name). Pass it when you want the new
+    session unreachable from claude.ai; leave it out for the default, Remote Control on.
+    See #79 for why the obvious rename (`--no-remote-control`) is not a clean fix: it
+    would also grab `-n`, which `claude -n NAME` (session naming) already needs.
     """
     if not cwd:
         raise ValueError("spawn requires --cwd <dir>")
