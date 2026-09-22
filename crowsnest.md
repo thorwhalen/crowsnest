@@ -1,4 +1,4 @@
-> built 2026-09-22 13:22 UTC from 6edf52f (main) · crowsnest 0.0.55. Details: build_info.json
+> built 2026-09-22 13:27 UTC from 36a39eb (main) · crowsnest 0.0.56. Details: build_info.json
 
 # index.html.md
 
@@ -5485,18 +5485,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-22 13:22 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/6edf52faf02bd642b93d6f4d5ff7820d5583103c"><code>6edf52f</code></a> on branch <code>main</code>, for **crowsnest 0.0.55** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-22 13:27 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/36a39eb29b4a90542ede839b821c6eeb43618f8e"><code>36a39eb</code></a> on branch <code>main</code>, for **crowsnest 0.0.56** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.55) is behind the latest release on PyPI (0.0.56): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/6edf52faf02bd642b93d6f4d5ff7820d5583103c"><code>6edf52faf02bd642b93d6f4d5ff7820d5583103c</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/36a39eb29b4a90542ede839b821c6eeb43618f8e"><code>36a39eb29b4a90542ede839b821c6eeb43618f8e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -5507,9 +5505,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35732791962">35732791962</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35733227294">35733227294</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>6edf52faf02bd642b93d6f4d5ff7820d5583103c</code> (in the history of the built commit) |
+| Event commit | <code>36a39eb29b4a90542ede839b821c6eeb43618f8e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5534,13 +5532,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.56/">0.0.56</a>, newer than the documented version (0.0.55).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.56/">0.0.56</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 6edf52faf02bd642b93d6f4d5ff7820d5583103c
+git checkout 36a39eb29b4a90542ede839b821c6eeb43618f8e
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
@@ -5564,7 +5562,7 @@ Skills are folders holding a `SKILL.md` (the [Agent Skills](https://agentskills.
 
 ### `crowsnest`
 
-Be the one session that watches the user’s other Claude Code sessions. Use when the user asks what their sessions are doing, which session is waiting on them, whether anything finished or got stuck, what a particular session just said or was asked, to ask a live session a question, to watch their sessions and tell them when something needs them, or to notify them when a session finishes. Triggers on: ‘what are my sessions doing’, ‘is anything waiting on me’, ‘which sessions need me’, ‘did X finish’, ‘what is X doing’, ‘what did X say’, ‘ask X what it is doing’, ‘watch my sessions’, ‘tell me when X is done’, ‘monitor my sessions’, ‘what happened in X’, ‘catch me up on my sessions’. Read-only: it never closes, kills, or writes into another session.
+Be the one session that watches the user’s other Claude Code sessions. Use when the user asks what their sessions are doing, which session is waiting on them, whether anything finished or got stuck, what a particular session just said or was asked, to ask a live session a question, to watch their sessions and tell them when something needs them, or to notify them when a session finishes. Triggers on: ‘what are my sessions doing’, ‘is anything waiting on me’, ‘which sessions need me’, ‘did X finish’, ‘what is X doing’, ‘what did X say’, ‘ask X what it is doing’, ‘watch my sessions’, ‘tell me when X is done’, ‘monitor my sessions’, ‘what happened in X’, ‘catch me up on my sessions’, ‘be my crowsnest’, ‘you are the crowsnest’, ‘act as my lookout’, ‘watch my other sessions for me’. Read-only: it never closes, kills, or writes into another session.
 
 ```bash
 gh skill install thorwhalen/crowsnest crowsnest --agent claude-code
