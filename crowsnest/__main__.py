@@ -487,6 +487,35 @@ def report(
     return f"wrote {len(result['html'].encode('utf-8'))} bytes to {path}"
 
 
+def publish(
+    *,
+    to: str | None = None,
+    home: str | None = None,
+    all_homes: bool = False,
+    ledger_dir: str | None = None,
+    tz: str | None = None,
+    plain: bool = False,
+):
+    """Render the report page and send it where you can open it from a phone.
+
+    `--to` is a local path (written atomically, e.g. a synced folder) or `host:path`
+    (rsync over ssh, never prompting). Without it, the config file's `[publish]` table
+    says where: `to = "..."`, or `command = ["...", "{page}", ...]` for any other route.
+    Run it from cron, launchd or a systemd timer and the page stays as fresh as that
+    schedule, with no Claude session awake. The page names your sessions and quotes what
+    they said, so send it only where you alone can read it.
+    """
+    result = tools.publish(
+        to=to,
+        home=home,
+        all_homes=all_homes,
+        tz=tz,
+        plain=plain,
+        row_context=_row_context(ledger_dir),
+    )
+    return f"published {result['bytes']} bytes to {result['to']}"
+
+
 def _doc(doc: dict) -> str:
     return _json.dumps(doc, indent=2)
 
@@ -1035,6 +1064,7 @@ _commands = [
     lineage,
     triage,
     report,
+    publish,
     seen,
     unseen,
     later,
