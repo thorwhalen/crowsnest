@@ -184,7 +184,7 @@ def test_a_row_without_a_url_shows_the_command_that_reaches_it():
 def test_a_row_with_a_url_is_unchanged():
     page = _page(_row(session_url=URL))
     assert (
-        f'<p class="where">demo <span class="sep">·</span> <a href="{URL}">open</a></p>'
+        f'<p class="where">demo <span class="sep">·</span> <a href="{URL}" target="_blank" rel="noopener">open</a></p>'
         in page
     )
     assert "crowsnest open" not in page
@@ -229,8 +229,8 @@ def test_every_session_in_the_tree_is_a_link_to_it_or_shows_the_command():
         ["boss"],
     )
     listed = _tree_list(_page(_row(), lineage=lin))
-    assert f'<a href="{URL}">boss</a>' in listed
-    assert f'<a href="{URL}2">kid-linked</a>' in listed
+    assert f'<a href="{URL}" target="_blank" rel="noopener">boss</a>' in listed
+    assert f'<a href="{URL}2" target="_blank" rel="noopener">kid-linked</a>' in listed
     assert (
         'kid-plain <span class="sep">·</span> <code class="way-in">crowsnest open kid-plain</code>'
         in listed
@@ -466,7 +466,7 @@ def test_report_all_homes_leads_to_every_live_session_it_names(
             assert ("<a " in item) != ("<code" in item), text
 
     # A row with no URL shows the command; the row with one keeps its "open" link.
-    assert f'<a href="{URL}">open</a>' in page
+    assert f'<a href="{URL}" target="_blank" rel="noopener">open</a>' in page
     assert "crowsnest open --all-homes s202" in _commands(page)
 
     resolved = {}

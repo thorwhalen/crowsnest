@@ -274,7 +274,10 @@ def test_the_page_renders_a_resolved_reference_as_an_anchor():
         "counts": {},
     }
     html = render_report(roster, made_at="2026-01-01T00:00:00Z")
-    assert '<a href="https://github.com/o/r/issues/17">r#17</a>' in html
+    assert (
+        '<a href="https://github.com/o/r/issues/17" target="_blank" rel="noopener">r#17</a>'
+        in html
+    )
 
 
 def test_a_reference_that_reached_the_page_unlabelled_still_gets_a_name():

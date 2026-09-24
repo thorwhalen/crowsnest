@@ -240,4 +240,6 @@ crowsnest publish --to <path or host:path>
 
 The route is the user's, never yours to invent: `--to`, or the config file's `[publish]` table (`to` = a local path or `[user@]host:path`; or `command` = argv with `{page}`). Ask where they can open a private page (their own server behind a login, a synced folder) if none is configured. The scheduler is theirs too (cron, launchd, a systemd timer); `crowsnest publish` only renders and delivers. The page carries no console, so the two coexist: the scheduled page to read, the artifact to act from while a watcher is up.
 
+The published page carries the open helper (`--open-helper` on `crowsnest report`): links open in new tabs, each account's sessions can be sent to the browser it is signed in to (the reader's choice, kept in their browser), and a session without Remote Control gets a button that copies its `crowsnest open` command. When the user says a session will not open from the page, point them at *Where sessions open* at the foot, or at turning Remote Control on in that session.
+
 Never send the page somewhere others can read it. It names sessions and quotes them.
