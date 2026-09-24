@@ -1,4 +1,4 @@
-> built 2026-09-24 05:20 UTC from bfb57e0 (main) · crowsnest 0.0.57. Details: build_info.json
+> built 2026-09-24 10:51 UTC from 8379245 (main) · crowsnest 0.0.58. Details: build_info.json
 
 # index.html.md
 
@@ -279,6 +279,8 @@ to = "~/Sync/crowsnest/index.html"            # a local path, e.g. a synced fold
 ```default
 * * * * *  crowsnest publish --all-homes
 ```
+
+The published page carries a small open helper. Every link opens in a new tab. If your accounts are signed in to different browsers, open *Where sessions open* at the foot and say which browser each one uses (kept in that browser only): a link to a session of an account signed in elsewhere is then copied for you to paste there, since a page cannot start another browser. A session without Remote Control has no link, so its `open` is a dashed button that copies its `crowsnest open` command and tells you to turn Remote Control on there (`/remote-control`); once it has a link, the page says so. `crowsnest report --open-helper` adds the same to any page.
 
 The page names your sessions and quotes what they said (sanitised, as every page is), so send it somewhere only you can open: behind your own login, in a private folder, never a public bucket. The last page sent is also kept locally, under crowsnest’s data directory in `publish/index.html`.
 
@@ -4005,6 +4007,8 @@ True
 | [`LIVE_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.LIVE_SCRIPT)      | The live status chips as the console's script paints them (crowsnest#58), with no DOM and no network, so `tests/test_live_script.py` runs it in node.                                                                                                                                                     |
 | [`ATTENTION_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.ATTENTION_SCRIPT) | a transcription of [`crowsnest.attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention) -- reading a document, `present`, the transitions, `seen_as_of`, `later_until` -- with no DOM and no network, so `tests/test_console_script.py` can run it in node against the Python. |
 | [`CONSOLE_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.CONSOLE_SCRIPT)   | the only thing it talks to is the host's `db` capability, and when that is absent it leaves the page exactly as the static one.                                                                                                                                                                           |
+| [`OPEN_CSS`](_autosummary/crowsnest.report.html.md#crowsnest.report.OPEN_CSS)         | the reach button drawn apart from a link (dashed, muted: it copies a command, it does not go anywhere), the toast that says what happened, and the "Where sessions open" panel the script adds to the foot.                                                                                               |
+| [`OPEN_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.OPEN_SCRIPT)      | how a reader gets from a row to its session.                                                                                                                                                                                                                                                              |
 | [`REGISTER_CSS`](_autosummary/crowsnest.report.html.md#crowsnest.report.REGISTER_CSS)     | What makes a register's head a disclosure (#86).                                                                                                                                                                                                                                                          |
 
 ### Functions
@@ -4030,7 +4034,7 @@ reads; times are epoch milliseconds, stamped the way `attention._stamp` stamps t
 * **Type:**
   The person’s attention record as the console’s script keeps it
 
-### crowsnest.report.CONSOLE_CSS *= '\\n[hidden]{display:none!important}\\n.console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;\\n  font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}\\n.acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}\\n.acts button,.console button,.seen-above{font:inherit;font-family:var(--mono);font-size:.68rem;\\n  letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer;\\n  border:1px solid var(--accent);background:transparent;color:var(--accent)}\\n.acts button:hover,.console button:hover,.seen-above:hover,.acts button:focus-visible,\\n.console button:focus-visible,.seen-above:focus-visible{\\n  background:var(--accent);color:var(--surface)}\\n.acts textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.answers{list-style:none;margin:.2rem 0 0;padding:0;width:100%;font-family:var(--mono);\\n  font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}\\n.answers li b{color:var(--ink);font-weight:500}\\n.unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}\\n.acts button,.later-sheet button,.seen-above,.toast button{min-height:2.75rem}\\n.seen-above{margin-top:.5rem}\\n.review-line .acts{grid-column:1/-1}\\n.acts a.review-open{display:inline-flex;align-items:center;min-height:2.75rem;font-family:var(--mono);\\n  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;\\n  border:1px solid var(--accent);color:var(--accent);text-decoration:none}\\n.later-sheet{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;width:100%;\\n  padding:.6rem;border:1px solid var(--rule);background:var(--surface)}\\n.later-sheet p{width:100%;margin:0;color:var(--ink)}\\n.later-sheet label{width:100%;display:flex;gap:.4rem;align-items:center}\\n.later-sheet input[type=text]{width:100%;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.is-seen{opacity:.55}\\n.live,.line.live .tag{color:var(--accent)}\\n.later-live .figure{color:var(--ink-soft)}\\n.toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:10;display:flex;\\n  gap:.8rem;align-items:center;max-width:calc(100% - 2rem);padding:.55rem .8rem;\\n  font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--surface)}\\n.toast button{font:inherit;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .6rem;\\n  cursor:pointer;border:1px solid var(--surface);background:transparent;color:var(--surface)}\\n.chip--live{background:transparent;border:1px solid currentColor;margin-left:.45rem}\\n.rail .chip--live{margin-left:0}\\n.chip--live.is-stale,.chip--live.is-unknown,.chip--live.is-gone{color:var(--ink-soft);\\n  border-style:dashed}\\n.chip--live.is-stale,.chip--live.is-unknown{opacity:.7}\\n.answers li{white-space:pre-line}\\n'*
+### crowsnest.report.CONSOLE_CSS *= '\\n[hidden]{display:none!important}\\n.console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;\\n  font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}\\n.acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}\\n.acts button,.console button,.seen-above{font:inherit;font-family:var(--mono);font-size:.68rem;\\n  letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer;\\n  border:1px solid var(--accent);background:transparent;color:var(--accent)}\\n.acts button:hover,.console button:hover,.seen-above:hover,.acts button:focus-visible,\\n.console button:focus-visible,.seen-above:focus-visible{\\n  background:var(--accent);color:var(--surface)}\\n.acts textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.answers{list-style:none;margin:.2rem 0 0;padding:0;width:100%;font-family:var(--mono);\\n  font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}\\n.answers li b{color:var(--ink);font-weight:500}\\n.unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}\\n.acts button,.later-sheet button,.seen-above,.toast button{min-height:2.75rem}\\n.seen-above{margin-top:.5rem}\\n.review-line .acts{grid-column:1/-1}\\n.acts a.review-open{display:inline-flex;align-items:center;min-height:2.75rem;font-family:var(--mono);\\n  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;\\n  border:1px solid var(--accent);color:var(--accent);text-decoration:none}\\n.later-sheet{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;width:100%;\\n  padding:.6rem;border:1px solid var(--rule);background:var(--surface)}\\n.later-sheet p{width:100%;margin:0;color:var(--ink)}\\n.later-sheet label{width:100%;display:flex;gap:.4rem;align-items:center}\\n.later-sheet input[type=text]{width:100%;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.is-seen{opacity:.55}\\n.live,.line.live .tag{color:var(--accent)}\\n.later-live .figure{color:var(--ink-soft)}\\n.toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:10;display:flex;\\n  gap:.8rem;align-items:center;max-width:calc(100% - 2rem);padding:.55rem .8rem;\\n  font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--surface)}\\n.toast button{font:inherit;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .6rem;\\n  cursor:pointer;border:1px solid var(--surface);background:transparent;color:var(--surface)}\\n.chip--live{background:transparent;border:1px solid currentColor;margin-left:.45rem}\\n.rail .chip--live{margin-left:0}\\n/\* The rail is a narrow column and .chip never wraps; a live chip\\'s words ("now idle, for\\n   14 h") are longer than the status chip\\'s, so in the rail it wraps rather\\n   than run into the row\\'s body. \*/\\n.rail .chip--live{white-space:normal;max-width:100%;overflow-wrap:anywhere;line-height:1.35}\\n.chip--live.is-stale,.chip--live.is-unknown,.chip--live.is-gone{color:var(--ink-soft);\\n  border-style:dashed}\\n.chip--live.is-stale,.chip--live.is-unknown{opacity:.7}\\n.answers li{white-space:pre-line}\\n'*
 
 The console’s styles, on top of the shared stylesheet’s tokens. Interactive mode only.
 The attention arm’s classes are its own (`is-seen`, `later-live`, `live`): the
@@ -4068,6 +4072,36 @@ as unknown. There is no skew tolerance: a courier whose clock runs one tick fast
 otherwise stretch the fresh window to three ticks, and the line would assert a
 freshness it cannot support (crowsnest#88).
 
+### crowsnest.report.OPEN_CSS *= '\\n.way-reach{font:inherit;font-family:var(--mono);font-size:.74rem;line-height:1.3;\\n  padding:0 .35rem;border:1px dashed var(--ink-soft);background:transparent;\\n  color:var(--ink-soft);cursor:pointer}\\n.way-reach:hover,.way-reach:focus-visible{border-style:solid;color:var(--ink)}\\n.way-toast{position:fixed;left:50%;bottom:max(1rem,env(safe-area-inset-bottom));\\n  transform:translateX(-50%);z-index:20;max-width:min(36rem,calc(100% - 2rem));\\n  padding:.6rem .8rem;font-family:var(--mono);font-size:.78rem;line-height:1.45;\\n  background:var(--ink);color:var(--surface)}\\n.way-toast[hidden]{display:none}\\n.way-toast code{overflow-wrap:anywhere;color:inherit;background:transparent;font-size:1em}\\n.way-toast a{color:inherit;text-decoration:underline}\\n.way-toast button{font:inherit;background:transparent;color:inherit;margin-left:.6rem;\\n  border:1px solid currentColor;padding:.1rem .4rem;cursor:pointer}\\n.open-prefs{margin-top:.8rem;font-size:.85rem}\\n.open-prefs summary{cursor:pointer;font-family:var(--mono);font-size:.72rem;\\n  letter-spacing:.08em;text-transform:uppercase}\\n.open-prefs label{display:flex;flex-wrap:wrap;gap:.3rem .6rem;align-items:baseline;\\n  margin-top:.4rem}\\n.open-prefs select{font:inherit}\\n'*
+
+the reach button drawn apart from a link
+(dashed, muted: it copies a command, it does not go anywhere), the toast that says what
+happened, and the “Where sessions open” panel the script adds to the foot.
+
+* **Type:**
+  The open helper’s look ([`OPEN_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.OPEN_SCRIPT))
+
+### crowsnest.report.OPEN_SCRIPT *= '\\n(() => {\\n  const PREFS = "crowsnest.open.v1", PENDING = "crowsnest.pending.v1";\\n  const PENDING_MS = 2 \* 3600 \* 1000;\\n  const BROWSERS = ["Chrome", "Safari", "Firefox", "Edge"];\\n  const load = (key) => {\\n    try { const v = JSON.parse(localStorage.getItem(key) || "null"); return v && typeof v === "object" ? v : {}; }\\n    catch (e) { return {}; }\\n  };\\n  const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} };\\n  const ua = navigator.userAgent || "";\\n  const here = /Edg(e|iOS|A)?\\\\//.test(ua) ? "Edge" : /Firefox\\\\/|FxiOS\\\\//.test(ua) ? "Firefox"\\n    : /Chrome\\\\/|CriOS\\\\//.test(ua) ? "Chrome" : /Safari\\\\//.test(ua) ? "Safari" : "";\\n  let toast = null, timer = 0;\\n  function say(parts, ms) {\\n    if (!toast) {\\n      toast = document.createElement("div");\\n      toast.className = "way-toast";\\n      toast.setAttribute("role", "status");\\n      document.body.appendChild(toast);\\n    }\\n    toast.textContent = "";\\n    for (const part of parts) {\\n      if (part) toast.appendChild(typeof part === "string" ? document.createTextNode(part) : part);\\n    }\\n    const close = document.createElement("button");\\n    close.type = "button";\\n    close.textContent = "close";\\n    close.addEventListener("click", () => { toast.hidden = true; });\\n    toast.appendChild(close);\\n    toast.hidden = false;\\n    clearTimeout(timer);\\n    timer = setTimeout(() => { toast.hidden = true; }, ms || 15000);\\n  }\\n  function code(text) { const c = document.createElement("code"); c.textContent = text; return c; }\\n  function link(href, text) {\\n    const a = document.createElement("a");\\n    a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = text;\\n    return a;\\n  }\\n  async function copy(text) {\\n    try { await navigator.clipboard.writeText(text); return true; } catch (e) {}\\n    try {\\n      const t = document.createElement("textarea");\\n      t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";\\n      document.body.appendChild(t); t.select();\\n      const ok = document.execCommand("copy");\\n      t.remove();\\n      return ok;\\n    } catch (e) { return false; }\\n  }\\n  document.addEventListener("click", async (event) => {\\n    const el = event.target && event.target.closest ? event.target.closest("[data-way]") : null;\\n    if (!el) return;\\n    const home = el.dataset.home || "";\\n    if (el.dataset.way === "open") {\\n      const want = (load(PREFS).homes || {})[home] || "";\\n      if (!want || !here || want === here) return;\\n      event.preventDefault();\\n      const ok = await copy(el.href);\\n      const whose = (home ? home + " sessions" : "These sessions") + " open in " + want + " (your setting). ";\\n      say(ok ? [whose, "Link copied: paste it in " + want + "."]\\n             : [whose, "Copy this link into " + want + ": ", code(el.href)]);\\n      return;\\n    }\\n    if (el.dataset.way === "reach") {\\n      const command = el.dataset.copy || "";\\n      const ok = await copy(command);\\n      const pending = load(PENDING);\\n      pending[el.dataset.session || command] = { at: Date.now(), label: el.dataset.label || "" };\\n      save(PENDING, pending);\\n      say([ok ? "Copied " : "Copy ", code(command),\\n           ". In a terminal on that session\\'s machine it brings the session\\'s window up. " +\\n           "It has no link here because Remote Control is off: turn it on there " +\\n           "(/remote-control) and this page shows its open link, and says so, once it refreshes."], 30000);\\n    }\\n  });\\n  // A session reached from here that now has a link.\\n  const pending = load(PENDING);\\n  let changed = false;\\n  const opens = [...document.querySelectorAll(\\'a[data-way="open"]\\')];\\n  for (const id of Object.keys(pending)) {\\n    const p = pending[id] || {};\\n    if (!(Date.now() - (p.at || 0) < PENDING_MS)) { delete pending[id]; changed = true; continue; }\\n    const a = opens.find((o) => o.dataset.session === id);\\n    if (a) {\\n      delete pending[id]; changed = true;\\n      say([(p.label || "That session") + " has a link now: ", link(a.href, "open it")], 30000);\\n    }\\n  }\\n  if (changed) save(PENDING, pending);\\n  // Where each account\\'s sessions open, per home on the page.\\n  const homes = [...new Set([...document.querySelectorAll("[data-way]")].map((e) => e.dataset.home || ""))];\\n  if (!homes.length) return;\\n  const foot = document.querySelector(".colophon") || document.querySelector("main") || document.body;\\n  const box = document.createElement("details");\\n  box.className = "open-prefs";\\n  const summary = document.createElement("summary");\\n  summary.textContent = "Where sessions open";\\n  box.appendChild(summary);\\n  const note = document.createElement("p");\\n  note.textContent = "This browser: " + (here || "not recognised") + ". Say which browser each " +\\n    "account is signed in to; a link to a session of an account signed in elsewhere is copied " +\\n    "for you to paste there. Kept in this browser only.";\\n  box.appendChild(note);\\n  const prefs = load(PREFS);\\n  prefs.homes = prefs.homes || {};\\n  for (const home of homes.sort()) {\\n    const label = document.createElement("label");\\n    label.appendChild(document.createTextNode((home || "sessions") + " "));\\n    const select = document.createElement("select");\\n    for (const name of ["", ...BROWSERS]) {\\n      const option = document.createElement("option");\\n      option.value = name;\\n      option.textContent = name ? name : "this browser";\\n      if ((prefs.homes[home] || "") === name) option.selected = true;\\n      select.appendChild(option);\\n    }\\n    select.addEventListener("change", () => {\\n      const now = load(PREFS);\\n      now.homes = now.homes || {};\\n      if (select.value) now.homes[home] = select.value; else delete now.homes[home];\\n      save(PREFS, now);\\n    });\\n    label.appendChild(select);\\n    box.appendChild(label);\\n  }\\n  foot.appendChild(box);\\n})();\\n'*
+
+how a reader gets from a row to its session.
+
+* **Account routing.** A session belongs to one account, and a browser is often signed
+  in to only one. The reader says, per home, which browser that account lives in
+  (“Where sessions open”, in the foot; kept in this browser’s `localStorage` and
+  nowhere else). A click on `open` for a home set to another browser copies the link
+  and says to paste it there – a page cannot start another browser. Unset, or set to
+  this one, the link just opens in a new tab.
+* **Reach.** A session without Remote Control has no link, only the `crowsnest open`
+  command. Its button copies the command and says what it does, and that turning
+  Remote Control on in that session gives it a link. The page remembers the session
+  (two hours) and, on a later render where it has a link, says so with the link.
+
+Loads nothing, sends nothing; every storage access is guarded, so a browser that
+refuses storage still gets the links and the buttons.
+
+* **Type:**
+  The open helper (crowsnest#104)
+
 ### crowsnest.report.REGISTER_CSS *= '\\n.register>summary{cursor:pointer;list-style:none;grid-template-rows:auto auto}\\n.register>summary::-webkit-details-marker{display:none}\\n.register>summary>.figure{grid-row:1/3}\\n.register>summary>h2,.register>summary>.rule{grid-column:2}\\n.register>summary>.rule{display:block}\\n.register>summary h2::after{content:"";display:inline-block;margin-left:.5rem;\\n  border:.3rem solid transparent;border-left-color:var(--ink-soft);\\n  transform:translateY(-.05em)}\\n.register[open]>summary h2::after{border-left-color:transparent;\\n  border-top-color:var(--ink-soft);transform:translateY(-.25em)}\\n'*
 
 What makes a register’s head a disclosure (#86). Every register but the one that needs
@@ -4083,7 +4117,7 @@ are placed directly: the figure down the first column, the heading and the rule 
 the second. Without this the rule falls below the head’s hairline, at the page’s left
 edge, on every register that folds.
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False)
 
 The roster [`crowsnest.tools.roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -4115,7 +4149,15 @@ when `None`), and an undo toast. Those write the person’s record straight to t
 page’s `db` and redraw the row at once, by [`crowsnest.attention.present()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.present)
 transcribed into the script ([`ATTENTION_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.ATTENTION_SCRIPT)). It still loads nothing from
 anywhere; without `db` it renders exactly as the static page. The static page
-carries no script at all.
+carries no script at all, unless `open_helper=True`.
+
+`open_helper=True` adds one small script ([`OPEN_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.OPEN_SCRIPT)) for a page someone
+opens in a browser: it routes each `open` by the account’s browser the reader chose
+(kept in that browser’s `localStorage`), and a session without a link gets a button
+that copies its `crowsnest open` command and says what to do with it. An interactive
+page does not carry it: the console’s one script keeps nothing in the browser (its
+record is the page’s `db`), and the helper’s choices live in `localStorage`. Every
+link opens in a new tab either way.
 
 `fragment=True` returns the page the way a host that wraps it in its own document
 wants it – the claude.ai artifact publisher does: the `<title>`, then the
@@ -4759,8 +4801,9 @@ ssh) or `command` (argv with `{page}` for the rendered file); without either, th
 config file’s `[publish]` table ([`crowsnest.config.publish_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)).
 `publisher` replaces the delivery: a callable `(page, to) -> str`
 ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)). The page is the static one – no console, whose buttons
-need the claude.ai viewer’s `db` – so run this on a schedule for a page that stays
-fresh with nothing awake but the scheduler.
+need the claude.ai viewer’s `db` – with the open helper (`open_helper=True` on
+[`report()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)), so run this on a schedule for a page that stays fresh with nothing
+awake but the scheduler.
 
 The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
 so the last one sent can be looked at locally.
@@ -4793,7 +4836,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
@@ -4838,6 +4881,11 @@ module’s seam) and the page then organises itself by what each session *needs*
 which is the question a person actually has. `triage=False` renders the older
 status-organised page; so does calling [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report) on a
 roster whose rows carry no verdict.
+
+`open_helper=True` adds the page’s open helper ([`crowsnest.report.OPEN_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.OPEN_SCRIPT)):
+each account’s sessions open in the browser the reader chose, and a session with no
+link gets a button that copies its `crowsnest open` command. For a page someone opens
+in a browser; [`publish()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.publish) turns it on.
 
 `links=False` leaves the references off the page. They are still resolved: a
 verdict reader may read them, and the verbs pin the row with them. To resolve
@@ -5695,7 +5743,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-24 05:20 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/bfb57e04807e09df89d7e71697228834e2d5b6dc"><code>bfb57e0</code></a> on branch <code>main</code>, for **crowsnest 0.0.57** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-24 10:51 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/8379245073649c1bb54d7d0bd8dfc06389eedcab"><code>8379245</code></a> on branch <code>main</code>, for **crowsnest 0.0.58** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -5704,7 +5752,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/bfb57e04807e09df89d7e71697228834e2d5b6dc"><code>bfb57e04807e09df89d7e71697228834e2d5b6dc</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/8379245073649c1bb54d7d0bd8dfc06389eedcab"><code>8379245073649c1bb54d7d0bd8dfc06389eedcab</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -5715,9 +5763,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35959356777">35959356777</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35989450498">35989450498</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>bfb57e04807e09df89d7e71697228834e2d5b6dc</code> (in the history of the built commit) |
+| Event commit | <code>8379245073649c1bb54d7d0bd8dfc06389eedcab</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5742,13 +5790,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.57/">0.0.57</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.58/">0.0.58</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout bfb57e04807e09df89d7e71697228834e2d5b6dc
+git checkout 8379245073649c1bb54d7d0bd8dfc06389eedcab
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

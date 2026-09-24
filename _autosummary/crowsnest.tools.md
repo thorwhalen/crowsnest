@@ -168,8 +168,9 @@ ssh) or `command` (argv with `{page}` for the rendered file); without either, th
 config file’s `[publish]` table ([`crowsnest.config.publish_settings()`](crowsnest.config.md#crowsnest.config.publish_settings)).
 `publisher` replaces the delivery: a callable `(page, to) -> str`
 ([`crowsnest.publish`](crowsnest.publish.md#module-crowsnest.publish)). The page is the static one – no console, whose buttons
-need the claude.ai viewer’s `db` – so run this on a schedule for a page that stays
-fresh with nothing awake but the scheduler.
+need the claude.ai viewer’s `db` – with the open helper (`open_helper=True` on
+[`report()`](#crowsnest.tools.report)), so run this on a schedule for a page that stays fresh with nothing
+awake but the scheduler.
 
 The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
 so the last one sent can be looked at locally.
@@ -202,7 +203,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.md#crowsnest.report.render_report)
 over what [`roster()`](#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
@@ -247,6 +248,11 @@ module’s seam) and the page then organises itself by what each session *needs*
 which is the question a person actually has. `triage=False` renders the older
 status-organised page; so does calling [`crowsnest.report.render_report()`](crowsnest.report.md#crowsnest.report.render_report) on a
 roster whose rows carry no verdict.
+
+`open_helper=True` adds the page’s open helper ([`crowsnest.report.OPEN_SCRIPT`](crowsnest.report.md#crowsnest.report.OPEN_SCRIPT)):
+each account’s sessions open in the browser the reader chose, and a session with no
+link gets a button that copies its `crowsnest open` command. For a page someone opens
+in a browser; [`publish()`](#crowsnest.tools.publish) turns it on.
 
 `links=False` leaves the references off the page. They are still resolved: a
 verdict reader may read them, and the verbs pin the row with them. To resolve

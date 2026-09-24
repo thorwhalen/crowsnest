@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-09-24T05:20:15Z",
+  "built_at": "2026-09-24T10:51:26Z",
   "package": {
     "name": "crowsnest",
-    "version": "0.0.57",
+    "version": "0.0.58",
     "display_name": "crowsnest",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "bfb57e04807e09df89d7e71697228834e2d5b6dc",
-    "short_commit": "bfb57e0",
+    "commit": "8379245073649c1bb54d7d0bd8dfc06389eedcab",
+    "short_commit": "8379245",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/crowsnest",
-    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/bfb57e04807e09df89d7e71697228834e2d5b6dc",
+    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/8379245073649c1bb54d7d0bd8dfc06389eedcab",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/crowsnest",
-    "sha": "bfb57e04807e09df89d7e71697228834e2d5b6dc",
+    "sha": "8379245073649c1bb54d7d0bd8dfc06389eedcab",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "35959356777",
-    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/35959356777",
+    "run_id": "35989450498",
+    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/35989450498",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -56,15 +56,15 @@
   },
   "site": {
     "modules_documented": 23,
-    "objects_documented": 302
+    "objects_documented": 304
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.57",
+    "latest": "0.0.58",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout bfb57e04807e09df89d7e71697228834e2d5b6dc\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 8379245073649c1bb54d7d0bd8dfc06389eedcab\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
