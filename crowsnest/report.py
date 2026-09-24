@@ -226,6 +226,10 @@ CONSOLE_CSS = """
   cursor:pointer;border:1px solid var(--surface);background:transparent;color:var(--surface)}
 .chip--live{background:transparent;border:1px solid currentColor;margin-left:.45rem}
 .rail .chip--live{margin-left:0}
+/* The rail is a narrow column and .chip never wraps; a live chip's words ("now idle, for
+   14 h") are longer than the status chip's, so in the rail it wraps rather
+   than run into the row's body. */
+.rail .chip--live{white-space:normal;max-width:100%;overflow-wrap:anywhere;line-height:1.35}
 .chip--live.is-stale,.chip--live.is-unknown,.chip--live.is-gone{color:var(--ink-soft);
   border-style:dashed}
 .chip--live.is-stale,.chip--live.is-unknown{opacity:.7}
