@@ -434,6 +434,7 @@ def report(
     ledger_dir: str | None = None,
     tz: str | None = None,
     plain: bool = False,
+    open_helper: bool = False,
 ):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
@@ -467,6 +468,12 @@ def report(
     what is new in *Needs you*; a closed *Review* block at the very foot gathers what has sat
     too long, under the `[attention]` table's thresholds. `--plain` leaves all of that out,
     for a copy to share.
+
+    Every link opens in a new tab. `--open-helper` adds one small script for a page you
+    open in a browser: set which browser each account is signed in to ("Where sessions
+    open", at the foot; kept in that browser) and a session of another account has its
+    link copied for you to paste there; a session with no link gets a button that copies
+    its `crowsnest open` command. `crowsnest publish` always adds it.
     """
     result = tools.report(
         home=home,
@@ -478,6 +485,7 @@ def report(
         interactive=interactive,
         tz=tz,
         plain=plain,
+        open_helper=open_helper,
     )
     if not out:
         return result["html"]

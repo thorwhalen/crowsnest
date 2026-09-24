@@ -567,6 +567,7 @@ def report(
     store=None,
     plain: bool = False,
     row_context: RowContext | None = None,
+    open_helper: bool = False,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -611,6 +612,11 @@ def report(
     which is the question a person actually has. ``triage=False`` renders the older
     status-organised page; so does calling :func:`crowsnest.report.render_report` on a
     roster whose rows carry no verdict.
+
+    ``open_helper=True`` adds the page's open helper (:data:`crowsnest.report.OPEN_SCRIPT`):
+    each account's sessions open in the browser the reader chose, and a session with no
+    link gets a button that copies its ``crowsnest open`` command. For a page someone opens
+    in a browser; :func:`publish` turns it on.
 
     ``links=False`` leaves the references off the page. They are still resolved: a
     verdict reader may read them, and the verbs pin the row with them. To resolve
@@ -686,6 +692,7 @@ def report(
         row_context=ctx,
         links=links,
         attention_settings=settings,
+        open_helper=open_helper,
     )
     return {
         "html": html,
@@ -715,8 +722,9 @@ def publish(
     config file's ``[publish]`` table (:func:`crowsnest.config.publish_settings`).
     ``publisher`` replaces the delivery: a callable ``(page, to) -> str``
     (:mod:`crowsnest.publish`). The page is the static one -- no console, whose buttons
-    need the claude.ai viewer's ``db`` -- so run this on a schedule for a page that stays
-    fresh with nothing awake but the scheduler.
+    need the claude.ai viewer's ``db`` -- with the open helper (``open_helper=True`` on
+    :func:`report`), so run this on a schedule for a page that stays fresh with nothing
+    awake but the scheduler.
 
     The rendered page is kept at ``page_path`` (default ``<data dir>/publish/index.html``),
     so the last one sent can be looked at locally.
@@ -745,6 +753,7 @@ def publish(
         tz=tz,
         plain=plain,
         row_context=row_context,
+        open_helper=True,
     )
     page = (
         Path(page_path).expanduser()

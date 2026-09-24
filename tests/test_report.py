@@ -484,8 +484,13 @@ def test_a_row_with_a_remote_control_session_links_to_it_and_its_repository():
         repo_url="https://github.com/o/r",
     )
     html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
-    assert '<a href="https://claude.ai/code/session_01ABC">open</a>' in html
-    assert '<a href="https://github.com/o/r">repo</a>' in html
+    assert (
+        '<a href="https://claude.ai/code/session_01ABC" target="_blank" rel="noopener">open</a>'
+        in html
+    )
+    assert (
+        '<a href="https://github.com/o/r" target="_blank" rel="noopener">repo</a>' in html
+    )
 
 
 def test_a_row_without_remote_control_has_no_open_link():
@@ -514,7 +519,10 @@ def test_mentioned_issues_and_prs_become_links_and_bad_schemes_are_dropped():
         },
     )
     html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
-    assert '<a href="https://github.com/o/r/issues/7">o/r#7</a>' in html
+    assert (
+        '<a href="https://github.com/o/r/issues/7" target="_blank" rel="noopener">o/r#7</a>'
+        in html
+    )
     assert "javascript:" not in html and "evil" not in html
 
 
@@ -526,7 +534,10 @@ def test_a_quiet_row_with_remote_control_links_too():
         session_url="https://claude.ai/code/session_01OLD",
     )
     html = render_report({"sessions": [r], "counts": {}}, made_at=STAMP)
-    assert '<a href="https://claude.ai/code/session_01OLD">open</a>' in html
+    assert (
+        '<a href="https://claude.ai/code/session_01OLD" target="_blank" rel="noopener">open</a>'
+        in html
+    )
 
 
 def _interactive_page():

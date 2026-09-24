@@ -94,6 +94,8 @@ __all__ = [
     "CONSOLE_CSS",
     "CONSOLE_SCRIPT",
     "LIVE_SCRIPT",
+    "OPEN_CSS",
+    "OPEN_SCRIPT",
     "REGISTER_CSS",
     "render_report",
 ]
@@ -102,6 +104,13 @@ __all__ = [
 #: renderers add their controls without every signature growing a flag.
 _interactive: contextvars.ContextVar[bool] = contextvars.ContextVar(
     "crowsnest_report_interactive", default=False
+)
+
+#: Whether the page carries the open helper (:data:`OPEN_SCRIPT`) for one
+#: :func:`render_report` call: ``open_helper=True`` on a page that is not interactive. The
+#: session links and the reach buttons carry the data attributes it reads only when it is.
+_open_helper: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "crowsnest_report_open_helper", default=False
 )
 
 #: Whether a row's resolved ``links`` are drawn, for one :func:`render_report` call. Off, a
@@ -1304,6 +1313,178 @@ WAY_IN_CSS = """
 .way-in-withheld{font-style:italic}
 """
 
+#: The open helper's look (:data:`OPEN_SCRIPT`): the reach button drawn apart from a link
+#: (dashed, muted: it copies a command, it does not go anywhere), the toast that says what
+#: happened, and the "Where sessions open" panel the script adds to the foot.
+OPEN_CSS = """
+.way-reach{font:inherit;font-family:var(--mono);font-size:.74rem;line-height:1.3;
+  padding:0 .35rem;border:1px dashed var(--ink-soft);background:transparent;
+  color:var(--ink-soft);cursor:pointer}
+.way-reach:hover,.way-reach:focus-visible{border-style:solid;color:var(--ink)}
+.way-toast{position:fixed;left:50%;bottom:max(1rem,env(safe-area-inset-bottom));
+  transform:translateX(-50%);z-index:20;max-width:min(36rem,calc(100% - 2rem));
+  padding:.6rem .8rem;font-family:var(--mono);font-size:.78rem;line-height:1.45;
+  background:var(--ink);color:var(--surface)}
+.way-toast[hidden]{display:none}
+.way-toast code{overflow-wrap:anywhere;color:inherit;background:transparent;font-size:1em}
+.way-toast a{color:inherit;text-decoration:underline}
+.way-toast button{font:inherit;background:transparent;color:inherit;margin-left:.6rem;
+  border:1px solid currentColor;padding:.1rem .4rem;cursor:pointer}
+.open-prefs{margin-top:.8rem;font-size:.85rem}
+.open-prefs summary{cursor:pointer;font-family:var(--mono);font-size:.72rem;
+  letter-spacing:.08em;text-transform:uppercase}
+.open-prefs label{display:flex;flex-wrap:wrap;gap:.3rem .6rem;align-items:baseline;
+  margin-top:.4rem}
+.open-prefs select{font:inherit}
+"""
+
+#: The open helper (crowsnest#104): how a reader gets from a row to its session.
+#:
+#: * **Account routing.** A session belongs to one account, and a browser is often signed
+#:   in to only one. The reader says, per home, which browser that account lives in
+#:   ("Where sessions open", in the foot; kept in this browser's ``localStorage`` and
+#:   nowhere else). A click on ``open`` for a home set to another browser copies the link
+#:   and says to paste it there -- a page cannot start another browser. Unset, or set to
+#:   this one, the link just opens in a new tab.
+#: * **Reach.** A session without Remote Control has no link, only the ``crowsnest open``
+#:   command. Its button copies the command and says what it does, and that turning
+#:   Remote Control on in that session gives it a link. The page remembers the session
+#:   (two hours) and, on a later render where it has a link, says so with the link.
+#:
+#: Loads nothing, sends nothing; every storage access is guarded, so a browser that
+#: refuses storage still gets the links and the buttons.
+OPEN_SCRIPT = r"""
+(() => {
+  const PREFS = "crowsnest.open.v1", PENDING = "crowsnest.pending.v1";
+  const PENDING_MS = 2 * 3600 * 1000;
+  const BROWSERS = ["Chrome", "Safari", "Firefox", "Edge"];
+  const load = (key) => {
+    try { const v = JSON.parse(localStorage.getItem(key) || "null"); return v && typeof v === "object" ? v : {}; }
+    catch (e) { return {}; }
+  };
+  const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} };
+  const ua = navigator.userAgent || "";
+  const here = /Edg(e|iOS|A)?\//.test(ua) ? "Edge" : /Firefox\/|FxiOS\//.test(ua) ? "Firefox"
+    : /Chrome\/|CriOS\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "";
+  let toast = null, timer = 0;
+  function say(parts, ms) {
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.className = "way-toast";
+      toast.setAttribute("role", "status");
+      document.body.appendChild(toast);
+    }
+    toast.textContent = "";
+    for (const part of parts) {
+      if (part) toast.appendChild(typeof part === "string" ? document.createTextNode(part) : part);
+    }
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "close";
+    close.addEventListener("click", () => { toast.hidden = true; });
+    toast.appendChild(close);
+    toast.hidden = false;
+    clearTimeout(timer);
+    timer = setTimeout(() => { toast.hidden = true; }, ms || 15000);
+  }
+  function code(text) { const c = document.createElement("code"); c.textContent = text; return c; }
+  function link(href, text) {
+    const a = document.createElement("a");
+    a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = text;
+    return a;
+  }
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+    try {
+      const t = document.createElement("textarea");
+      t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+      document.body.appendChild(t); t.select();
+      const ok = document.execCommand("copy");
+      t.remove();
+      return ok;
+    } catch (e) { return false; }
+  }
+  document.addEventListener("click", async (event) => {
+    const el = event.target && event.target.closest ? event.target.closest("[data-way]") : null;
+    if (!el) return;
+    const home = el.dataset.home || "";
+    if (el.dataset.way === "open") {
+      const want = (load(PREFS).homes || {})[home] || "";
+      if (!want || !here || want === here) return;
+      event.preventDefault();
+      const ok = await copy(el.href);
+      const whose = (home ? home + " sessions" : "These sessions") + " open in " + want + " (your setting). ";
+      say(ok ? [whose, "Link copied: paste it in " + want + "."]
+             : [whose, "Copy this link into " + want + ": ", code(el.href)]);
+      return;
+    }
+    if (el.dataset.way === "reach") {
+      const command = el.dataset.copy || "";
+      const ok = await copy(command);
+      const pending = load(PENDING);
+      pending[el.dataset.session || command] = { at: Date.now(), label: el.dataset.label || "" };
+      save(PENDING, pending);
+      say([ok ? "Copied " : "Copy ", code(command),
+           ". In a terminal on that session's machine it brings the session's window up. " +
+           "It has no link here because Remote Control is off: turn it on there " +
+           "(/remote-control) and this page shows its open link, and says so, once it refreshes."], 30000);
+    }
+  });
+  // A session reached from here that now has a link.
+  const pending = load(PENDING);
+  let changed = false;
+  const opens = [...document.querySelectorAll('a[data-way="open"]')];
+  for (const id of Object.keys(pending)) {
+    const p = pending[id] || {};
+    if (!(Date.now() - (p.at || 0) < PENDING_MS)) { delete pending[id]; changed = true; continue; }
+    const a = opens.find((o) => o.dataset.session === id);
+    if (a) {
+      delete pending[id]; changed = true;
+      say([(p.label || "That session") + " has a link now: ", link(a.href, "open it")], 30000);
+    }
+  }
+  if (changed) save(PENDING, pending);
+  // Where each account's sessions open, per home on the page.
+  const homes = [...new Set([...document.querySelectorAll("[data-way]")].map((e) => e.dataset.home || ""))];
+  if (!homes.length) return;
+  const foot = document.querySelector(".colophon") || document.querySelector("main") || document.body;
+  const box = document.createElement("details");
+  box.className = "open-prefs";
+  const summary = document.createElement("summary");
+  summary.textContent = "Where sessions open";
+  box.appendChild(summary);
+  const note = document.createElement("p");
+  note.textContent = "This browser: " + (here || "not recognised") + ". Say which browser each " +
+    "account is signed in to; a link to a session of an account signed in elsewhere is copied " +
+    "for you to paste there. Kept in this browser only.";
+  box.appendChild(note);
+  const prefs = load(PREFS);
+  prefs.homes = prefs.homes || {};
+  for (const home of homes.sort()) {
+    const label = document.createElement("label");
+    label.appendChild(document.createTextNode((home || "sessions") + " "));
+    const select = document.createElement("select");
+    for (const name of ["", ...BROWSERS]) {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name ? name : "this browser";
+      if ((prefs.homes[home] || "") === name) option.selected = true;
+      select.appendChild(option);
+    }
+    select.addEventListener("change", () => {
+      const now = load(PREFS);
+      now.homes = now.homes || {};
+      if (select.value) now.homes[home] = select.value; else delete now.homes[home];
+      save(PREFS, now);
+    });
+    label.appendChild(select);
+    box.appendChild(label);
+  }
+  foot.appendChild(box);
+})();
+"""
+
+
 #: What makes a register's head a disclosure (#86). Every register but the one that needs
 #: the person is closed, so the head has to *look* openable: the browser's own marker is
 #: suppressed (it sits where the figure does and breaks the head's grid) and the heading
@@ -1669,8 +1850,13 @@ def _empty(message: str) -> str:
     return f'<p class="empty">{message}</p>'
 
 
-def _link(safe: _Sanitizer, url: Any, label: str) -> str:
+def _link(safe: _Sanitizer, url: Any, label: str, *, extra: str = "") -> str:
     """An anchor, or the label as plain text when the URL cannot be published as one.
+
+    Every anchor opens in a new tab (:data:`_NEW_TAB`). Each one leaves the page for
+    claude.ai or a forge, and claude.ai refuses to be framed: a page shown inside a frame
+    (a site that embeds it, the artifact viewer) would otherwise answer a click with
+    "refused to connect". ``extra`` is attribute markup the caller built and escaped.
 
     Two ways a URL fails to be a link, and both used to render as an anchor pointing
     somewhere useless:
@@ -1697,7 +1883,29 @@ def _link(safe: _Sanitizer, url: Any, label: str) -> str:
         return ""
     if "~" in href and "~" not in raw:  # `scrub` rewrote a home path inside the URL
         return f"<span>{safe.text(label)}</span>" if label else ""
-    return f'<a href="{href}">{safe.text(label)}</a>'
+    return f'<a href="{href}"{_NEW_TAB}{extra}>{safe.text(label)}</a>'
+
+
+#: The attributes that send a link to its own tab, and give the new page no handle back.
+_NEW_TAB = ' target="_blank" rel="noopener"'
+
+
+def _way_attrs(safe: _Sanitizer, way: str, row: Mapping[str, Any]) -> str:
+    """The data attributes :data:`OPEN_SCRIPT` reads off a way in, when the page carries it.
+
+    ``data-home`` routes the click by account; ``data-session`` lets a copied reach command
+    be matched to the link the session gains later; ``data-label`` names it in the toast.
+    All three go through the sanitiser as text, so none can close the attribute.
+    """
+    if not _open_helper.get():
+        return ""
+    fields = {
+        "way": way,
+        "home": row.get("home") or "",
+        "session": row.get("session_id") or "",
+        "label": row.get("label") or "",
+    }
+    return "".join(f' data-{k}="{safe.text(v)}"' for k, v in fields.items())
 
 
 def _fallback(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
@@ -1718,6 +1926,10 @@ def _fallback(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     sanitiser. The page says the command was withheld rather than dropping it silently.
     The element keeps its whitespace (``.way-in``), so what a reader copies is what was
     printed.
+
+    On a page with the open helper (:data:`OPEN_SCRIPT`) the command is a button instead,
+    styled apart from a link: pressing it copies the command and says what to do with it,
+    and the page tells the reader once that session has a link of its own.
     """
     command = _stated_command(row)
     if not command:
@@ -1727,6 +1939,11 @@ def _fallback(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
         return (
             '<span class="way-in-withheld">terminal command withheld: it holds text '
             "this page may not publish</span>"
+        )
+    if _open_helper.get():
+        return (
+            f'<button type="button" class="way-reach" title="{shown}" data-copy="{shown}"'
+            f"{_way_attrs(safe, 'reach', row)}>open</button>"
         )
     return f'<code class="way-in">{shown}</code>'
 
@@ -1760,7 +1977,10 @@ def _way_in(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     Only a row with no usable URL gets the command. A URL that ``scrub`` rewrote still
     yields its plain-text ``open`` from :func:`_link`, exactly as before this existed.
     """
-    return _link(safe, row.get("session_url"), "open") or _fallback(safe, row)
+    extra = _way_attrs(safe, "open", row)
+    return _link(safe, row.get("session_url"), "open", extra=extra) or _fallback(
+        safe, row
+    )
 
 
 def _where(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
@@ -2887,6 +3107,7 @@ def render_report(
     row_context: RowContext | None = None,
     links: bool = True,
     attention_settings: AttentionSettings | None = None,
+    open_helper: bool = False,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -2918,7 +3139,15 @@ def render_report(
     page's ``db`` and redraw the row at once, by :func:`crowsnest.attention.present`
     transcribed into the script (:data:`ATTENTION_SCRIPT`). It still loads nothing from
     anywhere; without ``db`` it renders exactly as the static page. The static page
-    carries no script at all.
+    carries no script at all, unless ``open_helper=True``.
+
+    ``open_helper=True`` adds one small script (:data:`OPEN_SCRIPT`) for a page someone
+    opens in a browser: it routes each ``open`` by the account's browser the reader chose
+    (kept in that browser's ``localStorage``), and a session without a link gets a button
+    that copies its ``crowsnest open`` command and says what to do with it. An interactive
+    page does not carry it: the console's one script keeps nothing in the browser (its
+    record is the page's ``db``), and the helper's choices live in ``localStorage``. Every
+    link opens in a new tab either way.
 
     ``fragment=True`` returns the page the way a host that wraps it in its own document
     wants it -- the claude.ai artifact publisher does: the ``<title>``, then the
@@ -2972,6 +3201,7 @@ def render_report(
     settings = replace(settings, stale_after=stale_after)
     sessions = list(roster.get("sessions") or [])
     token = _interactive.set(interactive)
+    helper_token = _open_helper.set(open_helper and not interactive)
     links_token = _links_shown.set(links)
     try:
         view = _attention_view(
@@ -2996,6 +3226,7 @@ def render_report(
             _view.reset(view_token)
     finally:
         _interactive.reset(token)
+        _open_helper.reset(helper_token)
         _links_shown.reset(links_token)
 
 
@@ -3171,13 +3402,18 @@ def _render(
     # One <style>, not two: the figure's rules belong with the page's rules, and the
     # interactive mode's own block is the only thing that earns a second tag.
     attention_css = ATTENTION_CSS if view.on else ""
-    sheet = f"{_CSS}{_TREE_CSS}{REGISTER_CSS}{WAY_IN_CSS}{WHEN_CSS}{attention_css}"
+    open_css = OPEN_CSS if _open_helper.get() else ""
+    sheet = (
+        f"{_CSS}{_TREE_CSS}{REGISTER_CSS}{WAY_IN_CSS}{WHEN_CSS}{attention_css}{open_css}"
+    )
     style_tag = f"<style>{sheet}</style>"
     if _interactive.get():
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
     if _interactive.get():
         body += f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{CONSOLE_SCRIPT}</script>"
+    elif _open_helper.get():
+        body += f"<script>{OPEN_SCRIPT}</script>"
     if fragment:
         return f"{title_tag}\n{style_tag}\n{body}\n"
     head = (
