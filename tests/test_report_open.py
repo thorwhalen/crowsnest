@@ -38,7 +38,9 @@ def _page(*rows, **kw):
 
 def test_every_link_opens_in_a_new_tab():
     html = _page(_row("linked", session_url=URL, repo_url="https://github.com/o/r"))
-    anchors = re.findall(r"<a [^>]*>", html)
+    # An in-page jump (the masthead's tally strip, `href="#needs-you"`) stays on the
+    # page by definition; every link that leaves it opens a new tab.
+    anchors = [a for a in re.findall(r"<a [^>]*>", html) if 'href="#' not in a]
     assert anchors
     assert all('target="_blank" rel="noopener"' in a for a in anchors)
 
@@ -65,7 +67,9 @@ def test_the_helper_marks_links_by_home_and_turns_the_command_into_a_button():
         r'<button type="button" class="way-reach"[^>]*>open</button>', html
     )
     assert button
-    assert 'data-way="reach"' in button.group(0) and 'data-home="side"' in button.group(0)
+    assert 'data-way="reach"' in button.group(0) and 'data-home="side"' in button.group(
+        0
+    )
     assert 'data-copy="crowsnest open' in button.group(0)
     assert '<code class="way-in">' not in html
 
