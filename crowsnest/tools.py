@@ -45,6 +45,7 @@ __all__ = [
     "lineage",
     "live",
     "note",
+    "publish",
     "recap",
     "repo_url",
     "report",
@@ -692,6 +693,68 @@ def report(
         "fragment": fragment,
         "interactive": interactive,
     }
+
+
+def publish(
+    *,
+    to: str | None = None,
+    command: list[str] | None = None,
+    publisher=None,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    tz=None,
+    plain: bool = False,
+    row_context: RowContext | None = None,
+    page_path: str | Path | None = None,
+) -> dict:
+    """Render the report as a whole page and deliver it where its owner reads it.
+
+    The destination is ``to`` (a local path, or ``[user@]host:path`` sent by rsync over
+    ssh) or ``command`` (argv with ``{page}`` for the rendered file); without either, the
+    config file's ``[publish]`` table (:func:`crowsnest.config.publish_settings`).
+    ``publisher`` replaces the delivery: a callable ``(page, to) -> str``
+    (:mod:`crowsnest.publish`). The page is the static one -- no console, whose buttons
+    need the claude.ai viewer's ``db`` -- so run this on a schedule for a page that stays
+    fresh with nothing awake but the scheduler.
+
+    The rendered page is kept at ``page_path`` (default ``<data dir>/publish/index.html``),
+    so the last one sent can be looked at locally.
+    """
+    from crowsnest import publish as _publish
+    from crowsnest.config import publish_settings
+    from crowsnest.paths import data_dir
+
+    if publisher is None:
+        if not to and not command:
+            settings = publish_settings(path=config)
+            to, command = settings.to, list(settings.command)
+        if command:
+            publisher = _publish.command_publisher(command)
+        elif to:
+            publisher = _publish.dflt_publisher(to)
+        else:
+            raise ValueError(
+                "publish needs a destination: --to PATH or HOST:PATH, or a [publish] "
+                "table in the config file with `to` or `command`"
+            )
+    made = report(
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        tz=tz,
+        plain=plain,
+        row_context=row_context,
+    )
+    page = (
+        Path(page_path).expanduser()
+        if page_path
+        else data_dir() / "publish" / "index.html"
+    )
+    page.parent.mkdir(parents=True, exist_ok=True)
+    page.write_text(made["html"], encoding="utf-8")
+    where = publisher(page, to or "")
+    return {"to": where, "bytes": page.stat().st_size, "made_at": made["made_at"]}
 
 
 def lineage(

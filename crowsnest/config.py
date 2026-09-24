@@ -52,6 +52,9 @@ all three build a row the same way without a flag each (:mod:`crowsnest.rows`).
     [report]
     ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
 
+The ``[publish]`` table (:func:`publish_settings`) says where ``crowsnest publish`` sends
+the page: ``to`` (a local path or a ``host:path``) or ``command`` (:mod:`crowsnest.publish`).
+
 On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML
 double-quoted string treats a backslash as an escape.
 
@@ -86,15 +89,18 @@ __all__ = [
     "CLAUDE_BIN_KEY",
     "CONFIG_ENV_VAR",
     "DFLT_FRESH_SECONDS",
+    "PUBLISH_KEY",
     "REPORT_KEY",
     "AttentionSettings",
     "Home",
+    "PublishSettings",
     "ReportSettings",
     "attention_settings",
     "claude_bin_setting",
     "config_path",
     "configured_homes",
     "homes",
+    "publish_settings",
     "report_settings",
 ]
 
@@ -373,6 +379,61 @@ def report_settings(*, path: str | Path | None = None) -> ReportSettings:
             f"a command runs in"
         )
     return ReportSettings(ledger_dir=found)
+
+
+#: The config table saying where ``crowsnest publish`` sends the page.
+PUBLISH_KEY = "publish"
+
+
+@dataclass(frozen=True)
+class PublishSettings:
+    """The ``[publish]`` table, validated: where the page goes (:mod:`crowsnest.publish`).
+
+    At most one of ``to`` and ``command``. Neither is fine until something publishes.
+
+    >>> PublishSettings().to, PublishSettings().command
+    ('', ())
+    """
+
+    to: str = ""
+    command: tuple[str, ...] = ()
+
+
+def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
+    """The config file's ``[publish]`` table, or the defaults when it has none.
+
+    .. code-block:: toml
+
+        [publish]
+        to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
+        # command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]
+
+    A key the table does not know is an error, as in ``[attention]``, and so is giving
+    both: which one wins would be a guess.
+    """
+    file = config_path(path)
+    table = _loaded(path).get(PUBLISH_KEY)
+    if table is None:
+        return PublishSettings()
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{PUBLISH_KEY}] must be a table")  # noqa: TRY004
+    known = {f.name for f in fields(PublishSettings)}
+    unknown = sorted(set(table) - known)
+    if unknown:
+        raise ValueError(
+            f"{file}: [{PUBLISH_KEY}] has no {', '.join(unknown)}; "
+            f"it knows {', '.join(sorted(known))}"
+        )
+    to, command = table.get("to", ""), table.get("command", [])
+    if not isinstance(to, str):
+        raise ValueError(f"{file}: [{PUBLISH_KEY}] to must be a string, not {to!r}")  # noqa: TRY004
+    if not (isinstance(command, list) and all(isinstance(a, str) for a in command)):
+        raise ValueError(
+            f"{file}: [{PUBLISH_KEY}] command must be a list of strings, not {command!r}"
+        )
+    if to.strip() and command:
+        raise ValueError(f"{file}: [{PUBLISH_KEY}] gives both to and command; keep one")
+    return PublishSettings(to=to.strip(), command=tuple(command))
 
 
 def _default_home() -> Home:

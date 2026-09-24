@@ -228,3 +228,16 @@ block, exactly as with a comment.
 Before changing how the page shows, snoozes, or dismisses a row — or adding any
 per-item annotation — read `references/triage-ux.md` (sections 1-2 suffice): GTD and
 its rivals, inbox-UX critiques, and the design implications they lead to.
+
+## 7. A page that stays fresh with no session awake
+
+The artifact console of section 5 lives only while a watcher couriers it: every tick costs a turn (kill criterion K3), and when the watcher stops, the chips grey. When the user wants a page that is simply always current -- bookmarked, opened from a phone at any hour -- that is `crowsnest publish` on a schedule, not a courier:
+
+```bash
+crowsnest publish --all-homes            # render the static page, send it to the [publish] route
+crowsnest publish --to <path or host:path>
+```
+
+The route is the user's, never yours to invent: `--to`, or the config file's `[publish]` table (`to` = a local path or `[user@]host:path`; or `command` = argv with `{page}`). Ask where they can open a private page (their own server behind a login, a synced folder) if none is configured. The scheduler is theirs too (cron, launchd, a systemd timer); `crowsnest publish` only renders and delivers. The page carries no console, so the two coexist: the scheduled page to read, the artifact to act from while a watcher is up.
+
+Never send the page somewhere others can read it. It names sessions and quotes them.
