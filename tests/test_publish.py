@@ -99,7 +99,8 @@ def test_publish_reads_the_config_file(tmp_path, monkeypatch):
     monkeypatch.setattr(tools, "live_sessions", lambda *a, **k: [])
     cfg = tmp_path / "config.toml"
     dest = tmp_path / "synced" / "index.html"
-    cfg.write_text(f'[publish]\nto = "{dest}"\n')
+    # A TOML literal string: a Windows path's backslashes are not escapes there.
+    cfg.write_text(f"[publish]\nto = '{dest}'\n")
     out = tools.publish(
         config=cfg, home=demo_home(tmp_path), page_path=tmp_path / "page.html", tz="UTC"
     )
