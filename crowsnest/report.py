@@ -135,9 +135,7 @@ class _Attended:
     rev: str
     shown: str = ""
     record: _attention.Record | None = None
-    now_as: _attention.SeenAs | None = (
-        None  # what the row is now, as `seen_as` would say
-    )
+    now_as: _attention.SeenAs | None = None  # what the row is now, as `seen_as` would say
 
 
 @dataclass(frozen=True)
@@ -872,6 +870,12 @@ CONSOLE_SCRIPT = r"""
       const count = [...block.querySelectorAll("li[id^='session-']")].filter((li) => !li.hidden).length;
       const figure = block.querySelector(".figure");
       if (figure) figure.textContent = String(count);
+      // The masthead's strip carries the same figure (#109); the live Later block has no cell.
+      const cell = document.querySelector(`.tallystrip a[href="#${block.id}"]`);
+      if (cell) {
+        cell.querySelector("b").textContent = String(count);
+        cell.parentElement.classList.toggle("is-zero", count === 0);
+      }
       if (block.classList.contains("later-live")) block.hidden = count === 0;
     }
     function laterBlock() {
@@ -1534,7 +1538,7 @@ OVERVIEW_CSS = """
 .about[open]>summary{margin-bottom:.6rem}
 .about .claim+.claim{margin-top:.6rem}
 .tallystrip a{color:inherit;text-decoration:none}
-.tallystrip li.is-zero{opacity:.55}
+.tallystrip li.is-zero b{color:var(--ink-soft)}
 .register:has(>.empty){margin-top:1.4rem}
 .register:has(>.empty) .register-head{align-items:baseline;padding-bottom:.45rem;
   border-bottom-color:var(--rule)}
@@ -1678,9 +1682,7 @@ def _clock(
     """The page's clock, its arguments checked before anything is rendered."""
     limit = DFLT_STALE_AFTER if stale_after is None else stale_after
     if not isinstance(limit, timedelta) or limit <= timedelta(0):
-        raise ValueError(
-            f"stale_after must be a positive timedelta, not {stale_after!r}"
-        )
+        raise ValueError(f"stale_after must be a positive timedelta, not {stale_after!r}")
     return _Clock(_epoch(made_at), _zone(tz), limit.total_seconds())
 
 
@@ -1718,9 +1720,7 @@ def _said_of(row: Mapping[str, Any]) -> tuple[str, str]:
     return str(row.get("said_at") or ""), str(row.get("said_at_basis") or "")
 
 
-def _when(
-    row: Mapping[str, Any], clock: _Clock
-) -> tuple[float, date | None, str] | None:
+def _when(row: Mapping[str, Any], clock: _Clock) -> tuple[float, date | None, str] | None:
     """When the row's item was said: ``(epoch, day, basis)``, where ``day`` is the bare
     date when only a day is known; ``None`` when unknown. :func:`crowsnest.said.when_said`
     decides. A bare date's staleness is therefore the same in every zone, and a time
@@ -1781,9 +1781,7 @@ def _when_line(row: Mapping[str, Any], clock: _Clock) -> str:
         local = clock.local(epoch)
         same_day = local.date() == clock.local(clock.now).date()
         shown = local.strftime("%H:%M" if same_day else "%Y-%m-%d %H:%M")
-        machine = datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat(
-            "T", "seconds"
-        )
+        machine = datetime.fromtimestamp(epoch, tz=timezone.utc).isoformat("T", "seconds")
         figure, unit = _since(clock.now - epoch)
         ago = f"{figure} {unit} ago"
     else:
@@ -1792,9 +1790,7 @@ def _when_line(row: Mapping[str, Any], clock: _Clock) -> str:
         ago = f"{days} d ago" if days else "today"
     parts = [f'<time datetime="{machine}">{shown}</time>', ago]
     if basis == _said.LEDGER_WRITTEN:
-        parts.append(
-            "undated: when the ledger was last written, the words may be older"
-        )
+        parts.append("undated: when the ledger was last written, the words may be older")
     if clock.now - epoch > clock.stale_after:
         limit = _exactly(clock.stale_after)
         parts.append(f'<strong class="stale">stale: older than {limit}</strong>')
@@ -1839,7 +1835,9 @@ def _rail(
 
 
 #: The console's *Seen above*: every unseen row before it is marked seen (#56).
-_SEEN_ABOVE = '<button type="button" class="seen-above" data-seen-above hidden>Seen above</button>'
+_SEEN_ABOVE = (
+    '<button type="button" class="seen-above" data-seen-above hidden>Seen above</button>'
+)
 
 
 def _register(
@@ -2086,9 +2084,7 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     if not anchors:
         return ""
     shown, more = anchors[:SHOWN_REFS], anchors[SHOWN_REFS:]
-    head = (
-        '<p class="where">refs <span class="sep">·</span> ' + " ".join(shown) + "</p>"
-    )
+    head = '<p class="where">refs <span class="sep">·</span> ' + " ".join(shown) + "</p>"
     if not more:
         return head
     # The rest are one tap away, never gone: a row with twelve references is a wall of
@@ -2179,9 +2175,7 @@ def _item_attrs(safe: _Sanitizer, attended: _Attended | None) -> str:
     if attended.shown:
         attrs += f' data-shown="{_html.escape(attended.shown, quote=True)}"'
     if attended.record is not None and attended.record.updated_at:
-        attrs += (
-            f' data-updated="{_html.escape(attended.record.updated_at, quote=True)}"'
-        )
+        attrs += f' data-updated="{_html.escape(attended.record.updated_at, quote=True)}"'
     return attrs
 
 
@@ -2625,7 +2619,9 @@ def _lineage_register(safe: _Sanitizer, found: Any) -> str:
     gone = sum(1 for row in rows if not row.alive)
     rule = "Each session under the one that started it."
     if gone:
-        rule += f" {gone} of them has exited, drawn hollow, with its children still under it."
+        rule += (
+            f" {gone} of them has exited, drawn hollow, with its children still under it."
+        )
     # The number counts what the figure *draws*. A big "15" over a picture of nine
     # connectors is the register lying about its own contents.
     return _register(
@@ -2850,31 +2846,27 @@ def _record_or_none(item: str, store: Mapping[str, dict]) -> _attention.Record |
         return None
 
 
-def _unseen_first(rows: Sequence[Mapping[str, Any]], view: _View) -> list:
+def _unseen_first(rows: Sequence[Mapping[str, Any]], view: _View, clock: _Clock) -> list:
     """``rows`` with the seen ones moved below the rest; within each half, a session that
     is waiting right now (the registry's live signal) before one that only wrote that it
     needs someone, and then the most recently said first (#109).
 
-    The time is the row's own (:func:`_said_of`, the one the row prints) and sorts as
-    text: ISO dates and datetimes order correctly together, and a row with none goes
-    last. The sort is stable, so equal rows keep the roster's order.
+    The time is the one the row prints (:func:`_when`: the row's own words, a bare date
+    counted from its midnight, a future or unparsable time unknown), so the order and the
+    rail's figure never disagree. Unknown sorts last. The sort is stable, so equal rows
+    keep the roster's order.
     """
 
     def key(row: Mapping[str, Any]) -> tuple:
-        said_at, _ = _said_of(row)
+        when = _when(row, clock)
         return (
             view.shown(row) == _attention.SEEN,
             row.get("status") != "waiting",
-            not said_at,  # a missing time sorts after any time
-            _descending(said_at),
+            when is None,
+            -when[0] if when else 0.0,
         )
 
     return sorted(rows, key=key)
-
-
-def _descending(text: str) -> tuple[int, ...]:
-    """A sort key that orders ``text`` from latest to earliest (negated code points)."""
-    return tuple(-ord(c) for c in text)
 
 
 def _landed(row: Mapping[str, Any]) -> bool:
@@ -3375,9 +3367,10 @@ def _render(
     quiet = unclaimed(list(shown))  # everything no register above took
 
     # Seen rows sort below the unseen ones of their register (triage-ux 2.10); the
-    # register order itself never changes. An empty store sees nothing, so nothing moves.
+    # register order itself never changes. An empty store sees nothing, so only the
+    # live signal and the rows' own times decide the order (#109).
     needs_you, clear, waiting, busy, finished, quiet = (
-        _unseen_first(rows, view)
+        _unseen_first(rows, view, clock)
         for rows in (needs_you, clear, waiting, busy, finished, quiet)
     )
     waiting_on_you = len(needs_you) + sum(
@@ -3491,9 +3484,7 @@ def _render(
     unread = sum(
         1 for s in (needs_you if triaged else waiting) if view.shown(s) in _UNREAD
     )
-    title_tag = (
-        f"<title>{safe.text(f'{title} ({unread})' if unread else title)}</title>"
-    )
+    title_tag = f"<title>{safe.text(f'{title} ({unread})' if unread else title)}</title>"
     # One <style>, not two: the figure's rules belong with the page's rules, and the
     # interactive mode's own block is the only thing that earns a second tag.
     attention_css = ATTENTION_CSS if view.on else ""

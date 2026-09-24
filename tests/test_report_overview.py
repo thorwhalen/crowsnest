@@ -11,15 +11,13 @@ from __future__ import annotations
 import re
 from datetime import datetime
 
-from crowsnest.report import OVERVIEW_CSS, SHOWN_REFS, render_report
+from crowsnest.report import SHOWN_REFS, WHEN_CSS, render_report
 
 STAMP = "2026-02-01T12:00:00Z"
 
 
 def since(seconds_ago: float) -> float:
-    return (
-        datetime.fromisoformat(STAMP.replace("Z", "+00:00")).timestamp() - seconds_ago
-    )
+    return datetime.fromisoformat(STAMP.replace("Z", "+00:00")).timestamp() - seconds_ago
 
 
 def row(*, label="fixer", project="demo", status="idle", status_since=None, **extra):
@@ -100,9 +98,7 @@ def test_without_verdicts_the_strip_counts_waiting_instead_of_the_triage_registe
 
 def test_the_caveats_fold_but_stay_on_the_page():
     head = masthead(page())
-    fold = re.search(r'<details class="about">(.*?)</details>', head, re.DOTALL).group(
-        1
-    )
+    fold = re.search(r'<details class="about">(.*?)</details>', head, re.DOTALL).group(1)
     assert fold.startswith("<summary>How to read this page</summary>")
     assert "Every session below was alive at that moment" in fold
     assert "Times on the rows are in" in fold
@@ -114,7 +110,7 @@ def test_the_caveats_fold_but_stay_on_the_page():
 
 
 def test_the_stale_word_is_set_quietly():
-    rule = re.search(r"\.when \.stale\{([^}]*)\}", OVERVIEW_CSS + page()).group(1)
+    rule = re.search(r"\.when \.stale\{([^}]*)\}", WHEN_CSS).group(1)
     assert "var(--ink-soft)" in rule and "var(--needs)" not in rule
     assert "font-weight:400" in rule
 
@@ -156,15 +152,19 @@ def test_an_empty_register_is_drawn_as_one_line_by_style_alone():
 # 3. Order within a register -----------------------------------------------------------
 
 
-def test_the_live_signal_first_then_the_freshest_words_then_the_undated():
+def test_the_live_signal_first_then_the_freshest_words_then_the_unknown():
     html = page(
         needs("old", "2026-01-30T12:00:00+00:00"),
         needs("undated", None),
+        needs("future", "2026-03-01"),  # a plan or a deadline: unknown, not freshest
+        needs("day", "2026-01-31"),  # a bare date counts from its midnight: 1 d
         needs("new", "2026-02-01T11:30:00+00:00"),
+        needs("eve", "2026-01-31T23:00:00+00:00"),  # 13 h: fresher than the bare date
         needs("live", "2026-01-31T12:00:00+00:00", status="waiting", waiting_for="go?"),
     )
-    order = [html.index(f'id="session-{n}"') for n in ("live", "new", "old", "undated")]
-    assert order == sorted(order)
+    names = ("live", "new", "eve", "day", "old", "undated", "future")
+    order = [html.index(f'id="session-{n}"') for n in names]
+    assert order == sorted(order), names
 
 
 # 4. A day-dated item from today ---------------------------------------------------------
