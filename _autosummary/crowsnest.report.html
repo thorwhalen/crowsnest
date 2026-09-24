@@ -405,9 +405,10 @@ carries no script at all, unless <code class="docutils literal notranslate"><spa
 opens in a browser: it routes each <code class="docutils literal notranslate"><span class="pre">open</span></code> by the account’s browser the reader chose
 (kept in that browser’s <code class="docutils literal notranslate"><span class="pre">localStorage</span></code>), and a session without a link gets a button
 that copies its <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">open</span></code> command and says what to do with it. An interactive
-page does not carry it: the console’s one script keeps nothing in the browser (its
-record is the page’s <code class="docutils literal notranslate"><span class="pre">db</span></code>), and the helper’s choices live in <code class="docutils literal notranslate"><span class="pre">localStorage</span></code>. Every
-link opens in a new tab either way.</p>
+page always carries it, inside its one script. The console’s own code keeps nothing in
+the browser (its record is the page’s <code class="docutils literal notranslate"><span class="pre">db</span></code>); only the helper touches
+<code class="docutils literal notranslate"><span class="pre">localStorage</span></code>, for the reader’s own choices. Every link opens in a new tab either
+way.</p>
 <p><code class="docutils literal notranslate"><span class="pre">fragment=True</span></code> returns the page the way a host that wraps it in its own document
 wants it – the claude.ai artifact publisher does: the <code class="docutils literal notranslate"><span class="pre">&lt;title&gt;</span></code>, then the
 <code class="docutils literal notranslate"><span class="pre">&lt;style&gt;</span></code>, then the body’s content, with no doctype, <code class="docutils literal notranslate"><span class="pre">&lt;html&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;head&gt;</span></code> or
@@ -496,7 +497,7 @@ is still taken from the whole row, because that is the row the verbs pin.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=c3e19674"></script>
+      <script src="../_static/documentation_options.js?v=6799126d"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

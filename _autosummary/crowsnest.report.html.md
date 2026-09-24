@@ -219,9 +219,10 @@ carries no script at all, unless `open_helper=True`.
 opens in a browser: it routes each `open` by the account’s browser the reader chose
 (kept in that browser’s `localStorage`), and a session without a link gets a button
 that copies its `crowsnest open` command and says what to do with it. An interactive
-page does not carry it: the console’s one script keeps nothing in the browser (its
-record is the page’s `db`), and the helper’s choices live in `localStorage`. Every
-link opens in a new tab either way.
+page always carries it, inside its one script. The console’s own code keeps nothing in
+the browser (its record is the page’s `db`); only the helper touches
+`localStorage`, for the reader’s own choices. Every link opens in a new tab either
+way.
 
 `fragment=True` returns the page the way a host that wraps it in its own document
 wants it – the claude.ai artifact publisher does: the `<title>`, then the
