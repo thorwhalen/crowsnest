@@ -70,10 +70,10 @@ def test_the_helper_marks_links_by_home_and_turns_the_command_into_a_button():
     assert '<code class="way-in">' not in html
 
 
-def test_an_interactive_page_keeps_its_one_script_and_does_not_carry_the_helper():
-    html = _page(_row("bare"), interactive=True, open_helper=True)
+def test_an_interactive_page_carries_the_helper_inside_its_one_script():
+    html = _page(_row("bare", home="side"), interactive=True)
     assert html.count("<script") == 1
-    assert "crowsnest.open.v1" not in html and "way-reach" not in html
+    assert "crowsnest.open.v1" in html and 'data-way="reach"' in html
 
 
 def test_the_helper_reaches_nowhere_and_names_no_one():
