@@ -45,6 +45,7 @@ __all__ = [
     "lineage",
     "live",
     "note",
+    "publish",
     "recap",
     "repo_url",
     "report",
