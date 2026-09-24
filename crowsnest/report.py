@@ -107,7 +107,7 @@ _interactive: contextvars.ContextVar[bool] = contextvars.ContextVar(
 )
 
 #: Whether the page carries the open helper (:data:`OPEN_SCRIPT`) for one
-#: :func:`render_report` call: ``open_helper=True`` on a page that is not interactive. The
+#: :func:`render_report` call: ``open_helper=True``, or an interactive page. The
 #: session links and the reach buttons carry the data attributes it reads only when it is.
 _open_helper: contextvars.ContextVar[bool] = contextvars.ContextVar(
     "crowsnest_report_open_helper", default=False
@@ -3145,9 +3145,10 @@ def render_report(
     opens in a browser: it routes each ``open`` by the account's browser the reader chose
     (kept in that browser's ``localStorage``), and a session without a link gets a button
     that copies its ``crowsnest open`` command and says what to do with it. An interactive
-    page does not carry it: the console's one script keeps nothing in the browser (its
-    record is the page's ``db``), and the helper's choices live in ``localStorage``. Every
-    link opens in a new tab either way.
+    page always carries it, inside its one script. The console's own code keeps nothing in
+    the browser (its record is the page's ``db``); only the helper touches
+    ``localStorage``, for the reader's own choices. Every link opens in a new tab either
+    way.
 
     ``fragment=True`` returns the page the way a host that wraps it in its own document
     wants it -- the claude.ai artifact publisher does: the ``<title>``, then the
@@ -3201,7 +3202,7 @@ def render_report(
     settings = replace(settings, stale_after=stale_after)
     sessions = list(roster.get("sessions") or [])
     token = _interactive.set(interactive)
-    helper_token = _open_helper.set(open_helper and not interactive)
+    helper_token = _open_helper.set(open_helper or interactive)
     links_token = _links_shown.set(links)
     try:
         view = _attention_view(
@@ -3411,7 +3412,7 @@ def _render(
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
     if _interactive.get():
-        body += f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{CONSOLE_SCRIPT}</script>"
+        body += f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{CONSOLE_SCRIPT}{OPEN_SCRIPT}</script>"
     elif _open_helper.get():
         body += f"<script>{OPEN_SCRIPT}</script>"
     if fragment:

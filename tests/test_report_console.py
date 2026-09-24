@@ -22,6 +22,7 @@ from crowsnest.report import (
     CONSOLE_SCRIPT,
     CONSOLE_TICK_SECONDS,
     LATER_PRESETS,
+    OPEN_SCRIPT,
     TOAST_SECONDS,
     render_report,
 )
@@ -239,12 +240,16 @@ def test_the_interactive_page_still_carries_one_script_that_reaches_nowhere():
         "XMLHttpRequest",
         "WebSocket",
         "import(",
-        "localStorage",
         "src=",
         "@import",
         "innerHTML",
     ):
         assert forbidden not in script, forbidden
+    # The console's own data code keeps nothing in the browser: its record is the page's
+    # `db`. Only the open helper, appended last, touches storage, for the reader's own
+    # choices of where each account's sessions open (crowsnest#104).
+    assert script.endswith(OPEN_SCRIPT)
+    assert "localStorage" not in script[: -len(OPEN_SCRIPT)]
 
 
 def test_an_empty_store_keeps_the_static_pages_attention_markup_off_the_console():

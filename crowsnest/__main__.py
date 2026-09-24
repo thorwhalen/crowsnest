@@ -473,7 +473,7 @@ def report(
     open in a browser: set which browser each account is signed in to ("Where sessions
     open", at the foot; kept in that browser) and a session of another account has its
     link copied for you to paste there; a session with no link gets a button that copies
-    its `crowsnest open` command. `crowsnest publish` always adds it.
+    its `crowsnest open` command. `crowsnest publish` and `--interactive` always add it.
     """
     result = tools.report(
         home=home,
