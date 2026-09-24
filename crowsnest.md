@@ -1,4 +1,4 @@
-> built 2026-09-22 13:27 UTC from 36a39eb (main) · crowsnest 0.0.56. Details: build_info.json
+> built 2026-09-24 05:20 UTC from bfb57e0 (main) · crowsnest 0.0.57. Details: build_info.json
 
 # index.html.md
 
@@ -69,6 +69,7 @@ crowsnest report [--out FILE]      the roster as one phone-readable HTML page, n
                                    (--fragment: without the document wrapper, for publishing as an artifact;
                                     --interactive: buttons per row and a Refresh, live when published with the db capability;
                                     --plain: ignore what you marked with seen/later/done/note, for a copy to share)
+crowsnest publish [--to DEST]      render that page and send it where you read it: a path, host:path, or [publish] in the config
 crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
 crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
 crowsnest note|undo <session>      a note to yourself; one step back
@@ -259,6 +260,27 @@ Anything at all. Nothing in crowsnest ever rewrites this part.
 ```
 
 `last asked` and `last said` are mechanical — the `Stop` hook below writes them from the transcript tail, so they are true without anyone deciding anything. `state`, `open questions` and `decisions` are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.
+
+## A page that stays fresh without a session
+
+The artifact console needs a Claude session awake to courier it. For a page that is simply always current, render and send it on a schedule instead: `crowsnest publish` does both, and cron, launchd or a systemd timer runs it.
+
+Where it goes is yours to say, once, in `~/.config/crowsnest/config.toml`:
+
+```toml
+[publish]
+to = "~/Sync/crowsnest/index.html"            # a local path, e.g. a synced folder: written atomically
+# to = "me@myserver:/srv/crowsnest/index.html"  # host:path: rsync over ssh, never prompting
+# command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]   # any other route
+```
+
+`--to` on the command line overrides it. Then, for instance with cron, every minute:
+
+```default
+* * * * *  crowsnest publish --all-homes
+```
+
+The page names your sessions and quotes what they said (sanitised, as every page is), so send it somewhere only you can open: behind your own login, in a private folder, never a public bucket. The last page sent is also kept locally, under crowsnest’s data directory in `publish/index.html`.
 
 ## Being told instead of polling
 
@@ -1415,6 +1437,9 @@ all three build a row the same way without a flag each ([`crowsnest.rows`](_auto
 ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
 ```
 
+The `[publish]` table ([`publish_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)) says where `crowsnest publish` sends
+the page: `to` (a local path or a `host:path`) or `command` ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).
+
 On Windows write paths in single quotes (`path = 'C:\Users\me\.claude'`): a TOML
 double-quoted string treats a backslash as an escape.
 
@@ -1436,6 +1461,7 @@ and nothing in this module pretends otherwise.
 | [`DFLT_FRESH_SECONDS`](_autosummary/crowsnest.config.html.md#crowsnest.config.DFLT_FRESH_SECONDS) | How recently a remote home's registry record must have changed to count as live. |
 | [`ATTENTION_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.ATTENTION_KEY)      | The config table holding the attention settings.                                 |
 | [`REPORT_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.REPORT_KEY)         | The config table saying how the report's rows are built.                         |
+| [`PUBLISH_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.PUBLISH_KEY)        | The config table saying where `crowsnest publish` sends the page.                |
 
 ### Functions
 
@@ -1445,6 +1471,7 @@ and nothing in this module pretends otherwise.
 | [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
 | [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
 | [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
+| [`publish_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)(\*[, path])     | The config file's `[publish]` table, or the defaults when it has none.           |
 | [`report_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)(\*[, path])      | The config file's `[report]` table, or the defaults when it has none.            |
 
 ### Classes
@@ -1452,6 +1479,7 @@ and nothing in this module pretends otherwise.
 | [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                                                                                                                                                                                        |
 |--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
+| [`PublishSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.PublishSettings)([to, command])            | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
 | [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)([ledger_dir])              | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
@@ -1491,6 +1519,23 @@ How recently a remote home’s registry record must have changed to count as liv
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One Claude Code config directory to read, and how to judge liveness in it.
+
+### crowsnest.config.PUBLISH_KEY *= 'publish'*
+
+The config table saying where `crowsnest publish` sends the page.
+
+### *class* crowsnest.config.PublishSettings(to='', command=())
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).
+
+At most one of `to` and `command`. Neither is fine until something publishes.
+
+```pycon
+>>> PublishSettings().to, PublishSettings().command
+('', ())
+```
 
 ### crowsnest.config.REPORT_KEY *= 'report'*
 
@@ -1567,6 +1612,22 @@ a person who wrote one meant it.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)]
+
+### crowsnest.config.publish_settings(, path=None)
+
+The config file’s `[publish]` table, or the defaults when it has none.
+
+```toml
+[publish]
+to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
+# command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]
+```
+
+A key the table does not know is an error, as in `[attention]`, and so is giving
+both: which one wins would be a guess.
+
+* **Return type:**
+  [`PublishSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.PublishSettings)
 
 ### crowsnest.config.report_settings(, path=None)
 
@@ -2151,6 +2212,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`live`](_autosummary/crowsnest.live.html.md#module-crowsnest.live)           | What a published page may know about the sessions *now*: one small document, and a recap.             |
 | [`open`](_autosummary/crowsnest.open.html.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                   |
 | [`paths`](_autosummary/crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
+| [`publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.      |
 | [`registry`](_autosummary/crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
 | [`report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
 | [`rows`](_autosummary/crowsnest.rows.html.md#module-crowsnest.rows)           | How an item's row is built and hashed: one value, taken whole by every surface that pins it.          |
@@ -3570,6 +3632,135 @@ Returns the path without creating it; the writer that needs it creates it.
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 
+# _autosummary/crowsnest.publish.html.md
+
+# crowsnest.publish
+
+Deliver the report page to a place its owner can open from anywhere – by their route, not ours.
+
+crowsnest renders the page; where it goes differs from one person to the next: a synced
+folder, a server behind a login, a bucket. So delivering it takes a *destination* and a
+*publisher*, and the destination lives in the person’s config file, never in this code.
+
+```toml
+# ~/.config/crowsnest/config.toml
+[publish]
+to = "~/Sync/crowsnest/index.html"          # a local path: written atomically
+
+# or: a host:path, sent with rsync over ssh, never prompting
+# to = "me@myserver:/srv/crowsnest/index.html"
+
+# or: any command, run without a shell; {page} is the rendered file
+# command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]
+```
+
+Run `crowsnest publish` from cron, launchd or a systemd timer and the page stays as
+fresh as that schedule, with no session awake to tick it. \*\*The page names your sessions
+and quotes what they said\*\* (sanitised as every page is), so publish it only where you
+alone can read it.
+
+A publisher is a callable `(page, to) -> str`: it delivers the file `page` to `to`
+and says in one line where it went. [`dflt_publisher()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.dflt_publisher) picks one by the shape of
+`to`; `publisher=` on [`crowsnest.tools.publish()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.publish) replaces it.
+
+### Module Attributes
+
+| [`Publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.Publisher)        | deliver `page` to `to`, say where it went.                                    |
+|-------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER) | The placeholder a `command` publisher replaces with the rendered page's path. |
+| [`DFLT_PAGE_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_PAGE_NAME)   | The file name a destination that is a directory receives.                     |
+| [`DFLT_TIMEOUT`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_TIMEOUT)     | Seconds rsync may stall, and ssh may take to connect, before a run gives up.  |
+
+### Functions
+
+| [`command_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.command_publisher)(argv)                  | A publisher running `argv`, with [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER) replaced by the page.        |
+|-------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| [`dflt_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.dflt_publisher)(to)                       | rsync over ssh for a `[user@]host:path`, an atomic local write for anything else.                                               |
+| [`is_remote`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.is_remote)(to)                            | Whether `to` names a file on another machine (`[user@]host:path`).                                                              |
+| [`rsync_argv`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.rsync_argv)(page, to, \*[, timeout, ...]) | The rsync command [`to_rsync()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input. |
+| [`to_path`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_path)(page, to)                        | Copy `page` to the local path `to`, atomically: a reader never sees half a page.                                                |
+| [`to_rsync`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync)(page, to)                       | Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.                                                          |
+
+### crowsnest.publish.DFLT_PAGE_NAME *= 'index.html'*
+
+The file name a destination that is a directory receives.
+
+### crowsnest.publish.DFLT_TIMEOUT *= 20*
+
+Seconds rsync may stall, and ssh may take to connect, before a run gives up. A
+scheduled publish that hangs would pile up behind itself.
+
+### crowsnest.publish.PAGE_PLACEHOLDER *= '{page}'*
+
+The placeholder a `command` publisher replaces with the rendered page’s path.
+
+### crowsnest.publish.Publisher
+
+deliver `page` to `to`, say where it went.
+
+* **Type:**
+  `(page, to) -> str`
+
+alias of [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.command_publisher(argv)
+
+A publisher running `argv`, with [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER) replaced by the page.
+
+Run without a shell, so nothing in the page’s path is interpreted. `to` is ignored:
+the command says where the page goes.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.dflt_publisher(to)
+
+rsync over ssh for a `[user@]host:path`, an atomic local write for anything else.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.is_remote(to)
+
+Whether `to` names a file on another machine (`[user@]host:path`).
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+```pycon
+>>> is_remote("me@box:/srv/page.html"), is_remote("box:page.html")
+(True, True)
+>>> is_remote("~/Sync/page.html"), is_remote("C:/page.html"), is_remote("./a:b")
+(False, False, False)
+```
+
+### crowsnest.publish.rsync_argv(page, to, , timeout=20, connect_timeout=10)
+
+The rsync command [`to_rsync()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input.
+
+`BatchMode` makes ssh fail rather than prompt, which is what a job with no terminal
+needs: a prompt nobody can answer is a run that never ends.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.to_path(page, to)
+
+Copy `page` to the local path `to`, atomically: a reader never sees half a page.
+
+A `to` that is a directory, or ends with a slash, gets [`DFLT_PAGE_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_PAGE_NAME) in it.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.publish.to_rsync(page, to)
+
+Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+
 # _autosummary/crowsnest.registry.html.md
 
 # crowsnest.registry
@@ -4423,6 +4614,7 @@ here prints, exits, or knows which surface called it.
 | [`lineage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
 | [`live`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.live)(\*[, home, all_homes, config, activity, ...]) | What every live session is doing now, as the page's `live/roster` document.                                                                                                                                                               |
 | [`note`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
+| [`publish`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.publish)(\*[, to, command, publisher, home, ...])   | Render the report as a whole page and deliver it where its owner reads it.                                                                                                                                                                |
 | [`recap`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.recap)(session, \*[, home, all_homes, config, ...]) | Five lines about one live session, read from disk: the answer to a `recap` intent.                                                                                                                                                        |
 | [`repo_url`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. |
@@ -4554,6 +4746,24 @@ read, so the document never claims to be fresher than what it holds.
 
 Set the note on `session`’s item; empty text removes it. Nothing reads a note as an
 instruction.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None)
+
+Render the report as a whole page and deliver it where its owner reads it.
+
+The destination is `to` (a local path, or `[user@]host:path` sent by rsync over
+ssh) or `command` (argv with `{page}` for the rendered file); without either, the
+config file’s `[publish]` table ([`crowsnest.config.publish_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)).
+`publisher` replaces the delivery: a callable `(page, to) -> str`
+([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)). The page is the static one – no console, whose buttons
+need the claude.ai viewer’s `db` – so run this on a schedule for a page that stays
+fresh with nothing awake but the scheduler.
+
+The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
+so the last one sent can be looked at locally.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -5485,7 +5695,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-22 13:27 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/36a39eb29b4a90542ede839b821c6eeb43618f8e"><code>36a39eb</code></a> on branch <code>main</code>, for **crowsnest 0.0.56** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-24 05:20 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/bfb57e04807e09df89d7e71697228834e2d5b6dc"><code>bfb57e0</code></a> on branch <code>main</code>, for **crowsnest 0.0.57** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -5494,7 +5704,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/36a39eb29b4a90542ede839b821c6eeb43618f8e"><code>36a39eb29b4a90542ede839b821c6eeb43618f8e</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/bfb57e04807e09df89d7e71697228834e2d5b6dc"><code>bfb57e04807e09df89d7e71697228834e2d5b6dc</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -5505,9 +5715,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35733227294">35733227294</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/35959356777">35959356777</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>36a39eb29b4a90542ede839b821c6eeb43618f8e</code> (in the history of the built commit) |
+| Event commit | <code>bfb57e04807e09df89d7e71697228834e2d5b6dc</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5532,13 +5742,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.56/">0.0.56</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.57/">0.0.57</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 36a39eb29b4a90542ede839b821c6eeb43618f8e
+git checkout bfb57e04807e09df89d7e71697228834e2d5b6dc
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

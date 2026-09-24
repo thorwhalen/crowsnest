@@ -391,6 +391,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`live`](crowsnest.live.html.md#module-crowsnest.live)           | What a published page may know about the sessions *now*: one small document, and a recap.             |
 | [`open`](crowsnest.open.html.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                   |
 | [`paths`](crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
+| [`publish`](crowsnest.publish.html.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.      |
 | [`registry`](crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
 | [`report`](crowsnest.report.html.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
 | [`rows`](crowsnest.rows.html.md#module-crowsnest.rows)           | How an item's row is built and hashed: one value, taken whole by every surface that pins it.          |

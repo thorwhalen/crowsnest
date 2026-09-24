@@ -20,6 +20,7 @@
 - [crowsnest.live](_autosummary/crowsnest.live.html.md): What a published page may know about the sessions &#42;now&#42;: one small document, and a recap.
 - [crowsnest.open](_autosummary/crowsnest.open.html.md): Bring a live session’s terminal to the front, or say where it runs.
 - [crowsnest.paths](_autosummary/crowsnest.paths.html.md): Where crowsnest keeps what is not code: the data directory, and nothing else.
+- [crowsnest.publish](_autosummary/crowsnest.publish.html.md): Deliver the report page to a place its owner can open from anywhere – by their route, not ours.
 - [crowsnest.registry](_autosummary/crowsnest.registry.html.md): Who is alive right now, read from the registry Claude Code keeps while a session runs.
 - [crowsnest.report](_autosummary/crowsnest.report.html.md): The live roster as one self-contained HTML page: no stylesheet, script, font, or
 - [crowsnest.rows](_autosummary/crowsnest.rows.html.md): How an item’s row is built and hashed: one value, taken whole by every surface that pins it.
@@ -30,7 +31,7 @@
 - [crowsnest.triage](_autosummary/crowsnest.triage.html.md): Which sessions need you, which are safe to close, and which are still going.
 - [crowsnest.watch](_autosummary/crowsnest.watch.html.md): A stream of what changed, so a monitor is told instead of made to poll.
 - [For AI agents](ai-agents.html.md): &#96;crowsnest&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-09-22 13:27 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-09-24 05:20 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

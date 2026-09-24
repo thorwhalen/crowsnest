@@ -23,6 +23,7 @@ here prints, exits, or knows which surface called it.
 | [`lineage`](#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
 | [`live`](#crowsnest.tools.live)(\*[, home, all_homes, config, activity, ...]) | What every live session is doing now, as the page's `live/roster` document.                                                                                                                                                               |
 | [`note`](#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
+| [`publish`](#crowsnest.tools.publish)(\*[, to, command, publisher, home, ...])   | Render the report as a whole page and deliver it where its owner reads it.                                                                                                                                                                |
 | [`recap`](#crowsnest.tools.recap)(session, \*[, home, all_homes, config, ...]) | Five lines about one live session, read from disk: the answer to a `recap` intent.                                                                                                                                                        |
 | [`repo_url`](#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](#crowsnest.tools.roster) returns. |
@@ -154,6 +155,24 @@ read, so the document never claims to be fresher than what it holds.
 
 Set the note on `session`’s item; empty text removes it. Nothing reads a note as an
 instruction.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None)
+
+Render the report as a whole page and deliver it where its owner reads it.
+
+The destination is `to` (a local path, or `[user@]host:path` sent by rsync over
+ssh) or `command` (argv with `{page}` for the rendered file); without either, the
+config file’s `[publish]` table ([`crowsnest.config.publish_settings()`](crowsnest.config.html.md#crowsnest.config.publish_settings)).
+`publisher` replaces the delivery: a callable `(page, to) -> str`
+([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)). The page is the static one – no console, whose buttons
+need the claude.ai viewer’s `db` – so run this on a schedule for a page that stays
+fresh with nothing awake but the scheduler.
+
+The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
+so the last one sent can be looked at locally.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

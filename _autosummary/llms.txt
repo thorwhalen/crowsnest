@@ -18,6 +18,7 @@
 - [crowsnest.live](crowsnest.live.html.md): What a published page may know about the sessions &#42;now&#42;: one small document, and a recap.
 - [crowsnest.open](crowsnest.open.html.md): Bring a live session’s terminal to the front, or say where it runs.
 - [crowsnest.paths](crowsnest.paths.html.md): Where crowsnest keeps what is not code: the data directory, and nothing else.
+- [crowsnest.publish](crowsnest.publish.html.md): Deliver the report page to a place its owner can open from anywhere – by their route, not ours.
 - [crowsnest.registry](crowsnest.registry.html.md): Who is alive right now, read from the registry Claude Code keeps while a session runs.
 - [crowsnest.report](crowsnest.report.html.md): The live roster as one self-contained HTML page: no stylesheet, script, font, or
 - [crowsnest.rows](crowsnest.rows.html.md): How an item’s row is built and hashed: one value, taken whole by every surface that pins it.

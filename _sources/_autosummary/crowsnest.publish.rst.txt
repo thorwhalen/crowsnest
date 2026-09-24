@@ -1,0 +1,26 @@
+crowsnest.publish
+=================
+
+.. automodule:: crowsnest.publish
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      Publisher
+      PAGE_PLACEHOLDER
+      DFLT_PAGE_NAME
+      DFLT_TIMEOUT
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      command_publisher
+      dflt_publisher
+      is_remote
+      rsync_argv
+      to_path
+      to_rsync
+   

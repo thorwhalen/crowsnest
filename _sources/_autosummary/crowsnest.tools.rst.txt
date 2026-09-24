@@ -17,6 +17,7 @@ crowsnest.tools
       lineage
       live
       note
+      publish
       recap
       repo_url
       report

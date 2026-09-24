@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.publish - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.registry" href="crowsnest.registry.html" /><link rel="prev" title="crowsnest.paths" href="crowsnest.paths.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.publish"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.publish.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.live.html">crowsnest.live</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.publish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.publish.DFLT_PAGE_NAME"><code class="docutils literal notranslate"><span class="pre">DFLT_PAGE_NAME</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.DFLT_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">DFLT_TIMEOUT</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.PAGE_PLACEHOLDER"><code class="docutils literal notranslate"><span class="pre">PAGE_PLACEHOLDER</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.Publisher"><code class="docutils literal notranslate"><span class="pre">Publisher</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.command_publisher"><code class="docutils literal notranslate"><span class="pre">command_publisher()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.dflt_publisher"><code class="docutils literal notranslate"><span class="pre">dflt_publisher()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.is_remote"><code class="docutils literal notranslate"><span class="pre">is_remote()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.rsync_argv"><code class="docutils literal notranslate"><span class="pre">rsync_argv()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.to_path"><code class="docutils literal notranslate"><span class="pre">to_path()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.to_rsync"><code class="docutils literal notranslate"><span class="pre">to_rsync()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.publish</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.publish">
+<span id="crowsnest-publish"></span><h1>crowsnest.publish<a class="headerlink" href="#module-crowsnest.publish" title="Link to this heading">#</a></h1>
+<p>Deliver the report page to a place its owner can open from anywhere – by their route, not ours.</p>
+<p>crowsnest renders the page; where it goes differs from one person to the next: a synced
+folder, a server behind a login, a bucket. So delivering it takes a <em>destination</em> and a
+<em>publisher</em>, and the destination lives in the person’s config file, never in this code.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># ~/.config/crowsnest/config.toml</span>
+</span><span data-line="2"><span class="k">[publish]</span>
+</span><span data-line="3"><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/Sync/crowsnest/index.html"</span><span class="w">          </span><span class="c1"># a local path: written atomically</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># or: a host:path, sent with rsync over ssh, never prompting</span>
+</span><span data-line="6"><span class="c1"># to = "me@myserver:/srv/crowsnest/index.html"</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># or: any command, run without a shell; {page} is the rendered file</span>
+</span><span data-line="9"><span class="c1"># command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]</span>
+</span></pre></div>
+</div>
+<p>Run <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">publish</span></code> from cron, launchd or a systemd timer and the page stays as
+fresh as that schedule, with no session awake to tick it. **The page names your sessions
+and quotes what they said** (sanitised as every page is), so publish it only where you
+alone can read it.</p>
+<p>A publisher is a callable <code class="docutils literal notranslate"><span class="pre">(page,</span> <span class="pre">to)</span> <span class="pre">-&gt;</span> <span class="pre">str</span></code>: it delivers the file <code class="docutils literal notranslate"><span class="pre">page</span></code> to <code class="docutils literal notranslate"><span class="pre">to</span></code>
+and says in one line where it went. <a class="reference internal" href="#crowsnest.publish.dflt_publisher" title="crowsnest.publish.dflt_publisher"><code class="xref py py-func docutils literal notranslate"><span class="pre">dflt_publisher()</span></code></a> picks one by the shape of
+<code class="docutils literal notranslate"><span class="pre">to</span></code>; <code class="docutils literal notranslate"><span class="pre">publisher=</span></code> on <a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.publish" title="crowsnest.tools.publish"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.publish()</span></code></a> replaces it.</p>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.Publisher" title="crowsnest.publish.Publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Publisher</span></code></a></p></td>
+<td><p>deliver <code class="docutils literal notranslate"><span class="pre">page</span></code> to <code class="docutils literal notranslate"><span class="pre">to</span></code>, say where it went.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.PAGE_PLACEHOLDER" title="crowsnest.publish.PAGE_PLACEHOLDER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PAGE_PLACEHOLDER</span></code></a></p></td>
+<td><p>The placeholder a <code class="docutils literal notranslate"><span class="pre">command</span></code> publisher replaces with the rendered page's path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.DFLT_PAGE_NAME" title="crowsnest.publish.DFLT_PAGE_NAME"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_PAGE_NAME</span></code></a></p></td>
+<td><p>The file name a destination that is a directory receives.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.DFLT_TIMEOUT" title="crowsnest.publish.DFLT_TIMEOUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_TIMEOUT</span></code></a></p></td>
+<td><p>Seconds rsync may stall, and ssh may take to connect, before a run gives up.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.command_publisher" title="crowsnest.publish.command_publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">command_publisher</span></code></a>(argv)</p></td>
+<td><p>A publisher running <code class="docutils literal notranslate"><span class="pre">argv</span></code>, with <a class="reference internal" href="#crowsnest.publish.PAGE_PLACEHOLDER" title="crowsnest.publish.PAGE_PLACEHOLDER"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAGE_PLACEHOLDER</span></code></a> replaced by the page.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.dflt_publisher" title="crowsnest.publish.dflt_publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_publisher</span></code></a>(to)</p></td>
+<td><p>rsync over ssh for a <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>, an atomic local write for anything else.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.is_remote" title="crowsnest.publish.is_remote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_remote</span></code></a>(to)</p></td>
+<td><p>Whether <code class="docutils literal notranslate"><span class="pre">to</span></code> names a file on another machine (<code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.rsync_argv" title="crowsnest.publish.rsync_argv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsync_argv</span></code></a>(page, to, *[, timeout, ...])</p></td>
+<td><p>The rsync command <a class="reference internal" href="#crowsnest.publish.to_rsync" title="crowsnest.publish.to_rsync"><code class="xref py py-func docutils literal notranslate"><span class="pre">to_rsync()</span></code></a> runs: quiet, bounded, and never asking for input.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.to_path" title="crowsnest.publish.to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_path</span></code></a>(page, to)</p></td>
+<td><p>Copy <code class="docutils literal notranslate"><span class="pre">page</span></code> to the local path <code class="docutils literal notranslate"><span class="pre">to</span></code>, atomically: a reader never sees half a page.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.to_rsync" title="crowsnest.publish.to_rsync"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_rsync</span></code></a>(page, to)</p></td>
+<td><p>Send <code class="docutils literal notranslate"><span class="pre">page</span></code> to the remote <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code> <code class="docutils literal notranslate"><span class="pre">to</span></code> with rsync over ssh.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.DFLT_PAGE_NAME">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">DFLT_PAGE_NAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'index.html'</span></span><a class="headerlink" href="#crowsnest.publish.DFLT_PAGE_NAME" title="Link to this definition">#</a></dt>
+<dd><p>The file name a destination that is a directory receives.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.DFLT_TIMEOUT">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">DFLT_TIMEOUT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">20</span></span><a class="headerlink" href="#crowsnest.publish.DFLT_TIMEOUT" title="Link to this definition">#</a></dt>
+<dd><p>Seconds rsync may stall, and ssh may take to connect, before a run gives up. A
+scheduled publish that hangs would pile up behind itself.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.PAGE_PLACEHOLDER">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">PAGE_PLACEHOLDER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'{page}'</span></span><a class="headerlink" href="#crowsnest.publish.PAGE_PLACEHOLDER" title="Link to this definition">#</a></dt>
+<dd><p>The placeholder a <code class="docutils literal notranslate"><span class="pre">command</span></code> publisher replaces with the rendered page’s path.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.Publisher">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">Publisher</span></span><a class="headerlink" href="#crowsnest.publish.Publisher" title="Link to this definition">#</a></dt>
+<dd><p>deliver <code class="docutils literal notranslate"><span class="pre">page</span></code> to <code class="docutils literal notranslate"><span class="pre">to</span></code>, say where it went.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">(page,</span> <span class="pre">to)</span> <span class="pre">-&gt;</span> <span class="pre">str</span></code></p>
+</dd>
+</dl>
+<p>alias of <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.command_publisher">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">command_publisher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argv</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#command_publisher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.command_publisher" title="Link to this definition">#</a></dt>
+<dd><p>A publisher running <code class="docutils literal notranslate"><span class="pre">argv</span></code>, with <a class="reference internal" href="#crowsnest.publish.PAGE_PLACEHOLDER" title="crowsnest.publish.PAGE_PLACEHOLDER"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAGE_PLACEHOLDER</span></code></a> replaced by the page.</p>
+<p>Run without a shell, so nothing in the page’s path is interpreted. <code class="docutils literal notranslate"><span class="pre">to</span></code> is ignored:
+the command says where the page goes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.dflt_publisher">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">dflt_publisher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#dflt_publisher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.dflt_publisher" title="Link to this definition">#</a></dt>
+<dd><p>rsync over ssh for a <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>, an atomic local write for anything else.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.is_remote">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">is_remote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#is_remote"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.is_remote" title="Link to this definition">#</a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">to</span></code> names a file on another machine (<code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">is_remote</span><span class="p">(</span><span class="s2">"me@box:/srv/page.html"</span><span class="p">),</span> <span class="n">is_remote</span><span class="p">(</span><span class="s2">"box:page.html"</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">(True, True)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">is_remote</span><span class="p">(</span><span class="s2">"~/Sync/page.html"</span><span class="p">),</span> <span class="n">is_remote</span><span class="p">(</span><span class="s2">"C:/page.html"</span><span class="p">),</span> <span class="n">is_remote</span><span class="p">(</span><span class="s2">"./a:b"</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">(False, False, False)</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.rsync_argv">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">rsync_argv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#rsync_argv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.rsync_argv" title="Link to this definition">#</a></dt>
+<dd><p>The rsync command <a class="reference internal" href="#crowsnest.publish.to_rsync" title="crowsnest.publish.to_rsync"><code class="xref py py-func docutils literal notranslate"><span class="pre">to_rsync()</span></code></a> runs: quiet, bounded, and never asking for input.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BatchMode</span></code> makes ssh fail rather than prompt, which is what a job with no terminal
+needs: a prompt nobody can answer is a run that never ends.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.to_path">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">to_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#to_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.to_path" title="Link to this definition">#</a></dt>
+<dd><p>Copy <code class="docutils literal notranslate"><span class="pre">page</span></code> to the local path <code class="docutils literal notranslate"><span class="pre">to</span></code>, atomically: a reader never sees half a page.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">to</span></code> that is a directory, or ends with a slash, gets <a class="reference internal" href="#crowsnest.publish.DFLT_PAGE_NAME" title="crowsnest.publish.DFLT_PAGE_NAME"><code class="xref py py-data docutils literal notranslate"><span class="pre">DFLT_PAGE_NAME</span></code></a> in it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.to_rsync">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">to_rsync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#to_rsync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.to_rsync" title="Link to this definition">#</a></dt>
+<dd><p>Send <code class="docutils literal notranslate"><span class="pre">page</span></code> to the remote <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code> <code class="docutils literal notranslate"><span class="pre">to</span></code> with rsync over ssh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.paths.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.paths</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.registry.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.registry</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=2bfb35b6"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

@@ -77,6 +77,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.live.html">crowsnest.live</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.publish.html">crowsnest.publish</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
@@ -112,6 +113,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.tools.lineage"><code class="docutils literal notranslate"><span class="pre">lineage()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.live"><code class="docutils literal notranslate"><span class="pre">live()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.note"><code class="docutils literal notranslate"><span class="pre">note()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.tools.publish"><code class="docutils literal notranslate"><span class="pre">publish()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.recap"><code class="docutils literal notranslate"><span class="pre">recap()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.repo_url"><code class="docutils literal notranslate"><span class="pre">repo_url()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.tools.report"><code class="docutils literal notranslate"><span class="pre">report()</span></code></a></li>
@@ -203,40 +205,43 @@ here prints, exits, or knows which surface called it.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.note" title="crowsnest.tools.note"><code class="xref py py-obj docutils literal notranslate"><span class="pre">note</span></code></a>(session, text, *[, home, all_homes, ...])</p></td>
 <td><p>Set the note on <code class="docutils literal notranslate"><span class="pre">session</span></code>'s item; empty text removes it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.recap" title="crowsnest.tools.recap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recap</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.publish" title="crowsnest.tools.publish"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish</span></code></a>(*[, to, command, publisher, home, ...])</p></td>
+<td><p>Render the report as a whole page and deliver it where its owner reads it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.recap" title="crowsnest.tools.recap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recap</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
 <td><p>Five lines about one live session, read from disk: the answer to a <code class="docutils literal notranslate"><span class="pre">recap</span></code> intent.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.repo_url" title="crowsnest.tools.repo_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_url</span></code></a>(cwd)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.repo_url" title="crowsnest.tools.repo_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repo_url</span></code></a>(cwd)</p></td>
 <td><p>The browser URL of the repository at <code class="docutils literal notranslate"><span class="pre">cwd</span></code>'s <code class="docutils literal notranslate"><span class="pre">origin</span></code>, or <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.report" title="crowsnest.tools.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a>(*[, home, all_homes, config, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.report" title="crowsnest.tools.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a>(*[, home, all_homes, config, ...])</p></td>
 <td><p>The roster as one self-contained HTML page: <a class="reference internal" href="crowsnest.report.html#crowsnest.report.render_report" title="crowsnest.report.render_report"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.report.render_report()</span></code></a> over what <a class="reference internal" href="#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-func docutils literal notranslate"><span class="pre">roster()</span></code></a> returns.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.resolve" title="crowsnest.tools.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(session, *[, home, all_homes, config])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.resolve" title="crowsnest.tools.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(session, *[, home, all_homes, config])</p></td>
 <td><p>The live session a human means by <code class="docutils literal notranslate"><span class="pre">session</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">roster</span></code></a>(*[, home, all_homes, config, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.roster" title="crowsnest.tools.roster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">roster</span></code></a>(*[, home, all_homes, config, ...])</p></td>
 <td><p>Every live session, most urgent first, each with a clipped view of its activity.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.seen" title="crowsnest.tools.seen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seen</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.seen" title="crowsnest.tools.seen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seen</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
 <td><p>Mark <code class="docutils literal notranslate"><span class="pre">session</span></code>'s item seen at its current revision: it dims until it changes.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.sessions" title="crowsnest.tools.sessions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sessions</span></code></a>(*[, home, all_homes, config])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.sessions" title="crowsnest.tools.sessions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sessions</span></code></a>(*[, home, all_homes, config])</p></td>
 <td><p>The live sessions of one home, or of every configured home when <code class="docutils literal notranslate"><span class="pre">all_homes</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.show" title="crowsnest.tools.show"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.show" title="crowsnest.tools.show"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
 <td><p>One session in full: its registry record, its activity unclipped, and its links.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.triage" title="crowsnest.tools.triage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triage</span></code></a>(*[, home, all_homes, config, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.triage" title="crowsnest.tools.triage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triage</span></code></a>(*[, home, all_homes, config, ...])</p></td>
 <td><p>Every live session grouped by what it needs: the three-line answer to &quot;where are we&quot;.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.turns" title="crowsnest.tools.turns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">turns</span></code></a>(session, *[, last, before, home, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.turns" title="crowsnest.tools.turns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">turns</span></code></a>(session, *[, last, before, home, ...])</p></td>
 <td><p>The last <code class="docutils literal notranslate"><span class="pre">last</span></code> turns of a session, oldest first; <code class="docutils literal notranslate"><span class="pre">before=N</span></code> pages back from turn N.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.undo" title="crowsnest.tools.undo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">undo</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.undo" title="crowsnest.tools.undo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">undo</span></code></a>(session, *[, home, all_homes, config, ...])</p></td>
 <td><p>Restore <code class="docutils literal notranslate"><span class="pre">session</span></code>'s attention record to before its last change.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.tools.unseen" title="crowsnest.tools.unseen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unseen</span></code></a>(session, *[, home, all_homes, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.tools.unseen" title="crowsnest.tools.unseen"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unseen</span></code></a>(session, *[, home, all_homes, ...])</p></td>
 <td><p>Mark <code class="docutils literal notranslate"><span class="pre">session</span></code>'s item unread: it shows as new again.</p></td>
 </tr>
 </tbody>
@@ -381,6 +386,26 @@ read, so the document never claims to be fresher than what it holds.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">note</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tools.html#note"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.note" title="Link to this definition">#</a></dt>
 <dd><p>Set the note on <code class="docutils literal notranslate"><span class="pre">session</span></code>’s item; empty text removes it. Nothing reads a note as an
 instruction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.tools.publish">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.tools.</span></span><span class="sig-name descname"><span class="pre">publish</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publisher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tools.html#publish"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tools.publish" title="Link to this definition">#</a></dt>
+<dd><p>Render the report as a whole page and deliver it where its owner reads it.</p>
+<p>The destination is <code class="docutils literal notranslate"><span class="pre">to</span></code> (a local path, or <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code> sent by rsync over
+ssh) or <code class="docutils literal notranslate"><span class="pre">command</span></code> (argv with <code class="docutils literal notranslate"><span class="pre">{page}</span></code> for the rendered file); without either, the
+config file’s <code class="docutils literal notranslate"><span class="pre">[publish]</span></code> table (<a class="reference internal" href="crowsnest.config.html#crowsnest.config.publish_settings" title="crowsnest.config.publish_settings"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.config.publish_settings()</span></code></a>).
+<code class="docutils literal notranslate"><span class="pre">publisher</span></code> replaces the delivery: a callable <code class="docutils literal notranslate"><span class="pre">(page,</span> <span class="pre">to)</span> <span class="pre">-&gt;</span> <span class="pre">str</span></code>
+(<a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.publish</span></code></a>). The page is the static one – no console, whose buttons
+need the claude.ai viewer’s <code class="docutils literal notranslate"><span class="pre">db</span></code> – so run this on a schedule for a page that stays
+fresh with nothing awake but the scheduler.</p>
+<p>The rendered page is kept at <code class="docutils literal notranslate"><span class="pre">page_path</span></code> (default <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/publish/index.html</span></code>),
+so the last one sent can be looked at locally.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -654,7 +679,7 @@ raises <code class="docutils literal notranslate"><span class="pre">ValueError</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=8f83b1af"></script>
+      <script src="../_static/documentation_options.js?v=2bfb35b6"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

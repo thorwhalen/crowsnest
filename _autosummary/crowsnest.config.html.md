@@ -54,6 +54,9 @@ all three build a row the same way without a flag each ([`crowsnest.rows`](crows
 ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
 ```
 
+The `[publish]` table ([`publish_settings()`](#crowsnest.config.publish_settings)) says where `crowsnest publish` sends
+the page: `to` (a local path or a `host:path`) or `command` ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).
+
 On Windows write paths in single quotes (`path = 'C:\Users\me\.claude'`): a TOML
 double-quoted string treats a backslash as an escape.
 
@@ -75,6 +78,7 @@ and nothing in this module pretends otherwise.
 | [`DFLT_FRESH_SECONDS`](#crowsnest.config.DFLT_FRESH_SECONDS) | How recently a remote home's registry record must have changed to count as live. |
 | [`ATTENTION_KEY`](#crowsnest.config.ATTENTION_KEY)      | The config table holding the attention settings.                                 |
 | [`REPORT_KEY`](#crowsnest.config.REPORT_KEY)         | The config table saying how the report's rows are built.                         |
+| [`PUBLISH_KEY`](#crowsnest.config.PUBLISH_KEY)        | The config table saying where `crowsnest publish` sends the page.                |
 
 ### Functions
 
@@ -84,6 +88,7 @@ and nothing in this module pretends otherwise.
 | [`config_path`](#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
 | [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
 | [`homes`](#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
+| [`publish_settings`](#crowsnest.config.publish_settings)(\*[, path])     | The config file's `[publish]` table, or the defaults when it has none.           |
 | [`report_settings`](#crowsnest.config.report_settings)(\*[, path])      | The config file's `[report]` table, or the defaults when it has none.            |
 
 ### Classes
@@ -91,6 +96,7 @@ and nothing in this module pretends otherwise.
 | [`AttentionSettings`](#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                                                                                                                                                                                        |
 |--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
+| [`PublishSettings`](#crowsnest.config.PublishSettings)([to, command])            | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
 | [`ReportSettings`](#crowsnest.config.ReportSettings)([ledger_dir])              | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
@@ -130,6 +136,23 @@ How recently a remote home’s registry record must have changed to count as liv
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One Claude Code config directory to read, and how to judge liveness in it.
+
+### crowsnest.config.PUBLISH_KEY *= 'publish'*
+
+The config table saying where `crowsnest publish` sends the page.
+
+### *class* crowsnest.config.PublishSettings(to='', command=())
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).
+
+At most one of `to` and `command`. Neither is fine until something publishes.
+
+```pycon
+>>> PublishSettings().to, PublishSettings().command
+('', ())
+```
 
 ### crowsnest.config.REPORT_KEY *= 'report'*
 
@@ -206,6 +229,22 @@ a person who wrote one meant it.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](#crowsnest.config.Home)]
+
+### crowsnest.config.publish_settings(, path=None)
+
+The config file’s `[publish]` table, or the defaults when it has none.
+
+```toml
+[publish]
+to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
+# command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]
+```
+
+A key the table does not know is an error, as in `[attention]`, and so is giving
+both: which one wins would be a guess.
+
+* **Return type:**
+  [`PublishSettings`](#crowsnest.config.PublishSettings)
 
 ### crowsnest.config.report_settings(, path=None)
 

@@ -74,6 +74,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.live.html">crowsnest.live</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.open.html">crowsnest.open</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.publish.html">crowsnest.publish</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.report.html">crowsnest.report</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.rows.html">crowsnest.rows</a></li>
@@ -187,394 +188,461 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="52"><span class="sd">    [report]</span>
 </span><span data-line="53"><span class="sd">    ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~</span>
 </span><span data-line="54">
-</span><span data-line="55"><span class="sd">On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML</span>
-</span><span data-line="56"><span class="sd">double-quoted string treats a backslash as an escape.</span>
+</span><span data-line="55"><span class="sd">The ``[publish]`` table (:func:`publish_settings`) says where ``crowsnest publish`` sends</span>
+</span><span data-line="56"><span class="sd">the page: ``to`` (a local path or a ``host:path``) or ``command`` (:mod:`crowsnest.publish`).</span>
 </span><span data-line="57">
-</span><span data-line="58"><span class="sd">``remote = true`` is the one thing a home needs to say about itself: its pids cannot be</span>
-</span><span data-line="59"><span class="sd">checked here, so a record counts as live while its status is fresh (``fresh_seconds``,</span>
-</span><span data-line="60"><span class="sd">default one hour). Reading crosses accounts and machines; messaging and spawning do not,</span>
-</span><span data-line="61"><span class="sd">and nothing in this module pretends otherwise.</span>
-</span><span data-line="62">
-</span><span data-line="63"><span class="sd">&gt;&gt;&gt; homes(path='/nonexistent-config-for-doctest')[0].name</span>
-</span><span data-line="64"><span class="sd">'local'</span>
-</span><span data-line="65"><span class="sd">"""</span>
-</span><span data-line="66">
-</span><span data-line="67"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-</span><span data-line="68">
-</span><span data-line="69"><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
-</span><span data-line="70"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span data-line="71"><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-</span><span data-line="72"><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-</span><span data-line="73"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">fields</span>
-</span><span data-line="74"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
-</span><span data-line="75"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span data-line="76">
-</span><span data-line="77"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_home</span>
-</span><span data-line="78">
-</span><span data-line="79"><span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
-</span><span data-line="80">    <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
-</span><span data-line="81"><span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-</span><span data-line="82">    <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>  <span class="c1"># type: ignore[no-redef]</span>
-</span><span data-line="83">
-</span><span data-line="84"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="85">    <span class="s2">"ATTENTION_KEY"</span><span class="p">,</span>
-</span><span data-line="86">    <span class="s2">"CLAUDE_BIN_KEY"</span><span class="p">,</span>
-</span><span data-line="87">    <span class="s2">"CONFIG_ENV_VAR"</span><span class="p">,</span>
-</span><span data-line="88">    <span class="s2">"DFLT_FRESH_SECONDS"</span><span class="p">,</span>
-</span><span data-line="89">    <span class="s2">"REPORT_KEY"</span><span class="p">,</span>
-</span><span data-line="90">    <span class="s2">"AttentionSettings"</span><span class="p">,</span>
-</span><span data-line="91">    <span class="s2">"Home"</span><span class="p">,</span>
-</span><span data-line="92">    <span class="s2">"ReportSettings"</span><span class="p">,</span>
-</span><span data-line="93">    <span class="s2">"attention_settings"</span><span class="p">,</span>
-</span><span data-line="94">    <span class="s2">"claude_bin_setting"</span><span class="p">,</span>
-</span><span data-line="95">    <span class="s2">"config_path"</span><span class="p">,</span>
-</span><span data-line="96">    <span class="s2">"configured_homes"</span><span class="p">,</span>
-</span><span data-line="97">    <span class="s2">"homes"</span><span class="p">,</span>
-</span><span data-line="98">    <span class="s2">"report_settings"</span><span class="p">,</span>
-</span><span data-line="99"><span class="p">]</span>
-</span><span data-line="100">
-</span><span data-line="101"><span class="c1">#: The top-level config key naming the command that starts a session. See</span>
-</span><span data-line="102"><span class="c1">#: :func:`crowsnest.account.claude_bin` for what a person would put there and why.</span>
-</span><span data-line="103"><span class="n">CLAUDE_BIN_KEY</span> <span class="o">=</span> <span class="s2">"claude_bin"</span>
-</span><span data-line="104">
-</span><span data-line="105"><span class="c1">#: Overrides the config file location outright.</span>
-</span><span data-line="106"><span class="n">CONFIG_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CROWSNEST_CONFIG"</span>
-</span><span data-line="107">
-</span><span data-line="108"><span class="c1">#: How recently a remote home's registry record must have changed to count as live.</span>
-</span><span data-line="109"><span class="n">DFLT_FRESH_SECONDS</span> <span class="o">=</span> <span class="mf">3600.0</span>
+</span><span data-line="58"><span class="sd">On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML</span>
+</span><span data-line="59"><span class="sd">double-quoted string treats a backslash as an escape.</span>
+</span><span data-line="60">
+</span><span data-line="61"><span class="sd">``remote = true`` is the one thing a home needs to say about itself: its pids cannot be</span>
+</span><span data-line="62"><span class="sd">checked here, so a record counts as live while its status is fresh (``fresh_seconds``,</span>
+</span><span data-line="63"><span class="sd">default one hour). Reading crosses accounts and machines; messaging and spawning do not,</span>
+</span><span data-line="64"><span class="sd">and nothing in this module pretends otherwise.</span>
+</span><span data-line="65">
+</span><span data-line="66"><span class="sd">&gt;&gt;&gt; homes(path='/nonexistent-config-for-doctest')[0].name</span>
+</span><span data-line="67"><span class="sd">'local'</span>
+</span><span data-line="68"><span class="sd">"""</span>
+</span><span data-line="69">
+</span><span data-line="70"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="71">
+</span><span data-line="72"><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+</span><span data-line="73"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span data-line="74"><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+</span><span data-line="75"><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span data-line="76"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">fields</span>
+</span><span data-line="77"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+</span><span data-line="78"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="79">
+</span><span data-line="80"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_home</span>
+</span><span data-line="81">
+</span><span data-line="82"><span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+</span><span data-line="83">    <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+</span><span data-line="84"><span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+</span><span data-line="85">    <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>  <span class="c1"># type: ignore[no-redef]</span>
+</span><span data-line="86">
+</span><span data-line="87"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="88">    <span class="s2">"ATTENTION_KEY"</span><span class="p">,</span>
+</span><span data-line="89">    <span class="s2">"CLAUDE_BIN_KEY"</span><span class="p">,</span>
+</span><span data-line="90">    <span class="s2">"CONFIG_ENV_VAR"</span><span class="p">,</span>
+</span><span data-line="91">    <span class="s2">"DFLT_FRESH_SECONDS"</span><span class="p">,</span>
+</span><span data-line="92">    <span class="s2">"PUBLISH_KEY"</span><span class="p">,</span>
+</span><span data-line="93">    <span class="s2">"REPORT_KEY"</span><span class="p">,</span>
+</span><span data-line="94">    <span class="s2">"AttentionSettings"</span><span class="p">,</span>
+</span><span data-line="95">    <span class="s2">"Home"</span><span class="p">,</span>
+</span><span data-line="96">    <span class="s2">"PublishSettings"</span><span class="p">,</span>
+</span><span data-line="97">    <span class="s2">"ReportSettings"</span><span class="p">,</span>
+</span><span data-line="98">    <span class="s2">"attention_settings"</span><span class="p">,</span>
+</span><span data-line="99">    <span class="s2">"claude_bin_setting"</span><span class="p">,</span>
+</span><span data-line="100">    <span class="s2">"config_path"</span><span class="p">,</span>
+</span><span data-line="101">    <span class="s2">"configured_homes"</span><span class="p">,</span>
+</span><span data-line="102">    <span class="s2">"homes"</span><span class="p">,</span>
+</span><span data-line="103">    <span class="s2">"publish_settings"</span><span class="p">,</span>
+</span><span data-line="104">    <span class="s2">"report_settings"</span><span class="p">,</span>
+</span><span data-line="105"><span class="p">]</span>
+</span><span data-line="106">
+</span><span data-line="107"><span class="c1">#: The top-level config key naming the command that starts a session. See</span>
+</span><span data-line="108"><span class="c1">#: :func:`crowsnest.account.claude_bin` for what a person would put there and why.</span>
+</span><span data-line="109"><span class="n">CLAUDE_BIN_KEY</span> <span class="o">=</span> <span class="s2">"claude_bin"</span>
 </span><span data-line="110">
-</span><span data-line="111"><span class="c1">#: The name of the one home used when no config file exists.</span>
-</span><span data-line="112"><span class="n">DFLT_HOME_NAME</span> <span class="o">=</span> <span class="s2">"local"</span>
+</span><span data-line="111"><span class="c1">#: Overrides the config file location outright.</span>
+</span><span data-line="112"><span class="n">CONFIG_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CROWSNEST_CONFIG"</span>
 </span><span data-line="113">
-</span><span data-line="114">
+</span><span data-line="114"><span class="c1">#: How recently a remote home's registry record must have changed to count as live.</span>
+</span><span data-line="115"><span class="n">DFLT_FRESH_SECONDS</span> <span class="o">=</span> <span class="mf">3600.0</span>
+</span><span data-line="116">
+</span><span data-line="117"><span class="c1">#: The name of the one home used when no config file exists.</span>
+</span><span data-line="118"><span class="n">DFLT_HOME_NAME</span> <span class="o">=</span> <span class="s2">"local"</span>
+</span><span data-line="119">
+</span><span data-line="120">
 <div class="viewcode-block" id="Home">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.Home">[docs]</a>
-</span><span data-line="115"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="116"><span class="k">class</span><span class="w"> </span><span class="nc">Home</span><span class="p">:</span>
-</span><span data-line="117"><span class="w">    </span><span class="sd">"""One Claude Code config directory to read, and how to judge liveness in it."""</span>
-</span><span data-line="118">
-</span><span data-line="119">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="120">    <span class="n">path</span><span class="p">:</span> <span class="n">Path</span>
-</span><span data-line="121">    <span class="n">remote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span data-line="122">    <span class="n">fresh_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_FRESH_SECONDS</span></div>
-
-</span><span data-line="123">
+</span><span data-line="121"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="122"><span class="k">class</span><span class="w"> </span><span class="nc">Home</span><span class="p">:</span>
+</span><span data-line="123"><span class="w">    </span><span class="sd">"""One Claude Code config directory to read, and how to judge liveness in it."""</span>
 </span><span data-line="124">
+</span><span data-line="125">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="126">    <span class="n">path</span><span class="p">:</span> <span class="n">Path</span>
+</span><span data-line="127">    <span class="n">remote</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="128">    <span class="n">fresh_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_FRESH_SECONDS</span></div>
+
+</span><span data-line="129">
+</span><span data-line="130">
 <div class="viewcode-block" id="config_path">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.config_path">[docs]</a>
-</span><span data-line="125"><span class="k">def</span><span class="w"> </span><span class="nf">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-</span><span data-line="126"><span class="w">    </span><span class="sd">"""``path``, else ``$CROWSNEST_CONFIG``, else ``$XDG_CONFIG_HOME/crowsnest/config.toml``."""</span>
-</span><span data-line="127">    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
-</span><span data-line="128">        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span data-line="129">    <span class="n">override</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CONFIG_ENV_VAR</span><span class="p">)</span>
-</span><span data-line="130">    <span class="k">if</span> <span class="n">override</span><span class="p">:</span>
-</span><span data-line="131">        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">override</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span data-line="132">    <span class="n">xdg</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"XDG_CONFIG_HOME"</span><span class="p">)</span>
-</span><span data-line="133">    <span class="n">base</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">xdg</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">xdg</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".config"</span>
-</span><span data-line="134">    <span class="k">return</span> <span class="n">base</span> <span class="o">/</span> <span class="s2">"crowsnest"</span> <span class="o">/</span> <span class="s2">"config.toml"</span></div>
+</span><span data-line="131"><span class="k">def</span><span class="w"> </span><span class="nf">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="132"><span class="w">    </span><span class="sd">"""``path``, else ``$CROWSNEST_CONFIG``, else ``$XDG_CONFIG_HOME/crowsnest/config.toml``."""</span>
+</span><span data-line="133">    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+</span><span data-line="134">        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span data-line="135">    <span class="n">override</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CONFIG_ENV_VAR</span><span class="p">)</span>
+</span><span data-line="136">    <span class="k">if</span> <span class="n">override</span><span class="p">:</span>
+</span><span data-line="137">        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">override</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span data-line="138">    <span class="n">xdg</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"XDG_CONFIG_HOME"</span><span class="p">)</span>
+</span><span data-line="139">    <span class="n">base</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">xdg</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">xdg</span> <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".config"</span>
+</span><span data-line="140">    <span class="k">return</span> <span class="n">base</span> <span class="o">/</span> <span class="s2">"crowsnest"</span> <span class="o">/</span> <span class="s2">"config.toml"</span></div>
 
-</span><span data-line="135">
-</span><span data-line="136">
-</span><span data-line="137"><span class="k">def</span><span class="w"> </span><span class="nf">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="138"><span class="w">    </span><span class="sd">"""The config file as a mapping, empty when there is none.</span>
-</span><span data-line="139">
-</span><span data-line="140"><span class="sd">    A file that cannot be parsed raises, here as in :func:`homes`: a person who wrote one</span>
-</span><span data-line="141"><span class="sd">    meant it, and a silent fallback would spawn under settings they did not choose.</span>
-</span><span data-line="142"><span class="sd">    """</span>
-</span><span data-line="143">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="144">    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-</span><span data-line="145">        <span class="k">return</span> <span class="p">{}</span>
-</span><span data-line="146">    <span class="k">with</span> <span class="n">file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span data-line="147">        <span class="k">return</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-</span><span data-line="148">
-</span><span data-line="149">
+</span><span data-line="141">
+</span><span data-line="142">
+</span><span data-line="143"><span class="k">def</span><span class="w"> </span><span class="nf">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="144"><span class="w">    </span><span class="sd">"""The config file as a mapping, empty when there is none.</span>
+</span><span data-line="145">
+</span><span data-line="146"><span class="sd">    A file that cannot be parsed raises, here as in :func:`homes`: a person who wrote one</span>
+</span><span data-line="147"><span class="sd">    meant it, and a silent fallback would spawn under settings they did not choose.</span>
+</span><span data-line="148"><span class="sd">    """</span>
+</span><span data-line="149">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="150">    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+</span><span data-line="151">        <span class="k">return</span> <span class="p">{}</span>
+</span><span data-line="152">    <span class="k">with</span> <span class="n">file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span data-line="153">        <span class="k">return</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span><span data-line="154">
+</span><span data-line="155">
 <div class="viewcode-block" id="claude_bin_setting">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.claude_bin_setting">[docs]</a>
-</span><span data-line="150"><span class="k">def</span><span class="w"> </span><span class="nf">claude_bin_setting</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="151"><span class="w">    </span><span class="sd">"""The ``claude_bin`` the config file names, or ``''`` when it names none.</span>
-</span><span data-line="152">
-</span><span data-line="153"><span class="sd">    .. code-block:: toml</span>
-</span><span data-line="154">
-</span><span data-line="155"><span class="sd">        claude_bin = "claude-next"   # a name on PATH, or an absolute path</span>
-</span><span data-line="156">
-</span><span data-line="157"><span class="sd">    Whether it can actually run is :func:`crowsnest.account.claude_bin`'s business, not</span>
-</span><span data-line="158"><span class="sd">    this module's: reading a config file and vetting a command are different jobs, and</span>
-</span><span data-line="159"><span class="sd">    the one that fails needs to say so in terms of the command.</span>
-</span><span data-line="160"><span class="sd">    """</span>
-</span><span data-line="161">    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="162">    <span class="n">value</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CLAUDE_BIN_KEY</span><span class="p">)</span>
-</span><span data-line="163">    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="164">        <span class="n">_refuse_a_misplaced_claude_bin</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
-</span><span data-line="165">        <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="166">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="167">        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-</span><span data-line="168">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">CLAUDE_BIN_KEY</span><span class="si">}</span><span class="s2"> must be a string naming a command, "</span>
-</span><span data-line="169">            <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">)"</span>
-</span><span data-line="170">        <span class="p">)</span>
-</span><span data-line="171">    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+</span><span data-line="156"><span class="k">def</span><span class="w"> </span><span class="nf">claude_bin_setting</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="157"><span class="w">    </span><span class="sd">"""The ``claude_bin`` the config file names, or ``''`` when it names none.</span>
+</span><span data-line="158">
+</span><span data-line="159"><span class="sd">    .. code-block:: toml</span>
+</span><span data-line="160">
+</span><span data-line="161"><span class="sd">        claude_bin = "claude-next"   # a name on PATH, or an absolute path</span>
+</span><span data-line="162">
+</span><span data-line="163"><span class="sd">    Whether it can actually run is :func:`crowsnest.account.claude_bin`'s business, not</span>
+</span><span data-line="164"><span class="sd">    this module's: reading a config file and vetting a command are different jobs, and</span>
+</span><span data-line="165"><span class="sd">    the one that fails needs to say so in terms of the command.</span>
+</span><span data-line="166"><span class="sd">    """</span>
+</span><span data-line="167">    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="168">    <span class="n">value</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CLAUDE_BIN_KEY</span><span class="p">)</span>
+</span><span data-line="169">    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="170">        <span class="n">_refuse_a_misplaced_claude_bin</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+</span><span data-line="171">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="172">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="173">        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+</span><span data-line="174">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">CLAUDE_BIN_KEY</span><span class="si">}</span><span class="s2"> must be a string naming a command, "</span>
+</span><span data-line="175">            <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">)"</span>
+</span><span data-line="176">        <span class="p">)</span>
+</span><span data-line="177">    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
 
-</span><span data-line="172">
-</span><span data-line="173">
-</span><span data-line="174"><span class="k">def</span><span class="w"> </span><span class="nf">_refuse_a_misplaced_claude_bin</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="175"><span class="w">    </span><span class="sd">"""Raise if ``claude_bin`` was written under a table: a ``[[homes]]`` entry, ``[attention]``.</span>
-</span><span data-line="176">
-</span><span data-line="177"><span class="sd">    The easy mistake, and a silent one: TOML hands every key after a table header to</span>
-</span><span data-line="178"><span class="sd">    that table, so a ``claude_bin`` added at the end of the file becomes a field of the</span>
-</span><span data-line="179"><span class="sd">    last table -- read by nothing, reported by nothing, and the launcher stays whatever</span>
-</span><span data-line="180"><span class="sd">    it was. Cheaper to say so than to let someone re-read their own config file.</span>
-</span><span data-line="181"><span class="sd">    """</span>
-</span><span data-line="182">    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span data-line="183">        <span class="n">entries</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
-</span><span data-line="184">        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
-</span><span data-line="185">            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">CLAUDE_BIN_KEY</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">):</span>
-</span><span data-line="186">                <span class="k">continue</span>
-</span><span data-line="187">            <span class="n">where</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="188">                <span class="sa">f</span><span class="s2">"[[</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">]] entry </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'name'</span><span class="p">,</span><span class="w"> </span><span class="s1">'?'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="189">                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-</span><span data-line="190">                <span class="k">else</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] table"</span>
-</span><span data-line="191">            <span class="p">)</span>
-</span><span data-line="192">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="193">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">CLAUDE_BIN_KEY</span><span class="si">}</span><span class="s2"> is inside the </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">, where "</span>
-</span><span data-line="194">                <span class="sa">f</span><span class="s2">"it does nothing -- TOML gives every key after a table header to that "</span>
-</span><span data-line="195">                <span class="sa">f</span><span class="s2">"table. Move it above the first table header."</span>
-</span><span data-line="196">            <span class="p">)</span>
-</span><span data-line="197">
-</span><span data-line="198">
-</span><span data-line="199"><span class="c1">#: The config table holding the attention settings.</span>
-</span><span data-line="200"><span class="n">ATTENTION_KEY</span> <span class="o">=</span> <span class="s2">"attention"</span>
-</span><span data-line="201">
-</span><span data-line="202"><span class="c1">#: The hour "this evening" lands on, local time. After it, the preset means tomorrow morning.</span>
-</span><span data-line="203"><span class="n">DFLT_EVENING_HOUR</span> <span class="o">=</span> <span class="mi">18</span>
+</span><span data-line="178">
+</span><span data-line="179">
+</span><span data-line="180"><span class="k">def</span><span class="w"> </span><span class="nf">_refuse_a_misplaced_claude_bin</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="181"><span class="w">    </span><span class="sd">"""Raise if ``claude_bin`` was written under a table: a ``[[homes]]`` entry, ``[attention]``.</span>
+</span><span data-line="182">
+</span><span data-line="183"><span class="sd">    The easy mistake, and a silent one: TOML hands every key after a table header to</span>
+</span><span data-line="184"><span class="sd">    that table, so a ``claude_bin`` added at the end of the file becomes a field of the</span>
+</span><span data-line="185"><span class="sd">    last table -- read by nothing, reported by nothing, and the launcher stays whatever</span>
+</span><span data-line="186"><span class="sd">    it was. Cheaper to say so than to let someone re-read their own config file.</span>
+</span><span data-line="187"><span class="sd">    """</span>
+</span><span data-line="188">    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="189">        <span class="n">entries</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+</span><span data-line="190">        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+</span><span data-line="191">            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">CLAUDE_BIN_KEY</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">):</span>
+</span><span data-line="192">                <span class="k">continue</span>
+</span><span data-line="193">            <span class="n">where</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="194">                <span class="sa">f</span><span class="s2">"[[</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">]] entry </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'name'</span><span class="p">,</span><span class="w"> </span><span class="s1">'?'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="195">                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+</span><span data-line="196">                <span class="k">else</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] table"</span>
+</span><span data-line="197">            <span class="p">)</span>
+</span><span data-line="198">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="199">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">CLAUDE_BIN_KEY</span><span class="si">}</span><span class="s2"> is inside the </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">, where "</span>
+</span><span data-line="200">                <span class="sa">f</span><span class="s2">"it does nothing -- TOML gives every key after a table header to that "</span>
+</span><span data-line="201">                <span class="sa">f</span><span class="s2">"table. Move it above the first table header."</span>
+</span><span data-line="202">            <span class="p">)</span>
+</span><span data-line="203">
 </span><span data-line="204">
-</span><span data-line="205"><span class="c1">#: The hour "tomorrow morning" lands on, local time.</span>
-</span><span data-line="206"><span class="n">DFLT_MORNING_HOUR</span> <span class="o">=</span> <span class="mi">9</span>
+</span><span data-line="205"><span class="c1">#: The config table holding the attention settings.</span>
+</span><span data-line="206"><span class="n">ATTENTION_KEY</span> <span class="o">=</span> <span class="s2">"attention"</span>
 </span><span data-line="207">
-</span><span data-line="208"><span class="c1">#: How often an item may be put off before the Later sheet offers Drop first.</span>
-</span><span data-line="209"><span class="n">DFLT_MAX_SNOOZES</span> <span class="o">=</span> <span class="mi">3</span>
+</span><span data-line="208"><span class="c1">#: The hour "this evening" lands on, local time. After it, the preset means tomorrow morning.</span>
+</span><span data-line="209"><span class="n">DFLT_EVENING_HOUR</span> <span class="o">=</span> <span class="mi">18</span>
 </span><span data-line="210">
-</span><span data-line="211"><span class="c1">#: How long a seen item may wait on a person before the review band lists it.</span>
-</span><span data-line="212"><span class="n">DFLT_STALE_AFTER</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+</span><span data-line="211"><span class="c1">#: The hour "tomorrow morning" lands on, local time.</span>
+</span><span data-line="212"><span class="n">DFLT_MORNING_HOUR</span> <span class="o">=</span> <span class="mi">9</span>
 </span><span data-line="213">
-</span><span data-line="214"><span class="c1">#: How long a working session may go without a material change before it counts as stuck.</span>
-</span><span data-line="215"><span class="n">DFLT_STUCK_AFTER</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+</span><span data-line="214"><span class="c1">#: How often an item may be put off before the Later sheet offers Drop first.</span>
+</span><span data-line="215"><span class="n">DFLT_MAX_SNOOZES</span> <span class="o">=</span> <span class="mi">3</span>
 </span><span data-line="216">
-</span><span data-line="217"><span class="n">_HOURS_IN_A_DAY</span> <span class="o">=</span> <span class="mi">24</span>
-</span><span data-line="218">
-</span><span data-line="219"><span class="c1">#: A duration written as text: a number and one unit.</span>
-</span><span data-line="220"><span class="n">_DURATION</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s*(\d+(?:\.\d+)?)\s*([mhd])\s*$"</span><span class="p">)</span>
-</span><span data-line="221"><span class="n">_DURATION_UNITS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"m"</span><span class="p">:</span> <span class="s2">"minutes"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="s2">"hours"</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">:</span> <span class="s2">"days"</span><span class="p">}</span>
+</span><span data-line="217"><span class="c1">#: How long a seen item may wait on a person before the review band lists it.</span>
+</span><span data-line="218"><span class="n">DFLT_STALE_AFTER</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+</span><span data-line="219">
+</span><span data-line="220"><span class="c1">#: How long a working session may go without a material change before it counts as stuck.</span>
+</span><span data-line="221"><span class="n">DFLT_STUCK_AFTER</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
 </span><span data-line="222">
-</span><span data-line="223">
+</span><span data-line="223"><span class="n">_HOURS_IN_A_DAY</span> <span class="o">=</span> <span class="mi">24</span>
+</span><span data-line="224">
+</span><span data-line="225"><span class="c1">#: A duration written as text: a number and one unit.</span>
+</span><span data-line="226"><span class="n">_DURATION</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s*(\d+(?:\.\d+)?)\s*([mhd])\s*$"</span><span class="p">)</span>
+</span><span data-line="227"><span class="n">_DURATION_UNITS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"m"</span><span class="p">:</span> <span class="s2">"minutes"</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="s2">"hours"</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">:</span> <span class="s2">"days"</span><span class="p">}</span>
+</span><span data-line="228">
+</span><span data-line="229">
 <div class="viewcode-block" id="AttentionSettings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.AttentionSettings">[docs]</a>
-</span><span data-line="224"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="225"><span class="k">class</span><span class="w"> </span><span class="nc">AttentionSettings</span><span class="p">:</span>
-</span><span data-line="226"><span class="w">    </span><span class="sd">"""The ``[attention]`` table, validated. Every field has the default the research suggests.</span>
-</span><span data-line="227">
-</span><span data-line="228"><span class="sd">    &gt;&gt;&gt; AttentionSettings().evening_hour</span>
-</span><span data-line="229"><span class="sd">    18</span>
-</span><span data-line="230"><span class="sd">    &gt;&gt;&gt; AttentionSettings(morning_hour=24)</span>
-</span><span data-line="231"><span class="sd">    Traceback (most recent call last):</span>
-</span><span data-line="232"><span class="sd">      ...</span>
-</span><span data-line="233"><span class="sd">    ValueError: morning_hour must be a whole hour from 0 to 23, not 24</span>
-</span><span data-line="234"><span class="sd">    """</span>
-</span><span data-line="235">
-</span><span data-line="236">    <span class="n">evening_hour</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_EVENING_HOUR</span>
-</span><span data-line="237">    <span class="n">morning_hour</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_MORNING_HOUR</span>
-</span><span data-line="238">    <span class="n">max_snoozes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_MAX_SNOOZES</span>
-</span><span data-line="239">    <span class="n">stale_after</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">DFLT_STALE_AFTER</span>
-</span><span data-line="240">    <span class="n">stuck_after</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">DFLT_STUCK_AFTER</span>
+</span><span data-line="230"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="231"><span class="k">class</span><span class="w"> </span><span class="nc">AttentionSettings</span><span class="p">:</span>
+</span><span data-line="232"><span class="w">    </span><span class="sd">"""The ``[attention]`` table, validated. Every field has the default the research suggests.</span>
+</span><span data-line="233">
+</span><span data-line="234"><span class="sd">    &gt;&gt;&gt; AttentionSettings().evening_hour</span>
+</span><span data-line="235"><span class="sd">    18</span>
+</span><span data-line="236"><span class="sd">    &gt;&gt;&gt; AttentionSettings(morning_hour=24)</span>
+</span><span data-line="237"><span class="sd">    Traceback (most recent call last):</span>
+</span><span data-line="238"><span class="sd">      ...</span>
+</span><span data-line="239"><span class="sd">    ValueError: morning_hour must be a whole hour from 0 to 23, not 24</span>
+</span><span data-line="240"><span class="sd">    """</span>
 </span><span data-line="241">
-</span><span data-line="242">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="243">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"evening_hour"</span><span class="p">,</span> <span class="s2">"morning_hour"</span><span class="p">):</span>
-</span><span data-line="244">            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-</span><span data-line="245">            <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">_HOURS_IN_A_DAY</span><span class="p">:</span>
-</span><span data-line="246">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="247">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a whole hour from 0 to </span><span class="si">{</span><span class="n">_HOURS_IN_A_DAY</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">, "</span>
-</span><span data-line="248">                    <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="249">                <span class="p">)</span>
-</span><span data-line="250">        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_snoozes</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_snoozes</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span data-line="251">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="252">                <span class="sa">f</span><span class="s2">"max_snoozes must be a whole number of at least 1, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_snoozes</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="253">            <span class="p">)</span>
-</span><span data-line="254">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"stale_after"</span><span class="p">,</span> <span class="s2">"stuck_after"</span><span class="p">):</span>
-</span><span data-line="255">            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-</span><span data-line="256">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
-</span><span data-line="257">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a positive duration, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span></div>
+</span><span data-line="242">    <span class="n">evening_hour</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_EVENING_HOUR</span>
+</span><span data-line="243">    <span class="n">morning_hour</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_MORNING_HOUR</span>
+</span><span data-line="244">    <span class="n">max_snoozes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_MAX_SNOOZES</span>
+</span><span data-line="245">    <span class="n">stale_after</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">DFLT_STALE_AFTER</span>
+</span><span data-line="246">    <span class="n">stuck_after</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">DFLT_STUCK_AFTER</span>
+</span><span data-line="247">
+</span><span data-line="248">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="249">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"evening_hour"</span><span class="p">,</span> <span class="s2">"morning_hour"</span><span class="p">):</span>
+</span><span data-line="250">            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+</span><span data-line="251">            <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">_HOURS_IN_A_DAY</span><span class="p">:</span>
+</span><span data-line="252">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="253">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a whole hour from 0 to </span><span class="si">{</span><span class="n">_HOURS_IN_A_DAY</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">, "</span>
+</span><span data-line="254">                    <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="255">                <span class="p">)</span>
+</span><span data-line="256">        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_snoozes</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_snoozes</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="257">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="258">                <span class="sa">f</span><span class="s2">"max_snoozes must be a whole number of at least 1, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_snoozes</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="259">            <span class="p">)</span>
+</span><span data-line="260">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"stale_after"</span><span class="p">,</span> <span class="s2">"stuck_after"</span><span class="p">):</span>
+</span><span data-line="261">            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+</span><span data-line="262">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+</span><span data-line="263">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a positive duration, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span></div>
 
-</span><span data-line="258">
-</span><span data-line="259">
-</span><span data-line="260"><span class="k">def</span><span class="w"> </span><span class="nf">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="261">    <span class="c1"># `True` is an int to Python and a typo to a person writing `evening_hour = true`.</span>
-</span><span data-line="262">    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
-</span><span data-line="263">
 </span><span data-line="264">
-</span><span data-line="265"><span class="k">def</span><span class="w"> </span><span class="nf">_duration</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
-</span><span data-line="266"><span class="w">    </span><span class="sd">"""A config duration: a number of hours, or text like ``"90m"``, ``"24h"``, ``"2d"``.</span>
-</span><span data-line="267">
-</span><span data-line="268"><span class="sd">    &gt;&gt;&gt; _duration(24, key='x'), _duration('90m', key='x')</span>
-</span><span data-line="269"><span class="sd">    (datetime.timedelta(days=1), datetime.timedelta(seconds=5400))</span>
-</span><span data-line="270"><span class="sd">    """</span>
-</span><span data-line="271">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
-</span><span data-line="272">        <span class="n">amount</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">value</span><span class="p">,</span> <span class="s2">"h"</span>
-</span><span data-line="273">    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="274">        <span class="n">found</span> <span class="o">=</span> <span class="n">_DURATION</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="275">        <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
-</span><span data-line="276">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="277">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a number of hours or text like '90m', '24h' or '2d', "</span>
-</span><span data-line="278">                <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="279">            <span class="p">)</span>
-</span><span data-line="280">        <span class="n">amount</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-</span><span data-line="281">    <span class="c1"># TOML has `inf` and `nan`, and timedelta raises OverflowError on a huge one.</span>
-</span><span data-line="282">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="283">        <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">amount</span><span class="p">):</span>
-</span><span data-line="284">            <span class="k">raise</span> <span class="ne">OverflowError</span>
-</span><span data-line="285">        <span class="k">return</span> <span class="n">timedelta</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">_DURATION_UNITS</span><span class="p">[</span><span class="n">unit</span><span class="p">]:</span> <span class="n">amount</span><span class="p">})</span>
-</span><span data-line="286">    <span class="k">except</span> <span class="ne">OverflowError</span><span class="p">:</span>
-</span><span data-line="287">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a finite duration, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-</span><span data-line="288">
-</span><span data-line="289">
+</span><span data-line="265">
+</span><span data-line="266"><span class="k">def</span><span class="w"> </span><span class="nf">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="267">    <span class="c1"># `True` is an int to Python and a typo to a person writing `evening_hour = true`.</span>
+</span><span data-line="268">    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+</span><span data-line="269">
+</span><span data-line="270">
+</span><span data-line="271"><span class="k">def</span><span class="w"> </span><span class="nf">_duration</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">timedelta</span><span class="p">:</span>
+</span><span data-line="272"><span class="w">    </span><span class="sd">"""A config duration: a number of hours, or text like ``"90m"``, ``"24h"``, ``"2d"``.</span>
+</span><span data-line="273">
+</span><span data-line="274"><span class="sd">    &gt;&gt;&gt; _duration(24, key='x'), _duration('90m', key='x')</span>
+</span><span data-line="275"><span class="sd">    (datetime.timedelta(days=1), datetime.timedelta(seconds=5400))</span>
+</span><span data-line="276"><span class="sd">    """</span>
+</span><span data-line="277">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span data-line="278">        <span class="n">amount</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">value</span><span class="p">,</span> <span class="s2">"h"</span>
+</span><span data-line="279">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="280">        <span class="n">found</span> <span class="o">=</span> <span class="n">_DURATION</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="281">        <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+</span><span data-line="282">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="283">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a number of hours or text like '90m', '24h' or '2d', "</span>
+</span><span data-line="284">                <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="285">            <span class="p">)</span>
+</span><span data-line="286">        <span class="n">amount</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="287">    <span class="c1"># TOML has `inf` and `nan`, and timedelta raises OverflowError on a huge one.</span>
+</span><span data-line="288">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="289">        <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">amount</span><span class="p">):</span>
+</span><span data-line="290">            <span class="k">raise</span> <span class="ne">OverflowError</span>
+</span><span data-line="291">        <span class="k">return</span> <span class="n">timedelta</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">_DURATION_UNITS</span><span class="p">[</span><span class="n">unit</span><span class="p">]:</span> <span class="n">amount</span><span class="p">})</span>
+</span><span data-line="292">    <span class="k">except</span> <span class="ne">OverflowError</span><span class="p">:</span>
+</span><span data-line="293">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a finite duration, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+</span><span data-line="294">
+</span><span data-line="295">
 <div class="viewcode-block" id="attention_settings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.attention_settings">[docs]</a>
-</span><span data-line="290"><span class="k">def</span><span class="w"> </span><span class="nf">attention_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AttentionSettings</span><span class="p">:</span>
-</span><span data-line="291"><span class="w">    </span><span class="sd">"""The config file's ``[attention]`` table, or the defaults when it has none.</span>
-</span><span data-line="292">
-</span><span data-line="293"><span class="sd">    Refuses a key it does not know rather than ignoring it: a misspelt ``evening_hours``</span>
-</span><span data-line="294"><span class="sd">    that silently kept 18:00 would be found only by someone wondering why their evening</span>
-</span><span data-line="295"><span class="sd">    starts at six.</span>
-</span><span data-line="296"><span class="sd">    """</span>
-</span><span data-line="297">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="298">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ATTENTION_KEY</span><span class="p">)</span>
-</span><span data-line="299">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="300">        <span class="k">return</span> <span class="n">AttentionSettings</span><span class="p">()</span>
-</span><span data-line="301">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="302">        <span class="c1"># A config file is input; `crowsnest` reports bad input cleanly only as ValueError.</span>
-</span><span data-line="303">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">ATTENTION_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="304">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">AttentionSettings</span><span class="p">)}</span>
-</span><span data-line="305">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
-</span><span data-line="306">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="307">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="308">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">ATTENTION_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
-</span><span data-line="309">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="310">        <span class="p">)</span>
-</span><span data-line="311">    <span class="n">values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
-</span><span data-line="312">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="313">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"stale_after"</span><span class="p">,</span> <span class="s2">"stuck_after"</span><span class="p">):</span>
-</span><span data-line="314">            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
-</span><span data-line="315">                <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_duration</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
-</span><span data-line="316">        <span class="k">return</span> <span class="n">AttentionSettings</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
-</span><span data-line="317">    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="318">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">ATTENTION_KEY</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+</span><span data-line="296"><span class="k">def</span><span class="w"> </span><span class="nf">attention_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AttentionSettings</span><span class="p">:</span>
+</span><span data-line="297"><span class="w">    </span><span class="sd">"""The config file's ``[attention]`` table, or the defaults when it has none.</span>
+</span><span data-line="298">
+</span><span data-line="299"><span class="sd">    Refuses a key it does not know rather than ignoring it: a misspelt ``evening_hours``</span>
+</span><span data-line="300"><span class="sd">    that silently kept 18:00 would be found only by someone wondering why their evening</span>
+</span><span data-line="301"><span class="sd">    starts at six.</span>
+</span><span data-line="302"><span class="sd">    """</span>
+</span><span data-line="303">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="304">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ATTENTION_KEY</span><span class="p">)</span>
+</span><span data-line="305">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="306">        <span class="k">return</span> <span class="n">AttentionSettings</span><span class="p">()</span>
+</span><span data-line="307">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="308">        <span class="c1"># A config file is input; `crowsnest` reports bad input cleanly only as ValueError.</span>
+</span><span data-line="309">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">ATTENTION_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="310">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">AttentionSettings</span><span class="p">)}</span>
+</span><span data-line="311">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
+</span><span data-line="312">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="313">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="314">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">ATTENTION_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+</span><span data-line="315">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="316">        <span class="p">)</span>
+</span><span data-line="317">    <span class="n">values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+</span><span data-line="318">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="319">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"stale_after"</span><span class="p">,</span> <span class="s2">"stuck_after"</span><span class="p">):</span>
+</span><span data-line="320">            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+</span><span data-line="321">                <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_duration</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+</span><span data-line="322">        <span class="k">return</span> <span class="n">AttentionSettings</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
+</span><span data-line="323">    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="324">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">ATTENTION_KEY</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
 
-</span><span data-line="319">
-</span><span data-line="320">
-</span><span data-line="321"><span class="c1">#: The config table saying how the report's rows are built.</span>
-</span><span data-line="322"><span class="n">REPORT_KEY</span> <span class="o">=</span> <span class="s2">"report"</span>
-</span><span data-line="323">
-</span><span data-line="324">
+</span><span data-line="325">
+</span><span data-line="326">
+</span><span data-line="327"><span class="c1">#: The config table saying how the report's rows are built.</span>
+</span><span data-line="328"><span class="n">REPORT_KEY</span> <span class="o">=</span> <span class="s2">"report"</span>
+</span><span data-line="329">
+</span><span data-line="330">
 <div class="viewcode-block" id="ReportSettings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.ReportSettings">[docs]</a>
-</span><span data-line="325"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="326"><span class="k">class</span><span class="w"> </span><span class="nc">ReportSettings</span><span class="p">:</span>
-</span><span data-line="327"><span class="w">    </span><span class="sd">"""The ``[report]`` table, validated: how the report builds its rows, which the attention</span>
-</span><span data-line="328"><span class="sd">    verbs and the watcher must build the same way (:class:`crowsnest.rows.RowContext`).</span>
-</span><span data-line="329">
-</span><span data-line="330"><span class="sd">    &gt;&gt;&gt; ReportSettings().ledger_dir is None</span>
-</span><span data-line="331"><span class="sd">    True</span>
-</span><span data-line="332"><span class="sd">    """</span>
-</span><span data-line="333">
-</span><span data-line="334">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
-
+</span><span data-line="331"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="332"><span class="k">class</span><span class="w"> </span><span class="nc">ReportSettings</span><span class="p">:</span>
+</span><span data-line="333"><span class="w">    </span><span class="sd">"""The ``[report]`` table, validated: how the report builds its rows, which the attention</span>
+</span><span data-line="334"><span class="sd">    verbs and the watcher must build the same way (:class:`crowsnest.rows.RowContext`).</span>
 </span><span data-line="335">
-</span><span data-line="336">
+</span><span data-line="336"><span class="sd">    &gt;&gt;&gt; ReportSettings().ledger_dir is None</span>
+</span><span data-line="337"><span class="sd">    True</span>
+</span><span data-line="338"><span class="sd">    """</span>
+</span><span data-line="339">
+</span><span data-line="340">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+</span><span data-line="341">
+</span><span data-line="342">
 <div class="viewcode-block" id="report_settings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.report_settings">[docs]</a>
-</span><span data-line="337"><span class="k">def</span><span class="w"> </span><span class="nf">report_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReportSettings</span><span class="p">:</span>
-</span><span data-line="338"><span class="w">    </span><span class="sd">"""The config file's ``[report]`` table, or the defaults when it has none.</span>
-</span><span data-line="339">
-</span><span data-line="340"><span class="sd">    .. code-block:: toml</span>
-</span><span data-line="341">
-</span><span data-line="342"><span class="sd">        [report]</span>
-</span><span data-line="343"><span class="sd">        ledger_dir = "~/sync/crowsnest/ledger"   # the ledgers rows are triaged from</span>
-</span><span data-line="344">
-</span><span data-line="345"><span class="sd">    ``ledger_dir`` must be absolute or start with ``~``. A relative one would name a</span>
-</span><span data-line="346"><span class="sd">    different directory for each command run from a different place -- the report from one,</span>
-</span><span data-line="347"><span class="sd">    ``crowsnest watch`` from another -- which is the disagreement this setting exists to</span>
-</span><span data-line="348"><span class="sd">    end. A key the table does not know is an error, as in ``[attention]``.</span>
-</span><span data-line="349"><span class="sd">    """</span>
-</span><span data-line="350">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="351">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">REPORT_KEY</span><span class="p">)</span>
-</span><span data-line="352">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="353">        <span class="k">return</span> <span class="n">ReportSettings</span><span class="p">()</span>
-</span><span data-line="354">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="355">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">REPORT_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="356">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">ReportSettings</span><span class="p">)}</span>
-</span><span data-line="357">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
-</span><span data-line="358">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="359">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="360">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">REPORT_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
-</span><span data-line="361">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="362">        <span class="p">)</span>
-</span><span data-line="363">    <span class="n">raw</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ledger_dir"</span><span class="p">)</span>
-</span><span data-line="364">    <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="365">        <span class="k">return</span> <span class="n">ReportSettings</span><span class="p">()</span>
-</span><span data-line="366">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">raw</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-</span><span data-line="367">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">REPORT_KEY</span><span class="si">}</span><span class="s2">] ledger_dir must be a path, not </span><span class="si">{</span><span class="n">raw</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="368">    <span class="n">found</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span data-line="369">    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
-</span><span data-line="370">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="371">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">REPORT_KEY</span><span class="si">}</span><span class="s2">] ledger_dir must be absolute or start with ~, not "</span>
-</span><span data-line="372">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">raw</span><span class="si">!r}</span><span class="s2">: a relative one names a different directory from every directory "</span>
-</span><span data-line="373">            <span class="sa">f</span><span class="s2">"a command runs in"</span>
-</span><span data-line="374">        <span class="p">)</span>
-</span><span data-line="375">    <span class="k">return</span> <span class="n">ReportSettings</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">found</span><span class="p">)</span></div>
+</span><span data-line="343"><span class="k">def</span><span class="w"> </span><span class="nf">report_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReportSettings</span><span class="p">:</span>
+</span><span data-line="344"><span class="w">    </span><span class="sd">"""The config file's ``[report]`` table, or the defaults when it has none.</span>
+</span><span data-line="345">
+</span><span data-line="346"><span class="sd">    .. code-block:: toml</span>
+</span><span data-line="347">
+</span><span data-line="348"><span class="sd">        [report]</span>
+</span><span data-line="349"><span class="sd">        ledger_dir = "~/sync/crowsnest/ledger"   # the ledgers rows are triaged from</span>
+</span><span data-line="350">
+</span><span data-line="351"><span class="sd">    ``ledger_dir`` must be absolute or start with ``~``. A relative one would name a</span>
+</span><span data-line="352"><span class="sd">    different directory for each command run from a different place -- the report from one,</span>
+</span><span data-line="353"><span class="sd">    ``crowsnest watch`` from another -- which is the disagreement this setting exists to</span>
+</span><span data-line="354"><span class="sd">    end. A key the table does not know is an error, as in ``[attention]``.</span>
+</span><span data-line="355"><span class="sd">    """</span>
+</span><span data-line="356">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="357">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">REPORT_KEY</span><span class="p">)</span>
+</span><span data-line="358">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="359">        <span class="k">return</span> <span class="n">ReportSettings</span><span class="p">()</span>
+</span><span data-line="360">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="361">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">REPORT_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="362">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">ReportSettings</span><span class="p">)}</span>
+</span><span data-line="363">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
+</span><span data-line="364">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="365">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="366">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">REPORT_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+</span><span data-line="367">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="368">        <span class="p">)</span>
+</span><span data-line="369">    <span class="n">raw</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ledger_dir"</span><span class="p">)</span>
+</span><span data-line="370">    <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="371">        <span class="k">return</span> <span class="n">ReportSettings</span><span class="p">()</span>
+</span><span data-line="372">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">raw</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+</span><span data-line="373">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">REPORT_KEY</span><span class="si">}</span><span class="s2">] ledger_dir must be a path, not </span><span class="si">{</span><span class="n">raw</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="374">    <span class="n">found</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span data-line="375">    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+</span><span data-line="376">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="377">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">REPORT_KEY</span><span class="si">}</span><span class="s2">] ledger_dir must be absolute or start with ~, not "</span>
+</span><span data-line="378">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">raw</span><span class="si">!r}</span><span class="s2">: a relative one names a different directory from every directory "</span>
+</span><span data-line="379">            <span class="sa">f</span><span class="s2">"a command runs in"</span>
+</span><span data-line="380">        <span class="p">)</span>
+</span><span data-line="381">    <span class="k">return</span> <span class="n">ReportSettings</span><span class="p">(</span><span class="n">ledger_dir</span><span class="o">=</span><span class="n">found</span><span class="p">)</span></div>
 
-</span><span data-line="376">
-</span><span data-line="377">
-</span><span data-line="378"><span class="k">def</span><span class="w"> </span><span class="nf">_default_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Home</span><span class="p">:</span>
-</span><span data-line="379">    <span class="k">return</span> <span class="n">Home</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">DFLT_HOME_NAME</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">claude_home</span><span class="p">())</span>
-</span><span data-line="380">
-</span><span data-line="381">
+</span><span data-line="382">
+</span><span data-line="383">
+</span><span data-line="384"><span class="c1">#: The config table saying where ``crowsnest publish`` sends the page.</span>
+</span><span data-line="385"><span class="n">PUBLISH_KEY</span> <span class="o">=</span> <span class="s2">"publish"</span>
+</span><span data-line="386">
+</span><span data-line="387">
+<div class="viewcode-block" id="PublishSettings">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.PublishSettings">[docs]</a>
+</span><span data-line="388"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="389"><span class="k">class</span><span class="w"> </span><span class="nc">PublishSettings</span><span class="p">:</span>
+</span><span data-line="390"><span class="w">    </span><span class="sd">"""The ``[publish]`` table, validated: where the page goes (:mod:`crowsnest.publish`).</span>
+</span><span data-line="391">
+</span><span data-line="392"><span class="sd">    At most one of ``to`` and ``command``. Neither is fine until something publishes.</span>
+</span><span data-line="393">
+</span><span data-line="394"><span class="sd">    &gt;&gt;&gt; PublishSettings().to, PublishSettings().command</span>
+</span><span data-line="395"><span class="sd">    ('', ())</span>
+</span><span data-line="396"><span class="sd">    """</span>
+</span><span data-line="397">
+</span><span data-line="398">    <span class="n">to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="399">    <span class="n">command</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span></div>
+
+</span><span data-line="400">
+</span><span data-line="401">
+<div class="viewcode-block" id="publish_settings">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.publish_settings">[docs]</a>
+</span><span data-line="402"><span class="k">def</span><span class="w"> </span><span class="nf">publish_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PublishSettings</span><span class="p">:</span>
+</span><span data-line="403"><span class="w">    </span><span class="sd">"""The config file's ``[publish]`` table, or the defaults when it has none.</span>
+</span><span data-line="404">
+</span><span data-line="405"><span class="sd">    .. code-block:: toml</span>
+</span><span data-line="406">
+</span><span data-line="407"><span class="sd">        [publish]</span>
+</span><span data-line="408"><span class="sd">        to = "me@myserver:/srv/crowsnest/index.html"   # or a local path</span>
+</span><span data-line="409"><span class="sd">        # command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]</span>
+</span><span data-line="410">
+</span><span data-line="411"><span class="sd">    A key the table does not know is an error, as in ``[attention]``, and so is giving</span>
+</span><span data-line="412"><span class="sd">    both: which one wins would be a guess.</span>
+</span><span data-line="413"><span class="sd">    """</span>
+</span><span data-line="414">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="415">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PUBLISH_KEY</span><span class="p">)</span>
+</span><span data-line="416">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="417">        <span class="k">return</span> <span class="n">PublishSettings</span><span class="p">()</span>
+</span><span data-line="418">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="419">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="420">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">PublishSettings</span><span class="p">)}</span>
+</span><span data-line="421">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
+</span><span data-line="422">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="423">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="424">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+</span><span data-line="425">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="426">        <span class="p">)</span>
+</span><span data-line="427">    <span class="n">to</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"to"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"command"</span><span class="p">,</span> <span class="p">[])</span>
+</span><span data-line="428">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">to</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="429">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] to must be a string, not </span><span class="si">{</span><span class="n">to</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="430">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">command</span><span class="p">)):</span>
+</span><span data-line="431">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="432">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] command must be a list of strings, not </span><span class="si">{</span><span class="n">command</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="433">        <span class="p">)</span>
+</span><span data-line="434">    <span class="k">if</span> <span class="n">to</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="n">command</span><span class="p">:</span>
+</span><span data-line="435">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] gives both to and command; keep one"</span><span class="p">)</span>
+</span><span data-line="436">    <span class="k">return</span> <span class="n">PublishSettings</span><span class="p">(</span><span class="n">to</span><span class="o">=</span><span class="n">to</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">command</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">command</span><span class="p">))</span></div>
+
+</span><span data-line="437">
+</span><span data-line="438">
+</span><span data-line="439"><span class="k">def</span><span class="w"> </span><span class="nf">_default_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Home</span><span class="p">:</span>
+</span><span data-line="440">    <span class="k">return</span> <span class="n">Home</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">DFLT_HOME_NAME</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">claude_home</span><span class="p">())</span>
+</span><span data-line="441">
+</span><span data-line="442">
 <div class="viewcode-block" id="homes">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.homes">[docs]</a>
-</span><span data-line="382"><span class="k">def</span><span class="w"> </span><span class="nf">homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
-</span><span data-line="383"><span class="w">    </span><span class="sd">"""The configured homes, or the default one when the config file names none.</span>
-</span><span data-line="384">
-</span><span data-line="385"><span class="sd">    A config file that cannot be parsed is an error worth seeing, not a silent fallback:</span>
-</span><span data-line="386"><span class="sd">    a person who wrote one meant it.</span>
-</span><span data-line="387"><span class="sd">    """</span>
-</span><span data-line="388">    <span class="k">return</span> <span class="n">configured_homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span></div>
+</span><span data-line="443"><span class="k">def</span><span class="w"> </span><span class="nf">homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
+</span><span data-line="444"><span class="w">    </span><span class="sd">"""The configured homes, or the default one when the config file names none.</span>
+</span><span data-line="445">
+</span><span data-line="446"><span class="sd">    A config file that cannot be parsed is an error worth seeing, not a silent fallback:</span>
+</span><span data-line="447"><span class="sd">    a person who wrote one meant it.</span>
+</span><span data-line="448"><span class="sd">    """</span>
+</span><span data-line="449">    <span class="k">return</span> <span class="n">configured_homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span></div>
 
-</span><span data-line="389">
-</span><span data-line="390">
+</span><span data-line="450">
+</span><span data-line="451">
 <div class="viewcode-block" id="configured_homes">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.configured_homes">[docs]</a>
-</span><span data-line="391"><span class="k">def</span><span class="w"> </span><span class="nf">configured_homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
-</span><span data-line="392"><span class="w">    </span><span class="sd">"""The homes the config file's ``[[homes]]`` entries name; ``[]`` when it names none.</span>
-</span><span data-line="393">
-</span><span data-line="394"><span class="sd">    :func:`homes` falls back to the default home, whose path is whatever</span>
-</span><span data-line="395"><span class="sd">    ``$CLAUDE_CONFIG_DIR`` the *running* process has. That is right for reading, and</span>
-</span><span data-line="396"><span class="sd">    wrong for anything that must mean the same home in another account's terminal: a</span>
-</span><span data-line="397"><span class="sd">    command printed for later pasting (:func:`crowsnest.lineage.open_command`), say.</span>
-</span><span data-line="398">
-</span><span data-line="399"><span class="sd">    &gt;&gt;&gt; configured_homes(path='/nonexistent-config-for-doctest')</span>
-</span><span data-line="400"><span class="sd">    []</span>
-</span><span data-line="401"><span class="sd">    """</span>
-</span><span data-line="402">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="403">    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="404">    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="405">    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
-</span><span data-line="406">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">):</span>
-</span><span data-line="407">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: every [[homes]] entry needs a path"</span><span class="p">)</span>
-</span><span data-line="408">        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="409">            <span class="n">Home</span><span class="p">(</span>
-</span><span data-line="410">                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
-</span><span data-line="411">                <span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
-</span><span data-line="412">                <span class="n">remote</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
-</span><span data-line="413">                <span class="n">fresh_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fresh_seconds"</span><span class="p">,</span> <span class="n">DFLT_FRESH_SECONDS</span><span class="p">)),</span>
-</span><span data-line="414">            <span class="p">)</span>
-</span><span data-line="415">        <span class="p">)</span>
-</span><span data-line="416">    <span class="k">return</span> <span class="n">found</span></div>
+</span><span data-line="452"><span class="k">def</span><span class="w"> </span><span class="nf">configured_homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
+</span><span data-line="453"><span class="w">    </span><span class="sd">"""The homes the config file's ``[[homes]]`` entries name; ``[]`` when it names none.</span>
+</span><span data-line="454">
+</span><span data-line="455"><span class="sd">    :func:`homes` falls back to the default home, whose path is whatever</span>
+</span><span data-line="456"><span class="sd">    ``$CLAUDE_CONFIG_DIR`` the *running* process has. That is right for reading, and</span>
+</span><span data-line="457"><span class="sd">    wrong for anything that must mean the same home in another account's terminal: a</span>
+</span><span data-line="458"><span class="sd">    command printed for later pasting (:func:`crowsnest.lineage.open_command`), say.</span>
+</span><span data-line="459">
+</span><span data-line="460"><span class="sd">    &gt;&gt;&gt; configured_homes(path='/nonexistent-config-for-doctest')</span>
+</span><span data-line="461"><span class="sd">    []</span>
+</span><span data-line="462"><span class="sd">    """</span>
+</span><span data-line="463">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="464">    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="465">    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="466">    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
+</span><span data-line="467">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">):</span>
+</span><span data-line="468">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: every [[homes]] entry needs a path"</span><span class="p">)</span>
+</span><span data-line="469">        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="470">            <span class="n">Home</span><span class="p">(</span>
+</span><span data-line="471">                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+</span><span data-line="472">                <span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
+</span><span data-line="473">                <span class="n">remote</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+</span><span data-line="474">                <span class="n">fresh_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fresh_seconds"</span><span class="p">,</span> <span class="n">DFLT_FRESH_SECONDS</span><span class="p">)),</span>
+</span><span data-line="475">            <span class="p">)</span>
+</span><span data-line="476">        <span class="p">)</span>
+</span><span data-line="477">    <span class="k">return</span> <span class="n">found</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -603,7 +671,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=8f83b1af"></script>
+      <script src="../../_static/documentation_options.js?v=2bfb35b6"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -65,6 +65,7 @@ crowsnest report [--out FILE]      the roster as one phone-readable HTML page, n
                                    (--fragment: without the document wrapper, for publishing as an artifact;
                                     --interactive: buttons per row and a Refresh, live when published with the db capability;
                                     --plain: ignore what you marked with seen/later/done/note, for a copy to share)
+crowsnest publish [--to DEST]      render that page and send it where you read it: a path, host:path, or [publish] in the config
 crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
 crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
 crowsnest note|undo <session>      a note to yourself; one step back
@@ -255,6 +256,27 @@ Anything at all. Nothing in crowsnest ever rewrites this part.
 ```
 
 `last asked` and `last said` are mechanical — the `Stop` hook below writes them from the transcript tail, so they are true without anyone deciding anything. `state`, `open questions` and `decisions` are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.
+
+## A page that stays fresh without a session
+
+The artifact console needs a Claude session awake to courier it. For a page that is simply always current, render and send it on a schedule instead: `crowsnest publish` does both, and cron, launchd or a systemd timer runs it.
+
+Where it goes is yours to say, once, in `~/.config/crowsnest/config.toml`:
+
+```toml
+[publish]
+to = "~/Sync/crowsnest/index.html"            # a local path, e.g. a synced folder: written atomically
+# to = "me@myserver:/srv/crowsnest/index.html"  # host:path: rsync over ssh, never prompting
+# command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]   # any other route
+```
+
+`--to` on the command line overrides it. Then, for instance with cron, every minute:
+
+```default
+* * * * *  crowsnest publish --all-homes
+```
+
+The page names your sessions and quotes what they said (sanitised, as every page is), so send it somewhere only you can open: behind your own login, in a private folder, never a public bucket. The last page sent is also kept locally, under crowsnest’s data directory in `publish/index.html`.
 
 ## Being told instead of polling
 

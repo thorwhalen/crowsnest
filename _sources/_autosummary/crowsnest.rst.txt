@@ -49,6 +49,7 @@
    live
    open
    paths
+   publish
    registry
    report
    rows
