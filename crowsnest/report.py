@@ -870,6 +870,12 @@ CONSOLE_SCRIPT = r"""
       const count = [...block.querySelectorAll("li[id^='session-']")].filter((li) => !li.hidden).length;
       const figure = block.querySelector(".figure");
       if (figure) figure.textContent = String(count);
+      // The masthead's strip carries the same figure (#109); the live Later block has no cell.
+      const cell = document.querySelector(`.tallystrip a[href="#${block.id}"]`);
+      if (cell) {
+        cell.querySelector("b").textContent = String(count);
+        cell.parentElement.classList.toggle("is-zero", count === 0);
+      }
       if (block.classList.contains("later-live")) block.hidden = count === 0;
     }
     function laterBlock() {
@@ -1514,10 +1520,38 @@ REGISTER_CSS = """
 DFLT_TITLE = "crowsnest"
 
 #: The time beside each quoted item, and the word that says it is stale. The word carries
-#: the signal and the colour only repeats it.
+#: the signal; it is set quietly, because on a busy machine most rows are stale and a row
+#: shouting it on every line drowned the ask beside it (#109).
 WHEN_CSS = """
 .when time{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
-.when .stale{font-family:var(--mono);font-weight:600;color:var(--needs)}
+.when .stale{font-family:var(--mono);font-weight:400;color:var(--ink-soft)}
+"""
+
+#: The overview's own rules (#109): the masthead's folded caveats, the one-line tally
+#: strip, an empty register drawn as one line, and a row's references past the first few
+#: behind a fold. All of them apply to every page, store or no store, so an empty
+#: attention store still renders the page byte for byte as ``plain=True`` does.
+OVERVIEW_CSS = """
+.about{max-width:38rem}
+.about>summary{cursor:pointer;font-family:var(--mono);font-size:.72rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.about[open]>summary{margin-bottom:.6rem}
+.about .claim+.claim{margin-top:.6rem}
+.tallystrip a{color:inherit;text-decoration:none}
+.tallystrip li.is-zero b{color:var(--ink-soft)}
+.register:has(>.empty){margin-top:1.4rem}
+.register:has(>.empty) .register-head{align-items:baseline;padding-bottom:.45rem;
+  border-bottom-color:var(--rule)}
+.register:has(>.empty) .figure{font-size:1.35rem;line-height:1;min-width:1.5ch}
+.register:has(>.empty) h2{font-size:1.05rem;font-weight:500}
+.register:has(>.empty) .rule{display:none}
+.register:has(>.empty) .empty{padding:.45rem 0 0;font-size:.88rem}
+.refs-more{font-family:var(--mono);font-size:.74rem;color:var(--ink-soft)}
+.refs-more>summary{cursor:pointer;list-style:none;display:inline}
+.refs-more>summary::-webkit-details-marker{display:none}
+.refs-more>summary::before{content:"+ "}
+.refs-more[open]>summary::before{content:"- "}
+.refs-more>.where{margin-top:.15rem}
 """
 
 #: What the time on a row is called, by where it came from (:data:`crowsnest.said.BASES`).
@@ -1726,7 +1760,9 @@ def _said_age(row: Mapping[str, Any], clock: _Clock) -> tuple[str, str]:
         return "?", ""
     epoch, day, _ = when
     if day is not None:
-        return str(_days_before(day, clock)), "d"
+        days = _days_before(day, clock)
+        # A date-only source says "today", never "0 d"; the rail does not escape.
+        return (str(days) if days else "&lt;1"), "d"
     return _since(clock.now - epoch)
 
 
@@ -2047,9 +2083,21 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
             anchors.append(anchor)
     if not anchors:
         return ""
+    shown, more = anchors[:SHOWN_REFS], anchors[SHOWN_REFS:]
+    head = '<p class="where">refs <span class="sep">·</span> ' + " ".join(shown) + "</p>"
+    if not more:
+        return head
+    # The rest are one tap away, never gone: a row with twelve references is a wall of
+    # links on a phone, and the ask beside them is what the person came to read (#109).
     return (
-        '<p class="where">refs <span class="sep">·</span> ' + " ".join(anchors) + "</p>"
+        head + '<details class="refs-more"><summary>'
+        f"{len(more)} more</summary>"
+        '<p class="where">' + " ".join(more) + "</p></details>"
     )
+
+
+#: How many of a full row's references show before the rest fold (#109).
+SHOWN_REFS = 3
 
 
 def _row(
@@ -2589,35 +2637,40 @@ def _lineage_register(safe: _Sanitizer, found: Any) -> str:
 
 def _masthead(
     safe: _Sanitizer,
-    counts: Mapping[str, Any],
+    tally: Sequence[tuple[str, str, int]],
     stamp: str,
     title: str,
     *,
     zone: str,
     settings: AttentionSettings,
 ) -> str:
-    tally = [
-        ("Waiting", counts.get("waiting", 0), "needs"),
-        ("Busy", counts.get("busy", 0), "flight"),
-        ("Idle", counts.get("idle", 0), "done"),
-    ]
-    cells = "".join(
-        f'<div class="tally-cell tally--{tone}"><p class="tally-figure">{n}</p>'
-        f'<p class="tally-name">{name}</p></div>'
-        for name, n, tone in tally
+    """The masthead: the stamp in the largest type, the page's caveats behind one fold,
+    and the registers' figures on one line.
+
+    ``tally`` is ``(register id, name, count)`` per register, in page order: the same
+    numbers the register heads below carry, each linking to its register, so the strip
+    never contradicts the page under it (#109; before, it counted registry statuses,
+    and "0 waiting" sat over "9 Needs you"). The caveats fold because they are the same
+    two paragraphs every time, and on a phone they were the whole first screen.
+    """
+    strip = "".join(
+        f'<li{"" if n else " class=~is-zero~"}><a href="#{ident}"><b>{n}</b> '
+        f"<span>{safe.text(name)}</span></a></li>".replace("~", '"')
+        for ident, name, n in tally
     )
     return (
         '<header class="masthead">'
         '<p class="eyebrow">crowsnest <span class="sep">·</span> snapshot, not a status page</p>'
         f"<h1>{safe.text(title)}</h1>"
         f'<p class="stamp">as of <time>{safe.text(stamp)}</time></p>'
+        '<details class="about"><summary>How to read this page</summary>'
         '<p class="claim">Every session below was alive at that moment, read from its '
         "registry entry and the tail of its transcript, and nothing since. Re-run "
         "<code>crowsnest report</code> for a newer one.</p>"
         f'<p class="claim">Times on the rows are in {safe.text(zone)}. Each is when the '
         "words beside it were said, taken from where they were said, never the time this "
-        "page was made.</p>"
-        f'<div class="tally">{cells}</div>' + _console(settings) + "</header>"
+        "page was made.</p></details>"
+        f'<ul class="tallystrip">{strip}</ul>' + _console(settings) + "</header>"
     )
 
 
@@ -2793,9 +2846,27 @@ def _record_or_none(item: str, store: Mapping[str, dict]) -> _attention.Record |
         return None
 
 
-def _unseen_first(rows: Sequence[Mapping[str, Any]], view: _View) -> list:
-    """``rows`` with the seen ones moved below the rest, each half in its own order."""
-    return sorted(rows, key=lambda row: view.shown(row) == _attention.SEEN)
+def _unseen_first(rows: Sequence[Mapping[str, Any]], view: _View, clock: _Clock) -> list:
+    """``rows`` with the seen ones moved below the rest; within each half, a session that
+    is waiting right now (the registry's live signal) before one that only wrote that it
+    needs someone, and then the most recently said first (#109).
+
+    The time is the one the row prints (:func:`_when`: the row's own words, a bare date
+    counted from its midnight, a future or unparsable time unknown), so the order and the
+    rail's figure never disagree. Unknown sorts last. The sort is stable, so equal rows
+    keep the roster's order.
+    """
+
+    def key(row: Mapping[str, Any]) -> tuple:
+        when = _when(row, clock)
+        return (
+            view.shown(row) == _attention.SEEN,
+            row.get("status") != "waiting",
+            when is None,
+            -when[0] if when else 0.0,
+        )
+
+    return sorted(rows, key=key)
 
 
 def _landed(row: Mapping[str, Any]) -> bool:
@@ -3242,7 +3313,6 @@ def _render(
 ) -> str:
     safe = _Sanitizer()
     sessions = list(roster.get("sessions") or [])
-    counts = dict(roster.get("counts") or {})
     stamp = datetime.fromtimestamp(clock.now, tz=timezone.utc).strftime(
         "%Y-%m-%d %H:%M UTC"
     )
@@ -3297,9 +3367,10 @@ def _render(
     quiet = unclaimed(list(shown))  # everything no register above took
 
     # Seen rows sort below the unseen ones of their register (triage-ux 2.10); the
-    # register order itself never changes. An empty store sees nothing, so nothing moves.
+    # register order itself never changes. An empty store sees nothing, so only the
+    # live signal and the rows' own times decide the order (#109).
     needs_you, clear, waiting, busy, finished, quiet = (
-        _unseen_first(rows, view)
+        _unseen_first(rows, view, clock)
         for rows in (needs_you, clear, waiting, busy, finished, quiet)
     )
     waiting_on_you = len(needs_you) + sum(
@@ -3324,7 +3395,9 @@ def _render(
             rule="Holding for a person: a question to answer, a decision to make, or "
             "something only you can do.",
             empty=nothing_needs_you,
-            lead=_wip(waiting_on_you, waiting_on_you - len(needs_you)) if view.on else "",
+            lead=(
+                _wip(waiting_on_you, waiting_on_you - len(needs_you)) if view.on else ""
+            ),
             start_open=True,
         )
         if triaged
@@ -3342,8 +3415,20 @@ def _render(
         )
     )
 
+    tally = (
+        [
+            ("needs-you", "need you", len(needs_you)),
+            ("safe-to-close", "safe to close", len(clear)),
+        ]
+        if triaged
+        else [("waiting", "waiting", len(waiting))]
+    ) + [
+        ("finished", "just finished", len(finished)),
+        ("working", "working", len(busy)),
+        ("quiet", "quiet", len(quiet)),
+    ]
     parts = [
-        _masthead(safe, counts, stamp, title, zone=_zone_name(clock), settings=settings),
+        _masthead(safe, tally, stamp, title, zone=_zone_name(clock), settings=settings),
         _since_line(shown, view),
         head,
     ]
@@ -3405,7 +3490,8 @@ def _render(
     attention_css = ATTENTION_CSS if view.on else ""
     open_css = OPEN_CSS if _open_helper.get() else ""
     sheet = (
-        f"{_CSS}{_TREE_CSS}{REGISTER_CSS}{WAY_IN_CSS}{WHEN_CSS}{attention_css}{open_css}"
+        f"{_CSS}{_TREE_CSS}{REGISTER_CSS}{WAY_IN_CSS}{WHEN_CSS}{OVERVIEW_CSS}"
+        f"{attention_css}{open_css}"
     )
     style_tag = f"<style>{sheet}</style>"
     if _interactive.get():

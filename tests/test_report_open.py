@@ -38,9 +38,13 @@ def _page(*rows, **kw):
 
 def test_every_link_opens_in_a_new_tab():
     html = _page(_row("linked", session_url=URL, repo_url="https://github.com/o/r"))
+    # An in-page jump (the masthead's tally strip, `href="#needs-you"`) stays on the
+    # page, so it must NOT open a tab; every link that leaves the page must.
     anchors = re.findall(r"<a [^>]*>", html)
     assert anchors
-    assert all('target="_blank" rel="noopener"' in a for a in anchors)
+    for a in anchors:
+        leaves = not re.search(r'\shref="#', a)
+        assert ('target="_blank" rel="noopener"' in a) == leaves, a
 
 
 def test_without_the_helper_the_static_page_has_no_script_and_no_data_attributes():
