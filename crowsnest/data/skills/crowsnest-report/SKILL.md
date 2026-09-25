@@ -146,6 +146,12 @@ while the user is operating from the page, poll:
 
 and stop the loop when they say they are done.
 
+**A courier tick is silent.** A tick that imported nothing, exported nothing, found no
+queued intent and did not republish ends its turn with no prose at all (one character at
+most): the heartbeat is on the page, and it is not news. Say one line only when an intent
+was handled, a register changed, or something failed. A "tick at 05:51Z: nothing pending"
+reply every minute is an hour of context spent on nothing (kill criterion K3).
+
 **The watcher as courier.** The page's `db` cannot be read by a Python process, and the
 page cannot reach one; only this session holds both ends (the `Artifact` tool on one
 side, `crowsnest attention import`/`export` on the other). Do this every tick, before

@@ -95,6 +95,11 @@ So send, subscribe, or hand the wait to a background task (`run_in_background`, 
 `--watch`, or an `until … done` loop in the foreground is the one thing that makes you
 slow, and it is never needed.
 
+**Routine loop turns are silent; report changes, never heartbeats.** A turn that only
+re-arms a `Monitor`, notes a line nobody needs, or wakes on a loop to find nothing new ends
+with no prose at all (one character at most). Every "nothing new" line is paid for again
+in every later turn, and a day of them is what a compaction throws the roster out to keep.
+
 ## When you are compacted
 
 Only what is re-read from disk survives a compaction verbatim. So keep, above everything
