@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from fixtures import ALIVE, demo_home
 
-from crowsnest import registry, said, tools
+from crowsnest import registry, report, said, tools
 from crowsnest.__main__ import main
 from crowsnest.attention import fingerprint
 from crowsnest.ledger import FIELDS
@@ -198,6 +198,24 @@ def test_an_undated_ledger_is_dated_by_its_last_write_and_says_that_is_an_upper_
     assert verdict["said_at"] == said.from_epoch(NOW - 3 * 3600)
     shown = item(page(row(verdict=verdict)))
     assert ">09:00</time>" in shown and "undated" in shown
+
+
+def test_the_undated_caveat_is_on_the_time_not_printed_on_the_line():
+    """The caveat is the title of a dotted, focusable ``<abbr>`` around the time: hover,
+    tap (a phone has no hover) and a screen reader all reach it, and it no longer takes
+    most of the line on every such row. The page says what the dotted line means once."""
+    notes = ledger("## Notes\n\nOpen for Thor: attach the GIF.\n", written=NOW - 3 * 3600)
+    whole = page(row(verdict=classify_row(row(), ledger=notes)))
+    shown = item(whole)
+    assert (
+        f'<abbr class="undated" tabindex="0" title="{report.UNDATED_NOTE}">'
+        '<time datetime="' in shown
+    )
+    assert shown.count("may be older") == 1  # only inside the title
+    assert "abbr.undated:focus::after" in whole
+    assert "dotted underline" in whole.split("How to read this page", 1)[1]
+    dated = item(page(said_row("2026-02-06T09:00:00Z")))
+    assert "undated" not in dated
 
 
 # --------------------------------------------------------------------------------------

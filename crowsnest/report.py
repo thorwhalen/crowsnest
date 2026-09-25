@@ -1525,7 +1525,20 @@ DFLT_TITLE = "crowsnest"
 WHEN_CSS = """
 .when time{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
 .when .stale{font-family:var(--mono);font-weight:400;color:var(--ink-soft)}
+.when abbr.undated{text-decoration:underline dotted var(--ink-soft);
+  text-underline-offset:.2em;cursor:help}
+.when abbr.undated:focus{text-decoration-color:var(--ink)}
+.when abbr.undated:focus::after{content:" (" attr(title) ")";
+  font-size:.85em;color:var(--ink-soft)}
 """
+
+#: The caveat on a time that is only the ledger's last write. It sits on the time
+#: itself, as the ``title`` of a dotted ``<abbr>``: a mouse hovers it, a keyboard or a
+#: finger focuses it (``tabindex``; a phone has no hover) and ``WHEN_CSS`` then prints it
+#: inline, and a screen reader reads it. Printed on every such row it was most of the line.
+UNDATED_NOTE = (
+    "Undated: this is when the ledger was last written, so the words may be older."
+)
 
 #: The overview's own rules (#109): the masthead's folded caveats, the one-line tally
 #: strip, an empty register drawn as one line, and a row's references past the first few
@@ -1788,9 +1801,12 @@ def _when_line(row: Mapping[str, Any], clock: _Clock) -> str:
         shown = machine = day.isoformat()
         days = _days_before(day, clock)
         ago = f"{days} d ago" if days else "today"
-    parts = [f'<time datetime="{machine}">{shown}</time>', ago]
+    stamp = f'<time datetime="{machine}">{shown}</time>'
     if basis == _said.LEDGER_WRITTEN:
-        parts.append("undated: when the ledger was last written, the words may be older")
+        stamp = (
+            f'<abbr class="undated" tabindex="0" title="{UNDATED_NOTE}">{stamp}</abbr>'
+        )
+    parts = [stamp, ago]
     if clock.now - epoch > clock.stale_after:
         limit = _exactly(clock.stale_after)
         parts.append(f'<strong class="stale">stale: older than {limit}</strong>')
@@ -2669,7 +2685,8 @@ def _masthead(
         "<code>crowsnest report</code> for a newer one.</p>"
         f'<p class="claim">Times on the rows are in {safe.text(zone)}. Each is when the '
         "words beside it were said, taken from where they were said, never the time this "
-        "page was made.</p></details>"
+        "page was made. A time with a dotted underline is only when a ledger was last "
+        "written: its words may be older. Tap or hover it to be told so.</p></details>"
         f'<ul class="tallystrip">{strip}</ul>' + _console(settings) + "</header>"
     )
 
