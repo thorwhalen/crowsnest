@@ -213,7 +213,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None, actions=False, action_store=None, synthesiser=None, owed=False, owed_path=None)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None, actions=False, action_store=None, synthesiser=None, owed=False, owed_path=None, themes=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.md#crowsnest.report.render_report)
 over what [`roster()`](#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
@@ -277,6 +277,7 @@ line `action_store` holds for its revision, labelled *generated*.
 `owed=True` adds the *Owed* register: openloops’ open manual-task issues, read from
 a cache (`owed_path`, [`crowsnest.owed`](crowsnest.owed.md#module-crowsnest.owed)) that this call refreshes when it is more
 than ten minutes old, never running an issue’s verify command.
+`themes` is the board’s `[themes]` table; `None` reads the config file’s.
 
 `links=False` leaves the references off the page. They are still resolved: a
 verdict reader may read them, and the verbs pin the row with them. To resolve

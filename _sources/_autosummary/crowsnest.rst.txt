@@ -59,6 +59,7 @@
    rows
    said
    skills
+   themes
    tools
    tree
    triage

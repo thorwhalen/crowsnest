@@ -378,30 +378,31 @@ silently wrote nothing would be worse than a stack trace.
 
 ### Modules
 
-| [`account`](crowsnest.account.md#module-crowsnest.account)     | Which account a new session runs under, and which `claude` binary starts it.                          |
-|---------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| [`actions`](crowsnest.actions.md#module-crowsnest.actions)     | One generated line per Needs-you item: what the person must do, in at most eight words.               |
-| [`activity`](crowsnest.activity.md#module-crowsnest.activity)   | What a session is doing right now, read from the tail of its transcript.                              |
-| [`attention`](crowsnest.attention.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                    |
-| [`config`](crowsnest.config.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                |
-| [`courier`](crowsnest.courier.md#module-crowsnest.courier)     | The console's courier with no LLM: carry an owner-served console store both ways.                     |
-| [`hook`](crowsnest.hook.md#module-crowsnest.hook)           | The push half of the stream: what Claude Code's own hooks tell crowsnest.                             |
-| [`init`](crowsnest.init.md#module-crowsnest.init)           | Everything a crowsnest session needs before it can be one, set up in one command.                     |
-| [`ledger`](crowsnest.ledger.md#module-crowsnest.ledger)       | The ledger: the durable page a session leaves for the watcher, one file per session.                  |
-| [`lineage`](crowsnest.lineage.md#module-crowsnest.lineage)     | Who started whom: the spawn graph, as data.                                                           |
-| [`links`](crowsnest.links.md#module-crowsnest.links)         | References in a session's own words, turned into links you can click.                                 |
-| [`live`](crowsnest.live.md#module-crowsnest.live)           | What a published page may know about the sessions *now*: one small document, and a recap.             |
-| [`open`](crowsnest.open.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                   |
-| [`owed`](crowsnest.owed.md#module-crowsnest.owed)           | What the person owes their sessions: the open `manual-task` issues openloops lists.                   |
-| [`paths`](crowsnest.paths.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
-| [`publish`](crowsnest.publish.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.      |
-| [`refstate`](crowsnest.refstate.md#module-crowsnest.refstate)   | What a referenced issue or pull request is now: open or closed, and its title.                        |
-| [`registry`](crowsnest.registry.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
-| [`report`](crowsnest.report.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
-| [`rows`](crowsnest.rows.md#module-crowsnest.rows)           | How an item's row is built and hashed: one value, taken whole by every surface that pins it.          |
-| [`said`](crowsnest.said.md#module-crowsnest.said)           | When the thing an item quotes was said: its own time, taken from its own source.                      |
-| [`skills`](crowsnest.skills.md#module-crowsnest.skills)       | The agent-facing surface: the skills, the subagent, and the command that installs them.               |
-| [`tools`](crowsnest.tools.md#module-crowsnest.tools)         | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                      |
-| [`tree`](crowsnest.tree.md#module-crowsnest.tree)           | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                               |
-| [`triage`](crowsnest.triage.md#module-crowsnest.triage)       | Which sessions need you, which are safe to close, and which are still going.                          |
-| [`watch`](crowsnest.watch.md#module-crowsnest.watch)         | A stream of what changed, so a monitor is told instead of made to poll.                               |
+| [`account`](crowsnest.account.md#module-crowsnest.account)     | Which account a new session runs under, and which `claude` binary starts it.                                                         |
+|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| [`actions`](crowsnest.actions.md#module-crowsnest.actions)     | One generated line per Needs-you item: what the person must do, in at most eight words.                                              |
+| [`activity`](crowsnest.activity.md#module-crowsnest.activity)   | What a session is doing right now, read from the tail of its transcript.                                                             |
+| [`attention`](crowsnest.attention.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                                                   |
+| [`config`](crowsnest.config.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                                               |
+| [`courier`](crowsnest.courier.md#module-crowsnest.courier)     | The console's courier with no LLM: carry an owner-served console store both ways.                                                    |
+| [`hook`](crowsnest.hook.md#module-crowsnest.hook)           | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
+| [`init`](crowsnest.init.md#module-crowsnest.init)           | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
+| [`ledger`](crowsnest.ledger.md#module-crowsnest.ledger)       | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
+| [`lineage`](crowsnest.lineage.md#module-crowsnest.lineage)     | Who started whom: the spawn graph, as data.                                                                                          |
+| [`links`](crowsnest.links.md#module-crowsnest.links)         | References in a session's own words, turned into links you can click.                                                                |
+| [`live`](crowsnest.live.md#module-crowsnest.live)           | What a published page may know about the sessions *now*: one small document, and a recap.                                            |
+| [`open`](crowsnest.open.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                                                  |
+| [`owed`](crowsnest.owed.md#module-crowsnest.owed)           | What the person owes their sessions: the open `manual-task` issues openloops lists.                                                  |
+| [`paths`](crowsnest.paths.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                                                        |
+| [`publish`](crowsnest.publish.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.                                     |
+| [`refstate`](crowsnest.refstate.md#module-crowsnest.refstate)   | What a referenced issue or pull request is now: open or closed, and its title.                                                       |
+| [`registry`](crowsnest.registry.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                                               |
+| [`report`](crowsnest.report.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere.                                |
+| [`rows`](crowsnest.rows.md#module-crowsnest.rows)           | How an item's row is built and hashed: one value, taken whole by every surface that pins it.                                         |
+| [`said`](crowsnest.said.md#module-crowsnest.said)           | When the thing an item quotes was said: its own time, taken from its own source.                                                     |
+| [`skills`](crowsnest.skills.md#module-crowsnest.skills)       | The agent-facing surface: the skills, the subagent, and the command that installs them.                                              |
+| [`themes`](crowsnest.themes.md#module-crowsnest.themes)       | Which theme each session belongs to: the person's `[themes]` table first, then what the row itself says (the action-first pass, C1). |
+| [`tools`](crowsnest.tools.md#module-crowsnest.tools)         | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                                                     |
+| [`tree`](crowsnest.tree.md#module-crowsnest.tree)           | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                                                              |
+| [`triage`](crowsnest.triage.md#module-crowsnest.triage)       | Which sessions need you, which are safe to close, and which are still going.                                                         |
+| [`watch`](crowsnest.watch.md#module-crowsnest.watch)         | A stream of what changed, so a monitor is told instead of made to poll.                                                              |

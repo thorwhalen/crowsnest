@@ -28,6 +28,7 @@
 - [crowsnest.rows](crowsnest.rows.html.md): How an item’s row is built and hashed: one value, taken whole by every surface that pins it.
 - [crowsnest.said](crowsnest.said.html.md): When the thing an item quotes was said: its own time, taken from its own source.
 - [crowsnest.skills](crowsnest.skills.html.md): The agent-facing surface: the skills, the subagent, and the command that installs them.
+- [crowsnest.themes](crowsnest.themes.html.md): Which theme each session belongs to: the person’s &#96;&#91;themes&#93;&#96; table first, then what
 - [crowsnest.tools](crowsnest.tools.html.md): The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.
 - [crowsnest.tree](crowsnest.tree.html.md): The spawn forest as a picture: laid out in Python, drawn as inline SVG.
 - [crowsnest.triage](crowsnest.triage.html.md): Which sessions need you, which are safe to close, and which are still going.
