@@ -1770,6 +1770,11 @@ OVERVIEW_CSS = """
 .thin.is-unknown{box-shadow:inset 3px 0 0 var(--unsure)}
 .thin.is-unknown .thin-age{color:var(--unsure)}
 .unknown-mark{font-family:var(--mono);font-weight:600;color:var(--unsure);margin-right:.35rem}
+.action.is-raw{color:var(--ink-soft)}
+.said-clip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--ink-soft);font-size:.9rem;margin:.1rem 0 .3rem}
+.source{margin-top:.35rem}
+.source>summary{cursor:pointer;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:var(--ink-soft)}
+.source[open]>summary{margin-bottom:.35rem}
 .action{font-size:1.06rem;line-height:1.35;color:var(--ink);margin:.1rem 0 .35rem}
 .gen-tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--ink-soft);vertical-align:.12em}
 .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -2492,22 +2497,38 @@ def _row(
     tone: str,
     lines: Sequence[str],
     reach: str = "",
+    source: Sequence[str] | None = None,
 ) -> str:
-    """One row: its chip, how long ago its item was said, then what it quotes and when."""
+    """One row: its chip, how long ago its item was said, then what it quotes and when.
+
+    With ``source`` (a Needs-you card), the row leads with ``lines`` -- what to do -- and its
+    meta line, then its buttons; what the session wrote (``source``), when, and its
+    references go into one closed fold, the deferred layer (the action-first pass).
+    """
     ident = _slug(str(row.get("label") or row.get("session_id") or ""))
     figure, unit = _said_age(row, clock)
     attended = _view.get().of(row)
     # A needs register is where a change is announced in words; anywhere else it is a dot.
     loud = tone == "needs"
-    body = [
-        f'<p class="ask">{safe.text(row.get("label"))}{_dot(attended, loud=loud)}</p>',
-        _where(safe, row),
-        *lines,
-        _when_line(row, clock),
-        *_attention_lines(safe, attended, clock, loud=loud),
-        _refs(safe, row),
-        _controls(safe, row),
-    ]
+    if source is not None:
+        body = [
+            f'<p class="ask">{safe.text(row.get("label"))}{_dot(attended, loud=loud)}</p>',
+            *lines,
+            _where(safe, row),
+            *_attention_lines(safe, attended, clock, loud=loud),
+            _controls(safe, row),
+            _source_fold(safe, row, clock, source),
+        ]
+    else:
+        body = [
+            f'<p class="ask">{safe.text(row.get("label"))}{_dot(attended, loud=loud)}</p>',
+            _where(safe, row),
+            *lines,
+            _when_line(row, clock),
+            *_attention_lines(safe, attended, clock, loud=loud),
+            _refs(safe, row),
+            _controls(safe, row),
+        ]
     return (
         f'<li class="row row--{tone}{_state_class(attended)}" id="session-{ident}"'
         f"{_item_attrs(safe, attended)}>"
@@ -2817,14 +2838,113 @@ def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> s
     reason = verdict.get("reason")
     if reason and reason not in (row.get("waiting_for"), act.get("pending_question")):
         lines.append(_line(safe, _WHY_CHIPS.get(verdict.get("why"), "needs"), reason))
+    said = str(
+        act.get("pending_question") or reason or row.get("waiting_for") or ""
+    ).strip()
     action = _action(safe, row)
-    if action:
-        lines.insert(0, action)
+    # What to do leads; the words it came from, whole, are in the fold. With a generated
+    # line, two lines of what was said stay out to check it by; without one, the ask's
+    # first clause stands in, marked raw.
+    head = [action, _said_clip(safe, said)] if action else [_raw_action(safe, said)]
     chip = _WHY_CHIPS.get(verdict.get("why"), "waiting")
     # Reach is attention's one derived context (triage-ux 2.1). Only a page that applies
     # the store carries it, so a page from an empty store keeps its bytes.
     reach = _attention.reach(row) if _view.get().on else ""
-    return _row(safe, row, clock, chip=chip, tone="needs", lines=lines, reach=reach)
+    return _row(
+        safe,
+        row,
+        clock,
+        chip=chip,
+        tone="needs",
+        lines=[h for h in head if h],
+        reach=reach,
+        source=lines,
+    )
+
+
+#: What starts a clause that cannot stand alone: a quote cut mid-token, a table cell, a
+#: code span or markup, or the tail of a URL.
+_UNREADABLE = re.compile(r"^\s*(?:[`|~*;:,()\]}]|[A-Za-z]{1,4}[/`]|\d+\)\s*[a-z])")
+
+#: A clause that opens by saying there is nothing, which a card must not lead with.
+_SAYS_NOTHING = re.compile(r"^(?:none|nothing|n/?a)\b", re.IGNORECASE)
+
+#: List markers and emphasis the first clause is read past (``1.``, ``-``, ``**``).
+_LEAD_MARKUP = re.compile(r"^(?:\s*(?:[-*+>]|\d+[.)])\s+|\s*[*_]{1,3}(?=\S))+")
+
+#: The fewest words a clause needs to stand in for a generated line.
+RAW_MIN_WORDS = 3
+
+#: How much of an ask's first clause stands in for a missing generated line.
+RAW_LIMIT = 90
+
+
+def _first_clause(text: str) -> str:
+    """The ask up to its first sentence break, on one line, clipped.
+
+    >>> _first_clause('Squash or rebase? The PR is https://x/y. Then tag it.')
+    'Squash or rebase?'
+    >>> _first_clause('Set the key — via tw-edit-secret; then restart')
+    'Set the key'
+    >>> _first_clause('1. **Merge** the PR. Then tag it.')
+    'Merge the PR.'
+    """
+    one = _LEAD_MARKUP.sub("", " ".join(str(text or "").split())).replace("**", "")
+    cut = re.split(r"(?<=[.?!])\s+|\s+[\u2014\u2013]\s+|;\s+", one, maxsplit=1)[0]
+    return cut if len(cut) <= RAW_LIMIT else cut[: RAW_LIMIT - 1].rstrip() + "\u2026"
+
+
+def _raw_action(safe: _Sanitizer, said: str) -> str:
+    """The stand-in for a missing generated line: the ask's first clause, marked raw, or a
+    pointer to the source when that clause cannot stand alone."""
+    clause = _first_clause(said)
+    if (
+        len(clause.split()) < RAW_MIN_WORDS
+        or _UNREADABLE.match(clause)
+        or _SAYS_NOTHING.match(clause)
+    ):
+        return '<p class="action is-raw">open the source below</p>'
+    return (
+        f'<p class="action is-raw">{safe.text(clause)}'
+        ' <span class="gen-tag">raw</span></p>'
+    )
+
+
+def _said_clip(safe: _Sanitizer, said: str) -> str:
+    """Two lines of what the session said, beside a generated line, to check it by."""
+    one = " ".join(said.split())
+    return f'<p class="said-clip">It said: {safe.text(one)}</p>' if one else ""
+
+
+def _source_fold(
+    safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock, lines: Sequence[str]
+) -> str:
+    """The card's deferred layer: its words whole, when they were said, its references."""
+    refs = _refs(safe, row)
+    count = refs.count("<a ")
+    when = _when(row, clock)
+    said = ""
+    if when is not None:
+        epoch, day, _ = when
+        said = (
+            day.isoformat() if day is not None else clock.local(epoch).strftime("%H:%M")
+        )
+    summary = " \u00b7 ".join(
+        part
+        for part in (
+            "source",
+            f"{count} ref{'s' if count != 1 else ''}" if count else "",
+            f"said {said}" if said else "",
+        )
+        if part
+    )
+    return (
+        f'<details class="source"><summary>{summary}</summary>'
+        + "".join(lines)
+        + _when_line(row, clock)
+        + refs
+        + "</details>"
+    )
 
 
 def _safe_to_close_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str:

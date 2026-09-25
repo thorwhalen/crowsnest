@@ -84,7 +84,9 @@ def tag(html, label):
 
 def register(html, ident):
     after = html.split(f'id="{ident}"', 1)[1]
-    return re.split(r"<section |<details |<footer ", after, maxsplit=1)[0]
+    return re.split(
+        r"<section class=\"register|<details class=\"register|<footer ", after, maxsplit=1
+    )[0]
 
 
 def test_every_full_row_offers_seen_later_done_and_note_beside_the_intents():

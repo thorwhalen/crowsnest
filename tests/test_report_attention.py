@@ -103,7 +103,9 @@ def page(rows, store, **kw):
 def register(html, ident):
     """One register's markup: from its id to the next register or the footer."""
     after = html.split(f'id="{ident}"', 1)[1]
-    return re.split(r"<section |<details |<footer ", after, maxsplit=1)[0]
+    return re.split(
+        r"<section class=\"register|<details class=\"register|<footer ", after, maxsplit=1
+    )[0]
 
 
 def li(html, label):

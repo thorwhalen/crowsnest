@@ -75,7 +75,9 @@ def li(html, label):
 
 def register(html, ident):
     after = html.split(f'id="{ident}"', 1)[1]
-    return re.split(r"<section |<details |<footer ", after, maxsplit=1)[0]
+    return re.split(
+        r"<section class=\"register|<details class=\"register|<footer ", after, maxsplit=1
+    )[0]
 
 
 def mark(store, r, step, **kw):
