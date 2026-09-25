@@ -3550,6 +3550,9 @@ def _render(
     safe = _Sanitizer()
     sessions = list(roster.get("sessions") or [])
     stamp = _stamp(safe, clock)
+    rendered_at = datetime.fromtimestamp(clock.now, tz=timezone.utc).strftime(
+        "%Y-%m-%d %H:%M UTC"
+    )
 
     # A roster classified by `crowsnest.triage` organises the page by what each session
     # *needs*, which is the question a person actually has. Without verdicts the page
@@ -3711,7 +3714,7 @@ def _render(
         _lineage_register(safe, roster.get("lineage")),
         _quiet_register(safe, quiet, clock),
         _review_register(safe, sessions, view, clock, settings),
-        _footer(safe, stamp, handled=handled),
+        _footer(safe, rendered_at, handled=handled),
     ]
     # The badge (triage-ux 2.4): only what is unread in the register that needs the
     # person, never a total across the page.
