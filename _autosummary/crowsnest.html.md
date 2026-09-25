@@ -380,6 +380,7 @@ silently wrote nothing would be worse than a stack trace.
 
 | [`account`](crowsnest.account.html.md#module-crowsnest.account)     | Which account a new session runs under, and which `claude` binary starts it.                          |
 |---------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| [`actions`](crowsnest.actions.html.md#module-crowsnest.actions)     | One generated line per Needs-you item: what the person must do, in at most eight words.               |
 | [`activity`](crowsnest.activity.html.md#module-crowsnest.activity)   | What a session is doing right now, read from the tail of its transcript.                              |
 | [`attention`](crowsnest.attention.html.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                    |
 | [`config`](crowsnest.config.html.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                |

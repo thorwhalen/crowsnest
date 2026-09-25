@@ -38,6 +38,7 @@
    :recursive:
 
    account
+   actions
    activity
    attention
    config

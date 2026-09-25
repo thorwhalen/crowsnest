@@ -216,7 +216,7 @@ are placed directly: the figure down the first column, the heading and the rule 
 the second. Without this the rule falls below the head’s hairline, at the page’s left
 edge, on every register that folds.
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None, action_line=None)
 
 The roster [`crowsnest.tools.roster()`](crowsnest.tools.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -260,6 +260,10 @@ is not interactive, and `None` renders exactly the page from before it existed.
 -> {"state", "title", "closed_at"} | None` ([`crowsnest.refstate.state_of()`](crowsnest.refstate.md#crowsnest.refstate.state_of)):
 a row’s references then list open ones first, each with its title, and closed ones
 last and muted. The page fetches nothing; `None` renders as before it existed.
+
+`action_line` is each Needs-you row’s generated line, a callable `(row) -> {"line",
+...} | None` ([`crowsnest.actions.line_for()`](crowsnest.actions.md#crowsnest.actions.line_for)): it leads the row, labelled
+*generated*, above the words it came from. `None` renders as before.
 
 `open_helper=True` adds one small script ([`OPEN_SCRIPT`](#crowsnest.report.OPEN_SCRIPT)) for a page someone
 opens in a browser: it routes each `open` by the account’s browser the reader chose

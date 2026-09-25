@@ -1,0 +1,21 @@
+crowsnest.actions
+=================
+
+.. automodule:: crowsnest.actions
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MAX_WORDS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      claude_synthesiser
+      dflt_store
+      line_for
+      refresh
+   

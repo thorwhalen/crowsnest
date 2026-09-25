@@ -1,4 +1,4 @@
-> built 2026-09-25 15:50 UTC from 3d2d2c2 (main) · crowsnest 0.0.70. Details: build_info.json
+> built 2026-09-25 15:55 UTC from de55d46 (main) · crowsnest 0.0.71. Details: build_info.json
 
 # index.html.md
 
@@ -565,6 +565,88 @@ outright and fails for a name it does not know. Only an absolute path is believe
 
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+
+# _autosummary/crowsnest.actions.html.md
+
+# crowsnest.actions
+
+One generated line per Needs-you item: what the person must do, in at most eight words.
+
+A Needs-you row quotes what the session wrote, and what it wrote is often a paragraph, a
+list, or the tail of a table: the person has to read it all, and open its references, to
+find the one thing asked of them. This module writes that thing as one imperative line
+(“Approve mergeset history rewrite and PyPI deletions”), which the page shows first and
+labels *generated*, with the words it came from one fold away.
+
+**Never at render.** [`refresh()`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.refresh) writes lines ahead of time into a store keyed by the
+item’s attention id, each with the revision it was made for; the page shows a line only
+while that revision is the row’s own, so a material change makes a new one and nothing
+else does. A run writes at most `limit` lines, so a scheduled publish is not held up.
+
+**Nothing invented.** The model sees the ask, the verdict’s kind, and the references’
+titles and states – never transcript text – and is told to answer `null` when the ask
+names no object, and `no_ask` when it asks for nothing. A line longer than eight words,
+or on more than one line, is refused and stored as `null`.
+
+`synthesiser=` is the seam: a callable `(brief) -> {"line", "cites", "verdict"}`. The
+default, [`claude_synthesiser()`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.claude_synthesiser), runs `claude -p` with the cheapest model, in an
+empty directory, with its hooks quiet (`crowsnest.hook.QUIET_ENV_VAR`), so it wakes
+no watcher and reads no project’s instructions.
+
+### Module Attributes
+
+| [`MAX_WORDS`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.MAX_WORDS)   | The most words a line may have; a reference counts as one.   |
+|--------------------------------------------------------------|--------------------------------------------------------------|
+
+### Functions
+
+| [`claude_synthesiser`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.claude_synthesiser)(\*[, model, binary, timeout])   | A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in an empty directory with its hooks quiet, so it reads no project's instructions and wakes no watcher.   |
+|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`dflt_store`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.dflt_store)([root])                                 | One JSON file per item under `root` (default `<data dir>/actions`).                                                                                                                     |
+| [`line_for`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.line_for)(row, \*, item, rev[, store])              | The stored line for this row's revision (`{"line", "cites", "verdict", ...}`), or `None` when there is none for it yet.                                                                 |
+| [`refresh`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.refresh)(rows, \*, item, rev[, store, ...])         | Write a line for each Needs-you row whose stored line is for another revision, the freshest ask first, at most `limit` of them.                                                         |
+
+### crowsnest.actions.MAX_WORDS *= 8*
+
+The most words a line may have; a reference counts as one.
+
+### crowsnest.actions.claude_synthesiser(, model='haiku', binary=None, timeout=90)
+
+A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in
+an empty directory with its hooks quiet, so it reads no project’s instructions and
+wakes no watcher.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)], [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)]
+
+### crowsnest.actions.dflt_store(root=None)
+
+One JSON file per item under `root` (default `<data dir>/actions`).
+
+* **Return type:**
+  [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.actions.line_for(row, , item, rev, store=None)
+
+The stored line for this row’s revision (`{"line", "cites", "verdict", ...}`), or
+`None` when there is none for it yet.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.actions.refresh(rows, , item, rev, store=None, synthesiser=None, ref_state=None, limit=3, now=None)
+
+Write a line for each Needs-you row whose stored line is for another revision, the
+freshest ask first, at most `limit` of them.
+
+`item` and `rev` are the row’s attention id and revision
+([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)’s), so a line follows the item the person marks.
+A synthesiser that fails leaves the store as it was. Returns `{"made", "failed",
+"current"}` counts.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
 # _autosummary/crowsnest.activity.html.md
@@ -1478,11 +1560,11 @@ and nothing in this module pretends otherwise.
 
 ### Classes
 
-| [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])        | The `[attention]` table, validated.                                                                                                                                                                                                        |
-|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds])     | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
-| [`PublishSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.PublishSettings)([to, command, console, refs]) | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
-| [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)([ledger_dir])                  | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
+| [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])       | The `[attention]` table, validated.                                                                                                                                                                                                        |
+|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds])    | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
+| [`PublishSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.PublishSettings)([to, command, console, ...]) | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
+| [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)([ledger_dir])                 | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
 
@@ -1526,7 +1608,7 @@ One Claude Code config directory to read, and how to judge liveness in it.
 
 The config table saying where `crowsnest publish` sends the page.
 
-### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False)
+### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1625,6 +1707,7 @@ to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
 # command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]
 # console = "/api/crowsnest"   # the page's own store: an interactive page
 # refs = true                  # ask GitHub (gh) what the references are now
+# actions = true               # write a generated action line per Needs-you item
 ```
 
 A key the table does not know is an error, as in `[attention]`, and so is giving
@@ -2322,6 +2405,7 @@ silently wrote nothing would be worse than a stack trace.
 
 | [`account`](_autosummary/crowsnest.account.html.md#module-crowsnest.account)     | Which account a new session runs under, and which `claude` binary starts it.                          |
 |---------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| [`actions`](_autosummary/crowsnest.actions.html.md#module-crowsnest.actions)     | One generated line per Needs-you item: what the person must do, in at most eight words.               |
 | [`activity`](_autosummary/crowsnest.activity.html.md#module-crowsnest.activity)   | What a session is doing right now, read from the tail of its transcript.                              |
 | [`attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                    |
 | [`config`](_autosummary/crowsnest.config.html.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                |
@@ -4425,7 +4509,7 @@ are placed directly: the figure down the first column, the heading and the rule 
 the second. Without this the rule falls below the head’s hairline, at the page’s left
 edge, on every register that folds.
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None, action_line=None)
 
 The roster [`crowsnest.tools.roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -4469,6 +4553,10 @@ is not interactive, and `None` renders exactly the page from before it existed.
 -> {"state", "title", "closed_at"} | None` ([`crowsnest.refstate.state_of()`](_autosummary/crowsnest.refstate.html.md#crowsnest.refstate.state_of)):
 a row’s references then list open ones first, each with its title, and closed ones
 last and muted. The page fetches nothing; `None` renders as before it existed.
+
+`action_line` is each Needs-you row’s generated line, a callable `(row) -> {"line",
+...} | None` ([`crowsnest.actions.line_for()`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.line_for)): it leads the row, labelled
+*generated*, above the words it came from. `None` renders as before.
 
 `open_helper=True` adds one small script ([`OPEN_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.OPEN_SCRIPT)) for a page someone
 opens in a browser: it routes each `open` by the account’s browser the reader chose
@@ -5112,7 +5200,7 @@ instruction.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None, refs=None)
+### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None, refs=None, actions=None)
 
 Render the report as a whole page and deliver it where its owner reads it.
 
@@ -5131,7 +5219,9 @@ and its buttons write there; `crowsnest courier` carries what they write, with n
 LLM. `""` is the static page whatever the config file says.
 
 `refs` (default: the `[publish]` table’s `refs`) first refreshes what the rows’
-referenced issues and pull requests are now ([`report()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)’s `refs`).
+referenced issues and pull requests are now ([`report()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)’s `refs`), and
+`actions` (default: the table’s `actions`) writes a few generated action lines
+([`report()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)’s `actions`).
 
 The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
 so the last one sent can be looked at locally.
@@ -5164,7 +5254,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None, actions=False, action_store=None, synthesiser=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
@@ -5220,6 +5310,11 @@ the rows’ referenced issues and pull requests are now, a few repositories at a
 only those not asked about lately. Either way the page shows what `ref_store` knows
 (default [`crowsnest.refstate.dflt_store()`](_autosummary/crowsnest.refstate.html.md#crowsnest.refstate.dflt_store)): open references first with their
 titles, closed ones muted; a page whose store knows nothing renders as before.
+
+`actions=True` first writes a generated action line for a few Needs-you rows whose
+stored line is for another revision ([`crowsnest.actions.refresh()`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.refresh); `synthesiser`
+is its seam, `claude -p` by default). Either way each Needs-you row leads with the
+line `action_store` holds for its revision, labelled *generated*.
 
 `links=False` leaves the references off the page. They are still resolved: a
 verdict reader may read them, and the verbs pin the row with them. To resolve
@@ -6077,16 +6172,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-25 15:50 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/3d2d2c2e2ae05db0e724032db2500bfba74dfcbd"><code>3d2d2c2</code></a> on branch <code>main</code>, for **crowsnest 0.0.70** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-25 15:55 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/de55d4666415691ee008fef6f43d0957f51cfc22"><code>de55d46</code></a> on branch <code>main</code>, for **crowsnest 0.0.71** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.71) is behind the latest release on PyPI (0.0.72): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/3d2d2c2e2ae05db0e724032db2500bfba74dfcbd"><code>3d2d2c2e2ae05db0e724032db2500bfba74dfcbd</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/de55d4666415691ee008fef6f43d0957f51cfc22"><code>de55d4666415691ee008fef6f43d0957f51cfc22</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6097,9 +6194,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36156656852">36156656852</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36157216210">36157216210</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>3d2d2c2e2ae05db0e724032db2500bfba74dfcbd</code> (in the history of the built commit) |
+| Event commit | <code>de55d4666415691ee008fef6f43d0957f51cfc22</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6124,13 +6221,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.70/">0.0.70</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.72/">0.0.72</a>, newer than the documented version (0.0.71).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 3d2d2c2e2ae05db0e724032db2500bfba74dfcbd
+git checkout de55d4666415691ee008fef6f43d0957f51cfc22
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

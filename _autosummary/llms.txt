@@ -7,6 +7,7 @@
 
 - [crowsnest](crowsnest.html.md): One session that watches the others.
 - [crowsnest.account](crowsnest.account.html.md): Which account a new session runs under, and which &#96;claude&#96; binary starts it.
+- [crowsnest.actions](crowsnest.actions.html.md): One generated line per Needs-you item: what the person must do, in at most eight words.
 - [crowsnest.activity](crowsnest.activity.html.md): What a session is doing right now, read from the tail of its transcript.
 - [crowsnest.attention](crowsnest.attention.html.md): What the person did about each item the report shows: seen, put off, done, a note.
 - [crowsnest.config](crowsnest.config.html.md): The homes a roster covers, and the &#96;claude&#96; a spawn starts – what a config file says.
