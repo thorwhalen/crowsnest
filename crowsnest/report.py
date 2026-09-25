@@ -82,6 +82,7 @@ from crowsnest import said as _said
 from crowsnest.config import DFLT_STALE_AFTER, AttentionSettings
 from crowsnest.lineage import address as _address
 from crowsnest.lineage import open_command as _open_command
+from crowsnest.links import github_ref
 from crowsnest.links import label_for as _label_for
 from crowsnest.live import publishable as _publishable
 from crowsnest.rows import RowContext
@@ -1747,6 +1748,7 @@ OVERVIEW_CSS = """
 .refs-more>summary::before{content:"+ "}
 .refs-more[open]>summary::before{content:"- "}
 .refs-more>.where{margin-top:.15rem}
+.folder-tag{font-family:var(--mono);font-size:.72em;letter-spacing:.06em;color:var(--ink-soft)}
 .ref-title{font-family:var(--sans,inherit);color:var(--ink);font-size:.95em}
 .ref.is-closed,.ref.is-closed a,.ref.is-closed .ref-title{color:var(--ink-soft)}
 .ref-tag{font-family:var(--mono);font-size:.72em;letter-spacing:.06em;color:var(--ink-soft)}
@@ -2253,7 +2255,7 @@ def _where(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     phone too), otherwise the ``crowsnest open`` command that reaches it from a terminal.
     Then the repository behind its directory, when there is one.
     """
-    parts = [safe.text(row.get("project"))]
+    parts = [_project_label(safe, row)]
     home = row.get("home")
     if home:
         parts.append(safe.text(home))
@@ -2722,13 +2724,49 @@ def _working_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str
     return _row(safe, row, clock, chip="busy", tone="flight", lines=lines)
 
 
+def _project(row: Mapping[str, Any]) -> tuple[str, str, bool]:
+    """``(key, name, is_folder)``: the repository behind the session's directory, else its
+    folder.
+
+    A session's ``project`` is the name of the directory it runs in, so sessions started
+    in a parent folder were grouped as ``proj`` or ``t``: directories, not work. The
+    ``origin`` of that directory names the work, and keying by ``owner/name`` puts two
+    accounts' sessions on one repository together. Without one, the folder stands, said
+    to be a folder.
+
+    >>> _project({'repo_url': 'https://github.com/o/mergeset', 'project': 'mergeset'})
+    ('o/mergeset', 'mergeset', False)
+    >>> _project({'repo_url': '', 'project': 'proj'})
+    ('folder:proj', 'proj', True)
+    """
+    _, owner, repo, _ = github_ref(str(row.get("repo_url") or ""))
+    if owner and repo:
+        return f"{owner}/{repo}", repo, False
+    folder = str(row.get("project") or "")
+    return f"folder:{folder}", folder or "(no project)", True
+
+
+def _project_label(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """The project as a row names it: the repository, or its folder tagged as one."""
+    _, name, is_folder = _project(row)
+    tag = ' <span class="folder-tag">folder</span>' if is_folder and name else ""
+    return safe.text(name) + tag
+
+
 def _by_project(
     rows: Sequence[Mapping[str, Any]],
 ) -> list[tuple[str, list[Mapping[str, Any]]]]:
-    groups: dict[str, list[Mapping[str, Any]]] = {}
+    """Rows grouped by :func:`_project`, repositories by name, folders after them."""
+    groups: dict[tuple[bool, str, str], list[Mapping[str, Any]]] = {}
     for row in rows:
-        groups.setdefault(str(row.get("project") or "(no project)"), []).append(row)
-    return sorted(groups.items())
+        key, name, is_folder = _project(row)
+        groups.setdefault((is_folder, name.casefold(), key), []).append(row)
+    return [(_project_heading(found[0]), found) for _, found in sorted(groups.items())]
+
+
+def _project_heading(row: Mapping[str, Any]) -> str:
+    _, name, is_folder = _project(row)
+    return f"{name} · no repository" if is_folder else name
 
 
 #: How many references a quiet row shows. A quiet session is one line, and the point of

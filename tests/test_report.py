@@ -621,3 +621,28 @@ def test_the_static_page_is_unchanged_by_the_reachability_marking():
     assert "data-reachable" not in render_report(
         {"sessions": [r], "counts": {}}, made_at=STAMP
     )
+
+
+def test_rows_group_by_the_repository_behind_their_folder_not_the_folder():
+    """A session in a parent folder was grouped as `proj`; the work is the repository."""
+    old = since(3 * 86400)  # idle for days: Quiet
+    rows = [
+        row(
+            label="a",
+            project="checkout-1",
+            status_since=old,
+            repo_url="https://github.com/o/mergeset",
+        ),
+        row(
+            label="b",
+            project="mergeset",
+            status_since=old,
+            repo_url="https://github.com/o/mergeset",
+        ),
+        row(label="c", project="proj", status_since=old, repo_url=""),
+    ]
+    html = render_report(roster(*rows), made_at=STAMP)
+    quiet = html.split('id="quiet"', 1)[1]
+    assert quiet.count('<p class="subhead">mergeset</p>') == 1
+    assert '<p class="subhead">proj · no repository</p>' in quiet
+    assert quiet.index("mergeset</p>") < quiet.index("proj · no repository")
