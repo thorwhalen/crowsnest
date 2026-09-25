@@ -93,10 +93,12 @@ __all__ = [
     "ATTENTION_SCRIPT",
     "CONSOLE_CSS",
     "CONSOLE_SCRIPT",
+    "HTTP_STORE_SCRIPT",
     "LIVE_SCRIPT",
     "OPEN_CSS",
     "OPEN_SCRIPT",
     "REGISTER_CSS",
+    "ConsoleStore",
     "render_report",
 ]
 
@@ -104,6 +106,38 @@ __all__ = [
 #: renderers add their controls without every signature growing a flag.
 _interactive: contextvars.ContextVar[bool] = contextvars.ContextVar(
     "crowsnest_report_interactive", default=False
+)
+
+
+@dataclass(frozen=True)
+class ConsoleStore:
+    """Where an interactive page's console keeps its documents, when not in claude.ai.
+
+    ``url`` is the base of a small same-origin JSON protocol (:data:`HTTP_STORE_SCRIPT`):
+    ``GET <url>/docs/<collection>`` lists ``{"docs": [{"id", "data"}]}``,
+    ``GET <url>/docs/<collection>/<id>`` is one ``{"id", "data"}`` or a 404,
+    ``PUT`` there sets it whole, and ``POST <url>/docs/<collection>`` adds one and answers
+    ``{"id"}``. The collections are ``attention``, ``intents``, ``live`` and ``console``.
+    Whatever serves it must sit behind its owner's own login: the page never
+    authenticates. ``poll_seconds`` is how often the page reads while it is visible
+    (never while hidden). ``tick_seconds`` is how often the courier writes the heartbeat;
+    the page calls crowsnest's heartbeat stale past two of them.
+    """
+
+    url: str
+    poll_seconds: int = 20
+    tick_seconds: int = 60
+
+    def __post_init__(self):
+        if not str(self.url).strip():
+            raise ValueError("a console store needs a url")
+        if self.poll_seconds <= 0 or self.tick_seconds <= 0:
+            raise ValueError("poll_seconds and tick_seconds must be positive")
+
+
+#: The console store of the render in progress; ``None`` is the claude.ai viewer's ``db``.
+_console_store: contextvars.ContextVar[ConsoleStore | None] = contextvars.ContextVar(
+    "crowsnest_report_console_store", default=None
 )
 
 #: Whether the page carries the open helper (:data:`OPEN_SCRIPT`) for one
@@ -629,9 +663,143 @@ const cnAttention = (() => {
 })();
 """
 
+#: The console's store when the page is served by its owner rather than the claude.ai
+#: viewer (:class:`ConsoleStore`, crowsnest#111). It defines one global, ``cnHttpStore``,
+#: whose ``make(base)`` answers exactly the part of the viewer's ``db`` the console uses --
+#: ``collection(c).add``, ``.doc(id).set``, ``.onSnapshot``, ``.orderBy().limit().onSnapshot``
+#: and ``doc("c/id").onSnapshot`` -- over ``fetch`` against the protocol
+#: :class:`ConsoleStore` documents, so :data:`CONSOLE_SCRIPT` runs unchanged on either.
+#: A subscription is a poll, one per path however many listen, every ``pollSeconds`` while
+#: the page is visible and never while it is hidden; a write re-reads its collection at
+#: once. Credentials are the page's own same-origin cookie: nothing here authenticates.
+HTTP_STORE_SCRIPT = r"""
+const cnHttpStore = (() => {
+  "use strict";
+  function make(base, options) {
+    const o = options || {};
+    const pollSeconds = o.pollSeconds > 0 ? o.pollSeconds : 20;
+    const get = o.fetch || ((url, init) => fetch(url, init));
+    const page = o.document !== undefined ? o.document : (typeof document === "undefined" ? null : document);
+    const later = o.setTimeout || ((fn, ms) => setTimeout(fn, ms));
+    const cancel = o.clearTimeout || ((t) => clearTimeout(t));
+    const root = String(base).replace(/\/+$/, "");
+    const url = (c, id) => root + "/docs/" + encodeURIComponent(c) + (id === undefined ? "" : "/" + encodeURIComponent(id));
+
+    async function call(method, c, id, body) {
+      const init = { method, credentials: "same-origin", cache: "no-store", headers: {} };
+      if (body !== undefined) { init.headers["content-type"] = "application/json"; init.body = JSON.stringify(body); }
+      const r = await get(url(c, id), init);
+      if (method === "GET" && id !== undefined && r.status === 404) return null;
+      if (!r.ok) {
+        const e = new Error(r.status === 401 || r.status === 403 ? "signed out (" + r.status + ")" : "the server answered " + r.status);
+        e.code = r.status === 401 || r.status === 403 ? "signed-out" : "http-" + r.status;
+        throw e;
+      }
+      return r.status === 204 ? null : r.json();
+    }
+    const snapDoc = (id, data) => ({ id, exists: data !== null && data !== undefined, data: () => data });
+
+    // One poll per path, shared by every subscriber to it.
+    const feeds = new Map();
+    function feed(key, read) {
+      if (feeds.has(key)) return feeds.get(key);
+      const subs = new Set();
+      let timer = null, running = false, again = false;
+      function schedule() {
+        if (timer !== null || !subs.size) return;
+        timer = later(() => { timer = null; now(); }, pollSeconds * 1000);
+      }
+      async function now() {
+        if (!subs.size) return;
+        if (timer !== null) { cancel(timer); timer = null; }
+        if (page && page.hidden) return;  // resumed by visibilitychange
+        if (running) { again = true; return; }
+        running = true;
+        try {
+          const value = await read();
+          subs.forEach((s) => { try { s.next(value); } catch (e) { /* a listener's bug is its own */ } });
+        } catch (error) {
+          subs.forEach((s) => { if (s.error) try { s.error(error); } catch (e) { /* ditto */ } });
+        } finally {
+          running = false;
+          if (again) { again = false; now(); } else schedule();
+        }
+      }
+      const f = { subs, now };
+      feeds.set(key, f);
+      return f;
+    }
+    if (page && typeof page.addEventListener === "function") {
+      page.addEventListener("visibilitychange", () => { if (!page.hidden) feeds.forEach((f) => f.now()); });
+    }
+    function listen(f, sub) { f.subs.add(sub); f.now(); return () => { f.subs.delete(sub); }; }
+
+    function docFeed(c, id, next, error) {
+      const f = feed("d:" + c + "/" + id, async () => { const b = await call("GET", c, id); return b ? b.data : null; });
+      return listen(f, { next: (data) => next(snapDoc(id, data)), error });
+    }
+
+    function collection(name) {
+      const list = () => feed("c:" + name, async () => { const b = await call("GET", name); return (b && Array.isArray(b.docs)) ? b.docs : []; });
+      // Each subscriber keeps what it was last shown, so docChanges() names only what moved.
+      function subscribe(shape, next, error) {
+        const shown = new Map();
+        return listen(list(), {
+          next: (all) => {
+            const docs = shape(all.filter((x) => x && typeof x.id === "string"));
+            const changes = [];
+            for (const x of docs) {
+              const text = JSON.stringify(x.data);
+              if (shown.get(x.id) === text) continue;
+              changes.push({ type: shown.has(x.id) ? "modified" : "added", doc: snapDoc(x.id, x.data) });
+              shown.set(x.id, text);
+            }
+            const snaps = docs.map((x) => snapDoc(x.id, x.data));
+            next({ docs: snaps, docChanges: () => changes, metadata: { fromCache: false }, forEach: (fn) => snaps.forEach(fn) });
+          },
+          error,
+        });
+      }
+      const query = (order, limit) => ({
+        orderBy: (field, dir) => query({ field, dir }, limit),
+        limit: (n) => query(order, n),
+        onSnapshot: (next, error) => subscribe((docs) => {
+          let out = docs.slice();
+          if (order) {
+            const key = (x) => String(((x.data || {})[order.field]) ?? "");
+            const sign = order.dir === "desc" ? -1 : 1;
+            out.sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0) * sign);
+          }
+          return limit > 0 ? out.slice(0, limit) : out;
+        }, next, error),
+      });
+      return Object.assign(query(null, 0), {
+        add: async (data) => { const b = await call("POST", name, undefined, data); list().now(); return { id: b && b.id }; },
+        doc: (id) => ({
+          set: async (data) => { await call("PUT", name, id, data); list().now(); },
+          onSnapshot: (next, error) => docFeed(name, id, next, error),
+        }),
+      });
+    }
+
+    function doc(path) {
+      const [c, id] = String(path).split("/");
+      return {
+        set: async (data) => { await call("PUT", c, id, data); },
+        onSnapshot: (next, error) => docFeed(c, id, next, error),
+      };
+    }
+    return { collection, doc };
+  }
+  return { make };
+})();
+"""
+
+
 #: The console's one script. It loads nothing from anywhere: the only thing it talks to
-#: is the host's ``db`` capability, and when that is absent it leaves the page exactly as
-#: the static one. Everything read back from the store is untrusted and rendered as text.
+#: is the host's ``db`` capability, or on a page with a :class:`ConsoleStore` the owner's
+#: own store through :data:`HTTP_STORE_SCRIPT`, and when neither is there it leaves the
+#: page exactly as the static one. Everything read back from the store is untrusted and rendered as text.
 #:
 #: Two halves. **Intents** (Ask, Tell, Start work here, Refresh) are instructions, queued in
 #: ``intents`` for the watching session. **Attention** (Seen, Later, Done, Note, Seen above)
@@ -648,11 +816,17 @@ CONSOLE_SCRIPT = r"""
   const say = (t) => { if (status) status.textContent = t; };
   const codeOf = (e) => (e && (e.code || e.message)) || String(e);
   const drafts = new WeakMap();  // .acts -> {kind: text}: what was typed for each kind
-  const use = window.claude && window.claude.use;
-  if (typeof use !== "function") { say("console off: this copy of the page is not in the claude.ai viewer"); return; }
+  const host = document.querySelector(".console");
+  const served = host && host.dataset.consoleUrl;
   let db = null;
-  try { db = await window.claude.use("db"); } catch (e) { db = null; }
-  if (!db) { say("console off: open this page in the claude.ai viewer to act from it"); return; }
+  if (served) {
+    db = cnHttpStore.make(served, { pollSeconds: Number(host.dataset.pollSeconds) || 20 });
+  } else {
+    const use = window.claude && window.claude.use;
+    if (typeof use !== "function") { say("console off: this copy of the page is not in the claude.ai viewer"); return; }
+    try { db = await window.claude.use("db"); } catch (e) { db = null; }
+    if (!db) { say("console off: open this page in the claude.ai viewer to act from it"); return; }
+  }
   document.querySelectorAll("[data-console]").forEach((el) => { el.hidden = false; });
   const arm = document.getElementById("attention-arm");
   say(arm
@@ -2700,14 +2874,22 @@ def _console(settings: AttentionSettings) -> str:
     """
     if not _interactive.get():
         return ""
+    store = _console_store.get()
+    tick = store.tick_seconds if store else CONSOLE_TICK_SECONDS
+    where = (
+        f' data-console-url="{_html.escape(store.url, quote=True)}"'
+        f' data-poll-seconds="{store.poll_seconds}"'
+        if store
+        else ""
+    )
     return (
-        '<div class="console">'
+        f'<div class="console"{where}>'
         '<button type="button" data-kind="refresh" data-console hidden>Refresh</button>'
         '<span id="console-status">console: connecting to this page\'s store…</span>'
         '<span id="console-heartbeat" data-console hidden'
-        f' data-tick-seconds="{CONSOLE_TICK_SECONDS}"></span>'
+        f' data-tick-seconds="{tick}"></span>'
         '<span id="live-status" data-console hidden'
-        f' data-tick-seconds="{CONSOLE_TICK_SECONDS}"'
+        f' data-tick-seconds="{tick}"'
         f' data-repaint-seconds="{LIVE_REPAINT_SECONDS}"></span>'
         "</div>"
         '<ul class="answers" id="console-log" data-console hidden></ul>'
@@ -3196,6 +3378,7 @@ def render_report(
     links: bool = True,
     attention_settings: AttentionSettings | None = None,
     open_helper: bool = False,
+    console: ConsoleStore | str | None = None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -3228,6 +3411,12 @@ def render_report(
     transcribed into the script (:data:`ATTENTION_SCRIPT`). It still loads nothing from
     anywhere; without ``db`` it renders exactly as the static page. The static page
     carries no script at all, unless ``open_helper=True``.
+
+    ``console`` is where an interactive page's console keeps its documents: ``None``, the
+    claude.ai viewer's ``db``; a :class:`ConsoleStore`, or just its ``url``, a same-origin
+    JSON store its owner serves behind their own login (:data:`HTTP_STORE_SCRIPT`), which
+    a courier with no LLM keeps (``crowsnest courier``). It changes nothing on a page that
+    is not interactive, and ``None`` renders exactly the page from before it existed.
 
     ``open_helper=True`` adds one small script (:data:`OPEN_SCRIPT`) for a page someone
     opens in a browser: it routes each ``open`` by the account's browser the reader chose
@@ -3289,7 +3478,10 @@ def render_report(
     # The timedelta itself, never a float round trip, which overflows `timedelta.max`.
     settings = replace(settings, stale_after=stale_after)
     sessions = list(roster.get("sessions") or [])
+    if isinstance(console, str):
+        console = ConsoleStore(console)
     token = _interactive.set(interactive)
+    console_token = _console_store.set(console if interactive else None)
     helper_token = _open_helper.set(open_helper or interactive)
     links_token = _links_shown.set(links)
     try:
@@ -3315,6 +3507,7 @@ def render_report(
             _view.reset(view_token)
     finally:
         _interactive.reset(token)
+        _console_store.reset(console_token)
         _open_helper.reset(helper_token)
         _links_shown.reset(links_token)
 
@@ -3515,7 +3708,11 @@ def _render(
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
     if _interactive.get():
-        body += f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{CONSOLE_SCRIPT}{OPEN_SCRIPT}</script>"
+        http = HTTP_STORE_SCRIPT if _console_store.get() else ""
+        body += (
+            f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{http}{CONSOLE_SCRIPT}"
+            f"{OPEN_SCRIPT}</script>"
+        )
     elif _open_helper.get():
         body += f"<script>{OPEN_SCRIPT}</script>"
     if fragment:

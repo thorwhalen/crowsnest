@@ -435,6 +435,7 @@ def report(
     tz: str | None = None,
     plain: bool = False,
     open_helper: bool = False,
+    console_url: str | None = None,
 ):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
@@ -452,7 +453,8 @@ def report(
     Later, Done and Note too, Seen above on the registers, a Refresh, and a live status
     chip per row read from the page's `live/roster` document (`crowsnest live`). It works
     when the page is published with the `db` capability; without it the page is the
-    static one.
+    static one. `--console-url /api/crowsnest` points the console at a store your own
+    server keeps behind your login instead (`crowsnest courier` carries it, no LLM).
 
     The page leads with what needs you and what is safe to close, read from each session's
     ledger. `--no-triage` renders the older page, organised by status alone, which is also
@@ -486,6 +488,7 @@ def report(
         tz=tz,
         plain=plain,
         open_helper=open_helper,
+        console=console_url or None,
     )
     if not out:
         return result["html"]
@@ -503,6 +506,7 @@ def publish(
     ledger_dir: str | None = None,
     tz: str | None = None,
     plain: bool = False,
+    console_url: str | None = None,
 ):
     """Render the report page and send it where you can open it from a phone.
 
@@ -512,6 +516,11 @@ def publish(
     Run it from cron, launchd or a systemd timer and the page stays as fresh as that
     schedule, with no Claude session awake. The page names your sessions and quotes what
     they said, so send it only where you alone can read it.
+
+    `--console-url` (or `console = "..."` in `[publish]`) is the base URL of a store the
+    destination serves behind your login: the page then carries the console's buttons,
+    and `crowsnest courier` carries what they write. `--console-url ""` publishes the
+    static page whatever the config file says.
     """
     result = tools.publish(
         to=to,
@@ -520,6 +529,7 @@ def publish(
         tz=tz,
         plain=plain,
         row_context=_row_context(ledger_dir),
+        console=console_url,
     )
     return f"published {result['bytes']} bytes to {result['to']}"
 
