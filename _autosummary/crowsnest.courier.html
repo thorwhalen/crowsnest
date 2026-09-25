@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.courier - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.hook" href="crowsnest.hook.html" /><link rel="prev" title="crowsnest.config" href="crowsnest.config.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.courier"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.courier.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.courier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.live.html">crowsnest.live</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.publish.html">crowsnest.publish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.courier.COLLECTIONS"><code class="docutils literal notranslate"><span class="pre">COLLECTIONS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.courier.PULLED"><code class="docutils literal notranslate"><span class="pre">PULLED</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.courier.answer"><code class="docutils literal notranslate"><span class="pre">answer()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.courier.dflt_copy"><code class="docutils literal notranslate"><span class="pre">dflt_copy()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.courier.dflt_mirror"><code class="docutils literal notranslate"><span class="pre">dflt_mirror()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.courier.dir_copy"><code class="docutils literal notranslate"><span class="pre">dir_copy()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.courier.rsync_copy"><code class="docutils literal notranslate"><span class="pre">rsync_copy()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.courier.tick"><code class="docutils literal notranslate"><span class="pre">tick()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.courier</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.courier">
+<span id="crowsnest-courier"></span><h1>crowsnest.courier<a class="headerlink" href="#module-crowsnest.courier" title="Link to this heading">#</a></h1>
+<p>The console’s courier with no LLM: carry an owner-served console store both ways.</p>
+<p>A page published with a console store (<a class="reference internal" href="crowsnest.report.html#crowsnest.report.ConsoleStore" title="crowsnest.report.ConsoleStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">crowsnest.report.ConsoleStore</span></code></a>) writes what
+its buttons do into that store, on its owner’s server, behind their login. This module is
+the other end (crowsnest#111). The scheduler that already publishes the page (launchd,
+cron, a systemd timer) runs <a class="reference internal" href="#crowsnest.courier.tick" title="crowsnest.courier.tick"><code class="xref py py-func docutils literal notranslate"><span class="pre">tick()</span></code></a> once a minute, and each tick does five things:</p>
+<ol class="arabic simple">
+<li><p>Pull the store’s <code class="docutils literal notranslate"><span class="pre">attention</span></code> and <code class="docutils literal notranslate"><span class="pre">intents</span></code> into a local mirror.</p></li>
+<li><p>Take the attention documents into this machine’s attention store, last write winning
+by <code class="docutils literal notranslate"><span class="pre">updated_at</span></code> (<a class="reference internal" href="crowsnest.attention.html#crowsnest.attention.import_docs" title="crowsnest.attention.import_docs"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.attention.import_docs()</span></code></a>), and write back what
+changed here since the last tick.</p></li>
+<li><p>Answer each queued intent it can answer from disk: <code class="docutils literal notranslate"><span class="pre">recap</span></code> from the session’s own
+files, <code class="docutils literal notranslate"><span class="pre">refresh</span></code> by saying the page is republished every tick. Hand the rest (<code class="docutils literal notranslate"><span class="pre">ask</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tell</span></code>, <code class="docutils literal notranslate"><span class="pre">start</span></code>) to a Claude session by appending an <code class="docutils literal notranslate"><span class="pre">intent</span></code> line to the event
+log, which <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> streams. A session is woken only for an intent that needs
+judgment. It answers with <a class="reference internal" href="#crowsnest.courier.answer" title="crowsnest.courier.answer"><code class="xref py py-func docutils literal notranslate"><span class="pre">answer()</span></code></a>, and the next tick carries the answer.</p></li>
+<li><p>Write <code class="docutils literal notranslate"><span class="pre">live/roster</span></code> and <code class="docutils literal notranslate"><span class="pre">console/heartbeat</span></code>.</p></li>
+<li><p>Push the mirror back, never over a document the page wrote since the pull.</p></li>
+</ol>
+<p>The store is one JSON file per document, <code class="docutils literal notranslate"><span class="pre">&lt;root&gt;/&lt;collection&gt;/&lt;id&gt;.json</span></code>, holding the
+document itself: the same files the server’s routes read and write. <code class="docutils literal notranslate"><span class="pre">copy=</span></code> is how a
+collection moves between two roots, <code class="docutils literal notranslate"><span class="pre">(src,</span> <span class="pre">dst,</span> <span class="pre">collection)</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code>, newer wins:
+<a class="reference internal" href="#crowsnest.courier.rsync_copy" title="crowsnest.courier.rsync_copy"><code class="xref py py-func docutils literal notranslate"><span class="pre">rsync_copy()</span></code></a> for a <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code> (bounded, never prompting, as
+<a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.publish</span></code></a> sends the page), <a class="reference internal" href="#crowsnest.courier.dir_copy" title="crowsnest.courier.dir_copy"><code class="xref py py-func docutils literal notranslate"><span class="pre">dir_copy()</span></code></a> for a directory.</p>
+<p>An <code class="docutils literal notranslate"><span class="pre">answer</span></code> is a line this module wrote or one a session wrote through <a class="reference internal" href="#crowsnest.courier.answer" title="crowsnest.courier.answer"><code class="xref py py-func docutils literal notranslate"><span class="pre">answer()</span></code></a>,
+never a command’s output: the page shows it to whoever can open it.</p>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.courier.COLLECTIONS" title="crowsnest.courier.COLLECTIONS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">COLLECTIONS</span></code></a></p></td>
+<td><p>Every collection a console store holds; the page reads all four.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.courier.PULLED" title="crowsnest.courier.PULLED"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PULLED</span></code></a></p></td>
+<td><p>The ones the page writes, which a tick pulls.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.courier.answer" title="crowsnest.courier.answer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">answer</span></code></a>(intent, text, *[, status, mirror, now])</p></td>
+<td><p>Write a session's one-line answer to a handed intent; the next tick carries it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.courier.dflt_copy" title="crowsnest.courier.dflt_copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_copy</span></code></a>(remote)</p></td>
+<td><p>rsync over ssh for a <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>, a directory copy for anything else.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.courier.dflt_mirror" title="crowsnest.courier.dflt_mirror"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_mirror</span></code></a>()</p></td>
+<td><p>Where a tick keeps its copy of the store: <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/courier/mirror</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.courier.dir_copy" title="crowsnest.courier.dir_copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dir_copy</span></code></a>(src, dst, collection)</p></td>
+<td><p>Copy <code class="docutils literal notranslate"><span class="pre">src/collection/*.json</span></code> into <code class="docutils literal notranslate"><span class="pre">dst/collection/</span></code>, each only when newer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.courier.rsync_copy" title="crowsnest.courier.rsync_copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsync_copy</span></code></a>(src, dst, collection)</p></td>
+<td><p>Copy one collection between two roots, one of them <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>, by rsync.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.courier.tick" title="crowsnest.courier.tick"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tick</span></code></a>(remote, *[, mirror, copy, home, ...])</p></td>
+<td><p>Carry the console store at <code class="docutils literal notranslate"><span class="pre">remote</span></code> both ways once; the summary of what moved.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.courier.COLLECTIONS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.courier.</span></span><span class="sig-name descname"><span class="pre">COLLECTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('attention',</span> <span class="pre">'intents',</span> <span class="pre">'live',</span> <span class="pre">'console')</span></span><a class="headerlink" href="#crowsnest.courier.COLLECTIONS" title="Link to this definition">#</a></dt>
+<dd><p>Every collection a console store holds; the page reads all four.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.courier.PULLED">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.courier.</span></span><span class="sig-name descname"><span class="pre">PULLED</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('attention',</span> <span class="pre">'intents')</span></span><a class="headerlink" href="#crowsnest.courier.PULLED" title="Link to this definition">#</a></dt>
+<dd><p>The ones the page writes, which a tick pulls. <code class="docutils literal notranslate"><span class="pre">live</span></code> and <code class="docutils literal notranslate"><span class="pre">console</span></code> are only ever
+written here.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.courier.answer">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.courier.</span></span><span class="sig-name descname"><span class="pre">answer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'done'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/courier.html#answer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.courier.answer" title="Link to this definition">#</a></dt>
+<dd><p>Write a session’s one-line answer to a handed intent; the next tick carries it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">status</span></code> is <code class="docutils literal notranslate"><span class="pre">done</span></code> or <code class="docutils literal notranslate"><span class="pre">failed</span></code>. The text is kept to one line of at most
+<code class="xref py py-data docutils literal notranslate"><span class="pre">ANSWER_LIMIT</span></code> characters. It is published to whoever can open the page, so it
+says what happened in the page’s own terms, never a command’s output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.courier.dflt_copy">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.courier.</span></span><span class="sig-name descname"><span class="pre">dflt_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/courier.html#dflt_copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.courier.dflt_copy" title="Link to this definition">#</a></dt>
+<dd><p>rsync over ssh for a <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>, a directory copy for anything else.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.courier.dflt_mirror">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.courier.</span></span><span class="sig-name descname"><span class="pre">dflt_mirror</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/courier.html#dflt_mirror"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.courier.dflt_mirror" title="Link to this definition">#</a></dt>
+<dd><p>Where a tick keeps its copy of the store: <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/courier/mirror</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.courier.dir_copy">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.courier.</span></span><span class="sig-name descname"><span class="pre">dir_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/courier.html#dir_copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.courier.dir_copy" title="Link to this definition">#</a></dt>
+<dd><p>Copy <code class="docutils literal notranslate"><span class="pre">src/collection/*.json</span></code> into <code class="docutils literal notranslate"><span class="pre">dst/collection/</span></code>, each only when newer.</p>
+<p>A missing source collection is nothing to copy. Times are kept, so a copy is never
+newer than what it copied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.courier.rsync_copy">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.courier.</span></span><span class="sig-name descname"><span class="pre">rsync_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/courier.html#rsync_copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.courier.rsync_copy" title="Link to this definition">#</a></dt>
+<dd><p>Copy one collection between two roots, one of them <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>, by rsync.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--update</span></code> keeps whichever copy is newer, so a push never replaces a document the
+page wrote after the pull. A collection the far side does not have yet is nothing to
+pull. Pushing needs the store’s root to exist on the server (the server’s routes
+create it); rsync makes the collection directory under it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.courier.tick">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.courier.</span></span><span class="sig-name descname"><span class="pre">tick</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirror</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">live</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/courier.html#tick"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.courier.tick" title="Link to this definition">#</a></dt>
+<dd><p>Carry the console store at <code class="docutils literal notranslate"><span class="pre">remote</span></code> both ways once; the summary of what moved.</p>
+<p><code class="docutils literal notranslate"><span class="pre">remote</span></code> is the store’s root, <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code> or a directory. <code class="docutils literal notranslate"><span class="pre">home</span></code> /
+<code class="docutils literal notranslate"><span class="pre">all_homes</span></code> / <code class="docutils literal notranslate"><span class="pre">config</span></code> are the roster’s, as for the page, so a recap names the
+same sessions the page does. <code class="docutils literal notranslate"><span class="pre">store</span></code> is the attention store (its default when
+<code class="docutils literal notranslate"><span class="pre">None</span></code>). <code class="docutils literal notranslate"><span class="pre">recap</span></code> and <code class="docutils literal notranslate"><span class="pre">live</span></code> default to <a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.recap" title="crowsnest.tools.recap"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.recap()</span></code></a> and
+<a class="reference internal" href="crowsnest.tools.html#crowsnest.tools.live" title="crowsnest.tools.live"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.tools.live()</span></code></a>, and exist so a test need not read real sessions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.config.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.config</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.hook.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.hook</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=7ada5fdd"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

@@ -96,7 +96,7 @@ and nothing in this module pretends otherwise.
 | [`AttentionSettings`](#crowsnest.config.AttentionSettings)([evening_hour, ...])    | The `[attention]` table, validated.                                                                                                                                                                                                        |
 |--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds]) | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
-| [`PublishSettings`](#crowsnest.config.PublishSettings)([to, command])            | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
+| [`PublishSettings`](#crowsnest.config.PublishSettings)([to, command, console])   | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
 | [`ReportSettings`](#crowsnest.config.ReportSettings)([ledger_dir])              | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
@@ -141,7 +141,7 @@ One Claude Code config directory to read, and how to judge liveness in it.
 
 The config table saying where `crowsnest publish` sends the page.
 
-### *class* crowsnest.config.PublishSettings(to='', command=())
+### *class* crowsnest.config.PublishSettings(to='', command=(), console='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -238,6 +238,7 @@ The config file’s `[publish]` table, or the defaults when it has none.
 [publish]
 to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
 # command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]
+# console = "/api/crowsnest"   # the page's own store: an interactive page
 ```
 
 A key the table does not know is an error, as in `[attention]`, and so is giving

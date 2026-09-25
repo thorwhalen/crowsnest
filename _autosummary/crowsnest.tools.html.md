@@ -159,7 +159,7 @@ instruction.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None)
+### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None)
 
 Render the report as a whole page and deliver it where its owner reads it.
 
@@ -167,10 +167,15 @@ The destination is `to` (a local path, or `[user@]host:path` sent by rsync over
 ssh) or `command` (argv with `{page}` for the rendered file); without either, the
 config file’s `[publish]` table ([`crowsnest.config.publish_settings()`](crowsnest.config.html.md#crowsnest.config.publish_settings)).
 `publisher` replaces the delivery: a callable `(page, to) -> str`
-([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)). The page is the static one – no console, whose buttons
-need the claude.ai viewer’s `db` – with the open helper (`open_helper=True` on
-[`report()`](#crowsnest.tools.report)), so run this on a schedule for a page that stays fresh with nothing
-awake but the scheduler.
+([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)). The page is the static one with the open helper
+(`open_helper=True` on [`report()`](#crowsnest.tools.report)), so run this on a schedule for a page that
+stays fresh with nothing awake but the scheduler.
+
+`console` (default: the `[publish]` table’s `console`) is the base URL of a
+console store the destination serves behind its owner’s login
+([`crowsnest.report.ConsoleStore`](crowsnest.report.html.md#crowsnest.report.ConsoleStore)). Given one, the page is the interactive one,
+and its buttons write there; `crowsnest courier` carries what they write, with no
+LLM. `""` is the static page whatever the config file says.
 
 The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
 so the last one sent can be looked at locally.
@@ -203,7 +208,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host

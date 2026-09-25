@@ -12,6 +12,7 @@ crowsnest.report
       CONSOLE_CSS
       LIVE_SCRIPT
       ATTENTION_SCRIPT
+      HTTP_STORE_SCRIPT
       CONSOLE_SCRIPT
       OPEN_CSS
       OPEN_SCRIPT
@@ -22,4 +23,10 @@ crowsnest.report
    .. autosummary::
    
       render_report
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ConsoleStore
    

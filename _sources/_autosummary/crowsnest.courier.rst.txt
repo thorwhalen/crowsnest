@@ -1,0 +1,24 @@
+crowsnest.courier
+=================
+
+.. automodule:: crowsnest.courier
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      COLLECTIONS
+      PULLED
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      answer
+      dflt_copy
+      dflt_mirror
+      dir_copy
+      rsync_copy
+      tick
+   

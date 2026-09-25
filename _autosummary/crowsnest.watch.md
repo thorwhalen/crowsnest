@@ -67,7 +67,7 @@ session’s conversation.
 Seconds between snapshots. A turn takes seconds to minutes; five seconds is invisible
 to a human and two file listings per tick is nothing.
 
-### crowsnest.watch.HOOK_KINDS *= {'notification': 'needs-you', 'stop': 'stopped'}*
+### crowsnest.watch.HOOK_KINDS *= {'intent': 'intent', 'notification': 'needs-you', 'stop': 'stopped'}*
 
 What a hook event is called in the stream. `needs-you` and `stopped` are named for
 what the human should do about them, which is what the registry statuses are not.

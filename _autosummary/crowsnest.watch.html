@@ -69,6 +69,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.courier.html">crowsnest.courier</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
@@ -247,7 +248,7 @@ to a human and two file listings per tick is nothing.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.watch.HOOK_KINDS">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">HOOK_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'notification':</span> <span class="pre">'needs-you',</span> <span class="pre">'stop':</span> <span class="pre">'stopped'}</span></span><a class="headerlink" href="#crowsnest.watch.HOOK_KINDS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">HOOK_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'intent':</span> <span class="pre">'intent',</span> <span class="pre">'notification':</span> <span class="pre">'needs-you',</span> <span class="pre">'stop':</span> <span class="pre">'stopped'}</span></span><a class="headerlink" href="#crowsnest.watch.HOOK_KINDS" title="Link to this definition">#</a></dt>
 <dd><p>What a hook event is called in the stream. <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> and <code class="docutils literal notranslate"><span class="pre">stopped</span></code> are named for
 what the human should do about them, which is what the registry statuses are not.</p>
 </dd></dl>
@@ -449,7 +450,7 @@ fragment – a line the writer has not finished – is left for the next read.</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=dea2dbc4"></script>
+      <script src="../_static/documentation_options.js?v=7ada5fdd"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

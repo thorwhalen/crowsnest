@@ -383,6 +383,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`activity`](crowsnest.activity.html.md#module-crowsnest.activity)   | What a session is doing right now, read from the tail of its transcript.                              |
 | [`attention`](crowsnest.attention.html.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                    |
 | [`config`](crowsnest.config.html.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                |
+| [`courier`](crowsnest.courier.html.md#module-crowsnest.courier)     | The console's courier with no LLM: carry an owner-served console store both ways.                     |
 | [`hook`](crowsnest.hook.html.md#module-crowsnest.hook)           | The push half of the stream: what Claude Code's own hooks tell crowsnest.                             |
 | [`init`](crowsnest.init.html.md#module-crowsnest.init)           | Everything a crowsnest session needs before it can be one, set up in one command.                     |
 | [`ledger`](crowsnest.ledger.html.md#module-crowsnest.ledger)       | The ledger: the durable page a session leaves for the watcher, one file per session.                  |
