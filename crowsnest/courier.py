@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import re
+import shlex
 import shutil
 import subprocess
 from collections.abc import Callable, Iterable, Mapping
@@ -122,9 +123,21 @@ def rsync_argv(
     timeout: int = DFLT_TIMEOUT,
     connect_timeout: int = DFLT_CONNECT_TIMEOUT,
 ) -> list[str]:
-    """``rsync -a --update`` over ssh, quiet, bounded and never asking for input."""
+    """``rsync -a --update`` over ssh, quiet, bounded and never asking for input.
+
+    Sent to a ``host:path``, the far side first makes ``path`` (``mkdir -p``, through
+    ``--rsync-path``), so a push reaches a store whose directories nothing has made yet:
+    rsync alone makes only the last one.
+
+    >>> rsync_argv('m/intents/', 'box:/srv/db/intents/')[-3]
+    '--rsync-path=mkdir -p /srv/db/intents/ && rsync'
+    """
     ssh = f"ssh -o BatchMode=yes -o ConnectTimeout={connect_timeout}"
-    return ["rsync", "-a", "-q", "--update", f"--timeout={timeout}", "-e", ssh, src, dst]
+    argv = ["rsync", "-a", "-q", "--update", f"--timeout={timeout}", "-e", ssh]
+    if is_remote(dst):
+        path = dst.split(":", 1)[1] or "."
+        argv.append(f"--rsync-path=mkdir -p {shlex.quote(path)} && rsync")
+    return [*argv, src, dst]
 
 
 def rsync_copy(src: str, dst: str, collection: str) -> None:
@@ -132,8 +145,7 @@ def rsync_copy(src: str, dst: str, collection: str) -> None:
 
     ``--update`` keeps whichever copy is newer, so a push never replaces a document the
     page wrote after the pull. A collection the far side does not have yet is nothing to
-    pull. Pushing needs the store's root to exist on the server (the server's routes
-    create it); rsync makes the collection directory under it.
+    pull, and a push makes it, with every directory above it.
     """
     if not shutil.which("rsync"):
         raise ValueError("the courier needs rsync, which is not on PATH")
