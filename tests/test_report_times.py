@@ -165,8 +165,9 @@ def test_times_are_shown_in_the_zone_the_masthead_names_once():
     shown = item(html)
     assert '<time datetime="2026-02-06T09:30:00+00:00">11:30</time>' in shown
     assert "2 h ago" in shown and "stale" not in shown
-    assert html.count("UTC+02:00") == 1
-    assert html.index("UTC+02:00") < html.index("</header>")
+    # Named in the masthead (the stamp and the fold), never on the rows.
+    head, rows = html.split("</header>", 1)
+    assert "UTC+02:00" in head and "UTC+02:00" not in rows
 
 
 def test_a_time_on_another_day_carries_its_date_and_an_old_one_says_stale():
