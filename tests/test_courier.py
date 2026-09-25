@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import pytest
 
 import crowsnest.attention as att
-from crowsnest import courier, tools
+from crowsnest import courier, publish, tools
 from crowsnest.config import CourierSettings, courier_settings
 from crowsnest.watch import hook_event
 
@@ -210,7 +210,8 @@ def test_rsync_is_bounded_and_a_missing_remote_collection_is_empty(monkeypatch, 
     def fake_run(args, **_):
         return subprocess.CompletedProcess(args, said["code"], "", said["stderr"])
 
-    monkeypatch.setattr(courier.subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(publish.time, "sleep", lambda s: None)
     courier.rsync_copy("box:/db", str(tmp_path), "intents")  # nothing to pull: fine
     with pytest.raises(ValueError, match="exited 23"):
         courier.rsync_copy(str(tmp_path), "box:/db", "intents")

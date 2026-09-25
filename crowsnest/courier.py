@@ -33,12 +33,17 @@ import json
 import re
 import shlex
 import shutil
-import subprocess
 from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from crowsnest.publish import DFLT_CONNECT_TIMEOUT, DFLT_TIMEOUT, is_remote
+from crowsnest.publish import (
+    DFLT_CONNECT_TIMEOUT,
+    DFLT_TIMEOUT,
+    attempt,
+    is_remote,
+    ssh_command,
+)
 
 __all__ = [
     "COLLECTIONS",
@@ -132,7 +137,7 @@ def rsync_argv(
     >>> rsync_argv('m/intents/', 'box:/srv/db/intents/')[-3]
     '--rsync-path=mkdir -p /srv/db/intents/ && rsync'
     """
-    ssh = f"ssh -o BatchMode=yes -o ConnectTimeout={connect_timeout}"
+    ssh = ssh_command(connect_timeout=connect_timeout)
     argv = ["rsync", "-a", "-q", "--update", f"--timeout={timeout}", "-e", ssh]
     if is_remote(dst):
         path = dst.split(":", 1)[1] or "."
@@ -154,9 +159,7 @@ def rsync_copy(src: str, dst: str, collection: str) -> None:
             (Path(root).expanduser() / collection).mkdir(parents=True, exist_ok=True)
     source = f"{src.rstrip('/')}/{collection}/"
     target = f"{dst.rstrip('/')}/{collection}/"
-    done = subprocess.run(
-        rsync_argv(source, target), capture_output=True, text=True, check=False
-    )
+    done = attempt(rsync_argv(source, target))
     if done.returncode == 0:
         return
     said = (done.stderr or done.stdout).strip()
