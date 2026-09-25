@@ -170,3 +170,46 @@ def test_a_needs_you_row_leads_with_its_line_labelled_generated():
 def test_a_page_with_no_line_renders_as_before():
     assert page() == page(action_line=None) == page(action_line=lambda row: None)
     assert page() == page(action_line=lambda row: {"line": None, "verdict": "null"})
+
+
+# --------------------------------------------------------------------------------------
+# The card: what to do first, the source one fold away
+
+
+def card(html):
+    return html.split('id="session-asker"', 1)[1].split("</li>", 1)[0]
+
+
+def test_the_card_leads_with_its_line_and_folds_the_source():
+    html = page(action_line=lambda row: {"line": "Decide npm scope", "verdict": "ok"})
+    c = card(html)
+    assert (
+        c.index('class="action"')
+        < c.index('class="where"')
+        < c.index('<details class="source">')
+    )
+    assert '<p class="said-clip">It said: npm scope or not</p>' in c
+    fold = c.split('<details class="source">', 1)[1]
+    assert "npm scope or not" in fold and 'class="line when"' in fold
+
+
+def test_without_a_line_the_first_clause_stands_in_marked_raw():
+    c = card(page())
+    assert (
+        '<p class="action is-raw">npm scope or not <span class="gen-tag">raw</span></p>'
+        in c
+    )
+    assert "said-clip" not in c
+
+
+def test_a_clause_that_cannot_stand_alone_points_to_the_source():
+    from crowsnest.report import _first_clause, _raw_action, _Sanitizer
+
+    assert "open the source below" in _raw_action(
+        _Sanitizer(), "py` — needs you | safe |"
+    )
+    assert "open the source below" in _raw_action(
+        _Sanitizer(), "com/o/r/issues/1) — asking"
+    )
+    assert "gen-tag" in _raw_action(_Sanitizer(), "npm scope or unscoped names")
+    assert _first_clause("Set it. Then more.") == "Set it."
