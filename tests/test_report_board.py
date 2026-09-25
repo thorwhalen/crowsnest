@@ -63,10 +63,15 @@ def board(html: str) -> str:
     return re.search(r'<section class="board".*?</section>', html, re.DOTALL).group(0)
 
 
-def tiles(html: str) -> list[tuple[str, str]]:
-    """``(tile classes, session id)`` in board order."""
+def view(html: str, key: str = "session") -> str:
+    body = board(html).split(f'<div class="view view--{key}">', 1)[1]
+    return body.split('<div class="view view--', 1)[0]
+
+
+def tiles(html: str, key: str = "session") -> list[tuple[str, str]]:
+    """``(tile classes, session id)`` in the order the ``key`` view draws them."""
     return re.findall(
-        r'<li class="(tile [^"]*)"><a href="#session-([\w-]+)">', board(html)
+        r'<li class="(tile [^"]*)"><a href="#session-([\w-]+)">', view(html, key)
     )
 
 

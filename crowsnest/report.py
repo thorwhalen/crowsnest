@@ -78,6 +78,7 @@ from openloops.dashboard import rail as _ol_rail
 from openloops.dashboard import register as _ol_register
 
 import crowsnest.attention as _attention
+import crowsnest.themes as _themes
 from crowsnest import said as _said
 from crowsnest.config import DFLT_STALE_AFTER, AttentionSettings
 from crowsnest.lineage import address as _address
@@ -157,6 +158,9 @@ _action_line: contextvars.ContextVar = contextvars.ContextVar(
 
 #: What the person owes their sessions, for one :func:`render_report` call: openloops'
 #: owed envelope (:mod:`crowsnest.owed`), or ``None`` for a page without the register.
+_theme_of: contextvars.ContextVar = contextvars.ContextVar(
+    "crowsnest_report_theme_of", default=lambda row: _themes.Theme(_themes.UNTHEMED, 5)
+)
 _owed: contextvars.ContextVar = contextvars.ContextVar(
     "crowsnest_report_owed", default=None
 )
@@ -1183,9 +1187,9 @@ CONSOLE_SCRIPT = r"""
 
     // A row's tile on the board dims, lifts and hides with it, where it stands (B3).
     function followTile(el) {
-      const link = el.id ? document.querySelector(`.tiles a[href="#${el.id}"]`) : null;
-      if (!link) return;
-      const tile = link.parentElement;
+      if (el.id) document.querySelectorAll(`.tiles a[href="#${el.id}"]`).forEach((link) => follow(el, link.parentElement));
+    }
+    function follow(el, tile) {
       if (tile.dataset.drawn === undefined) tile.dataset.drawn = tile.className;
       const shown = el.dataset.live;
       if (shown === undefined) {
@@ -1797,6 +1801,7 @@ OVERVIEW_CSS = """
 .tiles--card{grid-template-columns:minmax(0,1fr)}
 .tiles--pair{grid-template-columns:repeat(2,minmax(0,1fr))}
 .tiles--chip{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:480px){.tiles--chip{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (min-width:900px){
   .tiles--card{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
   .tiles--pair{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -1819,6 +1824,32 @@ OVERVIEW_CSS = """
 .tile--card .tile-line{color:var(--ink);font-size:.92rem;white-space:normal;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tile-line.is-raw{font-style:italic;color:var(--ink-soft)}
+.views{margin-top:.7rem}
+.view-pick{position:absolute;opacity:0;pointer-events:none}
+.view-switch{display:inline-flex;border:1px solid var(--rule);border-radius:6px;
+  overflow:hidden;font-family:var(--mono);font-size:.74rem}
+.view-switch label{padding:.3rem .7rem;cursor:pointer;color:var(--ink-soft)}
+.view-switch label+label{border-left:1px solid var(--rule)}
+.view--project,.view--theme{display:none}
+#board-by-project:checked~.view--session,#board-by-theme:checked~.view--session{display:none}
+#board-by-project:checked~.view--project,#board-by-theme:checked~.view--theme{display:block}
+#board-by-session:checked~.view-switch label[for=board-by-session],
+#board-by-project:checked~.view-switch label[for=board-by-project],
+#board-by-theme:checked~.view-switch label[for=board-by-theme]{background:var(--ink);
+  color:var(--ground)}
+#board-by-session:focus-visible~.view-switch label[for=board-by-session],
+#board-by-project:focus-visible~.view-switch label[for=board-by-project],
+#board-by-theme:focus-visible~.view-switch label[for=board-by-theme]{outline:2px solid
+  var(--accent);outline-offset:-2px}
+.view-group{margin-top:1rem}
+.view-head{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .6rem}
+.view-head>b{font-family:var(--serif);font-size:1.05rem}
+.view-tally{font-size:.8rem;color:var(--ink-soft)}
+.view-tally .tone-needs b{color:var(--needs)}.view-tally .tone-unsure b{color:var(--unsure)}
+.view-tally .tone-free b{color:var(--free)}
+.view-tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft);border:1px solid var(--rule-soft);
+  border-radius:3px;padding:0 .3rem}
 .register:has(>.empty){margin-top:1.4rem}
 .register:has(>.empty) .register-head{align-items:baseline;padding-bottom:.45rem;
   border-bottom-color:var(--rule)}
@@ -3436,6 +3467,34 @@ def _board(safe: _Sanitizer, groups: Sequence[_Group], clock: _Clock) -> str:
         else ""
     )
 
+    views = [
+        ("session", "Session", _grids(safe, groups, clock)),
+        ("project", "Project", _headed(safe, groups, clock, _project_head)),
+        ("theme", "Theme", _headed(safe, groups, clock, _theme_head)),
+    ]
+    picks = "".join(
+        f'<input type="radio" class="view-pick" name="board-view" id="board-by-{key}"'
+        f"{' checked' if i == 0 else ''}>"
+        for i, (key, _, _) in enumerate(views)
+    )
+    switch = "".join(
+        f'<label for="board-by-{key}">{name}</label>' for key, name, _ in views
+    )
+    bodies = "".join(
+        f'<div class="view view--{key}">{body}</div>' for key, _, body in views
+    )
+    return (
+        '<section class="board" aria-labelledby="board-title">'
+        '<div class="board-head"><h2 id="board-title">Board</h2>'
+        f'<ul class="legend">{legend}</ul></div>{go}'
+        f'<div class="views">{picks}<div class="view-switch" aria-label="Group the board by">'
+        f"{switch}</div>{bodies}</div></section>"
+    )
+
+
+def _grids(safe: _Sanitizer, groups: Sequence[_Group], clock: _Clock) -> str:
+    """The tiles of ``groups``, one grid per size, in :data:`_TILE_ORDER`."""
+
     def order_of(g: _Group) -> str:
         return "unknown" if g.ident == "quiet" else g.kind
 
@@ -3450,11 +3509,80 @@ def _board(safe: _Sanitizer, groups: Sequence[_Group], clock: _Clock) -> str:
         grids.append(
             f'<ol class="tiles tiles--{size}" aria-label="{safe.text(label)}">{tiles}</ol>'
         )
+    return "".join(grids)
+
+
+#: A head of the Project or Theme view: ``(sort key, name, tag, tag's title)`` for a row.
+_Head = tuple[str, str, str, str]
+
+
+def _project_head(row: Mapping[str, Any]) -> _Head:
+    key, name, is_folder = _project(row)
     return (
-        '<section class="board" aria-labelledby="board-title">'
-        '<div class="board-head"><h2 id="board-title">Board</h2>'
-        f'<ul class="legend">{legend}</ul></div>{go}{"".join(grids)}</section>'
+        key,
+        name,
+        "folder" if is_folder else "",
+        "no repository" if is_folder else "",
     )
+
+
+def _theme_head(row: Mapping[str, Any]) -> _Head:
+    theme = _theme_of.get()(row)
+    return (
+        theme.name,
+        theme.name,
+        theme.how,
+        f"rule {theme.rule}: {_themes.RULES[theme.rule]}",
+    )
+
+
+def _headed(
+    safe: _Sanitizer,
+    groups: Sequence[_Group],
+    clock: _Clock,
+    head_of,
+) -> str:
+    """The tiles under one head per project or theme, the heads with the most needing
+    the person first, then the freshest ask, then by name."""
+    heads: dict[str, list[tuple[_Head, Mapping[str, Any]]]] = {}
+    for g in groups:
+        for row in g.rows:
+            head = head_of(row)
+            heads.setdefault(head[0], []).append((head, row))
+
+    def sort_key(item):
+        _, members = item
+        needing = [r for _, r in members if _group_of(r) == "needs_you"]
+        fresh = max(((_when(r, clock) or (0.0,))[0] for r in needing), default=0.0)
+        return (-len(needing), -fresh, members[0][0][1].casefold())
+
+    out = []
+    for _, members in sorted(heads.items(), key=sort_key):
+        rows = {id(r) for _, r in members}
+        sub = [replace(g, rows=[r for r in g.rows if id(r) in rows]) for g in groups]
+        tally = " \u00b7 ".join(
+            f'<span class="tone-{g.tone}"><b>{len(g.rows)}</b> {safe.text(g.word)}</span>'
+            for g in sub
+            if g.kind and g.rows
+        )
+        tags = {h[2] for h, _ in members if h[2]}
+        titles = sorted({h[3] for h, _ in members if h[3]})
+        # One kind of head says its kind; a theme some rows were named into and others
+        # inferred into says "inferred", with each rule in the title.
+        word = next(iter(tags)) if len(tags) == 1 else "inferred"
+        tag = (
+            f'<span class="view-tag" title="{safe.text("; ".join(titles))}">'
+            f"{safe.text(word)}</span>"
+            if tags
+            else ""
+        )
+        name = members[0][0][1]
+        out.append(
+            f'<div class="view-group"><p class="view-head"><b>{safe.text(name)}</b>'
+            f' <span class="view-tally">{tally}</span>{tag}</p>'
+            f"{_grids(safe, sub, clock)}</div>"
+        )
+    return "".join(out)
 
 
 #: A tile's jump lands in its row even when the row's register is folded: the script opens
@@ -3552,7 +3680,7 @@ DECK_SCRIPT = r"""
     cards.forEach((li) => li.classList.remove("current"));
     bar.remove();
     end.remove();
-    const tile = document.querySelector(".tiles li.tile:not(.is-seen):not(.tile--seen):not([hidden]) a");
+    const tile = [...document.querySelectorAll(".tiles li.tile:not(.is-seen):not(.tile--seen):not([hidden]) a")].find((a) => a.offsetParent);
     (tile || go).scrollIntoView({ block: "center" });
   }
   function click(selector) {
@@ -4108,6 +4236,7 @@ def render_report(
     ref_state=None,
     action_line=None,
     owed=None,
+    themes=None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -4210,6 +4339,10 @@ def render_report(
     ``links=False`` leaves each row's resolved references off the page: it renders as a
     row built without them would, the transcript's own locators included. Its revision
     is still taken from the whole row, because that is the row the verbs pin.
+
+    ``themes`` is the person's ``[themes]`` table (``{theme: [value, ...]}`` or a
+    :class:`crowsnest.themes.Themes`), which the board's Theme view groups by before it
+    infers (:func:`crowsnest.themes.infer`); ``None`` infers from the rows alone.
     """
     settings = AttentionSettings() if attention_settings is None else attention_settings
     if stale_after is None:
@@ -4226,6 +4359,14 @@ def render_report(
     ref_token = _ref_state.set(ref_state)
     action_token = _action_line.set(action_line)
     owed_token = _owed.set(owed)
+    table = themes if isinstance(themes, _themes.Themes) else _themes.Themes.of(themes)
+    theme_token = _theme_of.set(
+        _themes.infer(
+            sessions,
+            themes=table,
+            parents=_themes.parents_of(roster.get("lineage")),
+        )
+    )
     helper_token = _open_helper.set(open_helper or interactive)
     links_token = _links_shown.set(links)
     try:
@@ -4255,6 +4396,7 @@ def render_report(
         _ref_state.reset(ref_token)
         _action_line.reset(action_token)
         _owed.reset(owed_token)
+        _theme_of.reset(theme_token)
         _open_helper.reset(helper_token)
         _links_shown.reset(links_token)
 
