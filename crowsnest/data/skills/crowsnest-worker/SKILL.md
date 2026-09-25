@@ -32,6 +32,13 @@ a single file to answer a status request — answering is free, and it should st
 If the honest answer does not fit in five lines, put the long version in your ledger and
 make line 5 the path.
 
+## While you wait (CI, an agent, a merge)
+
+A turn woken only to find the wait still on (a CI poll, a loop tick, a `Monitor` re-arm, an
+agent not back yet) ends with no prose at all, one character at most. Report changes,
+never heartbeats: speak when the thing finished, failed, or needs the user. Ten "still
+waiting on CI" lines are ten lines the lookout and your own later turns read for nothing.
+
 ## Your ledger
 
 ```

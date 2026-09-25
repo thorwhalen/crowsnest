@@ -149,6 +149,13 @@ every proper noun; bolding everything carries nothing.
 
 Do not re-run the roster in a loop. The stream is the loop.
 
+**Routine loop turns are silent; report changes, never heartbeats.** Re-arming the
+`Monitor` when it expires, a `busy`/`started`/`exited` line you only note, a wake-up that
+finds nothing new: each ends the turn with no prose at all (one character at most). Say
+something only when a line above says to tell the user, or when something failed. Every
+"nothing new, re-armed" line is re-read in every later turn and buries the one line that
+mattered; a day of them is what compaction then throws the real state out to make room for.
+
 ## What to return
 
 When asked "what are my sessions doing" or "what needs me", return this and nothing
