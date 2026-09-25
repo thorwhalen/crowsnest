@@ -1,4 +1,4 @@
-> built 2026-09-25 16:14 UTC from e16d796 (main) · crowsnest 0.0.73. Details: build_info.json
+> built 2026-09-25 16:20 UTC from 219a6ec (main) · crowsnest 0.0.74. Details: build_info.json
 
 # index.html.md
 
@@ -4464,7 +4464,7 @@ reads; times are epoch milliseconds, stamped the way `attention._stamp` stamps t
 * **Type:**
   The person’s attention record as the console’s script keeps it
 
-### crowsnest.report.CONSOLE_CSS *= '\\n[hidden]{display:none!important}\\n.console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;\\n  font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}\\n.acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}\\n.acts button,.console button,.seen-above{font:inherit;font-family:var(--mono);font-size:.68rem;\\n  letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer;\\n  border:1px solid var(--accent);background:transparent;color:var(--accent)}\\n.acts button:hover,.console button:hover,.seen-above:hover,.acts button:focus-visible,\\n.console button:focus-visible,.seen-above:focus-visible{\\n  background:var(--accent);color:var(--surface)}\\n.acts textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.answers{list-style:none;margin:.2rem 0 0;padding:0;width:100%;font-family:var(--mono);\\n  font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}\\n.answers li b{color:var(--ink);font-weight:500}\\n.unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}\\n.acts button,.later-sheet button,.seen-above,.toast button{min-height:2.75rem}\\n.seen-above{margin-top:.5rem}\\n.review-line .acts{grid-column:1/-1}\\n.acts a.review-open{display:inline-flex;align-items:center;min-height:2.75rem;font-family:var(--mono);\\n  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;\\n  border:1px solid var(--accent);color:var(--accent);text-decoration:none}\\n.later-sheet{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;width:100%;\\n  padding:.6rem;border:1px solid var(--rule);background:var(--surface)}\\n.later-sheet p{width:100%;margin:0;color:var(--ink)}\\n.later-sheet label{width:100%;display:flex;gap:.4rem;align-items:center}\\n.later-sheet input[type=text]{width:100%;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.is-seen{opacity:.55}\\n.tile.is-seen a{border-left-style:dotted}\\n.live,.line.live .tag{color:var(--accent)}\\n.later-live .figure{color:var(--ink-soft)}\\n.toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:10;display:flex;\\n  gap:.8rem;align-items:center;max-width:calc(100% - 2rem);padding:.55rem .8rem;\\n  font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--surface)}\\n.toast button{font:inherit;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .6rem;\\n  cursor:pointer;border:1px solid var(--surface);background:transparent;color:var(--surface)}\\n.chip--live{background:transparent;border:1px solid currentColor;margin-left:.45rem}\\n.rail .chip--live{margin-left:0}\\n/\* The rail is a narrow column and .chip never wraps; a live chip\\'s words ("now idle, for\\n   14 h") are longer than the status chip\\'s, so in the rail it wraps rather\\n   than run into the row\\'s body. \*/\\n.rail .chip--live{white-space:normal;max-width:100%;overflow-wrap:anywhere;line-height:1.35}\\n.chip--live.is-stale,.chip--live.is-unknown,.chip--live.is-gone{color:var(--ink-soft);\\n  border-style:dashed}\\n.chip--live.is-stale,.chip--live.is-unknown{opacity:.7}\\n.answers li{white-space:pre-line}\\n'*
+### crowsnest.report.CONSOLE_CSS *= '\\n.deck li.row:not(.current){display:none}\\n.deck-bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:2;display:flex;\\n  flex-wrap:wrap;align-items:center;gap:.4rem .7rem;padding:.55rem 0;\\n  background:var(--ground);border-bottom:1px solid var(--rule-soft)}\\n.deck-count{font-weight:600;flex:1 1 auto}\\n.deck-nav{display:flex;gap:.35rem}\\n.deck-dots{display:flex;flex-wrap:wrap;gap:3px;flex-basis:100%}\\n.deck-dot{width:7px;height:7px;border-radius:50%;border:1px solid var(--needs)}\\n.deck-dot.is-seen{background:var(--needs)}\\n.deck-dot.is-here{outline:2px solid var(--ink);outline-offset:1px}\\n.deck-keys{flex-basis:100%;font-family:var(--mono);font-size:.7rem;color:var(--ink-soft)}\\n@media (hover:none){.deck-keys{display:none}}\\n.deck-end{padding:1rem 0}\\n.deck-sum{font-weight:600}\\n[hidden]{display:none!important}\\n.console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;\\n  font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}\\n.acts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.55rem;width:100%}\\n.acts button,.console button,.seen-above{font:inherit;font-family:var(--mono);font-size:.68rem;\\n  letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;cursor:pointer;\\n  border:1px solid var(--accent);background:transparent;color:var(--accent)}\\n.acts button:hover,.console button:hover,.seen-above:hover,.acts button:focus-visible,\\n.console button:focus-visible,.seen-above:focus-visible{\\n  background:var(--accent);color:var(--surface)}\\n.acts textarea{width:100%;min-height:3.2rem;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.answers{list-style:none;margin:.2rem 0 0;padding:0;width:100%;font-family:var(--mono);\\n  font-size:.72rem;color:var(--ink-soft);display:grid;gap:.15rem}\\n.answers li b{color:var(--ink);font-weight:500}\\n.unreachable{margin:0;font-family:var(--mono);font-size:.68rem;color:var(--ink-soft)}\\n.acts button,.later-sheet button,.seen-above,.toast button{min-height:2.75rem}\\n.seen-above{margin-top:.5rem}\\n.review-line .acts{grid-column:1/-1}\\n.acts a.review-open{display:inline-flex;align-items:center;min-height:2.75rem;font-family:var(--mono);\\n  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .55rem;\\n  border:1px solid var(--accent);color:var(--accent);text-decoration:none}\\n.later-sheet{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;width:100%;\\n  padding:.6rem;border:1px solid var(--rule);background:var(--surface)}\\n.later-sheet p{width:100%;margin:0;color:var(--ink)}\\n.later-sheet label{width:100%;display:flex;gap:.4rem;align-items:center}\\n.later-sheet input[type=text]{width:100%;font:inherit;font-size:.9rem;padding:.4rem;\\n  border:1px solid var(--rule);background:var(--surface);color:var(--ink)}\\n.is-seen{opacity:.55}\\n.tile.is-seen a{border-left-style:dotted}\\n.live,.line.live .tag{color:var(--accent)}\\n.later-live .figure{color:var(--ink-soft)}\\n.toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:10;display:flex;\\n  gap:.8rem;align-items:center;max-width:calc(100% - 2rem);padding:.55rem .8rem;\\n  font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--surface)}\\n.toast button{font:inherit;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .6rem;\\n  cursor:pointer;border:1px solid var(--surface);background:transparent;color:var(--surface)}\\n.chip--live{background:transparent;border:1px solid currentColor;margin-left:.45rem}\\n.rail .chip--live{margin-left:0}\\n/\* The rail is a narrow column and .chip never wraps; a live chip\\'s words ("now idle, for\\n   14 h") are longer than the status chip\\'s, so in the rail it wraps rather\\n   than run into the row\\'s body. \*/\\n.rail .chip--live{white-space:normal;max-width:100%;overflow-wrap:anywhere;line-height:1.35}\\n.chip--live.is-stale,.chip--live.is-unknown,.chip--live.is-gone{color:var(--ink-soft);\\n  border-style:dashed}\\n.chip--live.is-stale,.chip--live.is-unknown{opacity:.7}\\n.answers li{white-space:pre-line}\\n'*
 
 The console’s styles, on top of the shared stylesheet’s tokens. Interactive mode only.
 The attention arm’s classes are its own (`is-seen`, `later-live`, `live`): the
@@ -6245,7 +6245,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-25 16:14 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/e16d796a4953dfdf5e9daea870cbb8a4d8878bc6"><code>e16d796</code></a> on branch <code>main</code>, for **crowsnest 0.0.73** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-25 16:20 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/219a6ecc8b9bb25187f0ac48ad43d4f00cb04fee"><code>219a6ec</code></a> on branch <code>main</code>, for **crowsnest 0.0.74** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -6254,7 +6254,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/e16d796a4953dfdf5e9daea870cbb8a4d8878bc6"><code>e16d796a4953dfdf5e9daea870cbb8a4d8878bc6</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/219a6ecc8b9bb25187f0ac48ad43d4f00cb04fee"><code>219a6ecc8b9bb25187f0ac48ad43d4f00cb04fee</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6265,9 +6265,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36159294793">36159294793</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36159916314">36159916314</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>e16d796a4953dfdf5e9daea870cbb8a4d8878bc6</code> (in the history of the built commit) |
+| Event commit | <code>219a6ecc8b9bb25187f0ac48ad43d4f00cb04fee</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6292,13 +6292,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.73/">0.0.73</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.74/">0.0.74</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout e16d796a4953dfdf5e9daea870cbb8a4d8878bc6
+git checkout 219a6ecc8b9bb25187f0ac48ad43d4f00cb04fee
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
