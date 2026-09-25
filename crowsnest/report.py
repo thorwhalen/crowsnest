@@ -140,6 +140,13 @@ _console_store: contextvars.ContextVar[ConsoleStore | None] = contextvars.Contex
     "crowsnest_report_console_store", default=None
 )
 
+#: What a reference is now, for one :func:`render_report` call: a callable ``(url) ->
+#: {"state", "title", "closed_at"} | None`` (:func:`crowsnest.refstate.state_of`), or ``None``
+#: for a page that knows no states, which renders exactly as before they existed.
+_ref_state: contextvars.ContextVar = contextvars.ContextVar(
+    "crowsnest_report_ref_state", default=None
+)
+
 #: Whether the page carries the open helper (:data:`OPEN_SCRIPT`) for one
 #: :func:`render_report` call: ``open_helper=True``, or an interactive page. The
 #: session links and the reach buttons carry the data attributes it reads only when it is.
@@ -1739,6 +1746,10 @@ OVERVIEW_CSS = """
 .refs-more>summary::before{content:"+ "}
 .refs-more[open]>summary::before{content:"- "}
 .refs-more>.where{margin-top:.15rem}
+.ref-title{font-family:var(--sans,inherit);color:var(--ink);font-size:.95em}
+.ref.is-closed,.ref.is-closed a,.ref.is-closed .ref-title{color:var(--ink-soft)}
+.ref-tag{font-family:var(--mono);font-size:.72em;letter-spacing:.06em;color:var(--ink-soft)}
+.ref+.ref,.ref+a,a+.ref{margin-left:.35rem}
 """
 
 #: What the time on a row is called, by where it came from (:data:`crowsnest.said.BASES`).
@@ -2259,6 +2270,7 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
     if not found:
         act = row.get("activity") or {}
         found = act.get("locators") or ()
+    state_of = _ref_state.get()
     anchors = []
     seen: set[str] = set()
     for loc in found:
@@ -2270,9 +2282,16 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
         seen.add(url)
         anchor = _link(safe, url, _label_for(url, loc.get("text", "")))
         if anchor:
-            anchors.append(anchor)
+            known = state_of(url) if state_of else None
+            anchors.append((_REF_ORDER[known["state"]] if known else 1, anchor, known))
     if not anchors:
         return ""
+    # Open first, then what is not known, then closed: what still needs doing leads, and
+    # a closed one stays, muted, for the record (the owner clicked eight to find the one).
+    anchors = [
+        _ref(safe, anchor, known)
+        for _, anchor, known in sorted(anchors, key=lambda a: a[0])
+    ]
     shown, more = anchors[:SHOWN_REFS], anchors[SHOWN_REFS:]
     head = '<p class="where">refs <span class="sep">·</span> ' + " ".join(shown) + "</p>"
     if not more:
@@ -2288,6 +2307,34 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
 
 #: How many of a full row's references show before the rest fold (#109).
 SHOWN_REFS = 3
+
+#: Where a reference sorts by its state: open first, unknown next, closed last.
+_REF_ORDER = {"open": 0, "closed": 2, "merged": 2}
+
+#: How much of a reference's title shows beside it.
+REF_TITLE_LIMIT = 60
+
+
+def _ref(safe: _Sanitizer, anchor: str, known: Mapping | None) -> str:
+    """One reference as the row shows it: the link alone when its state is not known, else
+    the link with its title, and, when closed or merged, muted and saying so."""
+    if not known:
+        return anchor
+    title = str(known.get("title") or "").strip()
+    if len(title) > REF_TITLE_LIMIT:
+        title = title[: REF_TITLE_LIMIT - 1].rstrip() + "…"
+    shown = anchor + (
+        f' <span class="ref-title">{safe.text(title)}</span>' if title else ""
+    )
+    state = known.get("state")
+    if state == "open":
+        return f'<span class="ref is-open">{shown}</span>'
+    when = str(known.get("closed_at") or "")[:10]
+    said = f"{state} {when}".strip()
+    return (
+        f'<span class="ref is-closed" title="{safe.text(said)}">{shown}'
+        f' <span class="ref-tag">{safe.text(state)}</span></span>'
+    )
 
 
 def _row(
@@ -3379,6 +3426,7 @@ def render_report(
     attention_settings: AttentionSettings | None = None,
     open_helper: bool = False,
     console: ConsoleStore | str | None = None,
+    ref_state=None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -3417,6 +3465,11 @@ def render_report(
     JSON store its owner serves behind their own login (:data:`HTTP_STORE_SCRIPT`), which
     a courier with no LLM keeps (``crowsnest courier``). It changes nothing on a page that
     is not interactive, and ``None`` renders exactly the page from before it existed.
+
+    ``ref_state`` is what each referenced issue or pull request is now, a callable ``(url)
+    -> {"state", "title", "closed_at"} | None`` (:func:`crowsnest.refstate.state_of`):
+    a row's references then list open ones first, each with its title, and closed ones
+    last and muted. The page fetches nothing; ``None`` renders as before it existed.
 
     ``open_helper=True`` adds one small script (:data:`OPEN_SCRIPT`) for a page someone
     opens in a browser: it routes each ``open`` by the account's browser the reader chose
@@ -3482,6 +3535,7 @@ def render_report(
         console = ConsoleStore(console)
     token = _interactive.set(interactive)
     console_token = _console_store.set(console if interactive else None)
+    ref_token = _ref_state.set(ref_state)
     helper_token = _open_helper.set(open_helper or interactive)
     links_token = _links_shown.set(links)
     try:
@@ -3508,6 +3562,7 @@ def render_report(
     finally:
         _interactive.reset(token)
         _console_store.reset(console_token)
+        _ref_state.reset(ref_token)
         _open_helper.reset(helper_token)
         _links_shown.reset(links_token)
 

@@ -569,6 +569,8 @@ def report(
     row_context: RowContext | None = None,
     open_helper: bool = False,
     console=None,
+    refs: bool = False,
+    ref_store=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -619,6 +621,12 @@ def report(
     link gets a button that copies its ``crowsnest open`` command. For a page someone opens
     in a browser; :func:`publish` turns it on.
 
+    ``refs=True`` first asks GitHub (the ``gh`` CLI, :func:`crowsnest.refstate.refresh`) what
+    the rows' referenced issues and pull requests are now, a few repositories at a time and
+    only those not asked about lately. Either way the page shows what ``ref_store`` knows
+    (default :func:`crowsnest.refstate.dflt_store`): open references first with their
+    titles, closed ones muted; a page whose store knows nothing renders as before.
+
     ``links=False`` leaves the references off the page. They are still resolved: a
     verdict reader may read them, and the verbs pin the row with them. To resolve
     nothing, or to read other ledgers, give ``row_context`` ``resolvers=()`` or a
@@ -659,6 +667,19 @@ def report(
     # reader or a `material` may read them and the verbs pin the row with them. Resolving
     # nothing is `RowContext(resolvers=())`, which the verbs are then given too.
     data = {"sessions": rows, "counts": _counts(rows)}
+    from crowsnest import refstate as _refstate
+
+    ref_store = _refstate.dflt_store() if ref_store is None else ref_store
+    if refs:
+        _refstate.refresh(_refstate.repos_of(rows), store=ref_store)
+    made = datetime.fromisoformat(made_at.replace("Z", "+00:00"))
+    if made.tzinfo is None:
+        made = made.replace(tzinfo=timezone.utc)
+    ref_state = (
+        (lambda url: _refstate.state_of(url, store=ref_store, now=made))
+        if len(ref_store)
+        else None
+    )
     if with_lineage:
         # The rows the roster already read, not a second sweep of the registry: reading
         # twice costs a `ps` and a registry listing, and lets the two halves of one
@@ -695,6 +716,7 @@ def report(
         attention_settings=settings,
         open_helper=open_helper,
         console=console,
+        ref_state=ref_state,
     )
     return {
         "html": html,
@@ -717,6 +739,7 @@ def publish(
     row_context: RowContext | None = None,
     page_path: str | Path | None = None,
     console: str | None = None,
+    refs: bool | None = None,
 ) -> dict:
     """Render the report as a whole page and deliver it where its owner reads it.
 
@@ -734,6 +757,9 @@ def publish(
     and its buttons write there; ``crowsnest courier`` carries what they write, with no
     LLM. ``""`` is the static page whatever the config file says.
 
+    ``refs`` (default: the ``[publish]`` table's ``refs``) first refreshes what the rows'
+    referenced issues and pull requests are now (:func:`report`'s ``refs``).
+
     The rendered page is kept at ``page_path`` (default ``<data dir>/publish/index.html``),
     so the last one sent can be looked at locally.
     """
@@ -744,6 +770,8 @@ def publish(
     settings = publish_settings(path=config)
     if console is None:
         console = settings.console
+    if refs is None:
+        refs = settings.refs
     if publisher is None:
         if not to and not command:
             to, command = settings.to, list(settings.command)
@@ -766,6 +794,7 @@ def publish(
         open_helper=True,
         interactive=bool(console),
         console=console or None,
+        refs=refs,
     )
     page = (
         Path(page_path).expanduser()
