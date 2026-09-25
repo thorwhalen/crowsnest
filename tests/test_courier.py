@@ -198,6 +198,9 @@ def test_rsync_is_bounded_and_a_missing_remote_collection_is_empty(monkeypatch, 
     argv = courier.rsync_argv("box:/db/intents/", "/m/intents/")
     assert argv[:4] == ["rsync", "-a", "-q", "--update"]
     assert "BatchMode=yes" in argv[argv.index("-e") + 1]
+    assert not any(a.startswith("--rsync-path") for a in argv)  # a pull makes nothing
+    push = courier.rsync_argv("/m/intents/", "box:/srv/my db/intents/")
+    assert "--rsync-path=mkdir -p '/srv/my db/intents/' && rsync" in push
     monkeypatch.setattr(courier.shutil, "which", lambda name: "/usr/bin/rsync")
     said = {
         "stderr": "rsync: link_stat /db/intents: No such file or directory",
