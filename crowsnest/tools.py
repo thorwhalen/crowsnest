@@ -574,6 +574,8 @@ def report(
     actions: bool = False,
     action_store=None,
     synthesiser=None,
+    owed: bool = False,
+    owed_path=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -634,6 +636,9 @@ def report(
     stored line is for another revision (:func:`crowsnest.actions.refresh`; ``synthesiser``
     is its seam, ``claude -p`` by default). Either way each Needs-you row leads with the
     line ``action_store`` holds for its revision, labelled *generated*.
+    ``owed=True`` adds the *Owed* register: openloops' open manual-task issues, read from
+    a cache (``owed_path``, :mod:`crowsnest.owed`) that this call refreshes when it is more
+    than ten minutes old, never running an issue's verify command.
 
     ``links=False`` leaves the references off the page. They are still resolved: a
     verdict reader may read them, and the verbs pin the row with them. To resolve
@@ -709,6 +714,11 @@ def report(
         if triage and len(action_store)
         else None
     )
+    owed_envelope = None
+    if owed:
+        from crowsnest import owed as _owed
+
+        owed_envelope = _owed.refresh(path=owed_path)
     if with_lineage:
         # The rows the roster already read, not a second sweep of the registry: reading
         # twice costs a `ps` and a registry listing, and lets the two halves of one
@@ -747,6 +757,7 @@ def report(
         console=console,
         ref_state=ref_state,
         action_line=action_line,
+        owed=owed_envelope,
     )
     return {
         "html": html,
@@ -771,6 +782,7 @@ def publish(
     console: str | None = None,
     refs: bool | None = None,
     actions: bool | None = None,
+    owed: bool | None = None,
 ) -> dict:
     """Render the report as a whole page and deliver it where its owner reads it.
 
@@ -807,6 +819,8 @@ def publish(
         refs = settings.refs
     if actions is None:
         actions = settings.actions
+    if owed is None:
+        owed = settings.owed
     if publisher is None:
         if not to and not command:
             to, command = settings.to, list(settings.command)
@@ -831,6 +845,7 @@ def publish(
         console=console or None,
         refs=refs,
         actions=actions,
+        owed=owed,
     )
     page = (
         Path(page_path).expanduser()

@@ -509,6 +509,7 @@ def publish(
     console_url: str | None = None,
     refs: bool = False,
     actions: bool = False,
+    owed: bool = False,
 ):
     """Render the report page and send it where you can open it from a phone.
 
@@ -531,6 +532,8 @@ def publish(
     `--actions` (or `actions = true` in `[publish]`) writes a few generated action lines
     per run, with `claude -p` and the cheapest model: each Needs-you row then leads with
     what you must do, in at most eight words, labelled *generated*.
+    `--owed` (or `owed = true` in `[publish]`) adds an *Owed* register after *Needs you*:
+    the open manual-task issues openloops lists (`ol owed`), one tap each to open them.
     """
     result = tools.publish(
         to=to,
@@ -542,6 +545,7 @@ def publish(
         console=console_url,
         refs=refs or None,
         actions=actions or None,
+        owed=owed or None,
     )
     return f"published {result['bytes']} bytes to {result['to']}"
 
