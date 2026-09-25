@@ -33,6 +33,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
@@ -49,6 +50,19 @@ DFLT_PAGE_NAME = "index.html"
 #: scheduled publish that hangs would pile up behind itself.
 DFLT_TIMEOUT = 20
 DFLT_CONNECT_TIMEOUT = 10
+
+#: How long an idle shared ssh connection stays open, in seconds. A scheduler that runs
+#: once a minute then opens one connection per host per minute, not one per file: many
+#: connections a minute is what a server's ssh throttling drops (`unexpected end of file`,
+#: exit 255, about one publish in twenty before this).
+DFLT_CONTROL_PERSIST = 120
+
+#: Exits that mean the connection dropped rather than that the command was wrong: ssh's
+#: 255, and rsync's socket (10), stream (12) and timeout (30, 35) errors. Such a run is
+#: tried once more after :data:`RETRY_PAUSE` seconds.
+TRANSIENT_EXITS = frozenset({10, 12, 30, 35, 255})
+RETRIES = 1
+RETRY_PAUSE = 3.0
 
 # `host:path` or `user@host:path`, the way rsync and scp read one. A single letter before
 # the colon is a Windows drive, and a slash before it makes a local path with a colon in it.
@@ -86,6 +100,42 @@ def to_path(page: Path, to: str) -> str:
     return str(dest)
 
 
+def ssh_command(
+    *,
+    connect_timeout: int = DFLT_CONNECT_TIMEOUT,
+    control_dir: str | Path | None = None,
+    control_persist: int = DFLT_CONTROL_PERSIST,
+) -> str:
+    """The ssh rsync runs (its ``-e``): never prompting, bounded, and sharing a connection.
+
+    ``BatchMode`` makes ssh fail rather than prompt, which is what a job with no terminal
+    needs: a prompt nobody can answer is a run that never ends. ``ControlMaster`` keeps one
+    connection per host open for ``control_persist`` seconds under ``control_dir``
+    (default ``<data dir>/ssh``), so a publish and a courier tick share it. Not on Windows,
+    whose ssh has no control sockets, nor under a directory whose path holds a space,
+    which rsync's ``-e`` would split.
+
+    >>> ssh_command(control_dir='/tmp/cn-ssh').split(' -o ')[1:3]
+    ['BatchMode=yes', 'ConnectTimeout=10']
+    """
+    ssh = f"ssh -o BatchMode=yes -o ConnectTimeout={connect_timeout}"
+    if control_dir is None:
+        from crowsnest.paths import data_dir
+
+        control_dir = data_dir() / "ssh"
+    control = Path(control_dir).expanduser()
+    if os.name == "nt" or " " in str(control):
+        return ssh
+    try:
+        control.mkdir(mode=0o700, parents=True, exist_ok=True)
+    except OSError:
+        return ssh
+    return (
+        f"{ssh} -o ControlMaster=auto -o ControlPath={control}/%C"
+        f" -o ControlPersist={control_persist}"
+    )
+
+
 def rsync_argv(
     page: Path,
     to: str,
@@ -93,12 +143,8 @@ def rsync_argv(
     timeout: int = DFLT_TIMEOUT,
     connect_timeout: int = DFLT_CONNECT_TIMEOUT,
 ) -> list[str]:
-    """The rsync command :func:`to_rsync` runs: quiet, bounded, and never asking for input.
-
-    ``BatchMode`` makes ssh fail rather than prompt, which is what a job with no terminal
-    needs: a prompt nobody can answer is a run that never ends.
-    """
-    ssh = f"ssh -o BatchMode=yes -o ConnectTimeout={connect_timeout}"
+    """The rsync command :func:`to_rsync` runs: quiet, bounded, and never asking for input."""
+    ssh = ssh_command(connect_timeout=connect_timeout)
     return ["rsync", "-q", f"--timeout={timeout}", "-e", ssh, str(page), to]
 
 
@@ -138,9 +184,30 @@ def dflt_publisher(to: str) -> Publisher:
     return to_rsync if is_remote(to) else to_path
 
 
+def attempt(
+    argv: list[str],
+    *,
+    retries: int = RETRIES,
+    pause: float | None = None,
+    sleep: Callable[[float], None] | None = None,
+) -> subprocess.CompletedProcess:
+    """Run ``argv``, again after ``pause`` seconds (:data:`RETRY_PAUSE`) while it exits with
+    a dropped connection (:data:`TRANSIENT_EXITS`), at most ``retries`` more times; the
+    last run is returned."""
+    pause = RETRY_PAUSE if pause is None else pause
+    sleep = time.sleep if sleep is None else sleep
+    done = subprocess.run(argv, capture_output=True, text=True, check=False)
+    for _ in range(retries):
+        if done.returncode not in TRANSIENT_EXITS:
+            break
+        sleep(pause)
+        done = subprocess.run(argv, capture_output=True, text=True, check=False)
+    return done
+
+
 def _run(argv: list[str], *, what: str) -> None:
     """Run ``argv``; a failure is a ``ValueError`` naming the command and its last words."""
-    done = subprocess.run(argv, capture_output=True, text=True, check=False)
+    done = attempt(argv)
     if done.returncode:
         said = (done.stderr or done.stdout).strip().splitlines()
         tail = said[-1] if said else "no output"

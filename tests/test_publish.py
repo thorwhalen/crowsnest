@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
 
 import pytest
@@ -141,3 +142,32 @@ def test_a_console_url_publishes_the_page_with_its_buttons(tmp_path, monkeypatch
     cfg.write_text("[publish]\nconsole = 3\n")
     with pytest.raises(ValueError, match="console must be a string"):
         publish_settings(path=cfg)
+
+
+def test_a_dropped_connection_is_tried_once_more_and_a_wrong_command_is_not(monkeypatch):
+    codes, slept = [255, 0], []
+
+    def fake_run(args, **_):
+        return subprocess.CompletedProcess(
+            args, codes.pop(0), "", "unexpected end of file"
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    assert publish.attempt(["rsync"], sleep=slept.append).returncode == 0
+    assert slept == [publish.RETRY_PAUSE]
+    codes[:] = [23, 0]
+    assert (
+        publish.attempt(["rsync"], sleep=slept.append).returncode == 23
+    )  # not transient
+    codes[:] = [255, 255, 0]
+    assert publish.attempt(["rsync"], sleep=lambda s: None).returncode == 255  # one retry
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="no ssh control sockets on Windows")
+def test_ssh_shares_one_connection_under_the_data_dir(tmp_path):
+    ssh = publish.ssh_command(control_dir=tmp_path / "ssh")
+    assert "BatchMode=yes" in ssh and "ControlMaster=auto" in ssh
+    assert f"ControlPath={tmp_path / 'ssh'}/%C" in ssh
+    assert (tmp_path / "ssh").is_dir()
+    spaced = publish.ssh_command(control_dir=tmp_path / "a b")
+    assert "ControlMaster" not in spaced
