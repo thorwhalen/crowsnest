@@ -721,6 +721,42 @@ def attention_import():
     )
 
 
+def courier(
+    *,
+    remote: str | None = None,
+    home: str | None = None,
+    all_homes: bool = False,
+):
+    """Carry the page's own console store both ways once, with no LLM.
+
+    Run it right after `crowsnest publish`, on the same schedule, when the page is
+    published with a console store (`[publish] console`). It pulls what the page's buttons
+    wrote (`--remote HOST:PATH`, or `remote` in the config file's `[courier]` table: the
+    store's root on the server), takes Seen / Later / Done / Note into this machine's
+    attention store and writes back what changed here, answers Recap and Refresh from
+    disk, and writes the live status and the heartbeat. Ask, Tell and Start need a
+    session: each becomes an `intent` line in `crowsnest watch`, and the session that acts
+    on it answers with `crowsnest intent answer`.
+    """
+    moved = tools.courier(remote=remote, home=home, all_homes=all_homes)
+    return (
+        f"courier: {moved['imported']} in, {moved['exported']} out, "
+        f"{moved['answered']} answered, {moved['handed']} handed to a session"
+        + (f", {moved['skipped']} unreadable skipped" if moved["skipped"] else "")
+    )
+
+
+def intent_answer(intent: str, text: str, *, failed: bool = False):
+    """Answer an intent the courier handed to this session, in one line the page shows.
+
+    Say what happened in the page's own terms (the session, what was done, what the user
+    can do next), never a command's output: whoever can open the page reads it. The next
+    `crowsnest courier` tick carries it. `--failed` marks it failed instead of done.
+    """
+    doc = tools.intent_answer(intent, text, status="failed" if failed else "done")
+    return f"answered {intent}: {doc['status']}"
+
+
 def watch(
     *,
     interval: float = _watch.DFLT_INTERVAL,
@@ -1083,6 +1119,7 @@ _commands = [
     triage,
     report,
     publish,
+    courier,
     seen,
     unseen,
     later,
@@ -1100,7 +1137,10 @@ _commands = [
 
 #: Commands under a group word. The attention verbs a person types are top-level; the
 #: machine side of the store (what a courier runs) sits under `crowsnest attention`.
-_groups = {"attention": {"export": attention_export, "import": attention_import}}
+_groups = {
+    "attention": {"export": attention_export, "import": attention_import},
+    "intent": {"answer": intent_answer},
+}
 
 
 def main(argv: list[str] | None = None) -> None:

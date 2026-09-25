@@ -443,6 +443,51 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
     return PublishSettings(to=to.strip(), command=tuple(command), console=console.strip())
 
 
+#: The config file's table for the courier (:mod:`crowsnest.courier`).
+COURIER_KEY = "courier"
+
+
+@dataclass(frozen=True)
+class CourierSettings:
+    """The ``[courier]`` table: where the page's console store lives, for ``crowsnest courier``.
+
+    ``remote`` is that store's root, ``[user@]host:path`` or a directory: the files the
+    server's routes read and write, one JSON file per document.
+
+    >>> CourierSettings().remote
+    ''
+    """
+
+    remote: str = ""
+
+
+def courier_settings(*, path: str | Path | None = None) -> CourierSettings:
+    """The config file's ``[courier]`` table, or the defaults when it has none.
+
+    .. code-block:: toml
+
+        [courier]
+        remote = "me@myserver:/srv/crowsnest/db"   # or a local directory
+    """
+    file = config_path(path)
+    table = _loaded(path).get(COURIER_KEY)
+    if table is None:
+        return CourierSettings()
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{COURIER_KEY}] must be a table")  # noqa: TRY004
+    unknown = sorted(set(table) - {"remote"})
+    if unknown:
+        raise ValueError(
+            f"{file}: [{COURIER_KEY}] has no {', '.join(unknown)}; it knows remote"
+        )
+    remote = table.get("remote", "")
+    if not isinstance(remote, str):
+        raise ValueError(  # noqa: TRY004
+            f"{file}: [{COURIER_KEY}] remote must be a string, not {remote!r}"
+        )
+    return CourierSettings(remote=remote.strip())
+
+
 def _default_home() -> Home:
     return Home(name=DFLT_HOME_NAME, path=claude_home())
 

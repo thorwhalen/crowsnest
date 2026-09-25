@@ -75,7 +75,7 @@ DETAIL_LIMIT = 200
 
 #: What a hook event is called in the stream. ``needs-you`` and ``stopped`` are named for
 #: what the human should do about them, which is what the registry statuses are not.
-HOOK_KINDS = {"notification": "needs-you", "stop": "stopped"}
+HOOK_KINDS = {"notification": "needs-you", "stop": "stopped", "intent": "intent"}
 
 #: Notification types that are not a request. Claude Code sends ``idle_prompt`` when a
 #: session has merely sat idle for a minute after finishing a turn -- which the ``stop``

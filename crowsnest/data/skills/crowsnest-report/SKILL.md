@@ -181,6 +181,15 @@ acting on intents:
 import` already implements it (step 2 above). One console owner per artifact (section 2)
 keeps two couriers from racing on the same page.
 
+**A console on your own server, with no LLM courier** (#111). A page published with a
+console store (`crowsnest publish --console-url <base>`, or `console` in `[publish]`)
+talks to a small JSON store its owner serves behind their own login (the protocol is on
+`crowsnest.report.ConsoleStore`) instead of an artifact's `db`. `crowsnest courier`
+(`remote` in `[courier]`), run by the same scheduler right after `publish`, does steps 1
+to 4 above and answers Recap and Refresh from disk, all without a session. Ask, Tell and
+Start arrive as an `intent` line in `crowsnest watch`: act on it and answer with
+`crowsnest intent answer <id> "<one line>"`. No `/loop` is needed for such a page.
+
 **Sharing across crow's nests.** Nothing extra to do: every watcher on this machine
 couriers its own artifact into the same store (the data dir is per OS user), so an item
 seen on one page is seen on the other after each side's next tick.

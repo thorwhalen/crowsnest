@@ -778,6 +778,59 @@ def publish(
     return {"to": where, "bytes": page.stat().st_size, "made_at": made["made_at"]}
 
 
+def courier(
+    *,
+    remote: str | None = None,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    mirror: str | Path | None = None,
+    copy=None,
+    store=None,
+    events_path: str | Path | None = None,
+) -> dict:
+    """One courier tick for the page's own console store (:func:`crowsnest.courier.tick`).
+
+    ``remote`` defaults to the config file's ``[courier]`` table. Run it on the schedule
+    that publishes the page: it carries the buttons' writes both ways, answers a recap from
+    disk, and wakes a session (through ``crowsnest watch``) only for an ask, a tell or a
+    start. ``copy`` is the transport seam, ``(src, dst, collection) -> None``.
+    """
+    from crowsnest import courier as _courier
+    from crowsnest.config import courier_settings
+
+    remote = remote or courier_settings(path=config).remote
+    if not remote:
+        raise ValueError(
+            "the courier needs the console store's root: --remote HOST:PATH or a "
+            "[courier] table in the config file with `remote`"
+        )
+    return _courier.tick(
+        remote,
+        mirror=mirror,
+        copy=copy,
+        home=home,
+        all_homes=all_homes,
+        config=config,
+        store=store,
+        events_path=events_path,
+    )
+
+
+def intent_answer(
+    intent: str,
+    text: str,
+    *,
+    status: str = "done",
+    mirror: str | Path | None = None,
+) -> dict:
+    """A session's one-line answer to an intent the courier handed it; the next tick
+    carries it to the page (:func:`crowsnest.courier.answer`)."""
+    from crowsnest import courier as _courier
+
+    return _courier.answer(intent, text, status=status, mirror=mirror)
+
+
 def lineage(
     *,
     home: str | Path | None = None,

@@ -137,6 +137,11 @@ error, or an item the person put off **woke** (its time passed, or it changed wh
   they left, else the reason); push if they may have walked away. Otherwise → fold it
   into your next summary.
 - **busy**, **started**, **exited** → note it; mention it only when asked.
+- **intent** → a button on the page's own-server console (`crowsnest courier`) asked for
+  an Ask, a Tell or a Start; `detail` is `<kind> <intent id>: <text>` and `name` the
+  session. Act on it as crowsnest-report section 5 says for that kind, then answer with
+  `crowsnest intent answer <id> "<one line>"` (`--failed` when it could not be done). The
+  next courier tick carries the line to the page.
 
 **Default shape for every unsolicited line you relay from this stream**, unless the user
 asks for something else: bold `**HH:MM**`, a colon, then one line — `**14:12**: sweep2-qh
