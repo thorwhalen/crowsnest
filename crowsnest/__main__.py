@@ -508,6 +508,7 @@ def publish(
     plain: bool = False,
     console_url: str | None = None,
     refs: bool = False,
+    actions: bool = False,
 ):
     """Render the report page and send it where you can open it from a phone.
 
@@ -526,6 +527,10 @@ def publish(
     `--refs` (or `refs = true` in `[publish]`) first asks GitHub, through the `gh` CLI, what
     the referenced issues and pull requests are now, a few repositories per run: each row
     then lists its open references first with their titles, and its closed ones muted.
+
+    `--actions` (or `actions = true` in `[publish]`) writes a few generated action lines
+    per run, with `claude -p` and the cheapest model: each Needs-you row then leads with
+    what you must do, in at most eight words, labelled *generated*.
     """
     result = tools.publish(
         to=to,
@@ -536,6 +541,7 @@ def publish(
         row_context=_row_context(ledger_dir),
         console=console_url,
         refs=refs or None,
+        actions=actions or None,
     )
     return f"published {result['bytes']} bytes to {result['to']}"
 

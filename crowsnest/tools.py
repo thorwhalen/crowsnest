@@ -571,6 +571,9 @@ def report(
     console=None,
     refs: bool = False,
     ref_store=None,
+    actions: bool = False,
+    action_store=None,
+    synthesiser=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -627,6 +630,11 @@ def report(
     (default :func:`crowsnest.refstate.dflt_store`): open references first with their
     titles, closed ones muted; a page whose store knows nothing renders as before.
 
+    ``actions=True`` first writes a generated action line for a few Needs-you rows whose
+    stored line is for another revision (:func:`crowsnest.actions.refresh`; ``synthesiser``
+    is its seam, ``claude -p`` by default). Either way each Needs-you row leads with the
+    line ``action_store`` holds for its revision, labelled *generated*.
+
     ``links=False`` leaves the references off the page. They are still resolved: a
     verdict reader may read them, and the verbs pin the row with them. To resolve
     nothing, or to read other ledgers, give ``row_context`` ``resolvers=()`` or a
@@ -680,6 +688,27 @@ def report(
         if len(ref_store)
         else None
     )
+    from crowsnest import actions as _actions
+
+    action_store = _actions.dflt_store() if action_store is None else action_store
+    if actions and triage:
+        _actions.refresh(
+            rows,
+            item=ctx.item,
+            rev=ctx.rev,
+            store=action_store,
+            synthesiser=synthesiser,
+            ref_state=ref_state,
+        )
+    action_line = (
+        (
+            lambda row: _actions.line_for(
+                row, item=ctx.item, rev=ctx.rev, store=action_store
+            )
+        )
+        if triage and len(action_store)
+        else None
+    )
     if with_lineage:
         # The rows the roster already read, not a second sweep of the registry: reading
         # twice costs a `ps` and a registry listing, and lets the two halves of one
@@ -717,6 +746,7 @@ def report(
         open_helper=open_helper,
         console=console,
         ref_state=ref_state,
+        action_line=action_line,
     )
     return {
         "html": html,
@@ -740,6 +770,7 @@ def publish(
     page_path: str | Path | None = None,
     console: str | None = None,
     refs: bool | None = None,
+    actions: bool | None = None,
 ) -> dict:
     """Render the report as a whole page and deliver it where its owner reads it.
 
@@ -758,7 +789,9 @@ def publish(
     LLM. ``""`` is the static page whatever the config file says.
 
     ``refs`` (default: the ``[publish]`` table's ``refs``) first refreshes what the rows'
-    referenced issues and pull requests are now (:func:`report`'s ``refs``).
+    referenced issues and pull requests are now (:func:`report`'s ``refs``), and
+    ``actions`` (default: the table's ``actions``) writes a few generated action lines
+    (:func:`report`'s ``actions``).
 
     The rendered page is kept at ``page_path`` (default ``<data dir>/publish/index.html``),
     so the last one sent can be looked at locally.
@@ -772,6 +805,8 @@ def publish(
         console = settings.console
     if refs is None:
         refs = settings.refs
+    if actions is None:
+        actions = settings.actions
     if publisher is None:
         if not to and not command:
             to, command = settings.to, list(settings.command)
@@ -795,6 +830,7 @@ def publish(
         interactive=bool(console),
         console=console or None,
         refs=refs,
+        actions=actions,
     )
     page = (
         Path(page_path).expanduser()

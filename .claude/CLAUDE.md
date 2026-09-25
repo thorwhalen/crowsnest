@@ -27,6 +27,7 @@ The map for an agent working *on* crowsnest. Users get the shipped skills instea
 | `console=` in `render_report` / `tools.report` / `tools.publish`, a `report.ConsoleStore` (or its url): where an interactive page's console keeps its documents | `None`: the claude.ai viewer's `db` capability, which a session couriers (crowsnest-report section 5) | the owner's own same-origin JSON store (`HTTP_STORE_SCRIPT`, the protocol in `ConsoleStore`'s docstring) behind their own login, kept by `crowsnest courier` with no LLM (#111); `[publish] console` names it |
 | `copy=` in `courier.tick` / `tools.courier`, a callable `(src, dst, collection) -> None`, newer wins | `courier.dflt_copy(remote)`: `rsync -a --update` over bounded, non-prompting ssh for `[user@]host:path`, a directory copy otherwise; the root is `[courier] remote` | an S3 or HTTP transport for a store that is not a directory of JSON files |
 | `ref_state=` in `render_report`, a callable `(url) -> {state, title, closed_at} \| None`; `fetch=` / `store=` in `refstate.refresh` | `refstate.state_of` over `refstate.dflt_store()` (one JSON file per repo under `data_dir()/refs/`), filled by `refresh` with `gh_fetch` (`gh issue/pr list`), a few stale repos per run (`tools.report(refs=True)`, `[publish] refs`) | openloops' shared fetcher; a GraphQL batch |
+| `synthesiser=` in `actions.refresh` / `tools.report`, a callable `(brief) -> {line, cites, verdict}`; `action_line=` in `render_report`, `(row) -> doc \| None` | `actions.claude_synthesiser()`: `claude -p --model haiku --output-format json --no-session-persistence` in an empty temp dir with `CROWSNEST_QUIET_HOOKS=1` (so its hooks wake no watcher); lines cached per attention item id and revision under `data_dir()/actions/`, a few per publish (`[publish] actions`) | a template, another model, the Anthropic API |
 | `publisher=` in `tools.publish`, a callable `(page, to) -> str` | `publish.dflt_publisher(to)`: rsync over ssh (`BatchMode`, bounded) for a `[user@]host:path`, an atomic local write otherwise; `command=` (argv with `{page}`) instead of `to`. The route is the person's: `--to` or the config file's `[publish]` table, **never a default naming anyone's machine** | an S3 or gist uploader; a POST to a page's own endpoint |
 
 Surfaces built: the `cw` CLI (`__main__.py` renders, `tools.py` is the JSON core), the
@@ -87,6 +88,8 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
   trusts a wrong "safe to close" closes a terminal on live work and nothing tells them.
   Measured 2026-09: 180 of 181 ledgers had an empty `state:` and none had `open questions:`,
   so the classifier reads the free-part prose too, and `crowsnest-worker` teaches the field.
+- A generated line is never made at render, and never from transcript text: `actions.brief_of` shows the model
+  the verdict's asks and the refs' titles only. `kept` refuses a line over `MAX_WORDS` words.
 - Nothing in `tools.py` prints or exits. Every function takes and returns JSON-able values.
 - `lineage.jsonl` is append-only and **never rotated** — unlike `events.jsonl`, which rotates at
   4 MiB. Provenance that can age out is not provenance. Do not "tidy" it into the event log.
