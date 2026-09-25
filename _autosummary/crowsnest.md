@@ -392,6 +392,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`links`](crowsnest.links.md#module-crowsnest.links)         | References in a session's own words, turned into links you can click.                                 |
 | [`live`](crowsnest.live.md#module-crowsnest.live)           | What a published page may know about the sessions *now*: one small document, and a recap.             |
 | [`open`](crowsnest.open.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                   |
+| [`owed`](crowsnest.owed.md#module-crowsnest.owed)           | What the person owes their sessions: the open `manual-task` issues openloops lists.                   |
 | [`paths`](crowsnest.paths.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
 | [`publish`](crowsnest.publish.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.      |
 | [`refstate`](crowsnest.refstate.md#module-crowsnest.refstate)   | What a referenced issue or pull request is now: open or closed, and its title.                        |

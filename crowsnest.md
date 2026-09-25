@@ -1,4 +1,4 @@
-> built 2026-09-25 15:55 UTC from de55d46 (main) · crowsnest 0.0.71. Details: build_info.json
+> built 2026-09-25 16:06 UTC from 20b9200 (main) · crowsnest 0.0.72. Details: build_info.json
 
 # index.html.md
 
@@ -1608,7 +1608,7 @@ One Claude Code config directory to read, and how to judge liveness in it.
 
 The config table saying where `crowsnest publish` sends the page.
 
-### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False)
+### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False, owed=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1708,6 +1708,7 @@ to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
 # console = "/api/crowsnest"   # the page's own store: an interactive page
 # refs = true                  # ask GitHub (gh) what the references are now
 # actions = true               # write a generated action line per Needs-you item
+# owed = true                  # an Owed register: openloops' manual-task issues
 ```
 
 A key the table does not know is an error, as in `[attention]`, and so is giving
@@ -2417,6 +2418,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)         | References in a session's own words, turned into links you can click.                                 |
 | [`live`](_autosummary/crowsnest.live.html.md#module-crowsnest.live)           | What a published page may know about the sessions *now*: one small document, and a recap.             |
 | [`open`](_autosummary/crowsnest.open.html.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                   |
+| [`owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed)           | What the person owes their sessions: the open `manual-task` issues openloops lists.                   |
 | [`paths`](_autosummary/crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
 | [`publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.      |
 | [`refstate`](_autosummary/crowsnest.refstate.html.md#module-crowsnest.refstate)   | What a referenced issue or pull request is now: open or closed, and its title.                        |
@@ -3792,6 +3794,71 @@ by *name*, so it would raise whichever local tab happened to share that name.
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
+# _autosummary/crowsnest.owed.html.md
+
+# crowsnest.owed
+
+What the person owes their sessions: the open `manual-task` issues openloops lists.
+
+Every terminal’s status line says “30+ owed”, and the page is where the person looks for
+what to do, so it shows the same list (crowsnest#85): each issue, whose repository, how
+old, and one tap to open it. It is openloops’ list (`openloops.tools.owed()`), read
+without running any issue’s verify predicate: a scheduled page must never execute
+commands that an issue’s body names.
+
+The page never fetches. [`refresh()`](_autosummary/crowsnest.owed.html.md#crowsnest.owed.refresh) writes openloops’ envelope to a cache file under
+the data directory, at most once per `every`, and the page reads that file. An envelope
+whose listing failed (`listed: false`) is kept as it is, so the page can say the list is
+unavailable rather than show an empty one: “nothing owed” and “could not look” must not
+read the same.
+
+### Module Attributes
+
+| [`DFLT_EVERY`](_autosummary/crowsnest.owed.html.md#crowsnest.owed.DFLT_EVERY)   | How old the cached list may get before [`refresh()`](_autosummary/crowsnest.owed.html.md#crowsnest.owed.refresh) asks openloops again.   |
+|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| [`DFLT_LIMIT`](_autosummary/crowsnest.owed.html.md#crowsnest.owed.DFLT_LIMIT)   | How many issues are listed at most.                                                                                       |
+
+### Functions
+
+| [`cache_path`](_autosummary/crowsnest.owed.html.md#crowsnest.owed.cache_path)([path])                             | Where the list is kept: `path`, else `<data dir>/owed.json`.                                           |
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| [`load`](_autosummary/crowsnest.owed.html.md#crowsnest.owed.load)([path])                                   | The cached envelope, or `None` when there is none (or it cannot be read).                              |
+| [`refresh`](_autosummary/crowsnest.owed.html.md#crowsnest.owed.refresh)(\*[, path, lister, now, every, limit]) | Ask openloops for the owed list when the cache is older than `every`; the envelope the page will read. |
+
+### crowsnest.owed.DFLT_EVERY *= datetime.timedelta(seconds=600)*
+
+How old the cached list may get before [`refresh()`](_autosummary/crowsnest.owed.html.md#crowsnest.owed.refresh) asks openloops again.
+
+### crowsnest.owed.DFLT_LIMIT *= 200*
+
+How many issues are listed at most.
+
+### crowsnest.owed.cache_path(path=None)
+
+Where the list is kept: `path`, else `<data dir>/owed.json`.
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### crowsnest.owed.load(path=None)
+
+The cached envelope, or `None` when there is none (or it cannot be read).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.owed.refresh(, path=None, lister=None, now=None, every=datetime.timedelta(seconds=600), limit=200)
+
+Ask openloops for the owed list when the cache is older than `every`; the
+envelope the page will read.
+
+`lister` is openloops’ `owed()` by default, always called with
+`verify=False`. A lister that raises leaves the cache as it was.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+
 # _autosummary/crowsnest.paths.html.md
 
 # crowsnest.paths
@@ -4509,7 +4576,7 @@ are placed directly: the figure down the first column, the heading and the rule 
 the second. Without this the rule falls below the head’s hairline, at the page’s left
 edge, on every register that folds.
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None, action_line=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None, action_line=None, owed=None)
 
 The roster [`crowsnest.tools.roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -4557,6 +4624,9 @@ last and muted. The page fetches nothing; `None` renders as before it existed.
 `action_line` is each Needs-you row’s generated line, a callable `(row) -> {"line",
 ...} | None` ([`crowsnest.actions.line_for()`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.line_for)): it leads the row, labelled
 *generated*, above the words it came from. `None` renders as before.
+`owed` is openloops’ owed envelope ([`crowsnest.owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed)): the page then carries an
+*Owed* register after *Needs you*, one line per open manual-task issue, and a row’s
+reference to an owed issue leads its list, tagged. `None` renders as before.
 
 `open_helper=True` adds one small script ([`OPEN_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.OPEN_SCRIPT)) for a page someone
 opens in a browser: it routes each `open` by the account’s browser the reader chose
@@ -5200,7 +5270,7 @@ instruction.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None, refs=None, actions=None)
+### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None, refs=None, actions=None, owed=None)
 
 Render the report as a whole page and deliver it where its owner reads it.
 
@@ -5254,7 +5324,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None, actions=False, action_store=None, synthesiser=None)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None, actions=False, action_store=None, synthesiser=None, owed=False, owed_path=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
@@ -5315,6 +5385,9 @@ titles, closed ones muted; a page whose store knows nothing renders as before.
 stored line is for another revision ([`crowsnest.actions.refresh()`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.refresh); `synthesiser`
 is its seam, `claude -p` by default). Either way each Needs-you row leads with the
 line `action_store` holds for its revision, labelled *generated*.
+`owed=True` adds the *Owed* register: openloops’ open manual-task issues, read from
+a cache (`owed_path`, [`crowsnest.owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed)) that this call refreshes when it is more
+than ten minutes old, never running an issue’s verify command.
 
 `links=False` leaves the references off the page. They are still resolved: a
 verdict reader may read them, and the verbs pin the row with them. To resolve
@@ -6172,18 +6245,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-25 15:55 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/de55d4666415691ee008fef6f43d0957f51cfc22"><code>de55d46</code></a> on branch <code>main</code>, for **crowsnest 0.0.71** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-25 16:06 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/20b92000e23725bfa1930dec7fa05a61b1e0182e"><code>20b9200</code></a> on branch <code>main</code>, for **crowsnest 0.0.72** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.71) is behind the latest release on PyPI (0.0.72): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/de55d4666415691ee008fef6f43d0957f51cfc22"><code>de55d4666415691ee008fef6f43d0957f51cfc22</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/20b92000e23725bfa1930dec7fa05a61b1e0182e"><code>20b92000e23725bfa1930dec7fa05a61b1e0182e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6194,9 +6265,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36157216210">36157216210</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36158498048">36158498048</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>de55d4666415691ee008fef6f43d0957f51cfc22</code> (in the history of the built commit) |
+| Event commit | <code>20b92000e23725bfa1930dec7fa05a61b1e0182e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6221,13 +6292,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.72/">0.0.72</a>, newer than the documented version (0.0.71).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.72/">0.0.72</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout de55d4666415691ee008fef6f43d0957f51cfc22
+git checkout 20b92000e23725bfa1930dec7fa05a61b1e0182e
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

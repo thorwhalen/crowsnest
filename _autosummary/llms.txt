@@ -19,6 +19,7 @@
 - [crowsnest.links](crowsnest.links.html.md): References in a session’s own words, turned into links you can click.
 - [crowsnest.live](crowsnest.live.html.md): What a published page may know about the sessions &#42;now&#42;: one small document, and a recap.
 - [crowsnest.open](crowsnest.open.html.md): Bring a live session’s terminal to the front, or say where it runs.
+- [crowsnest.owed](crowsnest.owed.html.md): What the person owes their sessions: the open &#96;manual-task&#96; issues openloops lists.
 - [crowsnest.paths](crowsnest.paths.html.md): Where crowsnest keeps what is not code: the data directory, and nothing else.
 - [crowsnest.publish](crowsnest.publish.html.md): Deliver the report page to a place its owner can open from anywhere – by their route, not ours.
 - [crowsnest.refstate](crowsnest.refstate.html.md): What a referenced issue or pull request is now: open or closed, and its title.
