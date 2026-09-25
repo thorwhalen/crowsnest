@@ -197,25 +197,30 @@ def test_the_default_store_is_the_one_the_verbs_write():
 # --------------------------------------------------------------------------------
 
 
-def test_a_seen_row_is_dimmed_and_sorted_after_an_unseen_one_in_its_register():
+def test_a_seen_row_is_dimmed_where_it_stands_in_its_register():
     rows = fleet()
+    before = register(page(rows, {}), "needs-you")
     store = {}
     mark(store, named(rows, "asker"), attention.seen)
     html = page(rows, store)
     needs = register(html, "needs-you")
-    assert needs.index("session-decider") < needs.index("session-doer")
-    assert needs.index("session-doer") < needs.index("session-asker")
+    # Seen dims in place (the action-first pass, B3): the order is the unmarked page's.
+    assert re.findall(r'id="(session-[\w-]+)"', needs) == re.findall(
+        r'id="(session-[\w-]+)"', before
+    )
     assert "row--seen" in li(html, "asker")
     assert "row--seen" not in li(html, "decider")
     assert figure(html, "needs-you") == 3
+    tile = re.search(r'<li class="tile[^"]*"><a href="#session-asker">', html).group(0)
+    assert "tile--seen" in tile
 
 
-def test_a_seen_quiet_row_dims_and_sorts_within_its_project():
+def test_a_seen_quiet_row_dims_in_place_within_its_project():
     rows = [quiet_row("old-a", ago=7200), quiet_row("old-b", ago=7300)]
     store = {}
     mark(store, rows[0], attention.seen)
     quiet = register(page(rows, store), "quiet")
-    assert quiet.index("session-old-b") < quiet.index("session-old-a")
+    assert quiet.index("session-old-a") < quiet.index("session-old-b")
     assert "row--seen" in li(quiet, "old-a")
 
 

@@ -61,14 +61,19 @@ def masthead(html: str) -> str:
 # 1. The masthead ---------------------------------------------------------------------
 
 
-def test_the_tally_strip_carries_the_register_figures_and_links_to_them():
+def legend(html: str) -> str:
+    return re.search(r'<ul class="legend">(.*?)</ul>', html).group(1)
+
+
+def test_the_board_legend_carries_the_register_figures_and_links_to_them():
     html = page(
         needs("a", "2026-02-01T11:00:00+00:00"),
         needs("b", "2026-02-01T10:00:00+00:00"),
         row(label="c", status="busy"),
         row(label="d", status_since=since(86400)),  # idle a day: quiet, not finished
     )
-    strip = re.search(r'<ul class="tallystrip">(.*?)</ul>', masthead(html)).group(1)
+    strip = legend(html)
+    assert "legend" not in masthead(html)  # the tally strip it replaced is gone
     cells = re.findall(
         r'<li[^>]*><a href="#([\w-]+)"><b>(\d+)</b> <span>([^<]+)</span>', strip
     )
@@ -84,14 +89,14 @@ def test_the_tally_strip_carries_the_register_figures_and_links_to_them():
         head = html[html.index(f'id="{ident}"') :]
         assert re.search(r'class="figure"[^>]*>' + n + "<", head[:600]), ident
     # A zero is dimmed, never dropped: the register is still there to jump to.
-    assert strip.count('class="is-zero"') == 2
+    assert strip.count(' is-zero"') == 2
     # The registry's status counts are gone from the head of the page.
     assert 'class="tally-cell"' not in html
 
 
-def test_without_verdicts_the_strip_counts_waiting_instead_of_the_triage_registers():
+def test_without_verdicts_the_legend_counts_waiting_instead_of_the_triage_registers():
     html = page(row(label="w", status="waiting", waiting_for="which?"))
-    strip = re.search(r'<ul class="tallystrip">(.*?)</ul>', masthead(html)).group(1)
+    strip = legend(html)
     idents = re.findall(r'href="#([\w-]+)"', strip)
     assert idents == ["waiting", "finished", "working", "quiet"]
 

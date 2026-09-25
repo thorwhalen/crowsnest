@@ -235,6 +235,7 @@ _UNREAD = (_attention.NEW, *_BACK)
 #: was. Seen rows are dimmed, never recoloured: the register's colour is its meaning.
 ATTENTION_CSS = """
 .row--seen{opacity:.55}
+.tile--seen{opacity:.55}.tile--seen a{border-left-style:dotted}
 .chip--reach{color:var(--ink-soft);background:transparent;border-style:dashed}
 .dot{display:inline-block;width:.45rem;height:.45rem;border-radius:50%;
   background:var(--accent);margin-left:.45rem;vertical-align:middle}
@@ -281,6 +282,7 @@ CONSOLE_CSS = """
 .later-sheet input[type=text]{width:100%;font:inherit;font-size:.9rem;padding:.4rem;
   border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
 .is-seen{opacity:.55}
+.tile.is-seen a{border-left-style:dotted}
 .live,.line.live .tag{color:var(--accent)}
 .later-live .figure{color:var(--ink-soft)}
 .toast{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:10;display:flex;
@@ -1065,8 +1067,8 @@ CONSOLE_SCRIPT = r"""
       const count = [...block.querySelectorAll("li[id^='session-']")].filter((li) => !li.hidden).length;
       const figure = block.querySelector(".figure");
       if (figure) figure.textContent = String(count);
-      // The masthead's strip carries the same figure (#109); the live Later block has no cell.
-      const cell = document.querySelector(`.tallystrip a[href="#${block.id}"]`);
+      // The board's legend carries the same figure (#109); the live Later block has none.
+      const cell = document.querySelector(`.legend a[href="#${block.id}"]`);
       if (cell) {
         cell.querySelector("b").textContent = String(count);
         cell.parentElement.classList.toggle("is-zero", count === 0);
@@ -1165,6 +1167,23 @@ CONSOLE_SCRIPT = r"""
       }
     }
 
+    // A row's tile on the board dims, lifts and hides with it, where it stands (B3).
+    function followTile(el) {
+      const link = el.id ? document.querySelector(`.tiles a[href="#${el.id}"]`) : null;
+      if (!link) return;
+      const tile = link.parentElement;
+      if (tile.dataset.drawn === undefined) tile.dataset.drawn = tile.className;
+      const shown = el.dataset.live;
+      if (shown === undefined) {
+        tile.className = tile.dataset.drawn;
+        tile.hidden = false;
+        return;
+      }
+      tile.classList.remove("tile--seen");
+      tile.classList.toggle("is-seen", shown === A.SEEN || shown === A.LATER);
+      tile.hidden = shown === A.DONE;
+    }
+
     // Draw a row from `record`, or as the page rendered it when `record` is null.
     function apply(el, record) {
       const from = el.closest(".register");
@@ -1195,6 +1214,7 @@ CONSOLE_SCRIPT = r"""
         if (shown === A.LATER) putAway(el); else bringBack(el);
         addLive(el, shown, record);
       }
+      followTile(el);
       recount(from);
       recount(el.closest(".register"));
     }
@@ -1746,8 +1766,45 @@ OVERVIEW_CSS = """
   letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
 .about[open]>summary{margin-bottom:.6rem}
 .about .claim+.claim{margin-top:.6rem}
-.tallystrip a{color:inherit;text-decoration:none}
-.tallystrip li.is-zero b{color:var(--ink-soft)}
+.board{margin:1.4rem 0 1.8rem}
+.board-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.3rem 1rem}
+.board-head h2{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin:0}
+.legend{list-style:none;display:flex;flex-wrap:wrap;gap:.15rem .85rem;margin:0;padding:0;
+  font-size:.9rem}
+.legend a{color:inherit;text-decoration:none}
+.legend b{font-variant-numeric:tabular-nums}
+.legend .tone-needs b{color:var(--needs)}.legend .tone-free b{color:var(--free)}
+.legend .tone-unsure b{color:var(--unsure)}.legend .tone-flight b{color:var(--waits)}
+.legend li.is-zero b{color:var(--ink-soft)}
+.go-through{display:block;margin:.8rem 0 .2rem;padding:.6rem .9rem;text-align:center;
+  border:1px solid var(--needs);border-radius:8px;color:var(--needs);
+  text-decoration:none;font-weight:600}
+.tiles{list-style:none;margin:.55rem 0 0;padding:0;display:grid;gap:.4rem}
+.tiles--card{grid-template-columns:minmax(0,1fr)}
+.tiles--pair{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tiles--chip{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (min-width:900px){
+  .tiles--card{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .tiles--pair{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .tiles--chip{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.tile{--tile:var(--done);--tile-wash:var(--done-wash);min-width:0}
+.tile.tone-needs{--tile:var(--needs);--tile-wash:var(--needs-wash)}
+.tile.tone-free{--tile:var(--free);--tile-wash:var(--free-wash)}
+.tile.tone-flight{--tile:var(--waits);--tile-wash:var(--waits-wash)}
+.tile.tone-unsure{--tile:var(--unsure);--tile-wash:var(--unsure-wash)}
+.tile a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.1rem .5rem;
+  align-items:baseline;align-content:start;height:100%;box-sizing:border-box;padding:.4rem .55rem;
+  border-left:3px solid var(--tile);border-radius:6px;background:var(--tile-wash);
+  color:var(--ink);text-decoration:none}
+.tile-name{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.tile-age{font-family:var(--mono);font-size:.72rem;color:var(--ink-soft);white-space:nowrap}
+.tile-mark{font-family:var(--mono);color:var(--unsure);margin-right:.3rem}
+.tile-line{grid-column:1/-1;font-size:.84rem;color:var(--ink-soft);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.tile--card .tile-line{color:var(--ink);font-size:.92rem;white-space:normal;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tile-line.is-raw{font-style:italic;color:var(--ink-soft)}
 .register:has(>.empty){margin-top:1.4rem}
 .register:has(>.empty) .register-head{align-items:baseline;padding-bottom:.45rem;
   border-bottom-color:var(--rule)}
@@ -2812,11 +2869,27 @@ _WHY_CHIPS = {"decision": "decide", "action": "do", "question": "answer"}
 GENERATED_NOTE = "written by a model from this session's own request, not its words"
 
 
-def _action(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
-    """The row's generated action line, labelled, or ``''`` when there is none for it."""
+def _generated(row: Mapping[str, Any]) -> str:
+    """The row's generated action line as text, ``''`` when there is none for it."""
     lookup = _action_line.get()
     found = lookup(row) if lookup else None
     line = found.get("line") if isinstance(found, Mapping) else None
+    return str(line) if line else ""
+
+
+def _ask_text(row: Mapping[str, Any]) -> str:
+    """What a needs-you row asks, in its own words: the question, else the reason, else
+    what it waits for."""
+    act = row.get("activity") or {}
+    reason = (row.get("verdict") or {}).get("reason")
+    return str(
+        act.get("pending_question") or reason or row.get("waiting_for") or ""
+    ).strip()
+
+
+def _action(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """The row's generated action line, labelled, or ``''`` when there is none for it."""
+    line = _generated(row)
     if not line:
         return ""
     return (
@@ -2838,9 +2911,7 @@ def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> s
     reason = verdict.get("reason")
     if reason and reason not in (row.get("waiting_for"), act.get("pending_question")):
         lines.append(_line(safe, _WHY_CHIPS.get(verdict.get("why"), "needs"), reason))
-    said = str(
-        act.get("pending_question") or reason or row.get("waiting_for") or ""
-    ).strip()
+    said = _ask_text(row)
     action = _action(safe, row)
     # What to do leads; the words it came from, whole, are in the fold. With a generated
     # line, two lines of what was said stay out to check it by; without one, the ask's
@@ -2894,15 +2965,23 @@ def _first_clause(text: str) -> str:
     return cut if len(cut) <= RAW_LIMIT else cut[: RAW_LIMIT - 1].rstrip() + "\u2026"
 
 
-def _raw_action(safe: _Sanitizer, said: str) -> str:
-    """The stand-in for a missing generated line: the ask's first clause, marked raw, or a
-    pointer to the source when that clause cannot stand alone."""
+def _raw_clause(said: str) -> str:
+    """The ask's first clause when it can stand alone as what to do, else ``''``."""
     clause = _first_clause(said)
     if (
         len(clause.split()) < RAW_MIN_WORDS
         or _UNREADABLE.match(clause)
         or _SAYS_NOTHING.match(clause)
     ):
+        return ""
+    return clause
+
+
+def _raw_action(safe: _Sanitizer, said: str) -> str:
+    """The stand-in for a missing generated line: the ask's first clause, marked raw, or a
+    pointer to the source when that clause cannot stand alone."""
+    clause = _raw_clause(said)
+    if not clause:
         return '<p class="action is-raw">open the source below</p>'
     return (
         f'<p class="action is-raw">{safe.text(clause)}'
@@ -3217,27 +3296,18 @@ def _lineage_register(safe: _Sanitizer, found: Any) -> str:
 
 def _masthead(
     safe: _Sanitizer,
-    tally: Sequence[tuple[str, str, int]],
     stamp: str,
     title: str,
     *,
     zone: str,
     settings: AttentionSettings,
 ) -> str:
-    """The masthead: the stamp in the largest type, the page's caveats behind one fold,
-    and the registers' figures on one line.
+    """The masthead: the stamp in the largest type and the page's caveats behind one fold.
 
-    ``tally`` is ``(register id, name, count)`` per register, in page order: the same
-    numbers the register heads below carry, each linking to its register, so the strip
-    never contradicts the page under it (#109; before, it counted registry statuses,
-    and "0 waiting" sat over "9 Needs you"). The caveats fold because they are the same
-    two paragraphs every time, and on a phone they were the whole first screen.
+    The caveats fold because they are the same two paragraphs every time, and on a phone
+    they were the whole first screen. The registers' figures are the board's legend
+    (:func:`_board`), which replaced the tally strip here.
     """
-    strip = "".join(
-        f'<li{"" if n else " class=~is-zero~"}><a href="#{ident}"><b>{n}</b> '
-        f"<span>{safe.text(name)}</span></a></li>".replace("~", '"')
-        for ident, name, n in tally
-    )
     return (
         '<header class="masthead">'
         '<p class="eyebrow">crowsnest <span class="sep">·</span> snapshot, not a status page</p>'
@@ -3251,8 +3321,144 @@ def _masthead(
         "words beside it were said, taken from where they were said, never the time this "
         "page was made. A time with a dotted underline is only when a ledger was last "
         "written: its words may be older. Tap or hover it to be told so.</p></details>"
-        f'<ul class="tallystrip">{strip}</ul>' + _console(settings) + "</header>"
+        + _console(settings)
+        + "</header>"
     )
+
+
+@dataclass(frozen=True)
+class _Group:
+    """One of the board's groups: the register it links to, the legend's word, its tone,
+    its rows, and how its tiles are drawn (``card``, ``pair``, ``chip``; ``""`` for a
+    legend entry with no tiles, such as Owed)."""
+
+    ident: str
+    word: str
+    tone: str
+    rows: Sequence[Mapping[str, Any]] = ()
+    kind: str = ""
+    count: int | None = None
+
+    @property
+    def figure(self) -> int:
+        return len(self.rows) if self.count is None else self.count
+
+
+#: How much of a two-line tile's second line is carried; CSS clips it to one line.
+TILE_LINE_LIMIT = 140
+
+#: The order the tile grids are drawn in (spec B1): what needs the person, full width,
+#: then what moved, two up, then everything that has not said, then what is finished.
+_TILE_ORDER = ("card", "pair", "unknown", "chip")
+
+#: A tile drawn from the store says so in classes of the static page's own, as a row does
+#: (``row--seen``); ``is-seen`` is the console's, which the script sets as the row changes.
+_TILE_STATES = {_attention.SEEN: " tile--seen"}
+
+
+def _tile_line(row: Mapping[str, Any], kind: str) -> tuple[str, bool]:
+    """A tile's second line, and whether it is the page's own stand-in (drawn raw)."""
+    act = row.get("activity") or {}
+    if kind == "card":
+        line = _generated(row) or _raw_clause(_ask_text(row))
+        return (line, False) if line else ("open it to see what it asks", True)
+    if row.get("status") == "busy":
+        text = "; ".join(act.get("in_flight") or ())
+    else:
+        text = act.get("last_assistant_text") or ""
+    one = " ".join(str(text).split())
+    return (
+        one[: TILE_LINE_LIMIT - 1] + "\u2026" if len(one) > TILE_LINE_LIMIT else one
+    ), False
+
+
+def _tile(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock, group: _Group) -> str:
+    """One session as a tile: a link to its row, never a second copy of it."""
+    ident = _slug(str(row.get("label") or row.get("session_id") or ""))
+    attended = _view.get().of(row)
+    state = _TILE_STATES.get(attended.shown, "") if attended else ""
+    tone = "unsure" if group.ident == "quiet" and _is_unknown(row) else group.tone
+    figure, unit = _said_age(row, clock)
+    age = f'<span class="tile-age">{figure}{" " + unit if unit else ""}</span>'
+    mark = (
+        '<span class="tile-mark" aria-hidden="true">?</span>' if tone == "unsure" else ""
+    )
+    name = f'<span class="tile-name">{mark}{safe.text(row.get("label"))}</span>'
+    inner = name + age
+    if group.kind in ("card", "pair"):
+        text, raw = _tile_line(row, group.kind)
+        if text:
+            gen = group.kind == "card" and not raw and bool(_generated(row))
+            title = f' title="{GENERATED_NOTE}"' if gen else ""
+            inner += (
+                f'<span class="tile-line{" is-raw" if raw else ""}"{title}>'
+                f"{safe.text(text)}</span>"
+            )
+    return (
+        f'<li class="tile tile--{group.kind} tone-{tone}{state}">'
+        f'<a href="#session-{ident}">{inner}</a></li>'
+    )
+
+
+def _board(safe: _Sanitizer, groups: Sequence[_Group], clock: _Clock) -> str:
+    """The first screen (spec B1): the legend, *Go through them*, and a tile per session.
+
+    The legend is the registers' figures in page order, each linking to its register, so
+    it never contradicts the page under it (#109: the tally strip it replaced once counted
+    registry statuses, and "0 waiting" sat over "9 Needs you"). A zero is dimmed, never
+    dropped. Every tile links to its row: a session is one tile and one row, and the
+    board holds nothing the registers below do not.
+    """
+    legend = "".join(
+        f'<li class="tone-{g.tone}{"" if g.figure else " is-zero"}">'
+        f'<a href="#{g.ident}"><b>{g.figure}</b> <span>{safe.text(g.word)}</span></a></li>'
+        for g in groups
+    )
+    needing = next((g for g in groups if g.kind == "card"), None)
+    go = (
+        f'<a class="go-through" href="#{needing.ident}">Go through them '
+        f"({len(needing.rows)})</a>"
+        if needing is not None and needing.rows
+        else ""
+    )
+
+    def order_of(g: _Group) -> str:
+        return "unknown" if g.ident == "quiet" else g.kind
+
+    grids = []
+    for kind in _TILE_ORDER:
+        members = [g for g in groups if g.kind and g.rows and order_of(g) == kind]
+        if not members:
+            continue
+        tiles = "".join(_tile(safe, row, clock, g) for g in members for row in g.rows)
+        label = " and ".join(g.word for g in members)
+        size = "chip" if kind == "unknown" else kind
+        grids.append(
+            f'<ol class="tiles tiles--{size}" aria-label="{safe.text(label)}">{tiles}</ol>'
+        )
+    return (
+        '<section class="board" aria-labelledby="board-title">'
+        '<div class="board-head"><h2 id="board-title">Board</h2>'
+        f'<ul class="legend">{legend}</ul></div>{go}{"".join(grids)}</section>'
+    )
+
+
+#: A tile's jump lands in its row even when the row's register is folded: the script opens
+#: every ``<details>`` around the target. Without script a jump lands only in a register
+#: that starts open, which Needs you does, and that is where the tiles that matter point.
+BOARD_SCRIPT = """
+(() => {
+  function land() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const el = id && document.getElementById(id);
+    if (!el) return;
+    for (let d = el.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) d.open = true;
+    el.scrollIntoView();
+  }
+  addEventListener("hashchange", land);
+  land();
+})();
+"""
 
 
 def _console(settings: AttentionSettings) -> str:
@@ -3435,10 +3641,11 @@ def _record_or_none(item: str, store: Mapping[str, dict]) -> _attention.Record |
         return None
 
 
-def _unseen_first(rows: Sequence[Mapping[str, Any]], view: _View, clock: _Clock) -> list:
-    """``rows`` with the seen ones moved below the rest; within each half, a session that
-    is waiting right now (the registry's live signal) before one that only wrote that it
-    needs someone, and then the most recently said first (#109).
+def _in_order(rows: Sequence[Mapping[str, Any]], clock: _Clock) -> list:
+    """``rows`` with a session that is waiting right now (the registry's live signal)
+    before one that only wrote that it needs someone, and then the most recently said
+    first (#109). Seen does not move a row: it dims in place (the action-first pass, B3;
+    before, seen rows sank below the rest, triage-ux 2.10).
 
     The time is the one the row prints (:func:`_when`: the row's own words, a bare date
     counted from its midnight, a future or unparsable time unknown), so the order and the
@@ -3449,7 +3656,6 @@ def _unseen_first(rows: Sequence[Mapping[str, Any]], view: _View, clock: _Clock)
     def key(row: Mapping[str, Any]) -> tuple:
         when = _when(row, clock)
         return (
-            view.shown(row) == _attention.SEEN,
             row.get("status") != "waiting",
             when is None,
             -when[0] if when else 0.0,
@@ -3988,11 +4194,10 @@ def _render(
     )
     quiet = unclaimed(list(shown))  # everything no register above took
 
-    # Seen rows sort below the unseen ones of their register (triage-ux 2.10); the
-    # register order itself never changes. An empty store sees nothing, so only the
-    # live signal and the rows' own times decide the order (#109).
+    # Seen dims in place (the action-first pass, B3): marking a row never moves it, so
+    # only the live signal and the rows' own times decide the order (#109).
     needs_you, clear, waiting, busy, finished, quiet = (
-        _unseen_first(rows, view, clock)
+        _in_order(rows, clock)
         for rows in (needs_you, clear, waiting, busy, finished, quiet)
     )
     waiting_on_you = len(needs_you) + sum(
@@ -4037,25 +4242,33 @@ def _render(
         )
     )
 
-    tally = (
+    owed = _owed.get()
+    groups = (
         [
-            ("needs-you", "need you", len(needs_you)),
+            _Group("needs-you", "need you", "needs", needs_you, "card"),
             *(
-                [("owed", "owed", len(_owed.get().get("rows") or ()))]
-                if isinstance(_owed.get(), Mapping)
+                [_Group("owed", "owed", "needs", count=len(owed.get("rows") or ()))]
+                if isinstance(owed, Mapping)
                 else []
             ),
-            ("safe-to-close", "safe to close", len(clear)),
+            _Group("safe-to-close", "safe to close", "free", clear, "chip"),
         ]
         if triaged
-        else [("waiting", "waiting", len(waiting))]
+        else [_Group("waiting", "waiting", "needs", waiting, "card")]
     ) + [
-        ("finished", "just finished", len(finished)),
-        ("working", "working", len(busy)),
-        ("quiet", "quiet", len(quiet)),
+        _Group("finished", "just finished", "free", finished, "pair"),
+        _Group("working", "working", "flight", busy, "pair"),
+        _Group(
+            "quiet",
+            "quiet",
+            "unsure" if any(_is_unknown(r) for r in quiet) else "done",
+            quiet,
+            "chip",
+        ),
     ]
     parts = [
-        _masthead(safe, tally, stamp, title, zone=_zone_name(clock), settings=settings),
+        _masthead(safe, stamp, title, zone=_zone_name(clock), settings=settings),
+        _board(safe, groups, clock),
         _since_line(shown, view),
         head,
     ]
@@ -4130,7 +4343,7 @@ def _render(
         http = HTTP_STORE_SCRIPT if _console_store.get() else ""
         body += (
             f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{http}{CONSOLE_SCRIPT}"
-            f"{OPEN_SCRIPT}</script>"
+            f"{BOARD_SCRIPT}{OPEN_SCRIPT}</script>"
         )
     elif _open_helper.get():
         body += f"<script>{OPEN_SCRIPT}</script>"
