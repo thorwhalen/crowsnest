@@ -260,6 +260,10 @@ def _write_ledger(
         return ""
 
 
+#: Set to ``1`` in a session crowsnest starts for itself; its hooks then record nothing.
+QUIET_ENV_VAR = "CROWSNEST_QUIET_HOOKS"
+
+
 def handle(
     event: str,
     payload: dict,
@@ -278,6 +282,10 @@ def handle(
     to, and the ``ledger`` path when one was updated. **Never raises**: a failure comes
     back as ``ok=False`` with the reason, and is also one line in the hook log.
     """
+    if os.environ.get(QUIET_ENV_VAR) == "1":
+        # A session crowsnest started for its own use (an action line, say) is not one
+        # anyone is watching: its turn ending must not wake the watcher.
+        return {"ok": True, "skipped": QUIET_ENV_VAR}
     try:
         kind = str(event or "").strip().lower()
         payload = payload if isinstance(payload, dict) else {}

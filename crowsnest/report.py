@@ -148,6 +148,13 @@ _ref_state: contextvars.ContextVar = contextvars.ContextVar(
     "crowsnest_report_ref_state", default=None
 )
 
+#: The generated action line of a Needs-you row, for one :func:`render_report` call: a
+#: callable ``(row) -> {"line", "cites", "verdict"} | None`` (:func:`crowsnest.actions.line_for`),
+#: or ``None`` for a page that shows none, which renders exactly as before.
+_action_line: contextvars.ContextVar = contextvars.ContextVar(
+    "crowsnest_report_action_line", default=None
+)
+
 #: Whether the page carries the open helper (:data:`OPEN_SCRIPT`) for one
 #: :func:`render_report` call: ``open_helper=True``, or an interactive page. The
 #: session links and the reach buttons carry the data attributes it reads only when it is.
@@ -1752,6 +1759,9 @@ OVERVIEW_CSS = """
 .thin.is-unknown{box-shadow:inset 3px 0 0 var(--unsure)}
 .thin.is-unknown .thin-age{color:var(--unsure)}
 .unknown-mark{font-family:var(--mono);font-weight:600;color:var(--unsure);margin-right:.35rem}
+.action{font-size:1.06rem;line-height:1.35;color:var(--ink);margin:.1rem 0 .35rem}
+.gen-tag{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--ink-soft);vertical-align:.12em}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .ref-title{font-family:var(--sans,inherit);color:var(--ink);font-size:.95em}
 .ref.is-closed,.ref.is-closed a,.ref.is-closed .ref-title{color:var(--ink-soft)}
 .ref-tag{font-family:var(--mono);font-size:.72em;letter-spacing:.06em;color:var(--ink-soft)}
@@ -2672,6 +2682,24 @@ def _line(safe: _Sanitizer, tag: str, value: Any) -> str:
 _WHY_CHIPS = {"decision": "decide", "action": "do", "question": "answer"}
 
 
+#: What a screen reader and a tooltip say about a generated line.
+GENERATED_NOTE = "written by a model from this session's own request, not its words"
+
+
+def _action(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """The row's generated action line, labelled, or ``''`` when there is none for it."""
+    lookup = _action_line.get()
+    found = lookup(row) if lookup else None
+    line = found.get("line") if isinstance(found, Mapping) else None
+    if not line:
+        return ""
+    return (
+        f'<p class="action" title="{GENERATED_NOTE}">'
+        f'<span class="visually-hidden">generated: </span>{safe.text(line)}'
+        ' <span class="gen-tag" aria-hidden="true">generated</span></p>'
+    )
+
+
 def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> str:
     """A session holding for a person, with what it wants and in whose words."""
     act = row.get("activity") or {}
@@ -2684,6 +2712,9 @@ def _needs_you_row(safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock) -> s
     reason = verdict.get("reason")
     if reason and reason not in (row.get("waiting_for"), act.get("pending_question")):
         lines.append(_line(safe, _WHY_CHIPS.get(verdict.get("why"), "needs"), reason))
+    action = _action(safe, row)
+    if action:
+        lines.insert(0, action)
     chip = _WHY_CHIPS.get(verdict.get("why"), "waiting")
     # Reach is attention's one derived context (triage-ux 2.1). Only a page that applies
     # the store carries it, so a page from an empty store keeps its bytes.
@@ -3514,6 +3545,7 @@ def render_report(
     open_helper: bool = False,
     console: ConsoleStore | str | None = None,
     ref_state=None,
+    action_line=None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -3557,6 +3589,10 @@ def render_report(
     -> {"state", "title", "closed_at"} | None`` (:func:`crowsnest.refstate.state_of`):
     a row's references then list open ones first, each with its title, and closed ones
     last and muted. The page fetches nothing; ``None`` renders as before it existed.
+
+    ``action_line`` is each Needs-you row's generated line, a callable ``(row) -> {"line",
+    ...} | None`` (:func:`crowsnest.actions.line_for`): it leads the row, labelled
+    *generated*, above the words it came from. ``None`` renders as before.
 
     ``open_helper=True`` adds one small script (:data:`OPEN_SCRIPT`) for a page someone
     opens in a browser: it routes each ``open`` by the account's browser the reader chose
@@ -3623,6 +3659,7 @@ def render_report(
     token = _interactive.set(interactive)
     console_token = _console_store.set(console if interactive else None)
     ref_token = _ref_state.set(ref_state)
+    action_token = _action_line.set(action_line)
     helper_token = _open_helper.set(open_helper or interactive)
     links_token = _links_shown.set(links)
     try:
@@ -3650,6 +3687,7 @@ def render_report(
         _interactive.reset(token)
         _console_store.reset(console_token)
         _ref_state.reset(ref_token)
+        _action_line.reset(action_token)
         _open_helper.reset(helper_token)
         _links_shown.reset(links_token)
 
