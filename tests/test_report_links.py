@@ -184,7 +184,7 @@ def test_a_row_without_a_url_shows_the_command_that_reaches_it():
 def test_a_row_with_a_url_is_unchanged():
     page = _page(_row(session_url=URL))
     assert (
-        f'<p class="where">demo <span class="sep">·</span> <a href="{URL}" target="_blank" rel="noopener">open</a></p>'
+        f'<p class="where">demo <span class="folder-tag">folder</span> <span class="sep">·</span> <a href="{URL}" target="_blank" rel="noopener">open</a></p>'
         in page
     )
     assert "crowsnest open" not in page
