@@ -646,3 +646,20 @@ def test_rows_group_by_the_repository_behind_their_folder_not_the_folder():
     assert quiet.count('<p class="subhead">mergeset</p>') == 1
     assert '<p class="subhead">proj · no repository</p>' in quiet
     assert quiet.index("mergeset</p>") < quiet.index("proj · no repository")
+
+
+def test_an_unclassified_session_is_drawn_unknown_never_calm():
+    old = since(3 * 86400)
+    unknown = row(label="u", status_since=old, verdict={"group": "unclassified"})
+    html = render_report(roster(unknown), made_at=STAMP)
+    quiet = html.split('id="quiet"', 1)[1]
+    assert 'class="register register--unsure"' in html
+    assert "Nothing here has said whether it needs you. Some may." in html
+    assert '<li class="thin is-unknown" id="session-u"' in quiet
+    assert 'class="unknown-mark"' in quiet
+    # A page without triage has nothing unknown in it: Quiet stays calm there.
+    calm = render_report(roster(row(label="c", status_since=old)), made_at=STAMP)
+    assert (
+        'class="register register--unsure"' not in calm
+        and 'class="thin is-unknown"' not in calm
+    )

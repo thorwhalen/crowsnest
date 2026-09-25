@@ -1749,6 +1749,9 @@ OVERVIEW_CSS = """
 .refs-more[open]>summary::before{content:"- "}
 .refs-more>.where{margin-top:.15rem}
 .folder-tag{font-family:var(--mono);font-size:.72em;letter-spacing:.06em;color:var(--ink-soft)}
+.thin.is-unknown{box-shadow:inset 3px 0 0 var(--unsure)}
+.thin.is-unknown .thin-age{color:var(--unsure)}
+.unknown-mark{font-family:var(--mono);font-weight:600;color:var(--unsure);margin-right:.35rem}
 .ref-title{font-family:var(--sans,inherit);color:var(--ink);font-size:.95em}
 .ref.is-closed,.ref.is-closed a,.ref.is-closed .ref-title{color:var(--ink-soft)}
 .ref-tag{font-family:var(--mono);font-size:.72em;letter-spacing:.06em;color:var(--ink-soft)}
@@ -2816,11 +2819,13 @@ def _quiet_group(
             tail += f' <span class="sep">·</span> {opener}'
         tail += _thin_refs(safe, row)
         tail += _thin_marks(safe, attended)
+        unknown = _is_unknown(row)
         items.append(
-            f'<li class="thin{_state_class(attended)}" id="session-{ident}"'
-            f"{_item_attrs(safe, attended)}>"
+            f'<li class="thin{" is-unknown" if unknown else ""}{_state_class(attended)}"'
+            f' id="session-{ident}"{_item_attrs(safe, attended)}>'
             f'<span class="thin-age">{figure}{unit}</span>'
-            f'<p class="thin-ask">{safe.text(row.get("label"))}'
+            f'<p class="thin-ask">{_UNKNOWN_MARK if unknown else ""}'
+            f"{safe.text(row.get('label'))}"
             f"{_dot(attended, loud=False)}{_live_chip(row)}{tail}</p>"
             "</li>"
         )
@@ -2865,6 +2870,16 @@ def _register_from_rows(
     )
 
 
+#: What an unclassified row says before its name: not known, never "fine".
+_UNKNOWN_MARK = '<span class="unknown-mark" title="nothing it wrote says whether it needs you">?</span>'
+
+
+def _is_unknown(row: Mapping[str, Any]) -> bool:
+    """Did triage read this row and find nothing it could say (``unclassified``)?"""
+    verdict = row.get("verdict")
+    return isinstance(verdict, Mapping) and verdict.get("group") == "unclassified"
+
+
 def _quiet_register(
     safe: _Sanitizer, rows: Sequence[Mapping[str, Any]], clock: _Clock
 ) -> str:
@@ -2880,12 +2895,20 @@ def _quiet_register(
             body += f'<p class="seen-above-foot">{_SEEN_ABOVE}</p>'
     else:
         body = _empty("Nothing else is alive.")
+    # A session triage could not read has not said it is fine: drawn calm, it reads as
+    # finished, and it may be waiting on the person. So the register takes the unknown
+    # tone as soon as one row in it is unclassified, and says why (the action-first pass).
+    unknown = any(_is_unknown(row) for row in rows)
     return _register(
         ident="quiet",
         name="Quiet",
         figure=figure,
-        tone="done",
-        rule="Everything else, grouped by project.",
+        tone="unsure" if unknown else "done",
+        rule=(
+            "Nothing here has said whether it needs you. Some may. Grouped by project."
+            if unknown
+            else "Everything else, grouped by project."
+        ),
         body=body,
         seen_above=True,
         folds=bool(rows),
