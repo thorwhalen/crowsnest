@@ -490,3 +490,39 @@ def test_the_triage_verb_reads_ledgers_and_groups_the_roster(tmp_path):
     assert set(found["groups"]) == set(GROUPS)
     assert found["counts"]["unclassified"] == 0
     assert found["made_at"]
+
+
+# --------------------------------------------------------------------------------------
+# Answers that say "nothing", and people named as data (the action-first pass)
+
+
+@pytest.mark.parametrize(
+    "free",
+    [
+        "## For Thor\n\n(none)\n",
+        "## For Thor\n\n_(none yet)_\n",
+        "## For Thor\n\n- none for the user yet\n",
+    ],
+)
+def test_a_request_section_that_answers_none_in_any_spelling_asks_nothing(free):
+    assert classify_row(_row(), ledger=_ledger(free))["group"] == "unclassified"
+
+
+def test_an_open_questions_field_that_opens_with_none_asks_nothing():
+    field = "- none for the user yet; tw#182 stays open for later"
+    assert (
+        classify_row(_row(), ledger=_ledger(open_questions=field))["group"]
+        == "unclassified"
+    )
+
+
+def test_none_blocking_with_a_call_left_to_the_person_still_asks():
+    free = "## For Thor\n\nNone blocking. The rollout window is your call.\n"
+    assert classify_row(_row(), ledger=_ledger(free))["group"] == "needs_you"
+
+
+def test_a_table_row_naming_a_person_asks_nothing():
+    free = (
+        "## Status\n\n| column | meaning |\n|---|---|\n| needs you | blocked on Thor |\n"
+    )
+    assert classify_row(_row(), ledger=_ledger(free))["group"] == "unclassified"

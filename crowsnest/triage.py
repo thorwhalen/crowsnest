@@ -714,6 +714,8 @@ def _requests(page: _Page, owner: str) -> list[_Request]:
             before = free[: opened.start()].rsplit("\n", 1)[-1]
             if _NOT_REALLY.search(before) or _NO_SUCH.search(before):
                 continue  # "so no manual-task issue" is the absence of one
+            if before.lstrip().startswith("|"):
+                continue  # a table row names a person as data, it asks nothing
             # A lead-in opens a section: its ask, which the reason quotes from the start.
             # A statement mid-paragraph opens a sentence, which the reason quotes, and
             # its ask runs on to the end of the block.
@@ -868,6 +870,8 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     free = page.shown
 
     asked = _substantive(fields.get("open_questions"))
+    if asked and _opens_with_nothing(asked):
+        asked = ""  # "- none for the user yet; ..." answers the field with nothing
     if asked:
         said_at, basis = _written(ledger)
         return Verdict(
@@ -935,7 +939,9 @@ _NOTHING_REALLY = re.compile(
 #: have written what it needed; the opening word is the answer and the rest is the
 #: explanation.
 _OPENS_WITH_NOTHING = re.compile(
-    r"(?i)^[\s>*#_\u2014-]*(?:none|nothing|n/?a)\b[ \t]*(?:[\u2014\u2013:,.;!)\-]|$)"
+    r"(?i)^[\s>*#_(\u2014-]*(?:none|nothing|n/?a)\b"
+    r"(?:\s+(?:yet|for now|for (?:the user|you)))*"
+    r"[ \t]*(?:[\u2014\u2013:,.;!)_\-]|$)"
 )
 
 
@@ -951,6 +957,15 @@ def _opens_with_nothing(text: str) -> bool:
     >>> _opens_with_nothing('Nothing works until the key is rotated.')
     False
     >>> _opens_with_nothing('attach the GIF to #604')
+    False
+
+    Written in parentheses, or saying "not yet" or "not for you", it is the same answer:
+
+    >>> _opens_with_nothing('(none)'), _opens_with_nothing('(none yet)_')
+    (True, True)
+    >>> _opens_with_nothing('- none for the user yet; #182 stays open')
+    True
+    >>> _opens_with_nothing('None blocking. The runbook is your call.')
     False
     """
     return bool(_OPENS_WITH_NOTHING.match(str(text or "")))
