@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from datetime import datetime
 
-from crowsnest.report import BOARD_SCRIPT, render_report
+from crowsnest.report import BOARD_SCRIPT, CONSOLE_CSS, DECK_SCRIPT, render_report
 
 STAMP = "2026-02-01T12:00:00Z"
 
@@ -129,9 +129,22 @@ def test_go_through_them_counts_the_needs_you_register_and_jumps_to_it():
 def test_the_static_page_carries_no_board_script():
     assert "<script" not in page()
     assert BOARD_SCRIPT not in page()
+    assert DECK_SCRIPT not in page() and ".deck-bar" not in page()
 
 
 def test_the_interactive_page_opens_a_folded_register_to_land_a_jump():
     html = page(interactive=True)
     assert BOARD_SCRIPT in html
     assert 'addEventListener("hashchange"' in BOARD_SCRIPT
+
+
+def test_go_through_them_is_a_deck_only_where_script_runs():
+    """Without script the button is the link to the register, whose rows are the cards."""
+    html = page(interactive=True)
+    assert DECK_SCRIPT in html and CONSOLE_CSS in html
+    assert '<a class="go-through" href="#needs-you">' in html
+    assert ".deck li.row:not(.current){display:none}" in CONSOLE_CSS
+    # It presses the row's own buttons, so it writes nothing they would not.
+    for key in ("s: ()", "l: ()", "d: ()", "o: ()", "ArrowRight", "ArrowLeft", "Escape"):
+        assert key in DECK_SCRIPT, key
+    assert "localStorage" not in DECK_SCRIPT and "fetch(" not in DECK_SCRIPT

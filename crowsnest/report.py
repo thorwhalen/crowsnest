@@ -253,6 +253,20 @@ ATTENTION_CSS = """
 #: record, and this stylesheet is on every interactive page. ``[hidden]`` is restated
 #: because a class that sets ``display`` outranks the attribute outside the viewer.
 CONSOLE_CSS = """
+.deck li.row:not(.current){display:none}
+.deck-bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:2;display:flex;
+  flex-wrap:wrap;align-items:center;gap:.4rem .7rem;padding:.55rem 0;
+  background:var(--ground);border-bottom:1px solid var(--rule-soft)}
+.deck-count{font-weight:600;flex:1 1 auto}
+.deck-nav{display:flex;gap:.35rem}
+.deck-dots{display:flex;flex-wrap:wrap;gap:3px;flex-basis:100%}
+.deck-dot{width:7px;height:7px;border-radius:50%;border:1px solid var(--needs)}
+.deck-dot.is-seen{background:var(--needs)}
+.deck-dot.is-here{outline:2px solid var(--ink);outline-offset:1px}
+.deck-keys{flex-basis:100%;font-family:var(--mono);font-size:.7rem;color:var(--ink-soft)}
+@media (hover:none){.deck-keys{display:none}}
+.deck-end{padding:1rem 0}
+.deck-sum{font-weight:600}
 [hidden]{display:none!important}
 .console{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.9rem;
   font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
@@ -3461,6 +3475,122 @@ BOARD_SCRIPT = """
 """
 
 
+#: *Go through them* (the action-first pass, B4): the Needs-you register one card at a
+#: time. Script-only: without it the button is the plain link to the register, whose rows
+#: are the same cards. A card's own buttons act as on the row, and a mark that takes the
+#: card out of the way (Seen, Later, Done) moves to the next; keys ``s l d o``, the
+#: arrows, and ``Esc`` to leave. It reads the page and presses the row's own buttons,
+#: so it writes nothing the row's buttons would not.
+DECK_SCRIPT = r"""
+(() => {
+  const go = document.querySelector(".go-through");
+  const register = go && document.getElementById(go.getAttribute("href").slice(1));
+  if (!register || register.tagName !== "DETAILS") return;
+  const MOVES_ON = ["seen", "later", "done"];
+  let cards = [], at = 0, on = false;
+  const make = (tag, cls, text) => {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text) el.textContent = text;
+    return el;
+  };
+  const press = (label, fn) => {
+    const b = make("button", "", label);
+    b.type = "button";
+    b.addEventListener("click", fn);
+    return b;
+  };
+  const bar = make("div", "deck-bar");
+  bar.setAttribute("role", "group");
+  bar.setAttribute("aria-label", "Go through them");
+  const count = make("span", "deck-count");
+  count.setAttribute("aria-live", "polite");
+  const dots = make("span", "deck-dots");
+  const keys = make("span", "deck-keys", "s seen · l later · d done · o open · ← → · Esc");
+  const nav = make("span", "deck-nav");
+  nav.append(press("prev", () => step(-1)), press("next", () => step(1)), press("leave", leave));
+  bar.append(count, nav, dots, keys);
+  const end = make("div", "deck-end");
+  const sum = make("p", "deck-sum");
+  end.append(sum, press("Back to the board", leave));
+  const seen = (li) => (li.dataset.live || li.dataset.shown) === "seen";
+
+  function draw() {
+    const done = at >= cards.length;
+    cards.forEach((li, i) => li.classList.toggle("current", i === at));
+    end.hidden = !done;
+    count.textContent = done ? "All " + cards.length + " looked at" : (at + 1) + " of " + cards.length + " need you";
+    dots.textContent = "";
+    cards.forEach((li, i) => dots.append(make("span", "deck-dot" + (seen(li) ? " is-seen" : "") + (i === at ? " is-here" : ""))));
+    if (done) {
+      const off = cards.filter((li) => li.dataset.live === "later").length;
+      const gone = cards.filter((li) => li.dataset.live === "done").length;
+      sum.textContent = "All " + cards.length + " looked at · " + (cards.length - off - gone) + " still wait for an answer · " + off + " put off";
+    }
+    bar.scrollIntoView({ block: "start" });
+  }
+  function step(by) {
+    if (!on) return;
+    at = Math.max(0, Math.min(cards.length, at + by));
+    draw();
+  }
+  function enter(event) {
+    event.preventDefault();
+    cards = [...register.querySelectorAll("li.row[id^='session-']")].filter((li) => !li.hidden);
+    if (!cards.length) return;
+    at = 0;
+    on = true;
+    register.open = true;
+    register.classList.add("deck");
+    register.querySelector(":scope > summary").after(bar, end);
+    draw();
+  }
+  function leave() {
+    if (!on) return;
+    on = false;
+    register.classList.remove("deck");
+    cards.forEach((li) => li.classList.remove("current"));
+    bar.remove();
+    end.remove();
+    const tile = document.querySelector(".tiles li.tile:not(.is-seen):not(.tile--seen):not([hidden]) a");
+    (tile || go).scrollIntoView({ block: "center" });
+  }
+  function click(selector) {
+    const card = cards[at];
+    const target = card && card.querySelector(selector);
+    if (target && !target.hidden) target.click();
+  }
+  go.addEventListener("click", enter);
+  // A mark that takes the current card out of the way moves on, however it was made.
+  new MutationObserver((changes) => {
+    if (!on) return;
+    for (const change of changes) {
+      if (change.target === cards[at] && MOVES_ON.includes(change.target.dataset.live)) {
+        step(1);
+        return;
+      }
+    }
+  }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["data-live"] });
+  document.addEventListener("keydown", (event) => {
+    if (!on || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.target.closest("input, textarea, select, [contenteditable]")) return;
+    const act = {
+      s: () => click("button[data-attend=seen]"),
+      l: () => click("button[data-attend=later]"),
+      d: () => click("button[data-attend=done]"),
+      o: () => click(".where [data-way], .where a"),
+      ArrowRight: () => step(1),
+      ArrowLeft: () => step(-1),
+      Escape: leave,
+    }[event.key];
+    if (!act) return;
+    event.preventDefault();
+    act();
+  });
+})();
+"""
+
+
 def _console(settings: AttentionSettings) -> str:
     """Refresh, the status line, when crowsnest last looked, the log of intents that belong
     to no row, and -- on a page with the attention arm -- its Later sheet and undo toast.
@@ -4343,7 +4473,7 @@ def _render(
         http = HTTP_STORE_SCRIPT if _console_store.get() else ""
         body += (
             f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{http}{CONSOLE_SCRIPT}"
-            f"{BOARD_SCRIPT}{OPEN_SCRIPT}</script>"
+            f"{BOARD_SCRIPT}{DECK_SCRIPT}{OPEN_SCRIPT}</script>"
         )
     elif _open_helper.get():
         body += f"<script>{OPEN_SCRIPT}</script>"
