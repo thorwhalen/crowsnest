@@ -867,393 +867,408 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="714">            <span class="n">before</span> <span class="o">=</span> <span class="n">free</span><span class="p">[:</span> <span class="n">opened</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </span><span data-line="715">            <span class="k">if</span> <span class="n">_NOT_REALLY</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">before</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_NO_SUCH</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">before</span><span class="p">):</span>
 </span><span data-line="716">                <span class="k">continue</span>  <span class="c1"># "so no manual-task issue" is the absence of one</span>
-</span><span data-line="717">            <span class="c1"># A lead-in opens a section: its ask, which the reason quotes from the start.</span>
-</span><span data-line="718">            <span class="c1"># A statement mid-paragraph opens a sentence, which the reason quotes, and</span>
-</span><span data-line="719">            <span class="c1"># its ask runs on to the end of the block.</span>
-</span><span data-line="720">            <span class="k">if</span> <span class="n">form</span> <span class="o">==</span> <span class="n">_LEAD_IN</span><span class="p">:</span>
-</span><span data-line="721">                <span class="n">span</span> <span class="o">=</span> <span class="n">_section_ask</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">opened</span><span class="p">)</span>
-</span><span data-line="722">                <span class="n">wanted</span> <span class="o">=</span> <span class="n">free</span><span class="p">[</span><span class="n">span</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">span</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-</span><span data-line="723">            <span class="k">else</span><span class="p">:</span>
-</span><span data-line="724">                <span class="n">span</span> <span class="o">=</span> <span class="n">_statement_ask</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">opened</span><span class="p">)</span>
-</span><span data-line="725">                <span class="n">wanted</span> <span class="o">=</span> <span class="n">_sentence_at</span><span class="p">(</span><span class="n">free</span><span class="p">,</span> <span class="n">opened</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">span</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-</span><span data-line="726">            <span class="c1"># A section headed "For Thor" whose content is itself an all-clear is a</span>
-</span><span data-line="727">            <span class="c1"># session reporting that it needs nothing, in the place it would have said</span>
-</span><span data-line="728">            <span class="c1"># what it needed. Reading that as a request is the same error as reading</span>
-</span><span data-line="729">            <span class="c1"># silence as completion, pointing the other way.</span>
-</span><span data-line="730">            <span class="k">if</span> <span class="p">(</span>
-</span><span data-line="731">                <span class="n">_substantive</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
-</span><span data-line="732">                <span class="ow">and</span> <span class="ow">not</span> <span class="n">_opens_with_nothing</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
-</span><span data-line="733">                <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
-</span><span data-line="734">            <span class="p">):</span>
-</span><span data-line="735">                <span class="c1"># `end`, not `start`: a heading pattern may begin on the blank lines</span>
-</span><span data-line="736">                <span class="c1"># above its own line, which belong to the section before.</span>
-</span><span data-line="737">                <span class="n">opens</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="738">                    <span class="n">_is_a_lead_in</span><span class="p">(</span><span class="n">free</span><span class="p">,</span> <span class="n">opened</span><span class="p">)</span>
-</span><span data-line="739">                    <span class="k">if</span> <span class="n">form</span> <span class="o">==</span> <span class="n">_LEAD_IN</span>
-</span><span data-line="740">                    <span class="k">else</span> <span class="n">_on_an_undated_heading</span><span class="p">(</span><span class="n">free</span><span class="p">,</span> <span class="n">opened</span><span class="o">.</span><span class="n">start</span><span class="p">())</span>
-</span><span data-line="741">                <span class="p">)</span>
-</span><span data-line="742">                <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Request</span><span class="p">(</span><span class="n">wanted</span><span class="p">,</span> <span class="n">opened</span><span class="o">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">span</span><span class="p">,</span> <span class="n">opens</span><span class="p">))</span>
-</span><span data-line="743">    <span class="k">return</span> <span class="n">found</span>
-</span><span data-line="744">
-</span><span data-line="745">
-</span><span data-line="746"><span class="k">def</span><span class="w"> </span><span class="nf">_asks</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">_Page</span><span class="p">,</span> <span class="n">requests</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_Request</span><span class="p">],</span> <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Ask</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-</span><span data-line="747"><span class="w">    </span><span class="sd">"""What the session asks: the request its reason quotes, then every other "for</span>
-</span><span data-line="748"><span class="sd">    &lt;person&gt;" section in file order, each once.</span>
-</span><span data-line="749">
-</span><span data-line="750"><span class="sd">    A statement -- "blocked on Thor", "manual-task", "only you can" -- is an ask only when</span>
-</span><span data-line="751"><span class="sd">    it is the request the reason quotes. Sessions *mention* requests in statements: they</span>
-</span><span data-line="752"><span class="sd">    restate them, quote a brief, say no manual-task was needed, and every one of those in</span>
-</span><span data-line="753"><span class="sd">    a growing file would make the item change (K2 in discussion #51). A "for &lt;person&gt;"</span>
-</span><span data-line="754"><span class="sd">    section is how a session *makes* a request, which is what a second ask is -- when a</span>
-</span><span data-line="755"><span class="sd">    heading, a bold phrase or a colon opens it (:func:`_is_a_lead_in`), or a heading names</span>
-</span><span data-line="756"><span class="sd">    the request ("## Manual (only the user can do)"). "- Opened pull/46 for Thor to</span>
-</span><span data-line="757"><span class="sd">    review." under a dated log heading mentions a person; it opens nothing.</span>
-</span><span data-line="758"><span class="sd">    """</span>
-</span><span data-line="759">    <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">requests</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="p">(</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">opens_a_section</span><span class="p">)]</span>
-</span><span data-line="760">    <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Ask</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span data-line="761">    <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">chosen</span><span class="p">:</span>
-</span><span data-line="762">        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">span</span>
-</span><span data-line="763">        <span class="n">text</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">raw</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">wanted</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="764">        <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">_said_in</span><span class="p">(</span><span class="n">ledger</span><span class="p">,</span> <span class="n">page</span><span class="o">.</span><span class="n">shown</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">at</span><span class="p">)</span>
-</span><span data-line="765">        <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">())</span><span class="o">.</span><span class="n">casefold</span><span class="p">(),</span> <span class="n">Ask</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span><span class="p">))</span>
-</span><span data-line="766">    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-</span><span data-line="767">
-</span><span data-line="768">
-</span><span data-line="769"><span class="k">def</span><span class="w"> </span><span class="nf">_why</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="770"><span class="w">    </span><span class="sd">"""Which kind of needing this is: whichever the session asked for **first**.</span>
-</span><span data-line="771">
-</span><span data-line="772"><span class="sd">    Earliest match rather than a fixed precedence, because a section that opens *"attach</span>
-</span><span data-line="773"><span class="sd">    the two GIFs to #604"* and mentions a question three paragraphs later is an errand</span>
-</span><span data-line="774"><span class="sd">    with a question in it, not a decision -- and calling it a decision sends a person</span>
-</span><span data-line="775"><span class="sd">    looking for a choice that is not there.</span>
-</span><span data-line="776">
-</span><span data-line="777"><span class="sd">    &gt;&gt;&gt; _why('squash or rebase for the release?')</span>
-</span><span data-line="778"><span class="sd">    'decision'</span>
-</span><span data-line="779"><span class="sd">    &gt;&gt;&gt; _why('attach the GIF to the issue')</span>
-</span><span data-line="780"><span class="sd">    'action'</span>
-</span><span data-line="781"><span class="sd">    &gt;&gt;&gt; _why('attach the GIF to #604. Separately, which base branch?')</span>
+</span><span data-line="717">            <span class="k">if</span> <span class="n">before</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"|"</span><span class="p">):</span>
+</span><span data-line="718">                <span class="k">continue</span>  <span class="c1"># a table row names a person as data, it asks nothing</span>
+</span><span data-line="719">            <span class="c1"># A lead-in opens a section: its ask, which the reason quotes from the start.</span>
+</span><span data-line="720">            <span class="c1"># A statement mid-paragraph opens a sentence, which the reason quotes, and</span>
+</span><span data-line="721">            <span class="c1"># its ask runs on to the end of the block.</span>
+</span><span data-line="722">            <span class="k">if</span> <span class="n">form</span> <span class="o">==</span> <span class="n">_LEAD_IN</span><span class="p">:</span>
+</span><span data-line="723">                <span class="n">span</span> <span class="o">=</span> <span class="n">_section_ask</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">opened</span><span class="p">)</span>
+</span><span data-line="724">                <span class="n">wanted</span> <span class="o">=</span> <span class="n">free</span><span class="p">[</span><span class="n">span</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">span</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+</span><span data-line="725">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="726">                <span class="n">span</span> <span class="o">=</span> <span class="n">_statement_ask</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">opened</span><span class="p">)</span>
+</span><span data-line="727">                <span class="n">wanted</span> <span class="o">=</span> <span class="n">_sentence_at</span><span class="p">(</span><span class="n">free</span><span class="p">,</span> <span class="n">opened</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">span</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span data-line="728">            <span class="c1"># A section headed "For Thor" whose content is itself an all-clear is a</span>
+</span><span data-line="729">            <span class="c1"># session reporting that it needs nothing, in the place it would have said</span>
+</span><span data-line="730">            <span class="c1"># what it needed. Reading that as a request is the same error as reading</span>
+</span><span data-line="731">            <span class="c1"># silence as completion, pointing the other way.</span>
+</span><span data-line="732">            <span class="k">if</span> <span class="p">(</span>
+</span><span data-line="733">                <span class="n">_substantive</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
+</span><span data-line="734">                <span class="ow">and</span> <span class="ow">not</span> <span class="n">_opens_with_nothing</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
+</span><span data-line="735">                <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span>
+</span><span data-line="736">            <span class="p">):</span>
+</span><span data-line="737">                <span class="c1"># `end`, not `start`: a heading pattern may begin on the blank lines</span>
+</span><span data-line="738">                <span class="c1"># above its own line, which belong to the section before.</span>
+</span><span data-line="739">                <span class="n">opens</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="740">                    <span class="n">_is_a_lead_in</span><span class="p">(</span><span class="n">free</span><span class="p">,</span> <span class="n">opened</span><span class="p">)</span>
+</span><span data-line="741">                    <span class="k">if</span> <span class="n">form</span> <span class="o">==</span> <span class="n">_LEAD_IN</span>
+</span><span data-line="742">                    <span class="k">else</span> <span class="n">_on_an_undated_heading</span><span class="p">(</span><span class="n">free</span><span class="p">,</span> <span class="n">opened</span><span class="o">.</span><span class="n">start</span><span class="p">())</span>
+</span><span data-line="743">                <span class="p">)</span>
+</span><span data-line="744">                <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Request</span><span class="p">(</span><span class="n">wanted</span><span class="p">,</span> <span class="n">opened</span><span class="o">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">span</span><span class="p">,</span> <span class="n">opens</span><span class="p">))</span>
+</span><span data-line="745">    <span class="k">return</span> <span class="n">found</span>
+</span><span data-line="746">
+</span><span data-line="747">
+</span><span data-line="748"><span class="k">def</span><span class="w"> </span><span class="nf">_asks</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">_Page</span><span class="p">,</span> <span class="n">requests</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">_Request</span><span class="p">],</span> <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Ask</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+</span><span data-line="749"><span class="w">    </span><span class="sd">"""What the session asks: the request its reason quotes, then every other "for</span>
+</span><span data-line="750"><span class="sd">    &lt;person&gt;" section in file order, each once.</span>
+</span><span data-line="751">
+</span><span data-line="752"><span class="sd">    A statement -- "blocked on Thor", "manual-task", "only you can" -- is an ask only when</span>
+</span><span data-line="753"><span class="sd">    it is the request the reason quotes. Sessions *mention* requests in statements: they</span>
+</span><span data-line="754"><span class="sd">    restate them, quote a brief, say no manual-task was needed, and every one of those in</span>
+</span><span data-line="755"><span class="sd">    a growing file would make the item change (K2 in discussion #51). A "for &lt;person&gt;"</span>
+</span><span data-line="756"><span class="sd">    section is how a session *makes* a request, which is what a second ask is -- when a</span>
+</span><span data-line="757"><span class="sd">    heading, a bold phrase or a colon opens it (:func:`_is_a_lead_in`), or a heading names</span>
+</span><span data-line="758"><span class="sd">    the request ("## Manual (only the user can do)"). "- Opened pull/46 for Thor to</span>
+</span><span data-line="759"><span class="sd">    review." under a dated log heading mentions a person; it opens nothing.</span>
+</span><span data-line="760"><span class="sd">    """</span>
+</span><span data-line="761">    <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">requests</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="p">(</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">opens_a_section</span><span class="p">)]</span>
+</span><span data-line="762">    <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Ask</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="763">    <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">chosen</span><span class="p">:</span>
+</span><span data-line="764">        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">span</span>
+</span><span data-line="765">        <span class="n">text</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">raw</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">wanted</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="766">        <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">_said_in</span><span class="p">(</span><span class="n">ledger</span><span class="p">,</span> <span class="n">page</span><span class="o">.</span><span class="n">shown</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">at</span><span class="p">)</span>
+</span><span data-line="767">        <span class="n">found</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">())</span><span class="o">.</span><span class="n">casefold</span><span class="p">(),</span> <span class="n">Ask</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span><span class="p">))</span>
+</span><span data-line="768">    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</span><span data-line="769">
+</span><span data-line="770">
+</span><span data-line="771"><span class="k">def</span><span class="w"> </span><span class="nf">_why</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="772"><span class="w">    </span><span class="sd">"""Which kind of needing this is: whichever the session asked for **first**.</span>
+</span><span data-line="773">
+</span><span data-line="774"><span class="sd">    Earliest match rather than a fixed precedence, because a section that opens *"attach</span>
+</span><span data-line="775"><span class="sd">    the two GIFs to #604"* and mentions a question three paragraphs later is an errand</span>
+</span><span data-line="776"><span class="sd">    with a question in it, not a decision -- and calling it a decision sends a person</span>
+</span><span data-line="777"><span class="sd">    looking for a choice that is not there.</span>
+</span><span data-line="778">
+</span><span data-line="779"><span class="sd">    &gt;&gt;&gt; _why('squash or rebase for the release?')</span>
+</span><span data-line="780"><span class="sd">    'decision'</span>
+</span><span data-line="781"><span class="sd">    &gt;&gt;&gt; _why('attach the GIF to the issue')</span>
 </span><span data-line="782"><span class="sd">    'action'</span>
-</span><span data-line="783"><span class="sd">    &gt;&gt;&gt; _why('have a look when you can')</span>
-</span><span data-line="784"><span class="sd">    'question'</span>
-</span><span data-line="785"><span class="sd">    """</span>
-</span><span data-line="786">    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="787">        <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">(),</span> <span class="n">kind</span><span class="p">)</span>
-</span><span data-line="788">        <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span>
-</span><span data-line="789">            <span class="p">(</span><span class="s2">"decision"</span><span class="p">,</span> <span class="n">_DECISION</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)),</span>
-</span><span data-line="790">            <span class="p">(</span><span class="s2">"action"</span><span class="p">,</span> <span class="n">_ACTION</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)),</span>
-</span><span data-line="791">        <span class="p">)</span>
-</span><span data-line="792">        <span class="k">if</span> <span class="n">m</span>
-</span><span data-line="793">    <span class="p">]</span>
-</span><span data-line="794">    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">found</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">"question"</span>
-</span><span data-line="795">
-</span><span data-line="796">
-</span><span data-line="797"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="798"><span class="c1"># The readers</span>
-</span><span data-line="799">
-</span><span data-line="800">
+</span><span data-line="783"><span class="sd">    &gt;&gt;&gt; _why('attach the GIF to #604. Separately, which base branch?')</span>
+</span><span data-line="784"><span class="sd">    'action'</span>
+</span><span data-line="785"><span class="sd">    &gt;&gt;&gt; _why('have a look when you can')</span>
+</span><span data-line="786"><span class="sd">    'question'</span>
+</span><span data-line="787"><span class="sd">    """</span>
+</span><span data-line="788">    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="789">        <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">(),</span> <span class="n">kind</span><span class="p">)</span>
+</span><span data-line="790">        <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span>
+</span><span data-line="791">            <span class="p">(</span><span class="s2">"decision"</span><span class="p">,</span> <span class="n">_DECISION</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)),</span>
+</span><span data-line="792">            <span class="p">(</span><span class="s2">"action"</span><span class="p">,</span> <span class="n">_ACTION</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)),</span>
+</span><span data-line="793">        <span class="p">)</span>
+</span><span data-line="794">        <span class="k">if</span> <span class="n">m</span>
+</span><span data-line="795">    <span class="p">]</span>
+</span><span data-line="796">    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">found</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">"question"</span>
+</span><span data-line="797">
+</span><span data-line="798">
+</span><span data-line="799"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="800"><span class="c1"># The readers</span>
+</span><span data-line="801">
+</span><span data-line="802">
 <div class="viewcode-block" id="from_registry">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.triage.html#crowsnest.triage.from_registry">[docs]</a>
-</span><span data-line="801"><span class="k">def</span><span class="w"> </span><span class="nf">from_registry</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="802"><span class="w">    </span><span class="sd">"""What the registry says *right now*, which outranks anything written earlier.</span>
-</span><span data-line="803">
-</span><span data-line="804"><span class="sd">    A session whose status is ``waiting`` is holding for its human at this moment,</span>
-</span><span data-line="805"><span class="sd">    whatever its ledger last said -- the registry is live and the ledger is a memory. When</span>
-</span><span data-line="806"><span class="sd">    the transcript caught the question it asked, that question is the reason, verbatim.</span>
-</span><span data-line="807">
-</span><span data-line="808"><span class="sd">    Everything else running is ``working``: busy is busy. Idle says nothing here, and is</span>
-</span><span data-line="809"><span class="sd">    left to the ledger.</span>
-</span><span data-line="810">
-</span><span data-line="811"><span class="sd">    The time is :func:`crowsnest.said.of_activity`'s. For a waiting session that is when</span>
-</span><span data-line="812"><span class="sd">    it began waiting. For a busy one it is the transcript's latest event while a call is</span>
-</span><span data-line="813"><span class="sd">    in flight.</span>
-</span><span data-line="814"><span class="sd">    """</span>
-</span><span data-line="815">    <span class="n">status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="816">    <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">of_activity</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-</span><span data-line="817">    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
-</span><span data-line="818">        <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-</span><span data-line="819">        <span class="n">asked</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="820">        <span class="n">said</span> <span class="o">=</span> <span class="n">asked</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="821">        <span class="n">reason</span> <span class="o">=</span> <span class="n">said</span> <span class="ow">or</span> <span class="s2">"waiting for input"</span>
-</span><span data-line="822">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
-</span><span data-line="823">            <span class="s2">"needs_you"</span><span class="p">,</span>
-</span><span data-line="824">            <span class="n">_why</span><span class="p">(</span><span class="n">reason</span><span class="p">)</span> <span class="k">if</span> <span class="n">asked</span> <span class="k">else</span> <span class="s2">"question"</span><span class="p">,</span>
-</span><span data-line="825">            <span class="n">_one_line</span><span class="p">(</span><span class="n">reason</span><span class="p">),</span>
-</span><span data-line="826">            <span class="s2">"registry"</span><span class="p">,</span>
-</span><span data-line="827">            <span class="n">said_at</span><span class="p">,</span>
-</span><span data-line="828">            <span class="n">basis</span><span class="p">,</span>
-</span><span data-line="829">            <span class="n">asks</span><span class="o">=</span><span class="p">(</span><span class="n">Ask</span><span class="p">(</span><span class="n">said</span><span class="p">,</span> <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span><span class="p">),)</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="p">(),</span>
-</span><span data-line="830">        <span class="p">)</span>
-</span><span data-line="831">    <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">):</span>
-</span><span data-line="832">        <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-</span><span data-line="833">        <span class="n">running</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="834">            <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_flight"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="835">        <span class="p">)</span>
-</span><span data-line="836">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
-</span><span data-line="837">            <span class="s2">"working"</span><span class="p">,</span>
-</span><span data-line="838">            <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">running</span><span class="p">),</span>
-</span><span data-line="839">            <span class="n">source</span><span class="o">=</span><span class="s2">"registry"</span><span class="p">,</span>
-</span><span data-line="840">            <span class="n">said_at</span><span class="o">=</span><span class="n">said_at</span><span class="p">,</span>
-</span><span data-line="841">            <span class="n">said_at_basis</span><span class="o">=</span><span class="n">basis</span><span class="p">,</span>
-</span><span data-line="842">        <span class="p">)</span>
-</span><span data-line="843">    <span class="k">return</span> <span class="kc">None</span></div>
+</span><span data-line="803"><span class="k">def</span><span class="w"> </span><span class="nf">from_registry</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="804"><span class="w">    </span><span class="sd">"""What the registry says *right now*, which outranks anything written earlier.</span>
+</span><span data-line="805">
+</span><span data-line="806"><span class="sd">    A session whose status is ``waiting`` is holding for its human at this moment,</span>
+</span><span data-line="807"><span class="sd">    whatever its ledger last said -- the registry is live and the ledger is a memory. When</span>
+</span><span data-line="808"><span class="sd">    the transcript caught the question it asked, that question is the reason, verbatim.</span>
+</span><span data-line="809">
+</span><span data-line="810"><span class="sd">    Everything else running is ``working``: busy is busy. Idle says nothing here, and is</span>
+</span><span data-line="811"><span class="sd">    left to the ledger.</span>
+</span><span data-line="812">
+</span><span data-line="813"><span class="sd">    The time is :func:`crowsnest.said.of_activity`'s. For a waiting session that is when</span>
+</span><span data-line="814"><span class="sd">    it began waiting. For a busy one it is the transcript's latest event while a call is</span>
+</span><span data-line="815"><span class="sd">    in flight.</span>
+</span><span data-line="816"><span class="sd">    """</span>
+</span><span data-line="817">    <span class="n">status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="818">    <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">of_activity</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span><span data-line="819">    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
+</span><span data-line="820">        <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+</span><span data-line="821">        <span class="n">asked</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pending_question"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="822">        <span class="n">said</span> <span class="o">=</span> <span class="n">asked</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"waiting_for"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="823">        <span class="n">reason</span> <span class="o">=</span> <span class="n">said</span> <span class="ow">or</span> <span class="s2">"waiting for input"</span>
+</span><span data-line="824">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+</span><span data-line="825">            <span class="s2">"needs_you"</span><span class="p">,</span>
+</span><span data-line="826">            <span class="n">_why</span><span class="p">(</span><span class="n">reason</span><span class="p">)</span> <span class="k">if</span> <span class="n">asked</span> <span class="k">else</span> <span class="s2">"question"</span><span class="p">,</span>
+</span><span data-line="827">            <span class="n">_one_line</span><span class="p">(</span><span class="n">reason</span><span class="p">),</span>
+</span><span data-line="828">            <span class="s2">"registry"</span><span class="p">,</span>
+</span><span data-line="829">            <span class="n">said_at</span><span class="p">,</span>
+</span><span data-line="830">            <span class="n">basis</span><span class="p">,</span>
+</span><span data-line="831">            <span class="n">asks</span><span class="o">=</span><span class="p">(</span><span class="n">Ask</span><span class="p">(</span><span class="n">said</span><span class="p">,</span> <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span><span class="p">),)</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="p">(),</span>
+</span><span data-line="832">        <span class="p">)</span>
+</span><span data-line="833">    <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">):</span>
+</span><span data-line="834">        <span class="n">act</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"activity"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+</span><span data-line="835">        <span class="n">running</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="836">            <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">act</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"in_flight"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="837">        <span class="p">)</span>
+</span><span data-line="838">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+</span><span data-line="839">            <span class="s2">"working"</span><span class="p">,</span>
+</span><span data-line="840">            <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">running</span><span class="p">),</span>
+</span><span data-line="841">            <span class="n">source</span><span class="o">=</span><span class="s2">"registry"</span><span class="p">,</span>
+</span><span data-line="842">            <span class="n">said_at</span><span class="o">=</span><span class="n">said_at</span><span class="p">,</span>
+</span><span data-line="843">            <span class="n">said_at_basis</span><span class="o">=</span><span class="n">basis</span><span class="p">,</span>
+</span><span data-line="844">        <span class="p">)</span>
+</span><span data-line="845">    <span class="k">return</span> <span class="kc">None</span></div>
 
-</span><span data-line="844">
-</span><span data-line="845">
+</span><span data-line="846">
+</span><span data-line="847">
 <div class="viewcode-block" id="from_ledger">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.triage.html#crowsnest.triage.from_ledger">[docs]</a>
-</span><span data-line="846"><span class="k">def</span><span class="w"> </span><span class="nf">from_ledger</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="847"><span class="w">    </span><span class="sd">"""What the session wrote down for a person to read.</span>
-</span><span data-line="848">
-</span><span data-line="849"><span class="sd">    Read in the order the evidence is worth: the structured ``open questions`` field</span>
-</span><span data-line="850"><span class="sd">    first, because a session that filled it in meant to; then a "for &lt;person&gt;" section in</span>
-</span><span data-line="851"><span class="sd">    the free part, which is how sessions actually write today; then an all-clear</span>
-</span><span data-line="852"><span class="sd">    statement, which is the only thing that produces ``safe_to_close``.</span>
-</span><span data-line="853">
-</span><span data-line="854"><span class="sd">    Returns ``None`` when the ledger says none of those -- and that ``None`` is the whole</span>
-</span><span data-line="855"><span class="sd">    reason this is honest. Inferring "finished" from silence would be inferring it from</span>
-</span><span data-line="856"><span class="sd">    exactly what an interrupted session leaves behind.</span>
-</span><span data-line="857">
-</span><span data-line="858"><span class="sd">    Each verdict carries the time of the words it quotes (:func:`_said_in`). The fields</span>
-</span><span data-line="859"><span class="sd">    carry no date of their own, so they take the ledger's last write.</span>
-</span><span data-line="860">
-</span><span data-line="861"><span class="sd">    A request's ``asks`` are the one its reason quotes and every other "for &lt;person&gt;"</span>
-</span><span data-line="862"><span class="sd">    section in the file (:func:`_asks`): a section appended after the first is still</span>
-</span><span data-line="863"><span class="sd">    something the session needs.</span>
-</span><span data-line="864"><span class="sd">    """</span>
-</span><span data-line="865">    <span class="n">fields</span> <span class="o">=</span> <span class="n">ledger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fields"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-</span><span data-line="866">    <span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span> <span class="ow">or</span> <span class="n">DFLT_OWNER</span>
-</span><span data-line="867">    <span class="n">page</span> <span class="o">=</span> <span class="n">_page_of</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"free"</span><span class="p">),</span> <span class="n">owner</span><span class="p">)</span>
-</span><span data-line="868">    <span class="n">free</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">shown</span>
-</span><span data-line="869">
-</span><span data-line="870">    <span class="n">asked</span> <span class="o">=</span> <span class="n">_substantive</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"open_questions"</span><span class="p">))</span>
-</span><span data-line="871">    <span class="k">if</span> <span class="n">asked</span><span class="p">:</span>
-</span><span data-line="872">        <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">_written</span><span class="p">(</span><span class="n">ledger</span><span class="p">)</span>
-</span><span data-line="873">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
-</span><span data-line="874">            <span class="s2">"needs_you"</span><span class="p">,</span>
-</span><span data-line="875">            <span class="n">_why</span><span class="p">(</span><span class="n">asked</span><span class="p">),</span>
-</span><span data-line="876">            <span class="n">_one_line</span><span class="p">(</span><span class="n">asked</span><span class="p">),</span>
-</span><span data-line="877">            <span class="s2">"ledger:open questions"</span><span class="p">,</span>
-</span><span data-line="878">            <span class="n">said_at</span><span class="p">,</span>
-</span><span data-line="879">            <span class="n">basis</span><span class="p">,</span>
-</span><span data-line="880">            <span class="n">asks</span><span class="o">=</span><span class="p">(</span><span class="n">Ask</span><span class="p">(</span><span class="n">asked</span><span class="p">,</span> <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span><span class="p">),),</span>
-</span><span data-line="881">        <span class="p">)</span>
-</span><span data-line="882">
-</span><span data-line="883">    <span class="n">requests</span> <span class="o">=</span> <span class="n">_requests</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
-</span><span data-line="884">    <span class="k">if</span> <span class="n">requests</span><span class="p">:</span>
-</span><span data-line="885">        <span class="n">first</span> <span class="o">=</span> <span class="n">requests</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span data-line="886">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
-</span><span data-line="887">            <span class="s2">"needs_you"</span><span class="p">,</span>
-</span><span data-line="888">            <span class="n">_why</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">wanted</span><span class="p">),</span>
-</span><span data-line="889">            <span class="n">_one_line</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">wanted</span><span class="p">),</span>
-</span><span data-line="890">            <span class="s2">"ledger:for a person"</span><span class="p">,</span>
-</span><span data-line="891">            <span class="o">*</span><span class="n">_said_in</span><span class="p">(</span><span class="n">ledger</span><span class="p">,</span> <span class="n">free</span><span class="p">,</span> <span class="n">first</span><span class="o">.</span><span class="n">at</span><span class="p">),</span>
-</span><span data-line="892">            <span class="n">asks</span><span class="o">=</span><span class="n">_asks</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">requests</span><span class="p">,</span> <span class="n">ledger</span><span class="p">),</span>
-</span><span data-line="893">        <span class="p">)</span>
-</span><span data-line="894">
-</span><span data-line="895">    <span class="c1"># Being finished is read only from what the session said LAST. See the module</span>
-</span><span data-line="896">    <span class="c1"># docstring: an all-clear in the middle of an append-only file is a report about</span>
-</span><span data-line="897">    <span class="c1"># Monday, and today is not Monday.</span>
-</span><span data-line="898">    <span class="n">stated</span> <span class="o">=</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
-</span><span data-line="899">    <span class="k">if</span> <span class="n">stated</span><span class="p">:</span>
-</span><span data-line="900">        <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">_written</span><span class="p">(</span><span class="n">ledger</span><span class="p">)</span>
-</span><span data-line="901">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
-</span><span data-line="902">            <span class="s2">"safe_to_close"</span><span class="p">,</span>
-</span><span data-line="903">            <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">stated</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
-</span><span data-line="904">            <span class="n">source</span><span class="o">=</span><span class="s2">"ledger:state"</span><span class="p">,</span>
-</span><span data-line="905">            <span class="n">said_at</span><span class="o">=</span><span class="n">said_at</span><span class="p">,</span>
-</span><span data-line="906">            <span class="n">said_at_basis</span><span class="o">=</span><span class="n">basis</span><span class="p">,</span>
-</span><span data-line="907">        <span class="p">)</span>
-</span><span data-line="908">    <span class="n">latest</span> <span class="o">=</span> <span class="n">latest_section</span><span class="p">(</span><span class="n">free</span><span class="p">)</span>
-</span><span data-line="909">    <span class="n">ending</span> <span class="o">=</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="n">latest</span><span class="p">)</span>
-</span><span data-line="910">    <span class="k">if</span> <span class="n">ending</span><span class="p">:</span>
-</span><span data-line="911">        <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">_said_in</span><span class="p">(</span><span class="n">ledger</span><span class="p">,</span> <span class="n">free</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">free</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">latest</span><span class="p">))</span>
-</span><span data-line="912">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
-</span><span data-line="913">            <span class="s2">"safe_to_close"</span><span class="p">,</span>
-</span><span data-line="914">            <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">ending</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
-</span><span data-line="915">            <span class="n">source</span><span class="o">=</span><span class="s2">"ledger:last section"</span><span class="p">,</span>
-</span><span data-line="916">            <span class="n">said_at</span><span class="o">=</span><span class="n">said_at</span><span class="p">,</span>
-</span><span data-line="917">            <span class="n">said_at_basis</span><span class="o">=</span><span class="n">basis</span><span class="p">,</span>
-</span><span data-line="918">        <span class="p">)</span>
-</span><span data-line="919">    <span class="k">return</span> <span class="kc">None</span></div>
+</span><span data-line="848"><span class="k">def</span><span class="w"> </span><span class="nf">from_ledger</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="849"><span class="w">    </span><span class="sd">"""What the session wrote down for a person to read.</span>
+</span><span data-line="850">
+</span><span data-line="851"><span class="sd">    Read in the order the evidence is worth: the structured ``open questions`` field</span>
+</span><span data-line="852"><span class="sd">    first, because a session that filled it in meant to; then a "for &lt;person&gt;" section in</span>
+</span><span data-line="853"><span class="sd">    the free part, which is how sessions actually write today; then an all-clear</span>
+</span><span data-line="854"><span class="sd">    statement, which is the only thing that produces ``safe_to_close``.</span>
+</span><span data-line="855">
+</span><span data-line="856"><span class="sd">    Returns ``None`` when the ledger says none of those -- and that ``None`` is the whole</span>
+</span><span data-line="857"><span class="sd">    reason this is honest. Inferring "finished" from silence would be inferring it from</span>
+</span><span data-line="858"><span class="sd">    exactly what an interrupted session leaves behind.</span>
+</span><span data-line="859">
+</span><span data-line="860"><span class="sd">    Each verdict carries the time of the words it quotes (:func:`_said_in`). The fields</span>
+</span><span data-line="861"><span class="sd">    carry no date of their own, so they take the ledger's last write.</span>
+</span><span data-line="862">
+</span><span data-line="863"><span class="sd">    A request's ``asks`` are the one its reason quotes and every other "for &lt;person&gt;"</span>
+</span><span data-line="864"><span class="sd">    section in the file (:func:`_asks`): a section appended after the first is still</span>
+</span><span data-line="865"><span class="sd">    something the session needs.</span>
+</span><span data-line="866"><span class="sd">    """</span>
+</span><span data-line="867">    <span class="n">fields</span> <span class="o">=</span> <span class="n">ledger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fields"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+</span><span data-line="868">    <span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span> <span class="ow">or</span> <span class="n">DFLT_OWNER</span>
+</span><span data-line="869">    <span class="n">page</span> <span class="o">=</span> <span class="n">_page_of</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"free"</span><span class="p">),</span> <span class="n">owner</span><span class="p">)</span>
+</span><span data-line="870">    <span class="n">free</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">shown</span>
+</span><span data-line="871">
+</span><span data-line="872">    <span class="n">asked</span> <span class="o">=</span> <span class="n">_substantive</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"open_questions"</span><span class="p">))</span>
+</span><span data-line="873">    <span class="k">if</span> <span class="n">asked</span> <span class="ow">and</span> <span class="n">_opens_with_nothing</span><span class="p">(</span><span class="n">asked</span><span class="p">):</span>
+</span><span data-line="874">        <span class="n">asked</span> <span class="o">=</span> <span class="s2">""</span>  <span class="c1"># "- none for the user yet; ..." answers the field with nothing</span>
+</span><span data-line="875">    <span class="k">if</span> <span class="n">asked</span><span class="p">:</span>
+</span><span data-line="876">        <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">_written</span><span class="p">(</span><span class="n">ledger</span><span class="p">)</span>
+</span><span data-line="877">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+</span><span data-line="878">            <span class="s2">"needs_you"</span><span class="p">,</span>
+</span><span data-line="879">            <span class="n">_why</span><span class="p">(</span><span class="n">asked</span><span class="p">),</span>
+</span><span data-line="880">            <span class="n">_one_line</span><span class="p">(</span><span class="n">asked</span><span class="p">),</span>
+</span><span data-line="881">            <span class="s2">"ledger:open questions"</span><span class="p">,</span>
+</span><span data-line="882">            <span class="n">said_at</span><span class="p">,</span>
+</span><span data-line="883">            <span class="n">basis</span><span class="p">,</span>
+</span><span data-line="884">            <span class="n">asks</span><span class="o">=</span><span class="p">(</span><span class="n">Ask</span><span class="p">(</span><span class="n">asked</span><span class="p">,</span> <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span><span class="p">),),</span>
+</span><span data-line="885">        <span class="p">)</span>
+</span><span data-line="886">
+</span><span data-line="887">    <span class="n">requests</span> <span class="o">=</span> <span class="n">_requests</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
+</span><span data-line="888">    <span class="k">if</span> <span class="n">requests</span><span class="p">:</span>
+</span><span data-line="889">        <span class="n">first</span> <span class="o">=</span> <span class="n">requests</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="890">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+</span><span data-line="891">            <span class="s2">"needs_you"</span><span class="p">,</span>
+</span><span data-line="892">            <span class="n">_why</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">wanted</span><span class="p">),</span>
+</span><span data-line="893">            <span class="n">_one_line</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">wanted</span><span class="p">),</span>
+</span><span data-line="894">            <span class="s2">"ledger:for a person"</span><span class="p">,</span>
+</span><span data-line="895">            <span class="o">*</span><span class="n">_said_in</span><span class="p">(</span><span class="n">ledger</span><span class="p">,</span> <span class="n">free</span><span class="p">,</span> <span class="n">first</span><span class="o">.</span><span class="n">at</span><span class="p">),</span>
+</span><span data-line="896">            <span class="n">asks</span><span class="o">=</span><span class="n">_asks</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">requests</span><span class="p">,</span> <span class="n">ledger</span><span class="p">),</span>
+</span><span data-line="897">        <span class="p">)</span>
+</span><span data-line="898">
+</span><span data-line="899">    <span class="c1"># Being finished is read only from what the session said LAST. See the module</span>
+</span><span data-line="900">    <span class="c1"># docstring: an all-clear in the middle of an append-only file is a report about</span>
+</span><span data-line="901">    <span class="c1"># Monday, and today is not Monday.</span>
+</span><span data-line="902">    <span class="n">stated</span> <span class="o">=</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+</span><span data-line="903">    <span class="k">if</span> <span class="n">stated</span><span class="p">:</span>
+</span><span data-line="904">        <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">_written</span><span class="p">(</span><span class="n">ledger</span><span class="p">)</span>
+</span><span data-line="905">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+</span><span data-line="906">            <span class="s2">"safe_to_close"</span><span class="p">,</span>
+</span><span data-line="907">            <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">stated</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+</span><span data-line="908">            <span class="n">source</span><span class="o">=</span><span class="s2">"ledger:state"</span><span class="p">,</span>
+</span><span data-line="909">            <span class="n">said_at</span><span class="o">=</span><span class="n">said_at</span><span class="p">,</span>
+</span><span data-line="910">            <span class="n">said_at_basis</span><span class="o">=</span><span class="n">basis</span><span class="p">,</span>
+</span><span data-line="911">        <span class="p">)</span>
+</span><span data-line="912">    <span class="n">latest</span> <span class="o">=</span> <span class="n">latest_section</span><span class="p">(</span><span class="n">free</span><span class="p">)</span>
+</span><span data-line="913">    <span class="n">ending</span> <span class="o">=</span> <span class="n">_is_a_real_all_clear</span><span class="p">(</span><span class="n">latest</span><span class="p">)</span>
+</span><span data-line="914">    <span class="k">if</span> <span class="n">ending</span><span class="p">:</span>
+</span><span data-line="915">        <span class="n">said_at</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">_said_in</span><span class="p">(</span><span class="n">ledger</span><span class="p">,</span> <span class="n">free</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">free</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">latest</span><span class="p">))</span>
+</span><span data-line="916">        <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+</span><span data-line="917">            <span class="s2">"safe_to_close"</span><span class="p">,</span>
+</span><span data-line="918">            <span class="n">reason</span><span class="o">=</span><span class="n">_one_line</span><span class="p">(</span><span class="n">ending</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+</span><span data-line="919">            <span class="n">source</span><span class="o">=</span><span class="s2">"ledger:last section"</span><span class="p">,</span>
+</span><span data-line="920">            <span class="n">said_at</span><span class="o">=</span><span class="n">said_at</span><span class="p">,</span>
+</span><span data-line="921">            <span class="n">said_at_basis</span><span class="o">=</span><span class="n">basis</span><span class="p">,</span>
+</span><span data-line="922">        <span class="p">)</span>
+</span><span data-line="923">    <span class="k">return</span> <span class="kc">None</span></div>
 
-</span><span data-line="920">
-</span><span data-line="921">
-</span><span data-line="922"><span class="c1">#: Answers that fill a field without saying anything. A session told to write</span>
-</span><span data-line="923"><span class="c1">#: ``open questions`` and having none writes one of these, and treating that as a request</span>
-</span><span data-line="924"><span class="c1">#: puts it in front of a person forever -- which is the habit that teaches people to stop</span>
-</span><span data-line="925"><span class="c1">#: looking at the list at all.</span>
-</span><span data-line="926"><span class="n">_NOTHING_REALLY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-</span><span data-line="927">    <span class="sa">r</span><span class="s2">"(?i)^[\s\u2014*_&gt;-]*(?:none|n/?a|nothing|no)"</span>
-</span><span data-line="928">    <span class="sa">r</span><span class="s2">"(?:\s+(?:blocking|outstanding|open|pending|left|for now|yet|right now))?"</span>
-</span><span data-line="929">    <span class="sa">r</span><span class="s2">"[\s.!\u2014-]*$|^[\s*_&gt;-]{1,4}$"</span>
-</span><span data-line="930"><span class="p">)</span>
-</span><span data-line="931">
-</span><span data-line="932">
-</span><span data-line="933"><span class="c1">#: A request that opens by saying there is none. "Nothing -- all handled" under a</span>
-</span><span data-line="934"><span class="c1">#: "For Thor" heading is a session reporting that it needs nothing, in the place it would</span>
-</span><span data-line="935"><span class="c1">#: have written what it needed; the opening word is the answer and the rest is the</span>
-</span><span data-line="936"><span class="c1">#: explanation.</span>
-</span><span data-line="937"><span class="n">_OPENS_WITH_NOTHING</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-</span><span data-line="938">    <span class="sa">r</span><span class="s2">"(?i)^[\s&gt;*#_\u2014-]*(?:none|nothing|n/?a)\b[ \t]*(?:[\u2014\u2013:,.;!)\-]|$)"</span>
-</span><span data-line="939"><span class="p">)</span>
-</span><span data-line="940">
-</span><span data-line="941">
-</span><span data-line="942"><span class="k">def</span><span class="w"> </span><span class="nf">_opens_with_nothing</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="943"><span class="w">    </span><span class="sd">"""Does this section answer "nothing" before it says anything else?</span>
-</span><span data-line="944">
-</span><span data-line="945"><span class="sd">    The word has to *be* the answer, not begin a sentence: "Nothing -- all handled" is a</span>
-</span><span data-line="946"><span class="sd">    session reporting it needs nothing, and "Nothing works until the key is rotated" is a</span>
-</span><span data-line="947"><span class="sd">    session that very much needs something.</span>
-</span><span data-line="948">
-</span><span data-line="949"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('Nothing \u2014 all handled, no blockers.')</span>
-</span><span data-line="950"><span class="sd">    True</span>
-</span><span data-line="951"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('Nothing works until the key is rotated.')</span>
-</span><span data-line="952"><span class="sd">    False</span>
-</span><span data-line="953"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('attach the GIF to #604')</span>
-</span><span data-line="954"><span class="sd">    False</span>
-</span><span data-line="955"><span class="sd">    """</span>
-</span><span data-line="956">    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_OPENS_WITH_NOTHING</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)))</span>
-</span><span data-line="957">
-</span><span data-line="958">
-</span><span data-line="959"><span class="k">def</span><span class="w"> </span><span class="nf">_substantive</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="960"><span class="w">    </span><span class="sd">"""``value`` as text when it says something, else ``''``.</span>
+</span><span data-line="924">
+</span><span data-line="925">
+</span><span data-line="926"><span class="c1">#: Answers that fill a field without saying anything. A session told to write</span>
+</span><span data-line="927"><span class="c1">#: ``open questions`` and having none writes one of these, and treating that as a request</span>
+</span><span data-line="928"><span class="c1">#: puts it in front of a person forever -- which is the habit that teaches people to stop</span>
+</span><span data-line="929"><span class="c1">#: looking at the list at all.</span>
+</span><span data-line="930"><span class="n">_NOTHING_REALLY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+</span><span data-line="931">    <span class="sa">r</span><span class="s2">"(?i)^[\s\u2014*_&gt;-]*(?:none|n/?a|nothing|no)"</span>
+</span><span data-line="932">    <span class="sa">r</span><span class="s2">"(?:\s+(?:blocking|outstanding|open|pending|left|for now|yet|right now))?"</span>
+</span><span data-line="933">    <span class="sa">r</span><span class="s2">"[\s.!\u2014-]*$|^[\s*_&gt;-]{1,4}$"</span>
+</span><span data-line="934"><span class="p">)</span>
+</span><span data-line="935">
+</span><span data-line="936">
+</span><span data-line="937"><span class="c1">#: A request that opens by saying there is none. "Nothing -- all handled" under a</span>
+</span><span data-line="938"><span class="c1">#: "For Thor" heading is a session reporting that it needs nothing, in the place it would</span>
+</span><span data-line="939"><span class="c1">#: have written what it needed; the opening word is the answer and the rest is the</span>
+</span><span data-line="940"><span class="c1">#: explanation.</span>
+</span><span data-line="941"><span class="n">_OPENS_WITH_NOTHING</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+</span><span data-line="942">    <span class="sa">r</span><span class="s2">"(?i)^[\s&gt;*#_(\u2014-]*(?:none|nothing|n/?a)\b"</span>
+</span><span data-line="943">    <span class="sa">r</span><span class="s2">"(?:\s+(?:yet|for now|for (?:the user|you)))*"</span>
+</span><span data-line="944">    <span class="sa">r</span><span class="s2">"[ \t]*(?:[\u2014\u2013:,.;!)_\-]|$)"</span>
+</span><span data-line="945"><span class="p">)</span>
+</span><span data-line="946">
+</span><span data-line="947">
+</span><span data-line="948"><span class="k">def</span><span class="w"> </span><span class="nf">_opens_with_nothing</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="949"><span class="w">    </span><span class="sd">"""Does this section answer "nothing" before it says anything else?</span>
+</span><span data-line="950">
+</span><span data-line="951"><span class="sd">    The word has to *be* the answer, not begin a sentence: "Nothing -- all handled" is a</span>
+</span><span data-line="952"><span class="sd">    session reporting it needs nothing, and "Nothing works until the key is rotated" is a</span>
+</span><span data-line="953"><span class="sd">    session that very much needs something.</span>
+</span><span data-line="954">
+</span><span data-line="955"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('Nothing \u2014 all handled, no blockers.')</span>
+</span><span data-line="956"><span class="sd">    True</span>
+</span><span data-line="957"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('Nothing works until the key is rotated.')</span>
+</span><span data-line="958"><span class="sd">    False</span>
+</span><span data-line="959"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('attach the GIF to #604')</span>
+</span><span data-line="960"><span class="sd">    False</span>
 </span><span data-line="961">
-</span><span data-line="962"><span class="sd">    &gt;&gt;&gt; _substantive('- squash or rebase?')</span>
-</span><span data-line="963"><span class="sd">    '- squash or rebase?'</span>
-</span><span data-line="964"><span class="sd">    &gt;&gt;&gt; _substantive('- none'), _substantive('n/a'), _substantive('  ')</span>
-</span><span data-line="965"><span class="sd">    ('', '', '')</span>
-</span><span data-line="966"><span class="sd">    """</span>
-</span><span data-line="967">    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="968">    <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
-</span><span data-line="969">        <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="970">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-</span><span data-line="971">    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">_NOTHING_REALLY</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">):</span>
-</span><span data-line="972">        <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="973">    <span class="k">return</span> <span class="n">text</span>
-</span><span data-line="974">
-</span><span data-line="975">
-</span><span data-line="976"><span class="c1">#: Whose attention the "for &lt;person&gt;" family is about, when a caller does not say. "you"</span>
-</span><span data-line="977"><span class="c1">#: is matched either way, so a session that does not know the name still classifies.</span>
-</span><span data-line="978"><span class="n">DFLT_OWNER</span> <span class="o">=</span> <span class="s2">"thor"</span>
-</span><span data-line="979">
-</span><span data-line="980">
+</span><span data-line="962"><span class="sd">    Written in parentheses, or saying "not yet" or "not for you", it is the same answer:</span>
+</span><span data-line="963">
+</span><span data-line="964"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('(none)'), _opens_with_nothing('(none yet)_')</span>
+</span><span data-line="965"><span class="sd">    (True, True)</span>
+</span><span data-line="966"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('- none for the user yet; #182 stays open')</span>
+</span><span data-line="967"><span class="sd">    True</span>
+</span><span data-line="968"><span class="sd">    &gt;&gt;&gt; _opens_with_nothing('None blocking. The runbook is your call.')</span>
+</span><span data-line="969"><span class="sd">    False</span>
+</span><span data-line="970"><span class="sd">    """</span>
+</span><span data-line="971">    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_OPENS_WITH_NOTHING</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)))</span>
+</span><span data-line="972">
+</span><span data-line="973">
+</span><span data-line="974"><span class="k">def</span><span class="w"> </span><span class="nf">_substantive</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="975"><span class="w">    </span><span class="sd">"""``value`` as text when it says something, else ``''``.</span>
+</span><span data-line="976">
+</span><span data-line="977"><span class="sd">    &gt;&gt;&gt; _substantive('- squash or rebase?')</span>
+</span><span data-line="978"><span class="sd">    '- squash or rebase?'</span>
+</span><span data-line="979"><span class="sd">    &gt;&gt;&gt; _substantive('- none'), _substantive('n/a'), _substantive('  ')</span>
+</span><span data-line="980"><span class="sd">    ('', '', '')</span>
+</span><span data-line="981"><span class="sd">    """</span>
+</span><span data-line="982">    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="983">    <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+</span><span data-line="984">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="985">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+</span><span data-line="986">    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">_NOTHING_REALLY</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">):</span>
+</span><span data-line="987">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="988">    <span class="k">return</span> <span class="n">text</span>
+</span><span data-line="989">
+</span><span data-line="990">
+</span><span data-line="991"><span class="c1">#: Whose attention the "for &lt;person&gt;" family is about, when a caller does not say. "you"</span>
+</span><span data-line="992"><span class="c1">#: is matched either way, so a session that does not know the name still classifies.</span>
+</span><span data-line="993"><span class="n">DFLT_OWNER</span> <span class="o">=</span> <span class="s2">"thor"</span>
+</span><span data-line="994">
+</span><span data-line="995">
 <div class="viewcode-block" id="dflt_verdicts">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.triage.html#crowsnest.triage.dflt_verdicts">[docs]</a>
-</span><span data-line="981"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_verdicts</span><span class="p">(</span>
-</span><span data-line="982">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="983"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
-</span><span data-line="984"><span class="w">    </span><span class="sd">"""The readers :func:`classify` uses when a caller names none, strongest first.</span>
-</span><span data-line="985">
-</span><span data-line="986"><span class="sd">    The registry is first because it is the only one that is true *now*:</span>
-</span><span data-line="987"><span class="sd">    :func:`crowsnest.tools.brief`'s openloops digest is the reader this order leaves room</span>
-</span><span data-line="988"><span class="sd">    for, and it belongs after both.</span>
-</span><span data-line="989">
-</span><span data-line="990"><span class="sd">    ``owner`` is whose attention "for &lt;person&gt;" is about, for a machine whose sessions</span>
-</span><span data-line="991"><span class="sd">    write a different name. It reaches :func:`from_ledger` by binding rather than by</span>
-</span><span data-line="992"><span class="sd">    another parameter on the reader signature, so the seam stays ``(row, ledger)``.</span>
-</span><span data-line="993"><span class="sd">    """</span>
-</span><span data-line="994">    <span class="k">if</span> <span class="ow">not</span> <span class="n">owner</span><span class="p">:</span>
-</span><span data-line="995">        <span class="k">return</span> <span class="p">(</span><span class="n">from_registry</span><span class="p">,</span> <span class="n">from_ledger</span><span class="p">)</span>
-</span><span data-line="996">    <span class="k">return</span> <span class="p">(</span><span class="n">from_registry</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">from_ledger</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">))</span></div>
+</span><span data-line="996"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_verdicts</span><span class="p">(</span>
+</span><span data-line="997">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="998"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+</span><span data-line="999"><span class="w">    </span><span class="sd">"""The readers :func:`classify` uses when a caller names none, strongest first.</span>
+</span><span data-line="1000">
+</span><span data-line="1001"><span class="sd">    The registry is first because it is the only one that is true *now*:</span>
+</span><span data-line="1002"><span class="sd">    :func:`crowsnest.tools.brief`'s openloops digest is the reader this order leaves room</span>
+</span><span data-line="1003"><span class="sd">    for, and it belongs after both.</span>
+</span><span data-line="1004">
+</span><span data-line="1005"><span class="sd">    ``owner`` is whose attention "for &lt;person&gt;" is about, for a machine whose sessions</span>
+</span><span data-line="1006"><span class="sd">    write a different name. It reaches :func:`from_ledger` by binding rather than by</span>
+</span><span data-line="1007"><span class="sd">    another parameter on the reader signature, so the seam stays ``(row, ledger)``.</span>
+</span><span data-line="1008"><span class="sd">    """</span>
+</span><span data-line="1009">    <span class="k">if</span> <span class="ow">not</span> <span class="n">owner</span><span class="p">:</span>
+</span><span data-line="1010">        <span class="k">return</span> <span class="p">(</span><span class="n">from_registry</span><span class="p">,</span> <span class="n">from_ledger</span><span class="p">)</span>
+</span><span data-line="1011">    <span class="k">return</span> <span class="p">(</span><span class="n">from_registry</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">from_ledger</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">))</span></div>
 
-</span><span data-line="997">
-</span><span data-line="998">
-</span><span data-line="999"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="1000"><span class="c1"># The classification</span>
-</span><span data-line="1001">
-</span><span data-line="1002">
-</span><span data-line="1003"><span class="k">def</span><span class="w"> </span><span class="nf">_whatever_it_said</span><span class="p">(</span>
-</span><span data-line="1004">    <span class="n">reader</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span>
-</span><span data-line="1005">    <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
-</span><span data-line="1006">    <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
-</span><span data-line="1007"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1008"><span class="w">    </span><span class="sd">"""One reader's verdict, or none of it: a reader that raises is a reader that declines.</span>
-</span><span data-line="1009">
-</span><span data-line="1010"><span class="sd">    Swallowed rather than raised because this runs once per session on a page whose job is</span>
-</span><span data-line="1011"><span class="sd">    to be readable, and because the fallback is honest: a reader that cannot answer leaves</span>
-</span><span data-line="1012"><span class="sd">    the session to the next one, and then to ``unclassified``, which is exactly what "we</span>
-</span><span data-line="1013"><span class="sd">    do not know" is supposed to look like here.</span>
-</span><span data-line="1014"><span class="sd">    """</span>
-</span><span data-line="1015">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="1016">        <span class="k">return</span> <span class="n">reader</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="p">)</span>
-</span><span data-line="1017">    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- any reader, any failure; the others still count</span>
-</span><span data-line="1018">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="1019">
-</span><span data-line="1020">
+</span><span data-line="1012">
+</span><span data-line="1013">
+</span><span data-line="1014"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="1015"><span class="c1"># The classification</span>
+</span><span data-line="1016">
+</span><span data-line="1017">
+</span><span data-line="1018"><span class="k">def</span><span class="w"> </span><span class="nf">_whatever_it_said</span><span class="p">(</span>
+</span><span data-line="1019">    <span class="n">reader</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span>
+</span><span data-line="1020">    <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+</span><span data-line="1021">    <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+</span><span data-line="1022"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1023"><span class="w">    </span><span class="sd">"""One reader's verdict, or none of it: a reader that raises is a reader that declines.</span>
+</span><span data-line="1024">
+</span><span data-line="1025"><span class="sd">    Swallowed rather than raised because this runs once per session on a page whose job is</span>
+</span><span data-line="1026"><span class="sd">    to be readable, and because the fallback is honest: a reader that cannot answer leaves</span>
+</span><span data-line="1027"><span class="sd">    the session to the next one, and then to ``unclassified``, which is exactly what "we</span>
+</span><span data-line="1028"><span class="sd">    do not know" is supposed to look like here.</span>
+</span><span data-line="1029"><span class="sd">    """</span>
+</span><span data-line="1030">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="1031">        <span class="k">return</span> <span class="n">reader</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="p">)</span>
+</span><span data-line="1032">    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- any reader, any failure; the others still count</span>
+</span><span data-line="1033">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="1034">
+</span><span data-line="1035">
 <div class="viewcode-block" id="classify_row">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.triage.html#crowsnest.triage.classify_row">[docs]</a>
-</span><span data-line="1021"><span class="k">def</span><span class="w"> </span><span class="nf">classify_row</span><span class="p">(</span>
-</span><span data-line="1022">    <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
-</span><span data-line="1023">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1024">    <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1025">    <span class="n">verdicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1026">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1027"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1028"><span class="w">    </span><span class="sd">"""One session's verdict, as a JSON-able dict. Never guesses.</span>
-</span><span data-line="1029">
-</span><span data-line="1030"><span class="sd">    ``verdicts`` is the seam (see the module docstring): readers in order, the first</span>
-</span><span data-line="1031"><span class="sd">    non-``None`` winning. When none of them reaches a verdict the answer is</span>
-</span><span data-line="1032"><span class="sd">    ``unclassified``, which is a finding rather than a failure -- it says *this session</span>
-</span><span data-line="1033"><span class="sd">    has not told anyone where it stands*, and that is actionable in a way a guess is not.</span>
-</span><span data-line="1034"><span class="sd">    """</span>
-</span><span data-line="1035">    <span class="n">ledger</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">ledger</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ledger</span>
-</span><span data-line="1036">    <span class="k">for</span> <span class="n">reader</span> <span class="ow">in</span> <span class="n">dflt_verdicts</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="k">if</span> <span class="n">verdicts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">verdicts</span><span class="p">:</span>
-</span><span data-line="1037">        <span class="n">found</span> <span class="o">=</span> <span class="n">_whatever_it_said</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="p">)</span>
-</span><span data-line="1038">        <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1039">            <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
-</span><span data-line="1040">    <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
-</span><span data-line="1041">        <span class="s2">"unclassified"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"nothing said where it stands"</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">""</span>
-</span><span data-line="1042">    <span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span></div>
-
-</span><span data-line="1043">
+</span><span data-line="1036"><span class="k">def</span><span class="w"> </span><span class="nf">classify_row</span><span class="p">(</span>
+</span><span data-line="1037">    <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+</span><span data-line="1038">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1039">    <span class="n">ledger</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1040">    <span class="n">verdicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1041">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1042"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1043"><span class="w">    </span><span class="sd">"""One session's verdict, as a JSON-able dict. Never guesses.</span>
 </span><span data-line="1044">
+</span><span data-line="1045"><span class="sd">    ``verdicts`` is the seam (see the module docstring): readers in order, the first</span>
+</span><span data-line="1046"><span class="sd">    non-``None`` winning. When none of them reaches a verdict the answer is</span>
+</span><span data-line="1047"><span class="sd">    ``unclassified``, which is a finding rather than a failure -- it says *this session</span>
+</span><span data-line="1048"><span class="sd">    has not told anyone where it stands*, and that is actionable in a way a guess is not.</span>
+</span><span data-line="1049"><span class="sd">    """</span>
+</span><span data-line="1050">    <span class="n">ledger</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">ledger</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ledger</span>
+</span><span data-line="1051">    <span class="k">for</span> <span class="n">reader</span> <span class="ow">in</span> <span class="n">dflt_verdicts</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="k">if</span> <span class="n">verdicts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">verdicts</span><span class="p">:</span>
+</span><span data-line="1052">        <span class="n">found</span> <span class="o">=</span> <span class="n">_whatever_it_said</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="p">)</span>
+</span><span data-line="1053">        <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1054">            <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+</span><span data-line="1055">    <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span>
+</span><span data-line="1056">        <span class="s2">"unclassified"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"nothing said where it stands"</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">""</span>
+</span><span data-line="1057">    <span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span></div>
+
+</span><span data-line="1058">
+</span><span data-line="1059">
 <div class="viewcode-block" id="classify">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.triage.html#crowsnest.triage.classify">[docs]</a>
-</span><span data-line="1045"><span class="k">def</span><span class="w"> </span><span class="nf">classify</span><span class="p">(</span>
-</span><span data-line="1046">    <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">],</span>
-</span><span data-line="1047">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1048">    <span class="n">ledgers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1049">    <span class="n">verdicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1050">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1051"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1052"><span class="w">    </span><span class="sd">"""Every session, grouped by what it needs. The three-line answer to "where are we".</span>
-</span><span data-line="1053">
-</span><span data-line="1054"><span class="sd">    ``ledgers`` maps a session's label to its ledger page</span>
-</span><span data-line="1055"><span class="sd">    (:func:`crowsnest.ledger.read_ledger`'s shape); a session with no entry is classified</span>
-</span><span data-line="1056"><span class="sd">    from the registry alone, which is right for one that is waiting and honestly</span>
-</span><span data-line="1057"><span class="sd">    ``unclassified`` for one that is idle.</span>
-</span><span data-line="1058">
-</span><span data-line="1059"><span class="sd">    Returns ``{"groups": {...}, "counts": {...}}`` where each group holds the rows that</span>
-</span><span data-line="1060"><span class="sd">    fell into it, each with a ``verdict``. Rows keep the order they arrived in, which is</span>
-</span><span data-line="1061"><span class="sd">    the roster's own -- most urgent first. Each row's ``said_at`` and ``said_at_basis``</span>
-</span><span data-line="1062"><span class="sd">    are set again once its verdict is known (:func:`crowsnest.said.with_said`), so a row</span>
-</span><span data-line="1063"><span class="sd">    and its verdict never disagree about when the thing it quotes was said.</span>
-</span><span data-line="1064">
-</span><span data-line="1065"><span class="sd">    ``owner`` is whose attention "for &lt;person&gt;" is about (:func:`dflt_verdicts`), passed</span>
-</span><span data-line="1066"><span class="sd">    to every row as :func:`classify_row` takes it; readers given as ``verdicts`` bind</span>
-</span><span data-line="1067"><span class="sd">    their own.</span>
-</span><span data-line="1068"><span class="sd">    """</span>
-</span><span data-line="1069">    <span class="n">ledgers</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">ledgers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ledgers</span>
-</span><span data-line="1070">    <span class="n">groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">group</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">GROUPS</span><span class="p">}</span>
-</span><span data-line="1071">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
-</span><span data-line="1072">        <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="1073">        <span class="n">verdict</span> <span class="o">=</span> <span class="n">classify_row</span><span class="p">(</span>
-</span><span data-line="1074">            <span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="o">=</span><span class="n">ledgers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span> <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span>
-</span><span data-line="1075">        <span class="p">)</span>
-</span><span data-line="1076">        <span class="n">groups</span><span class="p">[</span><span class="n">verdict</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span> <span class="k">if</span> <span class="n">verdict</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">else</span> <span class="s2">"unclassified"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="1077">            <span class="n">with_said</span><span class="p">({</span><span class="o">**</span><span class="n">row</span><span class="p">,</span> <span class="s2">"verdict"</span><span class="p">:</span> <span class="n">verdict</span><span class="p">})</span>
-</span><span data-line="1078">        <span class="p">)</span>
-</span><span data-line="1079">    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">group</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-</span><span data-line="1080">    <span class="n">counts</span><span class="p">[</span><span class="s2">"needs_you_decision"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-</span><span data-line="1081">        <span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="s2">"needs_you"</span><span class="p">]</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">][</span><span class="s2">"why"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"decision"</span>
-</span><span data-line="1082">    <span class="p">)</span>
-</span><span data-line="1083">    <span class="c1"># One counter per `why`, so the summary line adds up. It said "5 need you (1 to</span>
-</span><span data-line="1084">    <span class="c1"># decide, 3 to do)" and 1 + 3 is not 5: the questions had nowhere to be counted.</span>
-</span><span data-line="1085">    <span class="k">for</span> <span class="n">why</span> <span class="ow">in</span> <span class="n">WHYS</span><span class="p">:</span>
-</span><span data-line="1086">        <span class="n">counts</span><span class="p">[</span><span class="sa">f</span><span class="s2">"needs_you_</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-</span><span data-line="1087">            <span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="s2">"needs_you"</span><span class="p">]</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">][</span><span class="s2">"why"</span><span class="p">]</span> <span class="o">==</span> <span class="n">why</span>
-</span><span data-line="1088">        <span class="p">)</span>
-</span><span data-line="1089">    <span class="k">return</span> <span class="p">{</span><span class="s2">"groups"</span><span class="p">:</span> <span class="n">groups</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">:</span> <span class="n">counts</span><span class="p">}</span></div>
+</span><span data-line="1060"><span class="k">def</span><span class="w"> </span><span class="nf">classify</span><span class="p">(</span>
+</span><span data-line="1061">    <span class="n">rows</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">],</span>
+</span><span data-line="1062">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1063">    <span class="n">ledgers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1064">    <span class="n">verdicts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">],</span> <span class="n">Verdict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1065">    <span class="n">owner</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1066"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1067"><span class="w">    </span><span class="sd">"""Every session, grouped by what it needs. The three-line answer to "where are we".</span>
+</span><span data-line="1068">
+</span><span data-line="1069"><span class="sd">    ``ledgers`` maps a session's label to its ledger page</span>
+</span><span data-line="1070"><span class="sd">    (:func:`crowsnest.ledger.read_ledger`'s shape); a session with no entry is classified</span>
+</span><span data-line="1071"><span class="sd">    from the registry alone, which is right for one that is waiting and honestly</span>
+</span><span data-line="1072"><span class="sd">    ``unclassified`` for one that is idle.</span>
+</span><span data-line="1073">
+</span><span data-line="1074"><span class="sd">    Returns ``{"groups": {...}, "counts": {...}}`` where each group holds the rows that</span>
+</span><span data-line="1075"><span class="sd">    fell into it, each with a ``verdict``. Rows keep the order they arrived in, which is</span>
+</span><span data-line="1076"><span class="sd">    the roster's own -- most urgent first. Each row's ``said_at`` and ``said_at_basis``</span>
+</span><span data-line="1077"><span class="sd">    are set again once its verdict is known (:func:`crowsnest.said.with_said`), so a row</span>
+</span><span data-line="1078"><span class="sd">    and its verdict never disagree about when the thing it quotes was said.</span>
+</span><span data-line="1079">
+</span><span data-line="1080"><span class="sd">    ``owner`` is whose attention "for &lt;person&gt;" is about (:func:`dflt_verdicts`), passed</span>
+</span><span data-line="1081"><span class="sd">    to every row as :func:`classify_row` takes it; readers given as ``verdicts`` bind</span>
+</span><span data-line="1082"><span class="sd">    their own.</span>
+</span><span data-line="1083"><span class="sd">    """</span>
+</span><span data-line="1084">    <span class="n">ledgers</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">ledgers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ledgers</span>
+</span><span data-line="1085">    <span class="n">groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">group</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">GROUPS</span><span class="p">}</span>
+</span><span data-line="1086">    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+</span><span data-line="1087">        <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="1088">        <span class="n">verdict</span> <span class="o">=</span> <span class="n">classify_row</span><span class="p">(</span>
+</span><span data-line="1089">            <span class="n">row</span><span class="p">,</span> <span class="n">ledger</span><span class="o">=</span><span class="n">ledgers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span> <span class="n">verdicts</span><span class="o">=</span><span class="n">verdicts</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span>
+</span><span data-line="1090">        <span class="p">)</span>
+</span><span data-line="1091">        <span class="n">groups</span><span class="p">[</span><span class="n">verdict</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span> <span class="k">if</span> <span class="n">verdict</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">else</span> <span class="s2">"unclassified"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="1092">            <span class="n">with_said</span><span class="p">({</span><span class="o">**</span><span class="n">row</span><span class="p">,</span> <span class="s2">"verdict"</span><span class="p">:</span> <span class="n">verdict</span><span class="p">})</span>
+</span><span data-line="1093">        <span class="p">)</span>
+</span><span data-line="1094">    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">group</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+</span><span data-line="1095">    <span class="n">counts</span><span class="p">[</span><span class="s2">"needs_you_decision"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+</span><span data-line="1096">        <span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="s2">"needs_you"</span><span class="p">]</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">][</span><span class="s2">"why"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"decision"</span>
+</span><span data-line="1097">    <span class="p">)</span>
+</span><span data-line="1098">    <span class="c1"># One counter per `why`, so the summary line adds up. It said "5 need you (1 to</span>
+</span><span data-line="1099">    <span class="c1"># decide, 3 to do)" and 1 + 3 is not 5: the questions had nowhere to be counted.</span>
+</span><span data-line="1100">    <span class="k">for</span> <span class="n">why</span> <span class="ow">in</span> <span class="n">WHYS</span><span class="p">:</span>
+</span><span data-line="1101">        <span class="n">counts</span><span class="p">[</span><span class="sa">f</span><span class="s2">"needs_you_</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+</span><span data-line="1102">            <span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">[</span><span class="s2">"needs_you"</span><span class="p">]</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"verdict"</span><span class="p">][</span><span class="s2">"why"</span><span class="p">]</span> <span class="o">==</span> <span class="n">why</span>
+</span><span data-line="1103">        <span class="p">)</span>
+</span><span data-line="1104">    <span class="k">return</span> <span class="p">{</span><span class="s2">"groups"</span><span class="p">:</span> <span class="n">groups</span><span class="p">,</span> <span class="s2">"counts"</span><span class="p">:</span> <span class="n">counts</span><span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -1282,7 +1297,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=86ab457a"></script>
+      <script src="../../_static/documentation_options.js?v=6eb1e6b8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

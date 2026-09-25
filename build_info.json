@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-09-25T15:37:08Z",
+  "built_at": "2026-09-25T15:42:21Z",
   "package": {
     "name": "crowsnest",
-    "version": "0.0.67",
+    "version": "0.0.68",
     "display_name": "crowsnest",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "62a6e01d5c35797abc4edb2c061829d9b7b1f45a",
-    "short_commit": "62a6e01",
+    "commit": "79e1b5f9e2cc87316574e6205252ca21339d33b2",
+    "short_commit": "79e1b5f",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/crowsnest",
-    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/62a6e01d5c35797abc4edb2c061829d9b7b1f45a",
+    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/79e1b5f9e2cc87316574e6205252ca21339d33b2",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/crowsnest",
-    "sha": "62a6e01d5c35797abc4edb2c061829d9b7b1f45a",
+    "sha": "79e1b5f9e2cc87316574e6205252ca21339d33b2",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "36155171742",
-    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/36155171742",
+    "run_id": "36155754674",
+    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/36155754674",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -60,16 +60,14 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.66",
-    "relation": "ahead",
+    "latest": "0.0.68",
+    "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 62a6e01d5c35797abc4edb2c061829d9b7b1f45a\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 79e1b5f9e2cc87316574e6205252ca21339d33b2\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
-    "aligned": false,
-    "notes": [
-      "The documented version (0.0.67) is ahead of the latest release on PyPI (0.0.66): these docs describe unreleased code."
-    ]
+    "aligned": true,
+    "notes": []
   }
 }
