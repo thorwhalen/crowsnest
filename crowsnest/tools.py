@@ -22,9 +22,10 @@ from pathlib import Path
 from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
-from crowsnest.config import attention_settings, configured_homes, homes
+from crowsnest.config import attention_settings, configured_homes, homes, theme_table
 from crowsnest.lineage import from_records as _from_records
 from crowsnest.lineage import open_command as _open_command
+from crowsnest.links import github_ref
 from crowsnest.registry import (
     STATUSES,
     LiveSession,
@@ -576,6 +577,7 @@ def report(
     synthesiser=None,
     owed: bool = False,
     owed_path=None,
+    themes=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -639,6 +641,7 @@ def report(
     ``owed=True`` adds the *Owed* register: openloops' open manual-task issues, read from
     a cache (``owed_path``, :mod:`crowsnest.owed`) that this call refreshes when it is more
     than ten minutes old, never running an issue's verify command.
+    ``themes`` is the board's ``[themes]`` table; ``None`` reads the config file's.
 
     ``links=False`` leaves the references off the page. They are still resolved: a
     verdict reader may read them, and the verbs pin the row with them. To resolve
@@ -758,6 +761,7 @@ def report(
         ref_state=ref_state,
         action_line=action_line,
         owed=owed_envelope,
+        themes=theme_table(path=config) if themes is None else themes,
     )
     return {
         "html": html,
@@ -909,6 +913,84 @@ def intent_answer(
     from crowsnest import courier as _courier
 
     return _courier.answer(intent, text, status=status, mirror=mirror)
+
+
+#: What ``groups`` can group by.
+GROUPINGS = ("theme", "project")
+
+
+def groups(
+    *,
+    by: str = "theme",
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    lineage_path: str | Path | None = None,
+    themes=None,
+) -> dict:
+    """Every live session under a theme (:mod:`crowsnest.themes`) or a project: the
+    grouping the page's board draws, as JSON.
+
+    ``by="theme"`` reads ``themes`` (``{theme: [value, ...]}``), else the config file's
+    ``[themes]`` table, then infers; each group says ``override``, ``inferred`` or
+    ``mixed`` and which rules placed its sessions. ``by="project"`` groups by the
+    repository behind each session's directory, else the folder.
+    """
+    from crowsnest import themes as _themes
+
+    if by not in GROUPINGS:
+        raise ValueError(f"by must be one of {', '.join(GROUPINGS)}, not {by!r}")
+    rows = roster(home=home, all_homes=all_homes, config=config)["sessions"]
+    if by == "theme":
+        graph = lineage(
+            home=home,
+            all_homes=all_homes,
+            config=config,
+            lineage_path=lineage_path,
+            sessions_read=rows,
+            sources=[lambda: _from_records(lineage_path=lineage_path)],
+        )
+        table = theme_table(path=config) if themes is None else themes
+        theme_of = _themes.infer(
+            rows,
+            themes=_themes.Themes.of(table),
+            parents=_themes.parents_of(graph),
+        )
+
+        def place(row):
+            found = theme_of(row)
+            return found.name, found.rule
+    else:
+
+        def place(row):
+            _, owner, repo, _ = github_ref(str(row.get("repo_url") or ""))
+            return (
+                (f"{owner}/{repo}", 0) if repo else (f"{row.get('project')} (folder)", 0)
+            )
+
+    found: dict[str, dict] = {}
+    for row in rows:
+        name, rule = place(row)
+        group = found.setdefault(name, {"name": name, "rules": set(), "sessions": []})
+        group["rules"].add(rule)
+        label = str(row.get("label") or "")
+        group["sessions"].append(f"{label}@{row['home']}" if row.get("home") else label)
+    out = []
+    for group in sorted(found.values(), key=lambda g: (-len(g["sessions"]), g["name"])):
+        rules = sorted(group.pop("rules") - {0})
+        how = (
+            ("override" if rules == [1] else "mixed" if 1 in rules else "inferred")
+            if rules
+            else ""
+        )
+        out.append(
+            {**group, "rules": rules, "how": how, "sessions": sorted(group["sessions"])}
+        )
+    return {
+        "by": by,
+        "groups": out,
+        "counts": {"groups": len(out), "sessions": len(rows)},
+    }
 
 
 def lineage(

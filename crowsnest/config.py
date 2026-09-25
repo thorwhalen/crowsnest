@@ -381,6 +381,40 @@ def report_settings(*, path: str | Path | None = None) -> ReportSettings:
     return ReportSettings(ledger_dir=found)
 
 
+#: The config table naming the person's themes (:mod:`crowsnest.themes`).
+THEMES_KEY = "themes"
+
+
+def theme_table(*, path: str | Path | None = None) -> dict[str, list[str]]:
+    """The config file's ``[themes]`` table: ``{theme: [repo, name, glob or org:, ...]}``.
+
+    .. code-block:: toml
+
+        [themes]
+        video = ["acme/player", "encoder", "org:acme-media"]
+        website = ["web/*"]
+
+    Empty when there is none. A theme whose value is not a list of strings is an error.
+    """
+    file = config_path(path)
+    table = _loaded(path).get(THEMES_KEY)
+    if table is None:
+        return {}
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{THEMES_KEY}] must be a table")  # noqa: TRY004
+    found = {}
+    for name, values in table.items():
+        if not isinstance(values, list) or not all(
+            isinstance(v, str) and v.strip() for v in values
+        ):
+            raise ValueError(
+                f"{file}: [{THEMES_KEY}] {name} must be a list of repositories, names, "
+                f"globs or org:<owner>, not {values!r}"
+            )
+        found[str(name)] = [v.strip() for v in values]
+    return found
+
+
 #: The config table saying where ``crowsnest publish`` sends the page.
 PUBLISH_KEY = "publish"
 

@@ -65,6 +65,7 @@ crowsnest report [--out FILE]      the roster as one phone-readable HTML page, n
                                     --interactive: buttons per row and a Refresh, live when published with the db capability;
                                     --plain: ignore what you marked with seen/later/done/note, for a copy to share)
 crowsnest publish [--to DEST]      render that page and send it where you read it: a path, host:path, or [publish] in the config
+crowsnest groups [--by project]    every session under a theme ([themes] in the config, else inferred) or a project
 crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
 crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
 crowsnest note|undo <session>      a note to yourself; one step back
@@ -278,6 +279,16 @@ to = "~/Sync/crowsnest/index.html"            # a local path, e.g. a synced fold
 The published page carries a small open helper. Every link opens in a new tab. If your accounts are signed in to different browsers, open *Where sessions open* at the foot and say which browser each one uses (kept in that browser only): a link to a session of an account signed in elsewhere is then copied for you to paste there, since a page cannot start another browser. A session without Remote Control has no link, so its `open` is a dashed button that copies its `crowsnest open` command and tells you to turn Remote Control on there (`/remote-control`); once it has a link, the page says so. `crowsnest report --open-helper` adds the same to any page.
 
 The page names your sessions and quotes what they said (sanitised, as every page is), so send it somewhere only you can open: behind your own login, in a private folder, never a public bucket. The last page sent is also kept locally, under crowsnest's data directory in `publish/index.html`.
+
+The page opens on a board: one tile per session, which you can group by session, project or theme. Themes are yours to name, in the same file. Each value is a repository as `owner/name`, a bare repository name, a directory glob, or `org:<owner>`, tried in that order:
+
+```toml
+[themes]
+video = ["acme/player", "encoder", "org:acme-media"]
+website = ["web/*"]
+```
+
+A session that no value matches is placed by its repository's owner. Failing that, it takes the theme of the session that started it, then the repository most of its references point at, and otherwise lands in `unthemed`. `crowsnest groups` prints the result.
 
 ## Being told instead of polling
 

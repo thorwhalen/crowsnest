@@ -422,6 +422,36 @@ def triage(
     return "\n".join(out).lstrip("\n")
 
 
+def groups(
+    *,
+    by: str = "theme",
+    home: str | None = None,
+    all_homes: bool = False,
+    json: bool = False,
+):
+    """Every live session under a theme or a project, as the page's board groups them.
+
+    Themes come from the `[themes]` table in the config file, then are inferred: the
+    repository's owner, the session that started it, what its references point at, else
+    `unthemed`. `--by project` groups by repository instead.
+    """
+    import json as _json
+
+    found = tools.groups(by=by, home=home, all_homes=all_homes)
+    if json:
+        return _json.dumps(found, indent=2)
+    out = []
+    for group in found["groups"]:
+        how = (
+            f"  [{group['how']}: rule {', '.join(map(str, group['rules']))}]"
+            if group["how"]
+            else ""
+        )
+        out.append(f"{group['name']} ({len(group['sessions'])}){how}")
+        out.extend(f"  {tag}" for tag in group["sessions"])
+    return "\n".join(out)
+
+
 def report(
     *,
     out: str | None = None,
@@ -1133,6 +1163,7 @@ _commands = [
     live,
     lineage,
     triage,
+    groups,
     report,
     publish,
     courier,
