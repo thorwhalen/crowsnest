@@ -159,7 +159,7 @@ instruction.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None)
+### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None, refs=None)
 
 Render the report as a whole page and deliver it where its owner reads it.
 
@@ -176,6 +176,9 @@ console store the destination serves behind its owner’s login
 ([`crowsnest.report.ConsoleStore`](crowsnest.report.html.md#crowsnest.report.ConsoleStore)). Given one, the page is the interactive one,
 and its buttons write there; `crowsnest courier` carries what they write, with no
 LLM. `""` is the static page whatever the config file says.
+
+`refs` (default: the `[publish]` table’s `refs`) first refreshes what the rows’
+referenced issues and pull requests are now ([`report()`](#crowsnest.tools.report)’s `refs`).
 
 The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
 so the last one sent can be looked at locally.
@@ -208,7 +211,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
@@ -258,6 +261,12 @@ roster whose rows carry no verdict.
 each account’s sessions open in the browser the reader chose, and a session with no
 link gets a button that copies its `crowsnest open` command. For a page someone opens
 in a browser; [`publish()`](#crowsnest.tools.publish) turns it on.
+
+`refs=True` first asks GitHub (the `gh` CLI, [`crowsnest.refstate.refresh()`](crowsnest.refstate.html.md#crowsnest.refstate.refresh)) what
+the rows’ referenced issues and pull requests are now, a few repositories at a time and
+only those not asked about lately. Either way the page shows what `ref_store` knows
+(default [`crowsnest.refstate.dflt_store()`](crowsnest.refstate.html.md#crowsnest.refstate.dflt_store)): open references first with their
+titles, closed ones muted; a page whose store knows nothing renders as before.
 
 `links=False` leaves the references off the page. They are still resolved: a
 verdict reader may read them, and the verbs pin the row with them. To resolve

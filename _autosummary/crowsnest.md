@@ -393,6 +393,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`open`](crowsnest.open.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                   |
 | [`paths`](crowsnest.paths.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                         |
 | [`publish`](crowsnest.publish.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.      |
+| [`refstate`](crowsnest.refstate.md#module-crowsnest.refstate)   | What a referenced issue or pull request is now: open or closed, and its title.                        |
 | [`registry`](crowsnest.registry.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                |
 | [`report`](crowsnest.report.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere. |
 | [`rows`](crowsnest.rows.md#module-crowsnest.rows)           | How an item's row is built and hashed: one value, taken whole by every surface that pins it.          |

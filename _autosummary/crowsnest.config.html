@@ -79,6 +79,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.publish.html">crowsnest.publish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.refstate.html">crowsnest.refstate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
@@ -283,7 +284,7 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.Home" title="crowsnest.config.Home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Home</span></code></a>(name, path[, remote, fresh_seconds])</p></td>
 <td><p>One Claude Code config directory to read, and how to judge liveness in it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.PublishSettings" title="crowsnest.config.PublishSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PublishSettings</span></code></a>([to, command, console])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.PublishSettings" title="crowsnest.config.PublishSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PublishSettings</span></code></a>([to, command, console, refs])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">[publish]</span></code> table, validated: where the page goes (<a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.publish</span></code></a>).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.ReportSettings" title="crowsnest.config.ReportSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReportSettings</span></code></a>([ledger_dir])</p></td>
@@ -351,7 +352,7 @@ and nothing in this module pretends otherwise.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.config.PublishSettings">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">PublishSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#PublishSettings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.PublishSettings" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">PublishSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">command</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#PublishSettings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.PublishSettings" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">[publish]</span></code> table, validated: where the page goes (<a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.publish</span></code></a>).</p>
 <p>At most one of <code class="docutils literal notranslate"><span class="pre">to</span></code> and <code class="docutils literal notranslate"><span class="pre">command</span></code>. Neither is fine until something publishes.</p>
@@ -465,6 +466,7 @@ a person who wrote one meant it.</p>
 </span><span data-line="2"><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"me@myserver:/srv/crowsnest/index.html"</span><span class="w">   </span><span class="c1"># or a local path</span>
 </span><span data-line="3"><span class="c1"># command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]</span>
 </span><span data-line="4"><span class="c1"># console = "/api/crowsnest"   # the page's own store: an interactive page</span>
+</span><span data-line="5"><span class="c1"># refs = true                  # ask GitHub (gh) what the references are now</span>
 </span></pre></div>
 </div>
 <p>A key the table does not know is an error, as in <code class="docutils literal notranslate"><span class="pre">[attention]</span></code>, and so is giving
@@ -537,7 +539,7 @@ end. A key the table does not know is an error, as in <code class="docutils lite
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=22d3c163"></script>
+      <script src="../_static/documentation_options.js?v=86ab457a"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

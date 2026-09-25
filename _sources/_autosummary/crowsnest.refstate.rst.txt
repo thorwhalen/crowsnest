@@ -1,0 +1,24 @@
+crowsnest.refstate
+==================
+
+.. automodule:: crowsnest.refstate
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_EVERY
+      DFLT_LIMIT
+      DFLT_STALE_AFTER
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      dflt_store
+      gh_fetch
+      refresh
+      repos_of
+      state_of
+   

@@ -51,6 +51,7 @@
    open
    paths
    publish
+   refstate
    registry
    report
    rows

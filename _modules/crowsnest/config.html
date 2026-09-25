@@ -76,6 +76,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.open.html">crowsnest.open</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.publish.html">crowsnest.publish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.refstate.html">crowsnest.refstate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.report.html">crowsnest.report</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.rows.html">crowsnest.rows</a></li>
@@ -557,145 +558,154 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="397">
 </span><span data-line="398">    <span class="n">to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
 </span><span data-line="399">    <span class="n">command</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="400">    <span class="n">console</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
+</span><span data-line="400">    <span class="n">console</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="401">    <span class="n">refs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-</span><span data-line="401">
 </span><span data-line="402">
+</span><span data-line="403">
 <div class="viewcode-block" id="publish_settings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.publish_settings">[docs]</a>
-</span><span data-line="403"><span class="k">def</span><span class="w"> </span><span class="nf">publish_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PublishSettings</span><span class="p">:</span>
-</span><span data-line="404"><span class="w">    </span><span class="sd">"""The config file's ``[publish]`` table, or the defaults when it has none.</span>
-</span><span data-line="405">
-</span><span data-line="406"><span class="sd">    .. code-block:: toml</span>
-</span><span data-line="407">
-</span><span data-line="408"><span class="sd">        [publish]</span>
-</span><span data-line="409"><span class="sd">        to = "me@myserver:/srv/crowsnest/index.html"   # or a local path</span>
-</span><span data-line="410"><span class="sd">        # command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]</span>
-</span><span data-line="411"><span class="sd">        # console = "/api/crowsnest"   # the page's own store: an interactive page</span>
-</span><span data-line="412">
-</span><span data-line="413"><span class="sd">    A key the table does not know is an error, as in ``[attention]``, and so is giving</span>
-</span><span data-line="414"><span class="sd">    both: which one wins would be a guess.</span>
-</span><span data-line="415"><span class="sd">    """</span>
-</span><span data-line="416">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="417">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PUBLISH_KEY</span><span class="p">)</span>
-</span><span data-line="418">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="419">        <span class="k">return</span> <span class="n">PublishSettings</span><span class="p">()</span>
-</span><span data-line="420">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="421">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="422">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">PublishSettings</span><span class="p">)}</span>
-</span><span data-line="423">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
-</span><span data-line="424">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="425">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="426">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
-</span><span data-line="427">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="428">        <span class="p">)</span>
-</span><span data-line="429">    <span class="n">to</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"to"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"command"</span><span class="p">,</span> <span class="p">[])</span>
-</span><span data-line="430">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">to</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="431">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] to must be a string, not </span><span class="si">{</span><span class="n">to</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="432">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">command</span><span class="p">)):</span>
-</span><span data-line="433">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="434">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] command must be a list of strings, not </span><span class="si">{</span><span class="n">command</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="435">        <span class="p">)</span>
-</span><span data-line="436">    <span class="k">if</span> <span class="n">to</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="n">command</span><span class="p">:</span>
-</span><span data-line="437">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] gives both to and command; keep one"</span><span class="p">)</span>
-</span><span data-line="438">    <span class="n">console</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"console"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="439">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">console</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="440">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="441">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] console must be a string, not </span><span class="si">{</span><span class="n">console</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="442">        <span class="p">)</span>
-</span><span data-line="443">    <span class="k">return</span> <span class="n">PublishSettings</span><span class="p">(</span><span class="n">to</span><span class="o">=</span><span class="n">to</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">command</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">command</span><span class="p">),</span> <span class="n">console</span><span class="o">=</span><span class="n">console</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></div>
+</span><span data-line="404"><span class="k">def</span><span class="w"> </span><span class="nf">publish_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PublishSettings</span><span class="p">:</span>
+</span><span data-line="405"><span class="w">    </span><span class="sd">"""The config file's ``[publish]`` table, or the defaults when it has none.</span>
+</span><span data-line="406">
+</span><span data-line="407"><span class="sd">    .. code-block:: toml</span>
+</span><span data-line="408">
+</span><span data-line="409"><span class="sd">        [publish]</span>
+</span><span data-line="410"><span class="sd">        to = "me@myserver:/srv/crowsnest/index.html"   # or a local path</span>
+</span><span data-line="411"><span class="sd">        # command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]</span>
+</span><span data-line="412"><span class="sd">        # console = "/api/crowsnest"   # the page's own store: an interactive page</span>
+</span><span data-line="413"><span class="sd">        # refs = true                  # ask GitHub (gh) what the references are now</span>
+</span><span data-line="414">
+</span><span data-line="415"><span class="sd">    A key the table does not know is an error, as in ``[attention]``, and so is giving</span>
+</span><span data-line="416"><span class="sd">    both: which one wins would be a guess.</span>
+</span><span data-line="417"><span class="sd">    """</span>
+</span><span data-line="418">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="419">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PUBLISH_KEY</span><span class="p">)</span>
+</span><span data-line="420">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="421">        <span class="k">return</span> <span class="n">PublishSettings</span><span class="p">()</span>
+</span><span data-line="422">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="423">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="424">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">PublishSettings</span><span class="p">)}</span>
+</span><span data-line="425">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
+</span><span data-line="426">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="427">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="428">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+</span><span data-line="429">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="430">        <span class="p">)</span>
+</span><span data-line="431">    <span class="n">to</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"to"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"command"</span><span class="p">,</span> <span class="p">[])</span>
+</span><span data-line="432">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">to</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="433">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] to must be a string, not </span><span class="si">{</span><span class="n">to</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="434">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">command</span><span class="p">)):</span>
+</span><span data-line="435">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="436">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] command must be a list of strings, not </span><span class="si">{</span><span class="n">command</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="437">        <span class="p">)</span>
+</span><span data-line="438">    <span class="k">if</span> <span class="n">to</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="n">command</span><span class="p">:</span>
+</span><span data-line="439">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] gives both to and command; keep one"</span><span class="p">)</span>
+</span><span data-line="440">    <span class="n">console</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"console"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="441">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">console</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="442">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="443">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] console must be a string, not </span><span class="si">{</span><span class="n">console</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="444">        <span class="p">)</span>
+</span><span data-line="445">    <span class="n">refs</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"refs"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</span><span data-line="446">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refs</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span data-line="447">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="448">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">PUBLISH_KEY</span><span class="si">}</span><span class="s2">] refs must be true or false, not </span><span class="si">{</span><span class="n">refs</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="449">        <span class="p">)</span>
+</span><span data-line="450">    <span class="k">return</span> <span class="n">PublishSettings</span><span class="p">(</span>
+</span><span data-line="451">        <span class="n">to</span><span class="o">=</span><span class="n">to</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">command</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">command</span><span class="p">),</span> <span class="n">console</span><span class="o">=</span><span class="n">console</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">refs</span><span class="o">=</span><span class="n">refs</span>
+</span><span data-line="452">    <span class="p">)</span></div>
 
-</span><span data-line="444">
-</span><span data-line="445">
-</span><span data-line="446"><span class="c1">#: The config file's table for the courier (:mod:`crowsnest.courier`).</span>
-</span><span data-line="447"><span class="n">COURIER_KEY</span> <span class="o">=</span> <span class="s2">"courier"</span>
-</span><span data-line="448">
-</span><span data-line="449">
-</span><span data-line="450"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="451"><span class="k">class</span><span class="w"> </span><span class="nc">CourierSettings</span><span class="p">:</span>
-</span><span data-line="452"><span class="w">    </span><span class="sd">"""The ``[courier]`` table: where the page's console store lives, for ``crowsnest courier``.</span>
 </span><span data-line="453">
-</span><span data-line="454"><span class="sd">    ``remote`` is that store's root, ``[user@]host:path`` or a directory: the files the</span>
-</span><span data-line="455"><span class="sd">    server's routes read and write, one JSON file per document.</span>
-</span><span data-line="456">
-</span><span data-line="457"><span class="sd">    &gt;&gt;&gt; CourierSettings().remote</span>
-</span><span data-line="458"><span class="sd">    ''</span>
-</span><span data-line="459"><span class="sd">    """</span>
-</span><span data-line="460">
-</span><span data-line="461">    <span class="n">remote</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="454">
+</span><span data-line="455"><span class="c1">#: The config file's table for the courier (:mod:`crowsnest.courier`).</span>
+</span><span data-line="456"><span class="n">COURIER_KEY</span> <span class="o">=</span> <span class="s2">"courier"</span>
+</span><span data-line="457">
+</span><span data-line="458">
+</span><span data-line="459"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="460"><span class="k">class</span><span class="w"> </span><span class="nc">CourierSettings</span><span class="p">:</span>
+</span><span data-line="461"><span class="w">    </span><span class="sd">"""The ``[courier]`` table: where the page's console store lives, for ``crowsnest courier``.</span>
 </span><span data-line="462">
-</span><span data-line="463">
-</span><span data-line="464"><span class="k">def</span><span class="w"> </span><span class="nf">courier_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CourierSettings</span><span class="p">:</span>
-</span><span data-line="465"><span class="w">    </span><span class="sd">"""The config file's ``[courier]`` table, or the defaults when it has none.</span>
-</span><span data-line="466">
-</span><span data-line="467"><span class="sd">    .. code-block:: toml</span>
-</span><span data-line="468">
-</span><span data-line="469"><span class="sd">        [courier]</span>
-</span><span data-line="470"><span class="sd">        remote = "me@myserver:/srv/crowsnest/db"   # or a local directory</span>
-</span><span data-line="471"><span class="sd">    """</span>
-</span><span data-line="472">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="473">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COURIER_KEY</span><span class="p">)</span>
-</span><span data-line="474">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="475">        <span class="k">return</span> <span class="n">CourierSettings</span><span class="p">()</span>
-</span><span data-line="476">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="477">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="478">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="s2">"remote"</span><span class="p">})</span>
-</span><span data-line="479">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="480">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="481">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; it knows remote"</span>
-</span><span data-line="482">        <span class="p">)</span>
-</span><span data-line="483">    <span class="n">remote</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="484">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">remote</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="485">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="486">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] remote must be a string, not </span><span class="si">{</span><span class="n">remote</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="487">        <span class="p">)</span>
-</span><span data-line="488">    <span class="k">return</span> <span class="n">CourierSettings</span><span class="p">(</span><span class="n">remote</span><span class="o">=</span><span class="n">remote</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-</span><span data-line="489">
-</span><span data-line="490">
-</span><span data-line="491"><span class="k">def</span><span class="w"> </span><span class="nf">_default_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Home</span><span class="p">:</span>
-</span><span data-line="492">    <span class="k">return</span> <span class="n">Home</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">DFLT_HOME_NAME</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">claude_home</span><span class="p">())</span>
-</span><span data-line="493">
-</span><span data-line="494">
-<div class="viewcode-block" id="homes">
-<a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.homes">[docs]</a>
-</span><span data-line="495"><span class="k">def</span><span class="w"> </span><span class="nf">homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
-</span><span data-line="496"><span class="w">    </span><span class="sd">"""The configured homes, or the default one when the config file names none.</span>
-</span><span data-line="497">
-</span><span data-line="498"><span class="sd">    A config file that cannot be parsed is an error worth seeing, not a silent fallback:</span>
-</span><span data-line="499"><span class="sd">    a person who wrote one meant it.</span>
-</span><span data-line="500"><span class="sd">    """</span>
-</span><span data-line="501">    <span class="k">return</span> <span class="n">configured_homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span></div>
-
+</span><span data-line="463"><span class="sd">    ``remote`` is that store's root, ``[user@]host:path`` or a directory: the files the</span>
+</span><span data-line="464"><span class="sd">    server's routes read and write, one JSON file per document.</span>
+</span><span data-line="465">
+</span><span data-line="466"><span class="sd">    &gt;&gt;&gt; CourierSettings().remote</span>
+</span><span data-line="467"><span class="sd">    ''</span>
+</span><span data-line="468"><span class="sd">    """</span>
+</span><span data-line="469">
+</span><span data-line="470">    <span class="n">remote</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="471">
+</span><span data-line="472">
+</span><span data-line="473"><span class="k">def</span><span class="w"> </span><span class="nf">courier_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CourierSettings</span><span class="p">:</span>
+</span><span data-line="474"><span class="w">    </span><span class="sd">"""The config file's ``[courier]`` table, or the defaults when it has none.</span>
+</span><span data-line="475">
+</span><span data-line="476"><span class="sd">    .. code-block:: toml</span>
+</span><span data-line="477">
+</span><span data-line="478"><span class="sd">        [courier]</span>
+</span><span data-line="479"><span class="sd">        remote = "me@myserver:/srv/crowsnest/db"   # or a local directory</span>
+</span><span data-line="480"><span class="sd">    """</span>
+</span><span data-line="481">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="482">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COURIER_KEY</span><span class="p">)</span>
+</span><span data-line="483">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="484">        <span class="k">return</span> <span class="n">CourierSettings</span><span class="p">()</span>
+</span><span data-line="485">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="486">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="487">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="s2">"remote"</span><span class="p">})</span>
+</span><span data-line="488">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="489">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="490">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; it knows remote"</span>
+</span><span data-line="491">        <span class="p">)</span>
+</span><span data-line="492">    <span class="n">remote</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="493">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">remote</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="494">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="495">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] remote must be a string, not </span><span class="si">{</span><span class="n">remote</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="496">        <span class="p">)</span>
+</span><span data-line="497">    <span class="k">return</span> <span class="n">CourierSettings</span><span class="p">(</span><span class="n">remote</span><span class="o">=</span><span class="n">remote</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</span><span data-line="498">
+</span><span data-line="499">
+</span><span data-line="500"><span class="k">def</span><span class="w"> </span><span class="nf">_default_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Home</span><span class="p">:</span>
+</span><span data-line="501">    <span class="k">return</span> <span class="n">Home</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">DFLT_HOME_NAME</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">claude_home</span><span class="p">())</span>
 </span><span data-line="502">
 </span><span data-line="503">
+<div class="viewcode-block" id="homes">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.homes">[docs]</a>
+</span><span data-line="504"><span class="k">def</span><span class="w"> </span><span class="nf">homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
+</span><span data-line="505"><span class="w">    </span><span class="sd">"""The configured homes, or the default one when the config file names none.</span>
+</span><span data-line="506">
+</span><span data-line="507"><span class="sd">    A config file that cannot be parsed is an error worth seeing, not a silent fallback:</span>
+</span><span data-line="508"><span class="sd">    a person who wrote one meant it.</span>
+</span><span data-line="509"><span class="sd">    """</span>
+</span><span data-line="510">    <span class="k">return</span> <span class="n">configured_homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span></div>
+
+</span><span data-line="511">
+</span><span data-line="512">
 <div class="viewcode-block" id="configured_homes">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.configured_homes">[docs]</a>
-</span><span data-line="504"><span class="k">def</span><span class="w"> </span><span class="nf">configured_homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
-</span><span data-line="505"><span class="w">    </span><span class="sd">"""The homes the config file's ``[[homes]]`` entries name; ``[]`` when it names none.</span>
-</span><span data-line="506">
-</span><span data-line="507"><span class="sd">    :func:`homes` falls back to the default home, whose path is whatever</span>
-</span><span data-line="508"><span class="sd">    ``$CLAUDE_CONFIG_DIR`` the *running* process has. That is right for reading, and</span>
-</span><span data-line="509"><span class="sd">    wrong for anything that must mean the same home in another account's terminal: a</span>
-</span><span data-line="510"><span class="sd">    command printed for later pasting (:func:`crowsnest.lineage.open_command`), say.</span>
-</span><span data-line="511">
-</span><span data-line="512"><span class="sd">    &gt;&gt;&gt; configured_homes(path='/nonexistent-config-for-doctest')</span>
-</span><span data-line="513"><span class="sd">    []</span>
-</span><span data-line="514"><span class="sd">    """</span>
-</span><span data-line="515">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="516">    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="517">    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="518">    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
-</span><span data-line="519">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">):</span>
-</span><span data-line="520">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: every [[homes]] entry needs a path"</span><span class="p">)</span>
-</span><span data-line="521">        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="522">            <span class="n">Home</span><span class="p">(</span>
-</span><span data-line="523">                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
-</span><span data-line="524">                <span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
-</span><span data-line="525">                <span class="n">remote</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
-</span><span data-line="526">                <span class="n">fresh_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fresh_seconds"</span><span class="p">,</span> <span class="n">DFLT_FRESH_SECONDS</span><span class="p">)),</span>
-</span><span data-line="527">            <span class="p">)</span>
-</span><span data-line="528">        <span class="p">)</span>
-</span><span data-line="529">    <span class="k">return</span> <span class="n">found</span></div>
+</span><span data-line="513"><span class="k">def</span><span class="w"> </span><span class="nf">configured_homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
+</span><span data-line="514"><span class="w">    </span><span class="sd">"""The homes the config file's ``[[homes]]`` entries name; ``[]`` when it names none.</span>
+</span><span data-line="515">
+</span><span data-line="516"><span class="sd">    :func:`homes` falls back to the default home, whose path is whatever</span>
+</span><span data-line="517"><span class="sd">    ``$CLAUDE_CONFIG_DIR`` the *running* process has. That is right for reading, and</span>
+</span><span data-line="518"><span class="sd">    wrong for anything that must mean the same home in another account's terminal: a</span>
+</span><span data-line="519"><span class="sd">    command printed for later pasting (:func:`crowsnest.lineage.open_command`), say.</span>
+</span><span data-line="520">
+</span><span data-line="521"><span class="sd">    &gt;&gt;&gt; configured_homes(path='/nonexistent-config-for-doctest')</span>
+</span><span data-line="522"><span class="sd">    []</span>
+</span><span data-line="523"><span class="sd">    """</span>
+</span><span data-line="524">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="525">    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="526">    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="527">    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
+</span><span data-line="528">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">):</span>
+</span><span data-line="529">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: every [[homes]] entry needs a path"</span><span class="p">)</span>
+</span><span data-line="530">        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="531">            <span class="n">Home</span><span class="p">(</span>
+</span><span data-line="532">                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+</span><span data-line="533">                <span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
+</span><span data-line="534">                <span class="n">remote</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+</span><span data-line="535">                <span class="n">fresh_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fresh_seconds"</span><span class="p">,</span> <span class="n">DFLT_FRESH_SECONDS</span><span class="p">)),</span>
+</span><span data-line="536">            <span class="p">)</span>
+</span><span data-line="537">        <span class="p">)</span>
+</span><span data-line="538">    <span class="k">return</span> <span class="n">found</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -724,7 +734,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=22d3c163"></script>
+      <script src="../../_static/documentation_options.js?v=86ab457a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
