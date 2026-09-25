@@ -398,6 +398,7 @@ class PublishSettings:
     to: str = ""
     command: tuple[str, ...] = ()
     console: str = ""
+    refs: bool = False
 
 
 def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
@@ -409,6 +410,7 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
         to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
         # command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]
         # console = "/api/crowsnest"   # the page's own store: an interactive page
+        # refs = true                  # ask GitHub (gh) what the references are now
 
     A key the table does not know is an error, as in ``[attention]``, and so is giving
     both: which one wins would be a guess.
@@ -440,7 +442,14 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
         raise ValueError(  # noqa: TRY004
             f"{file}: [{PUBLISH_KEY}] console must be a string, not {console!r}"
         )
-    return PublishSettings(to=to.strip(), command=tuple(command), console=console.strip())
+    refs = table.get("refs", False)
+    if not isinstance(refs, bool):
+        raise ValueError(  # noqa: TRY004
+            f"{file}: [{PUBLISH_KEY}] refs must be true or false, not {refs!r}"
+        )
+    return PublishSettings(
+        to=to.strip(), command=tuple(command), console=console.strip(), refs=refs
+    )
 
 
 #: The config file's table for the courier (:mod:`crowsnest.courier`).

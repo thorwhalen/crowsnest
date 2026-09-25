@@ -507,6 +507,7 @@ def publish(
     tz: str | None = None,
     plain: bool = False,
     console_url: str | None = None,
+    refs: bool = False,
 ):
     """Render the report page and send it where you can open it from a phone.
 
@@ -521,6 +522,10 @@ def publish(
     destination serves behind your login: the page then carries the console's buttons,
     and `crowsnest courier` carries what they write. `--console-url ""` publishes the
     static page whatever the config file says.
+
+    `--refs` (or `refs = true` in `[publish]`) first asks GitHub, through the `gh` CLI, what
+    the referenced issues and pull requests are now, a few repositories per run: each row
+    then lists its open references first with their titles, and its closed ones muted.
     """
     result = tools.publish(
         to=to,
@@ -530,6 +535,7 @@ def publish(
         plain=plain,
         row_context=_row_context(ledger_dir),
         console=console_url,
+        refs=refs or None,
     )
     return f"published {result['bytes']} bytes to {result['to']}"
 
