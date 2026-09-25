@@ -29,21 +29,32 @@ and says in one line where it went. [`dflt_publisher()`](#crowsnest.publish.dflt
 
 ### Module Attributes
 
-| [`Publisher`](#crowsnest.publish.Publisher)        | deliver `page` to `to`, say where it went.                                    |
-|-------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`PAGE_PLACEHOLDER`](#crowsnest.publish.PAGE_PLACEHOLDER) | The placeholder a `command` publisher replaces with the rendered page's path. |
-| [`DFLT_PAGE_NAME`](#crowsnest.publish.DFLT_PAGE_NAME)   | The file name a destination that is a directory receives.                     |
-| [`DFLT_TIMEOUT`](#crowsnest.publish.DFLT_TIMEOUT)     | Seconds rsync may stall, and ssh may take to connect, before a run gives up.  |
+| [`Publisher`](#crowsnest.publish.Publisher)            | deliver `page` to `to`, say where it went.                                    |
+|-----------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`PAGE_PLACEHOLDER`](#crowsnest.publish.PAGE_PLACEHOLDER)     | The placeholder a `command` publisher replaces with the rendered page's path. |
+| [`DFLT_PAGE_NAME`](#crowsnest.publish.DFLT_PAGE_NAME)       | The file name a destination that is a directory receives.                     |
+| [`DFLT_TIMEOUT`](#crowsnest.publish.DFLT_TIMEOUT)         | Seconds rsync may stall, and ssh may take to connect, before a run gives up.  |
+| [`DFLT_CONTROL_PERSIST`](#crowsnest.publish.DFLT_CONTROL_PERSIST) | How long an idle shared ssh connection stays open, in seconds.                |
+| [`TRANSIENT_EXITS`](#crowsnest.publish.TRANSIENT_EXITS)      | ssh's 255, and rsync's socket (10), stream (12) and timeout (30, 35) errors.  |
 
 ### Functions
 
-| [`command_publisher`](#crowsnest.publish.command_publisher)(argv)                  | A publisher running `argv`, with [`PAGE_PLACEHOLDER`](#crowsnest.publish.PAGE_PLACEHOLDER) replaced by the page.        |
-|-------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| [`dflt_publisher`](#crowsnest.publish.dflt_publisher)(to)                       | rsync over ssh for a `[user@]host:path`, an atomic local write for anything else.                                               |
-| [`is_remote`](#crowsnest.publish.is_remote)(to)                            | Whether `to` names a file on another machine (`[user@]host:path`).                                                              |
-| [`rsync_argv`](#crowsnest.publish.rsync_argv)(page, to, \*[, timeout, ...]) | The rsync command [`to_rsync()`](#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input. |
-| [`to_path`](#crowsnest.publish.to_path)(page, to)                        | Copy `page` to the local path `to`, atomically: a reader never sees half a page.                                                |
-| [`to_rsync`](#crowsnest.publish.to_rsync)(page, to)                       | Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.                                                          |
+| [`attempt`](#crowsnest.publish.attempt)(argv, \*[, retries, pause, sleep])   | Run `argv`, again after `pause` seconds (`RETRY_PAUSE`) while it exits with a dropped connection ([`TRANSIENT_EXITS`](#crowsnest.publish.TRANSIENT_EXITS)), at most `retries` more times; the last run is returned.   |
+|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`command_publisher`](#crowsnest.publish.command_publisher)(argv)                      | A publisher running `argv`, with [`PAGE_PLACEHOLDER`](#crowsnest.publish.PAGE_PLACEHOLDER) replaced by the page.                                                                                                       |
+| [`dflt_publisher`](#crowsnest.publish.dflt_publisher)(to)                           | rsync over ssh for a `[user@]host:path`, an atomic local write for anything else.                                                                                                                                              |
+| [`is_remote`](#crowsnest.publish.is_remote)(to)                                | Whether `to` names a file on another machine (`[user@]host:path`).                                                                                                                                                             |
+| [`rsync_argv`](#crowsnest.publish.rsync_argv)(page, to, \*[, timeout, ...])     | The rsync command [`to_rsync()`](#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input.                                                                                                |
+| [`ssh_command`](#crowsnest.publish.ssh_command)(\*[, connect_timeout, ...])      | The ssh rsync runs (its `-e`): never prompting, bounded, and sharing a connection.                                                                                                                                             |
+| [`to_path`](#crowsnest.publish.to_path)(page, to)                            | Copy `page` to the local path `to`, atomically: a reader never sees half a page.                                                                                                                                               |
+| [`to_rsync`](#crowsnest.publish.to_rsync)(page, to)                           | Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.                                                                                                                                                         |
+
+### crowsnest.publish.DFLT_CONTROL_PERSIST *= 120*
+
+How long an idle shared ssh connection stays open, in seconds. A scheduler that runs
+once a minute then opens one connection per host per minute, not one per file: many
+connections a minute is what a server’s ssh throttling drops (`unexpected end of file`,
+exit 255, about one publish in twenty before this).
 
 ### crowsnest.publish.DFLT_PAGE_NAME *= 'index.html'*
 
@@ -66,6 +77,24 @@ deliver `page` to `to`, say where it went.
   `(page, to) -> str`
 
 alias of [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.TRANSIENT_EXITS *= frozenset({10, 12, 30, 35, 255})*
+
+ssh’s
+255, and rsync’s socket (10), stream (12) and timeout (30, 35) errors. Such a run is
+tried once more after `RETRY_PAUSE` seconds.
+
+* **Type:**
+  Exits that mean the connection dropped rather than that the command was wrong
+
+### crowsnest.publish.attempt(argv, , retries=1, pause=None, sleep=None)
+
+Run `argv`, again after `pause` seconds (`RETRY_PAUSE`) while it exits with
+a dropped connection ([`TRANSIENT_EXITS`](#crowsnest.publish.TRANSIENT_EXITS)), at most `retries` more times; the
+last run is returned.
+
+* **Return type:**
+  [`CompletedProcess`](https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess)
 
 ### crowsnest.publish.command_publisher(argv)
 
@@ -102,11 +131,27 @@ Whether `to` names a file on another machine (`[user@]host:path`).
 
 The rsync command [`to_rsync()`](#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input.
 
-`BatchMode` makes ssh fail rather than prompt, which is what a job with no terminal
-needs: a prompt nobody can answer is a run that never ends.
-
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.ssh_command(, connect_timeout=10, control_dir=None, control_persist=120)
+
+The ssh rsync runs (its `-e`): never prompting, bounded, and sharing a connection.
+
+`BatchMode` makes ssh fail rather than prompt, which is what a job with no terminal
+needs: a prompt nobody can answer is a run that never ends. `ControlMaster` keeps one
+connection per host open for `control_persist` seconds under `control_dir`
+(default `<data dir>/ssh`), so a publish and a courier tick share it. Not on Windows,
+whose ssh has no control sockets, nor under a directory whose path holds a space,
+which rsync’s `-e` would split.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> ssh_command(control_dir='/tmp/cn-ssh').split(' -o ')[1:3]
+['BatchMode=yes', 'ConnectTimeout=10']
+```
 
 ### crowsnest.publish.to_path(page, to)
 

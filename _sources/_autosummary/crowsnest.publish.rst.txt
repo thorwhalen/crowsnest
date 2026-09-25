@@ -12,15 +12,19 @@ crowsnest.publish
       PAGE_PLACEHOLDER
       DFLT_PAGE_NAME
       DFLT_TIMEOUT
+      DFLT_CONTROL_PERSIST
+      TRANSIENT_EXITS
    
    .. rubric:: Functions
 
    .. autosummary::
    
+      attempt
       command_publisher
       dflt_publisher
       is_remote
       rsync_argv
+      ssh_command
       to_path
       to_rsync
    

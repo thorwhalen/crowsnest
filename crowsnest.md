@@ -1,4 +1,4 @@
-> built 2026-09-25 07:47 UTC from 57bcbfd (main) · crowsnest 0.0.64. Details: build_info.json
+> built 2026-09-25 15:28 UTC from da4b131 (main) · crowsnest 0.0.65. Details: build_info.json
 
 # index.html.md
 
@@ -3786,21 +3786,32 @@ and says in one line where it went. [`dflt_publisher()`](_autosummary/crowsnest.
 
 ### Module Attributes
 
-| [`Publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.Publisher)        | deliver `page` to `to`, say where it went.                                    |
-|-------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER) | The placeholder a `command` publisher replaces with the rendered page's path. |
-| [`DFLT_PAGE_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_PAGE_NAME)   | The file name a destination that is a directory receives.                     |
-| [`DFLT_TIMEOUT`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_TIMEOUT)     | Seconds rsync may stall, and ssh may take to connect, before a run gives up.  |
+| [`Publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.Publisher)            | deliver `page` to `to`, say where it went.                                    |
+|-----------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER)     | The placeholder a `command` publisher replaces with the rendered page's path. |
+| [`DFLT_PAGE_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_PAGE_NAME)       | The file name a destination that is a directory receives.                     |
+| [`DFLT_TIMEOUT`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_TIMEOUT)         | Seconds rsync may stall, and ssh may take to connect, before a run gives up.  |
+| [`DFLT_CONTROL_PERSIST`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_CONTROL_PERSIST) | How long an idle shared ssh connection stays open, in seconds.                |
+| [`TRANSIENT_EXITS`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.TRANSIENT_EXITS)      | ssh's 255, and rsync's socket (10), stream (12) and timeout (30, 35) errors.  |
 
 ### Functions
 
-| [`command_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.command_publisher)(argv)                  | A publisher running `argv`, with [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER) replaced by the page.        |
-|-------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| [`dflt_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.dflt_publisher)(to)                       | rsync over ssh for a `[user@]host:path`, an atomic local write for anything else.                                               |
-| [`is_remote`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.is_remote)(to)                            | Whether `to` names a file on another machine (`[user@]host:path`).                                                              |
-| [`rsync_argv`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.rsync_argv)(page, to, \*[, timeout, ...]) | The rsync command [`to_rsync()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input. |
-| [`to_path`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_path)(page, to)                        | Copy `page` to the local path `to`, atomically: a reader never sees half a page.                                                |
-| [`to_rsync`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync)(page, to)                       | Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.                                                          |
+| [`attempt`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.attempt)(argv, \*[, retries, pause, sleep])   | Run `argv`, again after `pause` seconds (`RETRY_PAUSE`) while it exits with a dropped connection ([`TRANSIENT_EXITS`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.TRANSIENT_EXITS)), at most `retries` more times; the last run is returned.   |
+|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`command_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.command_publisher)(argv)                      | A publisher running `argv`, with [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER) replaced by the page.                                                                                                       |
+| [`dflt_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.dflt_publisher)(to)                           | rsync over ssh for a `[user@]host:path`, an atomic local write for anything else.                                                                                                                                              |
+| [`is_remote`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.is_remote)(to)                                | Whether `to` names a file on another machine (`[user@]host:path`).                                                                                                                                                             |
+| [`rsync_argv`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.rsync_argv)(page, to, \*[, timeout, ...])     | The rsync command [`to_rsync()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input.                                                                                                |
+| [`ssh_command`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.ssh_command)(\*[, connect_timeout, ...])      | The ssh rsync runs (its `-e`): never prompting, bounded, and sharing a connection.                                                                                                                                             |
+| [`to_path`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_path)(page, to)                            | Copy `page` to the local path `to`, atomically: a reader never sees half a page.                                                                                                                                               |
+| [`to_rsync`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync)(page, to)                           | Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.                                                                                                                                                         |
+
+### crowsnest.publish.DFLT_CONTROL_PERSIST *= 120*
+
+How long an idle shared ssh connection stays open, in seconds. A scheduler that runs
+once a minute then opens one connection per host per minute, not one per file: many
+connections a minute is what a server’s ssh throttling drops (`unexpected end of file`,
+exit 255, about one publish in twenty before this).
 
 ### crowsnest.publish.DFLT_PAGE_NAME *= 'index.html'*
 
@@ -3823,6 +3834,24 @@ deliver `page` to `to`, say where it went.
   `(page, to) -> str`
 
 alias of [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.TRANSIENT_EXITS *= frozenset({10, 12, 30, 35, 255})*
+
+ssh’s
+255, and rsync’s socket (10), stream (12) and timeout (30, 35) errors. Such a run is
+tried once more after `RETRY_PAUSE` seconds.
+
+* **Type:**
+  Exits that mean the connection dropped rather than that the command was wrong
+
+### crowsnest.publish.attempt(argv, , retries=1, pause=None, sleep=None)
+
+Run `argv`, again after `pause` seconds (`RETRY_PAUSE`) while it exits with
+a dropped connection ([`TRANSIENT_EXITS`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.TRANSIENT_EXITS)), at most `retries` more times; the
+last run is returned.
+
+* **Return type:**
+  [`CompletedProcess`](https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess)
 
 ### crowsnest.publish.command_publisher(argv)
 
@@ -3859,11 +3888,27 @@ Whether `to` names a file on another machine (`[user@]host:path`).
 
 The rsync command [`to_rsync()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input.
 
-`BatchMode` makes ssh fail rather than prompt, which is what a job with no terminal
-needs: a prompt nobody can answer is a run that never ends.
-
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.ssh_command(, connect_timeout=10, control_dir=None, control_persist=120)
+
+The ssh rsync runs (its `-e`): never prompting, bounded, and sharing a connection.
+
+`BatchMode` makes ssh fail rather than prompt, which is what a job with no terminal
+needs: a prompt nobody can answer is a run that never ends. `ControlMaster` keeps one
+connection per host open for `control_persist` seconds under `control_dir`
+(default `<data dir>/ssh`), so a publish and a courier tick share it. Not on Windows,
+whose ssh has no control sockets, nor under a directory whose path holds a space,
+which rsync’s `-e` would split.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> ssh_command(control_dir='/tmp/cn-ssh').split(' -o ')[1:3]
+['BatchMode=yes', 'ConnectTimeout=10']
+```
 
 ### crowsnest.publish.to_path(page, to)
 
@@ -5909,18 +5954,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-25 07:47 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/57bcbfd2c44ffff066fc63bcb4538b2dafd829f7"><code>57bcbfd</code></a> on branch <code>main</code>, for **crowsnest 0.0.64** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-25 15:28 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/da4b13163f20b4496438cc7e246ad06e53feeb3c"><code>da4b131</code></a> on branch <code>main</code>, for **crowsnest 0.0.65** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.64) is behind the latest release on PyPI (0.0.65): `pip install crowsnest` gives newer code than these docs describe.
+- The documented version (0.0.65) is behind the latest release on PyPI (0.0.66): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/57bcbfd2c44ffff066fc63bcb4538b2dafd829f7"><code>57bcbfd2c44ffff066fc63bcb4538b2dafd829f7</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/da4b13163f20b4496438cc7e246ad06e53feeb3c"><code>da4b13163f20b4496438cc7e246ad06e53feeb3c</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -5931,9 +5976,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36109294806">36109294806</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36154184721">36154184721</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>57bcbfd2c44ffff066fc63bcb4538b2dafd829f7</code> (in the history of the built commit) |
+| Event commit | <code>da4b13163f20b4496438cc7e246ad06e53feeb3c</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -5958,13 +6003,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.65/">0.0.65</a>, newer than the documented version (0.0.64).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.66/">0.0.66</a>, newer than the documented version (0.0.65).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 57bcbfd2c44ffff066fc63bcb4538b2dafd829f7
+git checkout da4b13163f20b4496438cc7e246ad06e53feeb3c
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

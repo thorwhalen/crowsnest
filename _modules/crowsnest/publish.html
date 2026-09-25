@@ -170,136 +170,209 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="33"><span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 </span><span data-line="34"><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 </span><span data-line="35"><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
-</span><span data-line="36"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
-</span><span data-line="37"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span data-line="38">
-</span><span data-line="39"><span class="c1">#: ``(page, to) -&gt; str``: deliver ``page`` to ``to``, say where it went.</span>
-</span><span data-line="40"><span class="n">Publisher</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>
-</span><span data-line="41">
-</span><span data-line="42"><span class="c1">#: The placeholder a ``command`` publisher replaces with the rendered page's path.</span>
-</span><span data-line="43"><span class="n">PAGE_PLACEHOLDER</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{page}</span><span class="s2">"</span>
-</span><span data-line="44">
-</span><span data-line="45"><span class="c1">#: The file name a destination that is a directory receives.</span>
-</span><span data-line="46"><span class="n">DFLT_PAGE_NAME</span> <span class="o">=</span> <span class="s2">"index.html"</span>
-</span><span data-line="47">
-</span><span data-line="48"><span class="c1">#: Seconds rsync may stall, and ssh may take to connect, before a run gives up. A</span>
-</span><span data-line="49"><span class="c1">#: scheduled publish that hangs would pile up behind itself.</span>
-</span><span data-line="50"><span class="n">DFLT_TIMEOUT</span> <span class="o">=</span> <span class="mi">20</span>
-</span><span data-line="51"><span class="n">DFLT_CONNECT_TIMEOUT</span> <span class="o">=</span> <span class="mi">10</span>
-</span><span data-line="52">
-</span><span data-line="53"><span class="c1"># `host:path` or `user@host:path`, the way rsync and scp read one. A single letter before</span>
-</span><span data-line="54"><span class="c1"># the colon is a Windows drive, and a slash before it makes a local path with a colon in it.</span>
-</span><span data-line="55"><span class="n">_REMOTE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^(?:[^@/:\s]+@)?[^@/:\s]{2,}:"</span><span class="p">)</span>
-</span><span data-line="56">
-</span><span data-line="57">
+</span><span data-line="36"><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span data-line="37"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
+</span><span data-line="38"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="39">
+</span><span data-line="40"><span class="c1">#: ``(page, to) -&gt; str``: deliver ``page`` to ``to``, say where it went.</span>
+</span><span data-line="41"><span class="n">Publisher</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>
+</span><span data-line="42">
+</span><span data-line="43"><span class="c1">#: The placeholder a ``command`` publisher replaces with the rendered page's path.</span>
+</span><span data-line="44"><span class="n">PAGE_PLACEHOLDER</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{page}</span><span class="s2">"</span>
+</span><span data-line="45">
+</span><span data-line="46"><span class="c1">#: The file name a destination that is a directory receives.</span>
+</span><span data-line="47"><span class="n">DFLT_PAGE_NAME</span> <span class="o">=</span> <span class="s2">"index.html"</span>
+</span><span data-line="48">
+</span><span data-line="49"><span class="c1">#: Seconds rsync may stall, and ssh may take to connect, before a run gives up. A</span>
+</span><span data-line="50"><span class="c1">#: scheduled publish that hangs would pile up behind itself.</span>
+</span><span data-line="51"><span class="n">DFLT_TIMEOUT</span> <span class="o">=</span> <span class="mi">20</span>
+</span><span data-line="52"><span class="n">DFLT_CONNECT_TIMEOUT</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span data-line="53">
+</span><span data-line="54"><span class="c1">#: How long an idle shared ssh connection stays open, in seconds. A scheduler that runs</span>
+</span><span data-line="55"><span class="c1">#: once a minute then opens one connection per host per minute, not one per file: many</span>
+</span><span data-line="56"><span class="c1">#: connections a minute is what a server's ssh throttling drops (`unexpected end of file`,</span>
+</span><span data-line="57"><span class="c1">#: exit 255, about one publish in twenty before this).</span>
+</span><span data-line="58"><span class="n">DFLT_CONTROL_PERSIST</span> <span class="o">=</span> <span class="mi">120</span>
+</span><span data-line="59">
+</span><span data-line="60"><span class="c1">#: Exits that mean the connection dropped rather than that the command was wrong: ssh's</span>
+</span><span data-line="61"><span class="c1">#: 255, and rsync's socket (10), stream (12) and timeout (30, 35) errors. Such a run is</span>
+</span><span data-line="62"><span class="c1">#: tried once more after :data:`RETRY_PAUSE` seconds.</span>
+</span><span data-line="63"><span class="n">TRANSIENT_EXITS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">255</span><span class="p">})</span>
+</span><span data-line="64"><span class="n">RETRIES</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span data-line="65"><span class="n">RETRY_PAUSE</span> <span class="o">=</span> <span class="mf">3.0</span>
+</span><span data-line="66">
+</span><span data-line="67"><span class="c1"># `host:path` or `user@host:path`, the way rsync and scp read one. A single letter before</span>
+</span><span data-line="68"><span class="c1"># the colon is a Windows drive, and a slash before it makes a local path with a colon in it.</span>
+</span><span data-line="69"><span class="n">_REMOTE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^(?:[^@/:\s]+@)?[^@/:\s]{2,}:"</span><span class="p">)</span>
+</span><span data-line="70">
+</span><span data-line="71">
 <div class="viewcode-block" id="is_remote">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.publish.html#crowsnest.publish.is_remote">[docs]</a>
-</span><span data-line="58"><span class="k">def</span><span class="w"> </span><span class="nf">is_remote</span><span class="p">(</span><span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="59"><span class="w">    </span><span class="sd">"""Whether ``to`` names a file on another machine (``[user@]host:path``).</span>
-</span><span data-line="60">
-</span><span data-line="61"><span class="sd">    &gt;&gt;&gt; is_remote("me@box:/srv/page.html"), is_remote("box:page.html")</span>
-</span><span data-line="62"><span class="sd">    (True, True)</span>
-</span><span data-line="63"><span class="sd">    &gt;&gt;&gt; is_remote("~/Sync/page.html"), is_remote("C:/page.html"), is_remote("./a:b")</span>
-</span><span data-line="64"><span class="sd">    (False, False, False)</span>
-</span><span data-line="65"><span class="sd">    """</span>
-</span><span data-line="66">    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_REMOTE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">to</span><span class="p">))</span></div>
+</span><span data-line="72"><span class="k">def</span><span class="w"> </span><span class="nf">is_remote</span><span class="p">(</span><span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="73"><span class="w">    </span><span class="sd">"""Whether ``to`` names a file on another machine (``[user@]host:path``).</span>
+</span><span data-line="74">
+</span><span data-line="75"><span class="sd">    &gt;&gt;&gt; is_remote("me@box:/srv/page.html"), is_remote("box:page.html")</span>
+</span><span data-line="76"><span class="sd">    (True, True)</span>
+</span><span data-line="77"><span class="sd">    &gt;&gt;&gt; is_remote("~/Sync/page.html"), is_remote("C:/page.html"), is_remote("./a:b")</span>
+</span><span data-line="78"><span class="sd">    (False, False, False)</span>
+</span><span data-line="79"><span class="sd">    """</span>
+</span><span data-line="80">    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_REMOTE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">to</span><span class="p">))</span></div>
 
-</span><span data-line="67">
-</span><span data-line="68">
+</span><span data-line="81">
+</span><span data-line="82">
 <div class="viewcode-block" id="to_path">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.publish.html#crowsnest.publish.to_path">[docs]</a>
-</span><span data-line="69"><span class="k">def</span><span class="w"> </span><span class="nf">to_path</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="70"><span class="w">    </span><span class="sd">"""Copy ``page`` to the local path ``to``, atomically: a reader never sees half a page.</span>
-</span><span data-line="71">
-</span><span data-line="72"><span class="sd">    A ``to`` that is a directory, or ends with a slash, gets :data:`DFLT_PAGE_NAME` in it.</span>
-</span><span data-line="73"><span class="sd">    """</span>
-</span><span data-line="74">    <span class="n">dest</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">to</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span data-line="75">    <span class="k">if</span> <span class="n">to</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">))</span> <span class="ow">or</span> <span class="n">dest</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-</span><span data-line="76">        <span class="n">dest</span> <span class="o">=</span> <span class="n">dest</span> <span class="o">/</span> <span class="n">DFLT_PAGE_NAME</span>
-</span><span data-line="77">    <span class="n">dest</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="78">    <span class="n">fd</span><span class="p">,</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="n">dest</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">dest</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
-</span><span data-line="79">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="80">        <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span data-line="81">            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">page</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span>
-</span><span data-line="82">        <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
-</span><span data-line="83">    <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-</span><span data-line="84">        <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="85">        <span class="k">raise</span>
-</span><span data-line="86">    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span></div>
+</span><span data-line="83"><span class="k">def</span><span class="w"> </span><span class="nf">to_path</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="84"><span class="w">    </span><span class="sd">"""Copy ``page`` to the local path ``to``, atomically: a reader never sees half a page.</span>
+</span><span data-line="85">
+</span><span data-line="86"><span class="sd">    A ``to`` that is a directory, or ends with a slash, gets :data:`DFLT_PAGE_NAME` in it.</span>
+</span><span data-line="87"><span class="sd">    """</span>
+</span><span data-line="88">    <span class="n">dest</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">to</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span data-line="89">    <span class="k">if</span> <span class="n">to</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">))</span> <span class="ow">or</span> <span class="n">dest</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+</span><span data-line="90">        <span class="n">dest</span> <span class="o">=</span> <span class="n">dest</span> <span class="o">/</span> <span class="n">DFLT_PAGE_NAME</span>
+</span><span data-line="91">    <span class="n">dest</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="92">    <span class="n">fd</span><span class="p">,</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="n">dest</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">dest</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+</span><span data-line="93">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="94">        <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span data-line="95">            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">page</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span>
+</span><span data-line="96">        <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+</span><span data-line="97">    <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+</span><span data-line="98">        <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="99">        <span class="k">raise</span>
+</span><span data-line="100">    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span></div>
 
-</span><span data-line="87">
-</span><span data-line="88">
+</span><span data-line="101">
+</span><span data-line="102">
+<div class="viewcode-block" id="ssh_command">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.publish.html#crowsnest.publish.ssh_command">[docs]</a>
+</span><span data-line="103"><span class="k">def</span><span class="w"> </span><span class="nf">ssh_command</span><span class="p">(</span>
+</span><span data-line="104">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="105">    <span class="n">connect_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_CONNECT_TIMEOUT</span><span class="p">,</span>
+</span><span data-line="106">    <span class="n">control_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="107">    <span class="n">control_persist</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_CONTROL_PERSIST</span><span class="p">,</span>
+</span><span data-line="108"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="109"><span class="w">    </span><span class="sd">"""The ssh rsync runs (its ``-e``): never prompting, bounded, and sharing a connection.</span>
+</span><span data-line="110">
+</span><span data-line="111"><span class="sd">    ``BatchMode`` makes ssh fail rather than prompt, which is what a job with no terminal</span>
+</span><span data-line="112"><span class="sd">    needs: a prompt nobody can answer is a run that never ends. ``ControlMaster`` keeps one</span>
+</span><span data-line="113"><span class="sd">    connection per host open for ``control_persist`` seconds under ``control_dir``</span>
+</span><span data-line="114"><span class="sd">    (default ``&lt;data dir&gt;/ssh``), so a publish and a courier tick share it. Not on Windows,</span>
+</span><span data-line="115"><span class="sd">    whose ssh has no control sockets, nor under a directory whose path holds a space,</span>
+</span><span data-line="116"><span class="sd">    which rsync's ``-e`` would split.</span>
+</span><span data-line="117">
+</span><span data-line="118"><span class="sd">    &gt;&gt;&gt; ssh_command(control_dir='/tmp/cn-ssh').split(' -o ')[1:3]</span>
+</span><span data-line="119"><span class="sd">    ['BatchMode=yes', 'ConnectTimeout=10']</span>
+</span><span data-line="120"><span class="sd">    """</span>
+</span><span data-line="121">    <span class="n">ssh</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"ssh -o BatchMode=yes -o ConnectTimeout=</span><span class="si">{</span><span class="n">connect_timeout</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="122">    <span class="k">if</span> <span class="n">control_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="123">        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+</span><span data-line="124">
+</span><span data-line="125">        <span class="n">control_dir</span> <span class="o">=</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"ssh"</span>
+</span><span data-line="126">    <span class="n">control</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">control_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span data-line="127">    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"nt"</span> <span class="ow">or</span> <span class="s2">" "</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">control</span><span class="p">):</span>
+</span><span data-line="128">        <span class="k">return</span> <span class="n">ssh</span>
+</span><span data-line="129">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="130">        <span class="n">control</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mo">0o700</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="131">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="132">        <span class="k">return</span> <span class="n">ssh</span>
+</span><span data-line="133">    <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="134">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ssh</span><span class="si">}</span><span class="s2"> -o ControlMaster=auto -o ControlPath=</span><span class="si">{</span><span class="n">control</span><span class="si">}</span><span class="s2">/%C"</span>
+</span><span data-line="135">        <span class="sa">f</span><span class="s2">" -o ControlPersist=</span><span class="si">{</span><span class="n">control_persist</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="136">    <span class="p">)</span></div>
+
+</span><span data-line="137">
+</span><span data-line="138">
 <div class="viewcode-block" id="rsync_argv">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.publish.html#crowsnest.publish.rsync_argv">[docs]</a>
-</span><span data-line="89"><span class="k">def</span><span class="w"> </span><span class="nf">rsync_argv</span><span class="p">(</span>
-</span><span data-line="90">    <span class="n">page</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-</span><span data-line="91">    <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="92">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="93">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_TIMEOUT</span><span class="p">,</span>
-</span><span data-line="94">    <span class="n">connect_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_CONNECT_TIMEOUT</span><span class="p">,</span>
-</span><span data-line="95"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="96"><span class="w">    </span><span class="sd">"""The rsync command :func:`to_rsync` runs: quiet, bounded, and never asking for input.</span>
-</span><span data-line="97">
-</span><span data-line="98"><span class="sd">    ``BatchMode`` makes ssh fail rather than prompt, which is what a job with no terminal</span>
-</span><span data-line="99"><span class="sd">    needs: a prompt nobody can answer is a run that never ends.</span>
-</span><span data-line="100"><span class="sd">    """</span>
-</span><span data-line="101">    <span class="n">ssh</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"ssh -o BatchMode=yes -o ConnectTimeout=</span><span class="si">{</span><span class="n">connect_timeout</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="102">    <span class="k">return</span> <span class="p">[</span><span class="s2">"rsync"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"--timeout=</span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">ssh</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">page</span><span class="p">),</span> <span class="n">to</span><span class="p">]</span></div>
+</span><span data-line="139"><span class="k">def</span><span class="w"> </span><span class="nf">rsync_argv</span><span class="p">(</span>
+</span><span data-line="140">    <span class="n">page</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+</span><span data-line="141">    <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="142">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="143">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_TIMEOUT</span><span class="p">,</span>
+</span><span data-line="144">    <span class="n">connect_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_CONNECT_TIMEOUT</span><span class="p">,</span>
+</span><span data-line="145"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="146"><span class="w">    </span><span class="sd">"""The rsync command :func:`to_rsync` runs: quiet, bounded, and never asking for input."""</span>
+</span><span data-line="147">    <span class="n">ssh</span> <span class="o">=</span> <span class="n">ssh_command</span><span class="p">(</span><span class="n">connect_timeout</span><span class="o">=</span><span class="n">connect_timeout</span><span class="p">)</span>
+</span><span data-line="148">    <span class="k">return</span> <span class="p">[</span><span class="s2">"rsync"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"--timeout=</span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">ssh</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">page</span><span class="p">),</span> <span class="n">to</span><span class="p">]</span></div>
 
-</span><span data-line="103">
-</span><span data-line="104">
+</span><span data-line="149">
+</span><span data-line="150">
 <div class="viewcode-block" id="to_rsync">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.publish.html#crowsnest.publish.to_rsync">[docs]</a>
-</span><span data-line="105"><span class="k">def</span><span class="w"> </span><span class="nf">to_rsync</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="106"><span class="w">    </span><span class="sd">"""Send ``page`` to the remote ``[user@]host:path`` ``to`` with rsync over ssh."""</span>
-</span><span data-line="107">    <span class="k">if</span> <span class="ow">not</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"rsync"</span><span class="p">):</span>
-</span><span data-line="108">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="109">            <span class="sa">f</span><span class="s2">"publishing to </span><span class="si">{</span><span class="n">to</span><span class="si">!r}</span><span class="s2"> needs rsync, which is not on PATH. Install it, or set "</span>
-</span><span data-line="110">            <span class="sa">f</span><span class="s2">"[publish] command in the config file to send the page another way."</span>
-</span><span data-line="111">        <span class="p">)</span>
-</span><span data-line="112">    <span class="n">_run</span><span class="p">(</span><span class="n">rsync_argv</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">to</span><span class="p">),</span> <span class="n">what</span><span class="o">=</span><span class="sa">f</span><span class="s2">"rsync to </span><span class="si">{</span><span class="n">to</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="113">    <span class="k">return</span> <span class="n">to</span></div>
+</span><span data-line="151"><span class="k">def</span><span class="w"> </span><span class="nf">to_rsync</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="152"><span class="w">    </span><span class="sd">"""Send ``page`` to the remote ``[user@]host:path`` ``to`` with rsync over ssh."""</span>
+</span><span data-line="153">    <span class="k">if</span> <span class="ow">not</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"rsync"</span><span class="p">):</span>
+</span><span data-line="154">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="155">            <span class="sa">f</span><span class="s2">"publishing to </span><span class="si">{</span><span class="n">to</span><span class="si">!r}</span><span class="s2"> needs rsync, which is not on PATH. Install it, or set "</span>
+</span><span data-line="156">            <span class="sa">f</span><span class="s2">"[publish] command in the config file to send the page another way."</span>
+</span><span data-line="157">        <span class="p">)</span>
+</span><span data-line="158">    <span class="n">_run</span><span class="p">(</span><span class="n">rsync_argv</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">to</span><span class="p">),</span> <span class="n">what</span><span class="o">=</span><span class="sa">f</span><span class="s2">"rsync to </span><span class="si">{</span><span class="n">to</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="159">    <span class="k">return</span> <span class="n">to</span></div>
 
-</span><span data-line="114">
-</span><span data-line="115">
+</span><span data-line="160">
+</span><span data-line="161">
 <div class="viewcode-block" id="command_publisher">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.publish.html#crowsnest.publish.command_publisher">[docs]</a>
-</span><span data-line="116"><span class="k">def</span><span class="w"> </span><span class="nf">command_publisher</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Publisher</span><span class="p">:</span>
-</span><span data-line="117"><span class="w">    </span><span class="sd">"""A publisher running ``argv``, with :data:`PAGE_PLACEHOLDER` replaced by the page.</span>
-</span><span data-line="118">
-</span><span data-line="119"><span class="sd">    Run without a shell, so nothing in the page's path is interpreted. ``to`` is ignored:</span>
-</span><span data-line="120"><span class="sd">    the command says where the page goes.</span>
-</span><span data-line="121"><span class="sd">    """</span>
-</span><span data-line="122">    <span class="n">argv</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
-</span><span data-line="123">    <span class="k">if</span> <span class="ow">not</span> <span class="n">argv</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">PAGE_PLACEHOLDER</span> <span class="ow">in</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">argv</span><span class="p">):</span>
-</span><span data-line="124">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="125">            <span class="sa">f</span><span class="s2">"a publish command must name the page as </span><span class="si">{</span><span class="n">PAGE_PLACEHOLDER</span><span class="si">}</span><span class="s2"> in one of its "</span>
-</span><span data-line="126">            <span class="sa">f</span><span class="s2">"arguments, or it would send something else: </span><span class="si">{</span><span class="n">argv</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="127">        <span class="p">)</span>
-</span><span data-line="128">
-</span><span data-line="129">    <span class="k">def</span><span class="w"> </span><span class="nf">publish</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="130">        <span class="n">_run</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">PAGE_PLACEHOLDER</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">page</span><span class="p">))</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">argv</span><span class="p">],</span> <span class="n">what</span><span class="o">=</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span><span data-line="131">        <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
-</span><span data-line="132">
-</span><span data-line="133">    <span class="k">return</span> <span class="n">publish</span></div>
+</span><span data-line="162"><span class="k">def</span><span class="w"> </span><span class="nf">command_publisher</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Publisher</span><span class="p">:</span>
+</span><span data-line="163"><span class="w">    </span><span class="sd">"""A publisher running ``argv``, with :data:`PAGE_PLACEHOLDER` replaced by the page.</span>
+</span><span data-line="164">
+</span><span data-line="165"><span class="sd">    Run without a shell, so nothing in the page's path is interpreted. ``to`` is ignored:</span>
+</span><span data-line="166"><span class="sd">    the command says where the page goes.</span>
+</span><span data-line="167"><span class="sd">    """</span>
+</span><span data-line="168">    <span class="n">argv</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
+</span><span data-line="169">    <span class="k">if</span> <span class="ow">not</span> <span class="n">argv</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">PAGE_PLACEHOLDER</span> <span class="ow">in</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">argv</span><span class="p">):</span>
+</span><span data-line="170">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="171">            <span class="sa">f</span><span class="s2">"a publish command must name the page as </span><span class="si">{</span><span class="n">PAGE_PLACEHOLDER</span><span class="si">}</span><span class="s2"> in one of its "</span>
+</span><span data-line="172">            <span class="sa">f</span><span class="s2">"arguments, or it would send something else: </span><span class="si">{</span><span class="n">argv</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="173">        <span class="p">)</span>
+</span><span data-line="174">
+</span><span data-line="175">    <span class="k">def</span><span class="w"> </span><span class="nf">publish</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="176">        <span class="n">_run</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">PAGE_PLACEHOLDER</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">page</span><span class="p">))</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">argv</span><span class="p">],</span> <span class="n">what</span><span class="o">=</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span data-line="177">        <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
+</span><span data-line="178">
+</span><span data-line="179">    <span class="k">return</span> <span class="n">publish</span></div>
 
-</span><span data-line="134">
-</span><span data-line="135">
+</span><span data-line="180">
+</span><span data-line="181">
 <div class="viewcode-block" id="dflt_publisher">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.publish.html#crowsnest.publish.dflt_publisher">[docs]</a>
-</span><span data-line="136"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_publisher</span><span class="p">(</span><span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Publisher</span><span class="p">:</span>
-</span><span data-line="137"><span class="w">    </span><span class="sd">"""rsync over ssh for a ``[user@]host:path``, an atomic local write for anything else."""</span>
-</span><span data-line="138">    <span class="k">return</span> <span class="n">to_rsync</span> <span class="k">if</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">to</span><span class="p">)</span> <span class="k">else</span> <span class="n">to_path</span></div>
+</span><span data-line="182"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_publisher</span><span class="p">(</span><span class="n">to</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Publisher</span><span class="p">:</span>
+</span><span data-line="183"><span class="w">    </span><span class="sd">"""rsync over ssh for a ``[user@]host:path``, an atomic local write for anything else."""</span>
+</span><span data-line="184">    <span class="k">return</span> <span class="n">to_rsync</span> <span class="k">if</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">to</span><span class="p">)</span> <span class="k">else</span> <span class="n">to_path</span></div>
 
-</span><span data-line="139">
-</span><span data-line="140">
-</span><span data-line="141"><span class="k">def</span><span class="w"> </span><span class="nf">_run</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="142"><span class="w">    </span><span class="sd">"""Run ``argv``; a failure is a ``ValueError`` naming the command and its last words."""</span>
-</span><span data-line="143">    <span class="n">done</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span><span data-line="144">    <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">returncode</span><span class="p">:</span>
-</span><span data-line="145">        <span class="n">said</span> <span class="o">=</span> <span class="p">(</span><span class="n">done</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="n">done</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-</span><span data-line="146">        <span class="n">tail</span> <span class="o">=</span> <span class="n">said</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="s2">"no output"</span>
-</span><span data-line="147">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"publishing failed: </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> exited </span><span class="si">{</span><span class="n">done</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="185">
+</span><span data-line="186">
+<div class="viewcode-block" id="attempt">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.publish.html#crowsnest.publish.attempt">[docs]</a>
+</span><span data-line="187"><span class="k">def</span><span class="w"> </span><span class="nf">attempt</span><span class="p">(</span>
+</span><span data-line="188">    <span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="189">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="190">    <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">RETRIES</span><span class="p">,</span>
+</span><span data-line="191">    <span class="n">pause</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="192">    <span class="n">sleep</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="193"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CompletedProcess</span><span class="p">:</span>
+</span><span data-line="194"><span class="w">    </span><span class="sd">"""Run ``argv``, again after ``pause`` seconds (:data:`RETRY_PAUSE`) while it exits with</span>
+</span><span data-line="195"><span class="sd">    a dropped connection (:data:`TRANSIENT_EXITS`), at most ``retries`` more times; the</span>
+</span><span data-line="196"><span class="sd">    last run is returned."""</span>
+</span><span data-line="197">    <span class="n">pause</span> <span class="o">=</span> <span class="n">RETRY_PAUSE</span> <span class="k">if</span> <span class="n">pause</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">pause</span>
+</span><span data-line="198">    <span class="n">sleep</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">sleep</span> <span class="k">if</span> <span class="n">sleep</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sleep</span>
+</span><span data-line="199">    <span class="n">done</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="200">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">retries</span><span class="p">):</span>
+</span><span data-line="201">        <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TRANSIENT_EXITS</span><span class="p">:</span>
+</span><span data-line="202">            <span class="k">break</span>
+</span><span data-line="203">        <span class="n">sleep</span><span class="p">(</span><span class="n">pause</span><span class="p">)</span>
+</span><span data-line="204">        <span class="n">done</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="205">    <span class="k">return</span> <span class="n">done</span></div>
+
+</span><span data-line="206">
+</span><span data-line="207">
+</span><span data-line="208"><span class="k">def</span><span class="w"> </span><span class="nf">_run</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="209"><span class="w">    </span><span class="sd">"""Run ``argv``; a failure is a ``ValueError`` naming the command and its last words."""</span>
+</span><span data-line="210">    <span class="n">done</span> <span class="o">=</span> <span class="n">attempt</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
+</span><span data-line="211">    <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">returncode</span><span class="p">:</span>
+</span><span data-line="212">        <span class="n">said</span> <span class="o">=</span> <span class="p">(</span><span class="n">done</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="n">done</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+</span><span data-line="213">        <span class="n">tail</span> <span class="o">=</span> <span class="n">said</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="s2">"no output"</span>
+</span><span data-line="214">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"publishing failed: </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> exited </span><span class="si">{</span><span class="n">done</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -327,7 +400,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=b153cf10"></script>
+      <script src="../../_static/documentation_options.js?v=152b4b09"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

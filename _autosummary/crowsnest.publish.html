@@ -105,14 +105,18 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.publish.DFLT_CONTROL_PERSIST"><code class="docutils literal notranslate"><span class="pre">DFLT_CONTROL_PERSIST</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.DFLT_PAGE_NAME"><code class="docutils literal notranslate"><span class="pre">DFLT_PAGE_NAME</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.DFLT_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">DFLT_TIMEOUT</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.PAGE_PLACEHOLDER"><code class="docutils literal notranslate"><span class="pre">PAGE_PLACEHOLDER</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.Publisher"><code class="docutils literal notranslate"><span class="pre">Publisher</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.TRANSIENT_EXITS"><code class="docutils literal notranslate"><span class="pre">TRANSIENT_EXITS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.attempt"><code class="docutils literal notranslate"><span class="pre">attempt()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.command_publisher"><code class="docutils literal notranslate"><span class="pre">command_publisher()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.dflt_publisher"><code class="docutils literal notranslate"><span class="pre">dflt_publisher()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.is_remote"><code class="docutils literal notranslate"><span class="pre">is_remote()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.rsync_argv"><code class="docutils literal notranslate"><span class="pre">rsync_argv()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.ssh_command"><code class="docutils literal notranslate"><span class="pre">ssh_command()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.to_path"><code class="docutils literal notranslate"><span class="pre">to_path()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.to_rsync"><code class="docutils literal notranslate"><span class="pre">to_rsync()</span></code></a></li>
 </ul>
@@ -193,6 +197,12 @@ and says in one line where it went. <a class="reference internal" href="#crowsne
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.DFLT_TIMEOUT" title="crowsnest.publish.DFLT_TIMEOUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_TIMEOUT</span></code></a></p></td>
 <td><p>Seconds rsync may stall, and ssh may take to connect, before a run gives up.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.DFLT_CONTROL_PERSIST" title="crowsnest.publish.DFLT_CONTROL_PERSIST"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_CONTROL_PERSIST</span></code></a></p></td>
+<td><p>How long an idle shared ssh connection stays open, in seconds.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.TRANSIENT_EXITS" title="crowsnest.publish.TRANSIENT_EXITS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TRANSIENT_EXITS</span></code></a></p></td>
+<td><p>ssh's 255, and rsync's socket (10), stream (12) and timeout (30, 35) errors.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -200,17 +210,23 @@ and says in one line where it went. <a class="reference internal" href="#crowsne
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.command_publisher" title="crowsnest.publish.command_publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">command_publisher</span></code></a>(argv)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.attempt" title="crowsnest.publish.attempt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attempt</span></code></a>(argv, *[, retries, pause, sleep])</p></td>
+<td><p>Run <code class="docutils literal notranslate"><span class="pre">argv</span></code>, again after <code class="docutils literal notranslate"><span class="pre">pause</span></code> seconds (<code class="xref py py-data docutils literal notranslate"><span class="pre">RETRY_PAUSE</span></code>) while it exits with a dropped connection (<a class="reference internal" href="#crowsnest.publish.TRANSIENT_EXITS" title="crowsnest.publish.TRANSIENT_EXITS"><code class="xref py py-data docutils literal notranslate"><span class="pre">TRANSIENT_EXITS</span></code></a>), at most <code class="docutils literal notranslate"><span class="pre">retries</span></code> more times; the last run is returned.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.command_publisher" title="crowsnest.publish.command_publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">command_publisher</span></code></a>(argv)</p></td>
 <td><p>A publisher running <code class="docutils literal notranslate"><span class="pre">argv</span></code>, with <a class="reference internal" href="#crowsnest.publish.PAGE_PLACEHOLDER" title="crowsnest.publish.PAGE_PLACEHOLDER"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAGE_PLACEHOLDER</span></code></a> replaced by the page.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.dflt_publisher" title="crowsnest.publish.dflt_publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_publisher</span></code></a>(to)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.dflt_publisher" title="crowsnest.publish.dflt_publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_publisher</span></code></a>(to)</p></td>
 <td><p>rsync over ssh for a <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>, an atomic local write for anything else.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.is_remote" title="crowsnest.publish.is_remote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_remote</span></code></a>(to)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.is_remote" title="crowsnest.publish.is_remote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_remote</span></code></a>(to)</p></td>
 <td><p>Whether <code class="docutils literal notranslate"><span class="pre">to</span></code> names a file on another machine (<code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.rsync_argv" title="crowsnest.publish.rsync_argv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsync_argv</span></code></a>(page, to, *[, timeout, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.rsync_argv" title="crowsnest.publish.rsync_argv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsync_argv</span></code></a>(page, to, *[, timeout, ...])</p></td>
 <td><p>The rsync command <a class="reference internal" href="#crowsnest.publish.to_rsync" title="crowsnest.publish.to_rsync"><code class="xref py py-func docutils literal notranslate"><span class="pre">to_rsync()</span></code></a> runs: quiet, bounded, and never asking for input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.ssh_command" title="crowsnest.publish.ssh_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ssh_command</span></code></a>(*[, connect_timeout, ...])</p></td>
+<td><p>The ssh rsync runs (its <code class="docutils literal notranslate"><span class="pre">-e</span></code>): never prompting, bounded, and sharing a connection.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.to_path" title="crowsnest.publish.to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_path</span></code></a>(page, to)</p></td>
 <td><p>Copy <code class="docutils literal notranslate"><span class="pre">page</span></code> to the local path <code class="docutils literal notranslate"><span class="pre">to</span></code>, atomically: a reader never sees half a page.</p></td>
@@ -221,6 +237,15 @@ and says in one line where it went. <a class="reference internal" href="#crowsne
 </tbody>
 </table>
 </div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.DFLT_CONTROL_PERSIST">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">DFLT_CONTROL_PERSIST</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">120</span></span><a class="headerlink" href="#crowsnest.publish.DFLT_CONTROL_PERSIST" title="Link to this definition">#</a></dt>
+<dd><p>How long an idle shared ssh connection stays open, in seconds. A scheduler that runs
+once a minute then opens one connection per host per minute, not one per file: many
+connections a minute is what a server’s ssh throttling drops (<code class="code docutils literal notranslate"><span class="pre">unexpected</span> <span class="pre">end</span> <span class="pre">of</span> <span class="pre">file</span></code>,
+exit 255, about one publish in twenty before this).</p>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.publish.DFLT_PAGE_NAME">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">DFLT_PAGE_NAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'index.html'</span></span><a class="headerlink" href="#crowsnest.publish.DFLT_PAGE_NAME" title="Link to this definition">#</a></dt>
@@ -250,6 +275,32 @@ scheduled publish that hangs would pile up behind itself.</p>
 </dd>
 </dl>
 <p>alias of <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.TRANSIENT_EXITS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">TRANSIENT_EXITS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({10,</span> <span class="pre">12,</span> <span class="pre">30,</span> <span class="pre">35,</span> <span class="pre">255})</span></span><a class="headerlink" href="#crowsnest.publish.TRANSIENT_EXITS" title="Link to this definition">#</a></dt>
+<dd><p>ssh’s
+255, and rsync’s socket (10), stream (12) and timeout (30, 35) errors. Such a run is
+tried once more after <code class="xref py py-data docutils literal notranslate"><span class="pre">RETRY_PAUSE</span></code> seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Exits that mean the connection dropped rather than that the command was wrong</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.attempt">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">attempt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argv</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pause</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sleep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#attempt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.attempt" title="Link to this definition">#</a></dt>
+<dd><p>Run <code class="docutils literal notranslate"><span class="pre">argv</span></code>, again after <code class="docutils literal notranslate"><span class="pre">pause</span></code> seconds (<code class="xref py py-data docutils literal notranslate"><span class="pre">RETRY_PAUSE</span></code>) while it exits with
+a dropped connection (<a class="reference internal" href="#crowsnest.publish.TRANSIENT_EXITS" title="crowsnest.publish.TRANSIENT_EXITS"><code class="xref py py-data docutils literal notranslate"><span class="pre">TRANSIENT_EXITS</span></code></a>), at most <code class="docutils literal notranslate"><span class="pre">retries</span></code> more times; the
+last run is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">CompletedProcess</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -297,13 +348,32 @@ the command says where the page goes.</p>
 <dt class="sig sig-object py" id="crowsnest.publish.rsync_argv">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">rsync_argv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#rsync_argv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.rsync_argv" title="Link to this definition">#</a></dt>
 <dd><p>The rsync command <a class="reference internal" href="#crowsnest.publish.to_rsync" title="crowsnest.publish.to_rsync"><code class="xref py py-func docutils literal notranslate"><span class="pre">to_rsync()</span></code></a> runs: quiet, bounded, and never asking for input.</p>
-<p><code class="docutils literal notranslate"><span class="pre">BatchMode</span></code> makes ssh fail rather than prompt, which is what a job with no terminal
-needs: a prompt nobody can answer is a run that never ends.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.ssh_command">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">ssh_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_persist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#ssh_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.ssh_command" title="Link to this definition">#</a></dt>
+<dd><p>The ssh rsync runs (its <code class="docutils literal notranslate"><span class="pre">-e</span></code>): never prompting, bounded, and sharing a connection.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BatchMode</span></code> makes ssh fail rather than prompt, which is what a job with no terminal
+needs: a prompt nobody can answer is a run that never ends. <code class="docutils literal notranslate"><span class="pre">ControlMaster</span></code> keeps one
+connection per host open for <code class="docutils literal notranslate"><span class="pre">control_persist</span></code> seconds under <code class="docutils literal notranslate"><span class="pre">control_dir</span></code>
+(default <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/ssh</span></code>), so a publish and a courier tick share it. Not on Windows,
+whose ssh has no control sockets, nor under a directory whose path holds a space,
+which rsync’s <code class="docutils literal notranslate"><span class="pre">-e</span></code> would split.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">ssh_command</span><span class="p">(</span><span class="n">control_dir</span><span class="o">=</span><span class="s1">'/tmp/cn-ssh'</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' -o '</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+</span><span data-line="2"><span class="go">['BatchMode=yes', 'ConnectTimeout=10']</span>
+</span></pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -371,7 +441,7 @@ needs: a prompt nobody can answer is a run that never ends.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=b153cf10"></script>
+      <script src="../_static/documentation_options.js?v=152b4b09"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

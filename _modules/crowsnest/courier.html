@@ -170,362 +170,365 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="33"><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 </span><span data-line="34"><span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
 </span><span data-line="35"><span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
-</span><span data-line="36"><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
-</span><span data-line="37"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
-</span><span data-line="38"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timezone</span>
-</span><span data-line="39"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span data-line="40">
-</span><span data-line="41"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.publish</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFLT_CONNECT_TIMEOUT</span><span class="p">,</span> <span class="n">DFLT_TIMEOUT</span><span class="p">,</span> <span class="n">is_remote</span>
-</span><span data-line="42">
-</span><span data-line="43"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="44">    <span class="s2">"COLLECTIONS"</span><span class="p">,</span>
-</span><span data-line="45">    <span class="s2">"PULLED"</span><span class="p">,</span>
-</span><span data-line="46">    <span class="s2">"answer"</span><span class="p">,</span>
-</span><span data-line="47">    <span class="s2">"dflt_copy"</span><span class="p">,</span>
-</span><span data-line="48">    <span class="s2">"dflt_mirror"</span><span class="p">,</span>
-</span><span data-line="49">    <span class="s2">"dir_copy"</span><span class="p">,</span>
-</span><span data-line="50">    <span class="s2">"rsync_copy"</span><span class="p">,</span>
-</span><span data-line="51">    <span class="s2">"tick"</span><span class="p">,</span>
-</span><span data-line="52"><span class="p">]</span>
-</span><span data-line="53">
-</span><span data-line="54"><span class="c1">#: Every collection a console store holds; the page reads all four.</span>
-</span><span data-line="55"><span class="n">COLLECTIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"attention"</span><span class="p">,</span> <span class="s2">"intents"</span><span class="p">,</span> <span class="s2">"live"</span><span class="p">,</span> <span class="s2">"console"</span><span class="p">)</span>
-</span><span data-line="56">
-</span><span data-line="57"><span class="c1">#: The ones the page writes, which a tick pulls. ``live`` and ``console`` are only ever</span>
-</span><span data-line="58"><span class="c1">#: written here.</span>
-</span><span data-line="59"><span class="n">PULLED</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"attention"</span><span class="p">,</span> <span class="s2">"intents"</span><span class="p">)</span>
-</span><span data-line="60">
-</span><span data-line="61"><span class="c1">#: What a document id may be: one path segment of safe characters, never ``.`` or ``..``.</span>
-</span><span data-line="62"><span class="c1">#: The server enforces the same; a file named otherwise in the mirror is ignored.</span>
-</span><span data-line="63"><span class="n">DOC_ID</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^(?!\.\.?$)[A-Za-z0-9_.:@+-]{1,200}$"</span><span class="p">)</span>
-</span><span data-line="64">
-</span><span data-line="65"><span class="c1">#: How far back a tick re-exports attention records, before the last export: a record is</span>
-</span><span data-line="66"><span class="c1">#: stamped before it is stored, so one can land after a listing with an older stamp</span>
-</span><span data-line="67"><span class="c1">#: (:func:`crowsnest.attention.export_docs`). Resending costs nothing.</span>
-</span><span data-line="68"><span class="n">EXPORT_MARGIN</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</span><span data-line="36"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
+</span><span data-line="37"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timezone</span>
+</span><span data-line="38"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="39">
+</span><span data-line="40"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.publish</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span data-line="41">    <span class="n">DFLT_CONNECT_TIMEOUT</span><span class="p">,</span>
+</span><span data-line="42">    <span class="n">DFLT_TIMEOUT</span><span class="p">,</span>
+</span><span data-line="43">    <span class="n">attempt</span><span class="p">,</span>
+</span><span data-line="44">    <span class="n">is_remote</span><span class="p">,</span>
+</span><span data-line="45">    <span class="n">ssh_command</span><span class="p">,</span>
+</span><span data-line="46"><span class="p">)</span>
+</span><span data-line="47">
+</span><span data-line="48"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="49">    <span class="s2">"COLLECTIONS"</span><span class="p">,</span>
+</span><span data-line="50">    <span class="s2">"PULLED"</span><span class="p">,</span>
+</span><span data-line="51">    <span class="s2">"answer"</span><span class="p">,</span>
+</span><span data-line="52">    <span class="s2">"dflt_copy"</span><span class="p">,</span>
+</span><span data-line="53">    <span class="s2">"dflt_mirror"</span><span class="p">,</span>
+</span><span data-line="54">    <span class="s2">"dir_copy"</span><span class="p">,</span>
+</span><span data-line="55">    <span class="s2">"rsync_copy"</span><span class="p">,</span>
+</span><span data-line="56">    <span class="s2">"tick"</span><span class="p">,</span>
+</span><span data-line="57"><span class="p">]</span>
+</span><span data-line="58">
+</span><span data-line="59"><span class="c1">#: Every collection a console store holds; the page reads all four.</span>
+</span><span data-line="60"><span class="n">COLLECTIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"attention"</span><span class="p">,</span> <span class="s2">"intents"</span><span class="p">,</span> <span class="s2">"live"</span><span class="p">,</span> <span class="s2">"console"</span><span class="p">)</span>
+</span><span data-line="61">
+</span><span data-line="62"><span class="c1">#: The ones the page writes, which a tick pulls. ``live`` and ``console`` are only ever</span>
+</span><span data-line="63"><span class="c1">#: written here.</span>
+</span><span data-line="64"><span class="n">PULLED</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"attention"</span><span class="p">,</span> <span class="s2">"intents"</span><span class="p">)</span>
+</span><span data-line="65">
+</span><span data-line="66"><span class="c1">#: What a document id may be: one path segment of safe characters, never ``.`` or ``..``.</span>
+</span><span data-line="67"><span class="c1">#: The server enforces the same; a file named otherwise in the mirror is ignored.</span>
+</span><span data-line="68"><span class="n">DOC_ID</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^(?!\.\.?$)[A-Za-z0-9_.:@+-]{1,200}$"</span><span class="p">)</span>
 </span><span data-line="69">
-</span><span data-line="70"><span class="c1">#: The longest answer a session may write, in characters; the rest is cut with an ellipsis.</span>
-</span><span data-line="71"><span class="n">ANSWER_LIMIT</span> <span class="o">=</span> <span class="mi">500</span>
-</span><span data-line="72">
-</span><span data-line="73"><span class="c1">#: The kinds a tick hands to a session, because they take judgment or reach another one.</span>
-</span><span data-line="74"><span class="n">HANDED</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ask"</span><span class="p">,</span> <span class="s2">"tell"</span><span class="p">,</span> <span class="s2">"start"</span><span class="p">)</span>
-</span><span data-line="75">
-</span><span data-line="76"><span class="c1">#: Fixed answers, in the terms the page already uses.</span>
-</span><span data-line="77"><span class="n">NO_SUCH_SESSION</span> <span class="o">=</span> <span class="s2">"no recap: that session is not on the roster"</span>
-</span><span data-line="78"><span class="n">AMBIGUOUS_SESSION</span> <span class="o">=</span> <span class="s2">"no recap: that name belongs to more than one session"</span>
-</span><span data-line="79"><span class="n">REFRESHED</span> <span class="o">=</span> <span class="s2">"the page is republished every minute: reload it for the newest"</span>
-</span><span data-line="80"><span class="n">UNKNOWN_KIND</span> <span class="o">=</span> <span class="s2">"not something this page can ask for"</span>
-</span><span data-line="81"><span class="n">STATE_FILE</span> <span class="o">=</span> <span class="s2">".courier.json"</span>
-</span><span data-line="82">
-</span><span data-line="83"><span class="n">Copy</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
-</span><span data-line="84">
-</span><span data-line="85">
+</span><span data-line="70"><span class="c1">#: How far back a tick re-exports attention records, before the last export: a record is</span>
+</span><span data-line="71"><span class="c1">#: stamped before it is stored, so one can land after a listing with an older stamp</span>
+</span><span data-line="72"><span class="c1">#: (:func:`crowsnest.attention.export_docs`). Resending costs nothing.</span>
+</span><span data-line="73"><span class="n">EXPORT_MARGIN</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</span><span data-line="74">
+</span><span data-line="75"><span class="c1">#: The longest answer a session may write, in characters; the rest is cut with an ellipsis.</span>
+</span><span data-line="76"><span class="n">ANSWER_LIMIT</span> <span class="o">=</span> <span class="mi">500</span>
+</span><span data-line="77">
+</span><span data-line="78"><span class="c1">#: The kinds a tick hands to a session, because they take judgment or reach another one.</span>
+</span><span data-line="79"><span class="n">HANDED</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ask"</span><span class="p">,</span> <span class="s2">"tell"</span><span class="p">,</span> <span class="s2">"start"</span><span class="p">)</span>
+</span><span data-line="80">
+</span><span data-line="81"><span class="c1">#: Fixed answers, in the terms the page already uses.</span>
+</span><span data-line="82"><span class="n">NO_SUCH_SESSION</span> <span class="o">=</span> <span class="s2">"no recap: that session is not on the roster"</span>
+</span><span data-line="83"><span class="n">AMBIGUOUS_SESSION</span> <span class="o">=</span> <span class="s2">"no recap: that name belongs to more than one session"</span>
+</span><span data-line="84"><span class="n">REFRESHED</span> <span class="o">=</span> <span class="s2">"the page is republished every minute: reload it for the newest"</span>
+</span><span data-line="85"><span class="n">UNKNOWN_KIND</span> <span class="o">=</span> <span class="s2">"not something this page can ask for"</span>
+</span><span data-line="86"><span class="n">STATE_FILE</span> <span class="o">=</span> <span class="s2">".courier.json"</span>
+</span><span data-line="87">
+</span><span data-line="88"><span class="n">Copy</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
+</span><span data-line="89">
+</span><span data-line="90">
 <div class="viewcode-block" id="dflt_mirror">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.courier.html#crowsnest.courier.dflt_mirror">[docs]</a>
-</span><span data-line="86"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_mirror</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-</span><span data-line="87"><span class="w">    </span><span class="sd">"""Where a tick keeps its copy of the store: ``&lt;data dir&gt;/courier/mirror``."""</span>
-</span><span data-line="88">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
-</span><span data-line="89">
-</span><span data-line="90">    <span class="k">return</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"courier"</span> <span class="o">/</span> <span class="s2">"mirror"</span></div>
+</span><span data-line="91"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_mirror</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="92"><span class="w">    </span><span class="sd">"""Where a tick keeps its copy of the store: ``&lt;data dir&gt;/courier/mirror``."""</span>
+</span><span data-line="93">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+</span><span data-line="94">
+</span><span data-line="95">    <span class="k">return</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"courier"</span> <span class="o">/</span> <span class="s2">"mirror"</span></div>
 
-</span><span data-line="91">
-</span><span data-line="92">
-</span><span data-line="93"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="94"><span class="c1"># Moving a collection</span>
-</span><span data-line="95">
 </span><span data-line="96">
+</span><span data-line="97">
+</span><span data-line="98"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="99"><span class="c1"># Moving a collection</span>
+</span><span data-line="100">
+</span><span data-line="101">
 <div class="viewcode-block" id="dir_copy">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.courier.html#crowsnest.courier.dir_copy">[docs]</a>
-</span><span data-line="97"><span class="k">def</span><span class="w"> </span><span class="nf">dir_copy</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="98"><span class="w">    </span><span class="sd">"""Copy ``src/collection/*.json`` into ``dst/collection/``, each only when newer.</span>
-</span><span data-line="99">
-</span><span data-line="100"><span class="sd">    A missing source collection is nothing to copy. Times are kept, so a copy is never</span>
-</span><span data-line="101"><span class="sd">    newer than what it copied.</span>
-</span><span data-line="102"><span class="sd">    """</span>
-</span><span data-line="103">    <span class="n">here</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">collection</span>
-</span><span data-line="104">    <span class="k">if</span> <span class="ow">not</span> <span class="n">here</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-</span><span data-line="105">        <span class="k">return</span>
-</span><span data-line="106">    <span class="n">there</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">collection</span>
-</span><span data-line="107">    <span class="n">there</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="108">    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">here</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">):</span>
-</span><span data-line="109">        <span class="k">if</span> <span class="ow">not</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">):</span>
-</span><span data-line="110">            <span class="k">continue</span>
-</span><span data-line="111">        <span class="n">target</span> <span class="o">=</span> <span class="n">there</span> <span class="o">/</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span>
-</span><span data-line="112">        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">:</span>
-</span><span data-line="113">            <span class="k">continue</span>
-</span><span data-line="114">        <span class="n">tmp</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".json.tmp"</span><span class="p">)</span>
-</span><span data-line="115">        <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
-</span><span data-line="116">        <span class="n">tmp</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
+</span><span data-line="102"><span class="k">def</span><span class="w"> </span><span class="nf">dir_copy</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="103"><span class="w">    </span><span class="sd">"""Copy ``src/collection/*.json`` into ``dst/collection/``, each only when newer.</span>
+</span><span data-line="104">
+</span><span data-line="105"><span class="sd">    A missing source collection is nothing to copy. Times are kept, so a copy is never</span>
+</span><span data-line="106"><span class="sd">    newer than what it copied.</span>
+</span><span data-line="107"><span class="sd">    """</span>
+</span><span data-line="108">    <span class="n">here</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">collection</span>
+</span><span data-line="109">    <span class="k">if</span> <span class="ow">not</span> <span class="n">here</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+</span><span data-line="110">        <span class="k">return</span>
+</span><span data-line="111">    <span class="n">there</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">collection</span>
+</span><span data-line="112">    <span class="n">there</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="113">    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">here</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">):</span>
+</span><span data-line="114">        <span class="k">if</span> <span class="ow">not</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">):</span>
+</span><span data-line="115">            <span class="k">continue</span>
+</span><span data-line="116">        <span class="n">target</span> <span class="o">=</span> <span class="n">there</span> <span class="o">/</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span>
+</span><span data-line="117">        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">:</span>
+</span><span data-line="118">            <span class="k">continue</span>
+</span><span data-line="119">        <span class="n">tmp</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".json.tmp"</span><span class="p">)</span>
+</span><span data-line="120">        <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+</span><span data-line="121">        <span class="n">tmp</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
 
-</span><span data-line="117">
-</span><span data-line="118">
-</span><span data-line="119"><span class="k">def</span><span class="w"> </span><span class="nf">rsync_argv</span><span class="p">(</span>
-</span><span data-line="120">    <span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="121">    <span class="n">dst</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="122">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="123">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_TIMEOUT</span><span class="p">,</span>
-</span><span data-line="124">    <span class="n">connect_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_CONNECT_TIMEOUT</span><span class="p">,</span>
-</span><span data-line="125"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="126"><span class="w">    </span><span class="sd">"""``rsync -a --update`` over ssh, quiet, bounded and never asking for input.</span>
-</span><span data-line="127">
-</span><span data-line="128"><span class="sd">    Sent to a ``host:path``, the far side first makes ``path`` (``mkdir -p``, through</span>
-</span><span data-line="129"><span class="sd">    ``--rsync-path``), so a push reaches a store whose directories nothing has made yet:</span>
-</span><span data-line="130"><span class="sd">    rsync alone makes only the last one.</span>
-</span><span data-line="131">
-</span><span data-line="132"><span class="sd">    &gt;&gt;&gt; rsync_argv('m/intents/', 'box:/srv/db/intents/')[-3]</span>
-</span><span data-line="133"><span class="sd">    '--rsync-path=mkdir -p /srv/db/intents/ &amp;&amp; rsync'</span>
-</span><span data-line="134"><span class="sd">    """</span>
-</span><span data-line="135">    <span class="n">ssh</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"ssh -o BatchMode=yes -o ConnectTimeout=</span><span class="si">{</span><span class="n">connect_timeout</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="136">    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"rsync"</span><span class="p">,</span> <span class="s2">"-a"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--update"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"--timeout=</span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">ssh</span><span class="p">]</span>
-</span><span data-line="137">    <span class="k">if</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">dst</span><span class="p">):</span>
-</span><span data-line="138">        <span class="n">path</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"."</span>
-</span><span data-line="139">        <span class="n">argv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--rsync-path=mkdir -p </span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; rsync"</span><span class="p">)</span>
-</span><span data-line="140">    <span class="k">return</span> <span class="p">[</span><span class="o">*</span><span class="n">argv</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">]</span>
-</span><span data-line="141">
-</span><span data-line="142">
+</span><span data-line="122">
+</span><span data-line="123">
+</span><span data-line="124"><span class="k">def</span><span class="w"> </span><span class="nf">rsync_argv</span><span class="p">(</span>
+</span><span data-line="125">    <span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="126">    <span class="n">dst</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="127">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="128">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_TIMEOUT</span><span class="p">,</span>
+</span><span data-line="129">    <span class="n">connect_timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_CONNECT_TIMEOUT</span><span class="p">,</span>
+</span><span data-line="130"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="131"><span class="w">    </span><span class="sd">"""``rsync -a --update`` over ssh, quiet, bounded and never asking for input.</span>
+</span><span data-line="132">
+</span><span data-line="133"><span class="sd">    Sent to a ``host:path``, the far side first makes ``path`` (``mkdir -p``, through</span>
+</span><span data-line="134"><span class="sd">    ``--rsync-path``), so a push reaches a store whose directories nothing has made yet:</span>
+</span><span data-line="135"><span class="sd">    rsync alone makes only the last one.</span>
+</span><span data-line="136">
+</span><span data-line="137"><span class="sd">    &gt;&gt;&gt; rsync_argv('m/intents/', 'box:/srv/db/intents/')[-3]</span>
+</span><span data-line="138"><span class="sd">    '--rsync-path=mkdir -p /srv/db/intents/ &amp;&amp; rsync'</span>
+</span><span data-line="139"><span class="sd">    """</span>
+</span><span data-line="140">    <span class="n">ssh</span> <span class="o">=</span> <span class="n">ssh_command</span><span class="p">(</span><span class="n">connect_timeout</span><span class="o">=</span><span class="n">connect_timeout</span><span class="p">)</span>
+</span><span data-line="141">    <span class="n">argv</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"rsync"</span><span class="p">,</span> <span class="s2">"-a"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--update"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"--timeout=</span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">ssh</span><span class="p">]</span>
+</span><span data-line="142">    <span class="k">if</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">dst</span><span class="p">):</span>
+</span><span data-line="143">        <span class="n">path</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"."</span>
+</span><span data-line="144">        <span class="n">argv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--rsync-path=mkdir -p </span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2"> &amp;&amp; rsync"</span><span class="p">)</span>
+</span><span data-line="145">    <span class="k">return</span> <span class="p">[</span><span class="o">*</span><span class="n">argv</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">]</span>
+</span><span data-line="146">
+</span><span data-line="147">
 <div class="viewcode-block" id="rsync_copy">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.courier.html#crowsnest.courier.rsync_copy">[docs]</a>
-</span><span data-line="143"><span class="k">def</span><span class="w"> </span><span class="nf">rsync_copy</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="144"><span class="w">    </span><span class="sd">"""Copy one collection between two roots, one of them ``[user@]host:path``, by rsync.</span>
-</span><span data-line="145">
-</span><span data-line="146"><span class="sd">    ``--update`` keeps whichever copy is newer, so a push never replaces a document the</span>
-</span><span data-line="147"><span class="sd">    page wrote after the pull. A collection the far side does not have yet is nothing to</span>
-</span><span data-line="148"><span class="sd">    pull, and a push makes it, with every directory above it.</span>
-</span><span data-line="149"><span class="sd">    """</span>
-</span><span data-line="150">    <span class="k">if</span> <span class="ow">not</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"rsync"</span><span class="p">):</span>
-</span><span data-line="151">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"the courier needs rsync, which is not on PATH"</span><span class="p">)</span>
-</span><span data-line="152">    <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">):</span>
-</span><span data-line="153">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
-</span><span data-line="154">            <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">collection</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="155">    <span class="n">source</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">/"</span>
-</span><span data-line="156">    <span class="n">target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dst</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">/"</span>
-</span><span data-line="157">    <span class="n">done</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span data-line="158">        <span class="n">rsync_argv</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
-</span><span data-line="159">    <span class="p">)</span>
-</span><span data-line="160">    <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="161">        <span class="k">return</span>
-</span><span data-line="162">    <span class="n">said</span> <span class="o">=</span> <span class="p">(</span><span class="n">done</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="n">done</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="163">    <span class="k">if</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">src</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"No such file or directory"</span> <span class="ow">in</span> <span class="n">said</span><span class="p">:</span>
+</span><span data-line="148"><span class="k">def</span><span class="w"> </span><span class="nf">rsync_copy</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="149"><span class="w">    </span><span class="sd">"""Copy one collection between two roots, one of them ``[user@]host:path``, by rsync.</span>
+</span><span data-line="150">
+</span><span data-line="151"><span class="sd">    ``--update`` keeps whichever copy is newer, so a push never replaces a document the</span>
+</span><span data-line="152"><span class="sd">    page wrote after the pull. A collection the far side does not have yet is nothing to</span>
+</span><span data-line="153"><span class="sd">    pull, and a push makes it, with every directory above it.</span>
+</span><span data-line="154"><span class="sd">    """</span>
+</span><span data-line="155">    <span class="k">if</span> <span class="ow">not</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"rsync"</span><span class="p">):</span>
+</span><span data-line="156">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"the courier needs rsync, which is not on PATH"</span><span class="p">)</span>
+</span><span data-line="157">    <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">):</span>
+</span><span data-line="158">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
+</span><span data-line="159">            <span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">collection</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="160">    <span class="n">source</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">/"</span>
+</span><span data-line="161">    <span class="n">target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dst</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">/"</span>
+</span><span data-line="162">    <span class="n">done</span> <span class="o">=</span> <span class="n">attempt</span><span class="p">(</span><span class="n">rsync_argv</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">))</span>
+</span><span data-line="163">    <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 </span><span data-line="164">        <span class="k">return</span>
-</span><span data-line="165">    <span class="n">tail</span> <span class="o">=</span> <span class="n">said</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="s2">"no output"</span>
-</span><span data-line="166">    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"courier: rsync of </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> exited </span><span class="si">{</span><span class="n">done</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+</span><span data-line="165">    <span class="n">said</span> <span class="o">=</span> <span class="p">(</span><span class="n">done</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="n">done</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="166">    <span class="k">if</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">src</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"No such file or directory"</span> <span class="ow">in</span> <span class="n">said</span><span class="p">:</span>
+</span><span data-line="167">        <span class="k">return</span>
+</span><span data-line="168">    <span class="n">tail</span> <span class="o">=</span> <span class="n">said</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">said</span> <span class="k">else</span> <span class="s2">"no output"</span>
+</span><span data-line="169">    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"courier: rsync of </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> exited </span><span class="si">{</span><span class="n">done</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
-</span><span data-line="167">
-</span><span data-line="168">
+</span><span data-line="170">
+</span><span data-line="171">
 <div class="viewcode-block" id="dflt_copy">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.courier.html#crowsnest.courier.dflt_copy">[docs]</a>
-</span><span data-line="169"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_copy</span><span class="p">(</span><span class="n">remote</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Copy</span><span class="p">:</span>
-</span><span data-line="170"><span class="w">    </span><span class="sd">"""rsync over ssh for a ``[user@]host:path``, a directory copy for anything else."""</span>
-</span><span data-line="171">    <span class="k">return</span> <span class="n">rsync_copy</span> <span class="k">if</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span> <span class="k">else</span> <span class="n">dir_copy</span></div>
+</span><span data-line="172"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_copy</span><span class="p">(</span><span class="n">remote</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Copy</span><span class="p">:</span>
+</span><span data-line="173"><span class="w">    </span><span class="sd">"""rsync over ssh for a ``[user@]host:path``, a directory copy for anything else."""</span>
+</span><span data-line="174">    <span class="k">return</span> <span class="n">rsync_copy</span> <span class="k">if</span> <span class="n">is_remote</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span> <span class="k">else</span> <span class="n">dir_copy</span></div>
 
-</span><span data-line="172">
-</span><span data-line="173">
-</span><span data-line="174"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="175"><span class="c1"># The mirror</span>
+</span><span data-line="175">
 </span><span data-line="176">
-</span><span data-line="177">
-</span><span data-line="178"><span class="k">def</span><span class="w"> </span><span class="nf">_docs</span><span class="p">(</span><span class="n">mirror</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]:</span>
-</span><span data-line="179"><span class="w">    </span><span class="sd">"""Each readable document in one collection of the mirror, as ``(id, doc, path)``."""</span>
-</span><span data-line="180">    <span class="n">folder</span> <span class="o">=</span> <span class="n">mirror</span> <span class="o">/</span> <span class="n">collection</span>
-</span><span data-line="181">    <span class="k">if</span> <span class="ow">not</span> <span class="n">folder</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
-</span><span data-line="182">        <span class="k">return</span>
-</span><span data-line="183">    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">folder</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">)):</span>
-</span><span data-line="184">        <span class="k">if</span> <span class="ow">not</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">):</span>
-</span><span data-line="185">            <span class="k">continue</span>
-</span><span data-line="186">        <span class="k">try</span><span class="p">:</span>
-</span><span data-line="187">            <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span data-line="188">        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-</span><span data-line="189">            <span class="k">continue</span>
-</span><span data-line="190">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="191">            <span class="k">yield</span> <span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">path</span>
-</span><span data-line="192">
-</span><span data-line="193">
-</span><span data-line="194"><span class="k">def</span><span class="w"> </span><span class="nf">_write</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">doc</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="195"><span class="w">    </span><span class="sd">"""Write ``doc`` to ``path`` atomically, unless it already holds the same document."""</span>
-</span><span data-line="196">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="197">        <span class="k">if</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span> <span class="o">==</span> <span class="n">doc</span><span class="p">:</span>
-</span><span data-line="198">            <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="199">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-</span><span data-line="200">        <span class="k">pass</span>
-</span><span data-line="201">    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="202">    <span class="n">tmp</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".json.tmp"</span><span class="p">)</span>
-</span><span data-line="203">    <span class="n">tmp</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-</span><span data-line="204">    <span class="n">tmp</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="205">    <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="206">
-</span><span data-line="207">
-</span><span data-line="208"><span class="k">def</span><span class="w"> </span><span class="nf">_state</span><span class="p">(</span><span class="n">mirror</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="209">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="210">        <span class="n">state</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">((</span><span class="n">mirror</span> <span class="o">/</span> <span class="n">STATE_FILE</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span data-line="211">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-</span><span data-line="212">        <span class="k">return</span> <span class="p">{}</span>
-</span><span data-line="213">    <span class="k">return</span> <span class="n">state</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
-</span><span data-line="214">
-</span><span data-line="215">
-</span><span data-line="216"><span class="k">def</span><span class="w"> </span><span class="nf">_iso</span><span class="p">(</span><span class="n">moment</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="217">    <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="218">        <span class="n">moment</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
-</span><span data-line="219">        <span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
-</span><span data-line="220">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"+00:00"</span><span class="p">,</span> <span class="s2">"Z"</span><span class="p">)</span>
-</span><span data-line="221">    <span class="p">)</span>
-</span><span data-line="222">
-</span><span data-line="223">
-</span><span data-line="224"><span class="k">def</span><span class="w"> </span><span class="nf">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">ANSWER_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="225">    <span class="n">line</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-</span><span data-line="226">    <span class="k">return</span> <span class="n">line</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">line</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
-</span><span data-line="227">
-</span><span data-line="228">
-</span><span data-line="229"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="230"><span class="c1"># One tick</span>
+</span><span data-line="177"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="178"><span class="c1"># The mirror</span>
+</span><span data-line="179">
+</span><span data-line="180">
+</span><span data-line="181"><span class="k">def</span><span class="w"> </span><span class="nf">_docs</span><span class="p">(</span><span class="n">mirror</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]:</span>
+</span><span data-line="182"><span class="w">    </span><span class="sd">"""Each readable document in one collection of the mirror, as ``(id, doc, path)``."""</span>
+</span><span data-line="183">    <span class="n">folder</span> <span class="o">=</span> <span class="n">mirror</span> <span class="o">/</span> <span class="n">collection</span>
+</span><span data-line="184">    <span class="k">if</span> <span class="ow">not</span> <span class="n">folder</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+</span><span data-line="185">        <span class="k">return</span>
+</span><span data-line="186">    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">folder</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">)):</span>
+</span><span data-line="187">        <span class="k">if</span> <span class="ow">not</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">):</span>
+</span><span data-line="188">            <span class="k">continue</span>
+</span><span data-line="189">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="190">            <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+</span><span data-line="191">        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="192">            <span class="k">continue</span>
+</span><span data-line="193">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="194">            <span class="k">yield</span> <span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">path</span>
+</span><span data-line="195">
+</span><span data-line="196">
+</span><span data-line="197"><span class="k">def</span><span class="w"> </span><span class="nf">_write</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">doc</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="198"><span class="w">    </span><span class="sd">"""Write ``doc`` to ``path`` atomically, unless it already holds the same document."""</span>
+</span><span data-line="199">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="200">        <span class="k">if</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span> <span class="o">==</span> <span class="n">doc</span><span class="p">:</span>
+</span><span data-line="201">            <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="202">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="203">        <span class="k">pass</span>
+</span><span data-line="204">    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="205">    <span class="n">tmp</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".json.tmp"</span><span class="p">)</span>
+</span><span data-line="206">    <span class="n">tmp</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+</span><span data-line="207">    <span class="n">tmp</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="208">    <span class="k">return</span> <span class="kc">True</span>
+</span><span data-line="209">
+</span><span data-line="210">
+</span><span data-line="211"><span class="k">def</span><span class="w"> </span><span class="nf">_state</span><span class="p">(</span><span class="n">mirror</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="212">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="213">        <span class="n">state</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">((</span><span class="n">mirror</span> <span class="o">/</span> <span class="n">STATE_FILE</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+</span><span data-line="214">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="215">        <span class="k">return</span> <span class="p">{}</span>
+</span><span data-line="216">    <span class="k">return</span> <span class="n">state</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+</span><span data-line="217">
+</span><span data-line="218">
+</span><span data-line="219"><span class="k">def</span><span class="w"> </span><span class="nf">_iso</span><span class="p">(</span><span class="n">moment</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="220">    <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="221">        <span class="n">moment</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+</span><span data-line="222">        <span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+</span><span data-line="223">        <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"+00:00"</span><span class="p">,</span> <span class="s2">"Z"</span><span class="p">)</span>
+</span><span data-line="224">    <span class="p">)</span>
+</span><span data-line="225">
+</span><span data-line="226">
+</span><span data-line="227"><span class="k">def</span><span class="w"> </span><span class="nf">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">ANSWER_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="228">    <span class="n">line</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</span><span data-line="229">    <span class="k">return</span> <span class="n">line</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="n">line</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
+</span><span data-line="230">
 </span><span data-line="231">
-</span><span data-line="232">
+</span><span data-line="232"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="233"><span class="c1"># One tick</span>
+</span><span data-line="234">
+</span><span data-line="235">
 <div class="viewcode-block" id="tick">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.courier.html#crowsnest.courier.tick">[docs]</a>
-</span><span data-line="233"><span class="k">def</span><span class="w"> </span><span class="nf">tick</span><span class="p">(</span>
-</span><span data-line="234">    <span class="n">remote</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="235">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="236">    <span class="n">mirror</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="237">    <span class="n">copy</span><span class="p">:</span> <span class="n">Copy</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="238">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="239">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="240">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="241">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="242">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="243">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="244">    <span class="n">recap</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="245">    <span class="n">live</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="246"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="247"><span class="w">    </span><span class="sd">"""Carry the console store at ``remote`` both ways once; the summary of what moved.</span>
-</span><span data-line="248">
-</span><span data-line="249"><span class="sd">    ``remote`` is the store's root, ``[user@]host:path`` or a directory. ``home`` /</span>
-</span><span data-line="250"><span class="sd">    ``all_homes`` / ``config`` are the roster's, as for the page, so a recap names the</span>
-</span><span data-line="251"><span class="sd">    same sessions the page does. ``store`` is the attention store (its default when</span>
-</span><span data-line="252"><span class="sd">    ``None``). ``recap`` and ``live`` default to :func:`crowsnest.tools.recap` and</span>
-</span><span data-line="253"><span class="sd">    :func:`crowsnest.tools.live`, and exist so a test need not read real sessions.</span>
-</span><span data-line="254"><span class="sd">    """</span>
-</span><span data-line="255">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">tools</span>
-</span><span data-line="256">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">append_event</span>
-</span><span data-line="257">
-</span><span data-line="258">    <span class="n">mirror</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">mirror</span> <span class="k">else</span> <span class="n">dflt_mirror</span><span class="p">()</span>
-</span><span data-line="259">    <span class="n">mirror</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="260">    <span class="n">copy</span> <span class="o">=</span> <span class="n">dflt_copy</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span> <span class="k">if</span> <span class="n">copy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">copy</span>
-</span><span data-line="261">    <span class="n">recap</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">recap</span> <span class="k">if</span> <span class="n">recap</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">recap</span>
-</span><span data-line="262">    <span class="n">live</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">live</span> <span class="k">if</span> <span class="n">live</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">live</span>
-</span><span data-line="263">    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
-</span><span data-line="264">    <span class="n">stamp</span> <span class="o">=</span> <span class="n">_iso</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
-</span><span data-line="265">    <span class="n">state</span> <span class="o">=</span> <span class="n">_state</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span>
-</span><span data-line="266">    <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"imported"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"exported"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"answered"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"handed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"skipped"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
-</span><span data-line="267">
-</span><span data-line="268">    <span class="k">for</span> <span class="n">collection</span> <span class="ow">in</span> <span class="n">PULLED</span><span class="p">:</span>
-</span><span data-line="269">        <span class="n">copy</span><span class="p">(</span><span class="n">remote</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">mirror</span><span class="p">),</span> <span class="n">collection</span><span class="p">)</span>
+</span><span data-line="236"><span class="k">def</span><span class="w"> </span><span class="nf">tick</span><span class="p">(</span>
+</span><span data-line="237">    <span class="n">remote</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="238">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="239">    <span class="n">mirror</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="240">    <span class="n">copy</span><span class="p">:</span> <span class="n">Copy</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="241">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="242">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="243">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="244">    <span class="n">store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="245">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="246">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="247">    <span class="n">recap</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="248">    <span class="n">live</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="249"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="250"><span class="w">    </span><span class="sd">"""Carry the console store at ``remote`` both ways once; the summary of what moved.</span>
+</span><span data-line="251">
+</span><span data-line="252"><span class="sd">    ``remote`` is the store's root, ``[user@]host:path`` or a directory. ``home`` /</span>
+</span><span data-line="253"><span class="sd">    ``all_homes`` / ``config`` are the roster's, as for the page, so a recap names the</span>
+</span><span data-line="254"><span class="sd">    same sessions the page does. ``store`` is the attention store (its default when</span>
+</span><span data-line="255"><span class="sd">    ``None``). ``recap`` and ``live`` default to :func:`crowsnest.tools.recap` and</span>
+</span><span data-line="256"><span class="sd">    :func:`crowsnest.tools.live`, and exist so a test need not read real sessions.</span>
+</span><span data-line="257"><span class="sd">    """</span>
+</span><span data-line="258">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">tools</span>
+</span><span data-line="259">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">append_event</span>
+</span><span data-line="260">
+</span><span data-line="261">    <span class="n">mirror</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">mirror</span> <span class="k">else</span> <span class="n">dflt_mirror</span><span class="p">()</span>
+</span><span data-line="262">    <span class="n">mirror</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="263">    <span class="n">copy</span> <span class="o">=</span> <span class="n">dflt_copy</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span> <span class="k">if</span> <span class="n">copy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">copy</span>
+</span><span data-line="264">    <span class="n">recap</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">recap</span> <span class="k">if</span> <span class="n">recap</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">recap</span>
+</span><span data-line="265">    <span class="n">live</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">live</span> <span class="k">if</span> <span class="n">live</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">live</span>
+</span><span data-line="266">    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
+</span><span data-line="267">    <span class="n">stamp</span> <span class="o">=</span> <span class="n">_iso</span><span class="p">(</span><span class="n">now</span><span class="p">)</span>
+</span><span data-line="268">    <span class="n">state</span> <span class="o">=</span> <span class="n">_state</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span>
+</span><span data-line="269">    <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"imported"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"exported"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"answered"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"handed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"skipped"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
 </span><span data-line="270">
-</span><span data-line="271">    <span class="c1"># Attention in: one document at a time, so one the page wrote badly holds up no other.</span>
-</span><span data-line="272">    <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_docs</span><span class="p">(</span><span class="n">mirror</span><span class="p">,</span> <span class="s2">"attention"</span><span class="p">):</span>
-</span><span data-line="273">        <span class="k">if</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">!=</span> <span class="n">item</span><span class="p">:</span>
-</span><span data-line="274">            <span class="n">summary</span><span class="p">[</span><span class="s2">"skipped"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="275">            <span class="k">continue</span>
-</span><span data-line="276">        <span class="k">try</span><span class="p">:</span>
-</span><span data-line="277">            <span class="n">took</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">attention_import</span><span class="p">([{</span><span class="o">**</span><span class="n">doc</span><span class="p">,</span> <span class="s2">"id"</span><span class="p">:</span> <span class="n">item</span><span class="p">}],</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
-</span><span data-line="278">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-</span><span data-line="279">            <span class="n">summary</span><span class="p">[</span><span class="s2">"skipped"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="280">            <span class="k">continue</span>
-</span><span data-line="281">        <span class="n">summary</span><span class="p">[</span><span class="s2">"imported"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">took</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"written"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-</span><span data-line="282">
-</span><span data-line="283">    <span class="c1"># Attention out: what changed here since the last export, less a margin.</span>
-</span><span data-line="284">    <span class="n">since</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exported"</span><span class="p">)</span>
-</span><span data-line="285">    <span class="k">if</span> <span class="n">since</span><span class="p">:</span>
-</span><span data-line="286">        <span class="n">since</span> <span class="o">=</span> <span class="n">_iso</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span> <span class="o">-</span> <span class="n">EXPORT_MARGIN</span><span class="p">)</span>
-</span><span data-line="287">    <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">tools</span><span class="o">.</span><span class="n">attention_export</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">):</span>
-</span><span data-line="288">        <span class="n">item</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="289">        <span class="k">if</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_write</span><span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="s2">"attention"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">.json"</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
-</span><span data-line="290">            <span class="n">summary</span><span class="p">[</span><span class="s2">"exported"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="291">
-</span><span data-line="292">    <span class="c1"># Intents: answer what disk can answer, hand the rest to a session.</span>
-</span><span data-line="293">    <span class="k">for</span> <span class="n">intent</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_docs</span><span class="p">(</span><span class="n">mirror</span><span class="p">,</span> <span class="s2">"intents"</span><span class="p">):</span>
-</span><span data-line="294">        <span class="k">if</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">,</span> <span class="s2">"queued"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"queued"</span><span class="p">:</span>
-</span><span data-line="295">            <span class="k">continue</span>
-</span><span data-line="296">        <span class="n">kind</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="297">        <span class="n">session</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="298">        <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="299">        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"recap"</span><span class="p">:</span>
-</span><span data-line="300">            <span class="n">wanted</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">where</span> <span class="ow">and</span> <span class="n">all_homes</span> <span class="k">else</span> <span class="n">session</span>
-</span><span data-line="301">            <span class="k">try</span><span class="p">:</span>
-</span><span data-line="302">                <span class="n">lines</span> <span class="o">=</span> <span class="n">recap</span><span class="p">(</span><span class="n">wanted</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="303">                <span class="n">reply</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="s2">"lines"</span><span class="p">]),</span> <span class="s2">"done"</span>
-</span><span data-line="304">            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="305">                <span class="n">ambiguous</span> <span class="o">=</span> <span class="s2">"ambiguous"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-</span><span data-line="306">                <span class="n">reply</span> <span class="o">=</span> <span class="n">AMBIGUOUS_SESSION</span> <span class="k">if</span> <span class="n">ambiguous</span> <span class="k">else</span> <span class="n">NO_SUCH_SESSION</span>
-</span><span data-line="307">                <span class="n">status</span> <span class="o">=</span> <span class="s2">"failed"</span>
-</span><span data-line="308">            <span class="n">summary</span><span class="p">[</span><span class="s2">"answered"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="309">        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"refresh"</span><span class="p">:</span>
-</span><span data-line="310">            <span class="n">reply</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">REFRESHED</span><span class="p">,</span> <span class="s2">"done"</span>
+</span><span data-line="271">    <span class="k">for</span> <span class="n">collection</span> <span class="ow">in</span> <span class="n">PULLED</span><span class="p">:</span>
+</span><span data-line="272">        <span class="n">copy</span><span class="p">(</span><span class="n">remote</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">mirror</span><span class="p">),</span> <span class="n">collection</span><span class="p">)</span>
+</span><span data-line="273">
+</span><span data-line="274">    <span class="c1"># Attention in: one document at a time, so one the page wrote badly holds up no other.</span>
+</span><span data-line="275">    <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_docs</span><span class="p">(</span><span class="n">mirror</span><span class="p">,</span> <span class="s2">"attention"</span><span class="p">):</span>
+</span><span data-line="276">        <span class="k">if</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">!=</span> <span class="n">item</span><span class="p">:</span>
+</span><span data-line="277">            <span class="n">summary</span><span class="p">[</span><span class="s2">"skipped"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="278">            <span class="k">continue</span>
+</span><span data-line="279">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="280">            <span class="n">took</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">attention_import</span><span class="p">([{</span><span class="o">**</span><span class="n">doc</span><span class="p">,</span> <span class="s2">"id"</span><span class="p">:</span> <span class="n">item</span><span class="p">}],</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
+</span><span data-line="281">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+</span><span data-line="282">            <span class="n">summary</span><span class="p">[</span><span class="s2">"skipped"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="283">            <span class="k">continue</span>
+</span><span data-line="284">        <span class="n">summary</span><span class="p">[</span><span class="s2">"imported"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">took</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"written"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span><span data-line="285">
+</span><span data-line="286">    <span class="c1"># Attention out: what changed here since the last export, less a margin.</span>
+</span><span data-line="287">    <span class="n">since</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exported"</span><span class="p">)</span>
+</span><span data-line="288">    <span class="k">if</span> <span class="n">since</span><span class="p">:</span>
+</span><span data-line="289">        <span class="n">since</span> <span class="o">=</span> <span class="n">_iso</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span> <span class="o">-</span> <span class="n">EXPORT_MARGIN</span><span class="p">)</span>
+</span><span data-line="290">    <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">tools</span><span class="o">.</span><span class="n">attention_export</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="n">since</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">):</span>
+</span><span data-line="291">        <span class="n">item</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="292">        <span class="k">if</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_write</span><span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="s2">"attention"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">.json"</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+</span><span data-line="293">            <span class="n">summary</span><span class="p">[</span><span class="s2">"exported"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="294">
+</span><span data-line="295">    <span class="c1"># Intents: answer what disk can answer, hand the rest to a session.</span>
+</span><span data-line="296">    <span class="k">for</span> <span class="n">intent</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_docs</span><span class="p">(</span><span class="n">mirror</span><span class="p">,</span> <span class="s2">"intents"</span><span class="p">):</span>
+</span><span data-line="297">        <span class="k">if</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">,</span> <span class="s2">"queued"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"queued"</span><span class="p">:</span>
+</span><span data-line="298">            <span class="k">continue</span>
+</span><span data-line="299">        <span class="n">kind</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kind"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="300">        <span class="n">session</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="301">        <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="302">        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"recap"</span><span class="p">:</span>
+</span><span data-line="303">            <span class="n">wanted</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">where</span> <span class="ow">and</span> <span class="n">all_homes</span> <span class="k">else</span> <span class="n">session</span>
+</span><span data-line="304">            <span class="k">try</span><span class="p">:</span>
+</span><span data-line="305">                <span class="n">lines</span> <span class="o">=</span> <span class="n">recap</span><span class="p">(</span><span class="n">wanted</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="306">                <span class="n">reply</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="s2">"lines"</span><span class="p">]),</span> <span class="s2">"done"</span>
+</span><span data-line="307">            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="308">                <span class="n">ambiguous</span> <span class="o">=</span> <span class="s2">"ambiguous"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+</span><span data-line="309">                <span class="n">reply</span> <span class="o">=</span> <span class="n">AMBIGUOUS_SESSION</span> <span class="k">if</span> <span class="n">ambiguous</span> <span class="k">else</span> <span class="n">NO_SUCH_SESSION</span>
+</span><span data-line="310">                <span class="n">status</span> <span class="o">=</span> <span class="s2">"failed"</span>
 </span><span data-line="311">            <span class="n">summary</span><span class="p">[</span><span class="s2">"answered"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="312">        <span class="k">elif</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">HANDED</span><span class="p">:</span>
-</span><span data-line="313">            <span class="n">reply</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"handed to the crowsnest session at </span><span class="si">{</span><span class="n">stamp</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span><span class="si">}</span><span class="s2"> UTC"</span>
-</span><span data-line="314">            <span class="n">status</span> <span class="o">=</span> <span class="s2">"handed"</span>
-</span><span data-line="315">            <span class="n">append_event</span><span class="p">(</span>
-</span><span data-line="316">                <span class="p">{</span>
-</span><span data-line="317">                    <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"intent"</span><span class="p">,</span>
-</span><span data-line="318">                    <span class="s2">"at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
-</span><span data-line="319">                    <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="p">,</span>
-</span><span data-line="320">                    <span class="s2">"intent"</span><span class="p">:</span> <span class="n">intent</span><span class="p">,</span>
-</span><span data-line="321">                    <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'text'</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span>
-</span><span data-line="322">                <span class="p">},</span>
-</span><span data-line="323">                <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span>
-</span><span data-line="324">            <span class="p">)</span>
-</span><span data-line="325">            <span class="n">summary</span><span class="p">[</span><span class="s2">"handed"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="326">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="327">            <span class="n">reply</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">UNKNOWN_KIND</span><span class="p">,</span> <span class="s2">"failed"</span>
-</span><span data-line="328">            <span class="n">summary</span><span class="p">[</span><span class="s2">"answered"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="329">        <span class="n">_write</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">doc</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span> <span class="s2">"answer"</span><span class="p">:</span> <span class="n">reply</span><span class="p">,</span> <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">})</span>
-</span><span data-line="330">
-</span><span data-line="331">    <span class="c1"># What the page paints between publishes.</span>
-</span><span data-line="332">    <span class="n">_write</span><span class="p">(</span>
-</span><span data-line="333">        <span class="n">mirror</span> <span class="o">/</span> <span class="s2">"live"</span> <span class="o">/</span> <span class="s2">"roster.json"</span><span class="p">,</span>
-</span><span data-line="334">        <span class="n">live</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
-</span><span data-line="335">    <span class="p">)</span>
-</span><span data-line="336">    <span class="n">_write</span><span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="s2">"console"</span> <span class="o">/</span> <span class="s2">"heartbeat.json"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">})</span>
-</span><span data-line="337">
-</span><span data-line="338">    <span class="k">for</span> <span class="n">collection</span> <span class="ow">in</span> <span class="n">COLLECTIONS</span><span class="p">:</span>
-</span><span data-line="339">        <span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">mirror</span><span class="p">),</span> <span class="n">remote</span><span class="p">,</span> <span class="n">collection</span><span class="p">)</span>
-</span><span data-line="340">    <span class="n">_write</span><span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="n">STATE_FILE</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">state</span><span class="p">,</span> <span class="s2">"exported"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span> <span class="s2">"ticked"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">})</span>
-</span><span data-line="341">    <span class="k">return</span> <span class="n">summary</span></div>
+</span><span data-line="312">        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"refresh"</span><span class="p">:</span>
+</span><span data-line="313">            <span class="n">reply</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">REFRESHED</span><span class="p">,</span> <span class="s2">"done"</span>
+</span><span data-line="314">            <span class="n">summary</span><span class="p">[</span><span class="s2">"answered"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="315">        <span class="k">elif</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">HANDED</span><span class="p">:</span>
+</span><span data-line="316">            <span class="n">reply</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"handed to the crowsnest session at </span><span class="si">{</span><span class="n">stamp</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span><span class="si">}</span><span class="s2"> UTC"</span>
+</span><span data-line="317">            <span class="n">status</span> <span class="o">=</span> <span class="s2">"handed"</span>
+</span><span data-line="318">            <span class="n">append_event</span><span class="p">(</span>
+</span><span data-line="319">                <span class="p">{</span>
+</span><span data-line="320">                    <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"intent"</span><span class="p">,</span>
+</span><span data-line="321">                    <span class="s2">"at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
+</span><span data-line="322">                    <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="p">,</span>
+</span><span data-line="323">                    <span class="s2">"intent"</span><span class="p">:</span> <span class="n">intent</span><span class="p">,</span>
+</span><span data-line="324">                    <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'text'</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span>
+</span><span data-line="325">                <span class="p">},</span>
+</span><span data-line="326">                <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span>
+</span><span data-line="327">            <span class="p">)</span>
+</span><span data-line="328">            <span class="n">summary</span><span class="p">[</span><span class="s2">"handed"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="329">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="330">            <span class="n">reply</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">UNKNOWN_KIND</span><span class="p">,</span> <span class="s2">"failed"</span>
+</span><span data-line="331">            <span class="n">summary</span><span class="p">[</span><span class="s2">"answered"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="332">        <span class="n">_write</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">doc</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span> <span class="s2">"answer"</span><span class="p">:</span> <span class="n">reply</span><span class="p">,</span> <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">})</span>
+</span><span data-line="333">
+</span><span data-line="334">    <span class="c1"># What the page paints between publishes.</span>
+</span><span data-line="335">    <span class="n">_write</span><span class="p">(</span>
+</span><span data-line="336">        <span class="n">mirror</span> <span class="o">/</span> <span class="s2">"live"</span> <span class="o">/</span> <span class="s2">"roster.json"</span><span class="p">,</span>
+</span><span data-line="337">        <span class="n">live</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
+</span><span data-line="338">    <span class="p">)</span>
+</span><span data-line="339">    <span class="n">_write</span><span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="s2">"console"</span> <span class="o">/</span> <span class="s2">"heartbeat.json"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">})</span>
+</span><span data-line="340">
+</span><span data-line="341">    <span class="k">for</span> <span class="n">collection</span> <span class="ow">in</span> <span class="n">COLLECTIONS</span><span class="p">:</span>
+</span><span data-line="342">        <span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">mirror</span><span class="p">),</span> <span class="n">remote</span><span class="p">,</span> <span class="n">collection</span><span class="p">)</span>
+</span><span data-line="343">    <span class="n">_write</span><span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="n">STATE_FILE</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">state</span><span class="p">,</span> <span class="s2">"exported"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span> <span class="s2">"ticked"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">})</span>
+</span><span data-line="344">    <span class="k">return</span> <span class="n">summary</span></div>
 
-</span><span data-line="342">
-</span><span data-line="343">
+</span><span data-line="345">
+</span><span data-line="346">
 <div class="viewcode-block" id="answer">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.courier.html#crowsnest.courier.answer">[docs]</a>
-</span><span data-line="344"><span class="k">def</span><span class="w"> </span><span class="nf">answer</span><span class="p">(</span>
-</span><span data-line="345">    <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="346">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="347">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="348">    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"done"</span><span class="p">,</span>
-</span><span data-line="349">    <span class="n">mirror</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="350">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="351"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="352"><span class="w">    </span><span class="sd">"""Write a session's one-line answer to a handed intent; the next tick carries it.</span>
-</span><span data-line="353">
-</span><span data-line="354"><span class="sd">    ``status`` is ``done`` or ``failed``. The text is kept to one line of at most</span>
-</span><span data-line="355"><span class="sd">    :data:`ANSWER_LIMIT` characters. It is published to whoever can open the page, so it</span>
-</span><span data-line="356"><span class="sd">    says what happened in the page's own terms, never a command's output.</span>
-</span><span data-line="357"><span class="sd">    """</span>
-</span><span data-line="358">    <span class="k">if</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"done"</span><span class="p">,</span> <span class="s2">"failed"</span><span class="p">):</span>
-</span><span data-line="359">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"an answer's status is done or failed, not </span><span class="si">{</span><span class="n">status</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="360">    <span class="k">if</span> <span class="ow">not</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">intent</span><span class="p">):</span>
-</span><span data-line="361">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">!r}</span><span class="s2"> is not an intent id"</span><span class="p">)</span>
-</span><span data-line="362">    <span class="n">mirror</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">mirror</span> <span class="k">else</span> <span class="n">dflt_mirror</span><span class="p">()</span>
-</span><span data-line="363">    <span class="n">path</span> <span class="o">=</span> <span class="n">mirror</span> <span class="o">/</span> <span class="s2">"intents"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">.json"</span>
-</span><span data-line="364">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="365">        <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span data-line="366">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-</span><span data-line="367">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no intent </span><span class="si">{</span><span class="n">intent</span><span class="si">!r}</span><span class="s2"> in the courier's mirror"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-</span><span data-line="368">    <span class="n">line</span> <span class="o">=</span> <span class="n">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-</span><span data-line="369">    <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
-</span><span data-line="370">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"an answer needs some text"</span><span class="p">)</span>
-</span><span data-line="371">    <span class="n">moment</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
-</span><span data-line="372">    <span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">doc</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span> <span class="s2">"answer"</span><span class="p">:</span> <span class="n">line</span><span class="p">,</span> <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">_iso</span><span class="p">(</span><span class="n">moment</span><span class="p">)}</span>
-</span><span data-line="373">    <span class="n">_write</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
-</span><span data-line="374">    <span class="k">return</span> <span class="n">doc</span></div>
+</span><span data-line="347"><span class="k">def</span><span class="w"> </span><span class="nf">answer</span><span class="p">(</span>
+</span><span data-line="348">    <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="349">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="350">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="351">    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"done"</span><span class="p">,</span>
+</span><span data-line="352">    <span class="n">mirror</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="353">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="354"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="355"><span class="w">    </span><span class="sd">"""Write a session's one-line answer to a handed intent; the next tick carries it.</span>
+</span><span data-line="356">
+</span><span data-line="357"><span class="sd">    ``status`` is ``done`` or ``failed``. The text is kept to one line of at most</span>
+</span><span data-line="358"><span class="sd">    :data:`ANSWER_LIMIT` characters. It is published to whoever can open the page, so it</span>
+</span><span data-line="359"><span class="sd">    says what happened in the page's own terms, never a command's output.</span>
+</span><span data-line="360"><span class="sd">    """</span>
+</span><span data-line="361">    <span class="k">if</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"done"</span><span class="p">,</span> <span class="s2">"failed"</span><span class="p">):</span>
+</span><span data-line="362">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"an answer's status is done or failed, not </span><span class="si">{</span><span class="n">status</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="363">    <span class="k">if</span> <span class="ow">not</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">intent</span><span class="p">):</span>
+</span><span data-line="364">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">!r}</span><span class="s2"> is not an intent id"</span><span class="p">)</span>
+</span><span data-line="365">    <span class="n">mirror</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">mirror</span> <span class="k">else</span> <span class="n">dflt_mirror</span><span class="p">()</span>
+</span><span data-line="366">    <span class="n">path</span> <span class="o">=</span> <span class="n">mirror</span> <span class="o">/</span> <span class="s2">"intents"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">.json"</span>
+</span><span data-line="367">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="368">        <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+</span><span data-line="369">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="370">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no intent </span><span class="si">{</span><span class="n">intent</span><span class="si">!r}</span><span class="s2"> in the courier's mirror"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+</span><span data-line="371">    <span class="n">line</span> <span class="o">=</span> <span class="n">_one_line</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="372">    <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+</span><span data-line="373">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"an answer needs some text"</span><span class="p">)</span>
+</span><span data-line="374">    <span class="n">moment</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
+</span><span data-line="375">    <span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">doc</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span> <span class="s2">"answer"</span><span class="p">:</span> <span class="n">line</span><span class="p">,</span> <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">_iso</span><span class="p">(</span><span class="n">moment</span><span class="p">)}</span>
+</span><span data-line="376">    <span class="n">_write</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+</span><span data-line="377">    <span class="k">return</span> <span class="n">doc</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -554,7 +557,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=b153cf10"></script>
+      <script src="../../_static/documentation_options.js?v=152b4b09"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
