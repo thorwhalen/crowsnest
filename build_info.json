@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-09-25T07:36:03Z",
+  "built_at": "2026-09-25T07:47:36Z",
   "package": {
     "name": "crowsnest",
-    "version": "0.0.63",
+    "version": "0.0.64",
     "display_name": "crowsnest",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "34b2358236155f9cb2bbf55b0250b8fccff397cc",
-    "short_commit": "34b2358",
+    "commit": "57bcbfd2c44ffff066fc63bcb4538b2dafd829f7",
+    "short_commit": "57bcbfd",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/crowsnest",
-    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/34b2358236155f9cb2bbf55b0250b8fccff397cc",
+    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/57bcbfd2c44ffff066fc63bcb4538b2dafd829f7",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/crowsnest",
-    "sha": "34b2358236155f9cb2bbf55b0250b8fccff397cc",
+    "sha": "57bcbfd2c44ffff066fc63bcb4538b2dafd829f7",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "36108280423",
-    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/36108280423",
+    "run_id": "36109294806",
+    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/36109294806",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -60,16 +60,16 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.64",
+    "latest": "0.0.65",
     "relation": "behind",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 34b2358236155f9cb2bbf55b0250b8fccff397cc\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 57bcbfd2c44ffff066fc63bcb4538b2dafd829f7\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": false,
     "notes": [
-      "The documented version (0.0.63) is behind the latest release on PyPI (0.0.64): `pip install crowsnest` gives newer code than these docs describe."
+      "The documented version (0.0.64) is behind the latest release on PyPI (0.0.65): `pip install crowsnest` gives newer code than these docs describe."
     ]
   }
 }

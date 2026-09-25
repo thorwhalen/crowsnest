@@ -284,8 +284,7 @@ newer than what it copied.</p>
 <dd><p>Copy one collection between two roots, one of them <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>, by rsync.</p>
 <p><code class="docutils literal notranslate"><span class="pre">--update</span></code> keeps whichever copy is newer, so a push never replaces a document the
 page wrote after the pull. A collection the far side does not have yet is nothing to
-pull. Pushing needs the store’s root to exist on the server (the server’s routes
-create it); rsync makes the collection directory under it.</p>
+pull, and a push makes it, with every directory above it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
@@ -351,7 +350,7 @@ same sessions the page does. <code class="docutils literal notranslate"><span cl
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=7ada5fdd"></script>
+      <script src="../_static/documentation_options.js?v=b153cf10"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

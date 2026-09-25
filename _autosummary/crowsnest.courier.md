@@ -94,8 +94,7 @@ Copy one collection between two roots, one of them `[user@]host:path`, by rsync.
 
 `--update` keeps whichever copy is newer, so a push never replaces a document the
 page wrote after the pull. A collection the far side does not have yet is nothing to
-pull. Pushing needs the store’s root to exist on the server (the server’s routes
-create it); rsync makes the collection directory under it.
+pull, and a push makes it, with every directory above it.
 
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
