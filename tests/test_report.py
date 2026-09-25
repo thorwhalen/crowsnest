@@ -8,7 +8,7 @@ renderer and nothing upstream of it.
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from openloops.egress import scan
 
@@ -387,9 +387,26 @@ def test_the_page_reaches_nowhere():
 
 
 def test_the_page_says_it_is_a_snapshot_and_when_it_was_made():
-    html = render_report(roster(), made_at=STAMP)
-    assert "2026-02-01 12:00 UTC" in html
+    html = render_report(roster(), made_at=STAMP, tz="UTC")
+    assert "2026-02-01 12:00 UTC</time></p>" in html  # one form in UTC
     assert "snapshot" in html
+
+
+def test_the_stamp_leads_with_local_time_and_gives_utc_after_it():
+    # Fixed offsets, not zone names: Windows has no zone database without `tzdata`.
+    html = render_report(
+        roster(), made_at=STAMP, tz=timezone(timedelta(hours=5, minutes=30))
+    )
+    assert (
+        '<time datetime="2026-02-01T17:30:00+05:30">2026-02-01 17:30 UTC+05:30</time>'
+        ' <span class="stamp-utc">(12:00 UTC)</span>'
+    ) in html
+    west = render_report(
+        roster(), made_at="2026-02-01T02:00:00Z", tz=timezone(timedelta(hours=-5))
+    )
+    assert (
+        "2026-01-31 21:00 UTC-05:00</time>" in west and "(2026-02-01 02:00 UTC)" in west
+    )
 
 
 def test_the_title_is_the_page_name():

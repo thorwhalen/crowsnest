@@ -1719,6 +1719,7 @@ UNDATED_NOTE = (
 #: behind a fold. All of them apply to every page, store or no store, so an empty
 #: attention store still renders the page byte for byte as ``plain=True`` does.
 OVERVIEW_CSS = """
+.stamp .stamp-utc{font-size:.55em;font-weight:400;color:var(--ink-soft);white-space:nowrap}
 .about{max-width:38rem}
 .about>summary{cursor:pointer;font-family:var(--mono);font-size:.72rem;
   letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
@@ -1871,6 +1872,31 @@ def _clock(
     if not isinstance(limit, timedelta) or limit <= timedelta(0):
         raise ValueError(f"stale_after must be a positive timedelta, not {stale_after!r}")
     return _Clock(_epoch(made_at), _zone(tz), limit.total_seconds())
+
+
+def _stamp(safe: _Sanitizer, clock: _Clock) -> str:
+    """The masthead's moment: in the page's own zone, named, with UTC after it, lighter.
+
+    The local time is what the person reads the rows' times in; UTC is there to compare
+    with anything stated in UTC, so it gives way. Its date shows only when it is not the
+    local one, and on a page shown in UTC there is one form only.
+
+    >>> ist = timezone(timedelta(hours=5, minutes=30), "IST")
+    >>> _stamp(_Sanitizer(), _Clock(1790345100.0, ist))
+    '<time datetime="2026-09-25T19:35:00+05:30">2026-09-25 19:35 IST</time> <span class="stamp-utc">(14:05 UTC)</span>'
+    >>> _stamp(_Sanitizer(), _Clock(1790345100.0, timezone.utc))
+    '<time datetime="2026-09-25T14:05:00+00:00">2026-09-25 14:05 UTC</time>'
+    """
+    local = clock.local(clock.now)
+    utc = datetime.fromtimestamp(clock.now, tz=timezone.utc)
+    zone = local.tzname() or ""
+    shown = local.strftime("%Y-%m-%d %H:%M") + (f" {zone}" if zone else "")
+    machine = local.isoformat("T", "seconds")
+    stamp = f'<time datetime="{machine}">{safe.text(shown)}</time>'
+    if not local.utcoffset():
+        return stamp if zone else stamp.replace("</time>", " UTC</time>")
+    other = utc.strftime("%H:%M" if utc.date() == local.date() else "%Y-%m-%d %H:%M")
+    return f'{stamp} <span class="stamp-utc">({safe.text(other)} UTC)</span>'
 
 
 def _zone_name(clock: _Clock) -> str:
@@ -2852,7 +2878,7 @@ def _masthead(
         '<header class="masthead">'
         '<p class="eyebrow">crowsnest <span class="sep">·</span> snapshot, not a status page</p>'
         f"<h1>{safe.text(title)}</h1>"
-        f'<p class="stamp">as of <time>{safe.text(stamp)}</time></p>'
+        f'<p class="stamp">as of {stamp}</p>'
         '<details class="about"><summary>How to read this page</summary>'
         '<p class="claim">Every session below was alive at that moment, read from its '
         "registry entry and the tail of its transcript, and nothing since. Re-run "
@@ -3523,7 +3549,8 @@ def _render(
 ) -> str:
     safe = _Sanitizer()
     sessions = list(roster.get("sessions") or [])
-    stamp = datetime.fromtimestamp(clock.now, tz=timezone.utc).strftime(
+    stamp = _stamp(safe, clock)
+    rendered_at = datetime.fromtimestamp(clock.now, tz=timezone.utc).strftime(
         "%Y-%m-%d %H:%M UTC"
     )
 
@@ -3687,7 +3714,7 @@ def _render(
         _lineage_register(safe, roster.get("lineage")),
         _quiet_register(safe, quiet, clock),
         _review_register(safe, sessions, view, clock, settings),
-        _footer(safe, stamp, handled=handled),
+        _footer(safe, rendered_at, handled=handled),
     ]
     # The badge (triage-ux 2.4): only what is unread in the register that needs the
     # person, never a total across the page.
