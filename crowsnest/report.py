@@ -155,6 +155,12 @@ _action_line: contextvars.ContextVar = contextvars.ContextVar(
     "crowsnest_report_action_line", default=None
 )
 
+#: What the person owes their sessions, for one :func:`render_report` call: openloops'
+#: owed envelope (:mod:`crowsnest.owed`), or ``None`` for a page without the register.
+_owed: contextvars.ContextVar = contextvars.ContextVar(
+    "crowsnest_report_owed", default=None
+)
+
 #: Whether the page carries the open helper (:data:`OPEN_SCRIPT`) for one
 #: :func:`render_report` call: ``open_helper=True``, or an interactive page. The
 #: session links and the reach buttons carry the data attributes it reads only when it is.
@@ -1755,6 +1761,11 @@ OVERVIEW_CSS = """
 .refs-more>summary::before{content:"+ "}
 .refs-more[open]>summary::before{content:"- "}
 .refs-more>.where{margin-top:.15rem}
+.owed-title{font-family:var(--sans,inherit);color:var(--ink)}
+.owed-state{font-family:var(--mono);font-size:.72em;letter-spacing:.06em;color:var(--needs)}
+.owed-row.is-done .owed-state{color:var(--done)}
+.owed-row.is-unknown .owed-state{color:var(--unsure)}
+.ref-tag.owed{color:var(--needs)}
 .folder-tag{font-family:var(--mono);font-size:.72em;letter-spacing:.06em;color:var(--ink-soft)}
 .thin.is-unknown{box-shadow:inset 3px 0 0 var(--unsure)}
 .thin.is-unknown .thin-age{color:var(--unsure)}
@@ -2312,6 +2323,7 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
         act = row.get("activity") or {}
         found = act.get("locators") or ()
     state_of = _ref_state.get()
+    owed = _owed_urls()
     anchors = []
     seen: set[str] = set()
     for loc in found:
@@ -2324,6 +2336,12 @@ def _refs(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
         anchor = _link(safe, url, _label_for(url, loc.get("text", "")))
         if anchor:
             known = state_of(url) if state_of else None
+            if url in owed:
+                # An issue the person owes is the likeliest place the ask lives.
+                anchors.append(
+                    (-1, anchor + ' <span class="ref-tag owed">owed</span>', known)
+                )
+                continue
             anchors.append((_REF_ORDER[known["state"]] if known else 1, anchor, known))
     if not anchors:
         return ""
@@ -2354,6 +2372,93 @@ _REF_ORDER = {"open": 0, "closed": 2, "merged": 2}
 
 #: How much of a reference's title shows beside it.
 REF_TITLE_LIMIT = 60
+
+
+def _owed_urls() -> frozenset[str]:
+    """The URLs of the issues the person owes, on a page with the Owed register."""
+    envelope = _owed.get()
+    if not isinstance(envelope, Mapping):
+        return frozenset()
+    return frozenset(
+        str(r.get("url") or "")
+        for r in envelope.get("rows") or ()
+        if isinstance(r, Mapping)
+    )
+
+
+#: How an owed issue's state reads, and where it sorts: done first (a click finishes it),
+#: then open, then what could not be checked.
+_OWED_STATES = {"discharged": ("done", 0), "open": ("open", 1), "unknown": ("?", 2)}
+
+
+def _owed_register(
+    safe: _Sanitizer, envelope: Mapping, sessions: Sequence[Mapping[str, Any]]
+) -> str:
+    """The issues the person owes their sessions (crowsnest#85), from openloops' list.
+
+    One line each: the issue, its title, how old, its state, and which session on the page
+    asked for it. The link is the action: nothing on the page closes anything.
+    """
+    fetched = str(envelope.get("fetched_at") or "")[11:16]
+    rule = (
+        "Open manual-task issues your sessions filed for you"
+        + (f", listed at {fetched} UTC" if fetched else "")
+        + ". Their verify commands are not run here."
+    )
+    if not envelope.get("listed", True):
+        why = safe.text(str(envelope.get("error") or "the listing failed"))
+        return _register(
+            ident="owed",
+            name="Owed",
+            figure="?",
+            tone="unsure",
+            rule=rule,
+            body=f'<p class="empty">Unavailable: {why}</p>',
+        )
+    rows = [r for r in envelope.get("rows") or () if isinstance(r, Mapping)]
+    asked: dict[str, str] = {}
+    for session in sessions:
+        for link in session.get("links") or ():
+            if isinstance(link, Mapping) and link.get("url"):
+                asked.setdefault(str(link["url"]), str(session.get("label") or ""))
+    rows.sort(
+        key=lambda r: (
+            _OWED_STATES.get(str(r.get("state")), ("?", 2))[1],
+            -int(r.get("age_days") or 0),
+        )
+    )
+    items = []
+    for r in rows:
+        url = str(r.get("url") or "")
+        word, _ = _OWED_STATES.get(str(r.get("state")), ("?", 2))
+        repo = str(r.get("repo") or "").rsplit("/", 1)[-1]
+        label = f"{repo}#{r.get('number')}"
+        who = asked.get(url)
+        by = f' <span class="sep">·</span> asked by {safe.text(who)}' if who else ""
+        link = _link(safe, url, label) or safe.text(label)
+        items.append(
+            f'<li class="thin owed-row is-{safe.text(word) if word != "?" else "unknown"}">'
+            f'<span class="thin-age">{int(r.get("age_days") or 0)}d</span>'
+            f'<p class="thin-ask">{link} <span class="owed-title">'
+            f"{safe.text(str(r.get('title') or ''))}</span>"
+            f' <span class="owed-state">{safe.text(word)}</span>{by}</p></li>'
+        )
+    body = (
+        f'<ul class="thins">{"".join(items)}</ul>'
+        if items
+        else _empty("You owe nothing.")
+    )
+    if envelope.get("truncated"):
+        body += '<p class="empty">More are owed than were listed.</p>'
+    return _register(
+        ident="owed",
+        name="Owed",
+        figure=str(len(rows)),
+        tone="needs",
+        rule=rule,
+        body=body,
+        folds=bool(items),
+    )
 
 
 def _ref(safe: _Sanitizer, anchor: str, known: Mapping | None) -> str:
@@ -3546,6 +3651,7 @@ def render_report(
     console: ConsoleStore | str | None = None,
     ref_state=None,
     action_line=None,
+    owed=None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -3593,6 +3699,9 @@ def render_report(
     ``action_line`` is each Needs-you row's generated line, a callable ``(row) -> {"line",
     ...} | None`` (:func:`crowsnest.actions.line_for`): it leads the row, labelled
     *generated*, above the words it came from. ``None`` renders as before.
+    ``owed`` is openloops' owed envelope (:mod:`crowsnest.owed`): the page then carries an
+    *Owed* register after *Needs you*, one line per open manual-task issue, and a row's
+    reference to an owed issue leads its list, tagged. ``None`` renders as before.
 
     ``open_helper=True`` adds one small script (:data:`OPEN_SCRIPT`) for a page someone
     opens in a browser: it routes each ``open`` by the account's browser the reader chose
@@ -3660,6 +3769,7 @@ def render_report(
     console_token = _console_store.set(console if interactive else None)
     ref_token = _ref_state.set(ref_state)
     action_token = _action_line.set(action_line)
+    owed_token = _owed.set(owed)
     helper_token = _open_helper.set(open_helper or interactive)
     links_token = _links_shown.set(links)
     try:
@@ -3688,6 +3798,7 @@ def render_report(
         _console_store.reset(console_token)
         _ref_state.reset(ref_token)
         _action_line.reset(action_token)
+        _owed.reset(owed_token)
         _open_helper.reset(helper_token)
         _links_shown.reset(links_token)
 
@@ -3809,6 +3920,11 @@ def _render(
     tally = (
         [
             ("needs-you", "need you", len(needs_you)),
+            *(
+                [("owed", "owed", len(_owed.get().get("rows") or ()))]
+                if isinstance(_owed.get(), Mapping)
+                else []
+            ),
             ("safe-to-close", "safe to close", len(clear)),
         ]
         if triaged
@@ -3823,6 +3939,8 @@ def _render(
         _since_line(shown, view),
         head,
     ]
+    if isinstance(_owed.get(), Mapping):
+        parts.append(_owed_register(safe, _owed.get(), sessions))
     if triaged:
         parts.append(
             _register_from_rows(
