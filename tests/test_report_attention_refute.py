@@ -336,7 +336,9 @@ def _presented(r, store):
 
 
 @pytest.mark.parametrize("seed", range(12))
-def test_probe_every_session_once_seen_last_and_register_order_under_random_marks(seed):
+def test_probe_every_session_once_seen_in_place_and_register_order_under_random_marks(
+    seed,
+):
     rows, store = _random_page(seed)
     html = render_report({"sessions": rows, "counts": {}}, made_at=STAMP, store=store)
     handled = 0
@@ -357,10 +359,17 @@ def test_probe_every_session_once_seen_last_and_register_order_under_random_mark
     ]
     assert at == sorted(at)
     assert 'id="waiting"' not in html  # still the triaged page
+    plain = render_report({"sessions": rows, "counts": {}}, made_at=STAMP, store={})
+
+    def ids(page_html: str, ident: str) -> list[str]:
+        return re.findall(r'<li [^>]*id="(session-[^"]+)"', register(page_html, ident))
+
+    for ident in ("needs-you", "safe-to-close", "finished", "working", "quiet"):
+        # Seen dims in place: marks never reorder what stays in a register.
+        kept = ids(html, ident)
+        assert kept == [i for i in ids(plain, ident) if i in kept], ident
     for ident in ("needs-you", "safe-to-close", "finished", "working"):
         tags = re.findall(r"<li [^>]*>", register(html, ident))
-        flags = ["row--seen" in t for t in tags]
-        assert flags == sorted(flags), ident
         found = re.search(
             rf'id="{ident}"(?: open)?>'
             rf'<(?:div|summary) class="register-head">'
@@ -371,9 +380,6 @@ def test_probe_every_session_once_seen_last_and_register_order_under_random_mark
     quiet = register(html, "quiet")
     subheads = re.findall(r'<p class="subhead">([^<]*)</p>', quiet)
     assert subheads == sorted(subheads)
-    for group in re.findall(r'<ul class="thins">(.*?)</ul>', quiet):
-        flags = ["row--seen" in t for t in re.findall(r"<li [^>]*>", group)]
-        assert flags == sorted(flags)
 
 
 def test_probe_hiding_every_verdict_row_keeps_the_triaged_page_and_counts():
