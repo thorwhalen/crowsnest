@@ -397,6 +397,7 @@ class PublishSettings:
 
     to: str = ""
     command: tuple[str, ...] = ()
+    console: str = ""
 
 
 def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
@@ -407,6 +408,7 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
         [publish]
         to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
         # command = ["aws", "s3", "cp", "{page}", "s3://my-bucket/crowsnest.html"]
+        # console = "/api/crowsnest"   # the page's own store: an interactive page
 
     A key the table does not know is an error, as in ``[attention]``, and so is giving
     both: which one wins would be a guess.
@@ -433,7 +435,12 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
         )
     if to.strip() and command:
         raise ValueError(f"{file}: [{PUBLISH_KEY}] gives both to and command; keep one")
-    return PublishSettings(to=to.strip(), command=tuple(command))
+    console = table.get("console", "")
+    if not isinstance(console, str):
+        raise ValueError(  # noqa: TRY004
+            f"{file}: [{PUBLISH_KEY}] console must be a string, not {console!r}"
+        )
+    return PublishSettings(to=to.strip(), command=tuple(command), console=console.strip())
 
 
 def _default_home() -> Home:

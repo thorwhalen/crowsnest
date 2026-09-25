@@ -568,6 +568,7 @@ def report(
     plain: bool = False,
     row_context: RowContext | None = None,
     open_helper: bool = False,
+    console=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -693,6 +694,7 @@ def report(
         links=links,
         attention_settings=settings,
         open_helper=open_helper,
+        console=console,
     )
     return {
         "html": html,
@@ -714,6 +716,7 @@ def publish(
     plain: bool = False,
     row_context: RowContext | None = None,
     page_path: str | Path | None = None,
+    console: str | None = None,
 ) -> dict:
     """Render the report as a whole page and deliver it where its owner reads it.
 
@@ -721,10 +724,15 @@ def publish(
     ssh) or ``command`` (argv with ``{page}`` for the rendered file); without either, the
     config file's ``[publish]`` table (:func:`crowsnest.config.publish_settings`).
     ``publisher`` replaces the delivery: a callable ``(page, to) -> str``
-    (:mod:`crowsnest.publish`). The page is the static one -- no console, whose buttons
-    need the claude.ai viewer's ``db`` -- with the open helper (``open_helper=True`` on
-    :func:`report`), so run this on a schedule for a page that stays fresh with nothing
-    awake but the scheduler.
+    (:mod:`crowsnest.publish`). The page is the static one with the open helper
+    (``open_helper=True`` on :func:`report`), so run this on a schedule for a page that
+    stays fresh with nothing awake but the scheduler.
+
+    ``console`` (default: the ``[publish]`` table's ``console``) is the base URL of a
+    console store the destination serves behind its owner's login
+    (:class:`crowsnest.report.ConsoleStore`). Given one, the page is the interactive one,
+    and its buttons write there; ``crowsnest courier`` carries what they write, with no
+    LLM. ``""`` is the static page whatever the config file says.
 
     The rendered page is kept at ``page_path`` (default ``<data dir>/publish/index.html``),
     so the last one sent can be looked at locally.
@@ -733,9 +741,11 @@ def publish(
     from crowsnest.config import publish_settings
     from crowsnest.paths import data_dir
 
+    settings = publish_settings(path=config)
+    if console is None:
+        console = settings.console
     if publisher is None:
         if not to and not command:
-            settings = publish_settings(path=config)
             to, command = settings.to, list(settings.command)
         if command:
             publisher = _publish.command_publisher(command)
@@ -754,6 +764,8 @@ def publish(
         plain=plain,
         row_context=row_context,
         open_helper=True,
+        interactive=bool(console),
+        console=console or None,
     )
     page = (
         Path(page_path).expanduser()

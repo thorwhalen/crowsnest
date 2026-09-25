@@ -110,3 +110,34 @@ def test_publish_reads_the_config_file(tmp_path, monkeypatch):
 def test_publish_without_a_destination_says_how_to_give_one(tmp_path):
     with pytest.raises(ValueError, match=r"\[publish\]"):
         tools.publish(config=tmp_path / "none.toml")
+
+
+def test_a_console_url_publishes_the_page_with_its_buttons(tmp_path, monkeypatch):
+    monkeypatch.setattr(tools, "live_sessions", lambda *a, **k: [])
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('[publish]\nconsole = " /api/crowsnest "\n')
+    assert publish_settings(path=cfg).console == "/api/crowsnest"
+    sent = {}
+
+    def publisher(page, to):
+        sent["html"] = page.read_text()
+        return "somewhere"
+
+    def send(**options):
+        tools.publish(
+            publisher=publisher,
+            config=cfg,
+            home=demo_home(tmp_path),
+            page_path=tmp_path / "page.html",
+            tz="UTC",
+            **options,
+        )
+        return sent["html"]
+
+    assert 'data-console-url="/api/crowsnest"' in send()
+    assert 'data-console-url="/elsewhere"' in send(console="/elsewhere")
+    static = send(console="")
+    assert "data-console-url" not in static and 'class="console"' not in static
+    cfg.write_text("[publish]\nconsole = 3\n")
+    with pytest.raises(ValueError, match="console must be a string"):
+        publish_settings(path=cfg)
