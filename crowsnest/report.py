@@ -3345,7 +3345,12 @@ QUESTIONS_SHOWN = 10
 
 #: How much of a message and an answer a question's fold carries; the page's sanitiser
 #: runs first (`crowsnest.live.publishable`), so a clip never cuts a secret in half (#83).
-QUESTION_TEXT_LIMIT = 6000
+QUESTION_TEXT_LIMIT = 2500
+
+#: The same, for a question under *more*, whose fold carries only the question and the
+#: answer's opening: most are never opened, and two hundred of them whole made the page
+#: megabytes. The session holds the rest.
+QUESTION_FOLDED_LIMIT = 400
 
 #: A raw answer gist: the reply's first sentence, clipped.
 ANSWER_GIST_LIMIT = 140
@@ -3425,9 +3430,11 @@ def _question_order(rows: Sequence[Mapping[str, Any]]) -> list:
     )
 
 
-def _marked(safe: _Sanitizer, prompt: str, question: str) -> str:
+def _marked(
+    safe: _Sanitizer, prompt: str, question: str, *, limit: int = QUESTION_TEXT_LIMIT
+) -> str:
     """The message as typed, sanitised and clipped, with the question in ``<mark>``."""
-    shown = _published_lines(prompt, QUESTION_TEXT_LIMIT)
+    shown = _published_lines(prompt, limit)
     asked = _published(question, QUESTION_TEXT_LIMIT)
     if asked and asked in shown:
         return shown.replace(asked, f"<mark>{asked}</mark>", 1)
@@ -3456,7 +3463,12 @@ def _question_controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
 
 
 def _question_row(
-    safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock, *, homes: int
+    safe: _Sanitizer,
+    row: Mapping[str, Any],
+    clock: _Clock,
+    *,
+    homes: int,
+    limit: int = QUESTION_TEXT_LIMIT,
 ) -> str:
     """One question: its gist, its answer's, where it was asked; the words in a fold."""
     attended = _view.get().of(row)
@@ -3531,9 +3543,18 @@ def _question_row(
         summary += f" by {safe.text(row['answered_by'])}"
     fold = (
         f'<details class="source"><summary>{summary}</summary>'
-        f'<p class="q-full">{_marked(safe, row.get("prompt"), row.get("question"))}</p>'
+        f'<p class="q-full">{
+            _marked(
+                safe,
+                row.get("prompt")
+                if limit >= QUESTION_TEXT_LIMIT
+                else row.get("question"),
+                row.get("question"),
+                limit=limit,
+            )
+        }</p>'
         + (
-            f'<div class="a-full">{_published_lines(row["answer"], QUESTION_TEXT_LIMIT)}</div>'
+            f'<div class="a-full">{_published_lines(row["answer"], limit)}</div>'
             if row.get("answer")
             else ""
         )
@@ -3612,7 +3633,7 @@ def _questions_register(
         if rest:
             body += (
                 f'<details class="more"><summary>more · {len(rest)}</summary>'
-                f'<ol class="rows">{"".join(_question_row(safe, r, clock, homes=homes) for r in rest)}</ol>'
+                f'<ol class="rows">{"".join(_question_row(safe, r, clock, homes=homes, limit=QUESTION_FOLDED_LIMIT) for r in rest)}</ol>'
                 "</details>"
             )
         if view.arm:

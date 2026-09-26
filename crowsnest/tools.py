@@ -984,8 +984,11 @@ def questions_rows(
     keep = question_keep_days(path=config)
     found = _questions.scan(read, now=now, keep_days=keep, cache_dir=cache_dir)
     store = _gists.dflt_store() if gist_store is None else gist_store
+    # One batch of model calls per run: each takes tens of seconds, and the page and the
+    # courier behind it wait for the run. Pairings wait until every message has its gist.
+    asked = {"made": 0, "failed": 0, "waiting": 0}
     if generate:
-        _gists.refresh(found, store=store, synthesiser=synthesiser)
+        asked = _gists.refresh(found, store=store, synthesiser=synthesiser)
 
     def gist(sid, exchange):
         doc = store.get(_gists.key_of(sid, str(exchange.get("uuid") or "")))
@@ -998,7 +1001,7 @@ def questions_rows(
     rows = _questions.question_rows(
         found, now=now, keep_days=keep, live=live, spawned=spawned, gist=gist
     )
-    if generate:
+    if generate and not (asked["made"] or asked["failed"] or asked["waiting"]):
         # An answer given elsewhere is asked about only for what the turn left open.
         wanted = [
             (item_of(r), r["question"], _questions.candidates(r, found))
