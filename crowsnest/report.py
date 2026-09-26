@@ -3541,18 +3541,12 @@ def _question_row(
     )
     if row.get("answered_by"):
         summary += f" by {safe.text(row['answered_by'])}"
+    # Under *more*, the question's own words stand for the message.
+    message = row.get("prompt") if limit >= QUESTION_TEXT_LIMIT else row.get("question")
+    marked = _marked(safe, message, row.get("question"), limit=limit)
     fold = (
         f'<details class="source"><summary>{summary}</summary>'
-        f'<p class="q-full">{
-            _marked(
-                safe,
-                row.get("prompt")
-                if limit >= QUESTION_TEXT_LIMIT
-                else row.get("question"),
-                row.get("question"),
-                limit=limit,
-            )
-        }</p>'
+        f'<p class="q-full">{marked}</p>'
         + (
             f'<div class="a-full">{_published_lines(row["answer"], limit)}</div>'
             if row.get("answer")
