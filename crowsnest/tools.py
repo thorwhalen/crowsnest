@@ -703,8 +703,9 @@ def report(
     from crowsnest import actions as _actions
 
     action_store = _actions.dflt_store() if action_store is None else action_store
+    generated: dict = {}
     if actions and triage:
-        _actions.refresh(
+        generated["actions"] = _actions.refresh(
             rows,
             item=ctx.item,
             rev=ctx.rev,
@@ -776,6 +777,7 @@ def report(
                 cache_dir=question_cache,
                 generate=actions,
                 row_context=ctx,
+                counts=generated,
             )
             if questions
             else None
@@ -786,6 +788,7 @@ def report(
         "made_at": made_at,
         "fragment": fragment,
         "interactive": interactive,
+        "generated": generated,
     }
 
 
@@ -881,7 +884,12 @@ def publish(
     page.parent.mkdir(parents=True, exist_ok=True)
     page.write_text(made["html"], encoding="utf-8")
     where = publisher(page, to or "")
-    return {"to": where, "bytes": page.stat().st_size, "made_at": made["made_at"]}
+    return {
+        "to": where,
+        "bytes": page.stat().st_size,
+        "made_at": made["made_at"],
+        "generated": made.get("generated") or {},
+    }
 
 
 def courier(
@@ -950,6 +958,7 @@ def questions_rows(
     gist_store=None,
     synthesiser=None,
     row_context: RowContext | None = None,
+    counts: dict | None = None,
 ) -> list[dict]:
     """The person's questions of the last two weeks, one row each (#129).
 
@@ -989,6 +998,8 @@ def questions_rows(
     asked = {"made": 0, "failed": 0, "waiting": 0}
     if generate:
         asked = _gists.refresh(found, store=store, synthesiser=synthesiser)
+        if counts is not None:
+            counts["gists"] = asked
 
     def gist(sid, exchange):
         doc = store.get(_gists.key_of(sid, str(exchange.get("uuid") or "")))
@@ -1009,7 +1020,9 @@ def questions_rows(
             if r["state"] in (_questions.UNANSWERED, _questions.PARTLY)
             and not r["unsure"]
         ]
-        _gists.refresh_pairs(wanted, store=store)
+        paired = _gists.refresh_pairs(wanted, store=store)
+        if counts is not None:
+            counts["pairs"] = paired
 
     def pair(row, candidates):
         return _gists.pairing(store, item_of(row), row["question"], candidates)

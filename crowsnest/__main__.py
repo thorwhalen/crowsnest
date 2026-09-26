@@ -613,6 +613,20 @@ def publish(
         owed=owed or None,
         questions=questions or None,
     )
+    # A generated line that failed is said, not swallowed: under a scheduler it is most
+    # often a `claude` its PATH cannot find (set `claude_bin` in the config file).
+    failed = {
+        k: v.get("failed") for k, v in result["generated"].items() if v.get("failed")
+    }
+    if failed:
+        import sys
+
+        said = ", ".join(f"{n} {kind}" for kind, n in failed.items())
+        print(
+            f"crowsnest: generating failed ({said}); is `claude` on this PATH? "
+            "set claude_bin in the config file",
+            file=sys.stderr,
+        )
     return f"published {result['bytes']} bytes to {result['to']}"
 
 

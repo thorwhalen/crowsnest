@@ -160,6 +160,11 @@ def _found_executable(value: str, environ: dict[str, str]) -> str | None:
     return shutil.which(value, path=environ.get("PATH", ""))
 
 
+#: Where Claude Code's installers put ``claude`` under ``$HOME``: the native installer's,
+#: then the older local install's.
+INSTALLED_AT = ((".local", "bin", "claude"), (".claude", "local", "claude"))
+
+
 def claude_bin(
     environ: dict[str, str] | None = None, *, config: str | Path | None = None
 ) -> str:
@@ -168,13 +173,19 @@ def claude_bin(
     A person's own choice first (:func:`configured_claude_bin`); failing that, this
     session's own binary. ``$CLAUDE_CODE_EXECPATH`` when it points at a runnable file --
     the exact binary this session runs, so a spawned session is the same version signed
-    in the same way -- else the absolute path ``PATH`` resolves, else the bare name for a
+    in the same way -- else the absolute path ``PATH`` resolves, else where Claude Code's
+    installers put it under ``$HOME`` (:data:`INSTALLED_AT`), else the bare name for a
     shell to resolve later.
+
+    The installed places matter to a scheduler: launchd and cron run with a ``PATH`` that
+    does not reach ``~/.local/bin``, so a bare ``claude`` fails there, silently, in every
+    generated line (#129).
 
     The order is deliberate: a stated preference outranks inheritance, because a person
     who names a launcher is usually saying "not the one you would have picked".
 
-    >>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''}, config='/no/such/config')
+    >>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': '', 'HOME': '/no/such/home'},
+    ...            config='/no/such/config')
     'claude'
     """
     environ = os.environ if environ is None else environ
@@ -184,7 +195,15 @@ def claude_bin(
     exec_path = environ.get(EXEC_ENV_VAR) or ""
     if exec_path and os.path.isfile(exec_path) and _runnable(exec_path, environ):
         return exec_path
-    return shutil.which(CLAUDE_BIN, path=environ.get("PATH")) or CLAUDE_BIN
+    found = shutil.which(CLAUDE_BIN, path=environ.get("PATH"))
+    if found:
+        return found
+    home = environ.get("HOME") or ""
+    for place in INSTALLED_AT if home else ():
+        candidate = os.path.join(home, *place)
+        if os.path.isfile(candidate) and _runnable(candidate, environ):
+            return candidate
+    return CLAUDE_BIN
 
 
 def _runnable(path: str, environ: dict[str, str]) -> bool:

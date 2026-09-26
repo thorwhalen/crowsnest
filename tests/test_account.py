@@ -220,7 +220,17 @@ def test_claude_bin_reads_the_process_environment_by_default(tmp_path, monkeypat
     assert claude_bin() == str(exe)
     monkeypatch.delenv(EXEC_ENV_VAR)
     monkeypatch.setenv("PATH", str(tmp_path))  # holds claude-x, no `claude`
+    monkeypatch.setenv("HOME", str(tmp_path))  # and no installed one either
     assert claude_bin() == CLAUDE_BIN
+
+
+@posix_only
+def test_a_scheduler_s_path_still_finds_an_installed_claude(tmp_path):
+    """launchd and cron run with a PATH that does not reach ~/.local/bin (#129)."""
+    (tmp_path / ".local" / "bin").mkdir(parents=True)
+    exe = _executable(tmp_path / ".local" / "bin" / "claude")
+    env = {EXEC_ENV_VAR: "", "PATH": "/usr/bin:/bin", "HOME": str(tmp_path)}
+    assert claude_bin(env, config=tmp_path / "none.toml") == str(exe)
 
 
 def test_profile_home_refuses_a_remote_mirror(tmp_path):
