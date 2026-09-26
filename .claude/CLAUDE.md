@@ -93,6 +93,7 @@ Not seams: rendering, the status vocabulary, tail size, the ledger's field names
   so the classifier reads the free-part prose too, and `crowsnest-worker` teaches the field.
 - A generated line is never made at render, and never from transcript text: `actions.brief_of` shows the model
   the verdict's asks and the refs' titles only. `kept` refuses a line over `MAX_WORDS` words.
+  **The one exception is a question's gist** (`gists.py`, #129): it is the person's own message and the reply to it, so the model must see both. `gists.brief_of` sanitises them with the page's sanitiser before clipping, the call is the same local `claude -p` with hooks quiet and nothing persisted, the answer is cached per message under `data_dir()/questions/gists/` and remade only when the reply changes, and `gists.kept` refuses a gist past its word limit or with an answer to an "unanswered" question. The model *maps* onto the heuristics' sentences (`source`), so ids never move.
 - Nothing in `tools.py` prints or exits. Every function takes and returns JSON-able values.
 - `lineage.jsonl` is append-only and **never rotated** — unlike `events.jsonl`, which rotates at
   4 MiB. Provenance that can age out is not provenance. Do not "tidy" it into the event log.

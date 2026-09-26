@@ -200,10 +200,12 @@ def claude_synthesiser(
     model: str = DFLT_MODEL,
     binary: str | None = None,
     timeout: float = 90,
+    prompt: str = PROMPT,
 ) -> Synthesiser:
     """A synthesiser that asks ``claude -p`` (``model``, JSON out, no session kept), run in
     an empty directory with its hooks quiet, so it reads no project's instructions and
-    wakes no watcher."""
+    wakes no watcher. ``prompt`` is the instruction the brief's JSON is appended to
+    (:data:`PROMPT` by default; :mod:`crowsnest.gists` passes its own)."""
     from crowsnest.hook import QUIET_ENV_VAR
 
     def synthesise(brief: Mapping) -> Mapping:
@@ -212,9 +214,9 @@ def claude_synthesiser(
             from crowsnest.account import claude_bin
 
             claude = claude_bin()
-        prompt = PROMPT + json.dumps(brief, ensure_ascii=False)
+        asked = prompt + json.dumps(brief, ensure_ascii=False)
         argv = [
-            claude, "-p", prompt, "--model", model,
+            claude, "-p", asked, "--model", model,
             "--output-format", "json", "--no-session-persistence",
         ]  # fmt: skip
         env = {**os.environ, QUIET_ENV_VAR: "1"}

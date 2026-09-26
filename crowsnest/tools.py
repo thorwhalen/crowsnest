@@ -774,6 +774,7 @@ def report(
                 config=config,
                 lineage_path=lineage_path,
                 cache_dir=question_cache,
+                generate=actions,
             )
             if questions
             else None
@@ -944,6 +945,9 @@ def questions_rows(
     lineage_path: str | Path | None = None,
     cache_dir=None,
     now: float | None = None,
+    generate: bool = False,
+    gist_store=None,
+    synthesiser=None,
 ) -> list[dict]:
     """The person's questions of the last two weeks, one row each (#129).
 
@@ -951,6 +955,9 @@ def questions_rows(
     :mod:`crowsnest.questions`, caching each file. ``sessions`` are the live roster rows,
     which name a session, link it, and say whether its turn is still running; a session
     crowsnest spawned has its first prompt left out, because its parent wrote it.
+
+    Each message's gists (:mod:`crowsnest.gists`) come from ``gist_store``; ``generate``
+    first asks ``claude -p`` about a few messages whose gist is missing or stale.
     """
     import time
 
@@ -967,13 +974,19 @@ def questions_rows(
         for e in _from_records(lineage_path=lineage_path)
         if e.child_session_id
     }
+    from crowsnest import gists as _gists
+
     live = {str(s.get("session_id")): s for s in sessions if s.get("session_id")}
-    return _questions.question_rows(
-        _questions.scan(read, now=now, cache_dir=cache_dir),
-        now=now,
-        live=live,
-        spawned=spawned,
-    )
+    found = _questions.scan(read, now=now, cache_dir=cache_dir)
+    store = _gists.dflt_store() if gist_store is None else gist_store
+    if generate:
+        _gists.refresh(found, store=store, synthesiser=synthesiser)
+
+    def gist(sid, exchange):
+        doc = store.get(_gists.key_of(sid, str(exchange.get("uuid") or "")))
+        return doc if doc and doc.get("rev") == _gists.revision_of(exchange) else None
+
+    return _questions.question_rows(found, now=now, live=live, spawned=spawned, gist=gist)
 
 
 def questions(
