@@ -255,3 +255,33 @@ def test_keep_days_comes_from_the_config(tmp_path):
     path.write_text("[questions]\nkeep_days = 0\n")
     with pytest.raises(ValueError, match="positive"):
         config.question_keep_days(path=path)
+
+
+def test_a_question_under_more_carries_its_words_but_not_its_message(tmp_path):
+    (one,) = rows(tmp_path)
+    many = [
+        {
+            **one,
+            "prompt_uuid": f"p{i}",
+            "asked_epoch": NOW - i,
+            "prompt": f"Context {i}. Why is CI slow?",
+        }
+        for i in range(12)
+    ]
+    fold = register(page(many)).split('<details class="more">', 1)[1]
+    assert "<mark>Why is CI slow?</mark>" in fold
+    assert "Context 11." not in fold
+
+
+def test_pairings_wait_until_every_message_has_its_gist(tmp_path, monkeypatch):
+    from crowsnest import gists, tools
+
+    calls = []
+    monkeypatch.setattr(
+        gists, "refresh", lambda *a, **k: {"made": 1, "failed": 0, "waiting": 0}
+    )
+    monkeypatch.setattr(gists, "refresh_pairs", lambda *a, **k: calls.append(1))
+    tools.questions_rows(
+        home=tmp_path, generate=True, cache_dir=tmp_path / "c", gist_store={}
+    )
+    assert calls == []
