@@ -306,174 +306,193 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="160">    <span class="k">return</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATH"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
 </span><span data-line="161">
 </span><span data-line="162">
+</span><span data-line="163"><span class="c1">#: Where Claude Code's installers put ``claude`` under ``$HOME``: the native installer's,</span>
+</span><span data-line="164"><span class="c1">#: then the older local install's.</span>
+</span><span data-line="165"><span class="n">INSTALLED_AT</span> <span class="o">=</span> <span class="p">((</span><span class="s2">".local"</span><span class="p">,</span> <span class="s2">"bin"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">),</span> <span class="p">(</span><span class="s2">".claude"</span><span class="p">,</span> <span class="s2">"local"</span><span class="p">,</span> <span class="s2">"claude"</span><span class="p">))</span>
+</span><span data-line="166">
+</span><span data-line="167">
 <div class="viewcode-block" id="claude_bin">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.account.html#crowsnest.account.claude_bin">[docs]</a>
-</span><span data-line="163"><span class="k">def</span><span class="w"> </span><span class="nf">claude_bin</span><span class="p">(</span>
-</span><span data-line="164">    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="165"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="166"><span class="w">    </span><span class="sd">"""The ``claude`` a new session should be started with.</span>
-</span><span data-line="167">
-</span><span data-line="168"><span class="sd">    A person's own choice first (:func:`configured_claude_bin`); failing that, this</span>
-</span><span data-line="169"><span class="sd">    session's own binary. ``$CLAUDE_CODE_EXECPATH`` when it points at a runnable file --</span>
-</span><span data-line="170"><span class="sd">    the exact binary this session runs, so a spawned session is the same version signed</span>
-</span><span data-line="171"><span class="sd">    in the same way -- else the absolute path ``PATH`` resolves, else the bare name for a</span>
-</span><span data-line="172"><span class="sd">    shell to resolve later.</span>
-</span><span data-line="173">
-</span><span data-line="174"><span class="sd">    The order is deliberate: a stated preference outranks inheritance, because a person</span>
-</span><span data-line="175"><span class="sd">    who names a launcher is usually saying "not the one you would have picked".</span>
-</span><span data-line="176">
-</span><span data-line="177"><span class="sd">    &gt;&gt;&gt; claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''}, config='/no/such/config')</span>
-</span><span data-line="178"><span class="sd">    'claude'</span>
-</span><span data-line="179"><span class="sd">    """</span>
-</span><span data-line="180">    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
-</span><span data-line="181">    <span class="n">chosen</span> <span class="o">=</span> <span class="n">configured_claude_bin</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="182">    <span class="k">if</span> <span class="n">chosen</span><span class="p">:</span>
-</span><span data-line="183">        <span class="k">return</span> <span class="n">chosen</span>
-</span><span data-line="184">    <span class="n">exec_path</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">EXEC_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
-</span><span data-line="185">    <span class="k">if</span> <span class="n">exec_path</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">exec_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_runnable</span><span class="p">(</span><span class="n">exec_path</span><span class="p">,</span> <span class="n">environ</span><span class="p">):</span>
-</span><span data-line="186">        <span class="k">return</span> <span class="n">exec_path</span>
-</span><span data-line="187">    <span class="k">return</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">CLAUDE_BIN</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATH"</span><span class="p">))</span> <span class="ow">or</span> <span class="n">CLAUDE_BIN</span></div>
+</span><span data-line="168"><span class="k">def</span><span class="w"> </span><span class="nf">claude_bin</span><span class="p">(</span>
+</span><span data-line="169">    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="170"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="171"><span class="w">    </span><span class="sd">"""The ``claude`` a new session should be started with.</span>
+</span><span data-line="172">
+</span><span data-line="173"><span class="sd">    A person's own choice first (:func:`configured_claude_bin`); failing that, this</span>
+</span><span data-line="174"><span class="sd">    session's own binary. ``$CLAUDE_CODE_EXECPATH`` when it points at a runnable file --</span>
+</span><span data-line="175"><span class="sd">    the exact binary this session runs, so a spawned session is the same version signed</span>
+</span><span data-line="176"><span class="sd">    in the same way -- else the absolute path ``PATH`` resolves, else where Claude Code's</span>
+</span><span data-line="177"><span class="sd">    installers put it under ``$HOME`` (:data:`INSTALLED_AT`), else the bare name for a</span>
+</span><span data-line="178"><span class="sd">    shell to resolve later.</span>
+</span><span data-line="179">
+</span><span data-line="180"><span class="sd">    The installed places matter to a scheduler: launchd and cron run with a ``PATH`` that</span>
+</span><span data-line="181"><span class="sd">    does not reach ``~/.local/bin``, so a bare ``claude`` fails there, silently, in every</span>
+</span><span data-line="182"><span class="sd">    generated line (#129).</span>
+</span><span data-line="183">
+</span><span data-line="184"><span class="sd">    The order is deliberate: a stated preference outranks inheritance, because a person</span>
+</span><span data-line="185"><span class="sd">    who names a launcher is usually saying "not the one you would have picked".</span>
+</span><span data-line="186">
+</span><span data-line="187"><span class="sd">    &gt;&gt;&gt; claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': '', 'HOME': '/no/such/home'},</span>
+</span><span data-line="188"><span class="sd">    ...            config='/no/such/config')</span>
+</span><span data-line="189"><span class="sd">    'claude'</span>
+</span><span data-line="190"><span class="sd">    """</span>
+</span><span data-line="191">    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+</span><span data-line="192">    <span class="n">chosen</span> <span class="o">=</span> <span class="n">configured_claude_bin</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="193">    <span class="k">if</span> <span class="n">chosen</span><span class="p">:</span>
+</span><span data-line="194">        <span class="k">return</span> <span class="n">chosen</span>
+</span><span data-line="195">    <span class="n">exec_path</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">EXEC_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+</span><span data-line="196">    <span class="k">if</span> <span class="n">exec_path</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">exec_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_runnable</span><span class="p">(</span><span class="n">exec_path</span><span class="p">,</span> <span class="n">environ</span><span class="p">):</span>
+</span><span data-line="197">        <span class="k">return</span> <span class="n">exec_path</span>
+</span><span data-line="198">    <span class="n">found</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">CLAUDE_BIN</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATH"</span><span class="p">))</span>
+</span><span data-line="199">    <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+</span><span data-line="200">        <span class="k">return</span> <span class="n">found</span>
+</span><span data-line="201">    <span class="n">home</span> <span class="o">=</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"HOME"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+</span><span data-line="202">    <span class="k">for</span> <span class="n">place</span> <span class="ow">in</span> <span class="n">INSTALLED_AT</span> <span class="k">if</span> <span class="n">home</span> <span class="k">else</span> <span class="p">():</span>
+</span><span data-line="203">        <span class="n">candidate</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">home</span><span class="p">,</span> <span class="o">*</span><span class="n">place</span><span class="p">)</span>
+</span><span data-line="204">        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_runnable</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">environ</span><span class="p">):</span>
+</span><span data-line="205">            <span class="k">return</span> <span class="n">candidate</span>
+</span><span data-line="206">    <span class="k">return</span> <span class="n">CLAUDE_BIN</span></div>
 
-</span><span data-line="188">
-</span><span data-line="189">
-</span><span data-line="190"><span class="k">def</span><span class="w"> </span><span class="nf">_runnable</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="191"><span class="w">    </span><span class="sd">"""Can this file be executed? Windows has no execute bit, so ask ``PATHEXT`` instead.</span>
-</span><span data-line="192">
-</span><span data-line="193"><span class="sd">    ``os.access(X_OK)`` is true of every readable file there, which would make an</span>
-</span><span data-line="194"><span class="sd">    npm install's ``cli.js`` the command and fail with ``WinError 193``.</span>
-</span><span data-line="195"><span class="sd">    """</span>
-</span><span data-line="196">    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">"nt"</span><span class="p">:</span>
-</span><span data-line="197">        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span>
-</span><span data-line="198">    <span class="n">suffixes</span> <span class="o">=</span> <span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATHEXT"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_DFLT_PATHEXT</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
-</span><span data-line="199">    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">suffixes</span> <span class="k">if</span> <span class="n">s</span><span class="p">}</span>
-</span><span data-line="200">
-</span><span data-line="201">
-</span><span data-line="202"><span class="k">def</span><span class="w"> </span><span class="nf">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">argv</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="203"><span class="w">    </span><span class="sd">"""The last non-empty line ``exe argv`` printed, ``''`` when it printed none, ``None``</span>
-</span><span data-line="204"><span class="sd">    when it failed. Only the last line: a command may narrate before it answers."""</span>
-</span><span data-line="205">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="206">        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span data-line="207">            <span class="p">[</span><span class="n">exe</span><span class="p">,</span> <span class="o">*</span><span class="n">argv</span><span class="p">],</span>
-</span><span data-line="208">            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="209">            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="210">            <span class="n">timeout</span><span class="o">=</span><span class="n">_PROFILE_TIMEOUT</span><span class="p">,</span>
-</span><span data-line="211">            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span data-line="212">        <span class="p">)</span>
-</span><span data-line="213">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
-</span><span data-line="214">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="215">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="216">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="217">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-</span><span data-line="218">    <span class="k">return</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="207">
+</span><span data-line="208">
+</span><span data-line="209"><span class="k">def</span><span class="w"> </span><span class="nf">_runnable</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="210"><span class="w">    </span><span class="sd">"""Can this file be executed? Windows has no execute bit, so ask ``PATHEXT`` instead.</span>
+</span><span data-line="211">
+</span><span data-line="212"><span class="sd">    ``os.access(X_OK)`` is true of every readable file there, which would make an</span>
+</span><span data-line="213"><span class="sd">    npm install's ``cli.js`` the command and fail with ``WinError 193``.</span>
+</span><span data-line="214"><span class="sd">    """</span>
+</span><span data-line="215">    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">"nt"</span><span class="p">:</span>
+</span><span data-line="216">        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span>
+</span><span data-line="217">    <span class="n">suffixes</span> <span class="o">=</span> <span class="p">(</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PATHEXT"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_DFLT_PATHEXT</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
+</span><span data-line="218">    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">suffixes</span> <span class="k">if</span> <span class="n">s</span><span class="p">}</span>
 </span><span data-line="219">
 </span><span data-line="220">
+</span><span data-line="221"><span class="k">def</span><span class="w"> </span><span class="nf">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">argv</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="222"><span class="w">    </span><span class="sd">"""The last non-empty line ``exe argv`` printed, ``''`` when it printed none, ``None``</span>
+</span><span data-line="223"><span class="sd">    when it failed. Only the last line: a command may narrate before it answers."""</span>
+</span><span data-line="224">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="225">        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span data-line="226">            <span class="p">[</span><span class="n">exe</span><span class="p">,</span> <span class="o">*</span><span class="n">argv</span><span class="p">],</span>
+</span><span data-line="227">            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="228">            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="229">            <span class="n">timeout</span><span class="o">=</span><span class="n">_PROFILE_TIMEOUT</span><span class="p">,</span>
+</span><span data-line="230">            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="231">        <span class="p">)</span>
+</span><span data-line="232">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+</span><span data-line="233">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="234">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="235">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="236">    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+</span><span data-line="237">    <span class="k">return</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="238">
+</span><span data-line="239">
 <div class="viewcode-block" id="shell_profile_home">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.account.html#crowsnest.account.shell_profile_home">[docs]</a>
-</span><span data-line="221"><span class="k">def</span><span class="w"> </span><span class="nf">shell_profile_home</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PROFILE_CMD</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-</span><span data-line="222"><span class="w">    </span><span class="sd">"""The home ``cmd dir &lt;name&gt;`` reports, raising ``KeyError`` when it does not know it.</span>
-</span><span data-line="223">
-</span><span data-line="224"><span class="sd">    ``dir`` prints *nothing* for the home a profile scheme reaches by leaving</span>
-</span><span data-line="225"><span class="sd">    ``CLAUDE_CONFIG_DIR`` unset. That is not enough to act on: a lookup that simply echoes</span>
-</span><span data-line="226"><span class="sd">    its table prints nothing for a name it does not have either, and taking silence for</span>
-</span><span data-line="227"><span class="sd">    "the default account" would spawn there -- the very bug this module exists to prevent.</span>
-</span><span data-line="228"><span class="sd">    So an empty answer is confirmed with ``home &lt;name&gt;``, which names the directory</span>
-</span><span data-line="229"><span class="sd">    outright and fails for a name it does not know. Only an absolute path is believed.</span>
-</span><span data-line="230"><span class="sd">    """</span>
-</span><span data-line="231">    <span class="n">exe</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-</span><span data-line="232">    <span class="k">if</span> <span class="n">exe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="233">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="234">    <span class="n">value</span> <span class="o">=</span> <span class="n">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="s2">"dir"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-</span><span data-line="235">    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="236">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="237">    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
-</span><span data-line="238">        <span class="n">value</span> <span class="o">=</span> <span class="n">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="s2">"home"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-</span><span data-line="239">    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
-</span><span data-line="240">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="241">    <span class="n">home</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span data-line="242">    <span class="k">if</span> <span class="ow">not</span> <span class="n">home</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
-</span><span data-line="243">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="244">    <span class="k">return</span> <span class="n">home</span></div>
+</span><span data-line="240"><span class="k">def</span><span class="w"> </span><span class="nf">shell_profile_home</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">PROFILE_CMD</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="241"><span class="w">    </span><span class="sd">"""The home ``cmd dir &lt;name&gt;`` reports, raising ``KeyError`` when it does not know it.</span>
+</span><span data-line="242">
+</span><span data-line="243"><span class="sd">    ``dir`` prints *nothing* for the home a profile scheme reaches by leaving</span>
+</span><span data-line="244"><span class="sd">    ``CLAUDE_CONFIG_DIR`` unset. That is not enough to act on: a lookup that simply echoes</span>
+</span><span data-line="245"><span class="sd">    its table prints nothing for a name it does not have either, and taking silence for</span>
+</span><span data-line="246"><span class="sd">    "the default account" would spawn there -- the very bug this module exists to prevent.</span>
+</span><span data-line="247"><span class="sd">    So an empty answer is confirmed with ``home &lt;name&gt;``, which names the directory</span>
+</span><span data-line="248"><span class="sd">    outright and fails for a name it does not know. Only an absolute path is believed.</span>
+</span><span data-line="249"><span class="sd">    """</span>
+</span><span data-line="250">    <span class="n">exe</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+</span><span data-line="251">    <span class="k">if</span> <span class="n">exe</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="252">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="253">    <span class="n">value</span> <span class="o">=</span> <span class="n">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="s2">"dir"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+</span><span data-line="254">    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="255">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="256">    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+</span><span data-line="257">        <span class="n">value</span> <span class="o">=</span> <span class="n">_asked</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="s2">"home"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+</span><span data-line="258">    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+</span><span data-line="259">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="260">    <span class="n">home</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span data-line="261">    <span class="k">if</span> <span class="ow">not</span> <span class="n">home</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+</span><span data-line="262">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="263">    <span class="k">return</span> <span class="n">home</span></div>
 
-</span><span data-line="245">
-</span><span data-line="246">
+</span><span data-line="264">
+</span><span data-line="265">
 <div class="viewcode-block" id="profile_home">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.account.html#crowsnest.account.profile_home">[docs]</a>
-</span><span data-line="247"><span class="k">def</span><span class="w"> </span><span class="nf">profile_home</span><span class="p">(</span>
-</span><span data-line="248">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="249">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="250">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="251">    <span class="n">resolver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="252"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-</span><span data-line="253"><span class="w">    </span><span class="sd">"""The home a profile name means, or ``ValueError`` naming what is known.</span>
-</span><span data-line="254">
-</span><span data-line="255"><span class="sd">    The configured homes first -- ``[[homes]]`` in :mod:`crowsnest.config` is the naming</span>
-</span><span data-line="256"><span class="sd">    scheme crowsnest already has, and issue #1's roster reads the same names -- then</span>
-</span><span data-line="257"><span class="sd">    ``resolver``, the seam for a machine whose profile names live elsewhere (default:</span>
-</span><span data-line="258"><span class="sd">    :func:`shell_profile_home`, which asks a ``claude-profile`` command on ``PATH``). A</span>
-</span><span data-line="259"><span class="sd">    name neither knows is an error, never a silent fall back to the default account: that</span>
-</span><span data-line="260"><span class="sd">    is the mistake this whole module exists to prevent.</span>
-</span><span data-line="261">
-</span><span data-line="262"><span class="sd">    A home the config marks ``remote`` is refused rather than returned. Those are synced</span>
-</span><span data-line="263"><span class="sd">    copies of *another machine's* home, read-only by construction (:mod:`crowsnest.config`:</span>
-</span><span data-line="264"><span class="sd">    reading crosses machines, spawning does not); starting a local session in one would</span>
-</span><span data-line="265"><span class="sd">    write session records into a directory the next sync overwrites.</span>
-</span><span data-line="266"><span class="sd">    """</span>
-</span><span data-line="267">    <span class="n">known</span> <span class="o">=</span> <span class="n">homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="268">    <span class="k">for</span> <span class="n">home</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
-</span><span data-line="269">        <span class="k">if</span> <span class="n">home</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
-</span><span data-line="270">            <span class="k">if</span> <span class="n">home</span><span class="o">.</span><span class="n">remote</span><span class="p">:</span>
-</span><span data-line="271">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="272">                    <span class="sa">f</span><span class="s2">"profile </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> names a remote home (</span><span class="si">{</span><span class="n">home</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">) -- a synced copy "</span>
-</span><span data-line="273">                    <span class="sa">f</span><span class="s2">"of another machine's, which a local session must not write into. "</span>
-</span><span data-line="274">                    <span class="sa">f</span><span class="s2">"Spawn on a local account, or on that machine."</span>
-</span><span data-line="275">                <span class="p">)</span>
-</span><span data-line="276">            <span class="k">return</span> <span class="n">home</span><span class="o">.</span><span class="n">path</span>
-</span><span data-line="277">    <span class="n">resolver</span> <span class="o">=</span> <span class="n">shell_profile_home</span> <span class="k">if</span> <span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resolver</span>
-</span><span data-line="278">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="279">        <span class="k">return</span> <span class="n">resolver</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="280">    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-</span><span data-line="281">        <span class="k">pass</span>
-</span><span data-line="282">    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="283">        <span class="sa">f</span><span class="s2">"unknown profile </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: no [[homes]] entry named that in "</span>
-</span><span data-line="284">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2"> (it has </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">known</span><span class="p">)</span><span class="si">}</span><span class="s2">), and "</span>
-</span><span data-line="285">        <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">PROFILE_CMD</span><span class="si">}</span><span class="s2"> dir </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">` does not know it either"</span>
-</span><span data-line="286">    <span class="p">)</span></div>
+</span><span data-line="266"><span class="k">def</span><span class="w"> </span><span class="nf">profile_home</span><span class="p">(</span>
+</span><span data-line="267">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="268">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="269">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="270">    <span class="n">resolver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="271"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="272"><span class="w">    </span><span class="sd">"""The home a profile name means, or ``ValueError`` naming what is known.</span>
+</span><span data-line="273">
+</span><span data-line="274"><span class="sd">    The configured homes first -- ``[[homes]]`` in :mod:`crowsnest.config` is the naming</span>
+</span><span data-line="275"><span class="sd">    scheme crowsnest already has, and issue #1's roster reads the same names -- then</span>
+</span><span data-line="276"><span class="sd">    ``resolver``, the seam for a machine whose profile names live elsewhere (default:</span>
+</span><span data-line="277"><span class="sd">    :func:`shell_profile_home`, which asks a ``claude-profile`` command on ``PATH``). A</span>
+</span><span data-line="278"><span class="sd">    name neither knows is an error, never a silent fall back to the default account: that</span>
+</span><span data-line="279"><span class="sd">    is the mistake this whole module exists to prevent.</span>
+</span><span data-line="280">
+</span><span data-line="281"><span class="sd">    A home the config marks ``remote`` is refused rather than returned. Those are synced</span>
+</span><span data-line="282"><span class="sd">    copies of *another machine's* home, read-only by construction (:mod:`crowsnest.config`:</span>
+</span><span data-line="283"><span class="sd">    reading crosses machines, spawning does not); starting a local session in one would</span>
+</span><span data-line="284"><span class="sd">    write session records into a directory the next sync overwrites.</span>
+</span><span data-line="285"><span class="sd">    """</span>
+</span><span data-line="286">    <span class="n">known</span> <span class="o">=</span> <span class="n">homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="287">    <span class="k">for</span> <span class="n">home</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
+</span><span data-line="288">        <span class="k">if</span> <span class="n">home</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+</span><span data-line="289">            <span class="k">if</span> <span class="n">home</span><span class="o">.</span><span class="n">remote</span><span class="p">:</span>
+</span><span data-line="290">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="291">                    <span class="sa">f</span><span class="s2">"profile </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> names a remote home (</span><span class="si">{</span><span class="n">home</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">) -- a synced copy "</span>
+</span><span data-line="292">                    <span class="sa">f</span><span class="s2">"of another machine's, which a local session must not write into. "</span>
+</span><span data-line="293">                    <span class="sa">f</span><span class="s2">"Spawn on a local account, or on that machine."</span>
+</span><span data-line="294">                <span class="p">)</span>
+</span><span data-line="295">            <span class="k">return</span> <span class="n">home</span><span class="o">.</span><span class="n">path</span>
+</span><span data-line="296">    <span class="n">resolver</span> <span class="o">=</span> <span class="n">shell_profile_home</span> <span class="k">if</span> <span class="n">resolver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resolver</span>
+</span><span data-line="297">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="298">        <span class="k">return</span> <span class="n">resolver</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="299">    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+</span><span data-line="300">        <span class="k">pass</span>
+</span><span data-line="301">    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="302">        <span class="sa">f</span><span class="s2">"unknown profile </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: no [[homes]] entry named that in "</span>
+</span><span data-line="303">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2"> (it has </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">known</span><span class="p">)</span><span class="si">}</span><span class="s2">), and "</span>
+</span><span data-line="304">        <span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">PROFILE_CMD</span><span class="si">}</span><span class="s2"> dir </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">` does not know it either"</span>
+</span><span data-line="305">    <span class="p">)</span></div>
 
-</span><span data-line="287">
-</span><span data-line="288">
+</span><span data-line="306">
+</span><span data-line="307">
 <div class="viewcode-block" id="account_home">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.account.html#crowsnest.account.account_home">[docs]</a>
-</span><span data-line="289"><span class="k">def</span><span class="w"> </span><span class="nf">account_home</span><span class="p">(</span>
-</span><span data-line="290">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="291">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="292">    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="293">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="294">    <span class="n">resolver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="295">    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="296"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="297"><span class="w">    </span><span class="sd">"""The home a new session should run under: ``home``, else ``profile``, else the default.</span>
-</span><span data-line="298">
-</span><span data-line="299"><span class="sd">    ``None`` comes back when nothing selects a home, and means "this process's own</span>
-</span><span data-line="300"><span class="sd">    account" -- which is not the same as the default account, and is why this returns</span>
-</span><span data-line="301"><span class="sd">    ``None`` rather than ``~/.claude``. ``$CROWSNEST_PROFILE`` stands in for ``profile``</span>
-</span><span data-line="302"><span class="sd">    so a watching session states its account once instead of on every spawn.</span>
-</span><span data-line="303">
-</span><span data-line="304"><span class="sd">    &gt;&gt;&gt; account_home(environ={})</span>
-</span><span data-line="305"><span class="sd">    &gt;&gt;&gt; account_home(home='/h/.claude-iq', environ={})</span>
-</span><span data-line="306"><span class="sd">    '/h/.claude-iq'</span>
-</span><span data-line="307"><span class="sd">    """</span>
-</span><span data-line="308">    <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">profile</span><span class="p">:</span>
-</span><span data-line="309">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="310">            <span class="sa">f</span><span class="s2">"give either a home directory or a profile name, not both "</span>
-</span><span data-line="311">            <span class="sa">f</span><span class="s2">"(home=</span><span class="si">{</span><span class="n">home</span><span class="si">!r}</span><span class="s2">, profile=</span><span class="si">{</span><span class="n">profile</span><span class="si">!r}</span><span class="s2">)"</span>
-</span><span data-line="312">        <span class="p">)</span>
-</span><span data-line="313">    <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="314">        <span class="k">return</span> <span class="n">home</span>
-</span><span data-line="315">    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
-</span><span data-line="316">    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">profile</span> <span class="ow">or</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PROFILE_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="317">    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
-</span><span data-line="318">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="319">    <span class="k">return</span> <span class="n">profile_home</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">)</span></div>
+</span><span data-line="308"><span class="k">def</span><span class="w"> </span><span class="nf">account_home</span><span class="p">(</span>
+</span><span data-line="309">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="310">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="311">    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="312">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="313">    <span class="n">resolver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="314">    <span class="n">environ</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="315"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="316"><span class="w">    </span><span class="sd">"""The home a new session should run under: ``home``, else ``profile``, else the default.</span>
+</span><span data-line="317">
+</span><span data-line="318"><span class="sd">    ``None`` comes back when nothing selects a home, and means "this process's own</span>
+</span><span data-line="319"><span class="sd">    account" -- which is not the same as the default account, and is why this returns</span>
+</span><span data-line="320"><span class="sd">    ``None`` rather than ``~/.claude``. ``$CROWSNEST_PROFILE`` stands in for ``profile``</span>
+</span><span data-line="321"><span class="sd">    so a watching session states its account once instead of on every spawn.</span>
+</span><span data-line="322">
+</span><span data-line="323"><span class="sd">    &gt;&gt;&gt; account_home(environ={})</span>
+</span><span data-line="324"><span class="sd">    &gt;&gt;&gt; account_home(home='/h/.claude-iq', environ={})</span>
+</span><span data-line="325"><span class="sd">    '/h/.claude-iq'</span>
+</span><span data-line="326"><span class="sd">    """</span>
+</span><span data-line="327">    <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">profile</span><span class="p">:</span>
+</span><span data-line="328">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="329">            <span class="sa">f</span><span class="s2">"give either a home directory or a profile name, not both "</span>
+</span><span data-line="330">            <span class="sa">f</span><span class="s2">"(home=</span><span class="si">{</span><span class="n">home</span><span class="si">!r}</span><span class="s2">, profile=</span><span class="si">{</span><span class="n">profile</span><span class="si">!r}</span><span class="s2">)"</span>
+</span><span data-line="331">        <span class="p">)</span>
+</span><span data-line="332">    <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="333">        <span class="k">return</span> <span class="n">home</span>
+</span><span data-line="334">    <span class="n">environ</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="k">if</span> <span class="n">environ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">environ</span>
+</span><span data-line="335">    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">profile</span> <span class="ow">or</span> <span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PROFILE_ENV_VAR</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="336">    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+</span><span data-line="337">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="338">    <span class="k">return</span> <span class="n">profile_home</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">resolver</span><span class="o">=</span><span class="n">resolver</span><span class="p">)</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -502,7 +521,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=5c6fbccc"></script>
+      <script src="../../_static/documentation_options.js?v=f81738d5"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

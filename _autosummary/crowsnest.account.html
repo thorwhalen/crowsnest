@@ -311,8 +311,12 @@ so a watching session states its account once instead of on every spawn.</p>
 <p>A person’s own choice first (<a class="reference internal" href="#crowsnest.account.configured_claude_bin" title="crowsnest.account.configured_claude_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">configured_claude_bin()</span></code></a>); failing that, this
 session’s own binary. <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CODE_EXECPATH</span></code> when it points at a runnable file –
 the exact binary this session runs, so a spawned session is the same version signed
-in the same way – else the absolute path <code class="docutils literal notranslate"><span class="pre">PATH</span></code> resolves, else the bare name for a
+in the same way – else the absolute path <code class="docutils literal notranslate"><span class="pre">PATH</span></code> resolves, else where Claude Code’s
+installers put it under <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> (<code class="xref py py-data docutils literal notranslate"><span class="pre">INSTALLED_AT</span></code>), else the bare name for a
 shell to resolve later.</p>
+<p>The installed places matter to a scheduler: launchd and cron run with a <code class="docutils literal notranslate"><span class="pre">PATH</span></code> that
+does not reach <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code>, so a bare <code class="docutils literal notranslate"><span class="pre">claude</span></code> fails there, silently, in every
+generated line (#129).</p>
 <p>The order is deliberate: a stated preference outranks inheritance, because a person
 who names a launcher is usually saying “not the one you would have picked”.</p>
 <dl class="field-list simple">
@@ -320,8 +324,9 @@ who names a launcher is usually saying “not the one you would have picked”.<
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_bin</span><span class="p">({</span><span class="s1">'CLAUDE_CODE_EXECPATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'PATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">},</span> <span class="n">config</span><span class="o">=</span><span class="s1">'/no/such/config'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">'claude'</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_bin</span><span class="p">({</span><span class="s1">'CLAUDE_CODE_EXECPATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'PATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'HOME'</span><span class="p">:</span> <span class="s1">'/no/such/home'</span><span class="p">},</span>
+</span><span data-line="2"><span class="gp">... </span>           <span class="n">config</span><span class="o">=</span><span class="s1">'/no/such/config'</span><span class="p">)</span>
+</span><span data-line="3"><span class="go">'claude'</span>
 </span></pre></div>
 </div>
 </dd></dl>
@@ -430,7 +435,7 @@ outright and fails for a name it does not know. Only an absolute path is believe
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=5c6fbccc"></script>
+      <script src="../_static/documentation_options.js?v=f81738d5"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

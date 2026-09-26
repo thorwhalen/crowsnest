@@ -1,4 +1,4 @@
-> built 2026-09-26 08:28 UTC from 84ab4d1 (main) · crowsnest 0.0.80. Details: build_info.json
+> built 2026-09-26 08:40 UTC from c951981 (main) · crowsnest 0.0.81. Details: build_info.json
 
 # index.html.md
 
@@ -510,8 +510,13 @@ The `claude` a new session should be started with.
 A person’s own choice first ([`configured_claude_bin()`](_autosummary/crowsnest.account.html.md#crowsnest.account.configured_claude_bin)); failing that, this
 session’s own binary. `$CLAUDE_CODE_EXECPATH` when it points at a runnable file –
 the exact binary this session runs, so a spawned session is the same version signed
-in the same way – else the absolute path `PATH` resolves, else the bare name for a
+in the same way – else the absolute path `PATH` resolves, else where Claude Code’s
+installers put it under `$HOME` (`INSTALLED_AT`), else the bare name for a
 shell to resolve later.
+
+The installed places matter to a scheduler: launchd and cron run with a `PATH` that
+does not reach `~/.local/bin`, so a bare `claude` fails there, silently, in every
+generated line (#129).
 
 The order is deliberate: a stated preference outranks inheritance, because a person
 who names a launcher is usually saying “not the one you would have picked”.
@@ -520,7 +525,8 @@ who names a launcher is usually saying “not the one you would have picked”.
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
->>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''}, config='/no/such/config')
+>>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': '', 'HOME': '/no/such/home'},
+...            config='/no/such/config')
 'claude'
 ```
 
@@ -6681,18 +6687,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-26 08:28 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/84ab4d14beb7c08cea1823af8cd43d125f8f529c"><code>84ab4d1</code></a> on branch <code>main</code>, for **crowsnest 0.0.80** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-26 08:40 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c951981de5854ae02400a3cd139b75753098f2ef"><code>c951981</code></a> on branch <code>main</code>, for **crowsnest 0.0.81** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.80) is behind the latest release on PyPI (0.0.81): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/84ab4d14beb7c08cea1823af8cd43d125f8f529c"><code>84ab4d14beb7c08cea1823af8cd43d125f8f529c</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c951981de5854ae02400a3cd139b75753098f2ef"><code>c951981de5854ae02400a3cd139b75753098f2ef</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6703,9 +6707,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36229785858">36229785858</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36230397899">36230397899</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>84ab4d14beb7c08cea1823af8cd43d125f8f529c</code> (in the history of the built commit) |
+| Event commit | <code>c951981de5854ae02400a3cd139b75753098f2ef</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6730,13 +6734,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.81/">0.0.81</a>, newer than the documented version (0.0.80).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.81/">0.0.81</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 84ab4d14beb7c08cea1823af8cd43d125f8f529c
+git checkout c951981de5854ae02400a3cd139b75753098f2ef
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

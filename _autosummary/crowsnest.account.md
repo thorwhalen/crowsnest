@@ -114,8 +114,13 @@ The `claude` a new session should be started with.
 A person’s own choice first ([`configured_claude_bin()`](#crowsnest.account.configured_claude_bin)); failing that, this
 session’s own binary. `$CLAUDE_CODE_EXECPATH` when it points at a runnable file –
 the exact binary this session runs, so a spawned session is the same version signed
-in the same way – else the absolute path `PATH` resolves, else the bare name for a
+in the same way – else the absolute path `PATH` resolves, else where Claude Code’s
+installers put it under `$HOME` (`INSTALLED_AT`), else the bare name for a
 shell to resolve later.
+
+The installed places matter to a scheduler: launchd and cron run with a `PATH` that
+does not reach `~/.local/bin`, so a bare `claude` fails there, silently, in every
+generated line (#129).
 
 The order is deliberate: a stated preference outranks inheritance, because a person
 who names a launcher is usually saying “not the one you would have picked”.
@@ -124,7 +129,8 @@ who names a launcher is usually saying “not the one you would have picked”.
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
->>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': ''}, config='/no/such/config')
+>>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': '', 'HOME': '/no/such/home'},
+...            config='/no/such/config')
 'claude'
 ```
 
