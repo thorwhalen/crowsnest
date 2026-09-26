@@ -979,7 +979,10 @@ def questions_rows(
     from crowsnest import gists as _gists
 
     live = {str(s.get("session_id")): s for s in sessions if s.get("session_id")}
-    found = _questions.scan(read, now=now, cache_dir=cache_dir)
+    from crowsnest.config import question_keep_days
+
+    keep = question_keep_days(path=config)
+    found = _questions.scan(read, now=now, keep_days=keep, cache_dir=cache_dir)
     store = _gists.dflt_store() if gist_store is None else gist_store
     if generate:
         _gists.refresh(found, store=store, synthesiser=synthesiser)
@@ -992,7 +995,9 @@ def questions_rows(
     ctx = dflt_row_context(config=config) if row_context is None else row_context
     item_of = ctx.item
 
-    rows = _questions.question_rows(found, now=now, live=live, spawned=spawned, gist=gist)
+    rows = _questions.question_rows(
+        found, now=now, keep_days=keep, live=live, spawned=spawned, gist=gist
+    )
     if generate:
         # An answer given elsewhere is asked about only for what the turn left open.
         wanted = [
@@ -1007,7 +1012,7 @@ def questions_rows(
         return _gists.pairing(store, item_of(row), row["question"], candidates)
 
     return _questions.question_rows(
-        found, now=now, live=live, spawned=spawned, gist=gist, pair=pair
+        found, now=now, keep_days=keep, live=live, spawned=spawned, gist=gist, pair=pair
     )
 
 

@@ -381,6 +381,38 @@ def report_settings(*, path: str | Path | None = None) -> ReportSettings:
     return ReportSettings(ledger_dir=found)
 
 
+#: The config table for *Your questions* (#129).
+QUESTIONS_KEY = "questions"
+
+
+def question_keep_days(*, path: str | Path | None = None, dflt: float = 14.0) -> float:
+    """How many days a question stays on the page: the ``[questions]`` table's
+    ``keep_days``, else ``dflt``.
+
+    .. code-block:: toml
+
+        [questions]
+        keep_days = 7
+    """
+    file = config_path(path)
+    table = _loaded(path).get(QUESTIONS_KEY)
+    if table is None:
+        return dflt
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{QUESTIONS_KEY}] must be a table")  # noqa: TRY004
+    unknown = sorted(set(table) - {"keep_days"})
+    if unknown:
+        raise ValueError(
+            f"{file}: [{QUESTIONS_KEY}] has no {', '.join(unknown)}; it knows keep_days"
+        )
+    days = table.get("keep_days", dflt)
+    if isinstance(days, bool) or not isinstance(days, (int, float)) or days <= 0:
+        raise ValueError(
+            f"{file}: [{QUESTIONS_KEY}] keep_days must be a positive number, not {days!r}"
+        )
+    return float(days)
+
+
 #: The config table naming the person's themes (:mod:`crowsnest.themes`).
 THEMES_KEY = "themes"
 
