@@ -775,6 +775,7 @@ def report(
                 lineage_path=lineage_path,
                 cache_dir=question_cache,
                 generate=actions,
+                row_context=ctx,
             )
             if questions
             else None
@@ -948,6 +949,7 @@ def questions_rows(
     generate: bool = False,
     gist_store=None,
     synthesiser=None,
+    row_context: RowContext | None = None,
 ) -> list[dict]:
     """The person's questions of the last two weeks, one row each (#129).
 
@@ -986,7 +988,27 @@ def questions_rows(
         doc = store.get(_gists.key_of(sid, str(exchange.get("uuid") or "")))
         return doc if doc and doc.get("rev") == _gists.revision_of(exchange) else None
 
-    return _questions.question_rows(found, now=now, live=live, spawned=spawned, gist=gist)
+    # A question's id is its attention item's, named the one way a row is (#78).
+    ctx = dflt_row_context(config=config) if row_context is None else row_context
+    item_of = ctx.item
+
+    rows = _questions.question_rows(found, now=now, live=live, spawned=spawned, gist=gist)
+    if generate:
+        # An answer given elsewhere is asked about only for what the turn left open.
+        wanted = [
+            (item_of(r), r["question"], _questions.candidates(r, found))
+            for r in rows
+            if r["state"] in (_questions.UNANSWERED, _questions.PARTLY)
+            and not r["unsure"]
+        ]
+        _gists.refresh_pairs(wanted, store=store)
+
+    def pair(row, candidates):
+        return _gists.pairing(store, item_of(row), row["question"], candidates)
+
+    return _questions.question_rows(
+        found, now=now, live=live, spawned=spawned, gist=gist, pair=pair
+    )
 
 
 def questions(

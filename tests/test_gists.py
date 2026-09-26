@@ -119,3 +119,76 @@ def test_the_page_tags_generated_gists_and_folds_the_unsure():
     assert "Can you add a test?" in fold and "unsure" in fold
     # Unread counts the two real questions, not the unsure one.
     assert '<a href="#questions"><b>2</b> <span>unread</span></a>' in html
+
+
+def relayed():
+    """A question the asking turn deferred, relayed to another session that answered."""
+    asking = {
+        "home": "main", "session": "s1", "title": "lookout", "cwd": "/w/x",
+        "exchanges": [exchange(
+            prompt="Is the release pipeline green on the main branch today?",
+            questions=["Is the release pipeline green on the main branch today?"],
+            reply="I've asked the release session; it will tell me.",
+        )],
+        "turns": [],
+    }  # fmt: skip
+    worker = {
+        "home": "main", "session": "s2", "title": "release", "cwd": "/w/r",
+        "exchanges": [],
+        "turns": [{
+            "uuid": "t9", "origin": "peer", "asked_at": "2027-01-15T08:05:00Z",
+            "prompt": "The user asks: is the release pipeline green on the main branch today?",
+            "reply": "Yes, green: all eight jobs passed at 08:03.",
+            "replied_at": "2027-01-15T08:06:00Z",
+        }],
+    }  # fmt: skip
+    return [asking, worker]
+
+
+def test_a_relay_quoting_the_question_is_a_candidate_elsewhere():
+    sessions = relayed()
+    (row,) = questions.question_rows(sessions, now=NOW)
+    (found,) = questions.candidates(row, sessions)
+    assert (found["session"], found["uuid"]) == ("s2", "t9")
+
+
+def test_a_confirmed_pairing_makes_the_question_answered_elsewhere():
+    sessions = relayed()
+    deferred = {"questions": [{"source": sessions[0]["exchanges"][0]["questions"][0],
+                               "q": "Is the release pipeline green?", "a": "",
+                               "state": "unanswered", "sure": True}]}  # fmt: skip
+    store = {}
+    gists.refresh(sessions, store=store, synthesiser=lambda brief: deferred)
+
+    def gist(sid, ex):
+        doc = store.get(gists.key_of(sid, ex["uuid"]))
+        return doc if doc and doc["rev"] == gists.revision_of(ex) else None
+
+    (open_,) = questions.question_rows(sessions, now=NOW, gist=gist)
+    assert open_["state"] == "unanswered"
+    item = attention.item_id(open_)
+    gists.refresh_pairs(
+        [(item, open_["question"], questions.candidates(open_, sessions))],
+        store=store,
+        synthesiser=lambda brief: {
+            "match": 0,
+            "a": "Yes: all eight jobs passed",
+            "state": "answered",
+        },
+    )
+
+    def pair(row, found):
+        return gists.pairing(store, attention.item_id(row), row["question"], found)
+
+    (row,) = questions.question_rows(sessions, now=NOW, gist=gist, pair=pair)
+    assert (row["state"], row["answered_by"], row["a_gist"]) == (
+        "elsewhere",
+        "release",
+        "Yes: all eight jobs passed",
+    )
+    # Its revision changed, so a question marked read while open comes back once.
+    assert attention.fingerprint(row) != attention.fingerprint(open_)
+    html = render_report(
+        {"sessions": [], "counts": {}}, made_at=AT, tz="UTC", questions=[row]
+    )
+    assert "answered by release" in html and ">elsewhere<" in html

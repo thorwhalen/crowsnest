@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -35,11 +36,13 @@ from crowsnest.attention import QUESTION as _QUESTION
 __all__ = [
     "ANSWERED",
     "DFLT_KEEP_DAYS",
+    "ELSEWHERE",
     "ITEM_KIND",
     "PARTLY",
     "PENDING",
     "STATES",
     "UNANSWERED",
+    "candidates",
     "dflt_cache_dir",
     "question_rows",
     "scan",
@@ -59,7 +62,7 @@ PENDING = "pending"
 #: The reply answers it in part, or defers it (the model's reading, :mod:`crowsnest.gists`).
 PARTLY = "partly"
 #: Every state a row can be in, in the order the register sorts them.
-STATES = (UNANSWERED, PARTLY, ANSWERED, PENDING)
+STATES = (UNANSWERED, PARTLY, ANSWERED, PENDING, "elsewhere")  # ELSEWHERE, below
 
 #: How long a question stays on the page after it was asked.
 DFLT_KEEP_DAYS = 14
@@ -69,7 +72,25 @@ DFLT_KEEP_DAYS = 14
 MAX_KEPT = 20_000
 
 #: Bumped when what a cache file holds changes, so an old one is read again.
-CACHE_VERSION = 2
+CACHE_VERSION = 3
+
+#: How much of every other turn the cache keeps, for finding an answer given elsewhere.
+TURN_PROMPT_KEPT = 1500
+TURN_REPLY_KEPT = 4000
+
+#: How long after a question an answer given elsewhere still pairs with it.
+ELSEWHERE_SECONDS = 86400
+
+#: How many words of a question another session's prompt must quote verbatim to be a
+#: relay of it.
+SPAN_WORDS = 6
+
+#: The turns of the same session that can carry an answer that arrived later: another
+#: session's message (a relay coming back), or the tooling waking it.
+RELAY_ORIGINS = ("peer", "system")
+
+#: The state of a question answered in a later turn or another session.
+ELSEWHERE = "elsewhere"
 
 #: A turn with no words whose next human prompt came this soon (an interruption, a
 #: queued follow-up) takes that turn's reply: the session answered both at once.
@@ -85,12 +106,14 @@ def dflt_cache_dir() -> Path:
 
 @dataclass(frozen=True)
 class _Read:
-    """What one transcript said, as far as questions go."""
+    """What one transcript said, as far as questions go: the exchanges that ask, and a
+    short copy of every other turn that said something, where an answer may turn up."""
 
     session: str
     title: str
     cwd: str
     exchanges: tuple[dict, ...]
+    turns: tuple[dict, ...] = ()
 
 
 def _title(records: Iterable[Mapping]) -> str:
@@ -105,10 +128,22 @@ def _read(path: Path) -> _Read:
 
     records = load_records(path)
     found = exchanges(records)
-    kept = []
+    kept, turns = [], []
     for i, e in enumerate(found):
-        # Only a person's prompts with questions are kept, with whether a turn followed.
+        # A person's prompts with questions are kept whole, with whether a turn followed;
+        # every other turn that said something, short.
         if not e.questions:
+            if e.reply:
+                turns.append(
+                    {
+                        "uuid": e.uuid,
+                        "origin": e.origin,
+                        "asked_at": e.asked_at,
+                        "prompt": e.prompt[:TURN_PROMPT_KEPT],
+                        "reply": e.reply[:TURN_REPLY_KEPT],
+                        "replied_at": e.replied_at,
+                    }
+                )
             continue
         reply, replied_at = _carried(found, i)
         kept.append(
@@ -125,7 +160,7 @@ def _read(path: Path) -> _Read:
         )
     cwd = next((str(r.get("cwd")) for r in records if r.get("cwd")), "")
     session = next((e.session for e in found if e.session), path.stem)
-    return _Read(session, _title(records), cwd, tuple(kept))
+    return _Read(session, _title(records), cwd, tuple(kept), tuple(turns))
 
 
 def _carried(found: Sequence[Any], i: int) -> tuple[str, str]:
@@ -156,7 +191,11 @@ def _cached(path: Path, cache_dir: Path) -> _Read:
         doc = json.loads(target.read_text(encoding="utf-8"))
         if doc.get("stamp") == stamp:
             return _Read(
-                doc["session"], doc["title"], doc["cwd"], tuple(doc["exchanges"])
+                doc["session"],
+                doc["title"],
+                doc["cwd"],
+                tuple(doc["exchanges"]),
+                tuple(doc.get("turns") or ()),
             )
     except (OSError, ValueError, KeyError, TypeError):
         pass
@@ -171,6 +210,7 @@ def _cached(path: Path, cache_dir: Path) -> _Read:
                 "title": read.title,
                 "cwd": read.cwd,
                 "exchanges": list(read.exchanges),
+                "turns": list(read.turns),
             },
             ensure_ascii=False,
         ),
@@ -217,7 +257,7 @@ def scan(
                 read = _cached(path, cache_dir)
             except (OSError, ValueError):
                 continue
-            if read.exchanges:
+            if read.exchanges or read.turns:
                 out.append(
                     {
                         "home": home.name,
@@ -225,6 +265,7 @@ def scan(
                         "title": read.title,
                         "cwd": read.cwd,
                         "exchanges": list(read.exchanges),
+                        "turns": list(read.turns),
                     }
                 )
     return out
@@ -244,6 +285,58 @@ def _state(exchange: Mapping, *, running: bool) -> str:
     if not exchange.get("closed") and running:
         return PENDING
     return ANSWERED if exchange.get("reply") else UNANSWERED
+
+
+def _spans(text: str, n: int = SPAN_WORDS) -> set[str]:
+    words = re.findall(r"[a-z0-9_#./-]+", str(text or "").casefold())
+    return {" ".join(words[i : i + n]) for i in range(len(words) - n + 1)}
+
+
+def candidates(
+    row: Mapping, sessions: Iterable[Mapping], *, limit: int = 3
+) -> list[dict]:
+    """Where an answer to ``row`` may have been given, within :data:`ELSEWHERE_SECONDS`
+    after it was asked, earliest first:
+
+    - a later turn of the same session that another session or the tooling started (a
+      relay coming back, a notification the session answered);
+    - a turn of another session whose prompt quotes :data:`SPAN_WORDS` words of the
+      question verbatim (it was relayed there).
+
+    Only a turn that said something is a candidate. Returns ``session``, ``title``,
+    ``home``, ``uuid``, ``asked_at``, ``reply``, ``replied_at``.
+    """
+    asked = float(row.get("asked_epoch") or 0)
+    spans = _spans(row.get("question"))
+    found = []
+    for session in sessions:
+        sid = str(session.get("session") or "")
+        same = sid == row.get("session_id")
+        for turn in session.get("turns") or ():
+            at = _epoch(turn.get("asked_at"))
+            if at is None or not asked < at <= asked + ELSEWHERE_SECONDS:
+                continue
+            if not turn.get("reply"):
+                continue
+            if same:
+                if turn.get("origin") not in RELAY_ORIGINS:
+                    continue
+            elif not (spans and spans & _spans(turn.get("prompt"))):
+                continue
+            found.append(
+                {
+                    "session": sid,
+                    "title": session.get("title")
+                    or Path(str(session.get("cwd") or "")).name,
+                    "home": session.get("home") or "",
+                    "uuid": turn.get("uuid") or "",
+                    "asked_at": turn.get("asked_at") or "",
+                    "reply": turn.get("reply") or "",
+                    "replied_at": turn.get("replied_at") or "",
+                }
+            )
+    found.sort(key=lambda c: c["asked_at"])
+    return found[:limit]
 
 
 def _norm(text) -> str:
@@ -291,6 +384,7 @@ def question_rows(
     spawned: Iterable[str] = (),
     answer_hash: Callable[[str], str] | None = None,
     gist: Callable[[str, Mapping], Mapping | None] | None = None,
+    pair: Callable[[Mapping, list[dict]], Mapping | None] | None = None,
 ) -> list[dict]:
     """One row per question, newest first, for the page and the attention store.
 
@@ -306,6 +400,11 @@ def question_rows(
     ``{"group": "question", "why": state}``, which a mark records as what it saw. With a
     gist it also carries ``q_gist``, ``a_gist``, and ``unsure`` for a sentence the model
     did not take for a question (or was not sure of).
+
+    ``pair`` is ``(row, candidates) -> {"match": i, "a": ..., "state": ...}``, the model's
+    confirmation of an answer given elsewhere (:func:`candidates`). A question the turn
+    left ``unanswered`` or ``partly`` answered, and that it pairs, becomes
+    :data:`ELSEWHERE`, with ``answered_by`` naming where.
     """
     live = dict(live or {})
     spawned = set(spawned)
@@ -314,7 +413,8 @@ def question_rows(
     )
     since = now - keep_days * 86400
     rows = []
-    for session in sessions:
+    sessions_list = list(sessions)
+    for session in sessions_list:
         sid = str(session.get("session") or "")
         row = live.get(sid) or {}
         # Waiting on a permission prompt is a turn that has not ended either.
@@ -360,5 +460,38 @@ def question_rows(
                         "verdict": {"group": ITEM_KIND, "why": state},
                     }
                 )
+    if pair is not None:
+        for row in rows:
+            if row["state"] in (UNANSWERED, PARTLY) and not row["unsure"]:
+                _pair_elsewhere(row, candidates(row, sessions_list), pair, live)
     rows.sort(key=lambda r: (-r["asked_epoch"], r["prompt_uuid"], r["k"]))
     return rows
+
+
+def _pair_elsewhere(
+    row: dict, found: list[dict], pair: Callable, live: Mapping[str, Mapping]
+) -> None:
+    if not found:
+        return
+    doc = pair(row, found)
+    if not doc or doc.get("match") is None:
+        return
+    try:
+        match = found[int(doc["match"])]
+    except (ValueError, TypeError, IndexError):
+        return
+    there = live.get(match["session"]) or {}
+    reply = str(match.get("reply") or "")
+    row.update(
+        {
+            "state": ELSEWHERE,
+            "answer": reply,
+            "answered_at": match.get("replied_at") or "",
+            "answer_hash": hashlib.sha1(reply.encode("utf-8")).hexdigest()[:16],
+            "answered_by": str(there.get("label") or match.get("title") or ""),
+            "answered_session": match["session"],
+            "answered_url": str(there.get("session_url") or ""),
+            "a_gist": str(doc.get("a") or ""),
+            "verdict": {"group": ITEM_KIND, "why": ELSEWHERE},
+        }
+    )

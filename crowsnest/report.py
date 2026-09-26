@@ -3331,7 +3331,12 @@ QUESTION_TEXT_LIMIT = 6000
 #: A raw answer gist: the reply's first sentence, clipped.
 ANSWER_GIST_LIMIT = 140
 
-_QUESTION_CHIPS = {"unanswered": "needs", "partly": "unsure", "pending": "flight"}
+_QUESTION_CHIPS = {
+    "unanswered": "needs",
+    "partly": "unsure",
+    "pending": "flight",
+    "elsewhere": "waits",
+}
 
 _QUESTION_READ = (_attention.SEEN, _attention.LATER, _attention.DONE)
 
@@ -3454,11 +3459,18 @@ def _question_row(
         where.append(link)
     elif not row.get("alive"):
         where.append('<span class="gone">exited</span>')
+    if row.get("answered_by"):
+        # Answered in another session, or in a later turn after a relay came back.
+        by = safe.text(row["answered_by"])
+        there = _link(safe, row.get("answered_url"), f"answered by {row['answered_by']}")
+        where.append(there or f"answered by {by}")
     asked_at = clock.local(float(row.get("asked_epoch") or clock.now)).strftime("%H:%M")
     answered = _said_epoch(row.get("answered_at"))
     summary = f"source · asked {asked_at}" + (
         f" · answered {clock.local(answered).strftime('%H:%M')}" if answered else ""
     )
+    if row.get("answered_by"):
+        summary += f" by {safe.text(row['answered_by'])}"
     fold = (
         f'<details class="source"><summary>{summary}</summary>'
         f'<p class="q-full">{_marked(safe, row.get("prompt"), row.get("question"))}</p>'
