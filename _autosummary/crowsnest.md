@@ -395,6 +395,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`owed`](crowsnest.owed.md#module-crowsnest.owed)           | What the person owes their sessions: the open `manual-task` issues openloops lists.                                                  |
 | [`paths`](crowsnest.paths.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                                                        |
 | [`publish`](crowsnest.publish.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.                                     |
+| [`questions`](crowsnest.questions.md#module-crowsnest.questions) | Your questions: what the person asked their sessions, and what each answered (#129).                                                 |
 | [`refstate`](crowsnest.refstate.md#module-crowsnest.refstate)   | What a referenced issue or pull request is now: open or closed, and its title.                                                       |
 | [`registry`](crowsnest.registry.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                                               |
 | [`report`](crowsnest.report.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere.                                |

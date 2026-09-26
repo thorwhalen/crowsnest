@@ -41,21 +41,22 @@ Three seams, one keyword argument each:
 
 ### Module Attributes
 
-| [`NAMESPACE`](#crowsnest.attention.NAMESPACE)    | every id already in a store, a page's `db` and an export was derived from it, and a new one orphans them all.                       |
-|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| [`ACTIVE`](#crowsnest.attention.ACTIVE)       | The person's states.                                                                                                                |
-| [`LATER`](#crowsnest.attention.LATER)        | The person's states.                                                                                                                |
-| [`DONE`](#crowsnest.attention.DONE)         | The person's states.                                                                                                                |
-| [`NEW`](#crowsnest.attention.NEW)          | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
-| [`CHANGED`](#crowsnest.attention.CHANGED)      | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
-| [`WOKE`](#crowsnest.attention.WOKE)         | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
-| [`SEEN`](#crowsnest.attention.SEEN)         | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names. |
-| [`HIDDEN`](#crowsnest.attention.HIDDEN)       | The presentations the page does not show as rows.                                                                                   |
-| [`SNOOZED`](#crowsnest.attention.SNOOZED)      | The review band's kinds, in the order the band lists them.                                                                          |
-| [`STALE`](#crowsnest.attention.STALE)        | The review band's kinds, in the order the band lists them.                                                                          |
-| [`STUCK`](#crowsnest.attention.STUCK)        | The review band's kinds, in the order the band lists them.                                                                          |
-| [`UNMOVED`](#crowsnest.attention.UNMOVED)      | The review band's kinds, in the order the band lists them.                                                                          |
-| [`UNCLASSIFIED`](#crowsnest.attention.UNCLASSIFIED) | The review band's kinds, in the order the band lists them.                                                                          |
+| [`NAMESPACE`](#crowsnest.attention.NAMESPACE)    | every id already in a store, a page's `db` and an export was derived from it, and a new one orphans them all.                        |
+|---------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| [`ACTIVE`](#crowsnest.attention.ACTIVE)       | The person's states.                                                                                                                 |
+| [`LATER`](#crowsnest.attention.LATER)        | The person's states.                                                                                                                 |
+| [`DONE`](#crowsnest.attention.DONE)         | The person's states.                                                                                                                 |
+| [`NEW`](#crowsnest.attention.NEW)          | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names.  |
+| [`CHANGED`](#crowsnest.attention.CHANGED)      | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names.  |
+| [`WOKE`](#crowsnest.attention.WOKE)         | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names.  |
+| [`SEEN`](#crowsnest.attention.SEEN)         | What [`present()`](#crowsnest.attention.present) returns besides the two hidden states, which share the state names.  |
+| [`HIDDEN`](#crowsnest.attention.HIDDEN)       | The presentations the page does not show as rows.                                                                                    |
+| [`QUESTION`](#crowsnest.attention.QUESTION)     | The `item_kind` of a question row ([`crowsnest.questions`](crowsnest.questions.html.md#module-crowsnest.questions)). |
+| [`SNOOZED`](#crowsnest.attention.SNOOZED)      | The review band's kinds, in the order the band lists them.                                                                           |
+| [`STALE`](#crowsnest.attention.STALE)        | The review band's kinds, in the order the band lists them.                                                                           |
+| [`STUCK`](#crowsnest.attention.STUCK)        | The review band's kinds, in the order the band lists them.                                                                           |
+| [`UNMOVED`](#crowsnest.attention.UNMOVED)      | The review band's kinds, in the order the band lists them.                                                                           |
+| [`UNCLASSIFIED`](#crowsnest.attention.UNCLASSIFIED) | The review band's kinds, in the order the band lists them.                                                                           |
 
 ### Functions
 
@@ -145,6 +146,10 @@ What [`present()`](#crowsnest.attention.present) returns besides the two hidden 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 The person’s note on an item: never read as an instruction, never a change of state.
+
+### crowsnest.attention.QUESTION *= 'question'*
+
+The `item_kind` of a question row ([`crowsnest.questions`](crowsnest.questions.html.md#module-crowsnest.questions)).
 
 ### *class* crowsnest.attention.Record(seen_rev=None, state='active', later=None, done_rev=None, note=None, prev=None, updated_at='', seen_as=None)
 
@@ -257,6 +262,9 @@ Not the name, which is not unique across homes or over time (#42), and not
 account’s home. A resumed session keeps its id and so its record; a new session given
 an old name does not inherit one. (`/clear` starts a new session id in the same
 terminal, so a record made before it stays with the conversation that was cleared.)
+
+A question row (`item_kind` [`QUESTION`](#crowsnest.attention.QUESTION), from [`crowsnest.questions`](crowsnest.questions.html.md#module-crowsnest.questions)) is
+`("question", session_id, prompt_uuid, k)`.
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis)]

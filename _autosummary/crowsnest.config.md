@@ -141,7 +141,7 @@ One Claude Code config directory to read, and how to judge liveness in it.
 
 The config table saying where `crowsnest publish` sends the page.
 
-### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False, owed=False)
+### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False, owed=False, questions=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 

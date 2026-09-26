@@ -22,6 +22,7 @@
 - [crowsnest.owed](crowsnest.owed.html.md): What the person owes their sessions: the open &#96;manual-task&#96; issues openloops lists.
 - [crowsnest.paths](crowsnest.paths.html.md): Where crowsnest keeps what is not code: the data directory, and nothing else.
 - [crowsnest.publish](crowsnest.publish.html.md): Deliver the report page to a place its owner can open from anywhere – by their route, not ours.
+- [crowsnest.questions](crowsnest.questions.html.md): Your questions: what the person asked their sessions, and what each answered (#129).
 - [crowsnest.refstate](crowsnest.refstate.html.md): What a referenced issue or pull request is now: open or closed, and its title.
 - [crowsnest.registry](crowsnest.registry.html.md): Who is alive right now, read from the registry Claude Code keeps while a session runs.
 - [crowsnest.report](crowsnest.report.html.md): The live roster as one self-contained HTML page: no stylesheet, script, font, or

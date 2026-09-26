@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.questions - crowsnest</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.questions"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../_autosummary/crowsnest.html">crowsnest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.actions.html">crowsnest.actions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.courier.html">crowsnest.courier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.live.html">crowsnest.live</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.owed.html">crowsnest.owed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.publish.html">crowsnest.publish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.questions.html">crowsnest.questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.refstate.html">crowsnest.refstate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.rows.html">crowsnest.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.said.html">crowsnest.said</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.themes.html">crowsnest.themes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.questions</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <h1>Source code for crowsnest.questions</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="sd">"""Your questions: what the person asked their sessions, and what each answered (#129).</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="sd">A person asks a question between three requests, keeps working, and a day later cannot</span>
+</span><span data-line="4"><span class="sd">find the answer. This module gathers every question the person typed in any session on</span>
+</span><span data-line="5"><span class="sd">every home, pairs it with the reply its turn ended with, and hands the page one row per</span>
+</span><span data-line="6"><span class="sd">question, which the attention store marks read like any other item.</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="sd">**openloops reads the transcript** (:func:`openloops.exchanges.exchanges`); this module</span>
+</span><span data-line="9"><span class="sd">never parses one. What it adds is crowsnest's knowledge:</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="sd">- which homes to read (:func:`crowsnest.config.homes`), and only their recent transcripts;</span>
+</span><span data-line="12"><span class="sd">- which prompts the person did not type after all: the first prompt of a session crowsnest</span>
+</span><span data-line="13"><span class="sd">  spawned is its parent's brief (``spawned=``, from the lineage record);</span>
+</span><span data-line="14"><span class="sd">- whether a turn is still running, from the registry (``live=``), so a half-written</span>
+</span><span data-line="15"><span class="sd">  reply is ``pending`` rather than an answer;</span>
+</span><span data-line="16"><span class="sd">- a per-file cache, so a publish every minute re-reads only the transcripts that grew.</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="sd">The cache holds transcript text on this machine only, under the data directory. A row's</span>
+</span><span data-line="19"><span class="sd">text reaches a page through the page's sanitiser, and an attention record keeps its id and</span>
+</span><span data-line="20"><span class="sd">revision, never the text.</span>
+</span><span data-line="21"><span class="sd">"""</span>
+</span><span data-line="22">
+</span><span data-line="23"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="24">
+</span><span data-line="25"><span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+</span><span data-line="26"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span data-line="27"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+</span><span data-line="28"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+</span><span data-line="29"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+</span><span data-line="30"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="31"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+</span><span data-line="32">
+</span><span data-line="33"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.attention</span><span class="w"> </span><span class="kn">import</span> <span class="n">QUESTION</span> <span class="k">as</span> <span class="n">_QUESTION</span>
+</span><span data-line="34">
+</span><span data-line="35"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="36">    <span class="s2">"ANSWERED"</span><span class="p">,</span>
+</span><span data-line="37">    <span class="s2">"DFLT_KEEP_DAYS"</span><span class="p">,</span>
+</span><span data-line="38">    <span class="s2">"ITEM_KIND"</span><span class="p">,</span>
+</span><span data-line="39">    <span class="s2">"PENDING"</span><span class="p">,</span>
+</span><span data-line="40">    <span class="s2">"STATES"</span><span class="p">,</span>
+</span><span data-line="41">    <span class="s2">"UNANSWERED"</span><span class="p">,</span>
+</span><span data-line="42">    <span class="s2">"dflt_cache_dir"</span><span class="p">,</span>
+</span><span data-line="43">    <span class="s2">"question_rows"</span><span class="p">,</span>
+</span><span data-line="44">    <span class="s2">"scan"</span><span class="p">,</span>
+</span><span data-line="45"><span class="p">]</span>
+</span><span data-line="46">
+</span><span data-line="47"><span class="c1">#: The marker a question row carries, which attention's identity and material read</span>
+</span><span data-line="48"><span class="c1">#: (:data:`crowsnest.attention.QUESTION`). Not ``kind``: a roster row already uses that</span>
+</span><span data-line="49"><span class="c1">#: for the session's kind.</span>
+</span><span data-line="50"><span class="n">ITEM_KIND</span> <span class="o">=</span> <span class="n">_QUESTION</span>
+</span><span data-line="51">
+</span><span data-line="52"><span class="c1">#: The same turn's final words exist and the turn is over.</span>
+</span><span data-line="53"><span class="n">ANSWERED</span> <span class="o">=</span> <span class="s2">"answered"</span>
+</span><span data-line="54"><span class="c1">#: The turn ended without words, or the next prompt came first.</span>
+</span><span data-line="55"><span class="n">UNANSWERED</span> <span class="o">=</span> <span class="s2">"unanswered"</span>
+</span><span data-line="56"><span class="c1">#: The turn is still running: never flagged, never counted.</span>
+</span><span data-line="57"><span class="n">PENDING</span> <span class="o">=</span> <span class="s2">"pending"</span>
+</span><span data-line="58"><span class="c1">#: Every state a row can be in, in the order the register sorts them.</span>
+</span><span data-line="59"><span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span><span class="n">UNANSWERED</span><span class="p">,</span> <span class="n">ANSWERED</span><span class="p">,</span> <span class="n">PENDING</span><span class="p">)</span>
+</span><span data-line="60">
+</span><span data-line="61"><span class="c1">#: How long a question stays on the page after it was asked.</span>
+</span><span data-line="62"><span class="n">DFLT_KEEP_DAYS</span> <span class="o">=</span> <span class="mi">14</span>
+</span><span data-line="63">
+</span><span data-line="64"><span class="c1">#: How much of a reply and a prompt the cache keeps. The page sanitises before it clips,</span>
+</span><span data-line="65"><span class="c1">#: so a limit here only bounds the file (#83 is what clipping first gets wrong).</span>
+</span><span data-line="66"><span class="n">MAX_KEPT</span> <span class="o">=</span> <span class="mi">20_000</span>
+</span><span data-line="67">
+</span><span data-line="68"><span class="c1">#: Bumped when what a cache file holds changes, so an old one is read again.</span>
+</span><span data-line="69"><span class="n">CACHE_VERSION</span> <span class="o">=</span> <span class="mi">2</span>
+</span><span data-line="70">
+</span><span data-line="71"><span class="c1">#: A turn with no words whose next human prompt came this soon (an interruption, a</span>
+</span><span data-line="72"><span class="c1">#: queued follow-up) takes that turn's reply: the session answered both at once.</span>
+</span><span data-line="73"><span class="n">CARRY_SECONDS</span> <span class="o">=</span> <span class="mi">600</span>
+</span><span data-line="74">
+</span><span data-line="75">
+<div class="viewcode-block" id="dflt_cache_dir">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.questions.html#crowsnest.questions.dflt_cache_dir">[docs]</a>
+</span><span data-line="76"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_cache_dir</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="77"><span class="w">    </span><span class="sd">"""``&lt;data dir&gt;/questions/files``: one JSON file per transcript read."""</span>
+</span><span data-line="78">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+</span><span data-line="79">
+</span><span data-line="80">    <span class="k">return</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"questions"</span> <span class="o">/</span> <span class="s2">"files"</span></div>
+
+</span><span data-line="81">
+</span><span data-line="82">
+</span><span data-line="83"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="84"><span class="k">class</span><span class="w"> </span><span class="nc">_Read</span><span class="p">:</span>
+</span><span data-line="85"><span class="w">    </span><span class="sd">"""What one transcript said, as far as questions go."""</span>
+</span><span data-line="86">
+</span><span data-line="87">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="88">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="89">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="90">    <span class="n">exchanges</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</span><span data-line="91">
+</span><span data-line="92">
+</span><span data-line="93"><span class="k">def</span><span class="w"> </span><span class="nf">_title</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="94">    <span class="kn">from</span><span class="w"> </span><span class="nn">openloops.transcripts</span><span class="w"> </span><span class="kn">import</span> <span class="n">_titles</span>
+</span><span data-line="95">
+</span><span data-line="96">    <span class="n">custom</span><span class="p">,</span> <span class="n">ai</span> <span class="o">=</span> <span class="n">_titles</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">records</span><span class="p">))</span>
+</span><span data-line="97">    <span class="k">return</span> <span class="n">custom</span> <span class="ow">or</span> <span class="n">ai</span>
+</span><span data-line="98">
+</span><span data-line="99">
+</span><span data-line="100"><span class="k">def</span><span class="w"> </span><span class="nf">_read</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Read</span><span class="p">:</span>
+</span><span data-line="101">    <span class="kn">from</span><span class="w"> </span><span class="nn">openloops.exchanges</span><span class="w"> </span><span class="kn">import</span> <span class="n">exchanges</span><span class="p">,</span> <span class="n">load_records</span>
+</span><span data-line="102">
+</span><span data-line="103">    <span class="n">records</span> <span class="o">=</span> <span class="n">load_records</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="104">    <span class="n">found</span> <span class="o">=</span> <span class="n">exchanges</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+</span><span data-line="105">    <span class="n">kept</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="106">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">found</span><span class="p">):</span>
+</span><span data-line="107">        <span class="c1"># Only a person's prompts with questions are kept, with whether a turn followed.</span>
+</span><span data-line="108">        <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="o">.</span><span class="n">questions</span><span class="p">:</span>
+</span><span data-line="109">            <span class="k">continue</span>
+</span><span data-line="110">        <span class="n">reply</span><span class="p">,</span> <span class="n">replied_at</span> <span class="o">=</span> <span class="n">_carried</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</span><span data-line="111">        <span class="n">kept</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="112">            <span class="p">{</span>
+</span><span data-line="113">                <span class="s2">"uuid"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">uuid</span><span class="p">,</span>
+</span><span data-line="114">                <span class="s2">"asked_at"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">asked_at</span><span class="p">,</span>
+</span><span data-line="115">                <span class="s2">"prompt"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">prompt</span><span class="p">[:</span><span class="n">MAX_KEPT</span><span class="p">],</span>
+</span><span data-line="116">                <span class="s2">"questions"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">questions</span><span class="p">),</span>
+</span><span data-line="117">                <span class="s2">"reply"</span><span class="p">:</span> <span class="n">reply</span><span class="p">[:</span><span class="n">MAX_KEPT</span><span class="p">],</span>
+</span><span data-line="118">                <span class="s2">"replied_at"</span><span class="p">:</span> <span class="n">replied_at</span><span class="p">,</span>
+</span><span data-line="119">                <span class="s2">"closed"</span><span class="p">:</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+</span><span data-line="120">                <span class="s2">"first"</span><span class="p">:</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="121">            <span class="p">}</span>
+</span><span data-line="122">        <span class="p">)</span>
+</span><span data-line="123">    <span class="n">cwd</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)),</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="124">    <span class="n">session</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">e</span><span class="o">.</span><span class="n">session</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">found</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">session</span><span class="p">),</span> <span class="n">path</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+</span><span data-line="125">    <span class="k">return</span> <span class="n">_Read</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">_title</span><span class="p">(</span><span class="n">records</span><span class="p">),</span> <span class="n">cwd</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">kept</span><span class="p">))</span>
+</span><span data-line="126">
+</span><span data-line="127">
+</span><span data-line="128"><span class="k">def</span><span class="w"> </span><span class="nf">_carried</span><span class="p">(</span><span class="n">found</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="129"><span class="w">    </span><span class="sd">"""The reply to exchange ``i``: its own, else that of the human turns that followed it</span>
+</span><span data-line="130"><span class="sd">    within :data:`CARRY_SECONDS` with no words between (an interruption, a queued prompt)."""</span>
+</span><span data-line="131">    <span class="n">here</span> <span class="o">=</span> <span class="n">found</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span data-line="132">    <span class="k">if</span> <span class="n">here</span><span class="o">.</span><span class="n">reply</span><span class="p">:</span>
+</span><span data-line="133">        <span class="k">return</span> <span class="n">here</span><span class="o">.</span><span class="n">reply</span><span class="p">,</span> <span class="n">here</span><span class="o">.</span><span class="n">replied_at</span>
+</span><span data-line="134">    <span class="n">start</span> <span class="o">=</span> <span class="n">_epoch</span><span class="p">(</span><span class="n">here</span><span class="o">.</span><span class="n">asked_at</span><span class="p">)</span>
+</span><span data-line="135">    <span class="k">for</span> <span class="n">later</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]:</span>
+</span><span data-line="136">        <span class="n">at</span> <span class="o">=</span> <span class="n">_epoch</span><span class="p">(</span><span class="n">later</span><span class="o">.</span><span class="n">asked_at</span><span class="p">)</span>
+</span><span data-line="137">        <span class="k">if</span> <span class="n">later</span><span class="o">.</span><span class="n">origin</span> <span class="o">!=</span> <span class="s2">"human"</span> <span class="ow">or</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">at</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="138">            <span class="k">break</span>
+</span><span data-line="139">        <span class="k">if</span> <span class="n">at</span> <span class="o">-</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">CARRY_SECONDS</span><span class="p">:</span>
+</span><span data-line="140">            <span class="k">break</span>
+</span><span data-line="141">        <span class="k">if</span> <span class="n">later</span><span class="o">.</span><span class="n">reply</span><span class="p">:</span>
+</span><span data-line="142">            <span class="k">return</span> <span class="n">later</span><span class="o">.</span><span class="n">reply</span><span class="p">,</span> <span class="n">later</span><span class="o">.</span><span class="n">replied_at</span>
+</span><span data-line="143">    <span class="k">return</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">""</span>
+</span><span data-line="144">
+</span><span data-line="145">
+</span><span data-line="146"><span class="k">def</span><span class="w"> </span><span class="nf">_cached</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Read</span><span class="p">:</span>
+</span><span data-line="147"><span class="w">    </span><span class="sd">"""``path`` read, from the cache when its size and mtime have not changed."""</span>
+</span><span data-line="148">    <span class="n">stat</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
+</span><span data-line="149">    <span class="n">stamp</span> <span class="o">=</span> <span class="p">[</span><span class="n">CACHE_VERSION</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_mtime_ns</span><span class="p">]</span>
+</span><span data-line="150">    <span class="n">key</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+</span><span data-line="151">    <span class="n">target</span> <span class="o">=</span> <span class="n">cache_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.json"</span>
+</span><span data-line="152">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="153">        <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+</span><span data-line="154">        <span class="k">if</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stamp"</span><span class="p">)</span> <span class="o">==</span> <span class="n">stamp</span><span class="p">:</span>
+</span><span data-line="155">            <span class="k">return</span> <span class="n">_Read</span><span class="p">(</span>
+</span><span data-line="156">                <span class="n">doc</span><span class="p">[</span><span class="s2">"session"</span><span class="p">],</span> <span class="n">doc</span><span class="p">[</span><span class="s2">"title"</span><span class="p">],</span> <span class="n">doc</span><span class="p">[</span><span class="s2">"cwd"</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">doc</span><span class="p">[</span><span class="s2">"exchanges"</span><span class="p">])</span>
+</span><span data-line="157">            <span class="p">)</span>
+</span><span data-line="158">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+</span><span data-line="159">        <span class="k">pass</span>
+</span><span data-line="160">    <span class="n">read</span> <span class="o">=</span> <span class="n">_read</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="161">    <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="162">    <span class="n">tmp</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".json.tmp"</span><span class="p">)</span>
+</span><span data-line="163">    <span class="n">tmp</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+</span><span data-line="164">        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+</span><span data-line="165">            <span class="p">{</span>
+</span><span data-line="166">                <span class="s2">"stamp"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
+</span><span data-line="167">                <span class="s2">"session"</span><span class="p">:</span> <span class="n">read</span><span class="o">.</span><span class="n">session</span><span class="p">,</span>
+</span><span data-line="168">                <span class="s2">"title"</span><span class="p">:</span> <span class="n">read</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+</span><span data-line="169">                <span class="s2">"cwd"</span><span class="p">:</span> <span class="n">read</span><span class="o">.</span><span class="n">cwd</span><span class="p">,</span>
+</span><span data-line="170">                <span class="s2">"exchanges"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">read</span><span class="o">.</span><span class="n">exchanges</span><span class="p">),</span>
+</span><span data-line="171">            <span class="p">},</span>
+</span><span data-line="172">            <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="173">        <span class="p">),</span>
+</span><span data-line="174">        <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
+</span><span data-line="175">    <span class="p">)</span>
+</span><span data-line="176">    <span class="n">tmp</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+</span><span data-line="177">    <span class="k">return</span> <span class="n">read</span>
+</span><span data-line="178">
+</span><span data-line="179">
+</span><span data-line="180"><span class="k">def</span><span class="w"> </span><span class="nf">_transcripts</span><span class="p">(</span><span class="n">projects</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">since</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+</span><span data-line="181">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="182">        <span class="n">found</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">projects</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*/*.jsonl"</span><span class="p">))</span>
+</span><span data-line="183">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="184">        <span class="k">return</span> <span class="p">[]</span>
+</span><span data-line="185">    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="186">    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+</span><span data-line="187">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="188">            <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&gt;=</span> <span class="n">since</span><span class="p">:</span>
+</span><span data-line="189">                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="190">        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="191">            <span class="k">continue</span>
+</span><span data-line="192">    <span class="k">return</span> <span class="n">out</span>
+</span><span data-line="193">
+</span><span data-line="194">
+<div class="viewcode-block" id="scan">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.questions.html#crowsnest.questions.scan">[docs]</a>
+</span><span data-line="195"><span class="k">def</span><span class="w"> </span><span class="nf">scan</span><span class="p">(</span>
+</span><span data-line="196">    <span class="n">homes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+</span><span data-line="197">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="198">    <span class="n">now</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="199">    <span class="n">keep_days</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_KEEP_DAYS</span><span class="p">,</span>
+</span><span data-line="200">    <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="201"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="202"><span class="w">    </span><span class="sd">"""Every recent transcript of every home, read (from the cache where it can be).</span>
+</span><span data-line="203">
+</span><span data-line="204"><span class="sd">    ``homes`` are :class:`crowsnest.config.Home` (a ``name`` and a ``path``). Returns one</span>
+</span><span data-line="205"><span class="sd">    document per session that asked anything: ``home``, ``session``, ``title``, ``cwd``,</span>
+</span><span data-line="206"><span class="sd">    ``exchanges``. A transcript that cannot be read is skipped.</span>
+</span><span data-line="207"><span class="sd">    """</span>
+</span><span data-line="208">    <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">dflt_cache_dir</span><span class="p">()</span> <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span>
+</span><span data-line="209">    <span class="n">since</span> <span class="o">=</span> <span class="n">now</span> <span class="o">-</span> <span class="n">keep_days</span> <span class="o">*</span> <span class="mi">86400</span>
+</span><span data-line="210">    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="211">    <span class="k">for</span> <span class="n">home</span> <span class="ow">in</span> <span class="n">homes</span><span class="p">:</span>
+</span><span data-line="212">        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">_transcripts</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">home</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"projects"</span><span class="p">,</span> <span class="n">since</span><span class="p">):</span>
+</span><span data-line="213">            <span class="k">try</span><span class="p">:</span>
+</span><span data-line="214">                <span class="n">read</span> <span class="o">=</span> <span class="n">_cached</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">)</span>
+</span><span data-line="215">            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="216">                <span class="k">continue</span>
+</span><span data-line="217">            <span class="k">if</span> <span class="n">read</span><span class="o">.</span><span class="n">exchanges</span><span class="p">:</span>
+</span><span data-line="218">                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="219">                    <span class="p">{</span>
+</span><span data-line="220">                        <span class="s2">"home"</span><span class="p">:</span> <span class="n">home</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+</span><span data-line="221">                        <span class="s2">"session"</span><span class="p">:</span> <span class="n">read</span><span class="o">.</span><span class="n">session</span><span class="p">,</span>
+</span><span data-line="222">                        <span class="s2">"title"</span><span class="p">:</span> <span class="n">read</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+</span><span data-line="223">                        <span class="s2">"cwd"</span><span class="p">:</span> <span class="n">read</span><span class="o">.</span><span class="n">cwd</span><span class="p">,</span>
+</span><span data-line="224">                        <span class="s2">"exchanges"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">read</span><span class="o">.</span><span class="n">exchanges</span><span class="p">),</span>
+</span><span data-line="225">                    <span class="p">}</span>
+</span><span data-line="226">                <span class="p">)</span>
+</span><span data-line="227">    <span class="k">return</span> <span class="n">out</span></div>
+
+</span><span data-line="228">
+</span><span data-line="229">
+</span><span data-line="230"><span class="k">def</span><span class="w"> </span><span class="nf">_epoch</span><span class="p">(</span><span class="n">stamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="231">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="232">        <span class="n">moment</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">stamp</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span>
+</span><span data-line="233">    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+</span><span data-line="234">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="235">    <span class="k">if</span> <span class="n">moment</span><span class="o">.</span><span class="n">tzinfo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="236">        <span class="n">moment</span> <span class="o">=</span> <span class="n">moment</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+</span><span data-line="237">    <span class="k">return</span> <span class="n">moment</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+</span><span data-line="238">
+</span><span data-line="239">
+</span><span data-line="240"><span class="k">def</span><span class="w"> </span><span class="nf">_state</span><span class="p">(</span><span class="n">exchange</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">running</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="241">    <span class="k">if</span> <span class="ow">not</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"closed"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">running</span><span class="p">:</span>
+</span><span data-line="242">        <span class="k">return</span> <span class="n">PENDING</span>
+</span><span data-line="243">    <span class="k">return</span> <span class="n">ANSWERED</span> <span class="k">if</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">)</span> <span class="k">else</span> <span class="n">UNANSWERED</span>
+</span><span data-line="244">
+</span><span data-line="245">
+<div class="viewcode-block" id="question_rows">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.questions.html#crowsnest.questions.question_rows">[docs]</a>
+</span><span data-line="246"><span class="k">def</span><span class="w"> </span><span class="nf">question_rows</span><span class="p">(</span>
+</span><span data-line="247">    <span class="n">sessions</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">],</span>
+</span><span data-line="248">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="249">    <span class="n">now</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="250">    <span class="n">keep_days</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_KEEP_DAYS</span><span class="p">,</span>
+</span><span data-line="251">    <span class="n">live</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="252">    <span class="n">spawned</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+</span><span data-line="253">    <span class="n">answer_hash</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="254"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="255"><span class="w">    </span><span class="sd">"""One row per question, newest first, for the page and the attention store.</span>
+</span><span data-line="256">
+</span><span data-line="257"><span class="sd">    ``sessions`` is what :func:`scan` returns. ``live`` maps a session id to its roster</span>
+</span><span data-line="258"><span class="sd">    row, for its name, its link and whether a turn is running now. ``spawned`` holds the</span>
+</span><span data-line="259"><span class="sd">    ids of sessions crowsnest started with a brief: their first prompt was written by the</span>
+</span><span data-line="260"><span class="sd">    parent, not the person.</span>
+</span><span data-line="261">
+</span><span data-line="262"><span class="sd">    A row carries ``item_kind`` (:data:`ITEM_KIND`), ``session_id``, ``prompt_uuid`` and</span>
+</span><span data-line="263"><span class="sd">    ``k`` (the question's place in its message), which name the item; and ``state``,</span>
+</span><span data-line="264"><span class="sd">    ``answer_hash`` and ``answered_by``, which say when it changed. Its ``verdict`` is</span>
+</span><span data-line="265"><span class="sd">    ``{"group": "question", "why": state}``, which a mark records as what it saw.</span>
+</span><span data-line="266"><span class="sd">    """</span>
+</span><span data-line="267">    <span class="n">live</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">live</span> <span class="ow">or</span> <span class="p">{})</span>
+</span><span data-line="268">    <span class="n">spawned</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">spawned</span><span class="p">)</span>
+</span><span data-line="269">    <span class="n">digest</span> <span class="o">=</span> <span class="n">answer_hash</span> <span class="ow">or</span> <span class="p">(</span>
+</span><span data-line="270">        <span class="k">lambda</span> <span class="n">text</span><span class="p">:</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">16</span><span class="p">]</span>
+</span><span data-line="271">    <span class="p">)</span>
+</span><span data-line="272">    <span class="n">since</span> <span class="o">=</span> <span class="n">now</span> <span class="o">-</span> <span class="n">keep_days</span> <span class="o">*</span> <span class="mi">86400</span>
+</span><span data-line="273">    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="274">    <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">:</span>
+</span><span data-line="275">        <span class="n">sid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="276">        <span class="n">row</span> <span class="o">=</span> <span class="n">live</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+</span><span data-line="277">        <span class="c1"># Waiting on a permission prompt is a turn that has not ended either.</span>
+</span><span data-line="278">        <span class="n">running</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"waiting"</span><span class="p">)</span>
+</span><span data-line="279">        <span class="k">for</span> <span class="n">exchange</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exchanges"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
+</span><span data-line="280">            <span class="k">if</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"first"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">spawned</span><span class="p">:</span>
+</span><span data-line="281">                <span class="k">continue</span>
+</span><span data-line="282">            <span class="n">asked</span> <span class="o">=</span> <span class="n">_epoch</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asked_at"</span><span class="p">))</span>
+</span><span data-line="283">            <span class="k">if</span> <span class="n">asked</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">asked</span> <span class="o">&lt;</span> <span class="n">since</span><span class="p">:</span>
+</span><span data-line="284">                <span class="k">continue</span>
+</span><span data-line="285">            <span class="n">state</span> <span class="o">=</span> <span class="n">_state</span><span class="p">(</span><span class="n">exchange</span><span class="p">,</span> <span class="n">running</span><span class="o">=</span><span class="n">running</span><span class="p">)</span>
+</span><span data-line="286">            <span class="n">reply</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span> <span class="k">if</span> <span class="n">state</span> <span class="o">!=</span> <span class="n">PENDING</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="287">            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">question</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()):</span>
+</span><span data-line="288">                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="289">                    <span class="p">{</span>
+</span><span data-line="290">                        <span class="s2">"item_kind"</span><span class="p">:</span> <span class="n">ITEM_KIND</span><span class="p">,</span>
+</span><span data-line="291">                        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">sid</span><span class="p">,</span>
+</span><span data-line="292">                        <span class="s2">"prompt_uuid"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uuid"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="293">                        <span class="s2">"k"</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span>
+</span><span data-line="294">                        <span class="s2">"question"</span><span class="p">:</span> <span class="n">question</span><span class="p">,</span>
+</span><span data-line="295">                        <span class="s2">"prompt"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prompt"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="296">                        <span class="s2">"asked_at"</span><span class="p">:</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asked_at"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="297">                        <span class="s2">"asked_epoch"</span><span class="p">:</span> <span class="n">asked</span><span class="p">,</span>
+</span><span data-line="298">                        <span class="s2">"answer"</span><span class="p">:</span> <span class="n">reply</span><span class="p">,</span>
+</span><span data-line="299">                        <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"replied_at"</span><span class="p">)</span> <span class="k">if</span> <span class="n">reply</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="300">                        <span class="s2">"state"</span><span class="p">:</span> <span class="n">state</span><span class="p">,</span>
+</span><span data-line="301">                        <span class="s2">"answer_hash"</span><span class="p">:</span> <span class="n">digest</span><span class="p">(</span><span class="n">reply</span><span class="p">)</span> <span class="k">if</span> <span class="n">reply</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="302">                        <span class="s2">"answered_by"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="303">                        <span class="s2">"label"</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span>
+</span><span data-line="304">                        <span class="ow">or</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">)</span>
+</span><span data-line="305">                        <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+</span><span data-line="306">                        <span class="s2">"home"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"home"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="307">                        <span class="s2">"cwd"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="308">                        <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_url"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="309">                        <span class="s2">"alive"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="p">),</span>
+</span><span data-line="310">                        <span class="s2">"verdict"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"group"</span><span class="p">:</span> <span class="n">ITEM_KIND</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">state</span><span class="p">},</span>
+</span><span data-line="311">                    <span class="p">}</span>
+</span><span data-line="312">                <span class="p">)</span>
+</span><span data-line="313">    <span class="n">rows</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">r</span><span class="p">[</span><span class="s2">"asked_epoch"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"prompt_uuid"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"k"</span><span class="p">]))</span>
+</span><span data-line="314">    <span class="k">return</span> <span class="n">rows</span></div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=461c1127"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../../_static/shibuya.js?v=50760d75"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script></body>
+</html>

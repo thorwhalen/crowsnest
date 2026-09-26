@@ -17,6 +17,7 @@ crowsnest.attention
       WOKE
       SEEN
       HIDDEN
+      QUESTION
       SNOOZED
       STALE
       STUCK
