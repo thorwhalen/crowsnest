@@ -435,6 +435,7 @@ class PublishSettings:
     refs: bool = False
     actions: bool = False
     owed: bool = False
+    questions: bool = False
 
 
 def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
@@ -481,7 +482,7 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
             f"{file}: [{PUBLISH_KEY}] console must be a string, not {console!r}"
         )
     flags = {}
-    for flag in ("refs", "actions", "owed"):
+    for flag in ("refs", "actions", "owed", "questions"):
         flags[flag] = table.get(flag, False)
         if not isinstance(flags[flag], bool):
             raise ValueError(  # noqa: TRY004

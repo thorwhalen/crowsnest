@@ -452,6 +452,38 @@ def groups(
     return "\n".join(out)
 
 
+def questions(
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    unanswered: bool = False,
+    json: bool = False,
+):
+    """What you asked your sessions in the last two weeks, and what each answered.
+
+    Newest first, one line per question: when, the session, the question, and the first
+    words of the answer (`--unanswered` for those no turn answered). `--json` gives each
+    row whole, with the message it was in and the full reply.
+    """
+    import json as _json
+
+    found = tools.questions(home=home, all_homes=all_homes, unanswered=unanswered)
+    if json:
+        return _json.dumps(found, indent=2)
+    out = []
+    for row in found["questions"]:
+        when = _when(row["asked_at"])
+        said = row["answer"] if row["answer"] else f"({row['state']})"
+        out.append(f"{when} {row['label'][:20]:<21}{_one_line(row['question'], 70)}")
+        out.append(f"{'':>{len(when) + 22}}-> {_one_line(said, 70)}")
+    counts = found["counts"]
+    out.append(
+        f"-- {counts.get('asked', 0)} asked, {counts.get('unanswered', 0)} unanswered, "
+        f"{counts.get('pending', 0)} still running"
+    )
+    return "\n".join(out)
+
+
 def report(
     *,
     out: str | None = None,
@@ -540,6 +572,7 @@ def publish(
     refs: bool = False,
     actions: bool = False,
     owed: bool = False,
+    questions: bool = False,
 ):
     """Render the report page and send it where you can open it from a phone.
 
@@ -564,6 +597,8 @@ def publish(
     what you must do, in at most eight words, labelled *generated*.
     `--owed` (or `owed = true` in `[publish]`) adds an *Owed* register after *Needs you*:
     the open manual-task issues openloops lists (`ol owed`), one tap each to open them.
+    `--questions` (or `questions = true` in `[publish]`) adds *Your questions*: what you
+    asked your sessions in the last two weeks, each with its answer, read or unread.
     """
     result = tools.publish(
         to=to,
@@ -576,6 +611,7 @@ def publish(
         refs=refs or None,
         actions=actions or None,
         owed=owed or None,
+        questions=questions or None,
     )
     return f"published {result['bytes']} bytes to {result['to']}"
 
@@ -1164,6 +1200,7 @@ _commands = [
     lineage,
     triage,
     groups,
+    questions,
     report,
     publish,
     courier,
