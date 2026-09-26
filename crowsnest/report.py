@@ -1845,6 +1845,7 @@ OVERVIEW_CSS = """
   border-left:2px solid var(--rule-soft);padding-left:.6rem;margin-top:.4rem}
 .qrow .gone{color:var(--ink-soft)}
 .qrow .chip:empty{display:none}
+.qrow .unsure-tag{color:var(--unsure)}
 .register>.more,.register .more{margin-top:.6rem}
 .more>summary{cursor:pointer;font-family:var(--mono);font-size:.74rem;color:var(--ink-soft)}
 .view-pick{position:absolute;opacity:0;pointer-events:none}
@@ -3330,7 +3331,7 @@ QUESTION_TEXT_LIMIT = 6000
 #: A raw answer gist: the reply's first sentence, clipped.
 ANSWER_GIST_LIMIT = 140
 
-_QUESTION_CHIPS = {"unanswered": "needs", "pending": "flight"}
+_QUESTION_CHIPS = {"unanswered": "needs", "partly": "unsure", "pending": "flight"}
 
 _QUESTION_READ = (_attention.SEEN, _attention.LATER, _attention.DONE)
 
@@ -3362,7 +3363,9 @@ def _first_sentence(text: str) -> str:
 
 def _is_unread(row: Mapping[str, Any]) -> bool:
     """Unread: no record, or changed since the person marked it; a running turn never."""
-    return row.get("state") != "pending" and _view.get().shown(row) not in _QUESTION_READ
+    if row.get("state") == "pending" or row.get("unsure"):
+        return False
+    return _view.get().shown(row) not in _QUESTION_READ
 
 
 def _question_order(rows: Sequence[Mapping[str, Any]]) -> list:
@@ -3414,11 +3417,27 @@ def _question_row(
     chip = state if state in _QUESTION_CHIPS else ""
     tone = _QUESTION_CHIPS.get(state, "waits")
     raw = ' <span class="gen-tag">raw</span>'
-    question = _published(row.get("question"), ANSWER_GIST_LIMIT)
+    made = (
+        f' <span class="gen-tag" title="{GENERATED_NOTE}">generated</span>'
+        if not row.get("unsure")
+        else ' <span class="gen-tag unsure-tag">unsure</span>'
+    )
+    if row.get("q_gist"):
+        question = f"{_published(row['q_gist'], ANSWER_GIST_LIMIT)}{made}"
+    else:
+        # A sentence the model did not take for a question keeps its words, marked so.
+        tag = made if row.get("unsure") else raw
+        question = f"{_published(row.get('question'), ANSWER_GIST_LIMIT)}{tag}"
     if state == "pending":
         answer = '<p class="a-gist is-empty">still working on it</p>'
-    elif not row.get("answer"):
+    elif state == "unanswered" or not row.get("answer"):
         answer = '<p class="a-gist is-empty">no answer in this turn</p>'
+    elif row.get("a_gist"):
+        # The gist leads; the reply's opening stays out to check it by.
+        answer = (
+            f'<p class="a-gist">{_published(row["a_gist"], ANSWER_GIST_LIMIT)}{made}</p>'
+            f'<p class="said-clip">It said: {_published(row["answer"], 400)}</p>'
+        )
     else:
         answer = (
             '<p class="a-gist">'
@@ -3451,7 +3470,7 @@ def _question_row(
         + "</details>"
     )
     body = [
-        f'<p class="q-gist">{question}{raw}</p>',
+        f'<p class="q-gist">{question}</p>',
         answer,
         '<p class="where">' + ' <span class="sep">·</span> '.join(where) + "</p>",
         *_attention_lines(safe, attended, clock, loud=False),
@@ -3493,8 +3512,11 @@ def _questions_register(
     homes = len({r.get("home") for r in rows if r.get("home")})
     ordered = _question_order(rows)
     view = _view.get()
-    filed = [r for r in ordered if view.shown(r) == _attention.DONE]
-    active = [r for r in ordered if view.shown(r) != _attention.DONE]
+    # What the person filed (Done), and what the model doubts is a question at all, wait
+    # in the fold; neither is counted.
+    filed = [r for r in ordered if view.shown(r) == _attention.DONE or r.get("unsure")]
+    folded = {id(r) for r in filed}
+    active = [r for r in ordered if id(r) not in folded]
     shown, rest = active[:QUESTIONS_SHOWN], active[QUESTIONS_SHOWN:] + filed
     unread = sum(1 for r in rows if _is_unread(r))
     if rows:

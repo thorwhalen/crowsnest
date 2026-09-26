@@ -36,6 +36,7 @@ __all__ = [
     "ANSWERED",
     "DFLT_KEEP_DAYS",
     "ITEM_KIND",
+    "PARTLY",
     "PENDING",
     "STATES",
     "UNANSWERED",
@@ -55,8 +56,10 @@ ANSWERED = "answered"
 UNANSWERED = "unanswered"
 #: The turn is still running: never flagged, never counted.
 PENDING = "pending"
+#: The reply answers it in part, or defers it (the model's reading, :mod:`crowsnest.gists`).
+PARTLY = "partly"
 #: Every state a row can be in, in the order the register sorts them.
-STATES = (UNANSWERED, ANSWERED, PENDING)
+STATES = (UNANSWERED, PARTLY, ANSWERED, PENDING)
 
 #: How long a question stays on the page after it was asked.
 DFLT_KEEP_DAYS = 14
@@ -243,6 +246,42 @@ def _state(exchange: Mapping, *, running: bool) -> str:
     return ANSWERED if exchange.get("reply") else UNANSWERED
 
 
+def _norm(text) -> str:
+    return " ".join(str(text or "").split()).casefold().rstrip("?.! ")
+
+
+def _gisted(
+    exchange: Mapping, doc: Mapping | None
+) -> list[tuple[int, str, Mapping | None, bool]]:
+    """``(k, question, gist, unsure)`` for each question of a message.
+
+    Without a current gist, the heuristics' questions as they are. With one, each keeps
+    its ``k`` and takes the gist whose ``source`` is its sentence; a sentence the model did
+    not list is ``unsure``; a question the model added takes the next ``k``.
+    """
+    found = list(exchange.get("questions") or ())
+    if not doc:
+        return [(k, q, None, False) for k, q in enumerate(found)]
+    gists = [g for g in doc.get("questions") or () if isinstance(g, Mapping)]
+    by_source = {_norm(g.get("source")): g for g in gists if g.get("source")}
+    out = []
+    for k, q in enumerate(found):
+        gist = by_source.get(_norm(q))
+        out.append((k, q, gist, gist is None or gist.get("sure") is False))
+    known = {_norm(q) for q in found}
+    extra = [g for g in gists if _norm(g.get("source")) not in known]
+    for j, gist in enumerate(extra):
+        out.append(
+            (
+                len(found) + j,
+                str(gist.get("source") or gist.get("q") or ""),
+                gist,
+                gist.get("sure") is False,
+            )
+        )
+    return out
+
+
 def question_rows(
     sessions: Iterable[Mapping],
     *,
@@ -251,18 +290,22 @@ def question_rows(
     live: Mapping[str, Mapping] | None = None,
     spawned: Iterable[str] = (),
     answer_hash: Callable[[str], str] | None = None,
+    gist: Callable[[str, Mapping], Mapping | None] | None = None,
 ) -> list[dict]:
     """One row per question, newest first, for the page and the attention store.
 
     ``sessions`` is what :func:`scan` returns. ``live`` maps a session id to its roster
     row, for its name, its link and whether a turn is running now. ``spawned`` holds the
     ids of sessions crowsnest started with a brief: their first prompt was written by the
-    parent, not the person.
+    parent, not the person. ``gist`` is ``(session id, exchange) -> doc``, the model's
+    reading of a message (:mod:`crowsnest.gists`), ``None`` when it has none current.
 
     A row carries ``item_kind`` (:data:`ITEM_KIND`), ``session_id``, ``prompt_uuid`` and
     ``k`` (the question's place in its message), which name the item; and ``state``,
     ``answer_hash`` and ``answered_by``, which say when it changed. Its ``verdict`` is
-    ``{"group": "question", "why": state}``, which a mark records as what it saw.
+    ``{"group": "question", "why": state}``, which a mark records as what it saw. With a
+    gist it also carries ``q_gist``, ``a_gist``, and ``unsure`` for a sentence the model
+    did not take for a question (or was not sure of).
     """
     live = dict(live or {})
     spawned = set(spawned)
@@ -282,9 +325,13 @@ def question_rows(
             asked = _epoch(exchange.get("asked_at"))
             if asked is None or asked < since:
                 continue
-            state = _state(exchange, running=running)
-            reply = str(exchange.get("reply") or "") if state != PENDING else ""
-            for k, question in enumerate(exchange.get("questions") or ()):
+            turn = _state(exchange, running=running)
+            reply = str(exchange.get("reply") or "") if turn != PENDING else ""
+            doc = gist(sid, exchange) if (gist and turn != PENDING) else None
+            for k, question, found, unsure in _gisted(exchange, doc):
+                state = turn
+                if found and turn != PENDING:
+                    state = str(found.get("state") or turn)
                 rows.append(
                     {
                         "item_kind": ITEM_KIND,
@@ -292,6 +339,9 @@ def question_rows(
                         "prompt_uuid": str(exchange.get("uuid") or ""),
                         "k": k,
                         "question": question,
+                        "q_gist": str(found.get("q") or "") if found else "",
+                        "a_gist": str(found.get("a") or "") if found else "",
+                        "unsure": bool(doc) and unsure,
                         "prompt": str(exchange.get("prompt") or ""),
                         "asked_at": exchange.get("asked_at") or "",
                         "asked_epoch": asked,
