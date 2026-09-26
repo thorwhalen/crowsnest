@@ -70,6 +70,7 @@ import shlex
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta, timezone, tzinfo
+from pathlib import Path
 from typing import Any
 
 from openloops.dashboard import CSS as _CSS
@@ -239,6 +240,7 @@ _UNREAD = (_attention.NEW, *_BACK)
 #: was. Seen rows are dimmed, never recoloured: the register's colour is its meaning.
 ATTENTION_CSS = """
 .row--seen{opacity:.55}
+.qrow--put-off{opacity:.55}
 .tile--seen{opacity:.55}.tile--seen a{border-left-style:dotted}
 .chip--reach{color:var(--ink-soft);background:transparent;border-style:dashed}
 .dot{display:inline-block;width:.45rem;height:.45rem;border-radius:50%;
@@ -300,6 +302,7 @@ CONSOLE_CSS = """
 .later-sheet input[type=text]{width:100%;font:inherit;font-size:.9rem;padding:.4rem;
   border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
 .is-seen{opacity:.55}
+.qrow[data-live=later]{opacity:.55}
 .tile.is-seen a{border-left-style:dotted}
 .live,.line.live .tag{color:var(--accent)}
 .later-live .figure{color:var(--ink-soft)}
@@ -1080,9 +1083,14 @@ CONSOLE_SCRIPT = r"""
       });
       return marks;
     }
+    // A question is read once marked Seen, Later or Done; a running turn is never counted.
+    const READ = [A.SEEN, A.LATER, A.DONE];
+    const unread = (li) => !li.classList.contains("qrow--pending") && !READ.includes(li.dataset.live || li.dataset.shown);
     function recount(block) {
       if (!block) return;
-      const count = [...block.querySelectorAll("li[id^='session-']")].filter((li) => !li.hidden).length;
+      const count = block.id === "questions"
+        ? [...block.querySelectorAll("li.qrow")].filter(unread).length
+        : [...block.querySelectorAll("li[id^='session-']")].filter((li) => !li.hidden).length;
       const figure = block.querySelector(".figure");
       if (figure) figure.textContent = String(count);
       // The board's legend carries the same figure (#109); the live Later block has none.
@@ -1229,7 +1237,8 @@ CONSOLE_SCRIPT = r"""
           el.classList.toggle("is-" + state, shown === state);
         }
         el.hidden = shown === A.DONE;
-        if (shown === A.LATER) putAway(el); else bringBack(el);
+        // A question put off dims where it stands (#129); a session goes to Later.
+        if (shown === A.LATER && !el.classList.contains("qrow")) putAway(el); else bringBack(el);
         addLive(el, shown, record);
       }
       followTile(el);
@@ -1448,6 +1457,7 @@ CONSOLE_SCRIPT = r"""
       const unseen = [...rows.values()].flat().filter((el) =>
         (el.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
         && !el.hidden && !el.closest("#later")
+        && (!button.dataset.seenAbove || el.closest("#" + button.dataset.seenAbove))
         && (el.dataset.live || drawn.get(el).shown) !== A.SEEN);
       const folded = unseen.filter((el) => el.closest("details:not([open])"));
       const away = new Set(folded);
@@ -1825,6 +1835,18 @@ OVERVIEW_CSS = """
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tile-line.is-raw{font-style:italic;color:var(--ink-soft)}
 .views{margin-top:.7rem}
+.register--waits .figure,.legend .tone-waits b{color:var(--waits)}
+.qrow .q-gist{font-family:var(--serif);font-size:1.02rem;margin:0}
+.qrow .a-gist{margin:.15rem 0 0}
+.qrow .a-gist.is-empty{color:var(--ink-soft);font-style:italic}
+.qrow .q-full{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.88rem;color:var(--ink-soft)}
+.qrow .q-full mark{background:var(--waits-wash);color:var(--ink)}
+.qrow .a-full{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem;
+  border-left:2px solid var(--rule-soft);padding-left:.6rem;margin-top:.4rem}
+.qrow .gone{color:var(--ink-soft)}
+.qrow .chip:empty{display:none}
+.register>.more,.register .more{margin-top:.6rem}
+.more>summary{cursor:pointer;font-family:var(--mono);font-size:.74rem;color:var(--ink-soft)}
 .view-pick{position:absolute;opacity:0;pointer-events:none}
 .view-switch{display:inline-flex;border:1px solid var(--rule);border-radius:6px;
   overflow:hidden;font-family:var(--mono);font-size:.74rem}
@@ -3295,6 +3317,214 @@ def _quiet_register(
     )
 
 
+# --------------------------------------------------------------------------------------
+# Your questions (#129)
+
+#: How many questions show before the rest fold under *more*.
+QUESTIONS_SHOWN = 10
+
+#: How much of a message and an answer a question's fold carries; the page's sanitiser
+#: runs first (`crowsnest.live.publishable`), so a clip never cuts a secret in half (#83).
+QUESTION_TEXT_LIMIT = 6000
+
+#: A raw answer gist: the reply's first sentence, clipped.
+ANSWER_GIST_LIMIT = 140
+
+_QUESTION_CHIPS = {"unanswered": "needs", "pending": "flight"}
+
+_QUESTION_READ = (_attention.SEEN, _attention.LATER, _attention.DONE)
+
+
+def _published(value: Any, limit: int) -> str:
+    """``value`` sanitised, clipped, and escaped for the page, on one line."""
+    from crowsnest.live import publishable
+
+    return _html.escape(publishable(str(value or ""), limit=limit), quote=False)
+
+
+def _published_lines(value: Any, limit: int) -> str:
+    """``value`` sanitised line by line, its line breaks kept, clipped at ``limit``."""
+    out, left = [], limit
+    for line in str(value or "").splitlines():
+        if left <= 0:
+            out.append("\u2026")
+            break
+        shown = _published(line, left) if line.strip() else ""
+        out.append(shown)
+        left -= len(line) + 1
+    return "\n".join(out)
+
+
+def _first_sentence(text: str) -> str:
+    one = " ".join(str(text or "").split())
+    return re.split(r"(?<=[.?!])\s+", one, maxsplit=1)[0]
+
+
+def _is_unread(row: Mapping[str, Any]) -> bool:
+    """Unread: no record, or changed since the person marked it; a running turn never."""
+    return row.get("state") != "pending" and _view.get().shown(row) not in _QUESTION_READ
+
+
+def _question_order(rows: Sequence[Mapping[str, Any]]) -> list:
+    """Unanswered first, then the freshest asked; one message's questions keep their order.
+    Seen and Later do not move a row."""
+    return sorted(
+        rows,
+        key=lambda r: (
+            r.get("state") != "unanswered",
+            -float(r.get("asked_epoch") or 0),
+            str(r.get("prompt_uuid") or ""),
+            int(r.get("k") or 0),
+        ),
+    )
+
+
+def _marked(safe: _Sanitizer, prompt: str, question: str) -> str:
+    """The message as typed, sanitised and clipped, with the question in ``<mark>``."""
+    shown = _published_lines(prompt, QUESTION_TEXT_LIMIT)
+    asked = _published(question, QUESTION_TEXT_LIMIT)
+    if asked and asked in shown:
+        return shown.replace(asked, f"<mark>{asked}</mark>", 1)
+    return shown
+
+
+def _question_controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
+    """Seen, Later, Done and Note, on an interactive page with the attention arm."""
+    view = _view.get()
+    if not _interactive.get() or not view.arm or view.of(row) is None:
+        return ""
+    buttons = "".join(
+        f'<button type="button" data-attend="{kind}" hidden>{safe.text(label)}</button>'
+        for kind, label in ATTENTION_ACTIONS
+    )
+    return (
+        '<div class="acts" data-console hidden data-session="" data-home=""'
+        f' data-reachable="0">{buttons}<ul class="answers"></ul></div>'
+    )
+
+
+def _question_row(
+    safe: _Sanitizer, row: Mapping[str, Any], clock: _Clock, *, homes: int
+) -> str:
+    """One question: its gist, its answer's, where it was asked; the words in a fold."""
+    attended = _view.get().of(row)
+    put_off = " qrow--put-off" if attended and attended.shown == _attention.LATER else ""
+    state = str(row.get("state") or "")
+    figure, unit = _since(clock.now - float(row.get("asked_epoch") or clock.now))
+    chip = state if state in _QUESTION_CHIPS else ""
+    tone = _QUESTION_CHIPS.get(state, "waits")
+    raw = ' <span class="gen-tag">raw</span>'
+    question = _published(row.get("question"), ANSWER_GIST_LIMIT)
+    if state == "pending":
+        answer = '<p class="a-gist is-empty">still working on it</p>'
+    elif not row.get("answer"):
+        answer = '<p class="a-gist is-empty">no answer in this turn</p>'
+    else:
+        answer = (
+            '<p class="a-gist">'
+            f"{_published(_first_sentence(row['answer']), ANSWER_GIST_LIMIT)}{raw}</p>"
+        )
+    where = [safe.text(row.get("label") or "a session")]
+    folder = Path(str(row.get("cwd") or "")).name
+    if folder and folder != row.get("label"):
+        where.append(safe.text(folder))
+    if homes > 1 and row.get("home"):
+        where.append(safe.text(row["home"]))
+    link = _link(safe, row.get("session_url"), "open")
+    if link:
+        where.append(link)
+    elif not row.get("alive"):
+        where.append('<span class="gone">exited</span>')
+    asked_at = clock.local(float(row.get("asked_epoch") or clock.now)).strftime("%H:%M")
+    answered = _said_epoch(row.get("answered_at"))
+    summary = f"source · asked {asked_at}" + (
+        f" · answered {clock.local(answered).strftime('%H:%M')}" if answered else ""
+    )
+    fold = (
+        f'<details class="source"><summary>{summary}</summary>'
+        f'<p class="q-full">{_marked(safe, row.get("prompt"), row.get("question"))}</p>'
+        + (
+            f'<div class="a-full">{_published_lines(row["answer"], QUESTION_TEXT_LIMIT)}</div>'
+            if row.get("answer")
+            else ""
+        )
+        + "</details>"
+    )
+    body = [
+        f'<p class="q-gist">{question}{raw}</p>',
+        answer,
+        '<p class="where">' + ' <span class="sep">·</span> '.join(where) + "</p>",
+        *_attention_lines(safe, attended, clock, loud=False),
+        _question_controls(safe, row),
+        fold,
+    ]
+    ident = (
+        attended.item
+        if attended
+        else _slug(f"{row.get('session_id')}-{row.get('prompt_uuid')}-{row.get('k')}")
+    )
+    return (
+        f'<li class="row row--{tone} qrow qrow--{safe.text(state)}'
+        f"{_state_class(attended)}{put_off}"
+        f'" id="question-{ident}"{_item_attrs(safe, attended)}>'
+        + _rail(chip, tone, figure, unit)
+        + '<div class="body">'
+        + "".join(body)
+        + "</div></li>"
+    )
+
+
+def _said_epoch(stamp: Any) -> float | None:
+    try:
+        moment = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return (moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)).timestamp()
+
+
+def _questions_register(
+    safe: _Sanitizer, rows: Sequence[Mapping[str, Any]], clock: _Clock
+) -> str:
+    """*Your questions*: what the person asked their sessions, each with its answer (#129).
+
+    The figure is the unread count, the questions asked beside it. Ten show, unanswered
+    first and then the freshest; the rest, and those marked Done, fold under *more*.
+    """
+    homes = len({r.get("home") for r in rows if r.get("home")})
+    ordered = _question_order(rows)
+    view = _view.get()
+    filed = [r for r in ordered if view.shown(r) == _attention.DONE]
+    active = [r for r in ordered if view.shown(r) != _attention.DONE]
+    shown, rest = active[:QUESTIONS_SHOWN], active[QUESTIONS_SHOWN:] + filed
+    unread = sum(1 for r in rows if _is_unread(r))
+    if rows:
+        body = f'<ol class="rows">{"".join(_question_row(safe, r, clock, homes=homes) for r in shown)}</ol>'
+        if rest:
+            body += (
+                f'<details class="more"><summary>more · {len(rest)}</summary>'
+                f'<ol class="rows">{"".join(_question_row(safe, r, clock, homes=homes) for r in rest)}</ol>'
+                "</details>"
+            )
+        if view.arm:
+            # Scoped to this register: the page's *Seen above* would mark the Needs-you
+            # rows above it too. Like it, it leaves what a closed fold holds alone.
+            body += (
+                '<p class="seen-above-foot"><button type="button" class="seen-above"'
+                ' data-seen-above="questions" hidden>All read</button></p>'
+            )
+    else:
+        body = _empty("No questions asked in the last two weeks.")
+    return _register(
+        ident="questions",
+        name="Your questions",
+        figure=str(unread),
+        tone="waits",
+        rule=f"What you asked your sessions, with what each answered. Unread until you say Seen. {len(rows)} asked.",
+        body=body,
+        folds=bool(rows),
+    )
+
+
 def _lineage_register(safe: _Sanitizer, found: Any) -> str:
     """The spawn forest, drawn, when the roster carries one and it has a shape.
 
@@ -3838,6 +4068,7 @@ def _attention_view(
     plain: bool,
     row_context: RowContext,
     with_ids: bool,
+    also: Sequence[Mapping[str, Any]] = (),
 ) -> _View:
     """Every row's item, revision and presentation, for one render.
 
@@ -3854,37 +4085,44 @@ def _attention_view(
     as no record, so its row is shown rather than hidden.
     """
     triaged = any(_group_of(row) for row in sessions)
-    applied = not plain and triaged
-    if applied and store is None:
+    # `also` are items that are not sessions (the person's questions, #129). They take
+    # their marks from the same store, but their revisions never depend on triage, so the
+    # store applies to them on any page, and they never decide whether it applies to a
+    # session.
+    if not plain and (triaged or also) and store is None:
         store = _attention.dflt_store()
-    on = applied and _attention.holds_a_record(store)
+    holds = not plain and bool(triaged or also) and _attention.holds_a_record(store)
+    on = holds and triaged
+    also_on = holds and bool(also)
     # The console's attention arm needs ids and triaged revisions, not this machine's store:
     # it reads and writes the page's own `db`. So `plain`, which leaves the store out, leaves
     # the arm in, and an interactive page from an empty store is still its plain copy.
-    arm = with_ids and triaged
-    if not (on or with_ids):
+    arm = with_ids and (triaged or bool(also))
+    if not (on or also_on or with_ids):
         return _View()
     moment = datetime.fromtimestamp(now, tz=timezone.utc)
     rows: dict[int, _Attended] = {}
-    for row in sessions:
-        try:
-            item = row_context.item(row)
-            rev = row_context.rev(row)
-        except ValueError:  # UnicodeEncodeError included
-            continue
-        # What the row is now, as `seen_as` would record it: the static page's "was:" line
-        # compares it with the record, and the console writes it with every mark (#73).
-        now_as = _attention.seen_as_of(row)
-        if not on:
-            rows[id(row)] = _Attended(item, rev, now_as=now_as)
-            continue
-        record = _record_or_none(item, store)
-        try:
-            shown = _attention.present(rev, record, now=moment)
-        except (ValueError, OverflowError):
-            record, shown = None, _attention.NEW
-        rows[id(row)] = _Attended(item, rev, shown, record, now_as)
-    return _View(on=on, rows=rows, arm=arm)
+    for applies, group in ((on, sessions), (also_on, also)):
+        for row in group:
+            try:
+                item = row_context.item(row)
+                rev = row_context.rev(row)
+            except ValueError:  # UnicodeEncodeError included
+                continue
+            # What the row is now, as `seen_as` would record it: the static page's "was:"
+            # line compares it with the record, and the console writes it with every mark
+            # (#73).
+            now_as = _attention.seen_as_of(row)
+            if not applies:
+                rows[id(row)] = _Attended(item, rev, now_as=now_as)
+                continue
+            record = _record_or_none(item, store)
+            try:
+                shown = _attention.present(rev, record, now=moment)
+            except (ValueError, OverflowError):
+                record, shown = None, _attention.NEW
+            rows[id(row)] = _Attended(item, rev, shown, record, now_as)
+    return _View(on=on or also_on, rows=rows, arm=arm)
 
 
 def _record_or_none(item: str, store: Mapping[str, dict]) -> _attention.Record | None:
@@ -4237,6 +4475,7 @@ def render_report(
     action_line=None,
     owed=None,
     themes=None,
+    questions=None,
 ) -> str:
     """The roster :func:`crowsnest.tools.roster` returns as one self-contained HTML page.
 
@@ -4343,6 +4582,10 @@ def render_report(
     ``themes`` is the person's ``[themes]`` table (``{theme: [value, ...]}`` or a
     :class:`crowsnest.themes.Themes`), which the board's Theme view groups by before it
     infers (:func:`crowsnest.themes.infer`); ``None`` infers from the rows alone.
+
+    ``questions`` is the person's questions, one row each
+    (:func:`crowsnest.questions.question_rows`), which adds the *Your questions*
+    register; ``None`` leaves it out and the page is as it was.
     """
     settings = AttentionSettings() if attention_settings is None else attention_settings
     if stale_after is None:
@@ -4377,6 +4620,7 @@ def render_report(
             plain=plain,
             row_context=RowContext() if row_context is None else row_context,
             with_ids=interactive,
+            also=list(questions or ()),
         )
         view_token = _view.set(view)
         try:
@@ -4387,6 +4631,7 @@ def render_report(
                 fragment=fragment,
                 view=view,
                 settings=settings,
+                questions=questions,
             )
         finally:
             _view.reset(view_token)
@@ -4409,6 +4654,7 @@ def _render(
     fragment: bool,
     view: _View,
     settings: AttentionSettings,
+    questions: Sequence[Mapping[str, Any]] | None = None,
 ) -> str:
     safe = _Sanitizer()
     sessions = list(roster.get("sessions") or [])
@@ -4538,6 +4784,26 @@ def _render(
             "chip",
         ),
     ]
+    if questions is not None:
+        # After Needs you (and Owed), as the register itself sits: the legend is in page
+        # order (#109).
+        at = next(
+            (
+                i
+                for i, g in enumerate(groups)
+                if g.ident not in ("needs-you", "owed", "waiting")
+            ),
+            len(groups),
+        )
+        groups.insert(
+            at,
+            _Group(
+                "questions",
+                "unread",
+                "waits",
+                count=sum(1 for q in questions if _is_unread(q)),
+            ),
+        )
     parts = [
         _masthead(safe, stamp, title, zone=_zone_name(clock), settings=settings),
         _board(safe, groups, clock),
@@ -4546,6 +4812,8 @@ def _render(
     ]
     if isinstance(_owed.get(), Mapping):
         parts.append(_owed_register(safe, _owed.get(), sessions))
+    if questions is not None:
+        parts.append(_questions_register(safe, list(questions), clock))
     if triaged:
         parts.append(
             _register_from_rows(

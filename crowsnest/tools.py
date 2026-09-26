@@ -578,6 +578,8 @@ def report(
     owed: bool = False,
     owed_path=None,
     themes=None,
+    questions: bool = False,
+    question_cache=None,
 ) -> dict:
     """The roster as one self-contained HTML page: :func:`crowsnest.report.render_report`
     over what :func:`roster` returns. ``fragment`` drops the document wrapper for a host
@@ -642,6 +644,8 @@ def report(
     a cache (``owed_path``, :mod:`crowsnest.owed`) that this call refreshes when it is more
     than ten minutes old, never running an issue's verify command.
     ``themes`` is the board's ``[themes]`` table; ``None`` reads the config file's.
+    ``questions=True`` adds *Your questions* (:func:`questions`), read from a per-file
+    cache (``question_cache``) that this call brings up to date.
 
     ``links=False`` leaves the references off the page. They are still resolved: a
     verdict reader may read them, and the verbs pin the row with them. To resolve
@@ -762,6 +766,18 @@ def report(
         action_line=action_line,
         owed=owed_envelope,
         themes=theme_table(path=config) if themes is None else themes,
+        questions=(
+            questions_rows(
+                data["sessions"],
+                home=home,
+                all_homes=all_homes,
+                config=config,
+                lineage_path=lineage_path,
+                cache_dir=question_cache,
+            )
+            if questions
+            else None
+        ),
     )
     return {
         "html": html,
@@ -787,6 +803,7 @@ def publish(
     refs: bool | None = None,
     actions: bool | None = None,
     owed: bool | None = None,
+    questions: bool | None = None,
 ) -> dict:
     """Render the report as a whole page and deliver it where its owner reads it.
 
@@ -825,6 +842,8 @@ def publish(
         actions = settings.actions
     if owed is None:
         owed = settings.owed
+    if questions is None:
+        questions = settings.questions
     if publisher is None:
         if not to and not command:
             to, command = settings.to, list(settings.command)
@@ -850,6 +869,7 @@ def publish(
         refs=refs,
         actions=actions,
         owed=owed,
+        questions=questions,
     )
     page = (
         Path(page_path).expanduser()
@@ -913,6 +933,68 @@ def intent_answer(
     from crowsnest import courier as _courier
 
     return _courier.answer(intent, text, status=status, mirror=mirror)
+
+
+def questions_rows(
+    sessions: Iterable[Mapping] = (),
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    lineage_path: str | Path | None = None,
+    cache_dir=None,
+    now: float | None = None,
+) -> list[dict]:
+    """The person's questions of the last two weeks, one row each (#129).
+
+    Reads every home's recent transcripts (one home unless ``all_homes``) through
+    :mod:`crowsnest.questions`, caching each file. ``sessions`` are the live roster rows,
+    which name a session, link it, and say whether its turn is still running; a session
+    crowsnest spawned has its first prompt left out, because its parent wrote it.
+    """
+    import time
+
+    from crowsnest import questions as _questions
+    from crowsnest.config import Home
+
+    now = time.time() if now is None else now
+    if all_homes:
+        read = homes(path=config)
+    else:
+        read = [Home(name="", path=claude_home(home))]
+    spawned = {
+        e.child_session_id
+        for e in _from_records(lineage_path=lineage_path)
+        if e.child_session_id
+    }
+    live = {str(s.get("session_id")): s for s in sessions if s.get("session_id")}
+    return _questions.question_rows(
+        _questions.scan(read, now=now, cache_dir=cache_dir),
+        now=now,
+        live=live,
+        spawned=spawned,
+    )
+
+
+def questions(
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    unanswered: bool = False,
+) -> dict:
+    """What the person asked their sessions in the last two weeks, and what each answered.
+
+    ``{"questions": [...], "counts": {...}}``, newest first; ``unanswered`` keeps only
+    those no turn answered. Each row names its session, the question, the message it was
+    in, the reply and its state (``answered``, ``unanswered``, ``pending``).
+    """
+    data = roster(home=home, all_homes=all_homes, config=config)
+    rows = questions_rows(data["sessions"], home=home, all_homes=all_homes, config=config)
+    counts = Counter(r["state"] for r in rows)
+    if unanswered:
+        rows = [r for r in rows if r["state"] == "unanswered"]
+    return {"questions": rows, "counts": {"asked": sum(counts.values()), **counts}}
 
 
 #: What ``groups`` can group by.

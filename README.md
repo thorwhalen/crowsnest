@@ -66,6 +66,7 @@ crowsnest report [--out FILE]      the roster as one phone-readable HTML page, n
                                     --plain: ignore what you marked with seen/later/done/note, for a copy to share)
 crowsnest publish [--to DEST]      render that page and send it where you read it: a path, host:path, or [publish] in the config
 crowsnest groups [--by project]    every session under a theme ([themes] in the config, else inferred) or a project
+crowsnest questions [--unanswered]  what you asked your sessions in the last two weeks, and what each answered
 crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
 crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
 crowsnest note|undo <session>      a note to yourself; one step back
@@ -279,6 +280,8 @@ to = "~/Sync/crowsnest/index.html"            # a local path, e.g. a synced fold
 The published page carries a small open helper. Every link opens in a new tab. If your accounts are signed in to different browsers, open *Where sessions open* at the foot and say which browser each one uses (kept in that browser only): a link to a session of an account signed in elsewhere is then copied for you to paste there, since a page cannot start another browser. A session without Remote Control has no link, so its `open` is a dashed button that copies its `crowsnest open` command and tells you to turn Remote Control on there (`/remote-control`); once it has a link, the page says so. `crowsnest report --open-helper` adds the same to any page.
 
 The page names your sessions and quotes what they said (sanitised, as every page is), so send it somewhere only you can open: behind your own login, in a private folder, never a public bucket. The last page sent is also kept locally, under crowsnest's data directory in `publish/index.html`.
+
+`crowsnest publish --questions` (or `questions = true` in `[publish]`) adds *Your questions*. It lists every question you typed in any session over the last two weeks, including one buried among requests. Each comes with the answer the session gave, a fold holding your whole message and the whole answer, and Seen, Later and Done to keep track of which you have read. A question the turn did not answer is flagged. Your prompts are read from the transcripts on this machine and never leave it, except as the page you publish to yourself.
 
 The page opens on a board: one tile per session, which you can group by session, project or theme. Themes are yours to name, in the same file. Each value is a repository as `owner/name`, a bare repository name, a directory glob, or `org:<owner>`, tried in that order:
 

@@ -74,6 +74,7 @@ __all__ = [
     "NAMESPACE",
     "NEW",
     "PRESETS",
+    "QUESTION",
     "REVIEW_KINDS",
     "SEEN",
     "SNOOZED",
@@ -180,6 +181,10 @@ _TMP_SUFFIX = ".tmp"
 # Identity and revision
 
 
+#: The ``item_kind`` of a question row (:mod:`crowsnest.questions`).
+QUESTION = "question"
+
+
 def dflt_identity(row: Mapping) -> tuple[str, ...]:
     """``("session", session_id)``: one item per session, by the id that is the same everywhere.
 
@@ -188,10 +193,21 @@ def dflt_identity(row: Mapping) -> tuple[str, ...]:
     account's home. A resumed session keeps its id and so its record; a new session given
     an old name does not inherit one. (``/clear`` starts a new session id in the same
     terminal, so a record made before it stays with the conversation that was cleared.)
+
+    A question row (``item_kind`` :data:`QUESTION`, from :mod:`crowsnest.questions`) is
+    ``("question", session_id, prompt_uuid, k)``.
     """
     session_id = str(row.get("session_id") or "").strip()
     if not session_id:
         raise ValueError("a row without a session_id has no identity")
+    if row.get("item_kind") == QUESTION:
+        # One item per question: its session, the prompt it was asked in, and its place
+        # in that prompt (#129). A session row never carries `item_kind`, so its id is
+        # the one it always had.
+        prompt = str(row.get("prompt_uuid") or "").strip()
+        if not prompt:
+            raise ValueError("a question without its prompt's uuid has no identity")
+        return (QUESTION, session_id, prompt, str(int(row.get("k") or 0)))
     return ("session", session_id)
 
 
@@ -301,6 +317,15 @@ def dflt_material(row: Mapping) -> tuple:
     >>> dflt_material({'verdict': {**asked, 'asks': two}})
     ('needs_you', 'decision', 'squash?', 'rotate the key.')
     """
+    if row.get("item_kind") == QUESTION:
+        # A question changes when its answer does: one arrives, is replaced, or is found
+        # in another session (#129).
+        return (
+            QUESTION,
+            str(row.get("state") or ""),
+            str(row.get("answer_hash") or ""),
+            str(row.get("answered_by") or ""),
+        )
     verdict = row.get("verdict")
     group = str(verdict.get("group") or "") if isinstance(verdict, Mapping) else ""
     if group and group not in _VERDICT_SAYS_NOTHING:
