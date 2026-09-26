@@ -198,3 +198,60 @@ def test_all_read_is_scoped_to_the_register_and_only_on_an_interactive_page(tmp_
     found = rows(tmp_path)
     assert 'data-seen-above="questions"' not in page(found)
     assert 'data-seen-above="questions"' in page(found, interactive=True)
+
+
+def noted(store, row, text):
+    attention.update(
+        attention.item_id(row), lambda rec: attention.note(rec, text), store=store
+    )
+
+
+def test_read_them_walks_the_unread_where_script_runs(tmp_path):
+    html = register(page(rows(tmp_path)))
+    assert (
+        '<a class="go-through" href="#questions" data-deck-unread>Read them (1)</a>'
+        in html
+    )
+    from crowsnest.report import DECK_SCRIPT
+
+    assert 'querySelectorAll("a.go-through").forEach(deck)' in DECK_SCRIPT
+
+
+def test_corrections_are_offered_on_the_interactive_page_only(tmp_path):
+    found = rows(tmp_path)
+    assert "data-correct" not in page(found)
+    live = register(page(found, interactive=True))
+    assert 'data-correct="pair"' in live and 'data-correct="question"' in live
+    assert f'data-answer="{found[0]["answer_hash"]}"' in live
+
+
+def test_not_a_question_files_it_and_it_is_never_counted(tmp_path):
+    found = rows(tmp_path)
+    store = {}
+    noted(store, found[0], "not a question")
+    html = page(found, store=store)
+    assert '<a href="#questions"><b>0</b> <span>unread</span></a>' in html
+    fold = register(html).split('<details class="more">', 1)[1]
+    assert ">not a question</span>" in fold
+
+
+def test_a_wrong_pair_hides_that_answer_but_not_a_new_one(tmp_path):
+    found = rows(tmp_path)
+    store = {}
+    noted(store, found[0], f"wrong pair: {found[0]['answer_hash']}")
+    html = register(page(found, store=store))
+    assert "no answer in this turn" in html
+    assert "Because the cache was cold." not in html.split('<details class="source">')[0]
+    moved = [{**found[0], "answer": "Another answer.", "answer_hash": "new"}]
+    assert "Another answer." in register(page(moved, store=store))
+
+
+def test_keep_days_comes_from_the_config(tmp_path):
+    from crowsnest import config
+
+    path = tmp_path / "c.toml"
+    path.write_text("[questions]\nkeep_days = 3\n")
+    assert config.question_keep_days(path=path) == 3.0
+    path.write_text("[questions]\nkeep_days = 0\n")
+    with pytest.raises(ValueError, match="positive"):
+        config.question_keep_days(path=path)

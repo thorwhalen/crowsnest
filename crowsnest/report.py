@@ -1349,7 +1349,7 @@ CONSOLE_SCRIPT = r"""
     function light() {
       if (lit) return;
       lit = true;
-      document.querySelectorAll("button[data-attend],button[data-seen-above],button[data-review]").forEach((button) => { button.hidden = false; });
+      document.querySelectorAll("button[data-attend],button[data-seen-above],button[data-review],button[data-correct]").forEach((button) => { button.hidden = false; });
     }
     try {
       collection.onSnapshot((snap) => {
@@ -1427,6 +1427,22 @@ CONSOLE_SCRIPT = r"""
         openSheet(el);
       } else if (kind === NOTE) {
         openNote(el);
+      }
+    }));
+
+    // A question's corrections (#129): a note saying what was wrong, which the next render
+    // reads back. "not a question" also files it; "wrong pair" names the answer it is said
+    // of (`data-answer`, a digest), so a new answer shows again. The words are
+    // report.NOT_A_QUESTION and report.WRONG_PAIR.
+    document.querySelectorAll("button[data-correct]").forEach((button) => button.addEventListener("click", () => {
+      const el = button.closest("li[data-item]");
+      if (!lit || !isRow(el)) return;
+      if (button.dataset.correct === "question") {
+        act([el], (record, row, now) => A.done(A.note(record, "not a question", now), row.dataset.rev, now, seenAsOf(row)),
+          () => "Filed: not a question");
+      } else {
+        const said = ("wrong pair: " + (el.dataset.answer || "")).trim();
+        act([el], (record, row, now) => A.note(record, said, now), () => "Noted: that answer is not this question's");
       }
     }));
 
@@ -1846,6 +1862,9 @@ OVERVIEW_CSS = """
 .qrow .gone{color:var(--ink-soft)}
 .qrow .chip:empty{display:none}
 .qrow .unsure-tag{color:var(--unsure)}
+.qrow .corrections{display:inline-flex;gap:.3rem;margin-left:.4rem}
+.qrow .corrections button{font-size:.72rem;color:var(--ink-soft)}
+.read-them .go-through{display:inline-block;margin:.2rem 0 .5rem;padding:.35rem .8rem}
 .register>.more,.register .more{margin-top:.6rem}
 .more>summary{cursor:pointer;font-family:var(--mono);font-size:.74rem;color:var(--ink-soft)}
 .view-pick{position:absolute;opacity:0;pointer-events:none}
@@ -3340,6 +3359,25 @@ _QUESTION_CHIPS = {
 
 _QUESTION_READ = (_attention.SEEN, _attention.LATER, _attention.DONE)
 
+#: The notes a question's corrections write (#129). The console's script writes the same
+#: words (`data-correct`); a wrong pair names the answer it was said of, so a new answer
+#: is shown again.
+NOT_A_QUESTION = "not a question"
+WRONG_PAIR = "wrong pair:"
+
+
+def _noted(row: Mapping[str, Any]) -> str:
+    """The person's correction of a question, from its record's note: ``"question"``,
+    ``"pair"`` (for the answer it shows now), or ``""``."""
+    attended = _view.get().of(row)
+    record = attended.record if attended else None
+    text = str(record.note.text if record and record.note else "").strip()
+    if text == NOT_A_QUESTION:
+        return "question"
+    if text == f"{WRONG_PAIR} {row.get('answer_hash') or ''}".strip():
+        return "pair"
+    return ""
+
 
 def _published(value: Any, limit: int) -> str:
     """``value`` sanitised, clipped, and escaped for the page, on one line."""
@@ -3368,7 +3406,7 @@ def _first_sentence(text: str) -> str:
 
 def _is_unread(row: Mapping[str, Any]) -> bool:
     """Unread: no record, or changed since the person marked it; a running turn never."""
-    if row.get("state") == "pending" or row.get("unsure"):
+    if row.get("state") == "pending" or row.get("unsure") or _noted(row) == "question":
         return False
     return _view.get().shown(row) not in _QUESTION_READ
 
@@ -3405,9 +3443,15 @@ def _question_controls(safe: _Sanitizer, row: Mapping[str, Any]) -> str:
         f'<button type="button" data-attend="{kind}" hidden>{safe.text(label)}</button>'
         for kind, label in ATTENTION_ACTIONS
     )
+    fixes = '<button type="button" data-correct="question" hidden>not a question</button>'
+    if row.get("answer"):
+        fixes = (
+            '<button type="button" data-correct="pair" hidden>wrong pair</button>' + fixes
+        )
     return (
         '<div class="acts" data-console hidden data-session="" data-home=""'
-        f' data-reachable="0">{buttons}<ul class="answers"></ul></div>'
+        f' data-reachable="0">{buttons}<span class="corrections">{fixes}</span>'
+        '<ul class="answers"></ul></div>'
     )
 
 
@@ -3417,6 +3461,18 @@ def _question_row(
     """One question: its gist, its answer's, where it was asked; the words in a fold."""
     attended = _view.get().of(row)
     put_off = " qrow--put-off" if attended and attended.shown == _attention.LATER else ""
+    noted = _noted(row)
+    if noted == "pair":
+        # The person said this answer is not this question's: show none until another comes.
+        row = {
+            **row,
+            "state": "unanswered",
+            "answer": "",
+            "a_gist": "",
+            "answered_by": "",
+        }
+    elif noted == "question":
+        row = {**row, "unsure": True}
     state = str(row.get("state") or "")
     figure, unit = _since(clock.now - float(row.get("asked_epoch") or clock.now))
     chip = state if state in _QUESTION_CHIPS else ""
@@ -3425,7 +3481,9 @@ def _question_row(
     made = (
         f' <span class="gen-tag" title="{GENERATED_NOTE}">generated</span>'
         if not row.get("unsure")
-        else ' <span class="gen-tag unsure-tag">unsure</span>'
+        else ' <span class="gen-tag unsure-tag">'
+        + ("not a question" if noted == "question" else "unsure")
+        + "</span>"
     )
     if row.get("q_gist"):
         question = f"{_published(row['q_gist'], ANSWER_GIST_LIMIT)}{made}"
@@ -3489,6 +3547,12 @@ def _question_row(
         _question_controls(safe, row),
         fold,
     ]
+    # Which answer a "wrong pair" is said of: a digest, never the words.
+    answer_attr = (
+        f' data-answer="{_html.escape(str(row["answer_hash"]), quote=True)}"'
+        if _interactive.get() and row.get("answer_hash")
+        else ""
+    )
     ident = (
         attended.item
         if attended
@@ -3497,7 +3561,7 @@ def _question_row(
     return (
         f'<li class="row row--{tone} qrow qrow--{safe.text(state)}'
         f"{_state_class(attended)}{put_off}"
-        f'" id="question-{ident}"{_item_attrs(safe, attended)}>'
+        f'" id="question-{ident}"{_item_attrs(safe, attended)}{answer_attr}>'
         + _rail(chip, tone, figure, unit)
         + '<div class="body">'
         + "".join(body)
@@ -3526,13 +3590,25 @@ def _questions_register(
     view = _view.get()
     # What the person filed (Done), and what the model doubts is a question at all, wait
     # in the fold; neither is counted.
-    filed = [r for r in ordered if view.shown(r) == _attention.DONE or r.get("unsure")]
+    filed = [
+        r
+        for r in ordered
+        if view.shown(r) == _attention.DONE or r.get("unsure") or _noted(r) == "question"
+    ]
     folded = {id(r) for r in filed}
     active = [r for r in ordered if id(r) not in folded]
     shown, rest = active[:QUESTIONS_SHOWN], active[QUESTIONS_SHOWN:] + filed
     unread = sum(1 for r in rows if _is_unread(r))
     if rows:
-        body = f'<ol class="rows">{"".join(_question_row(safe, r, clock, homes=homes) for r in shown)}</ol>'
+        # *Read them* walks the unread one card at a time where script runs; without it,
+        # it is the link to this register.
+        body = (
+            '<p class="read-them"><a class="go-through" href="#questions" data-deck-unread>'
+            f"Read them ({unread})</a></p>"
+            if unread
+            else ""
+        )
+        body += f'<ol class="rows">{"".join(_question_row(safe, r, clock, homes=homes) for r in shown)}</ol>'
         if rest:
             body += (
                 f'<details class="more"><summary>more · {len(rest)}</summary>'
@@ -3875,10 +3951,18 @@ BOARD_SCRIPT = """
 #: so it writes nothing the row's buttons would not.
 DECK_SCRIPT = r"""
 (() => {
-  const go = document.querySelector(".go-through");
-  const register = go && document.getElementById(go.getAttribute("href").slice(1));
+ // One deck per `.go-through` link: Needs you's, and Your questions' "Read them", which
+ // walks only the unread rows (`data-deck-unread`, #129).
+ function deck(go) {
+  const register = document.getElementById(go.getAttribute("href").slice(1));
   if (!register || register.tagName !== "DETAILS") return;
+  const reading = go.hasAttribute("data-deck-unread");
+  const noun = reading ? "unread" : "need you";
+  const READ = ["seen", "later", "done"];
+  const unread = (li) => !li.hidden && !li.classList.contains("qrow--pending")
+    && !READ.includes(li.dataset.live || li.dataset.shown);
   const MOVES_ON = ["seen", "later", "done"];
+  const MAX_DOTS = 40;
   let cards = [], at = 0, on = false;
   const make = (tag, cls, text) => {
     const el = document.createElement(tag);
@@ -3904,20 +3988,26 @@ DECK_SCRIPT = r"""
   bar.append(count, nav, dots, keys);
   const end = make("div", "deck-end");
   const sum = make("p", "deck-sum");
-  end.append(sum, press("Back to the board", leave));
+  end.append(sum, press(reading ? "Done reading" : "Back to the board", leave));
   const seen = (li) => (li.dataset.live || li.dataset.shown) === "seen";
 
   function draw() {
     const done = at >= cards.length;
     cards.forEach((li, i) => li.classList.toggle("current", i === at));
     end.hidden = !done;
-    count.textContent = done ? "All " + cards.length + " looked at" : (at + 1) + " of " + cards.length + " need you";
+    count.textContent = done ? "All " + cards.length + (reading ? " read" : " looked at") : (at + 1) + " of " + cards.length + " " + noun;
     dots.textContent = "";
-    cards.forEach((li, i) => dots.append(make("span", "deck-dot" + (seen(li) ? " is-seen" : "") + (i === at ? " is-here" : ""))));
+    // A dot per card helps up to a screenful; past that the count says it better.
+    if (cards.length <= MAX_DOTS) {
+      cards.forEach((li, i) => dots.append(make("span", "deck-dot" + (seen(li) ? " is-seen" : "") + (i === at ? " is-here" : ""))));
+    }
     if (done) {
       const off = cards.filter((li) => li.dataset.live === "later").length;
       const gone = cards.filter((li) => li.dataset.live === "done").length;
-      sum.textContent = "All " + cards.length + " looked at · " + (cards.length - off - gone) + " still wait for an answer · " + off + " put off";
+      const open = cards.filter((li) => li.classList.contains("qrow--unanswered")).length;
+      sum.textContent = reading
+        ? "All " + cards.length + " read · " + open + " still unanswered"
+        : "All " + cards.length + " looked at · " + (cards.length - off - gone) + " still wait for an answer · " + off + " put off";
     }
     bar.scrollIntoView({ block: "start" });
   }
@@ -3928,8 +4018,12 @@ DECK_SCRIPT = r"""
   }
   function enter(event) {
     event.preventDefault();
-    cards = [...register.querySelectorAll("li.row[id^='session-']")].filter((li) => !li.hidden);
+    cards = reading
+      ? [...register.querySelectorAll("li.qrow")].filter(unread)
+      : [...register.querySelectorAll("li.row[id^='session-']")].filter((li) => !li.hidden);
     if (!cards.length) return;
+    // A card in a closed fold (*more*) could not be shown.
+    cards.forEach((li) => { const fold = li.closest("details.more"); if (fold) fold.open = true; });
     at = 0;
     on = true;
     register.open = true;
@@ -3944,7 +4038,7 @@ DECK_SCRIPT = r"""
     cards.forEach((li) => li.classList.remove("current"));
     bar.remove();
     end.remove();
-    const tile = [...document.querySelectorAll(".tiles li.tile:not(.is-seen):not(.tile--seen):not([hidden]) a")].find((a) => a.offsetParent);
+    const tile = reading ? null : [...document.querySelectorAll(".tiles li.tile:not(.is-seen):not(.tile--seen):not([hidden]) a")].find((a) => a.offsetParent);
     (tile || go).scrollIntoView({ block: "center" });
   }
   function click(selector) {
@@ -3979,6 +4073,8 @@ DECK_SCRIPT = r"""
     event.preventDefault();
     act();
   });
+ }
+ document.querySelectorAll("a.go-through").forEach(deck);
 })();
 """
 
