@@ -43,6 +43,7 @@
    attention
    config
    courier
+   gists
    hook
    init
    ledger

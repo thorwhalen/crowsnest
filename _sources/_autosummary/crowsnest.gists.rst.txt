@@ -1,0 +1,24 @@
+crowsnest.gists
+===============
+
+.. automodule:: crowsnest.gists
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_LIMIT
+      MAX_QUESTION_WORDS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      brief_of
+      dflt_store
+      kept
+      key_of
+      refresh
+      revision_of
+   

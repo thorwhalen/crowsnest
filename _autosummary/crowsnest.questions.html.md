@@ -28,6 +28,7 @@ revision, never the text.
 | [`ANSWERED`](#crowsnest.questions.ANSWERED)       | The same turn's final words exist and the turn is over.                                                                                                                                         |
 | [`UNANSWERED`](#crowsnest.questions.UNANSWERED)     | The turn ended without words, or the next prompt came first.                                                                                                                                    |
 | [`PENDING`](#crowsnest.questions.PENDING)        | never flagged, never counted.                                                                                                                                                                   |
+| [`PARTLY`](#crowsnest.questions.PARTLY)         | The reply answers it in part, or defers it (the model's reading, [`crowsnest.gists`](crowsnest.gists.html.md#module-crowsnest.gists)).                                      |
 | [`STATES`](#crowsnest.questions.STATES)         | Every state a row can be in, in the order the register sorts them.                                                                                                                              |
 | [`DFLT_KEEP_DAYS`](#crowsnest.questions.DFLT_KEEP_DAYS) | How long a question stays on the page after it was asked.                                                                                                                                       |
 
@@ -52,6 +53,10 @@ The marker a question row carries, which attention’s identity and material rea
 ([`crowsnest.attention.QUESTION`](crowsnest.attention.html.md#crowsnest.attention.QUESTION)). Not `kind`: a roster row already uses that
 for the session’s kind.
 
+### crowsnest.questions.PARTLY *= 'partly'*
+
+The reply answers it in part, or defers it (the model’s reading, [`crowsnest.gists`](crowsnest.gists.html.md#module-crowsnest.gists)).
+
 ### crowsnest.questions.PENDING *= 'pending'*
 
 never flagged, never counted.
@@ -59,7 +64,7 @@ never flagged, never counted.
 * **Type:**
   The turn is still running
 
-### crowsnest.questions.STATES *= ('unanswered', 'answered', 'pending')*
+### crowsnest.questions.STATES *= ('unanswered', 'partly', 'answered', 'pending')*
 
 Every state a row can be in, in the order the register sorts them.
 
@@ -74,19 +79,22 @@ The turn ended without words, or the next prompt came first.
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### crowsnest.questions.question_rows(sessions, , now, keep_days=14, live=None, spawned=(), answer_hash=None)
+### crowsnest.questions.question_rows(sessions, , now, keep_days=14, live=None, spawned=(), answer_hash=None, gist=None)
 
 One row per question, newest first, for the page and the attention store.
 
 `sessions` is what [`scan()`](#crowsnest.questions.scan) returns. `live` maps a session id to its roster
 row, for its name, its link and whether a turn is running now. `spawned` holds the
 ids of sessions crowsnest started with a brief: their first prompt was written by the
-parent, not the person.
+parent, not the person. `gist` is `(session id, exchange) -> doc`, the model’s
+reading of a message ([`crowsnest.gists`](crowsnest.gists.html.md#module-crowsnest.gists)), `None` when it has none current.
 
 A row carries `item_kind` ([`ITEM_KIND`](#crowsnest.questions.ITEM_KIND)), `session_id`, `prompt_uuid` and
 `k` (the question’s place in its message), which name the item; and `state`,
 `answer_hash` and `answered_by`, which say when it changed. Its `verdict` is
-`{"group": "question", "why": state}`, which a mark records as what it saw.
+`{"group": "question", "why": state}`, which a mark records as what it saw. With a
+gist it also carries `q_gist`, `a_gist`, and `unsure` for a sentence the model
+did not take for a question (or was not sure of).
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]

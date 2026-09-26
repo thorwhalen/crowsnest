@@ -1,4 +1,4 @@
-> built 2026-09-26 07:55 UTC from 9f8dbdb (main) · crowsnest 0.0.76. Details: build_info.json
+> built 2026-09-26 08:06 UTC from da042a1 (main) · crowsnest 0.0.77. Details: build_info.json
 
 # index.html.md
 
@@ -615,21 +615,22 @@ no watcher and reads no project’s instructions.
 
 ### Functions
 
-| [`claude_synthesiser`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.claude_synthesiser)(\*[, model, binary, timeout])   | A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in an empty directory with its hooks quiet, so it reads no project's instructions and wakes no watcher.   |
-|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`dflt_store`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.dflt_store)([root])                                 | One JSON file per item under `root` (default `<data dir>/actions`).                                                                                                                     |
-| [`line_for`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.line_for)(row, \*, item, rev[, store])              | The stored line for this row's revision (`{"line", "cites", "verdict", ...}`), or `None` when there is none for it yet.                                                                 |
-| [`refresh`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.refresh)(rows, \*, item, rev[, store, ...])         | Write a line for each Needs-you row whose stored line is for another revision, the freshest ask first, at most `limit` of them.                                                         |
+| [`claude_synthesiser`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.claude_synthesiser)(\*[, model, binary, ...])   | A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in an empty directory with its hooks quiet, so it reads no project's instructions and wakes no watcher.   |
+|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`dflt_store`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.dflt_store)([root])                             | One JSON file per item under `root` (default `<data dir>/actions`).                                                                                                                     |
+| [`line_for`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.line_for)(row, \*, item, rev[, store])          | The stored line for this row's revision (`{"line", "cites", "verdict", ...}`), or `None` when there is none for it yet.                                                                 |
+| [`refresh`](_autosummary/crowsnest.actions.html.md#crowsnest.actions.refresh)(rows, \*, item, rev[, store, ...])     | Write a line for each Needs-you row whose stored line is for another revision, the freshest ask first, at most `limit` of them.                                                         |
 
 ### crowsnest.actions.MAX_WORDS *= 8*
 
 The most words a line may have; a reference counts as one.
 
-### crowsnest.actions.claude_synthesiser(, model='haiku', binary=None, timeout=90)
+### crowsnest.actions.claude_synthesiser(\*, model='haiku', binary=None, timeout=90, prompt='You write ONE line that tells a busy person what they must do next, for a\\\\ndashboard of their coding sessions. Read the session\\\\'s request below and answer with JSON\\\\nonly, no prose, exactly: {"line": "...", "cites": ["repo#N", ...], "verdict": "ok"}.\\\\n\\\\nRules for "line":\\\\n- Start with an imperative verb (Say, Decide, Approve, Set, Log in, Reply, Confirm, Close,\\\\n  Run, Review, Merge, Answer). Never a noun phrase, never "the user", never "awaiting".\\\\n- At most 8 words, a reference like repo#12 counts as one word. No trailing period. No\\\\n  hedges. Do not name the session.\\\\n- Name the object: the thing to decide or the artefact to touch. Every noun must come from\\\\n  the request, the references\\\\' titles, or the kind. Invent nothing.\\\\n- Cite a reference in "cites" only when the instruction lives in it.\\\\nIf the request names no object you could act on, answer {"line": null, "cites": [], "verdict": "null"}.\\\\nIf the request asks for nothing ("none", "nothing yet", a status table), answer\\\\n{"line": null, "cites": [], "verdict": "no_ask"}.\\\\n\\\\nThe session\\\\'s request, as JSON:\\\\n')
 
 A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in
 an empty directory with its hooks quiet, so it reads no project’s instructions and
-wakes no watcher.
+wakes no watcher. `prompt` is the instruction the brief’s JSON is appended to
+(`PROMPT` by default; [`crowsnest.gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists) passes its own).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)], [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)]
@@ -1874,6 +1875,113 @@ same sessions the page does. `store` is the attention store (its default when
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
+# _autosummary/crowsnest.gists.html.md
+
+# crowsnest.gists
+
+Gists for *Your questions* (#129): each question in a few words, and the answer it got.
+
+The heuristics in `openloops.exchanges` find the sentences of a message that ask
+something and pair the message with its turn’s reply; they cannot say what a sentence
+means, whether the reply answered it, or which “questions” were requests after all. A
+model can, cheaply, once per message: this module asks `claude -p` (Haiku, the same
+runner as [`crowsnest.actions`](_autosummary/crowsnest.actions.html.md#module-crowsnest.actions)) for every question of one message at a time, and keeps
+the answer per message until the reply changes.
+
+**What the model sees** is the person’s own message and the reply to it, sanitised with
+the page’s sanitiser first and clipped, plus the sentences the heuristics flagged. It runs
+on this machine, under the person’s own account, with no session kept and hooks quiet;
+what comes back is stored under the data directory and nowhere else.
+
+**Ids never move.** A question the heuristics found keeps its place `k` in its message,
+so a mark made on the raw row still applies. The model *maps* its questions onto those
+sentences (`source`); a sentence it does not list becomes `unsure` (kept, folded, never
+counted), and a question it adds takes the next `k` after the heuristics’ own.
+
+### Module Attributes
+
+| [`DFLT_LIMIT`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.DFLT_LIMIT)         | the rest wait for the next publish.             |
+|---------------------------------------------------------------------|-------------------------------------------------|
+| [`MAX_QUESTION_WORDS`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.MAX_QUESTION_WORDS) | A question gist's and an answer gist's longest. |
+
+### Functions
+
+| [`brief_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.brief_of)(exchange)                               | What the model is shown: the message and the reply, sanitised and clipped, and the sentences the heuristics flagged.               |
+|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| [`dflt_store`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.dflt_store)([root])                               | One JSON file per message under `root` (default `<data dir>/questions/gists`).                                                     |
+| [`kept`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.kept)(answer)                                     | The model's questions that keep to the rules: a gist within its length, a known state, and an answer only when there is one.       |
+| [`key_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.key_of)(session, prompt_uuid)                     | The store key of one message: a uuid, so it is a safe file name.                                                                   |
+| [`refresh`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.refresh)(sessions, \*[, store, synthesiser, ...]) | Ask about each message whose stored gist was made from another revision, the freshest first, at most `limit`, `workers` at a time. |
+| [`revision_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.revision_of)(exchange)                            | What a gist was made from: the questions found and the reply.                                                                      |
+
+### crowsnest.gists.DFLT_LIMIT *= 4*
+
+the rest wait for the next publish.
+
+* **Type:**
+  How many messages one refresh asks about
+
+### crowsnest.gists.MAX_QUESTION_WORDS *= 12*
+
+A question gist’s and an answer gist’s longest.
+
+### crowsnest.gists.brief_of(exchange)
+
+What the model is shown: the message and the reply, sanitised and clipped, and the
+sentences the heuristics flagged.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.gists.dflt_store(root=None)
+
+One JSON file per message under `root` (default `<data dir>/questions/gists`).
+
+* **Return type:**
+  [`MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.gists.kept(answer)
+
+The model’s questions that keep to the rules: a gist within its length, a known
+state, and an answer only when there is one. Anything else is dropped, not trusted.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+```pycon
+>>> kept({"questions": [{"source": "Why?", "q": "Why is CI slow?", "a": "The cache was cold",
+...                      "state": "answered", "sure": True}, {"q": "x " * 20}]})
+[{'source': 'Why?', 'q': 'Why is CI slow?', 'a': 'The cache was cold', 'state': 'answered', 'sure': True}]
+```
+
+### crowsnest.gists.key_of(session, prompt_uuid)
+
+The store key of one message: a uuid, so it is a safe file name.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.gists.refresh(sessions, , store=None, synthesiser=None, limit=4, workers=4, now=None)
+
+Ask about each message whose stored gist was made from another revision, the
+freshest first, at most `limit`, `workers` at a time. A finished turn only: a running one’s reply is not
+its answer yet. A synthesiser that fails leaves the store as it was.
+
+`sessions` is what [`crowsnest.questions.scan()`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.scan) returns. Returns counts:
+`{"made", "failed", "current", "waiting"}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.gists.revision_of(exchange)
+
+What a gist was made from: the questions found and the reply. A new reply (the turn
+ended, or a later one carried) makes the stored gist stale.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+
 # _autosummary/crowsnest.hook.html.md
 
 # crowsnest.hook
@@ -2433,6 +2541,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                                                   |
 | [`config`](_autosummary/crowsnest.config.html.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                                               |
 | [`courier`](_autosummary/crowsnest.courier.html.md#module-crowsnest.courier)     | The console's courier with no LLM: carry an owner-served console store both ways.                                                    |
+| [`gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)         | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
 | [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)           | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
 | [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)           | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
 | [`ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)       | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
@@ -4136,6 +4245,7 @@ revision, never the text.
 | [`ANSWERED`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.ANSWERED)       | The same turn's final words exist and the turn is over.                                                                                                                                         |
 | [`UNANSWERED`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.UNANSWERED)     | The turn ended without words, or the next prompt came first.                                                                                                                                    |
 | [`PENDING`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.PENDING)        | never flagged, never counted.                                                                                                                                                                   |
+| [`PARTLY`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.PARTLY)         | The reply answers it in part, or defers it (the model's reading, [`crowsnest.gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)).                                      |
 | [`STATES`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.STATES)         | Every state a row can be in, in the order the register sorts them.                                                                                                                              |
 | [`DFLT_KEEP_DAYS`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.DFLT_KEEP_DAYS) | How long a question stays on the page after it was asked.                                                                                                                                       |
 
@@ -4160,6 +4270,10 @@ The marker a question row carries, which attention’s identity and material rea
 ([`crowsnest.attention.QUESTION`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.QUESTION)). Not `kind`: a roster row already uses that
 for the session’s kind.
 
+### crowsnest.questions.PARTLY *= 'partly'*
+
+The reply answers it in part, or defers it (the model’s reading, [`crowsnest.gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)).
+
 ### crowsnest.questions.PENDING *= 'pending'*
 
 never flagged, never counted.
@@ -4167,7 +4281,7 @@ never flagged, never counted.
 * **Type:**
   The turn is still running
 
-### crowsnest.questions.STATES *= ('unanswered', 'answered', 'pending')*
+### crowsnest.questions.STATES *= ('unanswered', 'partly', 'answered', 'pending')*
 
 Every state a row can be in, in the order the register sorts them.
 
@@ -4182,19 +4296,22 @@ The turn ended without words, or the next prompt came first.
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### crowsnest.questions.question_rows(sessions, , now, keep_days=14, live=None, spawned=(), answer_hash=None)
+### crowsnest.questions.question_rows(sessions, , now, keep_days=14, live=None, spawned=(), answer_hash=None, gist=None)
 
 One row per question, newest first, for the page and the attention store.
 
 `sessions` is what [`scan()`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.scan) returns. `live` maps a session id to its roster
 row, for its name, its link and whether a turn is running now. `spawned` holds the
 ids of sessions crowsnest started with a brief: their first prompt was written by the
-parent, not the person.
+parent, not the person. `gist` is `(session id, exchange) -> doc`, the model’s
+reading of a message ([`crowsnest.gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)), `None` when it has none current.
 
 A row carries `item_kind` ([`ITEM_KIND`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.ITEM_KIND)), `session_id`, `prompt_uuid` and
 `k` (the question’s place in its message), which name the item; and `state`,
 `answer_hash` and `answered_by`, which say when it changed. Its `verdict` is
-`{"group": "question", "why": state}`, which a mark records as what it saw.
+`{"group": "question", "why": state}`, which a mark records as what it saw. With a
+gist it also carries `q_gist`, `a_gist`, and `unsure` for a sentence the model
+did not take for a question (or was not sure of).
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
@@ -6497,7 +6614,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-26 07:55 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/9f8dbdb5e4d3b164b5c4d60cd1e06c5255a6d240"><code>9f8dbdb</code></a> on branch <code>main</code>, for **crowsnest 0.0.76** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-26 08:06 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/da042a123cc88b904ba784a6c1b47095ea7e241b"><code>da042a1</code></a> on branch <code>main</code>, for **crowsnest 0.0.77** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -6506,7 +6623,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/9f8dbdb5e4d3b164b5c4d60cd1e06c5255a6d240"><code>9f8dbdb5e4d3b164b5c4d60cd1e06c5255a6d240</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/da042a123cc88b904ba784a6c1b47095ea7e241b"><code>da042a123cc88b904ba784a6c1b47095ea7e241b</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6517,9 +6634,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36228173849">36228173849</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36228687864">36228687864</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>9f8dbdb5e4d3b164b5c4d60cd1e06c5255a6d240</code> (in the history of the built commit) |
+| Event commit | <code>da042a123cc88b904ba784a6c1b47095ea7e241b</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6544,13 +6661,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.76/">0.0.76</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.77/">0.0.77</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 9f8dbdb5e4d3b164b5c4d60cd1e06c5255a6d240
+git checkout da042a123cc88b904ba784a6c1b47095ea7e241b
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

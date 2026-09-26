@@ -30,21 +30,22 @@ no watcher and reads no project’s instructions.
 
 ### Functions
 
-| [`claude_synthesiser`](#crowsnest.actions.claude_synthesiser)(\*[, model, binary, timeout])   | A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in an empty directory with its hooks quiet, so it reads no project's instructions and wakes no watcher.   |
-|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`dflt_store`](#crowsnest.actions.dflt_store)([root])                                 | One JSON file per item under `root` (default `<data dir>/actions`).                                                                                                                     |
-| [`line_for`](#crowsnest.actions.line_for)(row, \*, item, rev[, store])              | The stored line for this row's revision (`{"line", "cites", "verdict", ...}`), or `None` when there is none for it yet.                                                                 |
-| [`refresh`](#crowsnest.actions.refresh)(rows, \*, item, rev[, store, ...])         | Write a line for each Needs-you row whose stored line is for another revision, the freshest ask first, at most `limit` of them.                                                         |
+| [`claude_synthesiser`](#crowsnest.actions.claude_synthesiser)(\*[, model, binary, ...])   | A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in an empty directory with its hooks quiet, so it reads no project's instructions and wakes no watcher.   |
+|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`dflt_store`](#crowsnest.actions.dflt_store)([root])                             | One JSON file per item under `root` (default `<data dir>/actions`).                                                                                                                     |
+| [`line_for`](#crowsnest.actions.line_for)(row, \*, item, rev[, store])          | The stored line for this row's revision (`{"line", "cites", "verdict", ...}`), or `None` when there is none for it yet.                                                                 |
+| [`refresh`](#crowsnest.actions.refresh)(rows, \*, item, rev[, store, ...])     | Write a line for each Needs-you row whose stored line is for another revision, the freshest ask first, at most `limit` of them.                                                         |
 
 ### crowsnest.actions.MAX_WORDS *= 8*
 
 The most words a line may have; a reference counts as one.
 
-### crowsnest.actions.claude_synthesiser(, model='haiku', binary=None, timeout=90)
+### crowsnest.actions.claude_synthesiser(\*, model='haiku', binary=None, timeout=90, prompt='You write ONE line that tells a busy person what they must do next, for a\\\\ndashboard of their coding sessions. Read the session\\\\'s request below and answer with JSON\\\\nonly, no prose, exactly: {"line": "...", "cites": ["repo#N", ...], "verdict": "ok"}.\\\\n\\\\nRules for "line":\\\\n- Start with an imperative verb (Say, Decide, Approve, Set, Log in, Reply, Confirm, Close,\\\\n  Run, Review, Merge, Answer). Never a noun phrase, never "the user", never "awaiting".\\\\n- At most 8 words, a reference like repo#12 counts as one word. No trailing period. No\\\\n  hedges. Do not name the session.\\\\n- Name the object: the thing to decide or the artefact to touch. Every noun must come from\\\\n  the request, the references\\\\' titles, or the kind. Invent nothing.\\\\n- Cite a reference in "cites" only when the instruction lives in it.\\\\nIf the request names no object you could act on, answer {"line": null, "cites": [], "verdict": "null"}.\\\\nIf the request asks for nothing ("none", "nothing yet", a status table), answer\\\\n{"line": null, "cites": [], "verdict": "no_ask"}.\\\\n\\\\nThe session\\\\'s request, as JSON:\\\\n')
 
 A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in
 an empty directory with its hooks quiet, so it reads no project’s instructions and
-wakes no watcher.
+wakes no watcher. `prompt` is the instruction the brief’s JSON is appended to
+(`PROMPT` by default; [`crowsnest.gists`](crowsnest.gists.html.md#module-crowsnest.gists) passes its own).
 
 * **Return type:**
   [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)], [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)]

@@ -12,6 +12,7 @@ crowsnest.questions
       ANSWERED
       UNANSWERED
       PENDING
+      PARTLY
       STATES
       DFLT_KEEP_DAYS
    
