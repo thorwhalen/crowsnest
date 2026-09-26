@@ -31,12 +31,17 @@ __all__ = [
     "DFLT_LIMIT",
     "MAX_ANSWER_WORDS",
     "MAX_QUESTION_WORDS",
+    "PAIR_PROMPT",
     "PROMPT",
     "brief_of",
     "dflt_store",
     "kept",
+    "kept_pair",
     "key_of",
+    "pair_key",
+    "pairing",
     "refresh",
+    "refresh_pairs",
     "revision_of",
 ]
 
@@ -230,3 +235,139 @@ def refresh(
         "current": current,
         "waiting": max(0, len(wanted) - limit),
     }
+
+
+# --------------------------------------------------------------------------------------
+# An answer given elsewhere (#129, step 3)
+
+#: How many questions one refresh asks about pairing.
+DFLT_PAIR_LIMIT = 2
+
+PAIR_PROMPT = """A person asked a question in one AI coding session. Below are replies given
+LATER, in that session after a relay came back or in other sessions the question was passed
+to. Say which reply answers it, if any. Answer with JSON only, no prose, exactly:
+{"match": 0, "a": "...", "state": "answered"}
+
+Rules:
+- "match": the index of the reply that answers the question, or null if none does. A reply
+  that only says it will look, or talks about something else, does not answer it.
+- "a": the answer in at most 14 words, stating it ("Yes: the hook fires once per tick"),
+  never that one was given. Every noun must appear in that reply. "" when match is null.
+- "state": "answered", or "partly" if it answers in part.
+
+The question and the replies, as JSON:
+"""
+
+
+def pair_key(item: str) -> str:
+    """The store key of one question's pairing: its attention id, which is a uuid."""
+    return str(uuid.uuid5(_NAMESPACE, f"pair:{item}"))
+
+
+def pair_revision(question: str, found: Iterable[Mapping]) -> str:
+    """What a pairing was made from: the question and the candidates' replies."""
+    material = json.dumps(
+        [question, [(c.get("uuid"), c.get("reply")) for c in found]], ensure_ascii=False
+    )
+    return hashlib.sha1(material.encode("utf-8")).hexdigest()[:16]
+
+
+def pair_brief(question: str, found: Iterable[Mapping]) -> dict:
+    """What the model is shown: the question and each candidate reply, sanitised first."""
+    from crowsnest.live import publishable
+
+    return {
+        "question": publishable(question),
+        "replies": [
+            publishable(str(c.get("reply") or ""), limit=REPLY_LIMIT // 2) for c in found
+        ],
+    }
+
+
+def kept_pair(answer: Mapping, count: int) -> dict:
+    """The model's pairing when it keeps to the rules, else no match.
+
+    >>> kept_pair({"match": 1, "a": "Yes: it fires once", "state": "answered"}, 2)["match"]
+    1
+    >>> kept_pair({"match": 5, "a": "x", "state": "answered"}, 2)["match"] is None
+    True
+    """
+    match = answer.get("match")
+    a = str(answer.get("a") or "").strip()
+    state = str(answer.get("state") or "")
+    if (
+        not isinstance(match, int)
+        or not 0 <= match < count
+        or not a
+        or _words(a) > MAX_ANSWER_WORDS
+        or state not in ("answered", "partly")
+    ):
+        return {"match": None, "a": "", "state": ""}
+    return {"match": match, "a": a, "state": state}
+
+
+def refresh_pairs(
+    wanted: Iterable[tuple[str, str, list[dict]]],
+    *,
+    store: MutableMapping[str, dict] | None = None,
+    synthesiser: Callable[[Mapping], Mapping] | None = None,
+    limit: int = DFLT_PAIR_LIMIT,
+    workers: int = DFLT_WORKERS,
+    now: datetime | None = None,
+) -> dict:
+    """Ask, for each ``(item, question, candidates)`` whose stored pairing is for other
+    candidates, which reply answers it; at most ``limit``, ``workers`` at a time."""
+    store = dflt_store() if store is None else store
+    if synthesiser is None:
+        from crowsnest.actions import claude_synthesiser
+
+        synthesiser = claude_synthesiser(prompt=PAIR_PROMPT, timeout=DFLT_TIMEOUT)
+    now = datetime.now(timezone.utc) if now is None else now
+    todo, current = [], 0
+    for item, question, found in wanted:
+        if not found:
+            continue
+        key, rev = pair_key(item), pair_revision(question, found)
+        if (store.get(key) or {}).get("rev") == rev:
+            current += 1
+            continue
+        todo.append((key, rev, question, found))
+    from concurrent.futures import ThreadPoolExecutor
+
+    def ask(job):
+        _, _, question, found = job
+        try:
+            return synthesiser(pair_brief(question, found))
+        except Exception:  # noqa: BLE001 -- a model or CLI failing must not fail the page
+            return None
+
+    batch = todo[:limit]
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        answers = list(pool.map(ask, batch))
+    made = failed = 0
+    for (key, rev, _, found), answer in zip(batch, answers, strict=True):
+        if answer is None:
+            failed += 1
+            continue
+        store[key] = {
+            "rev": rev,
+            **kept_pair(answer if isinstance(answer, Mapping) else {}, len(found)),
+            "made_at": now.isoformat(timespec="seconds"),
+        }
+        made += 1
+    return {
+        "made": made,
+        "failed": failed,
+        "current": current,
+        "waiting": max(0, len(todo) - limit),
+    }
+
+
+def pairing(
+    store: Mapping[str, dict], item: str, question: str, found: list[dict]
+) -> dict | None:
+    """The stored pairing of a question, when it was made from these candidates."""
+    doc = store.get(pair_key(item))
+    if not doc or doc.get("rev") != pair_revision(question, found):
+        return None
+    return doc
