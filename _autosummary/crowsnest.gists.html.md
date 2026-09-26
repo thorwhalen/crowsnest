@@ -27,13 +27,17 @@ counted), and a question it adds takes the next `k` after the heuristics’ own.
 
 ### Functions
 
-| [`brief_of`](#crowsnest.gists.brief_of)(exchange)                               | What the model is shown: the message and the reply, sanitised and clipped, and the sentences the heuristics flagged.               |
-|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| [`dflt_store`](#crowsnest.gists.dflt_store)([root])                               | One JSON file per message under `root` (default `<data dir>/questions/gists`).                                                     |
-| [`kept`](#crowsnest.gists.kept)(answer)                                     | The model's questions that keep to the rules: a gist within its length, a known state, and an answer only when there is one.       |
-| [`key_of`](#crowsnest.gists.key_of)(session, prompt_uuid)                     | The store key of one message: a uuid, so it is a safe file name.                                                                   |
-| [`refresh`](#crowsnest.gists.refresh)(sessions, \*[, store, synthesiser, ...]) | Ask about each message whose stored gist was made from another revision, the freshest first, at most `limit`, `workers` at a time. |
-| [`revision_of`](#crowsnest.gists.revision_of)(exchange)                            | What a gist was made from: the questions found and the reply.                                                                      |
+| [`brief_of`](#crowsnest.gists.brief_of)(exchange)                               | What the model is shown: the message and the reply, sanitised and clipped, and the sentences the heuristics flagged.                                     |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`dflt_store`](#crowsnest.gists.dflt_store)([root])                               | One JSON file per message under `root` (default `<data dir>/questions/gists`).                                                                           |
+| [`kept`](#crowsnest.gists.kept)(answer)                                     | The model's questions that keep to the rules: a gist within its length, a known state, and an answer only when there is one.                             |
+| [`kept_pair`](#crowsnest.gists.kept_pair)(answer, count)                         | The model's pairing when it keeps to the rules, else no match.                                                                                           |
+| [`key_of`](#crowsnest.gists.key_of)(session, prompt_uuid)                     | The store key of one message: a uuid, so it is a safe file name.                                                                                         |
+| [`pair_key`](#crowsnest.gists.pair_key)(item)                                   | The store key of one question's pairing: its attention id, which is a uuid.                                                                              |
+| [`pairing`](#crowsnest.gists.pairing)(store, item, question, found)            | The stored pairing of a question, when it was made from these candidates.                                                                                |
+| [`refresh`](#crowsnest.gists.refresh)(sessions, \*[, store, synthesiser, ...]) | Ask about each message whose stored gist was made from another revision, the freshest first, at most `limit`, `workers` at a time.                       |
+| [`refresh_pairs`](#crowsnest.gists.refresh_pairs)(wanted, \*[, store, ...])          | Ask, for each `(item, question, candidates)` whose stored pairing is for other candidates, which reply answers it; at most `limit`, `workers` at a time. |
+| [`revision_of`](#crowsnest.gists.revision_of)(exchange)                            | What a gist was made from: the questions found and the reply.                                                                                            |
 
 ### crowsnest.gists.DFLT_LIMIT *= 4*
 
@@ -75,12 +79,40 @@ state, and an answer only when there is one. Anything else is dropped, not trust
 [{'source': 'Why?', 'q': 'Why is CI slow?', 'a': 'The cache was cold', 'state': 'answered', 'sure': True}]
 ```
 
+### crowsnest.gists.kept_pair(answer, count)
+
+The model’s pairing when it keeps to the rules, else no match.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+```pycon
+>>> kept_pair({"match": 1, "a": "Yes: it fires once", "state": "answered"}, 2)["match"]
+1
+>>> kept_pair({"match": 5, "a": "x", "state": "answered"}, 2)["match"] is None
+True
+```
+
 ### crowsnest.gists.key_of(session, prompt_uuid)
 
 The store key of one message: a uuid, so it is a safe file name.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.gists.pair_key(item)
+
+The store key of one question’s pairing: its attention id, which is a uuid.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.gists.pairing(store, item, question, found)
+
+The stored pairing of a question, when it was made from these candidates.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.gists.refresh(sessions, , store=None, synthesiser=None, limit=4, workers=4, now=None)
 
@@ -90,6 +122,14 @@ its answer yet. A synthesiser that fails leaves the store as it was.
 
 `sessions` is what [`crowsnest.questions.scan()`](crowsnest.questions.html.md#crowsnest.questions.scan) returns. Returns counts:
 `{"made", "failed", "current", "waiting"}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.gists.refresh_pairs(wanted, , store=None, synthesiser=None, limit=2, workers=4, now=None)
+
+Ask, for each `(item, question, candidates)` whose stored pairing is for other
+candidates, which reply answers it; at most `limit`, `workers` at a time.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

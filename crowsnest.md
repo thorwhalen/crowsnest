@@ -1,4 +1,4 @@
-> built 2026-09-26 08:06 UTC from da042a1 (main) · crowsnest 0.0.77. Details: build_info.json
+> built 2026-09-26 08:11 UTC from cf5e4b8 (main) · crowsnest 0.0.78. Details: build_info.json
 
 # index.html.md
 
@@ -1906,13 +1906,17 @@ counted), and a question it adds takes the next `k` after the heuristics’ own.
 
 ### Functions
 
-| [`brief_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.brief_of)(exchange)                               | What the model is shown: the message and the reply, sanitised and clipped, and the sentences the heuristics flagged.               |
-|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| [`dflt_store`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.dflt_store)([root])                               | One JSON file per message under `root` (default `<data dir>/questions/gists`).                                                     |
-| [`kept`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.kept)(answer)                                     | The model's questions that keep to the rules: a gist within its length, a known state, and an answer only when there is one.       |
-| [`key_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.key_of)(session, prompt_uuid)                     | The store key of one message: a uuid, so it is a safe file name.                                                                   |
-| [`refresh`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.refresh)(sessions, \*[, store, synthesiser, ...]) | Ask about each message whose stored gist was made from another revision, the freshest first, at most `limit`, `workers` at a time. |
-| [`revision_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.revision_of)(exchange)                            | What a gist was made from: the questions found and the reply.                                                                      |
+| [`brief_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.brief_of)(exchange)                               | What the model is shown: the message and the reply, sanitised and clipped, and the sentences the heuristics flagged.                                     |
+|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`dflt_store`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.dflt_store)([root])                               | One JSON file per message under `root` (default `<data dir>/questions/gists`).                                                                           |
+| [`kept`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.kept)(answer)                                     | The model's questions that keep to the rules: a gist within its length, a known state, and an answer only when there is one.                             |
+| [`kept_pair`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.kept_pair)(answer, count)                         | The model's pairing when it keeps to the rules, else no match.                                                                                           |
+| [`key_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.key_of)(session, prompt_uuid)                     | The store key of one message: a uuid, so it is a safe file name.                                                                                         |
+| [`pair_key`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.pair_key)(item)                                   | The store key of one question's pairing: its attention id, which is a uuid.                                                                              |
+| [`pairing`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.pairing)(store, item, question, found)            | The stored pairing of a question, when it was made from these candidates.                                                                                |
+| [`refresh`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.refresh)(sessions, \*[, store, synthesiser, ...]) | Ask about each message whose stored gist was made from another revision, the freshest first, at most `limit`, `workers` at a time.                       |
+| [`refresh_pairs`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.refresh_pairs)(wanted, \*[, store, ...])          | Ask, for each `(item, question, candidates)` whose stored pairing is for other candidates, which reply answers it; at most `limit`, `workers` at a time. |
+| [`revision_of`](_autosummary/crowsnest.gists.html.md#crowsnest.gists.revision_of)(exchange)                            | What a gist was made from: the questions found and the reply.                                                                                            |
 
 ### crowsnest.gists.DFLT_LIMIT *= 4*
 
@@ -1954,12 +1958,40 @@ state, and an answer only when there is one. Anything else is dropped, not trust
 [{'source': 'Why?', 'q': 'Why is CI slow?', 'a': 'The cache was cold', 'state': 'answered', 'sure': True}]
 ```
 
+### crowsnest.gists.kept_pair(answer, count)
+
+The model’s pairing when it keeps to the rules, else no match.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+```pycon
+>>> kept_pair({"match": 1, "a": "Yes: it fires once", "state": "answered"}, 2)["match"]
+1
+>>> kept_pair({"match": 5, "a": "x", "state": "answered"}, 2)["match"] is None
+True
+```
+
 ### crowsnest.gists.key_of(session, prompt_uuid)
 
 The store key of one message: a uuid, so it is a safe file name.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.gists.pair_key(item)
+
+The store key of one question’s pairing: its attention id, which is a uuid.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.gists.pairing(store, item, question, found)
+
+The stored pairing of a question, when it was made from these candidates.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.gists.refresh(sessions, , store=None, synthesiser=None, limit=4, workers=4, now=None)
 
@@ -1969,6 +2001,14 @@ its answer yet. A synthesiser that fails leaves the store as it was.
 
 `sessions` is what [`crowsnest.questions.scan()`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.scan) returns. Returns counts:
 `{"made", "failed", "current", "waiting"}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.gists.refresh_pairs(wanted, , store=None, synthesiser=None, limit=2, workers=4, now=None)
+
+Ask, for each `(item, question, candidates)` whose stored pairing is for other
+candidates, which reply answers it; at most `limit`, `workers` at a time.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -4248,13 +4288,15 @@ revision, never the text.
 | [`PARTLY`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.PARTLY)         | The reply answers it in part, or defers it (the model's reading, [`crowsnest.gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)).                                      |
 | [`STATES`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.STATES)         | Every state a row can be in, in the order the register sorts them.                                                                                                                              |
 | [`DFLT_KEEP_DAYS`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.DFLT_KEEP_DAYS) | How long a question stays on the page after it was asked.                                                                                                                                       |
+| [`ELSEWHERE`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.ELSEWHERE)      | The state of a question answered in a later turn or another session.                                                                                                                            |
 
 ### Functions
 
-| [`dflt_cache_dir`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.dflt_cache_dir)()                                   | `<data dir>/questions/files`: one JSON file per transcript read.              |
-|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`question_rows`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.question_rows)(sessions, \*, now[, keep_days, ...]) | One row per question, newest first, for the page and the attention store.     |
-| [`scan`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.scan)(homes, \*, now[, keep_days, cache_dir])       | Every recent transcript of every home, read (from the cache where it can be). |
+| [`candidates`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.candidates)(row, sessions, \*[, limit])             | Where an answer to `row` may have been given, within `ELSEWHERE_SECONDS` after it was asked, earliest first:   |
+|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| [`dflt_cache_dir`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.dflt_cache_dir)()                                   | `<data dir>/questions/files`: one JSON file per transcript read.                                               |
+| [`question_rows`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.question_rows)(sessions, \*, now[, keep_days, ...]) | One row per question, newest first, for the page and the attention store.                                      |
+| [`scan`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.scan)(homes, \*, now[, keep_days, cache_dir])       | Every recent transcript of every home, read (from the cache where it can be).                                  |
 
 ### crowsnest.questions.ANSWERED *= 'answered'*
 
@@ -4263,6 +4305,10 @@ The same turn’s final words exist and the turn is over.
 ### crowsnest.questions.DFLT_KEEP_DAYS *= 14*
 
 How long a question stays on the page after it was asked.
+
+### crowsnest.questions.ELSEWHERE *= 'elsewhere'*
+
+The state of a question answered in a later turn or another session.
 
 ### crowsnest.questions.ITEM_KIND *= 'question'*
 
@@ -4281,13 +4327,29 @@ never flagged, never counted.
 * **Type:**
   The turn is still running
 
-### crowsnest.questions.STATES *= ('unanswered', 'partly', 'answered', 'pending')*
+### crowsnest.questions.STATES *= ('unanswered', 'partly', 'answered', 'pending', 'elsewhere')*
 
 Every state a row can be in, in the order the register sorts them.
 
 ### crowsnest.questions.UNANSWERED *= 'unanswered'*
 
 The turn ended without words, or the next prompt came first.
+
+### crowsnest.questions.candidates(row, sessions, , limit=3)
+
+Where an answer to `row` may have been given, within `ELSEWHERE_SECONDS`
+after it was asked, earliest first:
+
+- a later turn of the same session that another session or the tooling started (a
+  relay coming back, a notification the session answered);
+- a turn of another session whose prompt quotes `SPAN_WORDS` words of the
+  question verbatim (it was relayed there).
+
+Only a turn that said something is a candidate. Returns `session`, `title`,
+`home`, `uuid`, `asked_at`, `reply`, `replied_at`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### crowsnest.questions.dflt_cache_dir()
 
@@ -4296,7 +4358,7 @@ The turn ended without words, or the next prompt came first.
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### crowsnest.questions.question_rows(sessions, , now, keep_days=14, live=None, spawned=(), answer_hash=None, gist=None)
+### crowsnest.questions.question_rows(sessions, , now, keep_days=14, live=None, spawned=(), answer_hash=None, gist=None, pair=None)
 
 One row per question, newest first, for the page and the attention store.
 
@@ -4312,6 +4374,11 @@ A row carries `item_kind` ([`ITEM_KIND`](_autosummary/crowsnest.questions.html.m
 `{"group": "question", "why": state}`, which a mark records as what it saw. With a
 gist it also carries `q_gist`, `a_gist`, and `unsure` for a sentence the model
 did not take for a question (or was not sure of).
+
+`pair` is `(row, candidates) -> {"match": i, "a": ..., "state": ...}`, the model’s
+confirmation of an answer given elsewhere ([`candidates()`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.candidates)). A question the turn
+left `unanswered` or `partly` answered, and that it pairs, becomes
+[`ELSEWHERE`](_autosummary/crowsnest.questions.html.md#crowsnest.questions.ELSEWHERE), with `answered_by` naming where.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
@@ -6614,16 +6681,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-26 08:06 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/da042a123cc88b904ba784a6c1b47095ea7e241b"><code>da042a1</code></a> on branch <code>main</code>, for **crowsnest 0.0.77** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-26 08:11 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/cf5e4b8526bc5ca5718e9fa197c239a8d2f8f088"><code>cf5e4b8</code></a> on branch <code>main</code>, for **crowsnest 0.0.78** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.78) is behind the latest release on PyPI (0.0.79): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/da042a123cc88b904ba784a6c1b47095ea7e241b"><code>da042a123cc88b904ba784a6c1b47095ea7e241b</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/cf5e4b8526bc5ca5718e9fa197c239a8d2f8f088"><code>cf5e4b8526bc5ca5718e9fa197c239a8d2f8f088</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6634,9 +6703,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36228687864">36228687864</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36228946590">36228946590</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>da042a123cc88b904ba784a6c1b47095ea7e241b</code> (in the history of the built commit) |
+| Event commit | <code>cf5e4b8526bc5ca5718e9fa197c239a8d2f8f088</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6661,13 +6730,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.77/">0.0.77</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.79/">0.0.79</a>, newer than the documented version (0.0.78).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout da042a123cc88b904ba784a6c1b47095ea7e241b
+git checkout cf5e4b8526bc5ca5718e9fa197c239a8d2f8f088
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

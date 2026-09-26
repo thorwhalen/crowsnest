@@ -113,11 +113,13 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#crowsnest.questions.ANSWERED"><code class="docutils literal notranslate"><span class="pre">ANSWERED</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.DFLT_KEEP_DAYS"><code class="docutils literal notranslate"><span class="pre">DFLT_KEEP_DAYS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.questions.ELSEWHERE"><code class="docutils literal notranslate"><span class="pre">ELSEWHERE</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.ITEM_KIND"><code class="docutils literal notranslate"><span class="pre">ITEM_KIND</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.PARTLY"><code class="docutils literal notranslate"><span class="pre">PARTLY</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.PENDING"><code class="docutils literal notranslate"><span class="pre">PENDING</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.STATES"><code class="docutils literal notranslate"><span class="pre">STATES</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.UNANSWERED"><code class="docutils literal notranslate"><span class="pre">UNANSWERED</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.questions.candidates"><code class="docutils literal notranslate"><span class="pre">candidates()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.dflt_cache_dir"><code class="docutils literal notranslate"><span class="pre">dflt_cache_dir()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.question_rows"><code class="docutils literal notranslate"><span class="pre">question_rows()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.questions.scan"><code class="docutils literal notranslate"><span class="pre">scan()</span></code></a></li>
@@ -204,6 +206,9 @@ revision, never the text.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.questions.DFLT_KEEP_DAYS" title="crowsnest.questions.DFLT_KEEP_DAYS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_KEEP_DAYS</span></code></a></p></td>
 <td><p>How long a question stays on the page after it was asked.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.questions.ELSEWHERE" title="crowsnest.questions.ELSEWHERE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELSEWHERE</span></code></a></p></td>
+<td><p>The state of a question answered in a later turn or another session.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -211,13 +216,16 @@ revision, never the text.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.questions.dflt_cache_dir" title="crowsnest.questions.dflt_cache_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_cache_dir</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.questions.candidates" title="crowsnest.questions.candidates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">candidates</span></code></a>(row, sessions, *[, limit])</p></td>
+<td><p>Where an answer to <code class="docutils literal notranslate"><span class="pre">row</span></code> may have been given, within <code class="xref py py-data docutils literal notranslate"><span class="pre">ELSEWHERE_SECONDS</span></code> after it was asked, earliest first:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.questions.dflt_cache_dir" title="crowsnest.questions.dflt_cache_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_cache_dir</span></code></a>()</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/questions/files</span></code>: one JSON file per transcript read.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.questions.question_rows" title="crowsnest.questions.question_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">question_rows</span></code></a>(sessions, *, now[, keep_days, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.questions.question_rows" title="crowsnest.questions.question_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">question_rows</span></code></a>(sessions, *, now[, keep_days, ...])</p></td>
 <td><p>One row per question, newest first, for the page and the attention store.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.questions.scan" title="crowsnest.questions.scan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scan</span></code></a>(homes, *, now[, keep_days, cache_dir])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.questions.scan" title="crowsnest.questions.scan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scan</span></code></a>(homes, *, now[, keep_days, cache_dir])</p></td>
 <td><p>Every recent transcript of every home, read (from the cache where it can be).</p></td>
 </tr>
 </tbody>
@@ -233,6 +241,12 @@ revision, never the text.</p>
 <dt class="sig sig-object py" id="crowsnest.questions.DFLT_KEEP_DAYS">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.questions.</span></span><span class="sig-name descname"><span class="pre">DFLT_KEEP_DAYS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">14</span></span><a class="headerlink" href="#crowsnest.questions.DFLT_KEEP_DAYS" title="Link to this definition">#</a></dt>
 <dd><p>How long a question stays on the page after it was asked.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.questions.ELSEWHERE">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.questions.</span></span><span class="sig-name descname"><span class="pre">ELSEWHERE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'elsewhere'</span></span><a class="headerlink" href="#crowsnest.questions.ELSEWHERE" title="Link to this definition">#</a></dt>
+<dd><p>The state of a question answered in a later turn or another session.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -262,7 +276,7 @@ for the session’s kind.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.questions.STATES">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.questions.</span></span><span class="sig-name descname"><span class="pre">STATES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('unanswered',</span> <span class="pre">'partly',</span> <span class="pre">'answered',</span> <span class="pre">'pending')</span></span><a class="headerlink" href="#crowsnest.questions.STATES" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.questions.</span></span><span class="sig-name descname"><span class="pre">STATES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('unanswered',</span> <span class="pre">'partly',</span> <span class="pre">'answered',</span> <span class="pre">'pending',</span> <span class="pre">'elsewhere')</span></span><a class="headerlink" href="#crowsnest.questions.STATES" title="Link to this definition">#</a></dt>
 <dd><p>Every state a row can be in, in the order the register sorts them.</p>
 </dd></dl>
 
@@ -270,6 +284,26 @@ for the session’s kind.</p>
 <dt class="sig sig-object py" id="crowsnest.questions.UNANSWERED">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.questions.</span></span><span class="sig-name descname"><span class="pre">UNANSWERED</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'unanswered'</span></span><a class="headerlink" href="#crowsnest.questions.UNANSWERED" title="Link to this definition">#</a></dt>
 <dd><p>The turn ended without words, or the next prompt came first.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.questions.candidates">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.questions.</span></span><span class="sig-name descname"><span class="pre">candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sessions</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/questions.html#candidates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.questions.candidates" title="Link to this definition">#</a></dt>
+<dd><p>Where an answer to <code class="docutils literal notranslate"><span class="pre">row</span></code> may have been given, within <code class="xref py py-data docutils literal notranslate"><span class="pre">ELSEWHERE_SECONDS</span></code>
+after it was asked, earliest first:</p>
+<ul class="simple">
+<li><p>a later turn of the same session that another session or the tooling started (a
+relay coming back, a notification the session answered);</p></li>
+<li><p>a turn of another session whose prompt quotes <code class="xref py py-data docutils literal notranslate"><span class="pre">SPAN_WORDS</span></code> words of the
+question verbatim (it was relayed there).</p></li>
+</ul>
+<p>Only a turn that said something is a candidate. Returns <code class="docutils literal notranslate"><span class="pre">session</span></code>, <code class="docutils literal notranslate"><span class="pre">title</span></code>,
+<code class="docutils literal notranslate"><span class="pre">home</span></code>, <code class="docutils literal notranslate"><span class="pre">uuid</span></code>, <code class="docutils literal notranslate"><span class="pre">asked_at</span></code>, <code class="docutils literal notranslate"><span class="pre">reply</span></code>, <code class="docutils literal notranslate"><span class="pre">replied_at</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -285,7 +319,7 @@ for the session’s kind.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.questions.question_rows">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.questions.</span></span><span class="sig-name descname"><span class="pre">question_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sessions</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">live</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answer_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/questions.html#question_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.questions.question_rows" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.questions.</span></span><span class="sig-name descname"><span class="pre">question_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sessions</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">live</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answer_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/questions.html#question_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.questions.question_rows" title="Link to this definition">#</a></dt>
 <dd><p>One row per question, newest first, for the page and the attention store.</p>
 <p><code class="docutils literal notranslate"><span class="pre">sessions</span></code> is what <a class="reference internal" href="#crowsnest.questions.scan" title="crowsnest.questions.scan"><code class="xref py py-func docutils literal notranslate"><span class="pre">scan()</span></code></a> returns. <code class="docutils literal notranslate"><span class="pre">live</span></code> maps a session id to its roster
 row, for its name, its link and whether a turn is running now. <code class="docutils literal notranslate"><span class="pre">spawned</span></code> holds the
@@ -298,6 +332,10 @@ reading of a message (<a class="reference internal" href="crowsnest.gists.html#m
 <code class="docutils literal notranslate"><span class="pre">{&quot;group&quot;:</span> <span class="pre">&quot;question&quot;,</span> <span class="pre">&quot;why&quot;:</span> <span class="pre">state}</span></code>, which a mark records as what it saw. With a
 gist it also carries <code class="docutils literal notranslate"><span class="pre">q_gist</span></code>, <code class="docutils literal notranslate"><span class="pre">a_gist</span></code>, and <code class="docutils literal notranslate"><span class="pre">unsure</span></code> for a sentence the model
 did not take for a question (or was not sure of).</p>
+<p><code class="docutils literal notranslate"><span class="pre">pair</span></code> is <code class="docutils literal notranslate"><span class="pre">(row,</span> <span class="pre">candidates)</span> <span class="pre">-&gt;</span> <span class="pre">{&quot;match&quot;:</span> <span class="pre">i,</span> <span class="pre">&quot;a&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;state&quot;:</span> <span class="pre">...}</span></code>, the model’s
+confirmation of an answer given elsewhere (<a class="reference internal" href="#crowsnest.questions.candidates" title="crowsnest.questions.candidates"><code class="xref py py-func docutils literal notranslate"><span class="pre">candidates()</span></code></a>). A question the turn
+left <code class="docutils literal notranslate"><span class="pre">unanswered</span></code> or <code class="docutils literal notranslate"><span class="pre">partly</span></code> answered, and that it pairs, becomes
+<a class="reference internal" href="#crowsnest.questions.ELSEWHERE" title="crowsnest.questions.ELSEWHERE"><code class="xref py py-data docutils literal notranslate"><span class="pre">ELSEWHERE</span></code></a>, with <code class="docutils literal notranslate"><span class="pre">answered_by</span></code> naming where.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
@@ -361,7 +399,7 @@ document per session that asked anything: <code class="docutils literal notransl
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=e264953e"></script>
+      <script src="../_static/documentation_options.js?v=0a7e36fc"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

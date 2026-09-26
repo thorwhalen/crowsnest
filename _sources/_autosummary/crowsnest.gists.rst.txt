@@ -18,7 +18,11 @@ crowsnest.gists
       brief_of
       dflt_store
       kept
+      kept_pair
       key_of
+      pair_key
+      pairing
       refresh
+      refresh_pairs
       revision_of
    

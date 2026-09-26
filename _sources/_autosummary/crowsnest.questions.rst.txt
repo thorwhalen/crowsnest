@@ -15,11 +15,13 @@ crowsnest.questions
       PARTLY
       STATES
       DFLT_KEEP_DAYS
+      ELSEWHERE
    
    .. rubric:: Functions
 
    .. autosummary::
    
+      candidates
       dflt_cache_dir
       question_rows
       scan

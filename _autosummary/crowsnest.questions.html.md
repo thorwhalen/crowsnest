@@ -31,13 +31,15 @@ revision, never the text.
 | [`PARTLY`](#crowsnest.questions.PARTLY)         | The reply answers it in part, or defers it (the model's reading, [`crowsnest.gists`](crowsnest.gists.html.md#module-crowsnest.gists)).                                      |
 | [`STATES`](#crowsnest.questions.STATES)         | Every state a row can be in, in the order the register sorts them.                                                                                                                              |
 | [`DFLT_KEEP_DAYS`](#crowsnest.questions.DFLT_KEEP_DAYS) | How long a question stays on the page after it was asked.                                                                                                                                       |
+| [`ELSEWHERE`](#crowsnest.questions.ELSEWHERE)      | The state of a question answered in a later turn or another session.                                                                                                                            |
 
 ### Functions
 
-| [`dflt_cache_dir`](#crowsnest.questions.dflt_cache_dir)()                                   | `<data dir>/questions/files`: one JSON file per transcript read.              |
-|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`question_rows`](#crowsnest.questions.question_rows)(sessions, \*, now[, keep_days, ...]) | One row per question, newest first, for the page and the attention store.     |
-| [`scan`](#crowsnest.questions.scan)(homes, \*, now[, keep_days, cache_dir])       | Every recent transcript of every home, read (from the cache where it can be). |
+| [`candidates`](#crowsnest.questions.candidates)(row, sessions, \*[, limit])             | Where an answer to `row` may have been given, within `ELSEWHERE_SECONDS` after it was asked, earliest first:   |
+|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| [`dflt_cache_dir`](#crowsnest.questions.dflt_cache_dir)()                                   | `<data dir>/questions/files`: one JSON file per transcript read.                                               |
+| [`question_rows`](#crowsnest.questions.question_rows)(sessions, \*, now[, keep_days, ...]) | One row per question, newest first, for the page and the attention store.                                      |
+| [`scan`](#crowsnest.questions.scan)(homes, \*, now[, keep_days, cache_dir])       | Every recent transcript of every home, read (from the cache where it can be).                                  |
 
 ### crowsnest.questions.ANSWERED *= 'answered'*
 
@@ -46,6 +48,10 @@ The same turn’s final words exist and the turn is over.
 ### crowsnest.questions.DFLT_KEEP_DAYS *= 14*
 
 How long a question stays on the page after it was asked.
+
+### crowsnest.questions.ELSEWHERE *= 'elsewhere'*
+
+The state of a question answered in a later turn or another session.
 
 ### crowsnest.questions.ITEM_KIND *= 'question'*
 
@@ -64,13 +70,29 @@ never flagged, never counted.
 * **Type:**
   The turn is still running
 
-### crowsnest.questions.STATES *= ('unanswered', 'partly', 'answered', 'pending')*
+### crowsnest.questions.STATES *= ('unanswered', 'partly', 'answered', 'pending', 'elsewhere')*
 
 Every state a row can be in, in the order the register sorts them.
 
 ### crowsnest.questions.UNANSWERED *= 'unanswered'*
 
 The turn ended without words, or the next prompt came first.
+
+### crowsnest.questions.candidates(row, sessions, , limit=3)
+
+Where an answer to `row` may have been given, within `ELSEWHERE_SECONDS`
+after it was asked, earliest first:
+
+- a later turn of the same session that another session or the tooling started (a
+  relay coming back, a notification the session answered);
+- a turn of another session whose prompt quotes `SPAN_WORDS` words of the
+  question verbatim (it was relayed there).
+
+Only a turn that said something is a candidate. Returns `session`, `title`,
+`home`, `uuid`, `asked_at`, `reply`, `replied_at`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### crowsnest.questions.dflt_cache_dir()
 
@@ -79,7 +101,7 @@ The turn ended without words, or the next prompt came first.
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### crowsnest.questions.question_rows(sessions, , now, keep_days=14, live=None, spawned=(), answer_hash=None, gist=None)
+### crowsnest.questions.question_rows(sessions, , now, keep_days=14, live=None, spawned=(), answer_hash=None, gist=None, pair=None)
 
 One row per question, newest first, for the page and the attention store.
 
@@ -95,6 +117,11 @@ A row carries `item_kind` ([`ITEM_KIND`](#crowsnest.questions.ITEM_KIND)), `sess
 `{"group": "question", "why": state}`, which a mark records as what it saw. With a
 gist it also carries `q_gist`, `a_gist`, and `unsure` for a sentence the model
 did not take for a question (or was not sure of).
+
+`pair` is `(row, candidates) -> {"match": i, "a": ..., "state": ...}`, the model’s
+confirmation of an answer given elsewhere ([`candidates()`](#crowsnest.questions.candidates)). A question the turn
+left `unanswered` or `partly` answered, and that it pairs, becomes
+[`ELSEWHERE`](#crowsnest.questions.ELSEWHERE), with `answered_by` naming where.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]

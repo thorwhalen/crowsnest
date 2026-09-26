@@ -174,222 +174,375 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="31">    <span class="s2">"DFLT_LIMIT"</span><span class="p">,</span>
 </span><span data-line="32">    <span class="s2">"MAX_ANSWER_WORDS"</span><span class="p">,</span>
 </span><span data-line="33">    <span class="s2">"MAX_QUESTION_WORDS"</span><span class="p">,</span>
-</span><span data-line="34">    <span class="s2">"PROMPT"</span><span class="p">,</span>
-</span><span data-line="35">    <span class="s2">"brief_of"</span><span class="p">,</span>
-</span><span data-line="36">    <span class="s2">"dflt_store"</span><span class="p">,</span>
-</span><span data-line="37">    <span class="s2">"kept"</span><span class="p">,</span>
-</span><span data-line="38">    <span class="s2">"key_of"</span><span class="p">,</span>
-</span><span data-line="39">    <span class="s2">"refresh"</span><span class="p">,</span>
-</span><span data-line="40">    <span class="s2">"revision_of"</span><span class="p">,</span>
-</span><span data-line="41"><span class="p">]</span>
-</span><span data-line="42">
-</span><span data-line="43"><span class="c1">#: How many messages one refresh asks about: the rest wait for the next publish.</span>
-</span><span data-line="44"><span class="n">DFLT_LIMIT</span> <span class="o">=</span> <span class="mi">4</span>
-</span><span data-line="45">
-</span><span data-line="46"><span class="c1">#: A question gist's and an answer gist's longest.</span>
-</span><span data-line="47"><span class="n">MAX_QUESTION_WORDS</span> <span class="o">=</span> <span class="mi">12</span>
-</span><span data-line="48"><span class="n">MAX_ANSWER_WORDS</span> <span class="o">=</span> <span class="mi">14</span>
-</span><span data-line="49">
-</span><span data-line="50"><span class="c1">#: How much of a message and a reply the model is shown. The answer to a question is</span>
-</span><span data-line="51"><span class="c1">#: almost always in a reply's opening; a longer brief only makes each call slower.</span>
-</span><span data-line="52"><span class="n">MESSAGE_LIMIT</span> <span class="o">=</span> <span class="mi">3000</span>
-</span><span data-line="53"><span class="n">REPLY_LIMIT</span> <span class="o">=</span> <span class="mi">4000</span>
+</span><span data-line="34">    <span class="s2">"PAIR_PROMPT"</span><span class="p">,</span>
+</span><span data-line="35">    <span class="s2">"PROMPT"</span><span class="p">,</span>
+</span><span data-line="36">    <span class="s2">"brief_of"</span><span class="p">,</span>
+</span><span data-line="37">    <span class="s2">"dflt_store"</span><span class="p">,</span>
+</span><span data-line="38">    <span class="s2">"kept"</span><span class="p">,</span>
+</span><span data-line="39">    <span class="s2">"kept_pair"</span><span class="p">,</span>
+</span><span data-line="40">    <span class="s2">"key_of"</span><span class="p">,</span>
+</span><span data-line="41">    <span class="s2">"pair_key"</span><span class="p">,</span>
+</span><span data-line="42">    <span class="s2">"pairing"</span><span class="p">,</span>
+</span><span data-line="43">    <span class="s2">"refresh"</span><span class="p">,</span>
+</span><span data-line="44">    <span class="s2">"refresh_pairs"</span><span class="p">,</span>
+</span><span data-line="45">    <span class="s2">"revision_of"</span><span class="p">,</span>
+</span><span data-line="46"><span class="p">]</span>
+</span><span data-line="47">
+</span><span data-line="48"><span class="c1">#: How many messages one refresh asks about: the rest wait for the next publish.</span>
+</span><span data-line="49"><span class="n">DFLT_LIMIT</span> <span class="o">=</span> <span class="mi">4</span>
+</span><span data-line="50">
+</span><span data-line="51"><span class="c1">#: A question gist's and an answer gist's longest.</span>
+</span><span data-line="52"><span class="n">MAX_QUESTION_WORDS</span> <span class="o">=</span> <span class="mi">12</span>
+</span><span data-line="53"><span class="n">MAX_ANSWER_WORDS</span> <span class="o">=</span> <span class="mi">14</span>
 </span><span data-line="54">
-</span><span data-line="55"><span class="c1">#: How many calls run at once. Each takes tens of seconds, and a publish runs every</span>
-</span><span data-line="56"><span class="c1">#: minute: in turn, four would hold the page (and the courier behind it) for minutes.</span>
-</span><span data-line="57"><span class="n">DFLT_WORKERS</span> <span class="o">=</span> <span class="mi">4</span>
-</span><span data-line="58">
-</span><span data-line="59"><span class="c1">#: How long one call may take.</span>
-</span><span data-line="60"><span class="n">DFLT_TIMEOUT</span> <span class="o">=</span> <span class="mi">120</span>
-</span><span data-line="61">
-</span><span data-line="62"><span class="c1">#: The states the model may give an answer.</span>
-</span><span data-line="63"><span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"answered"</span><span class="p">,</span> <span class="s2">"partly"</span><span class="p">,</span> <span class="s2">"unanswered"</span><span class="p">)</span>
-</span><span data-line="64">
-</span><span data-line="65"><span class="n">PROMPT</span> <span class="o">=</span> <span class="s2">"""You read one message a person typed to an AI coding session and the reply the</span>
-</span><span data-line="66"><span class="s2">session gave, and list the QUESTIONS the person asked, each with the answer. Answer with</span>
-</span><span data-line="67"><span class="s2">JSON only, no prose, exactly:</span>
-</span><span data-line="68"><span class="s2">{"questions": [{"source": "...", "q": "...", "a": "...", "state": "answered", "sure": true}]}</span>
+</span><span data-line="55"><span class="c1">#: How much of a message and a reply the model is shown. The answer to a question is</span>
+</span><span data-line="56"><span class="c1">#: almost always in a reply's opening; a longer brief only makes each call slower.</span>
+</span><span data-line="57"><span class="n">MESSAGE_LIMIT</span> <span class="o">=</span> <span class="mi">3000</span>
+</span><span data-line="58"><span class="n">REPLY_LIMIT</span> <span class="o">=</span> <span class="mi">4000</span>
+</span><span data-line="59">
+</span><span data-line="60"><span class="c1">#: How many calls run at once. Each takes tens of seconds, and a publish runs every</span>
+</span><span data-line="61"><span class="c1">#: minute: in turn, four would hold the page (and the courier behind it) for minutes.</span>
+</span><span data-line="62"><span class="n">DFLT_WORKERS</span> <span class="o">=</span> <span class="mi">4</span>
+</span><span data-line="63">
+</span><span data-line="64"><span class="c1">#: How long one call may take.</span>
+</span><span data-line="65"><span class="n">DFLT_TIMEOUT</span> <span class="o">=</span> <span class="mi">120</span>
+</span><span data-line="66">
+</span><span data-line="67"><span class="c1">#: The states the model may give an answer.</span>
+</span><span data-line="68"><span class="n">STATES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"answered"</span><span class="p">,</span> <span class="s2">"partly"</span><span class="p">,</span> <span class="s2">"unanswered"</span><span class="p">)</span>
 </span><span data-line="69">
-</span><span data-line="70"><span class="s2">Rules:</span>
-</span><span data-line="71"><span class="s2">- A question asks for information or an opinion. NOT a question: a request phrased as one</span>
-</span><span data-line="72"><span class="s2">  ("can you fix X?", "could you add a test?"), a tag ("right?", "ok?"), a rhetorical one,</span>
-</span><span data-line="73"><span class="s2">  one the person answers in the same message, anything inside pasted or quoted text.</span>
-</span><span data-line="74"><span class="s2">- "candidates" are sentences a heuristic flagged. For each question you list, "source" is</span>
-</span><span data-line="75"><span class="s2">  the candidate's exact text when it is one, else the sentence copied exactly from the</span>
-</span><span data-line="76"><span class="s2">  message. Leave a candidate out if it is not a question.</span>
-</span><span data-line="77"><span class="s2">- "q": the question in at most 12 words, in the person's words, first person kept, lead-ins</span>
-</span><span data-line="78"><span class="s2">  ("also", "btw") dropped. End with "?" only if they typed one.</span>
-</span><span data-line="79"><span class="s2">- "a": the answer the reply gives, in at most 14 words, stating it ("Yes: the hook fires</span>
-</span><span data-line="80"><span class="s2">  once per tick"), never that an answer was given. A yes/no question starts "Yes", "No" or</span>
-</span><span data-line="81"><span class="s2">  "Depends". Every noun must appear in the reply. No hedges, no session names.</span>
-</span><span data-line="82"><span class="s2">- "state": "answered" if the reply answers it, "partly" if in part or deferred,</span>
-</span><span data-line="83"><span class="s2">  "unanswered" if the reply does not address it (then "a" is "").</span>
-</span><span data-line="84"><span class="s2">- "sure": false when you are unsure it is a question, or unsure the reply answers it.</span>
-</span><span data-line="85"><span class="s2">If the message asks nothing, answer {"questions": []}.</span>
-</span><span data-line="86">
-</span><span data-line="87"><span class="s2">The message, its candidates and the reply, as JSON:</span>
-</span><span data-line="88"><span class="s2">"""</span>
-</span><span data-line="89">
-</span><span data-line="90"><span class="n">_NAMESPACE</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="s2">"5f0c8c9e-4b8e-4f7e-9d4a-1f7a0c29b6d1"</span><span class="p">)</span>
+</span><span data-line="70"><span class="n">PROMPT</span> <span class="o">=</span> <span class="s2">"""You read one message a person typed to an AI coding session and the reply the</span>
+</span><span data-line="71"><span class="s2">session gave, and list the QUESTIONS the person asked, each with the answer. Answer with</span>
+</span><span data-line="72"><span class="s2">JSON only, no prose, exactly:</span>
+</span><span data-line="73"><span class="s2">{"questions": [{"source": "...", "q": "...", "a": "...", "state": "answered", "sure": true}]}</span>
+</span><span data-line="74">
+</span><span data-line="75"><span class="s2">Rules:</span>
+</span><span data-line="76"><span class="s2">- A question asks for information or an opinion. NOT a question: a request phrased as one</span>
+</span><span data-line="77"><span class="s2">  ("can you fix X?", "could you add a test?"), a tag ("right?", "ok?"), a rhetorical one,</span>
+</span><span data-line="78"><span class="s2">  one the person answers in the same message, anything inside pasted or quoted text.</span>
+</span><span data-line="79"><span class="s2">- "candidates" are sentences a heuristic flagged. For each question you list, "source" is</span>
+</span><span data-line="80"><span class="s2">  the candidate's exact text when it is one, else the sentence copied exactly from the</span>
+</span><span data-line="81"><span class="s2">  message. Leave a candidate out if it is not a question.</span>
+</span><span data-line="82"><span class="s2">- "q": the question in at most 12 words, in the person's words, first person kept, lead-ins</span>
+</span><span data-line="83"><span class="s2">  ("also", "btw") dropped. End with "?" only if they typed one.</span>
+</span><span data-line="84"><span class="s2">- "a": the answer the reply gives, in at most 14 words, stating it ("Yes: the hook fires</span>
+</span><span data-line="85"><span class="s2">  once per tick"), never that an answer was given. A yes/no question starts "Yes", "No" or</span>
+</span><span data-line="86"><span class="s2">  "Depends". Every noun must appear in the reply. No hedges, no session names.</span>
+</span><span data-line="87"><span class="s2">- "state": "answered" if the reply answers it, "partly" if in part or deferred,</span>
+</span><span data-line="88"><span class="s2">  "unanswered" if the reply does not address it (then "a" is "").</span>
+</span><span data-line="89"><span class="s2">- "sure": false when you are unsure it is a question, or unsure the reply answers it.</span>
+</span><span data-line="90"><span class="s2">If the message asks nothing, answer {"questions": []}.</span>
 </span><span data-line="91">
-</span><span data-line="92">
+</span><span data-line="92"><span class="s2">The message, its candidates and the reply, as JSON:</span>
+</span><span data-line="93"><span class="s2">"""</span>
+</span><span data-line="94">
+</span><span data-line="95"><span class="n">_NAMESPACE</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="s2">"5f0c8c9e-4b8e-4f7e-9d4a-1f7a0c29b6d1"</span><span class="p">)</span>
+</span><span data-line="96">
+</span><span data-line="97">
 <div class="viewcode-block" id="dflt_store">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.dflt_store">[docs]</a>
-</span><span data-line="93"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_store</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
-</span><span data-line="94"><span class="w">    </span><span class="sd">"""One JSON file per message under ``root`` (default ``&lt;data dir&gt;/questions/gists``)."""</span>
-</span><span data-line="95">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">_DirStore</span>
-</span><span data-line="96">
-</span><span data-line="97">    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="98">        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
-</span><span data-line="99">
-</span><span data-line="100">        <span class="n">root</span> <span class="o">=</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"questions"</span> <span class="o">/</span> <span class="s2">"gists"</span>
-</span><span data-line="101">    <span class="k">return</span> <span class="n">_DirStore</span><span class="p">(</span><span class="n">root</span><span class="p">)</span></div>
-
-</span><span data-line="102">
-</span><span data-line="103">
-<div class="viewcode-block" id="key_of">
-<a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.key_of">[docs]</a>
-</span><span data-line="104"><span class="k">def</span><span class="w"> </span><span class="nf">key_of</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prompt_uuid</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="105"><span class="w">    </span><span class="sd">"""The store key of one message: a uuid, so it is a safe file name."""</span>
-</span><span data-line="106">    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid5</span><span class="p">(</span><span class="n">_NAMESPACE</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">prompt_uuid</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span></div>
+</span><span data-line="98"><span class="k">def</span><span class="w"> </span><span class="nf">dflt_store</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="99"><span class="w">    </span><span class="sd">"""One JSON file per message under ``root`` (default ``&lt;data dir&gt;/questions/gists``)."""</span>
+</span><span data-line="100">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">_DirStore</span>
+</span><span data-line="101">
+</span><span data-line="102">    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="103">        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
+</span><span data-line="104">
+</span><span data-line="105">        <span class="n">root</span> <span class="o">=</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"questions"</span> <span class="o">/</span> <span class="s2">"gists"</span>
+</span><span data-line="106">    <span class="k">return</span> <span class="n">_DirStore</span><span class="p">(</span><span class="n">root</span><span class="p">)</span></div>
 
 </span><span data-line="107">
 </span><span data-line="108">
+<div class="viewcode-block" id="key_of">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.key_of">[docs]</a>
+</span><span data-line="109"><span class="k">def</span><span class="w"> </span><span class="nf">key_of</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prompt_uuid</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="110"><span class="w">    </span><span class="sd">"""The store key of one message: a uuid, so it is a safe file name."""</span>
+</span><span data-line="111">    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid5</span><span class="p">(</span><span class="n">_NAMESPACE</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">prompt_uuid</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span></div>
+
+</span><span data-line="112">
+</span><span data-line="113">
 <div class="viewcode-block" id="revision_of">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.revision_of">[docs]</a>
-</span><span data-line="109"><span class="k">def</span><span class="w"> </span><span class="nf">revision_of</span><span class="p">(</span><span class="n">exchange</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="110"><span class="w">    </span><span class="sd">"""What a gist was made from: the questions found and the reply. A new reply (the turn</span>
-</span><span data-line="111"><span class="sd">    ended, or a later one carried) makes the stored gist stale."""</span>
-</span><span data-line="112">    <span class="n">material</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
-</span><span data-line="113">        <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()),</span> <span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)],</span>
-</span><span data-line="114">        <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span data-line="115">    <span class="p">)</span>
-</span><span data-line="116">    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">material</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">16</span><span class="p">]</span></div>
+</span><span data-line="114"><span class="k">def</span><span class="w"> </span><span class="nf">revision_of</span><span class="p">(</span><span class="n">exchange</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="115"><span class="w">    </span><span class="sd">"""What a gist was made from: the questions found and the reply. A new reply (the turn</span>
+</span><span data-line="116"><span class="sd">    ended, or a later one carried) makes the stored gist stale."""</span>
+</span><span data-line="117">    <span class="n">material</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+</span><span data-line="118">        <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()),</span> <span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)],</span>
+</span><span data-line="119">        <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="120">    <span class="p">)</span>
+</span><span data-line="121">    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">material</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">16</span><span class="p">]</span></div>
 
-</span><span data-line="117">
-</span><span data-line="118">
+</span><span data-line="122">
+</span><span data-line="123">
 <div class="viewcode-block" id="brief_of">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.brief_of">[docs]</a>
-</span><span data-line="119"><span class="k">def</span><span class="w"> </span><span class="nf">brief_of</span><span class="p">(</span><span class="n">exchange</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="120"><span class="w">    </span><span class="sd">"""What the model is shown: the message and the reply, sanitised and clipped, and the</span>
-</span><span data-line="121"><span class="sd">    sentences the heuristics flagged."""</span>
-</span><span data-line="122">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.live</span><span class="w"> </span><span class="kn">import</span> <span class="n">publishable</span>
-</span><span data-line="123">
-</span><span data-line="124">    <span class="k">def</span><span class="w"> </span><span class="nf">clean</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
-</span><span data-line="125">        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span><span data-line="126">            <span class="n">publishable</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-</span><span data-line="127">        <span class="p">)[:</span><span class="n">limit</span><span class="p">]</span>
+</span><span data-line="124"><span class="k">def</span><span class="w"> </span><span class="nf">brief_of</span><span class="p">(</span><span class="n">exchange</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="125"><span class="w">    </span><span class="sd">"""What the model is shown: the message and the reply, sanitised and clipped, and the</span>
+</span><span data-line="126"><span class="sd">    sentences the heuristics flagged."""</span>
+</span><span data-line="127">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.live</span><span class="w"> </span><span class="kn">import</span> <span class="n">publishable</span>
 </span><span data-line="128">
-</span><span data-line="129">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="130">        <span class="s2">"message"</span><span class="p">:</span> <span class="n">clean</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prompt"</span><span class="p">),</span> <span class="n">MESSAGE_LIMIT</span><span class="p">),</span>
-</span><span data-line="131">        <span class="s2">"candidates"</span><span class="p">:</span> <span class="p">[</span><span class="n">publishable</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()],</span>
-</span><span data-line="132">        <span class="s2">"reply"</span><span class="p">:</span> <span class="n">clean</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">),</span> <span class="n">REPLY_LIMIT</span><span class="p">),</span>
-</span><span data-line="133">    <span class="p">}</span></div>
+</span><span data-line="129">    <span class="k">def</span><span class="w"> </span><span class="nf">clean</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
+</span><span data-line="130">        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span data-line="131">            <span class="n">publishable</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+</span><span data-line="132">        <span class="p">)[:</span><span class="n">limit</span><span class="p">]</span>
+</span><span data-line="133">
+</span><span data-line="134">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="135">        <span class="s2">"message"</span><span class="p">:</span> <span class="n">clean</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prompt"</span><span class="p">),</span> <span class="n">MESSAGE_LIMIT</span><span class="p">),</span>
+</span><span data-line="136">        <span class="s2">"candidates"</span><span class="p">:</span> <span class="p">[</span><span class="n">publishable</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()],</span>
+</span><span data-line="137">        <span class="s2">"reply"</span><span class="p">:</span> <span class="n">clean</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">),</span> <span class="n">REPLY_LIMIT</span><span class="p">),</span>
+</span><span data-line="138">    <span class="p">}</span></div>
 
-</span><span data-line="134">
-</span><span data-line="135">
-</span><span data-line="136"><span class="k">def</span><span class="w"> </span><span class="nf">_words</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="137">    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-</span><span data-line="138">
 </span><span data-line="139">
+</span><span data-line="140">
+</span><span data-line="141"><span class="k">def</span><span class="w"> </span><span class="nf">_words</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="142">    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</span><span data-line="143">
+</span><span data-line="144">
 <div class="viewcode-block" id="kept">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.kept">[docs]</a>
-</span><span data-line="140"><span class="k">def</span><span class="w"> </span><span class="nf">kept</span><span class="p">(</span><span class="n">answer</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-</span><span data-line="141"><span class="w">    </span><span class="sd">"""The model's questions that keep to the rules: a gist within its length, a known</span>
-</span><span data-line="142"><span class="sd">    state, and an answer only when there is one. Anything else is dropped, not trusted.</span>
-</span><span data-line="143">
-</span><span data-line="144"><span class="sd">    &gt;&gt;&gt; kept({"questions": [{"source": "Why?", "q": "Why is CI slow?", "a": "The cache was cold",</span>
-</span><span data-line="145"><span class="sd">    ...                      "state": "answered", "sure": True}, {"q": "x " * 20}]})</span>
-</span><span data-line="146"><span class="sd">    [{'source': 'Why?', 'q': 'Why is CI slow?', 'a': 'The cache was cold', 'state': 'answered', 'sure': True}]</span>
-</span><span data-line="147"><span class="sd">    """</span>
-</span><span data-line="148">    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="149">    <span class="k">for</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">answer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
-</span><span data-line="150">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-</span><span data-line="151">            <span class="k">continue</span>
-</span><span data-line="152">        <span class="n">q</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"q"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="153">        <span class="n">state</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="154">        <span class="k">if</span> <span class="ow">not</span> <span class="n">q</span> <span class="ow">or</span> <span class="n">_words</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_QUESTION_WORDS</span> <span class="ow">or</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">STATES</span><span class="p">:</span>
-</span><span data-line="155">            <span class="k">continue</span>
-</span><span data-line="156">        <span class="k">if</span> <span class="n">_words</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_ANSWER_WORDS</span> <span class="ow">or</span> <span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="s2">"unanswered"</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">a</span><span class="p">):</span>
-</span><span data-line="157">            <span class="k">continue</span>
-</span><span data-line="158">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="159">            <span class="p">{</span>
-</span><span data-line="160">                <span class="s2">"source"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
-</span><span data-line="161">                <span class="s2">"q"</span><span class="p">:</span> <span class="n">q</span><span class="p">,</span>
-</span><span data-line="162">                <span class="s2">"a"</span><span class="p">:</span> <span class="n">a</span><span class="p">,</span>
-</span><span data-line="163">                <span class="s2">"state"</span><span class="p">:</span> <span class="n">state</span><span class="p">,</span>
-</span><span data-line="164">                <span class="s2">"sure"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sure"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="165">            <span class="p">}</span>
-</span><span data-line="166">        <span class="p">)</span>
-</span><span data-line="167">    <span class="k">return</span> <span class="n">out</span></div>
+</span><span data-line="145"><span class="k">def</span><span class="w"> </span><span class="nf">kept</span><span class="p">(</span><span class="n">answer</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="146"><span class="w">    </span><span class="sd">"""The model's questions that keep to the rules: a gist within its length, a known</span>
+</span><span data-line="147"><span class="sd">    state, and an answer only when there is one. Anything else is dropped, not trusted.</span>
+</span><span data-line="148">
+</span><span data-line="149"><span class="sd">    &gt;&gt;&gt; kept({"questions": [{"source": "Why?", "q": "Why is CI slow?", "a": "The cache was cold",</span>
+</span><span data-line="150"><span class="sd">    ...                      "state": "answered", "sure": True}, {"q": "x " * 20}]})</span>
+</span><span data-line="151"><span class="sd">    [{'source': 'Why?', 'q': 'Why is CI slow?', 'a': 'The cache was cold', 'state': 'answered', 'sure': True}]</span>
+</span><span data-line="152"><span class="sd">    """</span>
+</span><span data-line="153">    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="154">    <span class="k">for</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">answer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
+</span><span data-line="155">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+</span><span data-line="156">            <span class="k">continue</span>
+</span><span data-line="157">        <span class="n">q</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"q"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="158">        <span class="n">state</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="159">        <span class="k">if</span> <span class="ow">not</span> <span class="n">q</span> <span class="ow">or</span> <span class="n">_words</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_QUESTION_WORDS</span> <span class="ow">or</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">STATES</span><span class="p">:</span>
+</span><span data-line="160">            <span class="k">continue</span>
+</span><span data-line="161">        <span class="k">if</span> <span class="n">_words</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_ANSWER_WORDS</span> <span class="ow">or</span> <span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="s2">"unanswered"</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="ow">not</span> <span class="n">a</span><span class="p">):</span>
+</span><span data-line="162">            <span class="k">continue</span>
+</span><span data-line="163">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="164">            <span class="p">{</span>
+</span><span data-line="165">                <span class="s2">"source"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+</span><span data-line="166">                <span class="s2">"q"</span><span class="p">:</span> <span class="n">q</span><span class="p">,</span>
+</span><span data-line="167">                <span class="s2">"a"</span><span class="p">:</span> <span class="n">a</span><span class="p">,</span>
+</span><span data-line="168">                <span class="s2">"state"</span><span class="p">:</span> <span class="n">state</span><span class="p">,</span>
+</span><span data-line="169">                <span class="s2">"sure"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sure"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="170">            <span class="p">}</span>
+</span><span data-line="171">        <span class="p">)</span>
+</span><span data-line="172">    <span class="k">return</span> <span class="n">out</span></div>
 
-</span><span data-line="168">
-</span><span data-line="169">
+</span><span data-line="173">
+</span><span data-line="174">
 <div class="viewcode-block" id="refresh">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.refresh">[docs]</a>
-</span><span data-line="170"><span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span>
-</span><span data-line="171">    <span class="n">sessions</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">],</span>
-</span><span data-line="172">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="173">    <span class="n">store</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="174">    <span class="n">synthesiser</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="175">    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_LIMIT</span><span class="p">,</span>
-</span><span data-line="176">    <span class="n">workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_WORKERS</span><span class="p">,</span>
-</span><span data-line="177">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="178"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="179"><span class="w">    </span><span class="sd">"""Ask about each message whose stored gist was made from another revision, the</span>
-</span><span data-line="180"><span class="sd">    freshest first, at most ``limit``, ``workers`` at a time. A finished turn only: a running one's reply is not</span>
-</span><span data-line="181"><span class="sd">    its answer yet. A synthesiser that fails leaves the store as it was.</span>
-</span><span data-line="182">
-</span><span data-line="183"><span class="sd">    ``sessions`` is what :func:`crowsnest.questions.scan` returns. Returns counts:</span>
-</span><span data-line="184"><span class="sd">    ``{"made", "failed", "current", "waiting"}``.</span>
-</span><span data-line="185"><span class="sd">    """</span>
-</span><span data-line="186">    <span class="n">store</span> <span class="o">=</span> <span class="n">dflt_store</span><span class="p">()</span> <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">store</span>
-</span><span data-line="187">    <span class="k">if</span> <span class="n">synthesiser</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="188">        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_synthesiser</span>
-</span><span data-line="189">
-</span><span data-line="190">        <span class="n">synthesiser</span> <span class="o">=</span> <span class="n">claude_synthesiser</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">PROMPT</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">DFLT_TIMEOUT</span><span class="p">)</span>
-</span><span data-line="191">    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
-</span><span data-line="192">    <span class="n">wanted</span><span class="p">,</span> <span class="n">current</span> <span class="o">=</span> <span class="p">[],</span> <span class="mi">0</span>
-</span><span data-line="193">    <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">:</span>
-</span><span data-line="194">        <span class="n">sid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="195">        <span class="k">for</span> <span class="n">exchange</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exchanges"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
-</span><span data-line="196">            <span class="k">if</span> <span class="ow">not</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"closed"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">):</span>
-</span><span data-line="197">                <span class="k">continue</span>
-</span><span data-line="198">            <span class="n">key</span><span class="p">,</span> <span class="n">rev</span> <span class="o">=</span> <span class="n">key_of</span><span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uuid"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)),</span> <span class="n">revision_of</span><span class="p">(</span><span class="n">exchange</span><span class="p">)</span>
-</span><span data-line="199">            <span class="k">if</span> <span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rev"</span><span class="p">)</span> <span class="o">==</span> <span class="n">rev</span><span class="p">:</span>
-</span><span data-line="200">                <span class="n">current</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="201">                <span class="k">continue</span>
-</span><span data-line="202">            <span class="n">wanted</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asked_at"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span> <span class="n">key</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">exchange</span><span class="p">))</span>
-</span><span data-line="203">    <span class="n">wanted</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="204">    <span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
-</span><span data-line="205">
-</span><span data-line="206">    <span class="k">def</span><span class="w"> </span><span class="nf">ask</span><span class="p">(</span><span class="n">exchange</span><span class="p">):</span>
-</span><span data-line="207">        <span class="k">try</span><span class="p">:</span>
-</span><span data-line="208">            <span class="k">return</span> <span class="n">synthesiser</span><span class="p">(</span><span class="n">brief_of</span><span class="p">(</span><span class="n">exchange</span><span class="p">))</span>
-</span><span data-line="209">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a model or CLI failing must not fail the page</span>
-</span><span data-line="210">            <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="211">
-</span><span data-line="212">    <span class="n">batch</span> <span class="o">=</span> <span class="n">wanted</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
-</span><span data-line="213">    <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">workers</span><span class="p">))</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
-</span><span data-line="214">        <span class="n">answers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">ask</span><span class="p">,</span> <span class="p">[</span><span class="n">exchange</span> <span class="k">for</span> <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">exchange</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]))</span>
-</span><span data-line="215">    <span class="n">made</span> <span class="o">=</span> <span class="n">failed</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span data-line="216">    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">_exchange</span><span class="p">),</span> <span class="n">answer</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">answers</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-</span><span data-line="217">        <span class="k">if</span> <span class="n">answer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="218">            <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="219">            <span class="k">continue</span>
-</span><span data-line="220">        <span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="221">            <span class="s2">"rev"</span><span class="p">:</span> <span class="n">rev</span><span class="p">,</span>
-</span><span data-line="222">            <span class="s2">"questions"</span><span class="p">:</span> <span class="n">kept</span><span class="p">(</span><span class="n">answer</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">answer</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}),</span>
-</span><span data-line="223">            <span class="s2">"model"</span><span class="p">:</span> <span class="nb">str</span><span class="p">((</span><span class="n">answer</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="224">            <span class="s2">"made_at"</span><span class="p">:</span> <span class="n">now</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">),</span>
-</span><span data-line="225">        <span class="p">}</span>
-</span><span data-line="226">        <span class="n">made</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span data-line="227">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="228">        <span class="s2">"made"</span><span class="p">:</span> <span class="n">made</span><span class="p">,</span>
-</span><span data-line="229">        <span class="s2">"failed"</span><span class="p">:</span> <span class="n">failed</span><span class="p">,</span>
-</span><span data-line="230">        <span class="s2">"current"</span><span class="p">:</span> <span class="n">current</span><span class="p">,</span>
-</span><span data-line="231">        <span class="s2">"waiting"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span> <span class="o">-</span> <span class="n">limit</span><span class="p">),</span>
-</span><span data-line="232">    <span class="p">}</span></div>
+</span><span data-line="175"><span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span>
+</span><span data-line="176">    <span class="n">sessions</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">],</span>
+</span><span data-line="177">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="178">    <span class="n">store</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="179">    <span class="n">synthesiser</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="180">    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_LIMIT</span><span class="p">,</span>
+</span><span data-line="181">    <span class="n">workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_WORKERS</span><span class="p">,</span>
+</span><span data-line="182">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="183"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="184"><span class="w">    </span><span class="sd">"""Ask about each message whose stored gist was made from another revision, the</span>
+</span><span data-line="185"><span class="sd">    freshest first, at most ``limit``, ``workers`` at a time. A finished turn only: a running one's reply is not</span>
+</span><span data-line="186"><span class="sd">    its answer yet. A synthesiser that fails leaves the store as it was.</span>
+</span><span data-line="187">
+</span><span data-line="188"><span class="sd">    ``sessions`` is what :func:`crowsnest.questions.scan` returns. Returns counts:</span>
+</span><span data-line="189"><span class="sd">    ``{"made", "failed", "current", "waiting"}``.</span>
+</span><span data-line="190"><span class="sd">    """</span>
+</span><span data-line="191">    <span class="n">store</span> <span class="o">=</span> <span class="n">dflt_store</span><span class="p">()</span> <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">store</span>
+</span><span data-line="192">    <span class="k">if</span> <span class="n">synthesiser</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="193">        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_synthesiser</span>
+</span><span data-line="194">
+</span><span data-line="195">        <span class="n">synthesiser</span> <span class="o">=</span> <span class="n">claude_synthesiser</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">PROMPT</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">DFLT_TIMEOUT</span><span class="p">)</span>
+</span><span data-line="196">    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
+</span><span data-line="197">    <span class="n">wanted</span><span class="p">,</span> <span class="n">current</span> <span class="o">=</span> <span class="p">[],</span> <span class="mi">0</span>
+</span><span data-line="198">    <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">sessions</span><span class="p">:</span>
+</span><span data-line="199">        <span class="n">sid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="200">        <span class="k">for</span> <span class="n">exchange</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exchanges"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">():</span>
+</span><span data-line="201">            <span class="k">if</span> <span class="ow">not</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"closed"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">):</span>
+</span><span data-line="202">                <span class="k">continue</span>
+</span><span data-line="203">            <span class="n">key</span><span class="p">,</span> <span class="n">rev</span> <span class="o">=</span> <span class="n">key_of</span><span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uuid"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)),</span> <span class="n">revision_of</span><span class="p">(</span><span class="n">exchange</span><span class="p">)</span>
+</span><span data-line="204">            <span class="k">if</span> <span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rev"</span><span class="p">)</span> <span class="o">==</span> <span class="n">rev</span><span class="p">:</span>
+</span><span data-line="205">                <span class="n">current</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="206">                <span class="k">continue</span>
+</span><span data-line="207">            <span class="n">wanted</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">exchange</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asked_at"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span> <span class="n">key</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">exchange</span><span class="p">))</span>
+</span><span data-line="208">    <span class="n">wanted</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="209">    <span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+</span><span data-line="210">
+</span><span data-line="211">    <span class="k">def</span><span class="w"> </span><span class="nf">ask</span><span class="p">(</span><span class="n">exchange</span><span class="p">):</span>
+</span><span data-line="212">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="213">            <span class="k">return</span> <span class="n">synthesiser</span><span class="p">(</span><span class="n">brief_of</span><span class="p">(</span><span class="n">exchange</span><span class="p">))</span>
+</span><span data-line="214">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a model or CLI failing must not fail the page</span>
+</span><span data-line="215">            <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="216">
+</span><span data-line="217">    <span class="n">batch</span> <span class="o">=</span> <span class="n">wanted</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
+</span><span data-line="218">    <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">workers</span><span class="p">))</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+</span><span data-line="219">        <span class="n">answers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">ask</span><span class="p">,</span> <span class="p">[</span><span class="n">exchange</span> <span class="k">for</span> <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">exchange</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]))</span>
+</span><span data-line="220">    <span class="n">made</span> <span class="o">=</span> <span class="n">failed</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="221">    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">_exchange</span><span class="p">),</span> <span class="n">answer</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">answers</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span data-line="222">        <span class="k">if</span> <span class="n">answer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="223">            <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="224">            <span class="k">continue</span>
+</span><span data-line="225">        <span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="226">            <span class="s2">"rev"</span><span class="p">:</span> <span class="n">rev</span><span class="p">,</span>
+</span><span data-line="227">            <span class="s2">"questions"</span><span class="p">:</span> <span class="n">kept</span><span class="p">(</span><span class="n">answer</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">answer</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}),</span>
+</span><span data-line="228">            <span class="s2">"model"</span><span class="p">:</span> <span class="nb">str</span><span class="p">((</span><span class="n">answer</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="229">            <span class="s2">"made_at"</span><span class="p">:</span> <span class="n">now</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">),</span>
+</span><span data-line="230">        <span class="p">}</span>
+</span><span data-line="231">        <span class="n">made</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="232">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="233">        <span class="s2">"made"</span><span class="p">:</span> <span class="n">made</span><span class="p">,</span>
+</span><span data-line="234">        <span class="s2">"failed"</span><span class="p">:</span> <span class="n">failed</span><span class="p">,</span>
+</span><span data-line="235">        <span class="s2">"current"</span><span class="p">:</span> <span class="n">current</span><span class="p">,</span>
+</span><span data-line="236">        <span class="s2">"waiting"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">wanted</span><span class="p">)</span> <span class="o">-</span> <span class="n">limit</span><span class="p">),</span>
+</span><span data-line="237">    <span class="p">}</span></div>
+
+</span><span data-line="238">
+</span><span data-line="239">
+</span><span data-line="240"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="241"><span class="c1"># An answer given elsewhere (#129, step 3)</span>
+</span><span data-line="242">
+</span><span data-line="243"><span class="c1">#: How many questions one refresh asks about pairing.</span>
+</span><span data-line="244"><span class="n">DFLT_PAIR_LIMIT</span> <span class="o">=</span> <span class="mi">2</span>
+</span><span data-line="245">
+</span><span data-line="246"><span class="n">PAIR_PROMPT</span> <span class="o">=</span> <span class="s2">"""A person asked a question in one AI coding session. Below are replies given</span>
+</span><span data-line="247"><span class="s2">LATER, in that session after a relay came back or in other sessions the question was passed</span>
+</span><span data-line="248"><span class="s2">to. Say which reply answers it, if any. Answer with JSON only, no prose, exactly:</span>
+</span><span data-line="249"><span class="s2">{"match": 0, "a": "...", "state": "answered"}</span>
+</span><span data-line="250">
+</span><span data-line="251"><span class="s2">Rules:</span>
+</span><span data-line="252"><span class="s2">- "match": the index of the reply that answers the question, or null if none does. A reply</span>
+</span><span data-line="253"><span class="s2">  that only says it will look, or talks about something else, does not answer it.</span>
+</span><span data-line="254"><span class="s2">- "a": the answer in at most 14 words, stating it ("Yes: the hook fires once per tick"),</span>
+</span><span data-line="255"><span class="s2">  never that one was given. Every noun must appear in that reply. "" when match is null.</span>
+</span><span data-line="256"><span class="s2">- "state": "answered", or "partly" if it answers in part.</span>
+</span><span data-line="257">
+</span><span data-line="258"><span class="s2">The question and the replies, as JSON:</span>
+</span><span data-line="259"><span class="s2">"""</span>
+</span><span data-line="260">
+</span><span data-line="261">
+<div class="viewcode-block" id="pair_key">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.pair_key">[docs]</a>
+</span><span data-line="262"><span class="k">def</span><span class="w"> </span><span class="nf">pair_key</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="263"><span class="w">    </span><span class="sd">"""The store key of one question's pairing: its attention id, which is a uuid."""</span>
+</span><span data-line="264">    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid5</span><span class="p">(</span><span class="n">_NAMESPACE</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"pair:</span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span></div>
+
+</span><span data-line="265">
+</span><span data-line="266">
+</span><span data-line="267"><span class="k">def</span><span class="w"> </span><span class="nf">pair_revision</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">found</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="268"><span class="w">    </span><span class="sd">"""What a pairing was made from: the question and the candidates' replies."""</span>
+</span><span data-line="269">    <span class="n">material</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+</span><span data-line="270">        <span class="p">[</span><span class="n">question</span><span class="p">,</span> <span class="p">[(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uuid"</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]],</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span>
+</span><span data-line="271">    <span class="p">)</span>
+</span><span data-line="272">    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">material</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">16</span><span class="p">]</span>
+</span><span data-line="273">
+</span><span data-line="274">
+</span><span data-line="275"><span class="k">def</span><span class="w"> </span><span class="nf">pair_brief</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">found</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="276"><span class="w">    </span><span class="sd">"""What the model is shown: the question and each candidate reply, sanitised first."""</span>
+</span><span data-line="277">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.live</span><span class="w"> </span><span class="kn">import</span> <span class="n">publishable</span>
+</span><span data-line="278">
+</span><span data-line="279">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="280">        <span class="s2">"question"</span><span class="p">:</span> <span class="n">publishable</span><span class="p">(</span><span class="n">question</span><span class="p">),</span>
+</span><span data-line="281">        <span class="s2">"replies"</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="282">            <span class="n">publishable</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reply"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span> <span class="n">limit</span><span class="o">=</span><span class="n">REPLY_LIMIT</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">found</span>
+</span><span data-line="283">        <span class="p">],</span>
+</span><span data-line="284">    <span class="p">}</span>
+</span><span data-line="285">
+</span><span data-line="286">
+<div class="viewcode-block" id="kept_pair">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.kept_pair">[docs]</a>
+</span><span data-line="287"><span class="k">def</span><span class="w"> </span><span class="nf">kept_pair</span><span class="p">(</span><span class="n">answer</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="288"><span class="w">    </span><span class="sd">"""The model's pairing when it keeps to the rules, else no match.</span>
+</span><span data-line="289">
+</span><span data-line="290"><span class="sd">    &gt;&gt;&gt; kept_pair({"match": 1, "a": "Yes: it fires once", "state": "answered"}, 2)["match"]</span>
+</span><span data-line="291"><span class="sd">    1</span>
+</span><span data-line="292"><span class="sd">    &gt;&gt;&gt; kept_pair({"match": 5, "a": "x", "state": "answered"}, 2)["match"] is None</span>
+</span><span data-line="293"><span class="sd">    True</span>
+</span><span data-line="294"><span class="sd">    """</span>
+</span><span data-line="295">    <span class="n">match</span> <span class="o">=</span> <span class="n">answer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"match"</span><span class="p">)</span>
+</span><span data-line="296">    <span class="n">a</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="297">    <span class="n">state</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="298">    <span class="k">if</span> <span class="p">(</span>
+</span><span data-line="299">        <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+</span><span data-line="300">        <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">match</span> <span class="o">&lt;</span> <span class="n">count</span>
+</span><span data-line="301">        <span class="ow">or</span> <span class="ow">not</span> <span class="n">a</span>
+</span><span data-line="302">        <span class="ow">or</span> <span class="n">_words</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_ANSWER_WORDS</span>
+</span><span data-line="303">        <span class="ow">or</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"answered"</span><span class="p">,</span> <span class="s2">"partly"</span><span class="p">)</span>
+</span><span data-line="304">    <span class="p">):</span>
+</span><span data-line="305">        <span class="k">return</span> <span class="p">{</span><span class="s2">"match"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span>
+</span><span data-line="306">    <span class="k">return</span> <span class="p">{</span><span class="s2">"match"</span><span class="p">:</span> <span class="n">match</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="n">a</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="n">state</span><span class="p">}</span></div>
+
+</span><span data-line="307">
+</span><span data-line="308">
+<div class="viewcode-block" id="refresh_pairs">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.refresh_pairs">[docs]</a>
+</span><span data-line="309"><span class="k">def</span><span class="w"> </span><span class="nf">refresh_pairs</span><span class="p">(</span>
+</span><span data-line="310">    <span class="n">wanted</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]],</span>
+</span><span data-line="311">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="312">    <span class="n">store</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="313">    <span class="n">synthesiser</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Mapping</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="314">    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_PAIR_LIMIT</span><span class="p">,</span>
+</span><span data-line="315">    <span class="n">workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_WORKERS</span><span class="p">,</span>
+</span><span data-line="316">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="317"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="318"><span class="w">    </span><span class="sd">"""Ask, for each ``(item, question, candidates)`` whose stored pairing is for other</span>
+</span><span data-line="319"><span class="sd">    candidates, which reply answers it; at most ``limit``, ``workers`` at a time."""</span>
+</span><span data-line="320">    <span class="n">store</span> <span class="o">=</span> <span class="n">dflt_store</span><span class="p">()</span> <span class="k">if</span> <span class="n">store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">store</span>
+</span><span data-line="321">    <span class="k">if</span> <span class="n">synthesiser</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="322">        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_synthesiser</span>
+</span><span data-line="323">
+</span><span data-line="324">        <span class="n">synthesiser</span> <span class="o">=</span> <span class="n">claude_synthesiser</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">PAIR_PROMPT</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">DFLT_TIMEOUT</span><span class="p">)</span>
+</span><span data-line="325">    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
+</span><span data-line="326">    <span class="n">todo</span><span class="p">,</span> <span class="n">current</span> <span class="o">=</span> <span class="p">[],</span> <span class="mi">0</span>
+</span><span data-line="327">    <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">question</span><span class="p">,</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">wanted</span><span class="p">:</span>
+</span><span data-line="328">        <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+</span><span data-line="329">            <span class="k">continue</span>
+</span><span data-line="330">        <span class="n">key</span><span class="p">,</span> <span class="n">rev</span> <span class="o">=</span> <span class="n">pair_key</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="n">pair_revision</span><span class="p">(</span><span class="n">question</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
+</span><span data-line="331">        <span class="k">if</span> <span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rev"</span><span class="p">)</span> <span class="o">==</span> <span class="n">rev</span><span class="p">:</span>
+</span><span data-line="332">            <span class="n">current</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="333">            <span class="k">continue</span>
+</span><span data-line="334">        <span class="n">todo</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">question</span><span class="p">,</span> <span class="n">found</span><span class="p">))</span>
+</span><span data-line="335">    <span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+</span><span data-line="336">
+</span><span data-line="337">    <span class="k">def</span><span class="w"> </span><span class="nf">ask</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
+</span><span data-line="338">        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">question</span><span class="p">,</span> <span class="n">found</span> <span class="o">=</span> <span class="n">job</span>
+</span><span data-line="339">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="340">            <span class="k">return</span> <span class="n">synthesiser</span><span class="p">(</span><span class="n">pair_brief</span><span class="p">(</span><span class="n">question</span><span class="p">,</span> <span class="n">found</span><span class="p">))</span>
+</span><span data-line="341">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a model or CLI failing must not fail the page</span>
+</span><span data-line="342">            <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="343">
+</span><span data-line="344">    <span class="n">batch</span> <span class="o">=</span> <span class="n">todo</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
+</span><span data-line="345">    <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">workers</span><span class="p">))</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+</span><span data-line="346">        <span class="n">answers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">ask</span><span class="p">,</span> <span class="n">batch</span><span class="p">))</span>
+</span><span data-line="347">    <span class="n">made</span> <span class="o">=</span> <span class="n">failed</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="348">    <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">rev</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">found</span><span class="p">),</span> <span class="n">answer</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">answers</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span data-line="349">        <span class="k">if</span> <span class="n">answer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="350">            <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="351">            <span class="k">continue</span>
+</span><span data-line="352">        <span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="353">            <span class="s2">"rev"</span><span class="p">:</span> <span class="n">rev</span><span class="p">,</span>
+</span><span data-line="354">            <span class="o">**</span><span class="n">kept_pair</span><span class="p">(</span><span class="n">answer</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">answer</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="p">{},</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)),</span>
+</span><span data-line="355">            <span class="s2">"made_at"</span><span class="p">:</span> <span class="n">now</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">),</span>
+</span><span data-line="356">        <span class="p">}</span>
+</span><span data-line="357">        <span class="n">made</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="358">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="359">        <span class="s2">"made"</span><span class="p">:</span> <span class="n">made</span><span class="p">,</span>
+</span><span data-line="360">        <span class="s2">"failed"</span><span class="p">:</span> <span class="n">failed</span><span class="p">,</span>
+</span><span data-line="361">        <span class="s2">"current"</span><span class="p">:</span> <span class="n">current</span><span class="p">,</span>
+</span><span data-line="362">        <span class="s2">"waiting"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">todo</span><span class="p">)</span> <span class="o">-</span> <span class="n">limit</span><span class="p">),</span>
+</span><span data-line="363">    <span class="p">}</span></div>
+
+</span><span data-line="364">
+</span><span data-line="365">
+<div class="viewcode-block" id="pairing">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.gists.html#crowsnest.gists.pairing">[docs]</a>
+</span><span data-line="366"><span class="k">def</span><span class="w"> </span><span class="nf">pairing</span><span class="p">(</span>
+</span><span data-line="367">    <span class="n">store</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">found</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span>
+</span><span data-line="368"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="369"><span class="w">    </span><span class="sd">"""The stored pairing of a question, when it was made from these candidates."""</span>
+</span><span data-line="370">    <span class="n">doc</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pair_key</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+</span><span data-line="371">    <span class="k">if</span> <span class="ow">not</span> <span class="n">doc</span> <span class="ow">or</span> <span class="n">doc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rev"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">pair_revision</span><span class="p">(</span><span class="n">question</span><span class="p">,</span> <span class="n">found</span><span class="p">):</span>
+</span><span data-line="372">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="373">    <span class="k">return</span> <span class="n">doc</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -418,7 +571,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=e264953e"></script>
+      <script src="../../_static/documentation_options.js?v=0a7e36fc"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
