@@ -76,17 +76,28 @@ def _when(said_at: str) -> str:
     ``(time unknown)``. A time later than now also reads as unknown, since it names a
     plan and not when anything was said. :func:`crowsnest.said.when_said` decides, as it
     does for the page."""
+    parts = _said_parts(said_at)
+    if parts is None:
+        return "(time unknown)"
+    shown, age = parts
+    return f"({shown}, {age})"
+
+
+def _said_parts(said_at: str) -> tuple[str, str] | None:
+    """``(when, age)`` for an item's ``said_at``, the two halves :func:`_when` joins:
+    local ``HH:MM`` (dated when not today) or the bare date, and how long ago. ``None``
+    when the time is unknown."""
     now = datetime.now(timezone.utc)
     found = _said.when_said(said_at, now=now.timestamp())
     if found is None:
-        return "(time unknown)"
+        return None
     epoch, day = found
     today = now.astimezone().date()
     if day is not None:
-        return f"({day.isoformat()}, {max(0, (today - day).days)}d)"
+        return day.isoformat(), f"{max(0, (today - day).days)}d"
     local = datetime.fromtimestamp(epoch, tz=timezone.utc).astimezone()
     shown = local.strftime("%H:%M" if local.date() == today else "%Y-%m-%d %H:%M")
-    return f"({shown}, {_age(epoch)})"
+    return shown, _age(epoch)
 
 
 def _row_detail(row: dict, limit: int) -> str:
@@ -367,12 +378,29 @@ _TRIAGE_HEADINGS = (
 )
 
 
+def _triage_line(row: dict, *, group: str, why: str) -> str:
+    """One triage item as the Markdown line a watcher relays: the time its words were
+    said in bold, the session name in bold, then the project and age, a colon, the
+    reason. Unknown reads `**time unknown**`; an unclassified item has no time at all."""
+    verdict = row["verdict"]
+    name = f"**{row['label']}**"
+    reason = _one_line(f"{why}{verdict['reason']}", 160)
+    if group == "unclassified":
+        return f"{name} ({row['project']}): {reason}"
+    parts = _said_parts(verdict["said_at"])
+    if parts is None:
+        return f"**time unknown** {name} ({row['project']}): {reason}"
+    when, age = parts
+    return f"**{when}** {name} ({row['project']}, {age}): {reason}"
+
+
 def triage(
     *,
     home: str | None = None,
     all_homes: bool = False,
     quiet: bool = False,
     json: bool = False,
+    plain: bool = False,
 ):
     """What needs you, what is safe to close, what is still working.
 
@@ -380,6 +408,12 @@ def triage(
     status. A session that has not said where it stands is reported as `unclassified`
     rather than guessed into "safe to close" -- closing a terminal on unfinished work is
     the expensive mistake, and `--quiet` hides that group when you already know.
+
+    Each item is a Markdown line in the shape every message about a session takes: the
+    time its words were said in bold, the session name in bold, a colon, then one line --
+    `**14:02** **shipper** (proj, 2h): [question] Squash or rebase?` -- so a watcher can
+    relay it as it is. An unclassified item quotes nobody, so it carries no time.
+    `--plain` prints the aligned columns instead; `--json` the rows.
     """
     import json as _json
 
@@ -398,9 +432,12 @@ def triage(
             why = f"[{verdict['why']}] " if verdict["why"] else ""
             # The reason's own time, from its source. An unclassified reason quotes nobody:
             # it is crowsnest saying the session has not said.
-            when = "" if group == "unclassified" else f"{_when(verdict['said_at'])} "
-            detail = _one_line(f"{when}{why}{verdict['reason']}", 88 + len(when))
-            out.append(f"  {row['label'][:26]:<27}{row['project'][:14]:<15}{detail}")
+            if plain:
+                when = "" if group == "unclassified" else f"{_when(verdict['said_at'])} "
+                detail = _one_line(f"{when}{why}{verdict['reason']}", 88 + len(when))
+                out.append(f"  {row['label'][:26]:<27}{row['project'][:14]:<15}{detail}")
+                continue
+            out.append(_triage_line(row, group=group, why=why))
         if not rows:
             out.append("  (none)")
     counts = found["counts"]
@@ -859,9 +896,16 @@ def watch(
     home: str | None = None,
     all_homes: bool = False,
     json: bool = False,
+    plain: bool = False,
     ledger_dir: str | None = None,
 ):
     """Print one line per change, forever: started, exited, idle, busy, waiting, error.
+
+    Each line is Markdown in the shape every message about a session takes -- the
+    event's own time in bold, the session name in bold, a colon, then one line:
+    `**14:12** **sweep2-qh**: waiting (crowsnest) — Squash or rebase?` -- so a watcher
+    can relay it as it is. `--plain` prints the unformatted line instead; `--json` the
+    event itself.
 
     `--all-homes` watches every home in the config file; a row then reads `name@home`.
     A `woke` is computed on the row the verbs pinned, triaged from `[report] ledger_dir`
@@ -884,14 +928,7 @@ def watch(
             all_homes=all_homes,
             row_context=_row_context(ledger_dir),
         ):
-            if json:
-                line = _json.dumps(event)
-            else:
-                when = _local(event["at"])
-                who = event["name"] + (f"@{event['home']}" if event.get("home") else "")
-                line = f"{when}  {event['kind']:<8} {who} ({event['project']})"
-                if event["detail"]:
-                    line += f" — {event['detail']}"
+            line = _json.dumps(event) if json else _watch.line(event, plain=plain)
             print(line, flush=True)
     except KeyboardInterrupt:
         pass

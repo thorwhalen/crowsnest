@@ -336,7 +336,13 @@ def test_the_cli_prints_each_items_time_and_roster_json_carries_it(home, capsys)
     fixer = next(ln for ln in capsys.readouterr().out.splitlines() if "fixer" in ln)
     assert re.search(stamp + '"', fixer), fixer
 
+    # triage leads each item with the time in bold; --plain keeps it beside the item.
     main(["triage", "--home", str(home)])
+    shipper = next(ln for ln in capsys.readouterr().out.splitlines() if "shipper" in ln)
+    assert re.match(
+        r"\*\*(?:\d{4}-\d{2}-\d{2} )?\d{2}:\d{2}\*\* \*\*shipper\*\*", shipper
+    ), shipper
+    main(["triage", "--home", str(home), "--plain"])
     shipper = next(ln for ln in capsys.readouterr().out.splitlines() if "shipper" in ln)
     assert re.search(stamp, shipper), shipper
 
