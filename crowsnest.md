@@ -1,4 +1,4 @@
-> built 2026-09-26 08:40 UTC from c951981 (main) · crowsnest 0.0.81. Details: build_info.json
+> built 2026-09-28 03:27 UTC from ecc3b39 (main) · crowsnest 0.0.82. Details: build_info.json
 
 # index.html.md
 
@@ -6525,18 +6525,21 @@ session’s conversation.
 |----------------------------------------------------------------------|--------------------------------------------|
 | [`HOOK_KINDS`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.HOOK_KINDS)          | What a hook event is called in the stream. |
 | [`QUIET_NOTIFICATIONS`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.QUIET_NOTIFICATIONS) | Notification types that are not a request. |
+| [`LOUD_KINDS`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.LOUD_KINDS)          | The kinds that need the person.            |
 | [`WORKING`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.WORKING)             | the session is working.                    |
 
 ### Functions
 
-| [`attention_wakes`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.attention_wakes)(\*[, store, row_of, home, ...])    | One `woke` event per attention item that just left `later`.                         |
-|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| [`diff`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.         |
-| [`events`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events)(\*[, interval, home, is_alive, sleep, ...]) | Yield one dict per change, forever -- or for `ticks` snapshots when given.          |
-| [`hook_event`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.hook_event)(record)                                 | One line of the hook log as an event, or `None` for an event kind we do not stream. |
-| [`snapshot`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.snapshot)(\*[, home, is_alive, all_homes, config])  | The live sessions right now, keyed by session id.                                   |
-| [`tail_events`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.tail_events)(path, position)                        | The JSON lines appended since `position`, and where to resume.                      |
-| [`tail_position`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.tail_position)(path)                                | Where a reader that wants only *new* lines should start: the end of the file now.   |
+| [`attention_wakes`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.attention_wakes)(\*[, store, row_of, home, ...])    | One `woke` event per attention item that just left `later`.                                                                |
+|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| [`diff`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.                                                |
+| [`events`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events)(\*[, interval, home, is_alive, sleep, ...]) | Yield one dict per change, forever -- or for `ticks` snapshots when given.                                                 |
+| [`hook_event`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.hook_event)(record)                                 | One line of the hook log as an event, or `None` for an event kind we do not stream.                                        |
+| [`line`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.line)(event, \*[, plain])                           | One event as the line a watcher relays.                                                                                    |
+| [`local_time`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.local_time)(stamp, \*[, now])                       | An ISO timestamp as local `HH:MM`, with the date in front when it is not today's, or the raw value when it cannot be read. |
+| [`snapshot`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.snapshot)(\*[, home, is_alive, all_homes, config])  | The live sessions right now, keyed by session id.                                                                          |
+| [`tail_events`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.tail_events)(path, position)                        | The JSON lines appended since `position`, and where to resume.                                                             |
+| [`tail_position`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.tail_position)(path)                                | Where a reader that wants only *new* lines should start: the end of the file now.                                          |
 
 ### crowsnest.watch.DFLT_INTERVAL *= 5.0*
 
@@ -6547,6 +6550,11 @@ to a human and two file listings per tick is nothing.
 
 What a hook event is called in the stream. `needs-you` and `stopped` are named for
 what the human should do about them, which is what the registry statuses are not.
+
+### crowsnest.watch.LOUD_KINDS *= frozenset({'error', 'intent', 'needs-you', 'waiting', 'woke'})*
+
+The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
+catches “waiting” and “error” without reading the line.
 
 ### crowsnest.watch.QUIET_NOTIFICATIONS *= frozenset({'idle_prompt'})*
 
@@ -6645,6 +6653,42 @@ True
 'needs-you'
 ```
 
+### crowsnest.watch.line(event, , plain=False)
+
+One event as the line a watcher relays.
+
+By default it is Markdown in the shape every message about a session takes: the
+event’s own time in bold, the session’s name in bold, a colon, then one line –
+`**14:12** **sweep2-qh**: waiting (crowsnest) — Squash or rebase?`. The time is
+the event’s `at`, when it happened, never when it is printed; a name from another
+home reads `name@home`; a kind in [`LOUD_KINDS`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.LOUD_KINDS) is bold as well. `plain`
+gives the unformatted line the stream always printed
+(`14:12  waiting  sweep2-qh (crowsnest) — Squash or rebase?`). `--json` is
+neither: it prints the event itself.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> event = {"at": "2026-09-28T14:12:00+00:00", "kind": "busy", "name": "x",
+...          "project": "p", "home": "", "detail": ""}
+>>> line(event).endswith("** **x**: busy (p)")
+True
+```
+
+### crowsnest.watch.local_time(stamp, , now=None)
+
+An ISO timestamp as local `HH:MM`, with the date in front when it is not today’s,
+or the raw value when it cannot be read.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> local_time("not a time")
+'not a time'
+```
+
 ### crowsnest.watch.snapshot(\*, home=None, is_alive=<function pid_alive>, all_homes=False, config=None)
 
 The live sessions right now, keyed by session id.
@@ -6687,7 +6731,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-09-26 08:40 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c951981de5854ae02400a3cd139b75753098f2ef"><code>c951981</code></a> on branch <code>main</code>, for **crowsnest 0.0.81** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-28 03:27 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/ecc3b399b7e8c4a2bfb0a50241d3c1be5893e792"><code>ecc3b39</code></a> on branch <code>main</code>, for **crowsnest 0.0.82** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -6696,7 +6740,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c951981de5854ae02400a3cd139b75753098f2ef"><code>c951981de5854ae02400a3cd139b75753098f2ef</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/ecc3b399b7e8c4a2bfb0a50241d3c1be5893e792"><code>ecc3b399b7e8c4a2bfb0a50241d3c1be5893e792</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6707,9 +6751,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36230397899">36230397899</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/36373681234">36373681234</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>c951981de5854ae02400a3cd139b75753098f2ef</code> (in the history of the built commit) |
+| Event commit | <code>ecc3b399b7e8c4a2bfb0a50241d3c1be5893e792</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6734,13 +6778,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.81/">0.0.81</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.82/">0.0.82</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout c951981de5854ae02400a3cd139b75753098f2ef
+git checkout ecc3b399b7e8c4a2bfb0a50241d3c1be5893e792
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

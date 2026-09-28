@@ -113,12 +113,15 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#crowsnest.watch.DFLT_INTERVAL"><code class="docutils literal notranslate"><span class="pre">DFLT_INTERVAL</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.HOOK_KINDS"><code class="docutils literal notranslate"><span class="pre">HOOK_KINDS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.watch.LOUD_KINDS"><code class="docutils literal notranslate"><span class="pre">LOUD_KINDS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.QUIET_NOTIFICATIONS"><code class="docutils literal notranslate"><span class="pre">QUIET_NOTIFICATIONS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.WORKING"><code class="docutils literal notranslate"><span class="pre">WORKING</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.attention_wakes"><code class="docutils literal notranslate"><span class="pre">attention_wakes()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.diff"><code class="docutils literal notranslate"><span class="pre">diff()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.hook_event"><code class="docutils literal notranslate"><span class="pre">hook_event()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.watch.line"><code class="docutils literal notranslate"><span class="pre">line()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.watch.local_time"><code class="docutils literal notranslate"><span class="pre">local_time()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.snapshot"><code class="docutils literal notranslate"><span class="pre">snapshot()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.tail_events"><code class="docutils literal notranslate"><span class="pre">tail_events()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.tail_position"><code class="docutils literal notranslate"><span class="pre">tail_position()</span></code></a></li>
@@ -211,7 +214,10 @@ session’s conversation.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.QUIET_NOTIFICATIONS" title="crowsnest.watch.QUIET_NOTIFICATIONS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QUIET_NOTIFICATIONS</span></code></a></p></td>
 <td><p>Notification types that are not a request.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.WORKING" title="crowsnest.watch.WORKING"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WORKING</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.LOUD_KINDS" title="crowsnest.watch.LOUD_KINDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LOUD_KINDS</span></code></a></p></td>
+<td><p>The kinds that need the person.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.WORKING" title="crowsnest.watch.WORKING"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WORKING</span></code></a></p></td>
 <td><p>the session is working.</p></td>
 </tr>
 </tbody>
@@ -232,6 +238,12 @@ session’s conversation.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.hook_event" title="crowsnest.watch.hook_event"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hook_event</span></code></a>(record)</p></td>
 <td><p>One line of the hook log as an event, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for an event kind we do not stream.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.line" title="crowsnest.watch.line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">line</span></code></a>(event, *[, plain])</p></td>
+<td><p>One event as the line a watcher relays.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.local_time" title="crowsnest.watch.local_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_time</span></code></a>(stamp, *[, now])</p></td>
+<td><p>An ISO timestamp as local <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code>, with the date in front when it is not today's, or the raw value when it cannot be read.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.snapshot" title="crowsnest.watch.snapshot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">snapshot</span></code></a>(*[, home, is_alive, all_homes, config])</p></td>
 <td><p>The live sessions right now, keyed by session id.</p></td>
@@ -257,6 +269,13 @@ to a human and two file listings per tick is nothing.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">HOOK_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'intent':</span> <span class="pre">'intent',</span> <span class="pre">'notification':</span> <span class="pre">'needs-you',</span> <span class="pre">'stop':</span> <span class="pre">'stopped'}</span></span><a class="headerlink" href="#crowsnest.watch.HOOK_KINDS" title="Link to this definition">#</a></dt>
 <dd><p>What a hook event is called in the stream. <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> and <code class="docutils literal notranslate"><span class="pre">stopped</span></code> are named for
 what the human should do about them, which is what the registry statuses are not.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.watch.LOUD_KINDS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">LOUD_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'error',</span> <span class="pre">'intent',</span> <span class="pre">'needs-you',</span> <span class="pre">'waiting',</span> <span class="pre">'woke'})</span></span><a class="headerlink" href="#crowsnest.watch.LOUD_KINDS" title="Link to this definition">#</a></dt>
+<dd><p>The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
+catches “waiting” and “error” without reading the line.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -371,6 +390,47 @@ it is Claude Code noticing a session is idle, not the session asking for anythin
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.watch.line">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">plain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/watch.html#line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.line" title="Link to this definition">#</a></dt>
+<dd><p>One event as the line a watcher relays.</p>
+<p>By default it is Markdown in the shape every message about a session takes: the
+event’s own time in bold, the session’s name in bold, a colon, then one line –
+<code class="docutils literal notranslate"><span class="pre">**14:12**</span> <span class="pre">**sweep2-qh**:</span> <span class="pre">waiting</span> <span class="pre">(crowsnest)</span> <span class="pre">—</span> <span class="pre">Squash</span> <span class="pre">or</span> <span class="pre">rebase?</span></code>. The time is
+the event’s <code class="docutils literal notranslate"><span class="pre">at</span></code>, when it happened, never when it is printed; a name from another
+home reads <code class="docutils literal notranslate"><span class="pre">name&#64;home</span></code>; a kind in <a class="reference internal" href="#crowsnest.watch.LOUD_KINDS" title="crowsnest.watch.LOUD_KINDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">LOUD_KINDS</span></code></a> is bold as well. <code class="docutils literal notranslate"><span class="pre">plain</span></code>
+gives the unformatted line the stream always printed
+(<code class="docutils literal notranslate"><span class="pre">14:12</span>&#160; <span class="pre">waiting</span>&#160; <span class="pre">sweep2-qh</span> <span class="pre">(crowsnest)</span> <span class="pre">—</span> <span class="pre">Squash</span> <span class="pre">or</span> <span class="pre">rebase?</span></code>). <code class="docutils literal notranslate"><span class="pre">--json</span></code> is
+neither: it prints the event itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"at"</span><span class="p">:</span> <span class="s2">"2026-09-28T14:12:00+00:00"</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">,</span>
+</span><span data-line="2"><span class="gp">... </span>         <span class="s2">"project"</span><span class="p">:</span> <span class="s2">"p"</span><span class="p">,</span> <span class="s2">"home"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"detail"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"** **x**: busy (p)"</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.watch.local_time">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">local_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stamp</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/watch.html#local_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.local_time" title="Link to this definition">#</a></dt>
+<dd><p>An ISO timestamp as local <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code>, with the date in front when it is not today’s,
+or the raw value when it cannot be read.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">local_time</span><span class="p">(</span><span class="s2">"not a time"</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">'not a time'</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.watch.snapshot">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_alive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">pid_alive&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/watch.html#snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.snapshot" title="Link to this definition">#</a></dt>
 <dd><p>The live sessions right now, keyed by session id.</p>
@@ -456,7 +516,7 @@ fragment – a line the writer has not finished – is left for the next read.</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=f81738d5"></script>
+      <script src="../_static/documentation_options.js?v=cfefb2bf"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -49,18 +49,21 @@ session’s conversation.
 |----------------------------------------------------------------------|--------------------------------------------|
 | [`HOOK_KINDS`](#crowsnest.watch.HOOK_KINDS)          | What a hook event is called in the stream. |
 | [`QUIET_NOTIFICATIONS`](#crowsnest.watch.QUIET_NOTIFICATIONS) | Notification types that are not a request. |
+| [`LOUD_KINDS`](#crowsnest.watch.LOUD_KINDS)          | The kinds that need the person.            |
 | [`WORKING`](#crowsnest.watch.WORKING)             | the session is working.                    |
 
 ### Functions
 
-| [`attention_wakes`](#crowsnest.watch.attention_wakes)(\*[, store, row_of, home, ...])    | One `woke` event per attention item that just left `later`.                         |
-|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| [`diff`](#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.         |
-| [`events`](#crowsnest.watch.events)(\*[, interval, home, is_alive, sleep, ...]) | Yield one dict per change, forever -- or for `ticks` snapshots when given.          |
-| [`hook_event`](#crowsnest.watch.hook_event)(record)                                 | One line of the hook log as an event, or `None` for an event kind we do not stream. |
-| [`snapshot`](#crowsnest.watch.snapshot)(\*[, home, is_alive, all_homes, config])  | The live sessions right now, keyed by session id.                                   |
-| [`tail_events`](#crowsnest.watch.tail_events)(path, position)                        | The JSON lines appended since `position`, and where to resume.                      |
-| [`tail_position`](#crowsnest.watch.tail_position)(path)                                | Where a reader that wants only *new* lines should start: the end of the file now.   |
+| [`attention_wakes`](#crowsnest.watch.attention_wakes)(\*[, store, row_of, home, ...])    | One `woke` event per attention item that just left `later`.                                                                |
+|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| [`diff`](#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.                                                |
+| [`events`](#crowsnest.watch.events)(\*[, interval, home, is_alive, sleep, ...]) | Yield one dict per change, forever -- or for `ticks` snapshots when given.                                                 |
+| [`hook_event`](#crowsnest.watch.hook_event)(record)                                 | One line of the hook log as an event, or `None` for an event kind we do not stream.                                        |
+| [`line`](#crowsnest.watch.line)(event, \*[, plain])                           | One event as the line a watcher relays.                                                                                    |
+| [`local_time`](#crowsnest.watch.local_time)(stamp, \*[, now])                       | An ISO timestamp as local `HH:MM`, with the date in front when it is not today's, or the raw value when it cannot be read. |
+| [`snapshot`](#crowsnest.watch.snapshot)(\*[, home, is_alive, all_homes, config])  | The live sessions right now, keyed by session id.                                                                          |
+| [`tail_events`](#crowsnest.watch.tail_events)(path, position)                        | The JSON lines appended since `position`, and where to resume.                                                             |
+| [`tail_position`](#crowsnest.watch.tail_position)(path)                                | Where a reader that wants only *new* lines should start: the end of the file now.                                          |
 
 ### crowsnest.watch.DFLT_INTERVAL *= 5.0*
 
@@ -71,6 +74,11 @@ to a human and two file listings per tick is nothing.
 
 What a hook event is called in the stream. `needs-you` and `stopped` are named for
 what the human should do about them, which is what the registry statuses are not.
+
+### crowsnest.watch.LOUD_KINDS *= frozenset({'error', 'intent', 'needs-you', 'waiting', 'woke'})*
+
+The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
+catches “waiting” and “error” without reading the line.
 
 ### crowsnest.watch.QUIET_NOTIFICATIONS *= frozenset({'idle_prompt'})*
 
@@ -167,6 +175,42 @@ True
 True
 >>> hook_event({'event': 'notification', 'notification_type': 'permission_prompt'})['kind']
 'needs-you'
+```
+
+### crowsnest.watch.line(event, , plain=False)
+
+One event as the line a watcher relays.
+
+By default it is Markdown in the shape every message about a session takes: the
+event’s own time in bold, the session’s name in bold, a colon, then one line –
+`**14:12** **sweep2-qh**: waiting (crowsnest) — Squash or rebase?`. The time is
+the event’s `at`, when it happened, never when it is printed; a name from another
+home reads `name@home`; a kind in [`LOUD_KINDS`](#crowsnest.watch.LOUD_KINDS) is bold as well. `plain`
+gives the unformatted line the stream always printed
+(`14:12  waiting  sweep2-qh (crowsnest) — Squash or rebase?`). `--json` is
+neither: it prints the event itself.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> event = {"at": "2026-09-28T14:12:00+00:00", "kind": "busy", "name": "x",
+...          "project": "p", "home": "", "detail": ""}
+>>> line(event).endswith("** **x**: busy (p)")
+True
+```
+
+### crowsnest.watch.local_time(stamp, , now=None)
+
+An ISO timestamp as local `HH:MM`, with the date in front when it is not today’s,
+or the raw value when it cannot be read.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> local_time("not a time")
+'not a time'
 ```
 
 ### crowsnest.watch.snapshot(\*, home=None, is_alive=<function pid_alive>, all_homes=False, config=None)

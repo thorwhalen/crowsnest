@@ -11,6 +11,7 @@ crowsnest.watch
       DFLT_INTERVAL
       HOOK_KINDS
       QUIET_NOTIFICATIONS
+      LOUD_KINDS
       WORKING
    
    .. rubric:: Functions
@@ -21,6 +22,8 @@ crowsnest.watch
       diff
       events
       hook_event
+      line
+      local_time
       snapshot
       tail_events
       tail_position
