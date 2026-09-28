@@ -143,14 +143,19 @@ error, or an item the person put off **woke** (its time passed, or it changed wh
   `crowsnest intent answer <id> "<one line>"` (`--failed` when it could not be done). The
   next courier tick carries the line to the page.
 
-**Default shape for every unsolicited line you relay from this stream**, unless the user
-asks for something else: bold `**HH:MM**`, a colon, then one line — `**14:12**: sweep2-qh
-is waiting on CI for its fixed branch before merging. Nothing needs you.` The time is the
-**source's** — when the event happened, never when you type it, same rule as "What to
-return" below; a five-day-old warning restamped at relay time reads as current for as long
-as anyone repeats it. Bold the one thing inside the line that changed or that the user must
-act on — a fact, a name they need to respond to, a number that decides something — not
-every proper noun; bolding everything carries nothing.
+**Default shape for every message that reports on a session** — a line from that stream,
+a scout's or worker's result you relay, and an answer about what a session did — unless the
+user asks for something else: bold `**HH:MM**`, then the bolded session name(s), a colon,
+then one line — `**14:12** **sweep2-qh**: waiting on CI for its fixed branch before
+merging. Nothing needs you.` `crowsnest watch` and `crowsnest triage` print their lines in
+this shape already (`--plain` for the bare columns), so relay them as they are. An answer
+that covers several sessions uses the shape once per item. It is not only for the watch
+stream: the rule went missing whenever the report came from anywhere else. The time is the
+**source's** — when the event happened, never when you type it; a five-day-old warning
+restamped at relay time reads as current for as long as anyone repeats it. Besides the time
+and the session names, bold only the one thing that changed or that the user must act on —
+a fact, a number that decides something — not every proper noun; bolding everything
+carries nothing.
 
 Do not re-run the roster in a loop. The stream is the loop.
 
@@ -168,24 +173,27 @@ more:
 
 ```
 ## Waiting on you
-- <name> (<project>, <HH:MM, or date HH:MM>, <age>) — <what for, and the question if there is one>
+**<HH:MM, or date HH:MM>** **<name>** (<project>, <age>): <what for, and the question if there is one>
 
 ## Just finished
-- <name> (<project>, <HH:MM, or date HH:MM>, <age>) — <its last words, one line>
+**<HH:MM, or date HH:MM>** **<name>** (<project>, <age>): <its last words, one line>
 
 ## Working
-- <project> (<HH:MM, or date HH:MM>, <age> of its newest item): <one line for the whole project, however many sessions>
+**<HH:MM, or date HH:MM>** **<project>** (<age> of its newest item): <one line for the whole project, however many sessions>
 
 ## Headline
 <N waiting on you, N just finished, N working, N idle.>
 ```
+
+Every item is in the default shape above (bold source time, bold name, colon, one line):
+the same line `crowsnest triage` prints, so it can be relayed as it is.
 
 Group **Working** and idle sessions by project, not by session. Omit an empty section
 and say so in the headline. Quote a session's last words; never invent a summary of
 work you did not read. Say which tier answered each item when it matters — "from its
 transcript" and "it told me" are different kinds of evidence.
 
-**Every item carries its source's time, never yours.** That is when the quoted thing was said. `crowsnest triage` prints it beside every item as `(HH:MM, age)`. The text roster prints it beside last words and calls in flight. For a waiting row the roster's status age already is that time, since the session began waiting on its question when its status changed. `--json` gives the time as each row's `said_at` and `said_at_basis`. Anywhere else, the roster's age column is how long a session has been in its status, which is a different fact. A claim you repeat from another session, a ledger or an earlier report keeps **that source's** time. Never stamp a relayed claim with the moment you relay it: a warning five days old, restamped at each relay, reads as current for as long as anyone repeats it. A claim older than `stale_after` (the `[attention]` table's, default 24 h) is said as "as of <date>" and re-read at tier 1 before you repeat it as current. If the source gives no time, write *time unknown*. Never borrow another time.
+**Every item carries its source's time, never yours.** That is when the quoted thing was said. `crowsnest triage` prints it in bold at the head of every item (`--plain`: beside it as `(HH:MM, age)`). The text roster prints it beside last words and calls in flight. For a waiting row the roster's status age already is that time, since the session began waiting on its question when its status changed. `--json` gives the time as each row's `said_at` and `said_at_basis`. Anywhere else, the roster's age column is how long a session has been in its status, which is a different fact. A claim you repeat from another session, a ledger or an earlier report keeps **that source's** time. Never stamp a relayed claim with the moment you relay it: a warning five days old, restamped at each relay, reads as current for as long as anyone repeats it. A claim older than `stale_after` (the `[attention]` table's, default 24 h) is said as "as of <date>" and re-read at tier 1 before you repeat it as current. If the source gives no time, write *time unknown*. Never borrow another time.
 
 ## When the answer is not a report
 

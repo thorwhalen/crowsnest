@@ -47,6 +47,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from crowsnest.activity import Activity, read_activity
 from crowsnest.hook import events_path as _events_path
@@ -55,12 +56,15 @@ from crowsnest.registry import LiveSession, live_sessions, pid_alive
 __all__ = [
     "DFLT_INTERVAL",
     "HOOK_KINDS",
+    "LOUD_KINDS",
     "QUIET_NOTIFICATIONS",
     "WORKING",
     "attention_wakes",
     "diff",
     "events",
     "hook_event",
+    "line",
+    "local_time",
     "snapshot",
     "tail_events",
     "tail_position",
@@ -86,6 +90,58 @@ QUIET_NOTIFICATIONS = frozenset({"idle_prompt"})
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+#: The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
+#: catches "waiting" and "error" without reading the line.
+LOUD_KINDS = frozenset({"waiting", "error", "needs-you", "woke", "intent"})
+
+
+def local_time(stamp: str, *, now: datetime | None = None) -> str:
+    """An ISO timestamp as local ``HH:MM``, with the date in front when it is not today's,
+    or the raw value when it cannot be read.
+
+    >>> local_time("not a time")
+    'not a time'
+    """
+    try:
+        then = datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone()
+    except ValueError:
+        return stamp
+    today = (datetime.now(timezone.utc) if now is None else now).astimezone().date()
+    return then.strftime("%H:%M" if then.date() == today else "%Y-%m-%d %H:%M")
+
+
+def line(event: Mapping[str, Any], *, plain: bool = False) -> str:
+    """One event as the line a watcher relays.
+
+    By default it is Markdown in the shape every message about a session takes: the
+    event's own time in bold, the session's name in bold, a colon, then one line --
+    ``**14:12** **sweep2-qh**: waiting (crowsnest) — Squash or rebase?``. The time is
+    the event's ``at``, when it happened, never when it is printed; a name from another
+    home reads ``name@home``; a kind in :data:`LOUD_KINDS` is bold as well. ``plain``
+    gives the unformatted line the stream always printed
+    (``14:12  waiting  sweep2-qh (crowsnest) — Squash or rebase?``). ``--json`` is
+    neither: it prints the event itself.
+
+    >>> event = {"at": "2026-09-28T14:12:00+00:00", "kind": "busy", "name": "x",
+    ...          "project": "p", "home": "", "detail": ""}
+    >>> line(event).endswith("** **x**: busy (p)")
+    True
+    """
+    when = local_time(str(event.get("at") or ""))
+    who = str(event.get("name") or "") + (
+        f"@{event['home']}" if event.get("home") else ""
+    )
+    kind = str(event.get("kind") or "")
+    project = str(event.get("project") or "")
+    detail = " ".join(str(event.get("detail") or "").split())  # one line, whatever came
+    if plain:
+        out = f"{when}  {kind:<8} {who} ({project})"
+        return out + (f" — {detail}" if detail else "")
+    said = f"**{kind}**" if kind in LOUD_KINDS else kind
+    out = f"**{when}** **{who}**: {said} ({project})"
+    return out + (f" — {detail}" if detail else "")
 
 
 def _one_line(text: str, limit: int = DETAIL_LIMIT) -> str:
