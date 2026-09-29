@@ -71,6 +71,10 @@ before the second starts.
 Five parts, in this order, and nothing else:
 
 1. **Where to look first** — issue URL, discussion URL, a file path, a ledger path.
+   Add where the worker keeps its working documents (research, reports, analyses) when
+   they are not for the repo's `docs/`: `$PP/_agent_work/<corpus>/`, never a new
+   `~/.local/share/<name>/` folder, which is for packages and apps only (the
+   `app-data-lifecycle` skill owns the rule).
 2. **What "done" is** — the acceptance line, copied from the issue, not paraphrased.
 3. **What not to touch** — the files another session owns, if any.
 4. **The reply contract**, verbatim:
