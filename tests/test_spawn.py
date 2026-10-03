@@ -718,3 +718,93 @@ def test_spawn_config_selects_the_launcher_too_not_only_the_homes(tmp_path, monk
     result = spawn("s", cwd=str(tmp_path), config=explicit, home=tmp_path, wait=0.05)
     assert seen and seen[0][0] == str(chosen)
     assert result["pid"] == 0  # nothing registers; the command line is the point
+
+
+# --- trust (#138) -------------------------------------------------------------------
+
+
+def _home_with_trust(tmp_path, projects):
+    import json
+
+    home = tmp_path / "acct"
+    home.mkdir()
+    (home / ".claude.json").write_text(json.dumps({"projects": projects}))
+    return home
+
+
+def _noop_builtin(monkeypatch, calls):
+    monkeypatch.setattr(
+        spawn_module,
+        "default_spawner",
+        lambda: (lambda argv, **k: calls.append(argv), "tmux"),
+    )
+
+
+def test_spawn_refuses_an_untrusted_folder_with_the_fix(tmp_path, monkeypatch):
+    home = _home_with_trust(tmp_path, {})
+    calls = []
+    _noop_builtin(monkeypatch, calls)
+    with pytest.raises(spawn_module.UntrustedFolder, match="--trust"):
+        spawn("demo", cwd=str(tmp_path / "repo"), home=home, wait=0.05)
+    assert calls == []
+
+
+def test_spawn_accepts_a_folder_trusted_directly_or_by_an_ancestor(
+    tmp_path, monkeypatch
+):
+    repo = tmp_path / "work" / "repo"
+    home = _home_with_trust(
+        tmp_path, {str(_resolved(tmp_path / "work")): {"hasTrustDialogAccepted": True}}
+    )
+    calls = []
+    _noop_builtin(monkeypatch, calls)
+    spawn("demo", cwd=str(repo), home=home, wait=0.05)
+    assert len(calls) == 1
+
+
+def test_spawn_trust_flag_records_the_folder(tmp_path, monkeypatch):
+    import json
+
+    home = _home_with_trust(tmp_path, {})
+    repo = tmp_path / "repo"
+    calls = []
+    _noop_builtin(monkeypatch, calls)
+    spawn("demo", cwd=str(repo), home=home, wait=0.05, trust=True)
+    saved = json.loads((home / ".claude.json").read_text())["projects"]
+    assert saved[str(_resolved(repo))]["hasTrustDialogAccepted"] is True
+    assert len(calls) == 1
+
+
+def test_spawn_checks_add_dirs_too(tmp_path, monkeypatch):
+    ok = tmp_path / "ok"
+    home = _home_with_trust(tmp_path, {str(_resolved(ok)): {"hasTrustDialogAccepted": True}})
+    _noop_builtin(monkeypatch, [])
+    with pytest.raises(spawn_module.UntrustedFolder, match="other"):
+        spawn("demo", cwd=str(ok), add_dirs=[str(tmp_path / "other")], home=home, wait=0.05)
+
+
+def test_spawn_does_not_check_a_callers_spawner_or_an_unknown_account(tmp_path):
+    home = _home_with_trust(tmp_path, {})
+    spawn("demo", cwd="/some/repo", spawner=lambda *a, **k: None, home=home, wait=0.05)
+    assert spawn_module.trusted("/x", home=tmp_path / "no-config") is None
+
+
+def test_a_registration_timeout_says_what_the_pane_shows(tmp_path):
+    home = tmp_path / "h"
+    home.mkdir()
+    result = spawn(
+        "ghost",
+        cwd="/some/repo",
+        spawner=lambda *a, **k: None,
+        peek=lambda name: "Is this a project you created or one you trust?\n 1. Yes",
+        home=home,
+        wait=0.05,
+    )
+    assert result["pid"] == 0 and "trust dialog" in result["how"]
+
+
+def test_pane_state_names_blockers_and_falls_back_to_the_tail():
+    assert "login" in spawn_module.pane_state("Please run /login")
+    assert "root" in spawn_module.pane_state("--dangerously-skip-permissions cannot be used with root/sudo")
+    assert "boom" in spawn_module.pane_state("a\n\nboom\n")
+    assert spawn_module.pane_state("") == ""

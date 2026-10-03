@@ -1165,6 +1165,7 @@ def spawn(
     binary: str = "",
     add_dirs: str | None = None,
     wait: float = DFLT_WAIT,
+    trust: bool = False,
 ) -> str:
     """Start a named session in `--cwd`; waits for it to register, then prints its row.
 
@@ -1184,6 +1185,10 @@ def spawn(
 
     `--add-dirs a,b,c` (or a file path with one directory per line) grants the session
     those directories too, which is how a fleet manager gets every repository of its fleet.
+
+    A `--cwd` or `--add-dirs` folder the account has never trusted is refused with the
+    one-time fix (a session there would sit at the trust dialog); `--trust` records it as
+    trusted instead -- pass it only when you mean it.
 
     `--model` and `--effort` are worth stating on every spawn: left out, the session
     inherits the account's default, which is the expensive one exactly when nobody was
@@ -1212,6 +1217,7 @@ def spawn(
         binary=binary,
         wait=wait,
         add_dirs=_dir_list(add_dirs),
+        trust=trust,
     )
     where = f" in {result['home']}" if result.get("home") else ""
     # The model is echoed because choosing it is the one decision a dispatcher makes by
