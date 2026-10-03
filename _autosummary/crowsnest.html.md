@@ -309,7 +309,7 @@ every [`roster()`](#crowsnest.roster) row does – the two things a page naming 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None)
+### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None)
 
 Start a session named `name` in `cwd`, and wait for the registry to see it.
 
@@ -346,6 +346,16 @@ is recovery work if it is not written down now, so one `spawn` line goes into
 a test’s `tmp_path` being why it is an argument). Its `name` is empty when this
 command was not run from inside a session – the honest answer for a person at a shell
 prompt – and the whole dict is `{}` only when the record could not be written.
+
+**Trust.** A folder the account has never opened stops the new session at Claude
+Code’s workspace trust dialog, where it never registers. With one of this module’s
+own spawners, `cwd` and every `add_dirs` entry are checked first
+(`trusted()`) and an untrusted one raises `UntrustedFolder` naming it and
+the one-time fix. `trust=True` – only ever a person’s explicit flag – records the
+folders as trusted instead. A caller’s `spawner` is not checked: it may run
+elsewhere, where this machine’s record says nothing. When the registry never sees the
+session, `peek` (`(name) -> str`; tmux’s pane by default) says what it displays,
+and `how` carries that.
 
 A name that a live session already carries is refused (`ValueError`): the name is
 the address for everything after – `show`, `open`, a message – and two sessions

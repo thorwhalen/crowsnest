@@ -1,4 +1,4 @@
-> built 2026-10-03 07:19 UTC from 5404ebf (main) · crowsnest 0.0.84. Details: build_info.json
+> built 2026-10-03 07:50 UTC from 59a0d75 (main) · crowsnest 0.0.85. Details: build_info.json
 
 # index.html.md
 
@@ -2511,7 +2511,7 @@ every [`roster()`](_autosummary/crowsnest.html.md#crowsnest.roster) row does –
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None)
+### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None)
 
 Start a session named `name` in `cwd`, and wait for the registry to see it.
 
@@ -2548,6 +2548,16 @@ is recovery work if it is not written down now, so one `spawn` line goes into
 a test’s `tmp_path` being why it is an argument). Its `name` is empty when this
 command was not run from inside a session – the honest answer for a person at a shell
 prompt – and the whole dict is `{}` only when the record could not be written.
+
+**Trust.** A folder the account has never opened stops the new session at Claude
+Code’s workspace trust dialog, where it never registers. With one of this module’s
+own spawners, `cwd` and every `add_dirs` entry are checked first
+(`trusted()`) and an untrusted one raises `UntrustedFolder` naming it and
+the one-time fix. `trust=True` – only ever a person’s explicit flag – records the
+folders as trusted instead. A caller’s `spawner` is not checked: it may run
+elsewhere, where this machine’s record says nothing. When the registry never sees the
+session, `peek` (`(name) -> str`; tmux’s pane by default) says what it displays,
+and `how` carries that.
 
 A name that a live session already carries is refused (`ValueError`): the name is
 the address for everything after – `show`, `open`, a message – and two sessions
@@ -6731,16 +6741,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-03 07:19 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/5404ebfc10110475a6ce5172972cdb769c723359"><code>5404ebf</code></a> on branch <code>main</code>, for **crowsnest 0.0.84** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-03 07:50 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/59a0d75f87deb041e681bbad9047fb505a0fea90"><code>59a0d75</code></a> on branch <code>main</code>, for **crowsnest 0.0.85** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.85) is behind the latest release on PyPI (0.0.86): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/5404ebfc10110475a6ce5172972cdb769c723359"><code>5404ebfc10110475a6ce5172972cdb769c723359</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/59a0d75f87deb041e681bbad9047fb505a0fea90"><code>59a0d75f87deb041e681bbad9047fb505a0fea90</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6751,9 +6763,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/37105849023">37105849023</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/37107542561">37107542561</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>5404ebfc10110475a6ce5172972cdb769c723359</code> (in the history of the built commit) |
+| Event commit | <code>59a0d75f87deb041e681bbad9047fb505a0fea90</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6778,13 +6790,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.84/">0.0.84</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.86/">0.0.86</a>, newer than the documented version (0.0.85).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 5404ebfc10110475a6ce5172972cdb769c723359
+git checkout 59a0d75f87deb041e681bbad9047fb505a0fea90
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
