@@ -23,7 +23,7 @@ Source: [`crowsnest/data/skills/crowsnest`](https://github.com/thorwhalen/crowsn
 
 ### `crowsnest-dispatch`
 
-Hand a corpus of work to a Claude Code session instead of doing it yourself. Use when the watching (crowsnest) session is asked to start work somewhere, when a conversation about one project has run on long enough that it belongs in that project's own session, or when an existing session should be given the next thing to do. Triggers on: 'start a session in X to do Y', 'get someone working on this', 'have X do the next issue', 'spin up a session for', 'tell the parser session to', 'hand this off', 'who should do this', 'take this over to that repo'. Covers naming, the brief, spawning, subscribing to the finish, and recording the dispatch.
+Hand a corpus of work to a Claude Code session instead of doing it yourself. Use when the watching (crowsnest) session is asked to start work somewhere, when a conversation about one project has run on long enough that it belongs in that project's own session, or when an existing session should be given the next thing to do. Triggers on: 'start a session in X to do Y', 'get someone working on this', 'have X do the next issue', 'spin up a session for', 'tell the parser session to', 'hand this off', 'who should do this', 'take this over to that repo'. Covers naming, scoping (which cwd and add-dirs, so the session sees the routing documents and skills it needs), the model, the brief, spawning, subscribing to the finish, and recording the dispatch.
 
 ```bash
 gh skill install thorwhalen/crowsnest crowsnest-dispatch --agent claude-code
