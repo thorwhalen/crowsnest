@@ -45,13 +45,14 @@ corpus and the job: `parser-tests`, `tw-deploy-fix`, `cn-ledger`. Never reuse a 
 
 ## 3. Scope the session: what will it be able to see?
 
-A session loads what its scope lets it load, and it will not go looking for the rest. The
-`session-scoping` skill (installed from `my_skills`) has the verified facts and the full
-checklist; the four decisions that belong on every dispatch line are these.
+A session loads what its scope lets it load, and it will not go looking for the rest. If a
+`session-scoping` skill is installed (the author's fleet ships one), it has the verified
+facts and the full checklist; the four decisions that belong on every dispatch line are
+these.
 
 - **The cwd decides which `CLAUDE.md` files load**: the user's, the cwd's, and every
   ancestor's. An `--add-dir` contributes its *skills* but **not** its `CLAUDE.md`. So pick
-  the cwd for its instructions: a group root (`$PP/g/g_av`) for cross-package production,
+  the cwd for its instructions: a group root (`$PP/g/<group>`) for cross-package production,
   so the group's routing document loads; a package root for work inside that package.
   Never `$PP` itself (it loads this lookout's instructions and none of the work's), and
   never a working folder (nothing loads). Working documents still go to
@@ -61,19 +62,19 @@ checklist; the four decisions that belong on every dispatch line are these.
   the sentence that says when to load them. Add what the session must edit; name what
   each add-dir is for.
 - **If the routing document is not under the cwd, make it the brief's first Read**
-  (`Read $PP/g/g_av/workspace_overview.md first`), and **name the two or three skills to
-  load first** (`workspace-overview`, `fleet-protocol`, the package skill). A skill named
+  (`Read $PP/g/<group>/workspace_overview.md first`), and **name the two or three skills to
+  load first** (the group's overview skill, the package skill, and any always-read protocol
+  skill the fleet has). A skill named
   in the brief is invocable even when the listing dropped its description.
 - **Consult the fleet SSOT while writing the brief**, so the brief carries pointers to the
   owning packages rather than your guess: `priv group ls`, `priv group show <group>`, the
-  group's overview, `ir discover skills "<what the task needs>"`. The table of registries
-  is `references/fleet-ssot.md` in `my_skills`.
+  group's overview, `ir discover skills "<what the task needs>"`, or whatever registry the
+  fleet keeps for who does what.
 
-The session that made the Punic Wars crawl (2026-10-02) was spawned from `$PP` with the
-AV group as an add-dir and "use whatever fleet package fits" in its brief: it saw 318
-skills (44 with descriptions), never loaded the group's routing document, and wrote
-scripts for what two packages already did. The diagnosis is
-`my_skills/references/fleet-protocol-diagnosis-2026-10.md`.
+The case that produced this step: a production session spawned from `$PP` with its group
+as an add-dir and "use whatever fleet package fits" in its brief saw 318 skills (44 with
+descriptions), never loaded the group's routing document, and wrote scripts for what two
+packages already did. The scope, not the doctrine, was the first thing wrong.
 
 ## 4. Choose the model before the brief
 
@@ -149,7 +150,7 @@ before you try again: a session that started but registered on another account i
 thing that looks like a failure and is not.
 
 For a session that already exists, `SendMessage` to its name from `ListAgents`, with the
-same five parts. Idle only — never a `busy` or `waiting` one.
+same six parts. Idle only — never a `busy` or `waiting` one.
 
 ## 7. Subscribe once, then stop looking
 
