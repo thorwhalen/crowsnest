@@ -42,10 +42,10 @@ __all__ = [
     "ACCOUNT_VARS",
     "CLAUDE_BIN",
     "SESSION_VARS",
+    "UntrustedFolder",
     "child_env",
     "claude_argv",
     "default_spawner",
-    "UntrustedFolder",
     "env_prefix",
     "local_argv",
     "pane_state",
@@ -499,12 +499,15 @@ def pane_state(text: str, *, lines: int = 3) -> str:
 
 def _tmux_peek(name: str) -> str:
     """What the tmux session ``name`` is displaying; empty when there is none to read."""
-    result = subprocess.run(
-        ["tmux", "capture-pane", "-p", "-t", name],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            ["tmux", "capture-pane", "-p", "-t", name],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return ""
     return result.stdout if result.returncode == 0 else ""
 
 
