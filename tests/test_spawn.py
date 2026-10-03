@@ -749,9 +749,7 @@ def test_spawn_refuses_an_untrusted_folder_with_the_fix(tmp_path, monkeypatch):
     assert calls == []
 
 
-def test_spawn_accepts_a_folder_trusted_directly_or_by_an_ancestor(
-    tmp_path, monkeypatch
-):
+def test_spawn_accepts_a_folder_trusted_directly_or_by_an_ancestor(tmp_path, monkeypatch):
     repo = tmp_path / "work" / "repo"
     home = _home_with_trust(
         tmp_path, {str(_resolved(tmp_path / "work")): {"hasTrustDialogAccepted": True}}
@@ -777,10 +775,14 @@ def test_spawn_trust_flag_records_the_folder(tmp_path, monkeypatch):
 
 def test_spawn_checks_add_dirs_too(tmp_path, monkeypatch):
     ok = tmp_path / "ok"
-    home = _home_with_trust(tmp_path, {str(_resolved(ok)): {"hasTrustDialogAccepted": True}})
+    home = _home_with_trust(
+        tmp_path, {str(_resolved(ok)): {"hasTrustDialogAccepted": True}}
+    )
     _noop_builtin(monkeypatch, [])
     with pytest.raises(spawn_module.UntrustedFolder, match="other"):
-        spawn("demo", cwd=str(ok), add_dirs=[str(tmp_path / "other")], home=home, wait=0.05)
+        spawn(
+            "demo", cwd=str(ok), add_dirs=[str(tmp_path / "other")], home=home, wait=0.05
+        )
 
 
 def test_spawn_does_not_check_a_callers_spawner_or_an_unknown_account(tmp_path):
@@ -805,6 +807,8 @@ def test_a_registration_timeout_says_what_the_pane_shows(tmp_path):
 
 def test_pane_state_names_blockers_and_falls_back_to_the_tail():
     assert "login" in spawn_module.pane_state("Please run /login")
-    assert "root" in spawn_module.pane_state("--dangerously-skip-permissions cannot be used with root/sudo")
+    assert "root" in spawn_module.pane_state(
+        "--dangerously-skip-permissions cannot be used with root/sudo"
+    )
     assert "boom" in spawn_module.pane_state("a\n\nboom\n")
     assert spawn_module.pane_state("") == ""
