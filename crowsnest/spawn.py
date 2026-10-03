@@ -24,6 +24,7 @@ line a remote spawner is handed stays runnable where it is going.
 
 from __future__ import annotations
 
+import json
 import os
 import shlex
 import shutil
@@ -41,12 +42,16 @@ __all__ = [
     "ACCOUNT_VARS",
     "CLAUDE_BIN",
     "SESSION_VARS",
+    "UntrustedFolder",
     "child_env",
     "claude_argv",
     "default_spawner",
     "env_prefix",
     "local_argv",
+    "pane_state",
     "spawn",
+    "trust_config_path",
+    "trusted",
 ]
 
 #: The variables that select which account a session runs under. ``CLAUDE_CONFIG_DIR`` is
@@ -417,6 +422,95 @@ def default_spawner() -> tuple[Callable[..., None], str]:
     return _subprocess_spawner, "subprocess"
 
 
+class UntrustedFolder(ValueError):
+    """A folder the target account has never trusted: its session would stop at the dialog."""
+
+
+def trust_config_path(home: str | Path | None) -> Path:
+    """The file Claude Code keeps per-folder trust in for the account ``home``.
+
+    The default home keeps it beside the home (``~/.claude.json``); any other home, inside
+    itself (``<home>/.claude.json``).
+    """
+    target = _resolved(
+        home if home is not None else os.environ.get(HOME_ENV_VAR) or DFLT_HOME
+    )
+    if target == _resolved(DFLT_HOME):
+        return target.parent / ".claude.json"
+    return target / ".claude.json"
+
+
+def _read_trust_projects(config_file: Path) -> dict | None:
+    try:
+        projects = json.loads(config_file.read_text()).get("projects")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return projects if isinstance(projects, dict) else None
+
+
+def trusted(folder: str | Path, *, home: str | Path | None = None) -> bool | None:
+    """Whether ``folder`` (or an ancestor, which Claude Code honours) is trusted for ``home``.
+
+    ``None`` when this machine holds no trust record for that account (no config file, or
+    nothing in it to go by): the answer is unknown and the caller should not block on it.
+
+    >>> trusted('/nowhere', home='/no/such/home') is None
+    True
+    """
+    projects = _read_trust_projects(trust_config_path(home))
+    if projects is None:
+        return None
+    path = _resolved(folder)
+    return any(
+        (projects.get(str(p)) or {}).get("hasTrustDialogAccepted") is True
+        for p in (path, *path.parents)
+    )
+
+
+def _accept_trust(folder: str | Path, *, home: str | Path | None) -> None:
+    """Record ``folder`` as trusted in ``home``'s config (atomic replace), as ``--trust`` asks."""
+    config_file = trust_config_path(home)
+    data = json.loads(config_file.read_text())
+    entry = data.setdefault("projects", {}).setdefault(str(_resolved(folder)), {})
+    entry["hasTrustDialogAccepted"] = True
+    tmp = config_file.with_name(config_file.name + ".crowsnest-tmp")
+    tmp.write_text(json.dumps(data, indent=2))
+    os.replace(tmp, config_file)
+
+
+#: What a pane that is not a running session shows, as ``(needle, state)`` pairs.
+_PANE_SIGNS = (
+    ("trust", "a workspace trust dialog (the folder is not trusted for this account)"),
+    ("/login", "a login prompt (the account is not signed in)"),
+    ("log in", "a login prompt (the account is not signed in)"),
+    ("cannot be used with root", "an error: the flag is refused under root/sudo"),
+)
+
+
+def pane_state(text: str, *, lines: int = 3) -> str:
+    """One phrase for what a captured pane shows: a known blocker, else its last lines."""
+    low = text.lower()
+    for needle, state in _PANE_SIGNS:
+        if needle in low:
+            return state
+    tail = [ln.strip() for ln in text.splitlines() if ln.strip()][-lines:]
+    return "pane shows: " + " | ".join(tail) if tail else ""
+
+
+def _tmux_peek(name: str) -> str:
+    """What the tmux session ``name`` is displaying; empty when there is none to read."""
+    try:
+        result = subprocess.run(
+            ["tmux", "capture-pane", "-p", "-t", name],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return ""
+    return result.stdout if result.returncode == 0 else ""
+
+
 def _find_by_name(
     name: str, *, home: str | Path | None, wait: float
 ) -> LiveSession | None:
@@ -446,6 +540,8 @@ def spawn(
     add_dirs: Sequence[str] = (),
     binary: str = "",
     lineage_path: str | Path | None = None,
+    trust: bool = False,
+    peek: Callable[[str], str] | None = None,
 ) -> dict:
     """Start a session named ``name`` in ``cwd``, and wait for the registry to see it.
 
@@ -483,6 +579,16 @@ def spawn(
     command was not run from inside a session -- the honest answer for a person at a shell
     prompt -- and the whole dict is ``{}`` only when the record could not be written.
 
+    **Trust.** A folder the account has never opened stops the new session at Claude
+    Code's workspace trust dialog, where it never registers. With one of this module's
+    own spawners, ``cwd`` and every ``add_dirs`` entry are checked first
+    (:func:`trusted`) and an untrusted one raises :class:`UntrustedFolder` naming it and
+    the one-time fix. ``trust=True`` -- only ever a person's explicit flag -- records the
+    folders as trusted instead. A caller's ``spawner`` is not checked: it may run
+    elsewhere, where this machine's record says nothing. When the registry never sees the
+    session, ``peek`` (``(name) -> str``; tmux's pane by default) says what it displays,
+    and ``how`` carries that.
+
     A name that a live session already carries is refused (``ValueError``): the name is
     the address for everything after -- ``show``, ``open``, a message -- and two sessions
     behind one name make all of them ambiguous. Pick another, a suffix will do.
@@ -495,6 +601,7 @@ def spawn(
             f"{taken[0].cwd}); pick another name, for instance {name!r} with a suffix"
         )
     how = "custom"
+    builtin = spawner is None
     if spawner is None:
         spawner, how = default_spawner()
         if spawner in _BUILTIN_SPAWNERS:
@@ -503,6 +610,18 @@ def spawn(
             # caller's spawner, a replaced `default_spawner` -- is handed a keyword it
             # never asked for. Anything else resolves its own binary for its own target.
             spawner = partial(spawner, config=config)
+    if builtin:
+        for folder in (cwd, *add_dirs):
+            if trusted(folder, home=home) is False:
+                if trust:
+                    _accept_trust(folder, home=home)
+                    continue
+                raise UntrustedFolder(
+                    f"{folder} is not trusted for this account, so the session would "
+                    "stop at Claude Code's trust dialog and never register. Open it "
+                    f"once by hand (`cd {folder} && claude`, accept the dialog), or "
+                    "pass --trust to record it as trusted."
+                )
     argv = claude_argv(
         name,
         prompt=prompt,
@@ -530,11 +649,14 @@ def spawn(
     )
     parent = record.get("parent", {}) if record else {}
     if found is None:
+        reader = peek or (_tmux_peek if how == "tmux" else None)
+        shown = pane_state(reader(name)) if reader else ""
         return {
             "name": name,
             "pid": 0,
             "session_id": "",
-            "how": f"{how}: no registry file for {name!r} within {wait:.0f}s",
+            "how": f"{how}: no registry file for {name!r} within {wait:.0f}s"
+            + (f"; the session is showing {shown}" if shown else ""),
             "home": where,
             "parent": parent,
         }
