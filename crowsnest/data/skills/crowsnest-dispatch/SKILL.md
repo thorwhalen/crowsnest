@@ -7,8 +7,9 @@ description: >-
   or when an existing session should be given the next thing to do. Triggers on: 'start a
   session in X to do Y', 'get someone working on this', 'have X do the next issue', 'spin
   up a session for', 'tell the parser session to', 'hand this off', 'who should do this',
-  'take this over to that repo'. Covers naming, the brief, spawning, subscribing to the
-  finish, and recording the dispatch.
+  'take this over to that repo'. Covers naming, scoping (which cwd and add-dirs, so the
+  session sees the routing documents and skills it needs), the model, the brief, spawning,
+  subscribing to the finish, and recording the dispatch.
 ---
 
 # crowsnest-dispatch — handing a corpus of work to a session
@@ -42,7 +43,39 @@ The name is the address for everything afterwards — the roster row, `crowsnest
 `SendMessage`, and its ledger file. Pick a short, unique, lowercase one that says the
 corpus and the job: `parser-tests`, `tw-deploy-fix`, `cn-ledger`. Never reuse a live name.
 
-## 3. Choose the model before the brief
+## 3. Scope the session: what will it be able to see?
+
+A session loads what its scope lets it load, and it will not go looking for the rest. The
+`session-scoping` skill (installed from `my_skills`) has the verified facts and the full
+checklist; the four decisions that belong on every dispatch line are these.
+
+- **The cwd decides which `CLAUDE.md` files load**: the user's, the cwd's, and every
+  ancestor's. An `--add-dir` contributes its *skills* but **not** its `CLAUDE.md`. So pick
+  the cwd for its instructions: a group root (`$PP/g/g_av`) for cross-package production,
+  so the group's routing document loads; a package root for work inside that package.
+  Never `$PP` itself (it loads this lookout's instructions and none of the work's), and
+  never a working folder (nothing loads). Working documents still go to
+  `$PP/_agent_work/<corpus>/` by path.
+- **Add-dirs are for editing and for skills, and each one widens the skill listing.**
+  Past about 1% of the window the listing shows the least-used skills name-only, without
+  the sentence that says when to load them. Add what the session must edit; name what
+  each add-dir is for.
+- **If the routing document is not under the cwd, make it the brief's first Read**
+  (`Read $PP/g/g_av/workspace_overview.md first`), and **name the two or three skills to
+  load first** (`workspace-overview`, `fleet-protocol`, the package skill). A skill named
+  in the brief is invocable even when the listing dropped its description.
+- **Consult the fleet SSOT while writing the brief**, so the brief carries pointers to the
+  owning packages rather than your guess: `priv group ls`, `priv group show <group>`, the
+  group's overview, `ir discover skills "<what the task needs>"`. The table of registries
+  is `references/fleet-ssot.md` in `my_skills`.
+
+The session that made the Punic Wars crawl (2026-10-02) was spawned from `$PP` with the
+AV group as an add-dir and "use whatever fleet package fits" in its brief: it saw 318
+skills (44 with descriptions), never loaded the group's routing document, and wrote
+scripts for what two packages already did. The diagnosis is
+`my_skills/references/fleet-protocol-diagnosis-2026-10.md`.
+
+## 4. Choose the model before the brief
 
 **Fable is for solving hard problems, and for design and planning that needs intelligence.**
 Everything else runs on the cheapest model that finishes the job. Decide this *before* you
@@ -66,32 +99,40 @@ the procedure turns out to be wrong on repository one. Run one corpus at a time 
 user asks for parallel — and when a corpus is a fleet, let the first one land and be read
 before the second starts.
 
-## 4. Compose the brief as pointers
+## 5. Compose the brief as pointers
 
-Five parts, in this order, and nothing else:
+Six parts, in this order, and nothing else:
 
-1. **Where to look first** — issue URL, discussion URL, a file path, a ledger path.
+1. **Scope** — the cwd and why, the add-dirs and what each is for, the document to Read
+   first, the skills to load first (step 3).
+2. **Where to look first** — issue URL, discussion URL, a file path, a ledger path.
    Add where the worker keeps its working documents (research, reports, analyses) when
    they are not for the repo's `docs/`: `$PP/_agent_work/<corpus>/`, never a new
    `~/.local/share/<name>/` folder, which is for packages and apps only (the
    `app-data-lifecycle` skill owns the rule).
-2. **What "done" is** — the acceptance line, copied from the issue, not paraphrased.
-3. **What not to touch** — the files another session owns, if any.
-4. **The reply contract**, verbatim:
+3. **What "done" is** — the acceptance line, copied from the issue, not paraphrased. For a
+   production task ("make this", "render that") done includes the fleet check as a step
+   with an output: *before writing any script, list in your ledger the components and
+   skills found for each part; a part with none is an issue (`gap-to-issue`), not a
+   script.* "Use whatever fits" is satisfied by the first fit; a required list is not.
+4. **What not to touch** — the files another session owns, if any.
+5. **The reply contract**, verbatim:
 
    > Reply in at most five lines. Anything longer goes in your ledger
    > (`~/.local/share/crowsnest/ledger/<name>.md`) and your reply names the path.
-5. **Who to report to** — your session name, and that a request from you is a request for
+6. **Who to report to** — your session name, and that a request from you is a request for
    a status line, not permission for anything.
 
-If you find yourself writing a sixth paragraph explaining the work, stop: that paragraph
+If you find yourself writing a seventh paragraph explaining the work, stop: that paragraph
 belongs in an issue the session can read.
 
-## 5. Start it, or message it
+## 6. Start it, or message it
 
 ```bash
-crowsnest spawn <name> --cwd <dir> --model sonnet --effort medium --prompt "<the brief>"
+crowsnest spawn <name> --cwd <dir> [--add-dirs <dir>,<dir>] --model sonnet --effort medium --prompt "<the brief>"
 ```
+
+`--cwd` is the scope decision from step 3; `--add-dirs` only what the session edits.
 
 Always pass `--model` explicitly, even when it matches your own: left out, the session
 inherits whatever the user's default happens to be, which is the expensive one exactly
@@ -110,7 +151,7 @@ thing that looks like a failure and is not.
 For a session that already exists, `SendMessage` to its name from `ListAgents`, with the
 same five parts. Idle only — never a `busy` or `waiting` one.
 
-## 6. Subscribe once, then stop looking
+## 7. Subscribe once, then stop looking
 
 Pass `notify_when_idle: true` on the `SendMessage` (no message needed for a pure, free
 subscription) so you are told when this one dispatch finishes. It is one-shot and it
@@ -119,7 +160,7 @@ the `Monitor` tool.
 
 Do not poll. Do not send "are you done?".
 
-## 7. Record it and let go
+## 8. Record it and let go
 
 Write the dispatch into that corpus's ledger so it survives your next `/clear`: the name,
 the directory, what it was asked for, and where the acceptance line lives. Then drop the
