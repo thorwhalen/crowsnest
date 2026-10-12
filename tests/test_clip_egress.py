@@ -98,7 +98,11 @@ def test_the_pages_own_clips_cannot_publish_a_prefix_either():
         reason = "r" * pad + " " + TOKEN
         verdict = {"group": "needs_you", "why": "asked", "reason": reason, "asks": []}
         _assert_clean(
-            _row(status="waiting", activity={"last_assistant_text": reason}, verdict=verdict),
+            _row(
+                status="waiting",
+                activity={"last_assistant_text": reason},
+                verdict=verdict,
+            ),
             where=f"raw {pad}",
         )
 
@@ -117,7 +121,11 @@ def test_a_cut_reference_title_publishes_none_of_it():
         known = {"state": "open", "title": "t" * pad + " " + TOKEN}
         row = _row(
             links=[
-                {"kind": "issue", "url": "https://github.com/o/r/issues/7", "label": "o/r#7"}
+                {
+                    "kind": "issue",
+                    "url": "https://github.com/o/r/issues/7",
+                    "label": "o/r#7",
+                }
             ]
         )
         for kind, page in _pages_with_refs(row, known):
@@ -129,8 +137,9 @@ def _pages_with_refs(row: dict, known: dict):
     roster = {"sessions": [row], "counts": {}}
     ref_state = lambda url: known  # noqa: E731
     yield "static", render_report(roster, made_at=STAMP, ref_state=ref_state)
-    yield "interactive", render_report(
-        roster, made_at=STAMP, interactive=True, ref_state=ref_state
+    yield (
+        "interactive",
+        render_report(roster, made_at=STAMP, interactive=True, ref_state=ref_state),
     )
 
 
@@ -173,5 +182,7 @@ def test_the_brief_a_model_sees_is_sanitised_before_its_ask_is_cut():
     from crowsnest.actions import ASK_LIMIT, brief_of
 
     for pad in _around(ASK_LIMIT):
-        row = {"verdict": {"why": "decision", "asks": [{"text": "a" * pad + " " + TOKEN}]}}
+        row = {
+            "verdict": {"why": "decision", "asks": [{"text": "a" * pad + " " + TOKEN}]}
+        }
         assert "ghp_" not in str(brief_of(row)) and "AAAA" not in str(brief_of(row)), pad
