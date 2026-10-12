@@ -1,4 +1,4 @@
-> built 2026-10-03 07:50 UTC from 59a0d75 (main) · crowsnest 0.0.85. Details: build_info.json
+> built 2026-10-12 12:50 UTC from 8022182 (main) · crowsnest 0.0.86. Details: build_info.json
 
 # index.html.md
 
@@ -1826,7 +1826,8 @@ written here.
 Write a session’s one-line answer to a handed intent; the next tick carries it.
 
 `status` is `done` or `failed`. The text is kept to one line of at most
-`ANSWER_LIMIT` characters. It is published to whoever can open the page, so it
+`ANSWER_LIMIT` characters, scrubbed of credentials and home paths before it is
+clipped. It is published to whoever can open the page, so it
 says what happened in the page’s own terms, never a command’s output.
 
 * **Return type:**
@@ -1879,6 +1880,78 @@ same sessions the page does. `store` is the attention store (its default when
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+
+# _autosummary/crowsnest.egress.html.md
+
+# crowsnest.egress
+
+The page’s sanitiser, made safe against text that an earlier clip has already cut (#83).
+
+Several clips run on a row’s text *before* the page sees it: a tool call’s argument is cut
+to 80 characters ([`crowsnest.activity.describe_tool()`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.describe_tool)), a roster row’s prompt and last
+words to 240 (`crowsnest.tools._clip()`), a reason to 200, and the page cuts its own
+tile lines and raw asks. Each cut keeps a prefix and appends an ellipsis, and a credential
+or home path cut that way is a shape no pattern in `openloops.egress` recognises:
+`ghp_AAAA…` goes through `openloops.dashboard.Sanitizer.text()` untouched.
+
+The rows are not changed: their clipped text is attention’s material, so cutting it
+differently would resurface every item it touches. Instead the one choke point everything
+reaches the page through, [`Sanitizer`](_autosummary/crowsnest.egress.html.md#crowsnest.egress.Sanitizer), drops each word an ellipsis ends before it
+scrubs. A clip always cuts the last word it kept, so that is the only word that can be a
+fragment. The price is that a word a person wrote before an ellipsis of their own is lost
+too; a published line saying `Let me think…` reads `Let me …`, which loses nothing
+anyone acts on.
+
+Not for text that this module’s callers clip *after* sanitising ([`crowsnest.live.publishable()`](_autosummary/crowsnest.live.html.md#crowsnest.live.publishable)
+does): its own ellipsis follows an already-clean word, and dropping that word would eat
+every clipped line.
+
+### Functions
+
+| [`drop_cut_words`](_autosummary/crowsnest.egress.html.md#crowsnest.egress.drop_cut_words)(text)   | `text` without any word that an ellipsis ends; each ellipsis stays.   |
+|-------------------------------------------------------------------------|-----------------------------------------------------------------------|
+
+### Classes
+
+| [`Sanitizer`](_autosummary/crowsnest.egress.html.md#crowsnest.egress.Sanitizer)([aliases])   | `openloops.dashboard.Sanitizer` that first drops the word an ellipsis ends.   |
+|-------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+
+### *class* crowsnest.egress.Sanitizer(aliases=None)
+
+Bases: `Sanitizer`
+
+`openloops.dashboard.Sanitizer` that first drops the word an ellipsis ends.
+
+```pycon
+>>> Sanitizer().text('see ghp_' + 'A' * 20 + '…')
+'see …'
+>>> Sanitizer().text('a < b')
+'a &lt; b'
+```
+
+#### text(value)
+
+One field, safe to place in the document.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.egress.drop_cut_words(text)
+
+`text` without any word that an ellipsis ends; each ellipsis stays.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> drop_cut_words('Bash: use ghp_AAAAAAAA…')
+'Bash: use …'
+>>> drop_cut_words('Bash: use ghp_AAAAAAAA…; Read: /Users/an…')
+'Bash: use …; Read: …'
+>>> drop_cut_words('Read: notes.md')
+'Read: notes.md'
+```
 
 
 # _autosummary/crowsnest.gists.html.md
@@ -2597,6 +2670,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                                                   |
 | [`config`](_autosummary/crowsnest.config.html.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                                               |
 | [`courier`](_autosummary/crowsnest.courier.html.md#module-crowsnest.courier)     | The console's courier with no LLM: carry an owner-served console store both ways.                                                    |
+| [`egress`](_autosummary/crowsnest.egress.html.md#module-crowsnest.egress)       | The page's sanitiser, made safe against text that an earlier clip has already cut (#83).                                             |
 | [`gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)         | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
 | [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)           | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
 | [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)           | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
@@ -3860,8 +3934,10 @@ entered its status, `''` when it does not say.
 
 The page’s `openloops.dashboard.Sanitizer` scrubs and HTML-escapes; this undoes
 only the escaping, so a script that sets `textContent` shows exactly what the page’s
-markup would. `limit` clips the result’s whitespace-collapsed text to that many
-characters, and the clip is sanitised again.
+markup would. A word an earlier clip cut (one ending in an ellipsis) is dropped first
+([`crowsnest.egress`](_autosummary/crowsnest.egress.html.md#module-crowsnest.egress)). `limit` clips the result’s whitespace-collapsed text to
+that many characters, and the clip is sanitised again, by the plain sanitiser: its
+ellipsis follows a word that is already clean, and must not cost that word.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -6741,18 +6817,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-03 07:50 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/59a0d75f87deb041e681bbad9047fb505a0fea90"><code>59a0d75</code></a> on branch <code>main</code>, for **crowsnest 0.0.85** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-12 12:50 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/80221825db0b37bedee35af55ff601615ad0019b"><code>8022182</code></a> on branch <code>main</code>, for **crowsnest 0.0.86** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.85) is behind the latest release on PyPI (0.0.86): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/59a0d75f87deb041e681bbad9047fb505a0fea90"><code>59a0d75f87deb041e681bbad9047fb505a0fea90</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/80221825db0b37bedee35af55ff601615ad0019b"><code>80221825db0b37bedee35af55ff601615ad0019b</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6763,9 +6837,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/37107542561">37107542561</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/38251336913">38251336913</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>59a0d75f87deb041e681bbad9047fb505a0fea90</code> (in the history of the built commit) |
+| Event commit | <code>80221825db0b37bedee35af55ff601615ad0019b</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -6774,7 +6848,7 @@ The documentation and the package may be misaligned:
 | epythet  | 0.2.12  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
-| Python   | 3.12.14 |
+| Python   | 3.12.15 |
 
 ## Configuration as resolved
 
@@ -6790,13 +6864,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.86/">0.0.86</a>, newer than the documented version (0.0.85).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.86/">0.0.86</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 59a0d75f87deb041e681bbad9047fb505a0fea90
+git checkout 80221825db0b37bedee35af55ff601615ad0019b
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

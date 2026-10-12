@@ -43,6 +43,7 @@
    attention
    config
    courier
+   egress
    gists
    hook
    init

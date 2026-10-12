@@ -71,6 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.courier.html">crowsnest.courier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
@@ -256,25 +257,25 @@ reinvented: the registry and the transcripts move with it.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.registry.LiveSession">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">LiveSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting_for</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_since</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_control</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transcript</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge_session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#LiveSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.LiveSession" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One running session, as the registry describes it. Flat and JSON-shaped.</p>
 <dl class="field-list simple">
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="crowsnest.registry.LiveSession.label">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">label</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.label" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">label</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.label" title="Link to this definition">#</a></dt>
 <dd><p>The name the user gave the session, else the head of its id.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="crowsnest.registry.LiveSession.project">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">project</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.project" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">project</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.project" title="Link to this definition">#</a></dt>
 <dd><p>The working directory’s last component – the name a human uses for it.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="crowsnest.registry.LiveSession.session_url">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">session_url</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.session_url" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">session_url</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.registry.LiveSession.session_url" title="Link to this definition">#</a></dt>
 <dd><p>The session on claude.ai, when it runs with Remote Control; else <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p>
 </dd></dl>
 
@@ -299,7 +300,7 @@ a kind of busy), then what is resting. Anything unrecognised sorts last.</p>
 <dd><p>The Claude Code config directory: <code class="docutils literal notranslate"><span class="pre">path</span></code>, else <code class="docutils literal notranslate"><span class="pre">$CLAUDE_CONFIG_DIR</span></code>, else <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_home</span><span class="p">(</span><span class="s1">'/x/y'</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
@@ -316,7 +317,7 @@ a kind of busy), then what is resting. Anything unrecognised sorts last.</p>
 that the record changed recently. Pass the result as <code class="docutils literal notranslate"><span class="pre">is_live=</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveSession</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveSession</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">rule</span> <span class="o">=</span> <span class="n">fresh_within</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">1000.0</span><span class="p">)</span>
@@ -343,7 +344,7 @@ with a freshness rule. <code class="docutils literal notranslate"><span class="p
 several homes can say where each row came from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveSession</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveSession</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -356,7 +357,7 @@ several homes can say where each row came from.</p>
 <code class="docutils literal notranslate"><span class="pre">/proc</span></code> start-time check on Linux, and is the replacement this seam exists for.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -370,7 +371,7 @@ a dash, so <code class="docutils literal notranslate"><span class="pre">video_ge
 to a search when the guess misses.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -385,7 +386,7 @@ the session id, which is unique. A path that exists nowhere is still returned, s
 caller can say <em>which</em> file is missing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -432,7 +433,7 @@ caller can say <em>which</em> file is missing.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=04662272"></script>
+      <script src="../_static/documentation_options.js?v=339ea818"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

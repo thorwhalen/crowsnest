@@ -395,6 +395,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`attention`](crowsnest.attention.html.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                                                   |
 | [`config`](crowsnest.config.html.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                                               |
 | [`courier`](crowsnest.courier.html.md#module-crowsnest.courier)     | The console's courier with no LLM: carry an owner-served console store both ways.                                                    |
+| [`egress`](crowsnest.egress.html.md#module-crowsnest.egress)       | The page's sanitiser, made safe against text that an earlier clip has already cut (#83).                                             |
 | [`gists`](crowsnest.gists.html.md#module-crowsnest.gists)         | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
 | [`hook`](crowsnest.hook.html.md#module-crowsnest.hook)           | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
 | [`init`](crowsnest.init.html.md#module-crowsnest.init)           | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |

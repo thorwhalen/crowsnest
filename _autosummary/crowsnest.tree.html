@@ -71,6 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.courier.html">crowsnest.courier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
@@ -307,7 +308,7 @@ tree (<code class="docutils literal notranslate"><span class="pre">crowsnest</sp
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.tree.Placed">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.tree.</span></span><span class="sig-name descname"><span class="pre">Placed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'session'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'idle'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_row</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tree.html#Placed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.tree.Placed" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One drawn row: a session, or the summary of a collapsed fleet.</p>
 <p><code class="docutils literal notranslate"><span class="pre">parent_row</span></code> is the row the connector comes down from, <code class="docutils literal notranslate"><span class="pre">-1</span></code> for a root. Everything
 is in rows and depths rather than pixels, so a different renderer – or a test – can
@@ -325,7 +326,7 @@ an item needs tomorrow) without this module learning a new field each time.</p>
 other mapping (a <code class="docutils literal notranslate"><span class="pre">MappingProxyType</span></code>, say) is not something <code class="docutils literal notranslate"><span class="pre">asdict</span></code> can copy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -361,7 +362,7 @@ even when a caller has already sanitised – and a caller that sanitises passes 
 function as <code class="docutils literal notranslate"><span class="pre">text=</span></code>, which escapes as well as scrubbing. See <a class="reference internal" href="#crowsnest.tree.render" title="crowsnest.tree.render"><code class="xref py py-func docutils literal notranslate"><span class="pre">render()</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -378,7 +379,7 @@ and structure is the thing the picture is for.</p>
 can take in.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.tree.Placed" title="crowsnest.tree.Placed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Placed</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.tree.Placed" title="crowsnest.tree.Placed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Placed</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -411,7 +412,7 @@ dark alike, so the figure follows the reader’s theme without a second palette;
 that page every one falls back to <code class="docutils literal notranslate"><span class="pre">currentColor</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -458,7 +459,7 @@ that page every one falls back to <code class="docutils literal notranslate"><sp
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=04662272"></script>
+      <script src="../_static/documentation_options.js?v=339ea818"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

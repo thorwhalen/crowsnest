@@ -71,6 +71,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.courier.html">crowsnest.courier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
@@ -327,7 +328,7 @@ hidden, and Undo puts either back where it stood.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.report.ConsoleStore">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.report.</span></span><span class="sig-name descname"><span class="pre">ConsoleStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poll_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/report.html#ConsoleStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.report.ConsoleStore" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Where an interactive page’s console keeps its documents, when not in claude.ai.</p>
 <p><code class="docutils literal notranslate"><span class="pre">url</span></code> is the base of a small same-origin JSON protocol (<a class="reference internal" href="#crowsnest.report.HTTP_STORE_SCRIPT" title="crowsnest.report.HTTP_STORE_SCRIPT"><code class="xref py py-data docutils literal notranslate"><span class="pre">HTTP_STORE_SCRIPT</span></code></a>):
 <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">&lt;url&gt;/docs/&lt;collection&gt;</span></code> lists <code class="docutils literal notranslate"><span class="pre">{&quot;docs&quot;:</span> <span class="pre">[{&quot;id&quot;,</span> <span class="pre">&quot;data&quot;}]}</span></code>,
@@ -526,7 +527,7 @@ infers (<a class="reference internal" href="crowsnest.themes.html#crowsnest.them
 register; <code class="docutils literal notranslate"><span class="pre">None</span></code> leaves it out and the page is as it was.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -573,7 +574,7 @@ register; <code class="docutils literal notranslate"><span class="pre">None</spa
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=04662272"></script>
+      <script src="../_static/documentation_options.js?v=339ea818"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

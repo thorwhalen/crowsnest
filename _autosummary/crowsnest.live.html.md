@@ -109,8 +109,10 @@ entered its status, `''` when it does not say.
 
 The page’s `openloops.dashboard.Sanitizer` scrubs and HTML-escapes; this undoes
 only the escaping, so a script that sets `textContent` shows exactly what the page’s
-markup would. `limit` clips the result’s whitespace-collapsed text to that many
-characters, and the clip is sanitised again.
+markup would. A word an earlier clip cut (one ending in an ellipsis) is dropped first
+([`crowsnest.egress`](crowsnest.egress.html.md#module-crowsnest.egress)). `limit` clips the result’s whitespace-collapsed text to
+that many characters, and the clip is sanitised again, by the plain sanitiser: its
+ellipsis follows a word that is already clean, and must not cost that word.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

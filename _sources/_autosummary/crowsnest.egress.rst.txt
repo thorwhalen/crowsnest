@@ -1,0 +1,18 @@
+crowsnest.egress
+================
+
+.. automodule:: crowsnest.egress
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      drop_cut_words
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Sanitizer
+   

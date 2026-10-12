@@ -58,7 +58,8 @@ written here.
 Write a session’s one-line answer to a handed intent; the next tick carries it.
 
 `status` is `done` or `failed`. The text is kept to one line of at most
-`ANSWER_LIMIT` characters. It is published to whoever can open the page, so it
+`ANSWER_LIMIT` characters, scrubbed of credentials and home paths before it is
+clipped. It is published to whoever can open the page, so it
 says what happened in the page’s own terms, never a command’s output.
 
 * **Return type:**
