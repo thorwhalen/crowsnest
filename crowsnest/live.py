@@ -54,6 +54,7 @@ from datetime import date, datetime, timezone
 from openloops.dashboard import Sanitizer as _Sanitizer
 
 from crowsnest import said as _said
+from crowsnest.egress import Sanitizer as _CutSafeSanitizer
 from crowsnest.lineage import address as _address
 
 __all__ = [
@@ -96,8 +97,10 @@ def publishable(value, *, limit: int | None = None) -> str:
 
     The page's :class:`openloops.dashboard.Sanitizer` scrubs and HTML-escapes; this undoes
     only the escaping, so a script that sets ``textContent`` shows exactly what the page's
-    markup would. ``limit`` clips the result's whitespace-collapsed text to that many
-    characters, and the clip is sanitised again.
+    markup would. A word an earlier clip cut (one ending in an ellipsis) is dropped first
+    (:mod:`crowsnest.egress`). ``limit`` clips the result's whitespace-collapsed text to
+    that many characters, and the clip is sanitised again, by the plain sanitiser: its
+    ellipsis follows a word that is already clean, and must not cost that word.
 
     >>> publishable('a < b')
     'a < b'
@@ -106,7 +109,7 @@ def publishable(value, *, limit: int | None = None) -> str:
     >>> publishable('one   two three', limit=8)
     'one two…'
     """
-    clean = _html.unescape(_Sanitizer().text(value))
+    clean = _html.unescape(_CutSafeSanitizer().text(value))
     if limit is None:
         return clean
     clipped = _clip(clean, limit)

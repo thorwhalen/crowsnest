@@ -54,6 +54,7 @@ True
 
 from __future__ import annotations
 
+import html as _html
 import unicodedata
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field, replace
@@ -373,13 +374,13 @@ def _label(row: Placed, text: Callable[[str], str]) -> str:
     x = _column(row.depth) + 9
     y = PAD + row.row * ROW_HEIGHT + ROW_HEIGHT / 2 + 4
     room = max(4 * CHAR, WIDTH - PAD - RIGHT_COLUMN - x)
-    name = text(_clip(row.label, room))
+    name = _shown(row.label, room, text)
     weight = ' font-weight="500"' if row.status == "waiting" else ""
     # The right-hand column says whatever is *not* already obvious. A dot's colour carries
     # the status, and colour alone is not a signal every reader has -- so a session that
     # is doing something says so in words, and only a resting one spends the column on
     # where it is working.
-    said = text(_clip(_right_column(row), RIGHT_COLUMN - CHAR))
+    said = _shown(_right_column(row), RIGHT_COLUMN - CHAR, text)
     mark = " ~" if row.confidence == "inferred" else ""
     return (
         f'<text x="{x:.0f}" y="{y:.0f}" font-size="{FONT}" '
@@ -387,6 +388,19 @@ def _label(row: Placed, text: Callable[[str], str]) -> str:
         f'<text x="{WIDTH - PAD}" y="{y:.0f}" font-size="{FONT - 1}" text-anchor="end" '
         f'fill="var(--ink-soft, currentColor)" opacity="0.8">{said}</text>'
     )
+
+
+def _shown(value: str, room: float, text: Callable[[str], str]) -> str:
+    """``value`` scrubbed whole by the caller's ``text``, *then* cut to ``room``, then escaped.
+
+    A cut made first could leave a credential's prefix for ``text`` to publish (#83); and
+    ``text`` may drop the word an ellipsis ends, which this cut's own ellipsis must not
+    cost -- so the clip comes after ``text`` and only :func:`escape` follows it.
+
+    >>> _shown('a<b', 99, escape)
+    'a&lt;b'
+    """
+    return escape(_clip(_html.unescape(text(value)), room))
 
 
 def _units(text: str) -> float:

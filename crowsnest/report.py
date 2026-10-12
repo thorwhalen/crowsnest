@@ -74,7 +74,6 @@ from pathlib import Path
 from typing import Any
 
 from openloops.dashboard import CSS as _CSS
-from openloops.dashboard import Sanitizer as _Sanitizer
 from openloops.dashboard import rail as _ol_rail
 from openloops.dashboard import register as _ol_register
 
@@ -82,6 +81,7 @@ import crowsnest.attention as _attention
 import crowsnest.themes as _themes
 from crowsnest import said as _said
 from crowsnest.config import DFLT_STALE_AFTER, AttentionSettings
+from crowsnest.egress import Sanitizer as _Sanitizer
 from crowsnest.lineage import address as _address
 from crowsnest.lineage import open_command as _open_command
 from crowsnest.links import github_ref
@@ -2208,7 +2208,9 @@ def _slug(text: str) -> str:
     >>> _slug('xa needed_or-not')
     'xa-needed_or-not'
     """
-    return _ID_RE.sub("-", text.strip()) or "session"
+    # A label is a person's text and can hold a credential or a home path: the id and the
+    # links to it carry what the page would show of it, never the label itself.
+    return _ID_RE.sub("-", _publishable(text).strip()) or "session"
 
 
 # --------------------------------------------------------------------------------
