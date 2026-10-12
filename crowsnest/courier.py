@@ -37,6 +37,7 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from crowsnest.live import publishable
 from crowsnest.publish import (
     DFLT_CONNECT_TIMEOUT,
     DFLT_TIMEOUT,
@@ -355,7 +356,8 @@ def answer(
     """Write a session's one-line answer to a handed intent; the next tick carries it.
 
     ``status`` is ``done`` or ``failed``. The text is kept to one line of at most
-    :data:`ANSWER_LIMIT` characters. It is published to whoever can open the page, so it
+    :data:`ANSWER_LIMIT` characters, scrubbed of credentials and home paths before it is
+    clipped. It is published to whoever can open the page, so it
     says what happened in the page's own terms, never a command's output.
     """
     if status not in ("done", "failed"):
@@ -368,7 +370,9 @@ def answer(
         doc = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         raise KeyError(f"no intent {intent!r} in the courier's mirror") from None
-    line = _one_line(text)
+    # Sanitised, then clipped: this text is published as given, and a clip made first
+    # could cut a credential to a prefix no pattern recognises (#83).
+    line = publishable(text, limit=ANSWER_LIMIT)
     if not line:
         raise ValueError("an answer needs some text")
     moment = datetime.now(timezone.utc) if now is None else now

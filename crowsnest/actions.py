@@ -148,15 +148,16 @@ def brief_of(row: Mapping, *, ref_state: Callable | None = None) -> dict:
     {'kind': 'decision', 'asks': ['squash or rebase?'], 'refs': []}
     """
     from crowsnest.links import label_for
+    from crowsnest.live import publishable
 
     verdict = row.get("verdict") if isinstance(row.get("verdict"), Mapping) else {}
     asks = [
-        str(a.get("text") or "")[:ASK_LIMIT]
+        publishable(a.get("text"), limit=ASK_LIMIT)
         for a in verdict.get("asks") or ()
         if isinstance(a, Mapping) and str(a.get("text") or "").strip()
     ]
     if not asks and verdict.get("reason"):
-        asks = [str(verdict["reason"])[:ASK_LIMIT]]
+        asks = [publishable(verdict["reason"], limit=ASK_LIMIT)]
     refs = []
     for link in row.get("links") or ():
         if not isinstance(link, Mapping) or not link.get("url"):
