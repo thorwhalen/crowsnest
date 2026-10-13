@@ -1110,22 +1110,14 @@ CONSOLE_SCRIPT = r"""
     function laterBlock() {
       const found = document.getElementById("later");
       if (found) return found;
-      const block = document.createElement("details");
-      block.className = "register later-live";
-      block.id = "later";
-      const summary = document.createElement("summary");
-      summary.className = "register-head";
-      const figure = document.createElement("span");
-      figure.className = "figure";
-      const name = document.createElement("h2");
-      name.textContent = "Later";
-      // The rule goes INSIDE the summary, as `_register` writes it: REGISTER_CSS places
-      // it with a child combinator, and a sibling <p> falls out of the head's grid.
-      const rule = document.createElement("span");
-      rule.className = "rule";
-      rule.textContent = "Put off from this page. Each row says when it comes back.";
-      summary.append(figure, name, rule);
-      block.append(summary);
+      // The head is the page's own `<template id="later-head">`, which Python builds with
+      // the same `_register` as every other register (#94): this script holds no copy of
+      // it. The block is the script's own to show and hide, so it takes the class
+      // that is its own (`later-live`) in place of the template's neutral tone.
+      const template = document.getElementById("later-head");
+      if (!template) return null;
+      const block = template.content.firstElementChild.cloneNode(true);
+      block.classList.replace("register--live", "later-live");
       const working = document.getElementById("working");
       if (working) working.after(block); else document.querySelector("main").append(block);
       return block;
@@ -1142,10 +1134,14 @@ CONSOLE_SCRIPT = r"""
     }
     function putAway(el) {
       if (slots.has(el) || drawn.get(el).shown === A.LATER) return;
+      // A page without its Later template (a host that strips <template>) leaves the row
+      // where it is: shown, never lost.
+      const block = laterBlock();
+      if (!block) return;
       const slot = document.createComment("put off from this page");
       el.before(slot);
       slots.set(el, slot);
-      listIn(laterBlock(), el).append(el);
+      listIn(block, el).append(el);
     }
     function bringBack(el) {
       const slot = slots.get(el);
@@ -4555,6 +4551,11 @@ def _later_line(
     )
 
 
+#: What the Later register's head says it is for, in the static register and, through
+#: :func:`_later_head_template`, in the one the console makes.
+LATER_RULE = "Put off by you. Each line says when it comes back."
+
+
 def _later_register(
     safe: _Sanitizer, rows: Sequence[Mapping[str, Any]], view: _View, clock: _Clock
 ) -> str:
@@ -4567,10 +4568,34 @@ def _later_register(
         name="Later",
         figure=str(len(rows)),
         tone="later",
-        rule="Put off by you. Each line says when it comes back.",
+        rule=LATER_RULE,
         body=f'<ul class="thins">{items}</ul>',
         folds=True,
     )
+
+
+def _later_head_template() -> str:
+    """The Later register with no figure and no rows, inert in an interactive page's
+    ``<template id="later-head">`` (#94).
+
+    ``CONSOLE_SCRIPT``'s ``laterBlock()`` clones it when the first row is put off on a
+    page that had no Later register, so a change to the head in
+    ``openloops.dashboard.register`` reaches the console's copy with the other registers'.
+    Only an interactive page carries it: a static page has no script to read it. Its tone
+    is the neutral ``live`` (the static page's ``register--later`` appears only once the
+    store holds a record, and the arm draws with classes of its own); the script swaps it
+    for ``later-live``.
+    """
+    head = _register(
+        ident="later",
+        name="Later",
+        figure="",
+        tone="live",
+        rule=LATER_RULE,
+        body="",
+        folds=True,
+    )
+    return f'<template id="later-head">{head}</template>'
 
 
 #: The review band's headings by kind. Each states the ``[attention]`` threshold that put
@@ -5206,6 +5231,7 @@ def _render(
         style_tag += f"<style>{CONSOLE_CSS}</style>"
     body = f'<main class="sheet">{"".join(parts)}</main>'
     if _interactive.get():
+        body += _later_head_template()
         http = HTTP_STORE_SCRIPT if _console_store.get() else ""
         body += (
             f"<script>{ATTENTION_SCRIPT}{LIVE_SCRIPT}{http}{CONSOLE_SCRIPT}"
