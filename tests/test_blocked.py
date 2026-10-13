@@ -38,7 +38,13 @@ def envelope(**over):
         "rows": [
             row(1, "blocked", blockers=[(9, "open")], title="Waiting one"),
             row(2, "unknown", blockers=[(8, "")], title="Unresolved <one>"),
-            row(3, "unblocked", blockers=[(7, "closed")], title="Free one", unblocked_days=4),
+            row(
+                3,
+                "unblocked",
+                blockers=[(7, "closed")],
+                title="Free one",
+                unblocked_days=4,
+            ),
         ],
         **over,
     }
@@ -105,7 +111,11 @@ def test_a_register_with_no_rows_says_so_not_unavailable():
 
 def test_it_sits_after_owed_and_before_safe_to_close_when_both_are_asked():
     html = page(owed={"listed": True, "rows": []}, blocked=envelope())
-    assert html.index('id="needs-you"') < html.index('id="owed"') < html.index('id="blocked"')
+    assert (
+        html.index('id="needs-you"')
+        < html.index('id="owed"')
+        < html.index('id="blocked"')
+    )
 
 
 def test_no_blocked_list_renders_exactly_as_before():
@@ -190,7 +200,9 @@ def test_a_failed_listing_is_not_asked_again_on_every_run(tmp_path):
         assert len(calls) == 2
 
 
-def test_two_writers_do_not_share_a_temp_file_and_an_unwritable_cache_is_not_fatal(tmp_path):
+def test_two_writers_do_not_share_a_temp_file_and_an_unwritable_cache_is_not_fatal(
+    tmp_path,
+):
     from crowsnest import envelope_cache
 
     path = tmp_path / "b.json"

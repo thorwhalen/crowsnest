@@ -2569,16 +2569,16 @@ def _fetched_note(safe: _Sanitizer, envelope: Mapping) -> str:
     """What an openloops register says about its cost and its age: it called GitHub, when,
     and, when the last refresh failed, that what shows is older than it should be."""
     fetched = str(envelope.get("fetched_at") or "")
-    when = (
-        safe.text(f"{fetched[:10]} {fetched[11:16]} UTC") if len(fetched) >= 16 else ""
-    )
+    when = safe.text(f"{fetched[:10]} {fetched[11:16]} UTC") if len(fetched) >= 16 else ""
     note = (
         f"Fetched from GitHub at {when}; refreshing it costs network calls."
         if when
         else "Fetching it costs network calls to GitHub."
     )
     if envelope.get("refresh_error"):
-        note += f" The latest refresh failed ({safe.text(str(envelope['refresh_error']))})."
+        note += (
+            f" The latest refresh failed ({safe.text(str(envelope['refresh_error']))})."
+        )
     return note
 
 
@@ -2730,9 +2730,7 @@ def _blocked_register(safe: _Sanitizer, envelope: Mapping) -> str:
             # The edges that explain the word: the open ones for "waits", the ones that
             # could not be read for "?".
             names = [
-                str(
-                    b.get("ref") or f"{b.get('repo') or '?'}#{b.get('number') or '?'}"
-                )
+                str(b.get("ref") or f"{b.get('repo') or '?'}#{b.get('number') or '?'}")
                 for b in r.get("blockers") or ()
                 if isinstance(b, Mapping)
                 and str(b.get("state")) not in ("closed",)
@@ -2753,8 +2751,7 @@ def _blocked_register(safe: _Sanitizer, envelope: Mapping) -> str:
             f' <span class="owed-state">{word}</span>{on}</p></li>'
         )
     rule += (
-        f" {tally['ready']} ready, {tally['waits']} still waiting, "
-        f"{tally['?']} read ?."
+        f" {tally['ready']} ready, {tally['waits']} still waiting, {tally['?']} read ?."
     )
     body = (
         f'<ul class="thins">{"".join(items)}</ul>'
