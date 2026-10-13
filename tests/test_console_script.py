@@ -320,3 +320,87 @@ def test_the_small_readings_agree(tmp_path):
         None if found is None else {"group": found.group, "why": found.why}
         for found in map(attention.seen_as_of, rows)
     ]
+
+
+# --- laterBlock() clones the head Python builds (crowsnest#94) -------------------------
+
+#: A DOM just big enough for ``laterBlock``: a template whose content is one element, the
+#: page's ``#working`` register to sit after, and ``main`` to append to. It records what the
+#: function created, which must be nothing: the head comes from the template.
+LATER_BLOCK_HARNESS = r"""
+const source = process.argv[2];
+const created = [];
+const classes = (list) => ({
+  list,
+  contains: (c) => list.includes(c),
+  replace: (a, b) => { const i = list.indexOf(a); if (i >= 0) list[i] = b; return i >= 0; },
+});
+const clone = { classList: classes(["register", "register--live"]), id: "later" };
+const calls = [];
+const working = { after: (el) => calls.push(["after", el]) };
+const main = { append: (el) => calls.push(["append", el]) };
+const document = {
+  getElementById: (id) => ({
+    later: globalThis.existing || null,
+    "later-head": globalThis.hasTemplate === false ? null : { content: { firstElementChild: { cloneNode: (deep) => (calls.push(["clone", deep]), clone) } } },
+    working: globalThis.hasWorking === false ? null : working,
+  })[id],
+  createElement: (tag) => { created.push(tag); throw new Error("createElement " + tag); },
+  querySelector: (sel) => (sel === "main" ? main : null),
+};
+const laterBlock = new Function("document", source + "; return laterBlock;")(document);
+const out = {};
+out.block = laterBlock() === clone;
+out.classes = clone.classList.list;
+out.calls = calls.map(([name]) => name);
+out.created = created;
+globalThis.hasWorking = false;
+calls.length = 0;
+laterBlock();
+out.fallback = calls.map(([name]) => name);
+globalThis.existing = { is: "found" };
+out.found = laterBlock() === globalThis.existing;
+console.log(JSON.stringify(out));
+"""
+
+
+def _later_block_source() -> str:
+    from crowsnest.report import CONSOLE_SCRIPT
+
+    start = CONSOLE_SCRIPT.index("function laterBlock()")
+    end = CONSOLE_SCRIPT.index("function listIn(", start)
+    return CONSOLE_SCRIPT[start:end]
+
+
+def test_laterblock_clones_the_template_and_builds_no_head_of_its_own(tmp_path):
+    harness = tmp_path / "harness.js"
+    harness.write_text(LATER_BLOCK_HARNESS, encoding="utf-8")
+    done = subprocess.run(
+        [NODE, str(harness), _later_block_source()],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert done.returncode == 0, done.stderr
+    out = json.loads(done.stdout)
+    assert out["block"] is True
+    assert out["created"] == []
+    assert out["classes"] == ["register", "later-live"]
+    assert out["calls"] == ["clone", "after"]
+    assert out["fallback"] == ["clone", "append"]
+    assert out["found"] is True
+
+
+def test_the_template_is_the_head_openloops_builds_and_only_an_interactive_page_has_it():
+    from crowsnest.report import LATER_RULE, _later_head_template
+
+    template = _later_head_template()
+    assert template.startswith('<template id="later-head"><details class="register register--live" id="later">')
+    assert '<summary class="register-head"><span class="figure"></span><h2>Later</h2>' in template
+    assert f'<span class="rule">{LATER_RULE}</span></summary></details></template>' in template
+    from test_report_console import fleet, page
+
+    assert template in page(fleet(), interactive=True)
+    assert "later-head" not in page(fleet())
+    assert "later-head" not in page(fleet(), plain=True)
+    assert 'createElement("summary")' not in _later_block_source()
