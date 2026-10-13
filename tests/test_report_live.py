@@ -109,7 +109,11 @@ def test_a_row_put_off_into_later_keeps_its_placeholder():
     later = attention.later(None, rev, until=None, now=NOW)
     markup = page(rows, interactive=True, store={item: attention.as_doc(item, later)})
     # The static register, not the inert template that also carries id="later" (#94).
-    assert 'register register--later" id="later"><summary' in markup.split("</template>", 1)[1].split("<script>", 1)[0] or 'id="later"' in markup.split("</template>")[0].split("<template")[0]
+    assert (
+        'register register--later" id="later"><summary'
+        in markup.split("</template>", 1)[1].split("<script>", 1)[0]
+        or 'id="later"' in markup.split("</template>")[0].split("<template")[0]
+    )
     assert chips(li(markup, "asker")) == ["asker"]
 
 

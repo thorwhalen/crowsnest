@@ -400,9 +400,17 @@ def test_the_template_is_the_head_openloops_builds_and_only_an_interactive_page_
     from crowsnest.report import LATER_RULE, _later_head_template
 
     template = _later_head_template()
-    assert template.startswith('<template id="later-head"><details class="register register--live" id="later">')
-    assert '<summary class="register-head"><span class="figure"></span><h2>Later</h2>' in template
-    assert f'<span class="rule">{LATER_RULE}</span></summary></details></template>' in template
+    assert template.startswith(
+        '<template id="later-head"><details class="register register--live" id="later">'
+    )
+    assert (
+        '<summary class="register-head"><span class="figure"></span><h2>Later</h2>'
+        in template
+    )
+    assert (
+        f'<span class="rule">{LATER_RULE}</span></summary></details></template>'
+        in template
+    )
     from test_report_console import fleet, page
 
     assert template in page(fleet(), interactive=True)
