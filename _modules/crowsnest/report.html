@@ -5257,152 +5257,158 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="5105">
 </span><span data-line="5106">    <span class="n">owed</span> <span class="o">=</span> <span class="n">_owed</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </span><span data-line="5107">    <span class="n">blocked</span> <span class="o">=</span> <span class="n">_blocked</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-</span><span data-line="5108">    <span class="n">groups</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="5109">        <span class="p">[</span>
-</span><span data-line="5110">            <span class="n">_Group</span><span class="p">(</span><span class="s2">"needs-you"</span><span class="p">,</span> <span class="s2">"need you"</span><span class="p">,</span> <span class="s2">"needs"</span><span class="p">,</span> <span class="n">needs_you</span><span class="p">,</span> <span class="s2">"card"</span><span class="p">),</span>
-</span><span data-line="5111">            <span class="o">*</span><span class="p">(</span>
-</span><span data-line="5112">                <span class="p">[</span><span class="n">_Group</span><span class="p">(</span><span class="s2">"owed"</span><span class="p">,</span> <span class="s2">"owed"</span><span class="p">,</span> <span class="s2">"needs"</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">_owed_count</span><span class="p">(</span><span class="n">owed</span><span class="p">))]</span>
-</span><span data-line="5113">                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">owed</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
-</span><span data-line="5114">                <span class="k">else</span> <span class="p">[]</span>
-</span><span data-line="5115">            <span class="p">),</span>
-</span><span data-line="5116">            <span class="o">*</span><span class="p">(</span>
-</span><span data-line="5117">                <span class="p">[</span><span class="n">_Group</span><span class="p">(</span><span class="s2">"blocked"</span><span class="p">,</span> <span class="s2">"ready"</span><span class="p">,</span> <span class="s2">"free"</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">_blocked_ready</span><span class="p">(</span><span class="n">blocked</span><span class="p">))]</span>
-</span><span data-line="5118">                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blocked</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
-</span><span data-line="5119">                <span class="k">else</span> <span class="p">[]</span>
-</span><span data-line="5120">            <span class="p">),</span>
-</span><span data-line="5121">            <span class="n">_Group</span><span class="p">(</span><span class="s2">"safe-to-close"</span><span class="p">,</span> <span class="s2">"safe to close"</span><span class="p">,</span> <span class="s2">"free"</span><span class="p">,</span> <span class="n">clear</span><span class="p">,</span> <span class="s2">"chip"</span><span class="p">),</span>
-</span><span data-line="5122">        <span class="p">]</span>
-</span><span data-line="5123">        <span class="k">if</span> <span class="n">triaged</span>
-</span><span data-line="5124">        <span class="k">else</span> <span class="p">[</span><span class="n">_Group</span><span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"needs"</span><span class="p">,</span> <span class="n">waiting</span><span class="p">,</span> <span class="s2">"card"</span><span class="p">)]</span>
-</span><span data-line="5125">    <span class="p">)</span> <span class="o">+</span> <span class="p">[</span>
-</span><span data-line="5126">        <span class="n">_Group</span><span class="p">(</span><span class="s2">"finished"</span><span class="p">,</span> <span class="s2">"just finished"</span><span class="p">,</span> <span class="s2">"free"</span><span class="p">,</span> <span class="n">finished</span><span class="p">,</span> <span class="s2">"pair"</span><span class="p">),</span>
-</span><span data-line="5127">        <span class="n">_Group</span><span class="p">(</span><span class="s2">"working"</span><span class="p">,</span> <span class="s2">"working"</span><span class="p">,</span> <span class="s2">"flight"</span><span class="p">,</span> <span class="n">busy</span><span class="p">,</span> <span class="s2">"pair"</span><span class="p">),</span>
-</span><span data-line="5128">        <span class="n">_Group</span><span class="p">(</span>
-</span><span data-line="5129">            <span class="s2">"quiet"</span><span class="p">,</span>
-</span><span data-line="5130">            <span class="s2">"quiet"</span><span class="p">,</span>
-</span><span data-line="5131">            <span class="s2">"unsure"</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">_is_unknown</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">quiet</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"done"</span><span class="p">,</span>
-</span><span data-line="5132">            <span class="n">quiet</span><span class="p">,</span>
-</span><span data-line="5133">            <span class="s2">"chip"</span><span class="p">,</span>
-</span><span data-line="5134">        <span class="p">),</span>
-</span><span data-line="5135">    <span class="p">]</span>
-</span><span data-line="5136">    <span class="k">if</span> <span class="n">questions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="5137">        <span class="c1"># After Needs you (and Owed), as the register itself sits: the legend is in page</span>
-</span><span data-line="5138">        <span class="c1"># order (#109).</span>
-</span><span data-line="5139">        <span class="n">at</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-</span><span data-line="5140">            <span class="p">(</span>
-</span><span data-line="5141">                <span class="n">i</span>
-</span><span data-line="5142">                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
-</span><span data-line="5143">                <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">ident</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"needs-you"</span><span class="p">,</span> <span class="s2">"owed"</span><span class="p">,</span> <span class="s2">"blocked"</span><span class="p">,</span> <span class="s2">"waiting"</span><span class="p">)</span>
-</span><span data-line="5144">            <span class="p">),</span>
-</span><span data-line="5145">            <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">),</span>
-</span><span data-line="5146">        <span class="p">)</span>
-</span><span data-line="5147">        <span class="n">groups</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
-</span><span data-line="5148">            <span class="n">at</span><span class="p">,</span>
-</span><span data-line="5149">            <span class="n">_Group</span><span class="p">(</span>
-</span><span data-line="5150">                <span class="s2">"questions"</span><span class="p">,</span>
-</span><span data-line="5151">                <span class="s2">"unread"</span><span class="p">,</span>
-</span><span data-line="5152">                <span class="s2">"waits"</span><span class="p">,</span>
-</span><span data-line="5153">                <span class="n">count</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">questions</span> <span class="k">if</span> <span class="n">_is_unread</span><span class="p">(</span><span class="n">q</span><span class="p">)),</span>
-</span><span data-line="5154">            <span class="p">),</span>
-</span><span data-line="5155">        <span class="p">)</span>
-</span><span data-line="5156">    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="5157">        <span class="n">_masthead</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">zone</span><span class="o">=</span><span class="n">_zone_name</span><span class="p">(</span><span class="n">clock</span><span class="p">),</span> <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">),</span>
-</span><span data-line="5158">        <span class="n">_board</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">clock</span><span class="p">),</span>
-</span><span data-line="5159">        <span class="n">_since_line</span><span class="p">(</span><span class="n">shown</span><span class="p">,</span> <span class="n">view</span><span class="p">),</span>
-</span><span data-line="5160">        <span class="n">head</span><span class="p">,</span>
-</span><span data-line="5161">    <span class="p">]</span>
-</span><span data-line="5162">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_owed</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">Mapping</span><span class="p">):</span>
-</span><span data-line="5163">        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_owed_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">_owed</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">sessions</span><span class="p">))</span>
-</span><span data-line="5164">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_blocked</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">Mapping</span><span class="p">):</span>
-</span><span data-line="5165">        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_blocked_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">_blocked</span><span class="o">.</span><span class="n">get</span><span class="p">()))</span>
-</span><span data-line="5166">    <span class="k">if</span> <span class="n">questions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="5167">        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_questions_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">questions</span><span class="p">),</span> <span class="n">clock</span><span class="p">))</span>
-</span><span data-line="5168">    <span class="k">if</span> <span class="n">triaged</span><span class="p">:</span>
-</span><span data-line="5169">        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="5170">            <span class="n">_register_from_rows</span><span class="p">(</span>
-</span><span data-line="5171">                <span class="n">safe</span><span class="p">,</span>
-</span><span data-line="5172">                <span class="n">clear</span><span class="p">,</span>
-</span><span data-line="5173">                <span class="n">clock</span><span class="p">,</span>
-</span><span data-line="5174">                <span class="n">row_fn</span><span class="o">=</span><span class="n">_safe_to_close_row</span><span class="p">,</span>
-</span><span data-line="5175">                <span class="n">ident</span><span class="o">=</span><span class="s2">"safe-to-close"</span><span class="p">,</span>
-</span><span data-line="5176">                <span class="n">name</span><span class="o">=</span><span class="s2">"Safe to close"</span><span class="p">,</span>
-</span><span data-line="5177">                <span class="n">tone</span><span class="o">=</span><span class="s2">"free"</span><span class="p">,</span>
-</span><span data-line="5178">                <span class="n">rule</span><span class="o">=</span><span class="s2">"Said in its own words that nothing is outstanding. Anything that "</span>
-</span><span data-line="5179">                <span class="s2">"did not say so is below, not here."</span><span class="p">,</span>
-</span><span data-line="5180">                <span class="n">empty</span><span class="o">=</span><span class="s2">"No session has said it is finished."</span><span class="p">,</span>
-</span><span data-line="5181">                <span class="n">seen_above</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="5182">            <span class="p">)</span>
-</span><span data-line="5183">        <span class="p">)</span>
-</span><span data-line="5184">    <span class="n">parts</span> <span class="o">+=</span> <span class="p">[</span>
-</span><span data-line="5185">        <span class="n">_register_from_rows</span><span class="p">(</span>
-</span><span data-line="5186">            <span class="n">safe</span><span class="p">,</span>
-</span><span data-line="5187">            <span class="n">finished</span><span class="p">,</span>
-</span><span data-line="5188">            <span class="n">clock</span><span class="p">,</span>
-</span><span data-line="5189">            <span class="n">row_fn</span><span class="o">=</span><span class="n">_finished_row</span><span class="p">,</span>
-</span><span data-line="5190">            <span class="n">ident</span><span class="o">=</span><span class="s2">"finished"</span><span class="p">,</span>
-</span><span data-line="5191">            <span class="n">name</span><span class="o">=</span><span class="s2">"Just finished"</span><span class="p">,</span>
-</span><span data-line="5192">            <span class="n">tone</span><span class="o">=</span><span class="s2">"free"</span><span class="p">,</span>
-</span><span data-line="5193">            <span class="n">rule</span><span class="o">=</span><span class="s2">"Idle within the last hour, with its last words."</span><span class="p">,</span>
-</span><span data-line="5194">            <span class="n">empty</span><span class="o">=</span><span class="s2">"No session went idle in the last hour."</span><span class="p">,</span>
-</span><span data-line="5195">            <span class="n">seen_above</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="5196">        <span class="p">),</span>
-</span><span data-line="5197">        <span class="n">_register_from_rows</span><span class="p">(</span>
-</span><span data-line="5198">            <span class="n">safe</span><span class="p">,</span>
-</span><span data-line="5199">            <span class="n">busy</span><span class="p">,</span>
-</span><span data-line="5200">            <span class="n">clock</span><span class="p">,</span>
-</span><span data-line="5201">            <span class="n">row_fn</span><span class="o">=</span><span class="n">_working_row</span><span class="p">,</span>
-</span><span data-line="5202">            <span class="n">ident</span><span class="o">=</span><span class="s2">"working"</span><span class="p">,</span>
-</span><span data-line="5203">            <span class="n">name</span><span class="o">=</span><span class="s2">"Working"</span><span class="p">,</span>
-</span><span data-line="5204">            <span class="n">tone</span><span class="o">=</span><span class="s2">"flight"</span><span class="p">,</span>
-</span><span data-line="5205">            <span class="n">rule</span><span class="o">=</span><span class="s2">"Busy, with the tool call in flight."</span><span class="p">,</span>
-</span><span data-line="5206">            <span class="n">empty</span><span class="o">=</span><span class="s2">"No session is running a tool right now."</span><span class="p">,</span>
-</span><span data-line="5207">            <span class="n">seen_above</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="5208">        <span class="p">),</span>
-</span><span data-line="5209">        <span class="n">_later_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">put_off</span><span class="p">,</span> <span class="n">view</span><span class="p">,</span> <span class="n">clock</span><span class="p">),</span>
-</span><span data-line="5210">        <span class="n">_lineage_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">roster</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lineage"</span><span class="p">)),</span>
-</span><span data-line="5211">        <span class="n">_quiet_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">quiet</span><span class="p">,</span> <span class="n">clock</span><span class="p">),</span>
-</span><span data-line="5212">        <span class="n">_review_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">sessions</span><span class="p">,</span> <span class="n">view</span><span class="p">,</span> <span class="n">clock</span><span class="p">,</span> <span class="n">settings</span><span class="p">),</span>
-</span><span data-line="5213">        <span class="n">_footer</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">rendered_at</span><span class="p">,</span> <span class="n">handled</span><span class="o">=</span><span class="n">handled</span><span class="p">),</span>
-</span><span data-line="5214">    <span class="p">]</span>
-</span><span data-line="5215">    <span class="c1"># The badge (triage-ux 2.4): only what is unread in the register that needs the</span>
-</span><span data-line="5216">    <span class="c1"># person, never a total across the page.</span>
-</span><span data-line="5217">    <span class="n">unread</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-</span><span data-line="5218">        <span class="mi">1</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="n">needs_you</span> <span class="k">if</span> <span class="n">triaged</span> <span class="k">else</span> <span class="n">waiting</span><span class="p">)</span> <span class="k">if</span> <span class="n">view</span><span class="o">.</span><span class="n">shown</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_UNREAD</span>
-</span><span data-line="5219">    <span class="p">)</span>
-</span><span data-line="5220">    <span class="n">title_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;title&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">unread</span><span class="si">}</span><span class="s1">)'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">unread</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;"</span>
-</span><span data-line="5221">    <span class="c1"># One &lt;style&gt;, not two: the figure's rules belong with the page's rules, and the</span>
-</span><span data-line="5222">    <span class="c1"># interactive mode's own block is the only thing that earns a second tag.</span>
-</span><span data-line="5223">    <span class="n">attention_css</span> <span class="o">=</span> <span class="n">ATTENTION_CSS</span> <span class="k">if</span> <span class="n">view</span><span class="o">.</span><span class="n">on</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="5224">    <span class="n">open_css</span> <span class="o">=</span> <span class="n">OPEN_CSS</span> <span class="k">if</span> <span class="n">_open_helper</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="5225">    <span class="n">sheet</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="5226">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}{</span><span class="n">_TREE_CSS</span><span class="si">}{</span><span class="n">REGISTER_CSS</span><span class="si">}{</span><span class="n">WAY_IN_CSS</span><span class="si">}{</span><span class="n">WHEN_CSS</span><span class="si">}{</span><span class="n">OVERVIEW_CSS</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="5227">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">attention_css</span><span class="si">}{</span><span class="n">open_css</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="5228">    <span class="p">)</span>
-</span><span data-line="5229">    <span class="n">style_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">sheet</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
-</span><span data-line="5230">    <span class="k">if</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
-</span><span data-line="5231">        <span class="n">style_tag</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">CONSOLE_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
-</span><span data-line="5232">    <span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;main class="sheet"&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/main&gt;'</span>
-</span><span data-line="5233">    <span class="k">if</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
-</span><span data-line="5234">        <span class="n">body</span> <span class="o">+=</span> <span class="n">_later_head_template</span><span class="p">()</span>
-</span><span data-line="5235">        <span class="n">http</span> <span class="o">=</span> <span class="n">HTTP_STORE_SCRIPT</span> <span class="k">if</span> <span class="n">_console_store</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="5236">        <span class="n">body</span> <span class="o">+=</span> <span class="p">(</span>
-</span><span data-line="5237">            <span class="sa">f</span><span class="s2">"&lt;script&gt;</span><span class="si">{</span><span class="n">ATTENTION_SCRIPT</span><span class="si">}{</span><span class="n">LIVE_SCRIPT</span><span class="si">}{</span><span class="n">http</span><span class="si">}{</span><span class="n">CONSOLE_SCRIPT</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="5238">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BOARD_SCRIPT</span><span class="si">}{</span><span class="n">DECK_SCRIPT</span><span class="si">}{</span><span class="n">OPEN_SCRIPT</span><span class="si">}</span><span class="s2">&lt;/script&gt;"</span>
-</span><span data-line="5239">        <span class="p">)</span>
-</span><span data-line="5240">    <span class="k">elif</span> <span class="n">_open_helper</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
-</span><span data-line="5241">        <span class="n">body</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&lt;script&gt;</span><span class="si">{</span><span class="n">OPEN_SCRIPT</span><span class="si">}</span><span class="s2">&lt;/script&gt;"</span>
-</span><span data-line="5242">    <span class="k">if</span> <span class="n">fragment</span><span class="p">:</span>
-</span><span data-line="5243">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title_tag</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">style_tag</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="5244">    <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="5245">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title_tag</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="5246">        <span class="s1">'&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;'</span>
-</span><span data-line="5247">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">style_tag</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="5248">    <span class="p">)</span>
-</span><span data-line="5249">    <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="5250">        <span class="s1">'&lt;!doctype html&gt;</span><span class="se">\n</span><span class="s1">&lt;html lang="en"&gt;</span><span class="se">\n</span><span class="s1">'</span>
-</span><span data-line="5251">        <span class="sa">f</span><span class="s1">'&lt;head&gt;</span><span class="se">\n</span><span class="s1">&lt;meta charset="utf-8"&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="se">\n</span><span class="s1">&lt;/head&gt;</span><span class="se">\n</span><span class="s1">'</span>
-</span><span data-line="5252">        <span class="sa">f</span><span class="s2">"&lt;body&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s2">&lt;/body&gt;</span><span class="se">\n</span><span class="s2">&lt;/html&gt;</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="5253">    <span class="p">)</span>
+</span><span data-line="5108">    <span class="c1"># The opt-in registers sit right after the one that needs the person, on a triaged page</span>
+</span><span data-line="5109">    <span class="c1"># (*Needs you*) and an untriaged one (*Waiting on you*) alike, so the legend is in page</span>
+</span><span data-line="5110">    <span class="c1"># order either way (#148).</span>
+</span><span data-line="5111">    <span class="n">opt_in</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="5112">        <span class="o">*</span><span class="p">(</span>
+</span><span data-line="5113">            <span class="p">[</span><span class="n">_Group</span><span class="p">(</span><span class="s2">"owed"</span><span class="p">,</span> <span class="s2">"owed"</span><span class="p">,</span> <span class="s2">"needs"</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">_owed_count</span><span class="p">(</span><span class="n">owed</span><span class="p">))]</span>
+</span><span data-line="5114">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">owed</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
+</span><span data-line="5115">            <span class="k">else</span> <span class="p">[]</span>
+</span><span data-line="5116">        <span class="p">),</span>
+</span><span data-line="5117">        <span class="o">*</span><span class="p">(</span>
+</span><span data-line="5118">            <span class="p">[</span><span class="n">_Group</span><span class="p">(</span><span class="s2">"blocked"</span><span class="p">,</span> <span class="s2">"ready"</span><span class="p">,</span> <span class="s2">"free"</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">_blocked_ready</span><span class="p">(</span><span class="n">blocked</span><span class="p">))]</span>
+</span><span data-line="5119">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blocked</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
+</span><span data-line="5120">            <span class="k">else</span> <span class="p">[]</span>
+</span><span data-line="5121">        <span class="p">),</span>
+</span><span data-line="5122">    <span class="p">]</span>
+</span><span data-line="5123">    <span class="n">groups</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="5124">        <span class="p">[</span>
+</span><span data-line="5125">            <span class="n">_Group</span><span class="p">(</span><span class="s2">"needs-you"</span><span class="p">,</span> <span class="s2">"need you"</span><span class="p">,</span> <span class="s2">"needs"</span><span class="p">,</span> <span class="n">needs_you</span><span class="p">,</span> <span class="s2">"card"</span><span class="p">),</span>
+</span><span data-line="5126">            <span class="o">*</span><span class="n">opt_in</span><span class="p">,</span>
+</span><span data-line="5127">            <span class="n">_Group</span><span class="p">(</span><span class="s2">"safe-to-close"</span><span class="p">,</span> <span class="s2">"safe to close"</span><span class="p">,</span> <span class="s2">"free"</span><span class="p">,</span> <span class="n">clear</span><span class="p">,</span> <span class="s2">"chip"</span><span class="p">),</span>
+</span><span data-line="5128">        <span class="p">]</span>
+</span><span data-line="5129">        <span class="k">if</span> <span class="n">triaged</span>
+</span><span data-line="5130">        <span class="k">else</span> <span class="p">[</span><span class="n">_Group</span><span class="p">(</span><span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"waiting"</span><span class="p">,</span> <span class="s2">"needs"</span><span class="p">,</span> <span class="n">waiting</span><span class="p">,</span> <span class="s2">"card"</span><span class="p">),</span> <span class="o">*</span><span class="n">opt_in</span><span class="p">]</span>
+</span><span data-line="5131">    <span class="p">)</span> <span class="o">+</span> <span class="p">[</span>
+</span><span data-line="5132">        <span class="n">_Group</span><span class="p">(</span><span class="s2">"finished"</span><span class="p">,</span> <span class="s2">"just finished"</span><span class="p">,</span> <span class="s2">"free"</span><span class="p">,</span> <span class="n">finished</span><span class="p">,</span> <span class="s2">"pair"</span><span class="p">),</span>
+</span><span data-line="5133">        <span class="n">_Group</span><span class="p">(</span><span class="s2">"working"</span><span class="p">,</span> <span class="s2">"working"</span><span class="p">,</span> <span class="s2">"flight"</span><span class="p">,</span> <span class="n">busy</span><span class="p">,</span> <span class="s2">"pair"</span><span class="p">),</span>
+</span><span data-line="5134">        <span class="n">_Group</span><span class="p">(</span>
+</span><span data-line="5135">            <span class="s2">"quiet"</span><span class="p">,</span>
+</span><span data-line="5136">            <span class="s2">"quiet"</span><span class="p">,</span>
+</span><span data-line="5137">            <span class="s2">"unsure"</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">_is_unknown</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">quiet</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"done"</span><span class="p">,</span>
+</span><span data-line="5138">            <span class="n">quiet</span><span class="p">,</span>
+</span><span data-line="5139">            <span class="s2">"chip"</span><span class="p">,</span>
+</span><span data-line="5140">        <span class="p">),</span>
+</span><span data-line="5141">    <span class="p">]</span>
+</span><span data-line="5142">    <span class="k">if</span> <span class="n">questions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="5143">        <span class="c1"># After Needs you (or Waiting) and the opt-in registers, as the register itself</span>
+</span><span data-line="5144">        <span class="c1"># sits: the legend is in page order (#109).</span>
+</span><span data-line="5145">        <span class="n">at</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+</span><span data-line="5146">            <span class="p">(</span>
+</span><span data-line="5147">                <span class="n">i</span>
+</span><span data-line="5148">                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+</span><span data-line="5149">                <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">ident</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"needs-you"</span><span class="p">,</span> <span class="s2">"owed"</span><span class="p">,</span> <span class="s2">"blocked"</span><span class="p">,</span> <span class="s2">"waiting"</span><span class="p">)</span>
+</span><span data-line="5150">            <span class="p">),</span>
+</span><span data-line="5151">            <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">),</span>
+</span><span data-line="5152">        <span class="p">)</span>
+</span><span data-line="5153">        <span class="n">groups</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+</span><span data-line="5154">            <span class="n">at</span><span class="p">,</span>
+</span><span data-line="5155">            <span class="n">_Group</span><span class="p">(</span>
+</span><span data-line="5156">                <span class="s2">"questions"</span><span class="p">,</span>
+</span><span data-line="5157">                <span class="s2">"unread"</span><span class="p">,</span>
+</span><span data-line="5158">                <span class="s2">"waits"</span><span class="p">,</span>
+</span><span data-line="5159">                <span class="n">count</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">questions</span> <span class="k">if</span> <span class="n">_is_unread</span><span class="p">(</span><span class="n">q</span><span class="p">)),</span>
+</span><span data-line="5160">            <span class="p">),</span>
+</span><span data-line="5161">        <span class="p">)</span>
+</span><span data-line="5162">    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="5163">        <span class="n">_masthead</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">zone</span><span class="o">=</span><span class="n">_zone_name</span><span class="p">(</span><span class="n">clock</span><span class="p">),</span> <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">),</span>
+</span><span data-line="5164">        <span class="n">_board</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">clock</span><span class="p">),</span>
+</span><span data-line="5165">        <span class="n">_since_line</span><span class="p">(</span><span class="n">shown</span><span class="p">,</span> <span class="n">view</span><span class="p">),</span>
+</span><span data-line="5166">        <span class="n">head</span><span class="p">,</span>
+</span><span data-line="5167">    <span class="p">]</span>
+</span><span data-line="5168">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_owed</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">Mapping</span><span class="p">):</span>
+</span><span data-line="5169">        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_owed_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">_owed</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">sessions</span><span class="p">))</span>
+</span><span data-line="5170">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_blocked</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">Mapping</span><span class="p">):</span>
+</span><span data-line="5171">        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_blocked_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">_blocked</span><span class="o">.</span><span class="n">get</span><span class="p">()))</span>
+</span><span data-line="5172">    <span class="k">if</span> <span class="n">questions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="5173">        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_questions_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">questions</span><span class="p">),</span> <span class="n">clock</span><span class="p">))</span>
+</span><span data-line="5174">    <span class="k">if</span> <span class="n">triaged</span><span class="p">:</span>
+</span><span data-line="5175">        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="5176">            <span class="n">_register_from_rows</span><span class="p">(</span>
+</span><span data-line="5177">                <span class="n">safe</span><span class="p">,</span>
+</span><span data-line="5178">                <span class="n">clear</span><span class="p">,</span>
+</span><span data-line="5179">                <span class="n">clock</span><span class="p">,</span>
+</span><span data-line="5180">                <span class="n">row_fn</span><span class="o">=</span><span class="n">_safe_to_close_row</span><span class="p">,</span>
+</span><span data-line="5181">                <span class="n">ident</span><span class="o">=</span><span class="s2">"safe-to-close"</span><span class="p">,</span>
+</span><span data-line="5182">                <span class="n">name</span><span class="o">=</span><span class="s2">"Safe to close"</span><span class="p">,</span>
+</span><span data-line="5183">                <span class="n">tone</span><span class="o">=</span><span class="s2">"free"</span><span class="p">,</span>
+</span><span data-line="5184">                <span class="n">rule</span><span class="o">=</span><span class="s2">"Said in its own words that nothing is outstanding. Anything that "</span>
+</span><span data-line="5185">                <span class="s2">"did not say so is below, not here."</span><span class="p">,</span>
+</span><span data-line="5186">                <span class="n">empty</span><span class="o">=</span><span class="s2">"No session has said it is finished."</span><span class="p">,</span>
+</span><span data-line="5187">                <span class="n">seen_above</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="5188">            <span class="p">)</span>
+</span><span data-line="5189">        <span class="p">)</span>
+</span><span data-line="5190">    <span class="n">parts</span> <span class="o">+=</span> <span class="p">[</span>
+</span><span data-line="5191">        <span class="n">_register_from_rows</span><span class="p">(</span>
+</span><span data-line="5192">            <span class="n">safe</span><span class="p">,</span>
+</span><span data-line="5193">            <span class="n">finished</span><span class="p">,</span>
+</span><span data-line="5194">            <span class="n">clock</span><span class="p">,</span>
+</span><span data-line="5195">            <span class="n">row_fn</span><span class="o">=</span><span class="n">_finished_row</span><span class="p">,</span>
+</span><span data-line="5196">            <span class="n">ident</span><span class="o">=</span><span class="s2">"finished"</span><span class="p">,</span>
+</span><span data-line="5197">            <span class="n">name</span><span class="o">=</span><span class="s2">"Just finished"</span><span class="p">,</span>
+</span><span data-line="5198">            <span class="n">tone</span><span class="o">=</span><span class="s2">"free"</span><span class="p">,</span>
+</span><span data-line="5199">            <span class="n">rule</span><span class="o">=</span><span class="s2">"Idle within the last hour, with its last words."</span><span class="p">,</span>
+</span><span data-line="5200">            <span class="n">empty</span><span class="o">=</span><span class="s2">"No session went idle in the last hour."</span><span class="p">,</span>
+</span><span data-line="5201">            <span class="n">seen_above</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="5202">        <span class="p">),</span>
+</span><span data-line="5203">        <span class="n">_register_from_rows</span><span class="p">(</span>
+</span><span data-line="5204">            <span class="n">safe</span><span class="p">,</span>
+</span><span data-line="5205">            <span class="n">busy</span><span class="p">,</span>
+</span><span data-line="5206">            <span class="n">clock</span><span class="p">,</span>
+</span><span data-line="5207">            <span class="n">row_fn</span><span class="o">=</span><span class="n">_working_row</span><span class="p">,</span>
+</span><span data-line="5208">            <span class="n">ident</span><span class="o">=</span><span class="s2">"working"</span><span class="p">,</span>
+</span><span data-line="5209">            <span class="n">name</span><span class="o">=</span><span class="s2">"Working"</span><span class="p">,</span>
+</span><span data-line="5210">            <span class="n">tone</span><span class="o">=</span><span class="s2">"flight"</span><span class="p">,</span>
+</span><span data-line="5211">            <span class="n">rule</span><span class="o">=</span><span class="s2">"Busy, with the tool call in flight."</span><span class="p">,</span>
+</span><span data-line="5212">            <span class="n">empty</span><span class="o">=</span><span class="s2">"No session is running a tool right now."</span><span class="p">,</span>
+</span><span data-line="5213">            <span class="n">seen_above</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="5214">        <span class="p">),</span>
+</span><span data-line="5215">        <span class="n">_later_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">put_off</span><span class="p">,</span> <span class="n">view</span><span class="p">,</span> <span class="n">clock</span><span class="p">),</span>
+</span><span data-line="5216">        <span class="n">_lineage_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">roster</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lineage"</span><span class="p">)),</span>
+</span><span data-line="5217">        <span class="n">_quiet_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">quiet</span><span class="p">,</span> <span class="n">clock</span><span class="p">),</span>
+</span><span data-line="5218">        <span class="n">_review_register</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">sessions</span><span class="p">,</span> <span class="n">view</span><span class="p">,</span> <span class="n">clock</span><span class="p">,</span> <span class="n">settings</span><span class="p">),</span>
+</span><span data-line="5219">        <span class="n">_footer</span><span class="p">(</span><span class="n">safe</span><span class="p">,</span> <span class="n">rendered_at</span><span class="p">,</span> <span class="n">handled</span><span class="o">=</span><span class="n">handled</span><span class="p">),</span>
+</span><span data-line="5220">    <span class="p">]</span>
+</span><span data-line="5221">    <span class="c1"># The badge (triage-ux 2.4): only what is unread in the register that needs the</span>
+</span><span data-line="5222">    <span class="c1"># person, never a total across the page.</span>
+</span><span data-line="5223">    <span class="n">unread</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+</span><span data-line="5224">        <span class="mi">1</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="n">needs_you</span> <span class="k">if</span> <span class="n">triaged</span> <span class="k">else</span> <span class="n">waiting</span><span class="p">)</span> <span class="k">if</span> <span class="n">view</span><span class="o">.</span><span class="n">shown</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_UNREAD</span>
+</span><span data-line="5225">    <span class="p">)</span>
+</span><span data-line="5226">    <span class="n">title_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;title&gt;</span><span class="si">{</span><span class="n">safe</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">unread</span><span class="si">}</span><span class="s1">)'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">unread</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;"</span>
+</span><span data-line="5227">    <span class="c1"># One &lt;style&gt;, not two: the figure's rules belong with the page's rules, and the</span>
+</span><span data-line="5228">    <span class="c1"># interactive mode's own block is the only thing that earns a second tag.</span>
+</span><span data-line="5229">    <span class="n">attention_css</span> <span class="o">=</span> <span class="n">ATTENTION_CSS</span> <span class="k">if</span> <span class="n">view</span><span class="o">.</span><span class="n">on</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="5230">    <span class="n">open_css</span> <span class="o">=</span> <span class="n">OPEN_CSS</span> <span class="k">if</span> <span class="n">_open_helper</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="5231">    <span class="n">sheet</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="5232">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_CSS</span><span class="si">}{</span><span class="n">_TREE_CSS</span><span class="si">}{</span><span class="n">REGISTER_CSS</span><span class="si">}{</span><span class="n">WAY_IN_CSS</span><span class="si">}{</span><span class="n">WHEN_CSS</span><span class="si">}{</span><span class="n">OVERVIEW_CSS</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="5233">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">attention_css</span><span class="si">}{</span><span class="n">open_css</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="5234">    <span class="p">)</span>
+</span><span data-line="5235">    <span class="n">style_tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">sheet</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
+</span><span data-line="5236">    <span class="k">if</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+</span><span data-line="5237">        <span class="n">style_tag</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&lt;style&gt;</span><span class="si">{</span><span class="n">CONSOLE_CSS</span><span class="si">}</span><span class="s2">&lt;/style&gt;"</span>
+</span><span data-line="5238">    <span class="n">body</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;main class="sheet"&gt;</span><span class="si">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/main&gt;'</span>
+</span><span data-line="5239">    <span class="k">if</span> <span class="n">_interactive</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+</span><span data-line="5240">        <span class="n">body</span> <span class="o">+=</span> <span class="n">_later_head_template</span><span class="p">()</span>
+</span><span data-line="5241">        <span class="n">http</span> <span class="o">=</span> <span class="n">HTTP_STORE_SCRIPT</span> <span class="k">if</span> <span class="n">_console_store</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="5242">        <span class="n">body</span> <span class="o">+=</span> <span class="p">(</span>
+</span><span data-line="5243">            <span class="sa">f</span><span class="s2">"&lt;script&gt;</span><span class="si">{</span><span class="n">ATTENTION_SCRIPT</span><span class="si">}{</span><span class="n">LIVE_SCRIPT</span><span class="si">}{</span><span class="n">http</span><span class="si">}{</span><span class="n">CONSOLE_SCRIPT</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="5244">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BOARD_SCRIPT</span><span class="si">}{</span><span class="n">DECK_SCRIPT</span><span class="si">}{</span><span class="n">OPEN_SCRIPT</span><span class="si">}</span><span class="s2">&lt;/script&gt;"</span>
+</span><span data-line="5245">        <span class="p">)</span>
+</span><span data-line="5246">    <span class="k">elif</span> <span class="n">_open_helper</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+</span><span data-line="5247">        <span class="n">body</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&lt;script&gt;</span><span class="si">{</span><span class="n">OPEN_SCRIPT</span><span class="si">}</span><span class="s2">&lt;/script&gt;"</span>
+</span><span data-line="5248">    <span class="k">if</span> <span class="n">fragment</span><span class="p">:</span>
+</span><span data-line="5249">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title_tag</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">style_tag</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="5250">    <span class="n">head</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="5251">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title_tag</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="5252">        <span class="s1">'&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;'</span>
+</span><span data-line="5253">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">style_tag</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="5254">    <span class="p">)</span>
+</span><span data-line="5255">    <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="5256">        <span class="s1">'&lt;!doctype html&gt;</span><span class="se">\n</span><span class="s1">&lt;html lang="en"&gt;</span><span class="se">\n</span><span class="s1">'</span>
+</span><span data-line="5257">        <span class="sa">f</span><span class="s1">'&lt;head&gt;</span><span class="se">\n</span><span class="s1">&lt;meta charset="utf-8"&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="se">\n</span><span class="s1">&lt;/head&gt;</span><span class="se">\n</span><span class="s1">'</span>
+</span><span data-line="5258">        <span class="sa">f</span><span class="s2">"&lt;body&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s2">&lt;/body&gt;</span><span class="se">\n</span><span class="s2">&lt;/html&gt;</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="5259">    <span class="p">)</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -5430,7 +5436,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=7ffc8fc3"></script>
+      <script src="../../_static/documentation_options.js?v=db840bda"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
