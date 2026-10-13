@@ -108,6 +108,8 @@ def test_the_register_lists_done_first_then_oldest_open_and_names_who_asked():
     )
     assert "asked by asker" in reg
     assert "Their verify commands are not run here." in html
+    assert "Fetched from GitHub at 2026-02-01 11:55 UTC" in html
+    assert "costs network calls" in html
     assert "<b>3</b> <span>owed</span>" in html  # the tally strip
     assert html.index('id="needs-you"') < html.index('id="owed"')
 
@@ -129,3 +131,30 @@ def test_a_failed_listing_says_unavailable_not_nothing():
 def test_no_owed_list_renders_as_before():
     assert page() == page(owed=None)
     assert 'id="owed"' not in page()
+
+
+def test_a_row_openloops_could_not_check_reads_question_mark_and_is_counted():
+    env = envelope()
+    env["rows"].append(
+        {
+            "repo": "o/s",
+            "number": 4,
+            "title": "Has a verify command",
+            "url": "https://github.com/o/s/issues/4",
+            "age_days": 2,
+            "state": "unknown",
+        }
+    )
+    reg = page(owed=env).split('id="owed"', 1)[1].split("</details>", 1)[0]
+    row = reg.split("Has a verify command", 1)[1].split("</li>", 1)[0]
+    assert '<span class="owed-state">?</span>' in row
+    assert "1 of 4 read ?." in reg
+    assert "2 of" not in reg
+
+
+def test_a_failing_lister_with_no_cache_is_unavailable_with_its_reason(tmp_path):
+    def broken(**kw):
+        raise RuntimeError("gh down")
+
+    got = owed.refresh(path=tmp_path / "o.json", lister=broken, now=NOW)
+    assert "Unavailable: RuntimeError: gh down" in page(owed=got)

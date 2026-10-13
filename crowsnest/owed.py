@@ -10,51 +10,40 @@ The page never fetches. :func:`refresh` writes openloops' envelope to a cache fi
 the data directory, at most once per ``every``, and the page reads that file. An envelope
 whose listing failed (``listed: false``) is kept as it is, so the page can say the list is
 unavailable rather than show an empty one: "nothing owed" and "could not look" must not
-read the same.
+read the same (:mod:`crowsnest.envelope_cache` keeps that rule for both openloops
+registers).
 """
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable, Mapping
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
+
+from crowsnest import envelope_cache
 
 __all__ = ["DFLT_EVERY", "DFLT_LIMIT", "cache_path", "load", "refresh"]
 
 #: How old the cached list may get before :func:`refresh` asks openloops again.
-DFLT_EVERY = timedelta(minutes=10)
+DFLT_EVERY = envelope_cache.DFLT_EVERY
 
 #: How many issues are listed at most.
 DFLT_LIMIT = 200
+
+#: The cache file's name under the data directory.
+CACHE_NAME = "owed.json"
 
 Lister = Callable[..., Mapping]
 
 
 def cache_path(path: str | Path | None = None) -> Path:
     """Where the list is kept: ``path``, else ``<data dir>/owed.json``."""
-    if path:
-        return Path(path).expanduser()
-    from crowsnest.paths import data_dir
-
-    return data_dir() / "owed.json"
-
-
-def _when(text) -> datetime | None:
-    try:
-        moment = datetime.fromisoformat(str(text).replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+    return envelope_cache.cache_path(path, name=CACHE_NAME)
 
 
 def load(path: str | Path | None = None) -> dict | None:
     """The cached envelope, or ``None`` when there is none (or it cannot be read)."""
-    try:
-        doc = json.loads(cache_path(path).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    return doc if isinstance(doc, dict) else None
+    return envelope_cache.load(path, name=CACHE_NAME)
 
 
 def refresh(
@@ -64,28 +53,22 @@ def refresh(
     now: datetime | None = None,
     every: timedelta = DFLT_EVERY,
     limit: int = DFLT_LIMIT,
-) -> dict | None:
+) -> dict:
     """Ask openloops for the owed list when the cache is older than ``every``; the
     envelope the page will read.
 
     ``lister`` is openloops' :func:`~openloops.tools.owed` by default, always called with
-    ``verify=False``. A lister that raises leaves the cache as it was.
+    ``verify=False``. A lister that raises -- or an openloops that cannot be imported --
+    leaves the cache as it was, flagged ``refresh_error``, or is an unlisted envelope
+    saying why when there is no cache.
     """
-    now = datetime.now(timezone.utc) if now is None else now
-    cached = load(path)
-    then = _when(cached.get("fetched_at")) if cached else None
-    if then is not None and now - then < every:
-        return cached
-    if lister is None:
-        from openloops.tools import owed as lister
-    try:
-        envelope = dict(lister(verify=False, limit=limit))
-    except Exception:  # noqa: BLE001 -- openloops or gh failing must not fail the page
-        return cached
-    envelope["fetched_at"] = now.astimezone(timezone.utc).isoformat(timespec="seconds")
-    target = cache_path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(envelope, ensure_ascii=False) + "\n", encoding="utf-8")
-    tmp.replace(target)
-    return envelope
+
+    def ask() -> Mapping:
+        nonlocal lister
+        if lister is None:
+            from openloops.tools import owed as lister
+        return lister(verify=False, limit=limit)
+
+    return envelope_cache.refresh(
+        name=CACHE_NAME, ask=ask, path=path, now=now, every=every
+    )

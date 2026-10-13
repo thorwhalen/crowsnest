@@ -535,6 +535,8 @@ def report(
     plain: bool = False,
     open_helper: bool = False,
     console_url: str | None = None,
+    owed: bool = False,
+    blocked: bool = False,
 ):
     """Render the roster as one phone-readable HTML page: no stylesheet, script, or
     request to anywhere.
@@ -575,6 +577,12 @@ def report(
     open", at the foot; kept in that browser) and a session of another account has its
     link copied for you to paste there; a session with no link gets a button that copies
     its `crowsnest open` command. `crowsnest publish` and `--interactive` always add it.
+
+    `--owed` adds an *Owed* register (the open manual-task issues, as openloops lists them)
+    and `--blocked` a *Free to proceed* register (issues whose `blocked_by` issues are
+    closed, as openloops resolves them). Both call GitHub through `gh`, so both are off by
+    default, the page says when it fetched and that this costs network calls, and what
+    openloops could not resolve reads `?`. Without them the page is exactly as before.
     """
     result = tools.report(
         home=home,
@@ -588,6 +596,8 @@ def report(
         plain=plain,
         open_helper=open_helper,
         console=console_url or None,
+        owed=owed,
+        blocked=blocked,
     )
     if not out:
         return result["html"]
@@ -609,6 +619,7 @@ def publish(
     refs: bool = False,
     actions: bool = False,
     owed: bool = False,
+    blocked: bool = False,
     questions: bool = False,
 ):
     """Render the report page and send it where you can open it from a phone.
@@ -634,6 +645,8 @@ def publish(
     what you must do, in at most eight words, labelled *generated*.
     `--owed` (or `owed = true` in `[publish]`) adds an *Owed* register after *Needs you*:
     the open manual-task issues openloops lists (`ol owed`), one tap each to open them.
+    `--blocked` (or `blocked = true`) adds *Free to proceed* after it: the issues waiting on
+    another, `ready` once every blocker is closed (`ol blocked`). Either reaches GitHub.
     `--questions` (or `questions = true` in `[publish]`) adds *Your questions*: what you
     asked your sessions in the last two weeks, each with its answer, read or unread.
     """
@@ -648,6 +661,7 @@ def publish(
         refs=refs or None,
         actions=actions or None,
         owed=owed or None,
+        blocked=blocked or None,
         questions=questions or None,
     )
     # A generated line that failed is said, not swallowed: under a scheduler it is most
