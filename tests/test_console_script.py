@@ -353,11 +353,14 @@ const out = {};
 out.block = laterBlock() === clone;
 out.classes = clone.classList.list;
 out.calls = calls.map(([name]) => name);
+out.deep = calls.filter(([name]) => name === "clone").map(([, deep]) => deep);
 out.created = created;
 globalThis.hasWorking = false;
 calls.length = 0;
 laterBlock();
 out.fallback = calls.map(([name]) => name);
+globalThis.hasTemplate = false;
+out.missing = laterBlock();
 globalThis.existing = { is: "found" };
 out.found = laterBlock() === globalThis.existing;
 console.log(JSON.stringify(out));
@@ -389,6 +392,8 @@ def test_laterblock_clones_the_template_and_builds_no_head_of_its_own(tmp_path):
     assert out["calls"] == ["clone", "after"]
     assert out["fallback"] == ["clone", "append"]
     assert out["found"] is True
+    assert out["deep"] == [True]  # a shallow clone is an empty <details>: no head
+    assert out["missing"] is None  # no template: nothing built, nothing thrown
 
 
 def test_the_template_is_the_head_openloops_builds_and_only_an_interactive_page_has_it():

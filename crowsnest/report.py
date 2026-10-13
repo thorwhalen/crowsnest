@@ -1114,7 +1114,9 @@ CONSOLE_SCRIPT = r"""
       // the same `_register` as every other register (#94): this script holds no copy of
       // it. The block is the script's own to show and hide, so it takes the class
       // that is its own (`later-live`) in place of the template's neutral tone.
-      const block = document.getElementById("later-head").content.firstElementChild.cloneNode(true);
+      const template = document.getElementById("later-head");
+      if (!template) return null;
+      const block = template.content.firstElementChild.cloneNode(true);
       block.classList.replace("register--live", "later-live");
       const working = document.getElementById("working");
       if (working) working.after(block); else document.querySelector("main").append(block);
@@ -1132,10 +1134,14 @@ CONSOLE_SCRIPT = r"""
     }
     function putAway(el) {
       if (slots.has(el) || drawn.get(el).shown === A.LATER) return;
+      // A page without its Later template (a host that strips <template>) leaves the row
+      // where it is: shown, never lost.
+      const block = laterBlock();
+      if (!block) return;
       const slot = document.createComment("put off from this page");
       el.before(slot);
       slots.set(el, slot);
-      listIn(laterBlock(), el).append(el);
+      listIn(block, el).append(el);
     }
     function bringBack(el) {
       const slot = slots.get(el);
