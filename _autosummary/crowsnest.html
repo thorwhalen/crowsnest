@@ -69,9 +69,11 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.actions.html">crowsnest.actions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.blocked.html">crowsnest.blocked</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.courier.html">crowsnest.courier</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
@@ -634,14 +636,20 @@ silently wrote nothing would be worse than a stack trace.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="crowsnest.attention.html#module-crowsnest.attention" title="crowsnest.attention"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attention</span></code></a></p></td>
 <td><p>What the person did about each item the report shows: seen, put off, done, a note.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.config.html#module-crowsnest.config" title="crowsnest.config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">config</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.blocked.html#module-crowsnest.blocked" title="crowsnest.blocked"><code class="xref py py-obj docutils literal notranslate"><span class="pre">blocked</span></code></a></p></td>
+<td><p>What is free to proceed (crowsnest#85): openloops' <code class="docutils literal notranslate"><span class="pre">blocked_by</span></code> edges, cached.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.config.html#module-crowsnest.config" title="crowsnest.config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">config</span></code></a></p></td>
 <td><p>The homes a roster covers, and the <code class="docutils literal notranslate"><span class="pre">claude</span></code> a spawn starts -- what a config file says.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.courier.html#module-crowsnest.courier" title="crowsnest.courier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">courier</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.courier.html#module-crowsnest.courier" title="crowsnest.courier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">courier</span></code></a></p></td>
 <td><p>The console's courier with no LLM: carry an owner-served console store both ways.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.egress.html#module-crowsnest.egress" title="crowsnest.egress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">egress</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.egress.html#module-crowsnest.egress" title="crowsnest.egress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">egress</span></code></a></p></td>
 <td><p>The page's sanitiser, made safe against text that an earlier clip has already cut (#83).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.envelope_cache.html#module-crowsnest.envelope_cache" title="crowsnest.envelope_cache"><code class="xref py py-obj docutils literal notranslate"><span class="pre">envelope_cache</span></code></a></p></td>
+<td><p>A cached openloops envelope: asked for at most once per <code class="docutils literal notranslate"><span class="pre">every</span></code>, read by the page.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="crowsnest.gists.html#module-crowsnest.gists" title="crowsnest.gists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gists</span></code></a></p></td>
 <td><p>Gists for <em>Your questions</em> (#129): each question in a few words, and the answer it got.</p></td>
@@ -757,7 +765,7 @@ silently wrote nothing would be worse than a stack trace.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=339ea818"></script>
+      <script src="../_static/documentation_options.js?v=97e62c01"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

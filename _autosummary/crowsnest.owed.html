@@ -69,9 +69,11 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.actions.html">crowsnest.actions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.blocked.html">crowsnest.blocked</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.courier.html">crowsnest.courier</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
@@ -167,7 +169,8 @@ commands that an issue’s body names.</p>
 the data directory, at most once per <code class="docutils literal notranslate"><span class="pre">every</span></code>, and the page reads that file. An envelope
 whose listing failed (<code class="docutils literal notranslate"><span class="pre">listed:</span> <span class="pre">false</span></code>) is kept as it is, so the page can say the list is
 unavailable rather than show an empty one: “nothing owed” and “could not look” must not
-read the same.</p>
+read the same (<a class="reference internal" href="crowsnest.envelope_cache.html#module-crowsnest.envelope_cache" title="crowsnest.envelope_cache"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.envelope_cache</span></code></a> keeps that rule for both openloops
+registers).</p>
 <p class="rubric">Module Attributes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -237,10 +240,12 @@ read the same.</p>
 <dd><p>Ask openloops for the owed list when the cache is older than <code class="docutils literal notranslate"><span class="pre">every</span></code>; the
 envelope the page will read.</p>
 <p><code class="docutils literal notranslate"><span class="pre">lister</span></code> is openloops’ <code class="xref py py-func docutils literal notranslate"><span class="pre">owed()</span></code> by default, always called with
-<code class="docutils literal notranslate"><span class="pre">verify=False</span></code>. A lister that raises leaves the cache as it was.</p>
+<code class="docutils literal notranslate"><span class="pre">verify=False</span></code>. A lister that raises – or an openloops that cannot be imported –
+leaves the cache as it was, flagged <code class="docutils literal notranslate"><span class="pre">refresh_error</span></code>, or is an unlisted envelope
+saying why when there is no cache.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -287,7 +292,7 @@ envelope the page will read.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=339ea818"></script>
+      <script src="../_static/documentation_options.js?v=97e62c01"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

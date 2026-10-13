@@ -66,9 +66,11 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.actions.html">crowsnest.actions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.activity.html">crowsnest.activity</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.blocked.html">crowsnest.blocked</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.config.html">crowsnest.config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.courier.html">crowsnest.courier</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.egress.html">crowsnest.egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.gists.html">crowsnest.gists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.init.html">crowsnest.init</a></li>
@@ -154,93 +156,76 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="10"><span class="sd">the data directory, at most once per ``every``, and the page reads that file. An envelope</span>
 </span><span data-line="11"><span class="sd">whose listing failed (``listed: false``) is kept as it is, so the page can say the list is</span>
 </span><span data-line="12"><span class="sd">unavailable rather than show an empty one: "nothing owed" and "could not look" must not</span>
-</span><span data-line="13"><span class="sd">read the same.</span>
-</span><span data-line="14"><span class="sd">"""</span>
-</span><span data-line="15">
-</span><span data-line="16"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-</span><span data-line="17">
-</span><span data-line="18"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span data-line="13"><span class="sd">read the same (:mod:`crowsnest.envelope_cache` keeps that rule for both openloops</span>
+</span><span data-line="14"><span class="sd">registers).</span>
+</span><span data-line="15"><span class="sd">"""</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="18">
 </span><span data-line="19"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span>
-</span><span data-line="20"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timezone</span>
+</span><span data-line="20"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
 </span><span data-line="21"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 </span><span data-line="22">
-</span><span data-line="23"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"DFLT_EVERY"</span><span class="p">,</span> <span class="s2">"DFLT_LIMIT"</span><span class="p">,</span> <span class="s2">"cache_path"</span><span class="p">,</span> <span class="s2">"load"</span><span class="p">,</span> <span class="s2">"refresh"</span><span class="p">]</span>
+</span><span data-line="23"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">envelope_cache</span>
 </span><span data-line="24">
-</span><span data-line="25"><span class="c1">#: How old the cached list may get before :func:`refresh` asks openloops again.</span>
-</span><span data-line="26"><span class="n">DFLT_EVERY</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</span><span data-line="27">
-</span><span data-line="28"><span class="c1">#: How many issues are listed at most.</span>
-</span><span data-line="29"><span class="n">DFLT_LIMIT</span> <span class="o">=</span> <span class="mi">200</span>
-</span><span data-line="30">
-</span><span data-line="31"><span class="n">Lister</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span>
+</span><span data-line="25"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"DFLT_EVERY"</span><span class="p">,</span> <span class="s2">"DFLT_LIMIT"</span><span class="p">,</span> <span class="s2">"cache_path"</span><span class="p">,</span> <span class="s2">"load"</span><span class="p">,</span> <span class="s2">"refresh"</span><span class="p">]</span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="c1">#: How old the cached list may get before :func:`refresh` asks openloops again.</span>
+</span><span data-line="28"><span class="n">DFLT_EVERY</span> <span class="o">=</span> <span class="n">envelope_cache</span><span class="o">.</span><span class="n">DFLT_EVERY</span>
+</span><span data-line="29">
+</span><span data-line="30"><span class="c1">#: How many issues are listed at most.</span>
+</span><span data-line="31"><span class="n">DFLT_LIMIT</span> <span class="o">=</span> <span class="mi">200</span>
 </span><span data-line="32">
-</span><span data-line="33">
+</span><span data-line="33"><span class="c1">#: The cache file's name under the data directory.</span>
+</span><span data-line="34"><span class="n">CACHE_NAME</span> <span class="o">=</span> <span class="s2">"owed.json"</span>
+</span><span data-line="35">
+</span><span data-line="36"><span class="n">Lister</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">]</span>
+</span><span data-line="37">
+</span><span data-line="38">
 <div class="viewcode-block" id="cache_path">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.owed.html#crowsnest.owed.cache_path">[docs]</a>
-</span><span data-line="34"><span class="k">def</span><span class="w"> </span><span class="nf">cache_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-</span><span data-line="35"><span class="w">    </span><span class="sd">"""Where the list is kept: ``path``, else ``&lt;data dir&gt;/owed.json``."""</span>
-</span><span data-line="36">    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
-</span><span data-line="37">        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span data-line="38">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
-</span><span data-line="39">
-</span><span data-line="40">    <span class="k">return</span> <span class="n">data_dir</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"owed.json"</span></div>
+</span><span data-line="39"><span class="k">def</span><span class="w"> </span><span class="nf">cache_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+</span><span data-line="40"><span class="w">    </span><span class="sd">"""Where the list is kept: ``path``, else ``&lt;data dir&gt;/owed.json``."""</span>
+</span><span data-line="41">    <span class="k">return</span> <span class="n">envelope_cache</span><span class="o">.</span><span class="n">cache_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">CACHE_NAME</span><span class="p">)</span></div>
 
-</span><span data-line="41">
 </span><span data-line="42">
-</span><span data-line="43"><span class="k">def</span><span class="w"> </span><span class="nf">_when</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="44">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="45">        <span class="n">moment</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span>
-</span><span data-line="46">    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-</span><span data-line="47">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="48">    <span class="k">return</span> <span class="n">moment</span> <span class="k">if</span> <span class="n">moment</span><span class="o">.</span><span class="n">tzinfo</span> <span class="k">else</span> <span class="n">moment</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
-</span><span data-line="49">
-</span><span data-line="50">
+</span><span data-line="43">
 <div class="viewcode-block" id="load">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.owed.html#crowsnest.owed.load">[docs]</a>
-</span><span data-line="51"><span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="52"><span class="w">    </span><span class="sd">"""The cached envelope, or ``None`` when there is none (or it cannot be read)."""</span>
-</span><span data-line="53">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="54">        <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">cache_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span data-line="55">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-</span><span data-line="56">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="57">    <span class="k">return</span> <span class="n">doc</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span></div>
+</span><span data-line="44"><span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="45"><span class="w">    </span><span class="sd">"""The cached envelope, or ``None`` when there is none (or it cannot be read)."""</span>
+</span><span data-line="46">    <span class="k">return</span> <span class="n">envelope_cache</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">CACHE_NAME</span><span class="p">)</span></div>
 
-</span><span data-line="58">
-</span><span data-line="59">
+</span><span data-line="47">
+</span><span data-line="48">
 <div class="viewcode-block" id="refresh">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.owed.html#crowsnest.owed.refresh">[docs]</a>
-</span><span data-line="60"><span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span>
-</span><span data-line="61">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="62">    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="63">    <span class="n">lister</span><span class="p">:</span> <span class="n">Lister</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="64">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="65">    <span class="n">every</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">DFLT_EVERY</span><span class="p">,</span>
-</span><span data-line="66">    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_LIMIT</span><span class="p">,</span>
-</span><span data-line="67"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="68"><span class="w">    </span><span class="sd">"""Ask openloops for the owed list when the cache is older than ``every``; the</span>
-</span><span data-line="69"><span class="sd">    envelope the page will read.</span>
-</span><span data-line="70">
-</span><span data-line="71"><span class="sd">    ``lister`` is openloops' :func:`~openloops.tools.owed` by default, always called with</span>
-</span><span data-line="72"><span class="sd">    ``verify=False``. A lister that raises leaves the cache as it was.</span>
-</span><span data-line="73"><span class="sd">    """</span>
-</span><span data-line="74">    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
-</span><span data-line="75">    <span class="n">cached</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="76">    <span class="n">then</span> <span class="o">=</span> <span class="n">_when</span><span class="p">(</span><span class="n">cached</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fetched_at"</span><span class="p">))</span> <span class="k">if</span> <span class="n">cached</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="77">    <span class="k">if</span> <span class="n">then</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">now</span> <span class="o">-</span> <span class="n">then</span> <span class="o">&lt;</span> <span class="n">every</span><span class="p">:</span>
-</span><span data-line="78">        <span class="k">return</span> <span class="n">cached</span>
-</span><span data-line="79">    <span class="k">if</span> <span class="n">lister</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="80">        <span class="kn">from</span><span class="w"> </span><span class="nn">openloops.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">owed</span> <span class="k">as</span> <span class="n">lister</span>
-</span><span data-line="81">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="82">        <span class="n">envelope</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">lister</span><span class="p">(</span><span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">))</span>
-</span><span data-line="83">    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- openloops or gh failing must not fail the page</span>
-</span><span data-line="84">        <span class="k">return</span> <span class="n">cached</span>
-</span><span data-line="85">    <span class="n">envelope</span><span class="p">[</span><span class="s2">"fetched_at"</span><span class="p">]</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
-</span><span data-line="86">    <span class="n">target</span> <span class="o">=</span> <span class="n">cache_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="87">    <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="88">    <span class="n">tmp</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".json.tmp"</span><span class="p">)</span>
-</span><span data-line="89">    <span class="n">tmp</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">envelope</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-</span><span data-line="90">    <span class="n">tmp</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
-</span><span data-line="91">    <span class="k">return</span> <span class="n">envelope</span></div>
+</span><span data-line="49"><span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span>
+</span><span data-line="50">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="51">    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="52">    <span class="n">lister</span><span class="p">:</span> <span class="n">Lister</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="53">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="54">    <span class="n">every</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">DFLT_EVERY</span><span class="p">,</span>
+</span><span data-line="55">    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_LIMIT</span><span class="p">,</span>
+</span><span data-line="56"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="57"><span class="w">    </span><span class="sd">"""Ask openloops for the owed list when the cache is older than ``every``; the</span>
+</span><span data-line="58"><span class="sd">    envelope the page will read.</span>
+</span><span data-line="59">
+</span><span data-line="60"><span class="sd">    ``lister`` is openloops' :func:`~openloops.tools.owed` by default, always called with</span>
+</span><span data-line="61"><span class="sd">    ``verify=False``. A lister that raises -- or an openloops that cannot be imported --</span>
+</span><span data-line="62"><span class="sd">    leaves the cache as it was, flagged ``refresh_error``, or is an unlisted envelope</span>
+</span><span data-line="63"><span class="sd">    saying why when there is no cache.</span>
+</span><span data-line="64"><span class="sd">    """</span>
+</span><span data-line="65">
+</span><span data-line="66">    <span class="k">def</span><span class="w"> </span><span class="nf">ask</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">:</span>
+</span><span data-line="67">        <span class="k">nonlocal</span> <span class="n">lister</span>
+</span><span data-line="68">        <span class="k">if</span> <span class="n">lister</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="69">            <span class="kn">from</span><span class="w"> </span><span class="nn">openloops.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">owed</span> <span class="k">as</span> <span class="n">lister</span>
+</span><span data-line="70">        <span class="k">return</span> <span class="n">lister</span><span class="p">(</span><span class="n">verify</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)</span>
+</span><span data-line="71">
+</span><span data-line="72">    <span class="k">return</span> <span class="n">envelope_cache</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span>
+</span><span data-line="73">        <span class="n">name</span><span class="o">=</span><span class="n">CACHE_NAME</span><span class="p">,</span> <span class="n">ask</span><span class="o">=</span><span class="n">ask</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">,</span> <span class="n">every</span><span class="o">=</span><span class="n">every</span>
+</span><span data-line="74">    <span class="p">)</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -269,7 +254,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=339ea818"></script>
+      <script src="../../_static/documentation_options.js?v=97e62c01"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

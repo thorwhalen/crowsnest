@@ -41,9 +41,11 @@
    actions
    activity
    attention
+   blocked
    config
    courier
    egress
+   envelope_cache
    gists
    hook
    init

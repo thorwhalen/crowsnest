@@ -216,7 +216,7 @@ are placed directly: the figure down the first column, the heading and the rule 
 the second. Without this the rule falls below the head’s hairline, at the page’s left
 edge, on every register that folds.
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None, action_line=None, owed=None, themes=None, questions=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None, action_line=None, owed=None, blocked=None, themes=None, questions=None)
 
 The roster [`crowsnest.tools.roster()`](crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -267,6 +267,11 @@ last and muted. The page fetches nothing; `None` renders as before it existed.
 `owed` is openloops’ owed envelope ([`crowsnest.owed`](crowsnest.owed.html.md#module-crowsnest.owed)): the page then carries an
 *Owed* register after *Needs you*, one line per open manual-task issue, and a row’s
 reference to an owed issue leads its list, tagged. `None` renders as before.
+`blocked` is openloops’ blocked envelope ([`crowsnest.blocked`](crowsnest.blocked.html.md#module-crowsnest.blocked)): the page then
+carries a *Free to proceed* register after *Owed*, each issue `ready`, `waits` or
+`?`. Both registers say they cost network calls and when they were fetched; an
+unresolved row reads `?`, and a failed listing reads *Unavailable*. `None` renders
+as before.
 
 `open_helper=True` adds one small script ([`OPEN_SCRIPT`](#crowsnest.report.OPEN_SCRIPT)) for a page someone
 opens in a browser: it routes each `open` by the account’s browser the reader chose

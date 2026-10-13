@@ -64,7 +64,9 @@ crowsnest lineage                  who started whom, as a tree; --backfill recov
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
                                    (--fragment: without the document wrapper, for publishing as an artifact;
                                     --interactive: buttons per row and a Refresh, live when published with the db capability;
-                                    --plain: ignore what you marked with seen/later/done/note, for a copy to share)
+                                    --plain: ignore what you marked with seen/later/done/note, for a copy to share;
+                                    --owed / --blocked: opt-in Owed and Free-to-proceed registers from openloops, which call
+                                    GitHub; what it could not resolve reads ?, and without them the page is unchanged)
 crowsnest publish [--to DEST]      render that page and send it where you read it: a path, host:path, or [publish] in the config
 crowsnest groups [--by project]    every session under a theme ([themes] in the config, else inferred) or a project
 crowsnest questions [--unanswered]  what you asked your sessions in the last two weeks, and what each answered

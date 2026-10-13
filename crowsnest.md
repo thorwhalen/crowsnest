@@ -1,4 +1,4 @@
-> built 2026-10-12 12:50 UTC from 8022182 (main) · crowsnest 0.0.86. Details: build_info.json
+> built 2026-10-13 09:22 UTC from 3749118 (main) · crowsnest 0.0.87. Details: build_info.json
 
 # index.html.md
 
@@ -68,7 +68,9 @@ crowsnest lineage                  who started whom, as a tree; --backfill recov
 crowsnest report [--out FILE]      the roster as one phone-readable HTML page, no stylesheet or script
                                    (--fragment: without the document wrapper, for publishing as an artifact;
                                     --interactive: buttons per row and a Refresh, live when published with the db capability;
-                                    --plain: ignore what you marked with seen/later/done/note, for a copy to share)
+                                    --plain: ignore what you marked with seen/later/done/note, for a copy to share;
+                                    --owed / --blocked: opt-in Owed and Free-to-proceed registers from openloops, which call
+                                    GitHub; what it could not resolve reads ?, and without them the page is unchanged)
 crowsnest publish [--to DEST]      render that page and send it where you read it: a path, host:path, or [publish] in the config
 crowsnest groups [--by project]    every session under a theme ([themes] in the config, else inferred) or a project
 crowsnest questions [--unanswered]  what you asked your sessions in the last two weeks, and what each answered
@@ -1492,6 +1494,76 @@ Store `record` as `item`’s document, with `extras` carried along; return it.
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
+# _autosummary/crowsnest.blocked.html.md
+
+# crowsnest.blocked
+
+What is free to proceed (crowsnest#85): openloops’ `blocked_by` edges, cached.
+
+The sibling of [`crowsnest.owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed), from `openloops.tools.blocked()`: each open issue
+that waits on another, with every edge resolved, as `unblocked` (every blocker closed –
+the work is free and nobody was told), `blocked` (naming what it waits on) or
+`unknown` (the edges could not be read). The page shows them as `ready` / `waits` /
+`?` and never rounds `unknown` into either.
+
+Resolving an edge is one GitHub call per candidate (openloops bounds it at
+[`DFLT_LIMIT`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.DFLT_LIMIT)), so the page never fetches: [`refresh()`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.refresh) writes the envelope to a
+cache file under the data directory at most once per `every`
+([`crowsnest.envelope_cache`](_autosummary/crowsnest.envelope_cache.html.md#module-crowsnest.envelope_cache)), and an envelope whose discovery failed is kept as it is,
+so the page says it is unavailable.
+
+### Module Attributes
+
+| [`DFLT_EVERY`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.DFLT_EVERY)   | How old the cached list may get before [`refresh()`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.refresh) asks openloops again.   |
+|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| [`DFLT_LIMIT`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.DFLT_LIMIT)   | one GitHub call each.                                                                                                     |
+
+### Functions
+
+| [`cache_path`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.cache_path)([path])                             | Where the list is kept: `path`, else `<data dir>/blocked.json`.                                              |
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| [`load`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.load)([path])                                   | The cached envelope, or `None` when there is none (or it cannot be read).                                    |
+| [`refresh`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.refresh)(\*[, path, lister, now, every, limit]) | Ask openloops what is free to proceed when the cache is older than `every`; the envelope the page will read. |
+
+### crowsnest.blocked.DFLT_EVERY *= datetime.timedelta(seconds=600)*
+
+How old the cached list may get before [`refresh()`](_autosummary/crowsnest.blocked.html.md#crowsnest.blocked.refresh) asks openloops again.
+
+### crowsnest.blocked.DFLT_LIMIT *= 50*
+
+one GitHub call each.
+
+* **Type:**
+  How many candidate issues are resolved at most
+
+### crowsnest.blocked.cache_path(path=None)
+
+Where the list is kept: `path`, else `<data dir>/blocked.json`.
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### crowsnest.blocked.load(path=None)
+
+The cached envelope, or `None` when there is none (or it cannot be read).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.blocked.refresh(, path=None, lister=None, now=None, every=datetime.timedelta(seconds=600), limit=50)
+
+Ask openloops what is free to proceed when the cache is older than `every`; the
+envelope the page will read.
+
+`lister` is openloops’ `blocked()` by default, called with
+`resolve=True` (without it every row reads `unknown`). A lister that raises – or
+an openloops that cannot be imported – leaves the cache as it was, flagged
+`refresh_error`, or is an unlisted envelope saying why when there is no cache.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+
 # _autosummary/crowsnest.config.html.md
 
 # crowsnest.config
@@ -1637,7 +1709,7 @@ One Claude Code config directory to read, and how to judge liveness in it.
 
 The config table saying where `crowsnest publish` sends the page.
 
-### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False, owed=False, questions=False)
+### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False, owed=False, blocked=False, questions=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1738,6 +1810,7 @@ to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
 # refs = true                  # ask GitHub (gh) what the references are now
 # actions = true               # write a generated action line per Needs-you item
 # owed = true                  # an Owed register: openloops' manual-task issues
+# blocked = true               # a Free to proceed register: issues whose blockers closed
 ```
 
 A key the table does not know is an error, as in `[attention]`, and so is giving
@@ -1952,6 +2025,71 @@ One field, safe to place in the document.
 >>> drop_cut_words('Read: notes.md')
 'Read: notes.md'
 ```
+
+
+# _autosummary/crowsnest.envelope_cache.html.md
+
+# crowsnest.envelope_cache
+
+A cached openloops envelope: asked for at most once per `every`, read by the page.
+
+The report never fetches ([`crowsnest.report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report) renders what it is handed), and the two
+registers that come from openloops – *Owed* ([`crowsnest.owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed)) and *Free to proceed*
+([`crowsnest.blocked`](_autosummary/crowsnest.blocked.html.md#module-crowsnest.blocked)) – call GitHub. So each keeps its envelope in a file under the
+data directory and [`refresh()`](_autosummary/crowsnest.envelope_cache.html.md#crowsnest.envelope_cache.refresh) asks again only when the file is older than `every`.
+
+“Could not look” is never “nothing there”, at any step:
+
+- an envelope whose listing failed (`listed: false`) is kept as it is, so the page says
+  the list is unavailable;
+- a lister that raises (`gh` missing, openloops not importable) leaves the cache as it
+  was, flagged `refresh_error` so the page says the refresh failed, or, with no cache
+  yet, becomes an unlisted envelope carrying the reason.
+
+Either way the failure is written down with the time it was tried (`tried_at`), so a
+scheduler that runs every minute asks GitHub again after `every`, not on every run: a
+GitHub that hangs must not cost each run a timeout.
+
+### Module Attributes
+
+| [`DFLT_EVERY`](_autosummary/crowsnest.envelope_cache.html.md#crowsnest.envelope_cache.DFLT_EVERY)   | How old a cached envelope may get before [`refresh()`](_autosummary/crowsnest.envelope_cache.html.md#crowsnest.envelope_cache.refresh) asks openloops again.   |
+|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+
+### Functions
+
+| [`cache_path`](_autosummary/crowsnest.envelope_cache.html.md#crowsnest.envelope_cache.cache_path)(path, \*, name)                 | Where an envelope is kept: `path`, else `<data dir>/<name>`.                  |
+|---------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`load`](_autosummary/crowsnest.envelope_cache.html.md#crowsnest.envelope_cache.load)(path, \*, name)                       | The cached envelope, or `None` when there is none (or it cannot be read).     |
+| [`refresh`](_autosummary/crowsnest.envelope_cache.html.md#crowsnest.envelope_cache.refresh)(\*, name, ask[, path, now, every]) | The envelope the page will read: the cache while it is fresh, else `ask()`'s. |
+
+### crowsnest.envelope_cache.DFLT_EVERY *= datetime.timedelta(seconds=600)*
+
+How old a cached envelope may get before [`refresh()`](_autosummary/crowsnest.envelope_cache.html.md#crowsnest.envelope_cache.refresh) asks openloops again.
+
+### crowsnest.envelope_cache.cache_path(path, , name)
+
+Where an envelope is kept: `path`, else `<data dir>/<name>`.
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### crowsnest.envelope_cache.load(path, , name)
+
+The cached envelope, or `None` when there is none (or it cannot be read).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.envelope_cache.refresh(, name, ask, path=None, now=None, every=datetime.timedelta(seconds=600))
+
+The envelope the page will read: the cache while it is fresh, else `ask()`’s.
+
+`ask` is a thunk over the lister, so each register decides its own keyword
+arguments (`verify=False`, a limit). It is called inside the `try`: anything that
+goes wrong reaching openloops is the register’s reason, not the page’s failure.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
 # _autosummary/crowsnest.gists.html.md
@@ -2663,37 +2801,39 @@ silently wrote nothing would be worse than a stack trace.
 
 ### Modules
 
-| [`account`](_autosummary/crowsnest.account.html.md#module-crowsnest.account)     | Which account a new session runs under, and which `claude` binary starts it.                                                         |
-|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| [`actions`](_autosummary/crowsnest.actions.html.md#module-crowsnest.actions)     | One generated line per Needs-you item: what the person must do, in at most eight words.                                              |
-| [`activity`](_autosummary/crowsnest.activity.html.md#module-crowsnest.activity)   | What a session is doing right now, read from the tail of its transcript.                                                             |
-| [`attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention) | What the person did about each item the report shows: seen, put off, done, a note.                                                   |
-| [`config`](_autosummary/crowsnest.config.html.md#module-crowsnest.config)       | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                                               |
-| [`courier`](_autosummary/crowsnest.courier.html.md#module-crowsnest.courier)     | The console's courier with no LLM: carry an owner-served console store both ways.                                                    |
-| [`egress`](_autosummary/crowsnest.egress.html.md#module-crowsnest.egress)       | The page's sanitiser, made safe against text that an earlier clip has already cut (#83).                                             |
-| [`gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)         | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
-| [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)           | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
-| [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)           | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
-| [`ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)       | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
-| [`lineage`](_autosummary/crowsnest.lineage.html.md#module-crowsnest.lineage)     | Who started whom: the spawn graph, as data.                                                                                          |
-| [`links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)         | References in a session's own words, turned into links you can click.                                                                |
-| [`live`](_autosummary/crowsnest.live.html.md#module-crowsnest.live)           | What a published page may know about the sessions *now*: one small document, and a recap.                                            |
-| [`open`](_autosummary/crowsnest.open.html.md#module-crowsnest.open)           | Bring a live session's terminal to the front, or say where it runs.                                                                  |
-| [`owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed)           | What the person owes their sessions: the open `manual-task` issues openloops lists.                                                  |
-| [`paths`](_autosummary/crowsnest.paths.html.md#module-crowsnest.paths)         | Where crowsnest keeps what is not code: the data directory, and nothing else.                                                        |
-| [`publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)     | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.                                     |
-| [`questions`](_autosummary/crowsnest.questions.html.md#module-crowsnest.questions) | Your questions: what the person asked their sessions, and what each answered (#129).                                                 |
-| [`refstate`](_autosummary/crowsnest.refstate.html.md#module-crowsnest.refstate)   | What a referenced issue or pull request is now: open or closed, and its title.                                                       |
-| [`registry`](_autosummary/crowsnest.registry.html.md#module-crowsnest.registry)   | Who is alive right now, read from the registry Claude Code keeps while a session runs.                                               |
-| [`report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report)       | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere.                                |
-| [`rows`](_autosummary/crowsnest.rows.html.md#module-crowsnest.rows)           | How an item's row is built and hashed: one value, taken whole by every surface that pins it.                                         |
-| [`said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)           | When the thing an item quotes was said: its own time, taken from its own source.                                                     |
-| [`skills`](_autosummary/crowsnest.skills.html.md#module-crowsnest.skills)       | The agent-facing surface: the skills, the subagent, and the command that installs them.                                              |
-| [`themes`](_autosummary/crowsnest.themes.html.md#module-crowsnest.themes)       | Which theme each session belongs to: the person's `[themes]` table first, then what the row itself says (the action-first pass, C1). |
-| [`tools`](_autosummary/crowsnest.tools.html.md#module-crowsnest.tools)         | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                                                     |
-| [`tree`](_autosummary/crowsnest.tree.html.md#module-crowsnest.tree)           | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                                                              |
-| [`triage`](_autosummary/crowsnest.triage.html.md#module-crowsnest.triage)       | Which sessions need you, which are safe to close, and which are still going.                                                         |
-| [`watch`](_autosummary/crowsnest.watch.html.md#module-crowsnest.watch)         | A stream of what changed, so a monitor is told instead of made to poll.                                                              |
+| [`account`](_autosummary/crowsnest.account.html.md#module-crowsnest.account)               | Which account a new session runs under, and which `claude` binary starts it.                                                         |
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| [`actions`](_autosummary/crowsnest.actions.html.md#module-crowsnest.actions)               | One generated line per Needs-you item: what the person must do, in at most eight words.                                              |
+| [`activity`](_autosummary/crowsnest.activity.html.md#module-crowsnest.activity)             | What a session is doing right now, read from the tail of its transcript.                                                             |
+| [`attention`](_autosummary/crowsnest.attention.html.md#module-crowsnest.attention)           | What the person did about each item the report shows: seen, put off, done, a note.                                                   |
+| [`blocked`](_autosummary/crowsnest.blocked.html.md#module-crowsnest.blocked)               | What is free to proceed (crowsnest#85): openloops' `blocked_by` edges, cached.                                                       |
+| [`config`](_autosummary/crowsnest.config.html.md#module-crowsnest.config)                 | The homes a roster covers, and the `claude` a spawn starts -- what a config file says.                                               |
+| [`courier`](_autosummary/crowsnest.courier.html.md#module-crowsnest.courier)               | The console's courier with no LLM: carry an owner-served console store both ways.                                                    |
+| [`egress`](_autosummary/crowsnest.egress.html.md#module-crowsnest.egress)                 | The page's sanitiser, made safe against text that an earlier clip has already cut (#83).                                             |
+| [`envelope_cache`](_autosummary/crowsnest.envelope_cache.html.md#module-crowsnest.envelope_cache) | A cached openloops envelope: asked for at most once per `every`, read by the page.                                                   |
+| [`gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)                   | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
+| [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)                     | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
+| [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)                     | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
+| [`ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)                 | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
+| [`lineage`](_autosummary/crowsnest.lineage.html.md#module-crowsnest.lineage)               | Who started whom: the spawn graph, as data.                                                                                          |
+| [`links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)                   | References in a session's own words, turned into links you can click.                                                                |
+| [`live`](_autosummary/crowsnest.live.html.md#module-crowsnest.live)                     | What a published page may know about the sessions *now*: one small document, and a recap.                                            |
+| [`open`](_autosummary/crowsnest.open.html.md#module-crowsnest.open)                     | Bring a live session's terminal to the front, or say where it runs.                                                                  |
+| [`owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed)                     | What the person owes their sessions: the open `manual-task` issues openloops lists.                                                  |
+| [`paths`](_autosummary/crowsnest.paths.html.md#module-crowsnest.paths)                   | Where crowsnest keeps what is not code: the data directory, and nothing else.                                                        |
+| [`publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)               | Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.                                     |
+| [`questions`](_autosummary/crowsnest.questions.html.md#module-crowsnest.questions)           | Your questions: what the person asked their sessions, and what each answered (#129).                                                 |
+| [`refstate`](_autosummary/crowsnest.refstate.html.md#module-crowsnest.refstate)             | What a referenced issue or pull request is now: open or closed, and its title.                                                       |
+| [`registry`](_autosummary/crowsnest.registry.html.md#module-crowsnest.registry)             | Who is alive right now, read from the registry Claude Code keeps while a session runs.                                               |
+| [`report`](_autosummary/crowsnest.report.html.md#module-crowsnest.report)                 | The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere.                                |
+| [`rows`](_autosummary/crowsnest.rows.html.md#module-crowsnest.rows)                     | How an item's row is built and hashed: one value, taken whole by every surface that pins it.                                         |
+| [`said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)                     | When the thing an item quotes was said: its own time, taken from its own source.                                                     |
+| [`skills`](_autosummary/crowsnest.skills.html.md#module-crowsnest.skills)                 | The agent-facing surface: the skills, the subagent, and the command that installs them.                                              |
+| [`themes`](_autosummary/crowsnest.themes.html.md#module-crowsnest.themes)                 | Which theme each session belongs to: the person's `[themes]` table first, then what the row itself says (the action-first pass, C1). |
+| [`tools`](_autosummary/crowsnest.tools.html.md#module-crowsnest.tools)                   | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                                                     |
+| [`tree`](_autosummary/crowsnest.tree.html.md#module-crowsnest.tree)                     | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                                                              |
+| [`triage`](_autosummary/crowsnest.triage.html.md#module-crowsnest.triage)                 | Which sessions need you, which are safe to close, and which are still going.                                                         |
+| [`watch`](_autosummary/crowsnest.watch.html.md#module-crowsnest.watch)                   | A stream of what changed, so a monitor is told instead of made to poll.                                                              |
 
 
 # _autosummary/crowsnest.init.html.md
@@ -4075,7 +4215,8 @@ The page never fetches. [`refresh()`](_autosummary/crowsnest.owed.html.md#crowsn
 the data directory, at most once per `every`, and the page reads that file. An envelope
 whose listing failed (`listed: false`) is kept as it is, so the page can say the list is
 unavailable rather than show an empty one: “nothing owed” and “could not look” must not
-read the same.
+read the same ([`crowsnest.envelope_cache`](_autosummary/crowsnest.envelope_cache.html.md#module-crowsnest.envelope_cache) keeps that rule for both openloops
+registers).
 
 ### Module Attributes
 
@@ -4118,10 +4259,12 @@ Ask openloops for the owed list when the cache is older than `every`; the
 envelope the page will read.
 
 `lister` is openloops’ `owed()` by default, always called with
-`verify=False`. A lister that raises leaves the cache as it was.
+`verify=False`. A lister that raises – or an openloops that cannot be imported –
+leaves the cache as it was, flagged `refresh_error`, or is an unlisted envelope
+saying why when there is no cache.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
 # _autosummary/crowsnest.paths.html.md
@@ -4983,7 +5126,7 @@ are placed directly: the figure down the first column, the heading and the rule 
 the second. Without this the rule falls below the head’s hairline, at the page’s left
 edge, on every register that folds.
 
-### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None, action_line=None, owed=None, themes=None, questions=None)
+### crowsnest.report.render_report(roster, , made_at, title='crowsnest', fragment=False, interactive=False, tz=None, stale_after=None, store=None, plain=False, row_context=None, links=True, attention_settings=None, open_helper=False, console=None, ref_state=None, action_line=None, owed=None, blocked=None, themes=None, questions=None)
 
 The roster [`crowsnest.tools.roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns as one self-contained HTML page.
 
@@ -5034,6 +5177,11 @@ last and muted. The page fetches nothing; `None` renders as before it existed.
 `owed` is openloops’ owed envelope ([`crowsnest.owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed)): the page then carries an
 *Owed* register after *Needs you*, one line per open manual-task issue, and a row’s
 reference to an owed issue leads its list, tagged. `None` renders as before.
+`blocked` is openloops’ blocked envelope ([`crowsnest.blocked`](_autosummary/crowsnest.blocked.html.md#module-crowsnest.blocked)): the page then
+carries a *Free to proceed* register after *Owed*, each issue `ready`, `waits` or
+`?`. Both registers say they cost network calls and when they were fetched; an
+unresolved row reads `?`, and a failed listing reads *Unavailable*. `None` renders
+as before.
 
 `open_helper=True` adds one small script ([`OPEN_SCRIPT`](_autosummary/crowsnest.report.html.md#crowsnest.report.OPEN_SCRIPT)) for a page someone
 opens in a browser: it routes each `open` by the account’s browser the reader chose
@@ -5795,7 +5943,7 @@ instruction.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None, refs=None, actions=None, owed=None, questions=None)
+### crowsnest.tools.publish(, to=None, command=None, publisher=None, home=None, all_homes=False, config=None, tz=None, plain=False, row_context=None, page_path=None, console=None, refs=None, actions=None, owed=None, blocked=None, questions=None)
 
 Render the report as a whole page and deliver it where its owner reads it.
 
@@ -5849,7 +5997,7 @@ them the same few repositories.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None, actions=False, action_store=None, synthesiser=None, owed=False, owed_path=None, themes=None, questions=False, question_cache=None)
+### crowsnest.tools.report(, home=None, all_homes=False, config=None, made_at=None, title='crowsnest', fragment=False, interactive=False, links=True, lineage_path=None, triage=True, with_lineage=True, tz=None, stale_after=None, store=None, plain=False, row_context=None, open_helper=False, console=None, refs=False, ref_store=None, actions=False, action_store=None, synthesiser=None, owed=False, owed_path=None, blocked=False, blocked_path=None, themes=None, questions=False, question_cache=None)
 
 The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report)
 over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. `fragment` drops the document wrapper for a host
@@ -5912,7 +6060,11 @@ is its seam, `claude -p` by default). Either way each Needs-you row leads with t
 line `action_store` holds for its revision, labelled *generated*.
 `owed=True` adds the *Owed* register: openloops’ open manual-task issues, read from
 a cache (`owed_path`, [`crowsnest.owed`](_autosummary/crowsnest.owed.html.md#module-crowsnest.owed)) that this call refreshes when it is more
-than ten minutes old, never running an issue’s verify command.
+than ten minutes old, never running an issue’s verify command. `blocked=True` adds
+*Free to proceed* the same way (`blocked_path`, [`crowsnest.blocked`](_autosummary/crowsnest.blocked.html.md#module-crowsnest.blocked)): each issue
+that waits on another, `ready`, `waits` or `?`. Both reach GitHub when their
+cache is stale, so both are off by default and the page says so; a failure to reach it
+renders the register as unavailable, with its reason, never as empty.
 `themes` is the board’s `[themes]` table; `None` reads the config file’s.
 `questions=True` adds *Your questions* (`questions()`), read from a per-file
 cache (`question_cache`) that this call brings up to date.
@@ -6817,16 +6969,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-12 12:50 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/80221825db0b37bedee35af55ff601615ad0019b"><code>8022182</code></a> on branch <code>main</code>, for **crowsnest 0.0.86** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 09:22 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/3749118be87e7ede8814652510993cfca70ba6fa"><code>3749118</code></a> on branch <code>main</code>, for **crowsnest 0.0.87** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.87) is behind the latest release on PyPI (0.0.88): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/80221825db0b37bedee35af55ff601615ad0019b"><code>80221825db0b37bedee35af55ff601615ad0019b</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/3749118be87e7ede8814652510993cfca70ba6fa"><code>3749118be87e7ede8814652510993cfca70ba6fa</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6837,15 +6991,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/38251336913">38251336913</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/38375651197">38375651197</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>80221825db0b37bedee35af55ff601615ad0019b</code> (in the history of the built commit) |
+| Event commit | <code>3749118be87e7ede8814652510993cfca70ba6fa</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.12  |
+| epythet  | 0.2.15  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -6864,14 +7018,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.86/">0.0.86</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.88/">0.0.88</a>, newer than the documented version (0.0.87).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 80221825db0b37bedee35af55ff601615ad0019b
-pip install "epythet==0.2.12"
+git checkout 3749118be87e7ede8814652510993cfca70ba6fa
+pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

@@ -1,0 +1,20 @@
+crowsnest.envelope\_cache
+=========================
+
+.. automodule:: crowsnest.envelope_cache
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_EVERY
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cache_path
+      load
+      refresh
+   

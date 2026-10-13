@@ -12,7 +12,8 @@ The page never fetches. [`refresh()`](#crowsnest.owed.refresh) writes openloops�
 the data directory, at most once per `every`, and the page reads that file. An envelope
 whose listing failed (`listed: false`) is kept as it is, so the page can say the list is
 unavailable rather than show an empty one: “nothing owed” and “could not look” must not
-read the same.
+read the same ([`crowsnest.envelope_cache`](crowsnest.envelope_cache.html.md#module-crowsnest.envelope_cache) keeps that rule for both openloops
+registers).
 
 ### Module Attributes
 
@@ -55,7 +56,9 @@ Ask openloops for the owed list when the cache is older than `every`; the
 envelope the page will read.
 
 `lister` is openloops’ `owed()` by default, always called with
-`verify=False`. A lister that raises leaves the cache as it was.
+`verify=False`. A lister that raises – or an openloops that cannot be imported –
+leaves the cache as it was, flagged `refresh_error`, or is an unlisted envelope
+saying why when there is no cache.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

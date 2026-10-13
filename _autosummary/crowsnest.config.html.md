@@ -141,7 +141,7 @@ One Claude Code config directory to read, and how to judge liveness in it.
 
 The config table saying where `crowsnest publish` sends the page.
 
-### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False, owed=False, questions=False)
+### *class* crowsnest.config.PublishSettings(to='', command=(), console='', refs=False, actions=False, owed=False, blocked=False, questions=False)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -242,6 +242,7 @@ to = "me@myserver:/srv/crowsnest/index.html"   # or a local path
 # refs = true                  # ask GitHub (gh) what the references are now
 # actions = true               # write a generated action line per Needs-you item
 # owed = true                  # an Owed register: openloops' manual-task issues
+# blocked = true               # a Free to proceed register: issues whose blockers closed
 ```
 
 A key the table does not know is an error, as in `[attention]`, and so is giving
