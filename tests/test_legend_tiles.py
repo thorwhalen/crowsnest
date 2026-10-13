@@ -10,7 +10,13 @@ MADE = "2026-02-01T12:00:00Z"
 OWED = {
     "listed": True,
     "rows": [
-        {"repo": "o/r", "number": 1, "title": "t", "url": "https://github.com/o/r/issues/1", "state": "open"}
+        {
+            "repo": "o/r",
+            "number": 1,
+            "title": "t",
+            "url": "https://github.com/o/r/issues/1",
+            "state": "open",
+        }
     ],
 }
 BLOCKED = {
@@ -39,7 +45,12 @@ def session(*, verdict):
         "links": [],
     }
     if verdict:
-        row["verdict"] = {"group": "needs_you", "why": "action", "reason": "x", "asks": []}
+        row["verdict"] = {
+            "group": "needs_you",
+            "why": "action",
+            "reason": "x",
+            "asks": [],
+        }
     return row
 
 
@@ -68,7 +79,10 @@ def test_a_triaged_page_keeps_them_between_needs_you_and_safe_to_close():
 
 
 def test_a_failed_listing_reads_question_mark_in_the_legend_on_an_untriaged_page():
-    tiles = dict((t[0], t[1]) for t in legend(page(verdict=False, owed={"listed": False, "rows": []})))
+    tiles = dict(
+        (t[0], t[1])
+        for t in legend(page(verdict=False, owed={"listed": False, "rows": []}))
+    )
     assert tiles["owed"] == "?"
 
 
