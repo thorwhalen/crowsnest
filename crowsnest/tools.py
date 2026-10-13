@@ -577,6 +577,8 @@ def report(
     synthesiser=None,
     owed: bool = False,
     owed_path=None,
+    blocked: bool = False,
+    blocked_path=None,
     themes=None,
     questions: bool = False,
     question_cache=None,
@@ -642,7 +644,11 @@ def report(
     line ``action_store`` holds for its revision, labelled *generated*.
     ``owed=True`` adds the *Owed* register: openloops' open manual-task issues, read from
     a cache (``owed_path``, :mod:`crowsnest.owed`) that this call refreshes when it is more
-    than ten minutes old, never running an issue's verify command.
+    than ten minutes old, never running an issue's verify command. ``blocked=True`` adds
+    *Free to proceed* the same way (``blocked_path``, :mod:`crowsnest.blocked`): each issue
+    that waits on another, ``ready``, ``waits`` or ``?``. Both reach GitHub when their
+    cache is stale, so both are off by default and the page says so; a failure to reach it
+    renders the register as unavailable, with its reason, never as empty.
     ``themes`` is the board's ``[themes]`` table; ``None`` reads the config file's.
     ``questions=True`` adds *Your questions* (:func:`questions`), read from a per-file
     cache (``question_cache``) that this call brings up to date.
@@ -727,6 +733,11 @@ def report(
         from crowsnest import owed as _owed
 
         owed_envelope = _owed.refresh(path=owed_path)
+    blocked_envelope = None
+    if blocked:
+        from crowsnest import blocked as _blocked
+
+        blocked_envelope = _blocked.refresh(path=blocked_path)
     if with_lineage:
         # The rows the roster already read, not a second sweep of the registry: reading
         # twice costs a `ps` and a registry listing, and lets the two halves of one
@@ -766,6 +777,7 @@ def report(
         ref_state=ref_state,
         action_line=action_line,
         owed=owed_envelope,
+        blocked=blocked_envelope,
         themes=theme_table(path=config) if themes is None else themes,
         questions=(
             questions_rows(
@@ -808,6 +820,7 @@ def publish(
     refs: bool | None = None,
     actions: bool | None = None,
     owed: bool | None = None,
+    blocked: bool | None = None,
     questions: bool | None = None,
 ) -> dict:
     """Render the report as a whole page and deliver it where its owner reads it.
@@ -847,6 +860,8 @@ def publish(
         actions = settings.actions
     if owed is None:
         owed = settings.owed
+    if blocked is None:
+        blocked = settings.blocked
     if questions is None:
         questions = settings.questions
     if publisher is None:
@@ -874,6 +889,7 @@ def publish(
         refs=refs,
         actions=actions,
         owed=owed,
+        blocked=blocked,
         questions=questions,
     )
     page = (

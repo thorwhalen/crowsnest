@@ -467,6 +467,7 @@ class PublishSettings:
     refs: bool = False
     actions: bool = False
     owed: bool = False
+    blocked: bool = False
     questions: bool = False
 
 
@@ -482,6 +483,7 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
         # refs = true                  # ask GitHub (gh) what the references are now
         # actions = true               # write a generated action line per Needs-you item
         # owed = true                  # an Owed register: openloops' manual-task issues
+        # blocked = true               # a Free to proceed register: issues whose blockers closed
 
     A key the table does not know is an error, as in ``[attention]``, and so is giving
     both: which one wins would be a guess.
@@ -514,7 +516,7 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
             f"{file}: [{PUBLISH_KEY}] console must be a string, not {console!r}"
         )
     flags = {}
-    for flag in ("refs", "actions", "owed", "questions"):
+    for flag in ("refs", "actions", "owed", "blocked", "questions"):
         flags[flag] = table.get(flag, False)
         if not isinstance(flags[flag], bool):
             raise ValueError(  # noqa: TRY004
