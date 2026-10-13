@@ -164,7 +164,9 @@ def test_a_needs_you_rows_tail_chatter_mentioning_an_issue_is_not_a_change(
 ):
     a = _row(tmp_path, "a", ledger=ASK, last_words="Waiting for your call.")
     b = _row(tmp_path, "b", ledger=ASK, last_words="While waiting I reread #17.")
-    assert a["verdict"]["said_at_basis"] == "ledger written"  # the field LEDGER_MTIME pins
+    assert (
+        a["verdict"]["said_at_basis"] == "ledger written"
+    )  # the field LEDGER_MTIME pins
     assert a["verdict"] == b["verdict"]
     assert att.fingerprint(a) == att.fingerprint(b), (a["links"], b["links"])
 
