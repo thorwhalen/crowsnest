@@ -2543,11 +2543,35 @@ def _owed_urls() -> frozenset[str]:
     )
 
 
+def _days(row: Mapping, key: str) -> int:
+    """A row's whole days; a field that is not a number reads 0, never a crash: a cached
+    envelope is published data, and one bad field must not take the page down."""
+    try:
+        return int(row.get(key) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _listed(envelope: Mapping) -> bool:
+    """Whether the envelope says its listing worked. Only ``listed: true`` says so: one
+    that does not say is not read as an empty list."""
+    return envelope.get("listed") is True
+
+
+def _owed_count(envelope: Mapping) -> int | str:
+    """The legend's figure for *Owed*: how many rows, or ``?`` when it could not be listed."""
+    if not _listed(envelope):
+        return "?"
+    return len(envelope.get("rows") or ())
+
+
 def _fetched_note(safe: _Sanitizer, envelope: Mapping) -> str:
     """What an openloops register says about its cost and its age: it called GitHub, when,
     and, when the last refresh failed, that what shows is older than it should be."""
     fetched = str(envelope.get("fetched_at") or "")
-    when = f"{fetched[:10]} {fetched[11:16]} UTC" if len(fetched) >= 16 else ""
+    when = (
+        safe.text(f"{fetched[:10]} {fetched[11:16]} UTC") if len(fetched) >= 16 else ""
+    )
     note = (
         f"Fetched from GitHub at {when}; refreshing it costs network calls."
         if when
@@ -2576,7 +2600,7 @@ def _owed_register(
         + _fetched_note(safe, envelope)
         + " Their verify commands are not run here. An issue with one reads ?."
     )
-    if not envelope.get("listed", True):
+    if not _listed(envelope):
         why = safe.text(str(envelope.get("error") or "the listing failed"))
         return _register(
             ident="owed",
@@ -2586,9 +2610,13 @@ def _owed_register(
             rule=rule,
             body=f'<p class="empty">Unavailable: {why}</p>',
         )
-    rows = [r for r in envelope.get("rows") or () if isinstance(r, Mapping)]
-    unknown = sum(1 for r in rows if str(r.get("state")) not in ("open", "discharged"))
-    rule += f" {unknown} of {len(rows)} read ?." if unknown else ""
+    raw = list(envelope.get("rows") or ())
+    rows = [r for r in raw if isinstance(r, Mapping)]
+    bad = len(raw) - len(rows)
+    unknown = bad + sum(
+        1 for r in rows if str(r.get("state")) not in ("open", "discharged")
+    )
+    rule += f" {unknown} of {len(raw)} read ?." if unknown else ""
     asked: dict[str, str] = {}
     for session in sessions:
         for link in session.get("links") or ():
@@ -2597,7 +2625,7 @@ def _owed_register(
     rows.sort(
         key=lambda r: (
             _OWED_STATES.get(str(r.get("state")), ("?", 2))[1],
-            -int(r.get("age_days") or 0),
+            -_days(r, "age_days"),
         )
     )
     items = []
@@ -2611,7 +2639,7 @@ def _owed_register(
         link = _link(safe, url, label) or safe.text(label)
         items.append(
             f'<li class="thin owed-row is-{safe.text(word) if word != "?" else "unknown"}">'
-            f'<span class="thin-age">{int(r.get("age_days") or 0)}d</span>'
+            f'<span class="thin-age">{_days(r, "age_days")}d</span>'
             f'<p class="thin-ask">{link} <span class="owed-title">'
             f"{safe.text(str(r.get('title') or ''))}</span>"
             f' <span class="owed-state">{safe.text(word)}</span>{by}</p></li>'
@@ -2620,13 +2648,17 @@ def _owed_register(
         f'<ul class="thins">{"".join(items)}</ul>'
         if items
         else _empty("You owe nothing.")
+        if not bad
+        else ""
     )
+    if bad:
+        body += f'<p class="empty">{bad} entries could not be read (?).</p>'
     if envelope.get("truncated"):
         body += '<p class="empty">More are owed than were listed.</p>'
     return _register(
         ident="owed",
         name="Owed",
-        figure=str(len(rows)),
+        figure=str(len(raw)),
         tone="needs",
         rule=rule,
         body=body,
@@ -2641,7 +2673,7 @@ _BLOCKED_STATES = {"unblocked": ("ready", 0), "blocked": ("waits", 1)}
 
 def _blocked_ready(envelope: Mapping) -> int | str:
     """The legend's figure for *Free to proceed*: how many issues are ready."""
-    if not envelope.get("listed", True):
+    if not _listed(envelope):
         return "?"
     return sum(
         1
@@ -2661,7 +2693,7 @@ def _blocked_register(safe: _Sanitizer, envelope: Mapping) -> str:
         "Open issues waiting on another issue, with every blocker looked up. "
         + _fetched_note(safe, envelope)
     )
-    if not envelope.get("listed", True):
+    if not _listed(envelope):
         why = safe.text(str(envelope.get("error") or "the listing failed"))
         return _register(
             ident="blocked",
@@ -2671,15 +2703,17 @@ def _blocked_register(safe: _Sanitizer, envelope: Mapping) -> str:
             rule=rule,
             body=f'<p class="empty">Unavailable: {why}</p>',
         )
-    rows = [r for r in envelope.get("rows") or () if isinstance(r, Mapping)]
+    raw = list(envelope.get("rows") or ())
+    rows = [r for r in raw if isinstance(r, Mapping)]
+    bad = len(raw) - len(rows)
     rows.sort(
         key=lambda r: (
             _BLOCKED_STATES.get(str(r.get("state")), ("?", 2))[1],
-            -int(r.get("unblocked_days") or 0),
-            -int(r.get("age_days") or 0),
+            -_days(r, "unblocked_days"),
+            -_days(r, "age_days"),
         )
     )
-    tally = {"ready": 0, "waits": 0, "?": 0}
+    tally = {"ready": 0, "waits": 0, "?": bad}
     items = []
     for r in rows:
         url = str(r.get("url") or "")
@@ -2689,14 +2723,20 @@ def _blocked_register(safe: _Sanitizer, envelope: Mapping) -> str:
         label = f"{repo}#{r.get('number')}"
         link = _link(safe, url, label) or safe.text(label)
         if word == "ready":
-            age = int(r.get("unblocked_days") or 0)
+            age = _days(r, "unblocked_days")
             on = ""
         else:
-            age = int(r.get("age_days") or 0)
+            age = _days(r, "age_days")
+            # The edges that explain the word: the open ones for "waits", the ones that
+            # could not be read for "?".
             names = [
-                str(b.get("ref") or "")
+                str(
+                    b.get("ref") or f"{b.get('repo') or '?'}#{b.get('number') or '?'}"
+                )
                 for b in r.get("blockers") or ()
-                if isinstance(b, Mapping) and str(b.get("state")) != "closed"
+                if isinstance(b, Mapping)
+                and str(b.get("state")) not in ("closed",)
+                and (str(b.get("state")) == "open") == (word == "waits")
             ]
             on = (
                 f' <span class="sep">·</span> {"waits on" if word == "waits" else "could not read"}'
@@ -2720,7 +2760,11 @@ def _blocked_register(safe: _Sanitizer, envelope: Mapping) -> str:
         f'<ul class="thins">{"".join(items)}</ul>'
         if items
         else _empty("Nothing is waiting on another issue.")
+        if not bad
+        else ""
     )
+    if bad:
+        body += f'<p class="empty">{bad} entries could not be read (?).</p>'
     if envelope.get("truncated"):
         body += '<p class="empty">More were found than were looked up.</p>'
     return _register(
@@ -5043,7 +5087,7 @@ def _render(
         [
             _Group("needs-you", "need you", "needs", needs_you, "card"),
             *(
-                [_Group("owed", "owed", "needs", count=len(owed.get("rows") or ()))]
+                [_Group("owed", "owed", "needs", count=_owed_count(owed))]
                 if isinstance(owed, Mapping)
                 else []
             ),

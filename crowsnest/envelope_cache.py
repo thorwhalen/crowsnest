@@ -8,15 +8,21 @@ data directory and :func:`refresh` asks again only when the file is older than `
 "Could not look" is never "nothing there", at any step:
 
 - an envelope whose listing failed (``listed: false``) is kept as it is, so the page says
-  the list is unavailable; and it is not fresh, so the next run asks again;
+  the list is unavailable;
 - a lister that raises (``gh`` missing, openloops not importable) leaves the cache as it
   was, flagged ``refresh_error`` so the page says the refresh failed, or, with no cache
   yet, becomes an unlisted envelope carrying the reason.
+
+Either way the failure is written down with the time it was tried (``tried_at``), so a
+scheduler that runs every minute asks GitHub again after ``every``, not on every run: a
+GitHub that hangs must not cost each run a timeout.
 """
 
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -71,20 +77,40 @@ def refresh(
     """
     now = datetime.now(timezone.utc) if now is None else now
     cached = load(path, name=name)
-    then = _when(cached.get("fetched_at")) if cached else None
-    if cached and cached.get("listed", True) and then and now - then < every:
+    last = (
+        (_when(cached.get("tried_at")) or _when(cached.get("fetched_at")))
+        if cached
+        else None
+    )
+    if cached and last and now - last < every:
         return cached
+    stamp = now.astimezone(timezone.utc).isoformat(timespec="seconds")
     try:
         envelope = dict(ask())
+        envelope["fetched_at"] = stamp
     except Exception as exc:  # noqa: BLE001 -- openloops or gh failing must not fail the page
         reason = f"{type(exc).__name__}: {exc}".strip(": ")
-        if cached and cached.get("listed", True):
-            return {**cached, "refresh_error": reason}
-        return {"listed": False, "error": reason, "rows": []}
-    envelope["fetched_at"] = now.astimezone(timezone.utc).isoformat(timespec="seconds")
-    target = cache_path(path, name=name)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(envelope, ensure_ascii=False) + "\n", encoding="utf-8")
-    tmp.replace(target)
+        if cached and cached.get("listed") is True:
+            envelope = {**cached, "refresh_error": reason}
+        else:
+            envelope = {"listed": False, "error": reason, "rows": []}
+        envelope["tried_at"] = stamp
+    _write(cache_path(path, name=name), envelope)
     return envelope
+
+
+def _write(target: Path, envelope: Mapping) -> None:
+    """Atomic, and safe against a second process doing the same: each writer has its own
+    temp file. A cache that cannot be written costs the next run a fetch, not the page."""
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=target.parent, prefix=target.name, suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+            os.replace(tmp, target)
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+    except OSError:
+        pass
