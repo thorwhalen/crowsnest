@@ -7,7 +7,9 @@ synthetic fixtures only -- never from a unit test's hand-made row.
 
 import io
 import json
+import os
 import re
+import time
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -35,6 +37,11 @@ UTC = timezone.utc
 T0 = datetime(2026, 1, 5, 12, 0, tzinfo=UTC)
 SID = "11111111-2222-3333-4444-555555555555"
 REPO = "https://github.com/o/r"
+#: Every ledger written here gets this mtime. A verdict's ``said_at`` (basis "ledger
+#: written") is the ledger's mtime, so two ledgers written either side of a second
+#: boundary gave two rows different verdicts in a field no test here is about (#106).
+#: Taken once at import, so it is still "just now" as far as staleness goes.
+LEDGER_MTIME = int(time.time())
 ASK = "## For Thor\n\nSquash or rebase the release branch? The PR is https://github.com/o/r/pull/45\n"
 
 
@@ -88,6 +95,7 @@ def _session(
         path = ledger_path(name, ledger_dir=ledger_dir)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"# {name}\n\n{ledger}", encoding="utf-8")
+        os.utime(path, (LEDGER_MTIME, LEDGER_MTIME))
     return home, ledger_dir
 
 
@@ -156,6 +164,7 @@ def test_a_needs_you_rows_tail_chatter_mentioning_an_issue_is_not_a_change(
 ):
     a = _row(tmp_path, "a", ledger=ASK, last_words="Waiting for your call.")
     b = _row(tmp_path, "b", ledger=ASK, last_words="While waiting I reread #17.")
+    assert a["verdict"]["said_at_basis"] == "ledger written"  # the field LEDGER_MTIME pins
     assert a["verdict"] == b["verdict"]
     assert att.fingerprint(a) == att.fingerprint(b), (a["links"], b["links"])
 
