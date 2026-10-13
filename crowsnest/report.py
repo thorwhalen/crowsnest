@@ -5118,8 +5118,8 @@ def _render(
         ),
     ]
     if questions is not None:
-        # After Needs you (and Owed), as the register itself sits: the legend is in page
-        # order (#109).
+        # After Needs you (or Waiting) and the opt-in registers, as the register itself
+        # sits: the legend is in page order (#109).
         at = next(
             (
                 i

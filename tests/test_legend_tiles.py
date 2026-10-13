@@ -76,3 +76,9 @@ def test_the_pages_without_the_registers_have_no_such_tiles():
     for verdict in (False, True):
         ids = [t[0] for t in legend(page(verdict=verdict))]
         assert "owed" not in ids and "blocked" not in ids
+
+
+def test_questions_follow_the_opt_in_registers_on_an_untriaged_page():
+    html = page(verdict=False, owed=OWED, blocked=BLOCKED, questions=[])
+    ids = [t[0] for t in legend(html)]
+    assert ids[:4] == ["waiting", "owed", "blocked", "questions"]
