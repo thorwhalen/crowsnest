@@ -5083,23 +5083,29 @@ def _render(
 
     owed = _owed.get()
     blocked = _blocked.get()
+    # The opt-in registers sit right after the one that needs the person, on a triaged page
+    # (*Needs you*) and an untriaged one (*Waiting on you*) alike, so the legend is in page
+    # order either way (#148).
+    opt_in = [
+        *(
+            [_Group("owed", "owed", "needs", count=_owed_count(owed))]
+            if isinstance(owed, Mapping)
+            else []
+        ),
+        *(
+            [_Group("blocked", "ready", "free", count=_blocked_ready(blocked))]
+            if isinstance(blocked, Mapping)
+            else []
+        ),
+    ]
     groups = (
         [
             _Group("needs-you", "need you", "needs", needs_you, "card"),
-            *(
-                [_Group("owed", "owed", "needs", count=_owed_count(owed))]
-                if isinstance(owed, Mapping)
-                else []
-            ),
-            *(
-                [_Group("blocked", "ready", "free", count=_blocked_ready(blocked))]
-                if isinstance(blocked, Mapping)
-                else []
-            ),
+            *opt_in,
             _Group("safe-to-close", "safe to close", "free", clear, "chip"),
         ]
         if triaged
-        else [_Group("waiting", "waiting", "needs", waiting, "card")]
+        else [_Group("waiting", "waiting", "needs", waiting, "card"), *opt_in]
     ) + [
         _Group("finished", "just finished", "free", finished, "pair"),
         _Group("working", "working", "flight", busy, "pair"),
