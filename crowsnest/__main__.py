@@ -1215,6 +1215,7 @@ def spawn(
     add_dirs: str | None = None,
     wait: float = DFLT_WAIT,
     trust: bool = False,
+    permission_mode: str | None = None,
 ) -> str:
     """Start a named session in `--cwd`; waits for it to register, then prints its row.
 
@@ -1238,6 +1239,13 @@ def spawn(
     A `--cwd` or `--add-dirs` folder the account has never trusted is refused with the
     one-time fix (a session there would sit at the trust dialog); `--trust` records it as
     trusted instead -- pass it only when you mean it.
+
+    `--permission-mode MODE` starts the session in that Claude Code permission mode
+    (`acceptEdits`, `plan`, ..., or `bypass` for `--dangerously-skip-permissions`; `""`
+    for claude's own default). Left out: `spawn_permission_mode` from the config file,
+    else the mode this session itself was started in -- a lookout running with
+    `--dangerously-skip-permissions` spawns workers that skip permissions too, and one in
+    a normal mode spawns them in that mode. Skipping permissions is never implied.
 
     `--model` and `--effort` are worth stating on every spawn: left out, the session
     inherits the account's default, which is the expensive one exactly when nobody was
@@ -1267,6 +1275,7 @@ def spawn(
         wait=wait,
         add_dirs=_dir_list(add_dirs),
         trust=trust,
+        permission_mode=permission_mode,
     )
     where = f" in {result['home']}" if result.get("home") else ""
     # The model is echoed because choosing it is the one decision a dispatcher makes by

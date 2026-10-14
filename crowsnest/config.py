@@ -88,6 +88,7 @@ __all__ = [
     "ATTENTION_KEY",
     "CLAUDE_BIN_KEY",
     "CONFIG_ENV_VAR",
+    "SPAWN_PERMISSION_MODE_KEY",
     "DFLT_FRESH_SECONDS",
     "PUBLISH_KEY",
     "REPORT_KEY",
@@ -102,11 +103,16 @@ __all__ = [
     "homes",
     "publish_settings",
     "report_settings",
+    "spawn_permission_mode_setting",
 ]
 
 #: The top-level config key naming the command that starts a session. See
 #: :func:`crowsnest.account.claude_bin` for what a person would put there and why.
 CLAUDE_BIN_KEY = "claude_bin"
+
+#: The top-level config key naming the permission mode a spawned session starts in. See
+#: :func:`crowsnest.spawn.pick_permission_mode` for the order the choices are taken in.
+SPAWN_PERMISSION_MODE_KEY = "spawn_permission_mode"
 
 #: Overrides the config file location outright.
 CONFIG_ENV_VAR = "CROWSNEST_CONFIG"
@@ -173,6 +179,30 @@ def claude_bin_setting(*, path: str | Path | None = None) -> str:
         raise TypeError(
             f"{config_path(path)}: {CLAUDE_BIN_KEY} must be a string naming a command, "
             f"not {type(value).__name__} ({value!r})"
+        )
+    return value.strip()
+
+
+def spawn_permission_mode_setting(*, path: str | Path | None = None) -> str | None:
+    """The ``spawn_permission_mode`` the config file names, or ``None`` when it names none.
+
+    .. code-block:: toml
+
+        spawn_permission_mode = "acceptEdits"   # or "bypass", "plan", ... ; "" = claude's own
+
+    ``None`` (absent) and ``""`` (present, empty) differ on purpose: an empty value is a
+    stated choice -- start spawned sessions in Claude Code's own default mode, whatever
+    the spawning session runs in -- while an absent one leaves the choice to
+    :func:`crowsnest.spawn.pick_permission_mode`'s next fallback.
+    """
+    data = _loaded(path)
+    value = data.get(SPAWN_PERMISSION_MODE_KEY)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise TypeError(
+            f"{config_path(path)}: {SPAWN_PERMISSION_MODE_KEY} must be a string naming a "
+            f"permission mode, not {type(value).__name__} ({value!r})"
         )
     return value.strip()
 

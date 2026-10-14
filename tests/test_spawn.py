@@ -258,8 +258,15 @@ def test_env_prefix_states_an_inherited_api_key_instead_of_leaving_it_to_the_she
     assert "ANTHROPIC_API_KEY" not in _unset(tokens)
 
 
-def test_claude_argv_default_is_skip_permissions_named_and_remote_controlled():
-    assert claude_argv("demo") == [
+def test_claude_argv_states_no_permission_mode_unless_told_named_and_remote_controlled():
+    # crowsnest#105: the builder no longer hard-codes --dangerously-skip-permissions;
+    # `spawn` picks the mode (`pick_permission_mode`) and hands it in.
+    assert claude_argv("demo") == ["claude", "--remote-control", "-n", "demo"]
+
+
+def test_claude_argv_bypass_is_the_flag_spawns_always_used():
+    # byte for byte the line every spawn produced before the mode became a choice
+    assert claude_argv("demo", permission_mode="bypass") == [
         "claude",
         "--remote-control",
         "--dangerously-skip-permissions",
@@ -269,7 +276,9 @@ def test_claude_argv_default_is_skip_permissions_named_and_remote_controlled():
 
 
 def test_claude_argv_carries_model_effort_and_prompt_last():
-    argv = claude_argv("demo", prompt="go", model="opus", effort="high")
+    argv = claude_argv(
+        "demo", prompt="go", model="opus", effort="high", permission_mode="bypass"
+    )
     assert argv == [
         "claude",
         "--remote-control",
@@ -812,3 +821,184 @@ def test_pane_state_names_blockers_and_falls_back_to_the_tail():
     )
     assert "boom" in spawn_module.pane_state("a\n\nboom\n")
     assert spawn_module.pane_state("") == ""
+
+
+# --- permission mode (crowsnest#105) --------------------------------------------
+
+
+def test_claude_argv_passes_a_named_mode_as_permission_mode():
+    argv = claude_argv("demo", prompt="go", permission_mode="acceptEdits")
+    assert argv == [
+        "claude",
+        "--remote-control",
+        "--permission-mode",
+        "acceptEdits",
+        "-n",
+        "demo",
+        "go",
+    ]
+    for alias in ("bypass", "bypassPermissions", "dangerously-skip-permissions"):
+        assert "--dangerously-skip-permissions" in claude_argv("d", permission_mode=alias)
+    for bad in ("--evil", "two words"):
+        with pytest.raises(ValueError, match="not a permission mode"):
+            claude_argv("d", permission_mode=bad)
+
+
+def _argv_of(table):
+    return lambda pid: table.get(pid)
+
+
+def test_spawner_permission_mode_reads_the_spawning_sessions_command_line():
+    from crowsnest.spawn import spawner_permission_mode
+
+    lookout = [
+        "/root/.local/bin/claude",
+        "--remote-control",
+        "--add-dir",
+        "/a",
+        "/b",
+        "--dangerously-skip-permissions",
+        "-n",
+        "cn-tw",
+        "--model",
+        "opus",
+    ]
+    assert (
+        spawner_permission_mode({"CLAUDE_PID": "42"}, argv_of=_argv_of({42: lookout}))
+        == "bypassPermissions"
+    )
+    normal = ["claude", "--permission-mode", "plan", "-n", "x", "a prompt"]
+    assert (
+        spawner_permission_mode({"CLAUDE_PID": "7"}, argv_of=_argv_of({7: normal}))
+        == "plan"
+    )
+    assert (
+        spawner_permission_mode(
+            {"CLAUDE_PID": "7"},
+            argv_of=_argv_of({7: ["claude", "--permission-mode=acceptEdits"]}),
+        )
+        == "acceptEdits"
+    )
+    # a prompt that merely mentions the flag is one argument, not the flag
+    talky = ["claude", "-n", "x", "please never pass --dangerously-skip-permissions"]
+    assert (
+        spawner_permission_mode({"CLAUDE_PID": "7"}, argv_of=_argv_of({7: talky})) == ""
+    )
+    # outside a session, unreadable, garbage pid: no mode stated
+    assert spawner_permission_mode({}, argv_of=_argv_of({})) == ""
+    assert spawner_permission_mode({"CLAUDE_PID": "9"}, argv_of=_argv_of({})) == ""
+    assert spawner_permission_mode({"CLAUDE_PID": "nope"}, argv_of=_argv_of({})) == ""
+
+
+def test_spawner_permission_mode_reads_this_process_for_real():
+    import os
+
+    from crowsnest.spawn import _process_argv, spawner_permission_mode
+
+    me = _process_argv(os.getpid())
+    assert me and any("pytest" in a for a in me)
+    assert spawner_permission_mode({"CLAUDE_PID": str(os.getpid())}) == ""
+
+
+def test_pick_permission_mode_order(tmp_path):
+    from crowsnest.spawn import pick_permission_mode
+
+    env = {"CLAUDE_PID": "1"}
+    bypassing = _argv_of({1: ["claude", "--dangerously-skip-permissions"]})
+    none_cfg = tmp_path / "none.toml"
+    # 1. the spawning session's own mode when nothing else says anything
+    assert (
+        pick_permission_mode(None, environ=env, config=none_cfg, argv_of=bypassing)
+        == "bypassPermissions"
+    )
+    # 2. the config file outranks it -- and "" there is a stated choice
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "acceptEdits"\n')
+    assert (
+        pick_permission_mode(None, environ=env, config=cfg, argv_of=bypassing)
+        == "acceptEdits"
+    )
+    cfg.write_text('spawn_permission_mode = ""\n')
+    assert pick_permission_mode(None, environ=env, config=cfg, argv_of=bypassing) == ""
+    # 3. an explicit argument outranks both ("" included)
+    assert (
+        pick_permission_mode("plan", environ=env, config=cfg, argv_of=bypassing) == "plan"
+    )
+    assert pick_permission_mode("", environ=env, config=none_cfg, argv_of=bypassing) == ""
+    cfg.write_text("spawn_permission_mode = 3\n")
+    with pytest.raises(TypeError, match="spawn_permission_mode"):
+        pick_permission_mode(None, environ=env, config=cfg, argv_of=bypassing)
+
+
+def _record_spawn(monkeypatch, tmp_path, **spawn_kwargs):
+    """Run `spawn` with a recording spawner: argv only, nothing is started."""
+    started = []
+
+    def spawner(argv, *, cwd, name, home):
+        started.append(argv)
+
+    monkeypatch.setattr(spawn_module, "_find_by_name", lambda *a, **k: None)
+    monkeypatch.setattr(spawn_module, "_refuse_taken_name", lambda *a, **k: None)
+    spawn(
+        "probe",
+        cwd=str(tmp_path),
+        spawner=spawner,
+        wait=0,
+        lineage_path=tmp_path / "lineage.jsonl",
+        config=tmp_path / "no-config.toml",
+        peek=lambda name: "",
+        **spawn_kwargs,
+    )
+    return started[0]
+
+
+def test_a_bypass_spawner_spawns_exactly_the_line_it_always_did(monkeypatch, tmp_path):
+    """tw today: the lookout runs as root under --dangerously-skip-permissions (with
+    IS_SANDBOX=1); its workers must come up with the very same flag, not a new one."""
+    monkeypatch.setenv("CLAUDE_PID", "4242")
+    monkeypatch.setattr(
+        spawn_module,
+        "_process_argv",
+        lambda pid: ["claude", "--dangerously-skip-permissions", "-n", "cn-tw"],
+    )
+    argv = _record_spawn(
+        monkeypatch, tmp_path, model="opus", effort="high", add_dirs=["/x"]
+    )
+    assert argv == [
+        "claude",
+        "--remote-control",
+        "--add-dir",
+        "/x",
+        "--dangerously-skip-permissions",
+        "-n",
+        "probe",
+        "--model",
+        "opus",
+        "--effort",
+        "high",
+    ]
+
+
+def test_a_normal_mode_spawner_never_implies_bypass(monkeypatch, tmp_path):
+    monkeypatch.setenv("CLAUDE_PID", "4242")
+    monkeypatch.setattr(spawn_module, "_process_argv", lambda pid: ["claude", "-n", "me"])
+    argv = _record_spawn(monkeypatch, tmp_path)
+    assert "--dangerously-skip-permissions" not in argv
+    assert "--permission-mode" not in argv
+    monkeypatch.delenv("CLAUDE_PID")
+    assert "--dangerously-skip-permissions" not in _record_spawn(monkeypatch, tmp_path)
+
+
+def test_spawn_explicit_permission_mode_wins(monkeypatch, tmp_path):
+    monkeypatch.setenv("CLAUDE_PID", "4242")
+    monkeypatch.setattr(
+        spawn_module,
+        "_process_argv",
+        lambda pid: ["claude", "--dangerously-skip-permissions"],
+    )
+    argv = _record_spawn(monkeypatch, tmp_path, permission_mode="acceptEdits")
+    assert argv[argv.index("--permission-mode") + 1] == "acceptEdits"
+    assert "--dangerously-skip-permissions" not in argv
+    assert "--dangerously-skip-permissions" not in _record_spawn(
+        monkeypatch, tmp_path, permission_mode=""
+    )
