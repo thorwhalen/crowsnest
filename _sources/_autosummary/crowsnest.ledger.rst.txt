@@ -17,11 +17,15 @@ crowsnest.ledger
 
    .. autosummary::
    
+      find_ledgers
+      ledger_conflicts
       ledger_dir
       ledger_path
       list_ledgers
       read_ledger
+      record_session
       safe_name
+      session_entries
       split_stamp
       stamped
       update_ledger

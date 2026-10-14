@@ -1,4 +1,4 @@
-> built 2026-10-13 21:03 UTC from 9552f86 (main) · crowsnest 0.0.90. Details: build_info.json
+> built 2026-10-14 05:11 UTC from 286362d (main) · crowsnest 0.0.91. Details: build_info.json
 
 # index.html.md
 
@@ -257,6 +257,8 @@ open questions:
 - squash or rebase for the release?
 decisions:
 - the ledger lives under ~/.local/share/crowsnest
+sessions:
+- 5ef2882a-…@main as lookout · first seen 2026-09-06T18:12:03Z
 
 ## Notes
 
@@ -264,6 +266,8 @@ Anything at all. Nothing in crowsnest ever rewrites this part.
 ```
 
 `last asked` and `last said` are mechanical — the `Stop` hook below writes them from the transcript tail, so they are true without anyone deciding anything. `state`, `open questions` and `decisions` are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.
+
+The file is keyed by the session’s *name*, because it is a corpus’s memory: a `/clear`, a restart or `claude -n <same name>` tomorrow brings a new session id and must land in the same file. *Who* wrote it lives inside: the `Stop` hook appends every new session id to `sessions` (with its home and name), once. That makes three things visible that used to be silent: two live sessions sharing a name (`crowsnest ledger` flags it `!!`), two names that map to one file (`cn/xa` and `cn:xa` both become `cn-xa.md`; flagged, and `spawn` refuses the second), and a rename (the old and new ledgers get `renamed to:` / `renamed from:`). `crowsnest ledger <session id or prefix>` finds the ledger a session wrote.
 
 ## A page that stays fresh without a session
 
@@ -2772,7 +2776,10 @@ and `how` carries that.
 
 A name that a live session already carries is refused (`ValueError`): the name is
 the address for everything after – `show`, `open`, a message – and two sessions
-behind one name make all of them ambiguous. Pick another, a suffix will do.
+behind one name make all of them ambiguous, and write one ledger. Every configured
+home is checked, not only the one the session starts in (crowsnest#42). So is a name
+whose ledger file already belongs to a *different* name (`cn/xa` and `cn:xa`
+share `cn-xa.md`). Pick another, a suffix will do.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -3051,21 +3058,28 @@ somewhere else.
 
 ### Functions
 
-| [`ledger_dir`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.ledger_dir)([path])                    | Where ledgers live: `path` when given, else `<data dir>/ledger`.                 |
-|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`ledger_path`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.ledger_path)(name, \*[, ledger_dir])   | The file one session's ledger lives in, whether or not it exists yet.            |
-| [`list_ledgers`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.list_ledgers)(\*[, ledger_dir])        | Every ledger, most recently written first: name, path, state, and how old it is. |
-| [`read_ledger`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.read_ledger)(name, \*[, ledger_dir])   | One session's ledger as a JSON-able dict; a shaped empty one when there is none. |
-| [`safe_name`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.safe_name)(name)                       | A session name as a file stem: anything outside `[A-Za-z0-9._-]` becomes a dash. |
-| [`split_stamp`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.split_stamp)(value)                    | A stamped value back into `(when, what)`; `('', value)` when it carries no time. |
-| [`stamped`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.stamped)(text[, at])                   | A one-line field value carrying its time: `<when> · <what>`.                     |
-| [`update_ledger`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.update_ledger)(name, \*[, ledger_dir]) | Rewrite the named fields of one ledger and leave every other byte of it alone.   |
+| [`find_ledgers`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.find_ledgers)(session_id, \*[, ledger_dir])        | The names of the ledgers a session has written to; `session_id` may be a prefix.   |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`ledger_conflicts`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.ledger_conflicts)(page, \*[, live_ids])            | What is wrong with who writes this ledger, one sentence each; `[]` when nothing.   |
+| [`ledger_dir`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.ledger_dir)([path])                                | Where ledgers live: `path` when given, else `<data dir>/ledger`.                   |
+| [`ledger_path`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.ledger_path)(name, \*[, ledger_dir])               | The file one session's ledger lives in, whether or not it exists yet.              |
+| [`list_ledgers`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.list_ledgers)(\*[, ledger_dir])                    | Every ledger, most recently written first: name, path, state, and how old it is.   |
+| [`read_ledger`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.read_ledger)(name, \*[, ledger_dir])               | One session's ledger as a JSON-able dict; a shaped empty one when there is none.   |
+| [`record_session`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.record_session)(name, session_id, \*[, home, ...]) | Append `session_id` to the ledger's `sessions` unless it is already there.         |
+| [`safe_name`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.safe_name)(name)                                   | A session name as a file stem: anything outside `[A-Za-z0-9._-]` becomes a dash.   |
+| [`session_entries`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.session_entries)(value)                            | The `sessions` field's entries as `{id, home, name, first_seen}` dicts.            |
+| [`split_stamp`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.split_stamp)(value)                                | A stamped value back into `(when, what)`; `('', value)` when it carries no time.   |
+| [`stamped`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.stamped)(text[, at])                               | A one-line field value carrying its time: `<when> · <what>`.                       |
+| [`update_ledger`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.update_ledger)(name, \*[, ledger_dir])             | Rewrite the named fields of one ledger and leave every other byte of it alone.     |
 
-### crowsnest.ledger.FIELDS *= ('state', 'last_asked', 'last_said', 'open_questions', 'decisions')*
+### crowsnest.ledger.FIELDS *= ('state', 'last_asked', 'last_said', 'open_questions', 'decisions', 'sessions', 'renamed_from', 'renamed_to')*
 
 The fixed fields, in the order they are written. Two are mechanical (`last_asked`,
 `last_said`: the hook writes them from the transcript) and three are judgements
-(`state`, `open_questions`, `decisions`: the session itself writes those).
+(`state`, `open_questions`, `decisions`: the session itself writes those). The
+last three are identity, also mechanical: `sessions` is the append-only list of
+every session that has written here ([`record_session()`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.record_session)), and `renamed_from` /
+`renamed_to` link the ledgers one session wrote under two names (crowsnest#42).
 
 ### crowsnest.ledger.FREE_HEADING *= '## Notes'*
 
@@ -3079,6 +3093,36 @@ The subdirectory of the data directory that holds the ledgers.
 ### crowsnest.ledger.STAMP_SEP *= ' · '*
 
 What separates a field’s timestamp from its text, in the fields that carry one.
+
+### crowsnest.ledger.find_ledgers(session_id, , ledger_dir=None)
+
+The names of the ledgers a session has written to; `session_id` may be a prefix.
+
+The search the issue wanted the id in the filename for, without the per-process
+shards that would cost: grep the `sessions` fields.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.ledger.ledger_conflicts(page, , live_ids=frozenset({}))
+
+What is wrong with who writes this ledger, one sentence each; `[]` when nothing.
+
+Two conditions, both of which used to be silent: distinct session *names* writing
+one file ([`safe_name()`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.safe_name) maps them to one stem), and more than one of
+`live_ids` – the sessions running now – writing it (two live sessions sharing a
+name). A `/clear` is neither: the old id is no longer live.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> page = {'fields': {'sessions': '- a1@main as cn/xa · first seen t\n- b2@main as cn:xa · first seen t'}}
+>>> for problem in ledger_conflicts(page, live_ids={'a1', 'b2'}):
+...     print(problem)
+names cn/xa, cn:xa all map to this one file
+2 live sessions write here: a1@main, b2@main
+```
 
 ### crowsnest.ledger.ledger_dir(path=None)
 
@@ -3122,6 +3166,20 @@ never has to test for a key. `free` is the part below the first heading, and
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### crowsnest.ledger.record_session(name, session_id, , home='', at='', ledger_dir=None)
+
+Append `session_id` to the ledger’s `sessions` unless it is already there.
+
+Returns the updated page, or `None` when nothing was written (the session was
+already recorded) – the common case, every turn after a session’s first.
+
+When the session is new *here* but already recorded in another ledger, it has been
+renamed: each ledger’s `renamed_from` / `renamed_to` names the other, so the old
+one no longer reads like the ledger of a session that simply ended.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
 ### crowsnest.ledger.safe_name(name)
 
 A session name as a file stem: anything outside `[A-Za-z0-9._-]` becomes a dash.
@@ -3136,6 +3194,20 @@ Session names come from `claude -n <name>` and are not constrained to be filenam
 'cn-xa-needs-you'
 >>> safe_name('  ')
 'unnamed'
+```
+
+### crowsnest.ledger.session_entries(value)
+
+The `sessions` field’s entries as `{id, home, name, first_seen}` dicts.
+
+A line that is not an entry (a human’s note in the list) is skipped, not an error.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+```pycon
+>>> session_entries('- 5ef2882a@main as cn-proj · first seen 2026-09-09T08:12Z')
+[{'id': '5ef2882a', 'home': 'main', 'name': 'cn-proj', 'first_seen': '2026-09-09T08:12Z'}]
 ```
 
 ### crowsnest.ledger.split_stamp(value)
@@ -6969,18 +7041,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-13 21:03 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/9552f8686fd92a80516dde3e8212d58fffe46407"><code>9552f86</code></a> on branch <code>main</code>, for **crowsnest 0.0.90** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 05:11 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/286362da209cfa20e68b6794523e5a8a89f25ac5"><code>286362d</code></a> on branch <code>main</code>, for **crowsnest 0.0.91** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.90) is behind the latest release on PyPI (0.0.91): `pip install crowsnest` gives newer code than these docs describe.
+- The documented version (0.0.91) is behind the latest release on PyPI (0.0.92): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/9552f8686fd92a80516dde3e8212d58fffe46407"><code>9552f8686fd92a80516dde3e8212d58fffe46407</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/286362da209cfa20e68b6794523e5a8a89f25ac5"><code>286362da209cfa20e68b6794523e5a8a89f25ac5</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -6991,9 +7063,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/38467398852">38467398852</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/38515124826">38515124826</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>9552f8686fd92a80516dde3e8212d58fffe46407</code> (in the history of the built commit) |
+| Event commit | <code>286362da209cfa20e68b6794523e5a8a89f25ac5</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7018,13 +7090,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.91/">0.0.91</a>, newer than the documented version (0.0.90).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.92/">0.0.92</a>, newer than the documented version (0.0.91).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 9552f8686fd92a80516dde3e8212d58fffe46407
+git checkout 286362da209cfa20e68b6794523e5a8a89f25ac5
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

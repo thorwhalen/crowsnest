@@ -670,152 +670,191 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="524">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">_POLL_INTERVAL</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">wait</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="ow">or</span> <span class="n">_POLL_INTERVAL</span><span class="p">)</span>
 </span><span data-line="525">
 </span><span data-line="526">
-<div class="viewcode-block" id="spawn">
-<a class="viewcode-back" href="../../_autosummary/crowsnest.html#crowsnest.spawn">[docs]</a>
-</span><span data-line="527"><span class="k">def</span><span class="w"> </span><span class="nf">spawn</span><span class="p">(</span>
+</span><span data-line="527"><span class="k">def</span><span class="w"> </span><span class="nf">_refuse_taken_name</span><span class="p">(</span>
 </span><span data-line="528">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 </span><span data-line="529">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="530">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="531">    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="532">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="533">    <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="534">    <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="535">    <span class="n">spawner</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="536">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="537">    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="538">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="539">    <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_WAIT</span><span class="p">,</span>
-</span><span data-line="540">    <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
-</span><span data-line="541">    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="542">    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="543">    <span class="n">trust</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="544">    <span class="n">peek</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="545"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="546"><span class="w">    </span><span class="sd">"""Start a session named ``name`` in ``cwd``, and wait for the registry to see it.</span>
-</span><span data-line="547">
-</span><span data-line="548"><span class="sd">    ``add_dirs`` are further directories the session is allowed to work in (a fleet</span>
-</span><span data-line="549"><span class="sd">    manager gets every repository of its fleet this way).</span>
-</span><span data-line="550">
-</span><span data-line="551"><span class="sd">    ``spawner`` is the seam: a callable ``(argv, *, cwd, name, home)`` that starts the</span>
-</span><span data-line="552"><span class="sd">    built ``claude`` command line somewhere a person can find it -- ``argv[0]`` is the</span>
-</span><span data-line="553"><span class="sd">    bare name unless the caller chose one, so a spawner resolves it for its own target</span>
-</span><span data-line="554"><span class="sd">    (:func:`local_argv` does that for this machine) -- under the account</span>
-</span><span data-line="555"><span class="sd">    ``home`` (``None``: the spawner's own) -- the default is :func:`default_spawner`'s</span>
-</span><span data-line="556"><span class="sd">    pick, and :func:`child_env` and :func:`env_prefix` are what a spawner derives its</span>
-</span><span data-line="557"><span class="sd">    environment with. ``xa spawn`` is the pointed replacement, adding hosts and a phone</span>
-</span><span data-line="558"><span class="sd">    web UI; it gets the account as one path to translate, not a local environment.</span>
-</span><span data-line="559">
-</span><span data-line="560"><span class="sd">    ``home`` is both the home whose registry is watched for the new session and the</span>
-</span><span data-line="561"><span class="sd">    account it is started under; left out, both are the spawning session's own, so a</span>
-</span><span data-line="562"><span class="sd">    crowsnest session on one account creates sessions on that account. ``profile`` names</span>
-</span><span data-line="563"><span class="sd">    a home instead of spelling it (:func:`crowsnest.account.account_home`, which also</span>
-</span><span data-line="564"><span class="sd">    reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``</span>
-</span><span data-line="565"><span class="sd">    to run; left out, each local spawner runs the one this session runs.</span>
+</span><span data-line="530">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+</span><span data-line="531">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="532">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="533"><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="534"><span class="w">    </span><span class="sd">"""Raise ``ValueError`` when ``name`` is live in any home, or its ledger is another's."""</span>
+</span><span data-line="535">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">configured_homes</span>
+</span><span data-line="536">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.ledger</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_ledger</span><span class="p">,</span> <span class="n">session_entries</span>
+</span><span data-line="537">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">fresh_within</span>
+</span><span data-line="538">
+</span><span data-line="539">    <span class="n">live</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">))</span>
+</span><span data-line="540">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="541">        <span class="c1"># The *configured* homes only: ``home`` itself is checked above, and the</span>
+</span><span data-line="542">        <span class="c1"># default-home fallback would be whatever account this process runs under.</span>
+</span><span data-line="543">        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">configured_homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">):</span>
+</span><span data-line="544">            <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">!=</span> <span class="n">Path</span><span class="p">(</span><span class="n">home</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">():</span>
+</span><span data-line="545">                <span class="c1"># A synced copy of another machine's registry: its pids mean nothing</span>
+</span><span data-line="546">                <span class="c1"># here, so liveness is the roster's freshness rule, as in `sessions`.</span>
+</span><span data-line="547">                <span class="n">rule</span> <span class="o">=</span> <span class="n">fresh_within</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">fresh_seconds</span><span class="p">)</span> <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">remote</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="548">                <span class="n">live</span> <span class="o">+=</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">h</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">home_name</span><span class="o">=</span><span class="n">h</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">is_live</span><span class="o">=</span><span class="n">rule</span><span class="p">)</span>
+</span><span data-line="549">    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001, S110 -- an unreadable config narrows the check to `home`</span>
+</span><span data-line="550">        <span class="k">pass</span>
+</span><span data-line="551">    <span class="n">taken</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
+</span><span data-line="552">    <span class="k">if</span> <span class="n">taken</span><span class="p">:</span>
+</span><span data-line="553">        <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" on home </span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">home</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">home</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="554">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="555">            <span class="sa">f</span><span class="s2">"a live session is already named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> (pid </span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">, in "</span>
+</span><span data-line="556">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cwd</span><span class="si">}{</span><span class="n">where</span><span class="si">}</span><span class="s2">); pick another name, for instance </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> with a suffix"</span>
+</span><span data-line="557">        <span class="p">)</span>
+</span><span data-line="558">    <span class="n">page</span> <span class="o">=</span> <span class="n">read_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
+</span><span data-line="559">    <span class="n">owners</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">session_entries</span><span class="p">(</span><span class="n">page</span><span class="p">[</span><span class="s2">"fields"</span><span class="p">][</span><span class="s2">"sessions"</span><span class="p">])}</span>
+</span><span data-line="560">    <span class="k">if</span> <span class="n">owners</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">owners</span><span class="p">:</span>
+</span><span data-line="561">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="562">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> would write the ledger </span><span class="si">{</span><span class="n">page</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">, which belongs to "</span>
+</span><span data-line="563">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">owners</span><span class="p">))</span><span class="si">}</span><span class="s2"> (the file name keeps only [A-Za-z0-9._-]); "</span>
+</span><span data-line="564">            <span class="s2">"pick a name that differs in those characters"</span>
+</span><span data-line="565">        <span class="p">)</span>
 </span><span data-line="566">
-</span><span data-line="567"><span class="sd">    Returns ``{"name", "pid", "session_id", "how", "home", "parent"}``, ``home`` being the</span>
-</span><span data-line="568"><span class="sd">    account the session was started under (``""``: the spawning session's own). When the</span>
-</span><span data-line="569"><span class="sd">    registry file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how``</span>
-</span><span data-line="570"><span class="sd">    says so -- the session may still be starting, or may have failed before it could</span>
-</span><span data-line="571"><span class="sd">    register.</span>
-</span><span data-line="572">
-</span><span data-line="573"><span class="sd">    ``parent`` is the session that asked for this one, and the reason it is here is that</span>
-</span><span data-line="574"><span class="sd">    **this is the only moment anyone knows it for free**. Everything downstream -- the</span>
-</span><span data-line="575"><span class="sd">    spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --</span>
-</span><span data-line="576"><span class="sd">    is recovery work if it is not written down now, so one ``spawn`` line goes into</span>
-</span><span data-line="577"><span class="sd">    ``lineage.jsonl`` (:func:`crowsnest.lineage.record_spawn`; ``lineage_path`` is where,</span>
-</span><span data-line="578"><span class="sd">    a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this</span>
-</span><span data-line="579"><span class="sd">    command was not run from inside a session -- the honest answer for a person at a shell</span>
-</span><span data-line="580"><span class="sd">    prompt -- and the whole dict is ``{}`` only when the record could not be written.</span>
-</span><span data-line="581">
-</span><span data-line="582"><span class="sd">    **Trust.** A folder the account has never opened stops the new session at Claude</span>
-</span><span data-line="583"><span class="sd">    Code's workspace trust dialog, where it never registers. With one of this module's</span>
-</span><span data-line="584"><span class="sd">    own spawners, ``cwd`` and every ``add_dirs`` entry are checked first</span>
-</span><span data-line="585"><span class="sd">    (:func:`trusted`) and an untrusted one raises :class:`UntrustedFolder` naming it and</span>
-</span><span data-line="586"><span class="sd">    the one-time fix. ``trust=True`` -- only ever a person's explicit flag -- records the</span>
-</span><span data-line="587"><span class="sd">    folders as trusted instead. A caller's ``spawner`` is not checked: it may run</span>
-</span><span data-line="588"><span class="sd">    elsewhere, where this machine's record says nothing. When the registry never sees the</span>
-</span><span data-line="589"><span class="sd">    session, ``peek`` (``(name) -&gt; str``; tmux's pane by default) says what it displays,</span>
-</span><span data-line="590"><span class="sd">    and ``how`` carries that.</span>
+</span><span data-line="567">
+<div class="viewcode-block" id="spawn">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.html#crowsnest.spawn">[docs]</a>
+</span><span data-line="568"><span class="k">def</span><span class="w"> </span><span class="nf">spawn</span><span class="p">(</span>
+</span><span data-line="569">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="570">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="571">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="572">    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="573">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="574">    <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="575">    <span class="n">remote_control</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="576">    <span class="n">spawner</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="577">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="578">    <span class="n">profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="579">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="580">    <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DFLT_WAIT</span><span class="p">,</span>
+</span><span data-line="581">    <span class="n">add_dirs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+</span><span data-line="582">    <span class="n">binary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="583">    <span class="n">lineage_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="584">    <span class="n">trust</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="585">    <span class="n">peek</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="586"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="587"><span class="w">    </span><span class="sd">"""Start a session named ``name`` in ``cwd``, and wait for the registry to see it.</span>
+</span><span data-line="588">
+</span><span data-line="589"><span class="sd">    ``add_dirs`` are further directories the session is allowed to work in (a fleet</span>
+</span><span data-line="590"><span class="sd">    manager gets every repository of its fleet this way).</span>
 </span><span data-line="591">
-</span><span data-line="592"><span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
-</span><span data-line="593"><span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
-</span><span data-line="594"><span class="sd">    behind one name make all of them ambiguous. Pick another, a suffix will do.</span>
-</span><span data-line="595"><span class="sd">    """</span>
-</span><span data-line="596">    <span class="n">home</span> <span class="o">=</span> <span class="n">account_home</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="597">    <span class="n">taken</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
-</span><span data-line="598">    <span class="k">if</span> <span class="n">taken</span><span class="p">:</span>
-</span><span data-line="599">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="600">            <span class="sa">f</span><span class="s2">"a live session is already named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> (pid </span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">, in "</span>
-</span><span data-line="601">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">taken</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">); pick another name, for instance </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> with a suffix"</span>
-</span><span data-line="602">        <span class="p">)</span>
-</span><span data-line="603">    <span class="n">how</span> <span class="o">=</span> <span class="s2">"custom"</span>
-</span><span data-line="604">    <span class="n">builtin</span> <span class="o">=</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span>
-</span><span data-line="605">    <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="606">        <span class="n">spawner</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">default_spawner</span><span class="p">()</span>
-</span><span data-line="607">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">in</span> <span class="n">_BUILTIN_SPAWNERS</span><span class="p">:</span>
-</span><span data-line="608">            <span class="c1"># Ours alone are told which config file names the launcher. The seam's</span>
-</span><span data-line="609">            <span class="c1"># signature stays `(argv, *, cwd, name, home)`, so nothing else -- a</span>
-</span><span data-line="610">            <span class="c1"># caller's spawner, a replaced `default_spawner` -- is handed a keyword it</span>
-</span><span data-line="611">            <span class="c1"># never asked for. Anything else resolves its own binary for its own target.</span>
-</span><span data-line="612">            <span class="n">spawner</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">spawner</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="613">    <span class="k">if</span> <span class="n">builtin</span><span class="p">:</span>
-</span><span data-line="614">        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="o">*</span><span class="n">add_dirs</span><span class="p">):</span>
-</span><span data-line="615">            <span class="k">if</span> <span class="n">trusted</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-</span><span data-line="616">                <span class="k">if</span> <span class="n">trust</span><span class="p">:</span>
-</span><span data-line="617">                    <span class="n">_accept_trust</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="618">                    <span class="k">continue</span>
-</span><span data-line="619">                <span class="k">raise</span> <span class="n">UntrustedFolder</span><span class="p">(</span>
-</span><span data-line="620">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2"> is not trusted for this account, so the session would "</span>
-</span><span data-line="621">                    <span class="s2">"stop at Claude Code's trust dialog and never register. Open it "</span>
-</span><span data-line="622">                    <span class="sa">f</span><span class="s2">"once by hand (`cd </span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2"> &amp;&amp; claude`, accept the dialog), or "</span>
-</span><span data-line="623">                    <span class="s2">"pass --trust to record it as trusted."</span>
-</span><span data-line="624">                <span class="p">)</span>
-</span><span data-line="625">    <span class="n">argv</span> <span class="o">=</span> <span class="n">claude_argv</span><span class="p">(</span>
-</span><span data-line="626">        <span class="n">name</span><span class="p">,</span>
-</span><span data-line="627">        <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
-</span><span data-line="628">        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-</span><span data-line="629">        <span class="n">effort</span><span class="o">=</span><span class="n">effort</span><span class="p">,</span>
-</span><span data-line="630">        <span class="n">remote_control</span><span class="o">=</span><span class="n">remote_control</span><span class="p">,</span>
-</span><span data-line="631">        <span class="n">add_dirs</span><span class="o">=</span><span class="n">add_dirs</span><span class="p">,</span>
-</span><span data-line="632">        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
-</span><span data-line="633">    <span class="p">)</span>
-</span><span data-line="634">    <span class="n">spawner</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="635">    <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="636">    <span class="n">found</span> <span class="o">=</span> <span class="n">_find_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span>
-</span><span data-line="637">    <span class="c1"># Recorded whether or not the registry saw it: a session that started slowly still</span>
-</span><span data-line="638">    <span class="c1"># has a parent, and the name is the key the edge is kept under either way.</span>
-</span><span data-line="639">    <span class="c1"># `home` is the *new* session's account; the caller is registered in its own, so</span>
-</span><span data-line="640">    <span class="c1"># `record_spawn` is deliberately not told one. Passing the target's would make</span>
-</span><span data-line="641">    <span class="c1"># `--profile` record an 8-character session-id prefix as the parent.</span>
-</span><span data-line="642">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_spawn</span>
-</span><span data-line="643">
-</span><span data-line="644">    <span class="n">record</span> <span class="o">=</span> <span class="n">record_spawn</span><span class="p">(</span>
-</span><span data-line="645">        <span class="n">name</span><span class="p">,</span>
-</span><span data-line="646">        <span class="n">child_session_id</span><span class="o">=</span><span class="n">found</span><span class="o">.</span><span class="n">session_id</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="647">        <span class="n">project</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="648">        <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
-</span><span data-line="649">    <span class="p">)</span>
-</span><span data-line="650">    <span class="n">parent</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">record</span> <span class="k">else</span> <span class="p">{}</span>
-</span><span data-line="651">    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="652">        <span class="n">reader</span> <span class="o">=</span> <span class="n">peek</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_tmux_peek</span> <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="653">        <span class="n">shown</span> <span class="o">=</span> <span class="n">pane_state</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">if</span> <span class="n">reader</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="654">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="655">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="656">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="657">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="658">            <span class="s2">"how"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">: no registry file for </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> within </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span>
-</span><span data-line="659">            <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"; the session is showing </span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">shown</span> <span class="k">else</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="660">            <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
-</span><span data-line="661">            <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
-</span><span data-line="662">        <span class="p">}</span>
-</span><span data-line="663">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="664">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="665">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
-</span><span data-line="666">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-</span><span data-line="667">        <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
-</span><span data-line="668">        <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
-</span><span data-line="669">        <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
-</span><span data-line="670">    <span class="p">}</span></div>
+</span><span data-line="592"><span class="sd">    ``spawner`` is the seam: a callable ``(argv, *, cwd, name, home)`` that starts the</span>
+</span><span data-line="593"><span class="sd">    built ``claude`` command line somewhere a person can find it -- ``argv[0]`` is the</span>
+</span><span data-line="594"><span class="sd">    bare name unless the caller chose one, so a spawner resolves it for its own target</span>
+</span><span data-line="595"><span class="sd">    (:func:`local_argv` does that for this machine) -- under the account</span>
+</span><span data-line="596"><span class="sd">    ``home`` (``None``: the spawner's own) -- the default is :func:`default_spawner`'s</span>
+</span><span data-line="597"><span class="sd">    pick, and :func:`child_env` and :func:`env_prefix` are what a spawner derives its</span>
+</span><span data-line="598"><span class="sd">    environment with. ``xa spawn`` is the pointed replacement, adding hosts and a phone</span>
+</span><span data-line="599"><span class="sd">    web UI; it gets the account as one path to translate, not a local environment.</span>
+</span><span data-line="600">
+</span><span data-line="601"><span class="sd">    ``home`` is both the home whose registry is watched for the new session and the</span>
+</span><span data-line="602"><span class="sd">    account it is started under; left out, both are the spawning session's own, so a</span>
+</span><span data-line="603"><span class="sd">    crowsnest session on one account creates sessions on that account. ``profile`` names</span>
+</span><span data-line="604"><span class="sd">    a home instead of spelling it (:func:`crowsnest.account.account_home`, which also</span>
+</span><span data-line="605"><span class="sd">    reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``</span>
+</span><span data-line="606"><span class="sd">    to run; left out, each local spawner runs the one this session runs.</span>
+</span><span data-line="607">
+</span><span data-line="608"><span class="sd">    Returns ``{"name", "pid", "session_id", "how", "home", "parent"}``, ``home`` being the</span>
+</span><span data-line="609"><span class="sd">    account the session was started under (``""``: the spawning session's own). When the</span>
+</span><span data-line="610"><span class="sd">    registry file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how``</span>
+</span><span data-line="611"><span class="sd">    says so -- the session may still be starting, or may have failed before it could</span>
+</span><span data-line="612"><span class="sd">    register.</span>
+</span><span data-line="613">
+</span><span data-line="614"><span class="sd">    ``parent`` is the session that asked for this one, and the reason it is here is that</span>
+</span><span data-line="615"><span class="sd">    **this is the only moment anyone knows it for free**. Everything downstream -- the</span>
+</span><span data-line="616"><span class="sd">    spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --</span>
+</span><span data-line="617"><span class="sd">    is recovery work if it is not written down now, so one ``spawn`` line goes into</span>
+</span><span data-line="618"><span class="sd">    ``lineage.jsonl`` (:func:`crowsnest.lineage.record_spawn`; ``lineage_path`` is where,</span>
+</span><span data-line="619"><span class="sd">    a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this</span>
+</span><span data-line="620"><span class="sd">    command was not run from inside a session -- the honest answer for a person at a shell</span>
+</span><span data-line="621"><span class="sd">    prompt -- and the whole dict is ``{}`` only when the record could not be written.</span>
+</span><span data-line="622">
+</span><span data-line="623"><span class="sd">    **Trust.** A folder the account has never opened stops the new session at Claude</span>
+</span><span data-line="624"><span class="sd">    Code's workspace trust dialog, where it never registers. With one of this module's</span>
+</span><span data-line="625"><span class="sd">    own spawners, ``cwd`` and every ``add_dirs`` entry are checked first</span>
+</span><span data-line="626"><span class="sd">    (:func:`trusted`) and an untrusted one raises :class:`UntrustedFolder` naming it and</span>
+</span><span data-line="627"><span class="sd">    the one-time fix. ``trust=True`` -- only ever a person's explicit flag -- records the</span>
+</span><span data-line="628"><span class="sd">    folders as trusted instead. A caller's ``spawner`` is not checked: it may run</span>
+</span><span data-line="629"><span class="sd">    elsewhere, where this machine's record says nothing. When the registry never sees the</span>
+</span><span data-line="630"><span class="sd">    session, ``peek`` (``(name) -&gt; str``; tmux's pane by default) says what it displays,</span>
+</span><span data-line="631"><span class="sd">    and ``how`` carries that.</span>
+</span><span data-line="632">
+</span><span data-line="633"><span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
+</span><span data-line="634"><span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
+</span><span data-line="635"><span class="sd">    behind one name make all of them ambiguous, and write one ledger. Every configured</span>
+</span><span data-line="636"><span class="sd">    home is checked, not only the one the session starts in (crowsnest#42). So is a name</span>
+</span><span data-line="637"><span class="sd">    whose ledger file already belongs to a *different* name (``cn/xa`` and ``cn:xa``</span>
+</span><span data-line="638"><span class="sd">    share ``cn-xa.md``). Pick another, a suffix will do.</span>
+</span><span data-line="639"><span class="sd">    """</span>
+</span><span data-line="640">    <span class="n">home</span> <span class="o">=</span> <span class="n">account_home</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="641">    <span class="n">_refuse_taken_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="642">    <span class="n">how</span> <span class="o">=</span> <span class="s2">"custom"</span>
+</span><span data-line="643">    <span class="n">builtin</span> <span class="o">=</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="644">    <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="645">        <span class="n">spawner</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">default_spawner</span><span class="p">()</span>
+</span><span data-line="646">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">in</span> <span class="n">_BUILTIN_SPAWNERS</span><span class="p">:</span>
+</span><span data-line="647">            <span class="c1"># Ours alone are told which config file names the launcher. The seam's</span>
+</span><span data-line="648">            <span class="c1"># signature stays `(argv, *, cwd, name, home)`, so nothing else -- a</span>
+</span><span data-line="649">            <span class="c1"># caller's spawner, a replaced `default_spawner` -- is handed a keyword it</span>
+</span><span data-line="650">            <span class="c1"># never asked for. Anything else resolves its own binary for its own target.</span>
+</span><span data-line="651">            <span class="n">spawner</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">spawner</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="652">    <span class="k">if</span> <span class="n">builtin</span><span class="p">:</span>
+</span><span data-line="653">        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="o">*</span><span class="n">add_dirs</span><span class="p">):</span>
+</span><span data-line="654">            <span class="k">if</span> <span class="n">trusted</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+</span><span data-line="655">                <span class="k">if</span> <span class="n">trust</span><span class="p">:</span>
+</span><span data-line="656">                    <span class="n">_accept_trust</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="657">                    <span class="k">continue</span>
+</span><span data-line="658">                <span class="k">raise</span> <span class="n">UntrustedFolder</span><span class="p">(</span>
+</span><span data-line="659">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2"> is not trusted for this account, so the session would "</span>
+</span><span data-line="660">                    <span class="s2">"stop at Claude Code's trust dialog and never register. Open it "</span>
+</span><span data-line="661">                    <span class="sa">f</span><span class="s2">"once by hand (`cd </span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2"> &amp;&amp; claude`, accept the dialog), or "</span>
+</span><span data-line="662">                    <span class="s2">"pass --trust to record it as trusted."</span>
+</span><span data-line="663">                <span class="p">)</span>
+</span><span data-line="664">    <span class="n">argv</span> <span class="o">=</span> <span class="n">claude_argv</span><span class="p">(</span>
+</span><span data-line="665">        <span class="n">name</span><span class="p">,</span>
+</span><span data-line="666">        <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
+</span><span data-line="667">        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span data-line="668">        <span class="n">effort</span><span class="o">=</span><span class="n">effort</span><span class="p">,</span>
+</span><span data-line="669">        <span class="n">remote_control</span><span class="o">=</span><span class="n">remote_control</span><span class="p">,</span>
+</span><span data-line="670">        <span class="n">add_dirs</span><span class="o">=</span><span class="n">add_dirs</span><span class="p">,</span>
+</span><span data-line="671">        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
+</span><span data-line="672">    <span class="p">)</span>
+</span><span data-line="673">    <span class="n">spawner</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="674">    <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="675">    <span class="n">found</span> <span class="o">=</span> <span class="n">_find_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">)</span>
+</span><span data-line="676">    <span class="c1"># Recorded whether or not the registry saw it: a session that started slowly still</span>
+</span><span data-line="677">    <span class="c1"># has a parent, and the name is the key the edge is kept under either way.</span>
+</span><span data-line="678">    <span class="c1"># `home` is the *new* session's account; the caller is registered in its own, so</span>
+</span><span data-line="679">    <span class="c1"># `record_spawn` is deliberately not told one. Passing the target's would make</span>
+</span><span data-line="680">    <span class="c1"># `--profile` record an 8-character session-id prefix as the parent.</span>
+</span><span data-line="681">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_spawn</span>
+</span><span data-line="682">
+</span><span data-line="683">    <span class="n">record</span> <span class="o">=</span> <span class="n">record_spawn</span><span class="p">(</span>
+</span><span data-line="684">        <span class="n">name</span><span class="p">,</span>
+</span><span data-line="685">        <span class="n">child_session_id</span><span class="o">=</span><span class="n">found</span><span class="o">.</span><span class="n">session_id</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="686">        <span class="n">project</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="687">        <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
+</span><span data-line="688">    <span class="p">)</span>
+</span><span data-line="689">    <span class="n">parent</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">record</span> <span class="k">else</span> <span class="p">{}</span>
+</span><span data-line="690">    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="691">        <span class="n">reader</span> <span class="o">=</span> <span class="n">peek</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_tmux_peek</span> <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="692">        <span class="n">shown</span> <span class="o">=</span> <span class="n">pane_state</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">if</span> <span class="n">reader</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="693">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="694">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="695">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="696">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="697">            <span class="s2">"how"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">: no registry file for </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> within </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span>
+</span><span data-line="698">            <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"; the session is showing </span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">shown</span> <span class="k">else</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="699">            <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+</span><span data-line="700">            <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
+</span><span data-line="701">        <span class="p">}</span>
+</span><span data-line="702">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="703">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="704">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
+</span><span data-line="705">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="706">        <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
+</span><span data-line="707">        <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+</span><span data-line="708">        <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
+</span><span data-line="709">    <span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -844,7 +883,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=38a06c88"></script>
+      <script src="../../_static/documentation_options.js?v=9cd8e891"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

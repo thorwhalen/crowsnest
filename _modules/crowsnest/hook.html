@@ -219,9 +219,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="73"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 </span><span data-line="74">
 </span><span data-line="75"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.activity</span><span class="w"> </span><span class="kn">import</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">read_activity</span>
-</span><span data-line="76"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.ledger</span><span class="w"> </span><span class="kn">import</span> <span class="n">stamped</span><span class="p">,</span> <span class="n">update_ledger</span>
+</span><span data-line="76"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.ledger</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_session</span><span class="p">,</span> <span class="n">stamped</span><span class="p">,</span> <span class="n">update_ledger</span>
 </span><span data-line="77"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">data_dir</span>
-</span><span data-line="78"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">live_sessions</span>
+</span><span data-line="78"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">claude_home</span><span class="p">,</span> <span class="n">live_sessions</span>
 </span><span data-line="79">
 </span><span data-line="80"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
 </span><span data-line="81">    <span class="s2">"DETAIL_LIMIT"</span><span class="p">,</span>
@@ -418,63 +418,102 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="260">        <span class="k">return</span> <span class="s2">""</span>
 </span><span data-line="261">
 </span><span data-line="262">
-</span><span data-line="263"><span class="c1">#: Set to ``1`` in a session crowsnest starts for itself; its hooks then record nothing.</span>
-</span><span data-line="264"><span class="n">QUIET_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CROWSNEST_QUIET_HOOKS"</span>
+</span><span data-line="263"><span class="k">def</span><span class="w"> </span><span class="nf">_home_label</span><span class="p">(</span><span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="264"><span class="w">    </span><span class="sd">"""The configured name of the home this hook runs in (``main``, ``local``...).</span>
 </span><span data-line="265">
-</span><span data-line="266">
+</span><span data-line="266"><span class="sd">    Matched by path against the config's homes; the directory's own name when none</span>
+</span><span data-line="267"><span class="sd">    matches, so an entry always says *which* account wrote it.</span>
+</span><span data-line="268"><span class="sd">    """</span>
+</span><span data-line="269">    <span class="n">root</span> <span class="o">=</span> <span class="n">claude_home</span><span class="p">(</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="270">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="271">        <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">homes</span>
+</span><span data-line="272">
+</span><span data-line="273">        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">homes</span><span class="p">():</span>
+</span><span data-line="274">            <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">==</span> <span class="n">root</span><span class="o">.</span><span class="n">resolve</span><span class="p">():</span>
+</span><span data-line="275">                <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">name</span>
+</span><span data-line="276">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a bad config must not cost the ledger write</span>
+</span><span data-line="277">        <span class="n">_log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"home label: </span><span class="si">{</span><span class="n">exc</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="278">    <span class="k">return</span> <span class="n">root</span><span class="o">.</span><span class="n">name</span>
+</span><span data-line="279">
+</span><span data-line="280">
+</span><span data-line="281"><span class="k">def</span><span class="w"> </span><span class="nf">_record_session</span><span class="p">(</span>
+</span><span data-line="282">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="283">    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="284">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="285">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="286">    <span class="n">at</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="287">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="288"><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="289"><span class="w">    </span><span class="sd">"""Who wrote this ledger (crowsnest#42): appended once per session, then a no-op."""</span>
+</span><span data-line="290">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="291">        <span class="n">record_session</span><span class="p">(</span>
+</span><span data-line="292">            <span class="n">name</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">_home_label</span><span class="p">(</span><span class="n">home</span><span class="p">),</span> <span class="n">at</span><span class="o">=</span><span class="n">at</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span>
+</span><span data-line="293">        <span class="p">)</span>
+</span><span data-line="294">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- the fields already landed; keep them</span>
+</span><span data-line="295">        <span class="n">_log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ledger </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> sessions: </span><span class="si">{</span><span class="n">exc</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="296">
+</span><span data-line="297">
+</span><span data-line="298"><span class="c1">#: Set to ``1`` in a session crowsnest starts for itself; its hooks then record nothing.</span>
+</span><span data-line="299"><span class="n">QUIET_ENV_VAR</span> <span class="o">=</span> <span class="s2">"CROWSNEST_QUIET_HOOKS"</span>
+</span><span data-line="300">
+</span><span data-line="301">
 <div class="viewcode-block" id="handle">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.hook.html#crowsnest.hook.handle">[docs]</a>
-</span><span data-line="267"><span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span>
-</span><span data-line="268">    <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="269">    <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-</span><span data-line="270">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="271">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="272">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="273">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="274"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="275"><span class="w">    </span><span class="sd">"""Record one hook event: an event line always, a ledger update on ``stop``.</span>
-</span><span data-line="276">
-</span><span data-line="277"><span class="sd">    ``event`` is ``stop`` or ``notification`` (the ``hook_event_name`` spelling works</span>
-</span><span data-line="278"><span class="sd">    too; case does not matter). ``payload`` is the JSON Claude Code wrote on the hook's</span>
-</span><span data-line="279"><span class="sd">    stdin -- see the module docstring for which of its fields are read.</span>
-</span><span data-line="280">
-</span><span data-line="281"><span class="sd">    Returns a JSON-able dict: ``ok``, the ``record`` written, the ``events`` file it went</span>
-</span><span data-line="282"><span class="sd">    to, and the ``ledger`` path when one was updated. **Never raises**: a failure comes</span>
-</span><span data-line="283"><span class="sd">    back as ``ok=False`` with the reason, and is also one line in the hook log.</span>
-</span><span data-line="284"><span class="sd">    """</span>
-</span><span data-line="285">    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">QUIET_ENV_VAR</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"1"</span><span class="p">:</span>
-</span><span data-line="286">        <span class="c1"># A session crowsnest started for its own use (an action line, say) is not one</span>
-</span><span data-line="287">        <span class="c1"># anyone is watching: its turn ending must not wake the watcher.</span>
-</span><span data-line="288">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"skipped"</span><span class="p">:</span> <span class="n">QUIET_ENV_VAR</span><span class="p">}</span>
-</span><span data-line="289">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="290">        <span class="n">kind</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-</span><span data-line="291">        <span class="n">payload</span> <span class="o">=</span> <span class="n">payload</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
-</span><span data-line="292">        <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="293">        <span class="k">if</span> <span class="ow">not</span> <span class="n">session_id</span><span class="p">:</span>
-</span><span data-line="294">            <span class="c1"># Every hook payload carries one. Without it an "event" names nobody, and a</span>
-</span><span data-line="295">            <span class="c1"># line in the log saying so is worth more than a line in the stream.</span>
-</span><span data-line="296">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"hook payload has no session_id"</span><span class="p">)</span>
-</span><span data-line="297">        <span class="n">cwd</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="298">        <span class="n">name</span><span class="p">,</span> <span class="n">project</span> <span class="o">=</span> <span class="n">_identify</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">cwd</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="299">        <span class="n">activity</span> <span class="o">=</span> <span class="n">_activity</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span>
-</span><span data-line="300">        <span class="n">record</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="301">            <span class="s2">"at"</span><span class="p">:</span> <span class="n">_now</span><span class="p">(),</span>
-</span><span data-line="302">            <span class="s2">"event"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
-</span><span data-line="303">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">,</span>
-</span><span data-line="304">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="305">            <span class="s2">"project"</span><span class="p">:</span> <span class="n">project</span><span class="p">,</span>
-</span><span data-line="306">            <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_detail</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">activity</span><span class="p">),</span>
-</span><span data-line="307">        <span class="p">}</span>
-</span><span data-line="308">        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"notification"</span><span class="p">:</span>
-</span><span data-line="309">            <span class="n">record</span><span class="p">[</span><span class="s2">"notification_type"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notification_type"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="310">        <span class="n">written</span> <span class="o">=</span> <span class="n">append_event</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">)</span>
-</span><span data-line="311">        <span class="n">ledger</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="312">        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"stop"</span> <span class="ow">and</span> <span class="n">name</span><span class="p">:</span>
-</span><span data-line="313">            <span class="n">ledger</span> <span class="o">=</span> <span class="n">_write_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">activity</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
-</span><span data-line="314">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"record"</span><span class="p">:</span> <span class="n">record</span><span class="p">,</span> <span class="s2">"events"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">written</span><span class="p">),</span> <span class="s2">"ledger"</span><span class="p">:</span> <span class="n">ledger</span><span class="p">}</span>
-</span><span data-line="315">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a broken crowsnest may not break a session</span>
-</span><span data-line="316">        <span class="n">_log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="317">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"event"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="p">),</span> <span class="s2">"error"</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">exc</span><span class="p">)}</span></div>
+</span><span data-line="302"><span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span>
+</span><span data-line="303">    <span class="n">event</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="304">    <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+</span><span data-line="305">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="306">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="307">    <span class="n">ledger_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="308">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="309"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="310"><span class="w">    </span><span class="sd">"""Record one hook event: an event line always, a ledger update on ``stop``.</span>
+</span><span data-line="311">
+</span><span data-line="312"><span class="sd">    ``event`` is ``stop`` or ``notification`` (the ``hook_event_name`` spelling works</span>
+</span><span data-line="313"><span class="sd">    too; case does not matter). ``payload`` is the JSON Claude Code wrote on the hook's</span>
+</span><span data-line="314"><span class="sd">    stdin -- see the module docstring for which of its fields are read.</span>
+</span><span data-line="315">
+</span><span data-line="316"><span class="sd">    Returns a JSON-able dict: ``ok``, the ``record`` written, the ``events`` file it went</span>
+</span><span data-line="317"><span class="sd">    to, and the ``ledger`` path when one was updated. **Never raises**: a failure comes</span>
+</span><span data-line="318"><span class="sd">    back as ``ok=False`` with the reason, and is also one line in the hook log.</span>
+</span><span data-line="319"><span class="sd">    """</span>
+</span><span data-line="320">    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">QUIET_ENV_VAR</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"1"</span><span class="p">:</span>
+</span><span data-line="321">        <span class="c1"># A session crowsnest started for its own use (an action line, say) is not one</span>
+</span><span data-line="322">        <span class="c1"># anyone is watching: its turn ending must not wake the watcher.</span>
+</span><span data-line="323">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"skipped"</span><span class="p">:</span> <span class="n">QUIET_ENV_VAR</span><span class="p">}</span>
+</span><span data-line="324">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="325">        <span class="n">kind</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span data-line="326">        <span class="n">payload</span> <span class="o">=</span> <span class="n">payload</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+</span><span data-line="327">        <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="328">        <span class="k">if</span> <span class="ow">not</span> <span class="n">session_id</span><span class="p">:</span>
+</span><span data-line="329">            <span class="c1"># Every hook payload carries one. Without it an "event" names nobody, and a</span>
+</span><span data-line="330">            <span class="c1"># line in the log saying so is worth more than a line in the stream.</span>
+</span><span data-line="331">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"hook payload has no session_id"</span><span class="p">)</span>
+</span><span data-line="332">        <span class="n">cwd</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="333">        <span class="n">name</span><span class="p">,</span> <span class="n">project</span> <span class="o">=</span> <span class="n">_identify</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">cwd</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="334">        <span class="n">activity</span> <span class="o">=</span> <span class="n">_activity</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span>
+</span><span data-line="335">        <span class="n">record</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="336">            <span class="s2">"at"</span><span class="p">:</span> <span class="n">_now</span><span class="p">(),</span>
+</span><span data-line="337">            <span class="s2">"event"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
+</span><span data-line="338">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="339">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="340">            <span class="s2">"project"</span><span class="p">:</span> <span class="n">project</span><span class="p">,</span>
+</span><span data-line="341">            <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_detail</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">activity</span><span class="p">),</span>
+</span><span data-line="342">        <span class="p">}</span>
+</span><span data-line="343">        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"notification"</span><span class="p">:</span>
+</span><span data-line="344">            <span class="n">record</span><span class="p">[</span><span class="s2">"notification_type"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notification_type"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="345">        <span class="n">written</span> <span class="o">=</span> <span class="n">append_event</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">)</span>
+</span><span data-line="346">        <span class="n">ledger</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="347">        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"stop"</span> <span class="ow">and</span> <span class="n">name</span><span class="p">:</span>
+</span><span data-line="348">            <span class="n">ledger</span> <span class="o">=</span> <span class="n">_write_ledger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">activity</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span><span class="p">)</span>
+</span><span data-line="349">            <span class="k">if</span> <span class="n">ledger</span><span class="p">:</span>
+</span><span data-line="350">                <span class="n">_record_session</span><span class="p">(</span>
+</span><span data-line="351">                    <span class="n">name</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="n">record</span><span class="p">[</span><span class="s2">"at"</span><span class="p">],</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="n">ledger_dir</span>
+</span><span data-line="352">                <span class="p">)</span>
+</span><span data-line="353">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"record"</span><span class="p">:</span> <span class="n">record</span><span class="p">,</span> <span class="s2">"events"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">written</span><span class="p">),</span> <span class="s2">"ledger"</span><span class="p">:</span> <span class="n">ledger</span><span class="p">}</span>
+</span><span data-line="354">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- a broken crowsnest may not break a session</span>
+</span><span data-line="355">        <span class="n">_log</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="356">        <span class="k">return</span> <span class="p">{</span><span class="s2">"ok"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"event"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="p">),</span> <span class="s2">"error"</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">exc</span><span class="p">)}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -503,7 +542,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=38a06c88"></script>
+      <script src="../../_static/documentation_options.js?v=9cd8e891"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

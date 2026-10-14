@@ -71,21 +71,28 @@ somewhere else.
 
 ### Functions
 
-| [`ledger_dir`](#crowsnest.ledger.ledger_dir)([path])                    | Where ledgers live: `path` when given, else `<data dir>/ledger`.                 |
-|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`ledger_path`](#crowsnest.ledger.ledger_path)(name, \*[, ledger_dir])   | The file one session's ledger lives in, whether or not it exists yet.            |
-| [`list_ledgers`](#crowsnest.ledger.list_ledgers)(\*[, ledger_dir])        | Every ledger, most recently written first: name, path, state, and how old it is. |
-| [`read_ledger`](#crowsnest.ledger.read_ledger)(name, \*[, ledger_dir])   | One session's ledger as a JSON-able dict; a shaped empty one when there is none. |
-| [`safe_name`](#crowsnest.ledger.safe_name)(name)                       | A session name as a file stem: anything outside `[A-Za-z0-9._-]` becomes a dash. |
-| [`split_stamp`](#crowsnest.ledger.split_stamp)(value)                    | A stamped value back into `(when, what)`; `('', value)` when it carries no time. |
-| [`stamped`](#crowsnest.ledger.stamped)(text[, at])                   | A one-line field value carrying its time: `<when> · <what>`.                     |
-| [`update_ledger`](#crowsnest.ledger.update_ledger)(name, \*[, ledger_dir]) | Rewrite the named fields of one ledger and leave every other byte of it alone.   |
+| [`find_ledgers`](#crowsnest.ledger.find_ledgers)(session_id, \*[, ledger_dir])        | The names of the ledgers a session has written to; `session_id` may be a prefix.   |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`ledger_conflicts`](#crowsnest.ledger.ledger_conflicts)(page, \*[, live_ids])            | What is wrong with who writes this ledger, one sentence each; `[]` when nothing.   |
+| [`ledger_dir`](#crowsnest.ledger.ledger_dir)([path])                                | Where ledgers live: `path` when given, else `<data dir>/ledger`.                   |
+| [`ledger_path`](#crowsnest.ledger.ledger_path)(name, \*[, ledger_dir])               | The file one session's ledger lives in, whether or not it exists yet.              |
+| [`list_ledgers`](#crowsnest.ledger.list_ledgers)(\*[, ledger_dir])                    | Every ledger, most recently written first: name, path, state, and how old it is.   |
+| [`read_ledger`](#crowsnest.ledger.read_ledger)(name, \*[, ledger_dir])               | One session's ledger as a JSON-able dict; a shaped empty one when there is none.   |
+| [`record_session`](#crowsnest.ledger.record_session)(name, session_id, \*[, home, ...]) | Append `session_id` to the ledger's `sessions` unless it is already there.         |
+| [`safe_name`](#crowsnest.ledger.safe_name)(name)                                   | A session name as a file stem: anything outside `[A-Za-z0-9._-]` becomes a dash.   |
+| [`session_entries`](#crowsnest.ledger.session_entries)(value)                            | The `sessions` field's entries as `{id, home, name, first_seen}` dicts.            |
+| [`split_stamp`](#crowsnest.ledger.split_stamp)(value)                                | A stamped value back into `(when, what)`; `('', value)` when it carries no time.   |
+| [`stamped`](#crowsnest.ledger.stamped)(text[, at])                               | A one-line field value carrying its time: `<when> · <what>`.                       |
+| [`update_ledger`](#crowsnest.ledger.update_ledger)(name, \*[, ledger_dir])             | Rewrite the named fields of one ledger and leave every other byte of it alone.     |
 
-### crowsnest.ledger.FIELDS *= ('state', 'last_asked', 'last_said', 'open_questions', 'decisions')*
+### crowsnest.ledger.FIELDS *= ('state', 'last_asked', 'last_said', 'open_questions', 'decisions', 'sessions', 'renamed_from', 'renamed_to')*
 
 The fixed fields, in the order they are written. Two are mechanical (`last_asked`,
 `last_said`: the hook writes them from the transcript) and three are judgements
-(`state`, `open_questions`, `decisions`: the session itself writes those).
+(`state`, `open_questions`, `decisions`: the session itself writes those). The
+last three are identity, also mechanical: `sessions` is the append-only list of
+every session that has written here ([`record_session()`](#crowsnest.ledger.record_session)), and `renamed_from` /
+`renamed_to` link the ledgers one session wrote under two names (crowsnest#42).
 
 ### crowsnest.ledger.FREE_HEADING *= '## Notes'*
 
@@ -99,6 +106,36 @@ The subdirectory of the data directory that holds the ledgers.
 ### crowsnest.ledger.STAMP_SEP *= ' · '*
 
 What separates a field’s timestamp from its text, in the fields that carry one.
+
+### crowsnest.ledger.find_ledgers(session_id, , ledger_dir=None)
+
+The names of the ledgers a session has written to; `session_id` may be a prefix.
+
+The search the issue wanted the id in the filename for, without the per-process
+shards that would cost: grep the `sessions` fields.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.ledger.ledger_conflicts(page, , live_ids=frozenset({}))
+
+What is wrong with who writes this ledger, one sentence each; `[]` when nothing.
+
+Two conditions, both of which used to be silent: distinct session *names* writing
+one file ([`safe_name()`](#crowsnest.ledger.safe_name) maps them to one stem), and more than one of
+`live_ids` – the sessions running now – writing it (two live sessions sharing a
+name). A `/clear` is neither: the old id is no longer live.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> page = {'fields': {'sessions': '- a1@main as cn/xa · first seen t\n- b2@main as cn:xa · first seen t'}}
+>>> for problem in ledger_conflicts(page, live_ids={'a1', 'b2'}):
+...     print(problem)
+names cn/xa, cn:xa all map to this one file
+2 live sessions write here: a1@main, b2@main
+```
 
 ### crowsnest.ledger.ledger_dir(path=None)
 
@@ -142,6 +179,20 @@ never has to test for a key. `free` is the part below the first heading, and
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### crowsnest.ledger.record_session(name, session_id, , home='', at='', ledger_dir=None)
+
+Append `session_id` to the ledger’s `sessions` unless it is already there.
+
+Returns the updated page, or `None` when nothing was written (the session was
+already recorded) – the common case, every turn after a session’s first.
+
+When the session is new *here* but already recorded in another ledger, it has been
+renamed: each ledger’s `renamed_from` / `renamed_to` names the other, so the old
+one no longer reads like the ledger of a session that simply ended.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
 ### crowsnest.ledger.safe_name(name)
 
 A session name as a file stem: anything outside `[A-Za-z0-9._-]` becomes a dash.
@@ -156,6 +207,20 @@ Session names come from `claude -n <name>` and are not constrained to be filenam
 'cn-xa-needs-you'
 >>> safe_name('  ')
 'unnamed'
+```
+
+### crowsnest.ledger.session_entries(value)
+
+The `sessions` field’s entries as `{id, home, name, first_seen}` dicts.
+
+A line that is not an entry (a human’s note in the list) is skipped, not an error.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+```pycon
+>>> session_entries('- 5ef2882a@main as cn-proj · first seen 2026-09-09T08:12Z')
+[{'id': '5ef2882a', 'home': 'main', 'name': 'cn-proj', 'first_seen': '2026-09-09T08:12Z'}]
 ```
 
 ### crowsnest.ledger.split_stamp(value)

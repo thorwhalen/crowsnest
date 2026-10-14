@@ -359,7 +359,10 @@ and `how` carries that.
 
 A name that a live session already carries is refused (`ValueError`): the name is
 the address for everything after – `show`, `open`, a message – and two sessions
-behind one name make all of them ambiguous. Pick another, a suffix will do.
+behind one name make all of them ambiguous, and write one ledger. Every configured
+home is checked, not only the one the session starts in (crowsnest#42). So is a name
+whose ledger file already belongs to a *different* name (`cn/xa` and `cn:xa`
+share `cn-xa.md`). Pick another, a suffix will do.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

@@ -393,13 +393,16 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="7"><span class="k">-</span><span class="w"> </span>squash or rebase for the release?
 </span><span data-line="8">decisions:
 </span><span data-line="9"><span class="k">-</span><span class="w"> </span>the ledger lives under ~/.local/share/crowsnest
-</span><span data-line="10">
-</span><span data-line="11"><span class="gu">## Notes</span>
+</span><span data-line="10">sessions:
+</span><span data-line="11"><span class="k">-</span><span class="w"> </span>5ef2882a-…@main as lookout · first seen 2026-09-06T18:12:03Z
 </span><span data-line="12">
-</span><span data-line="13">Anything at all. Nothing in crowsnest ever rewrites this part.
+</span><span data-line="13"><span class="gu">## Notes</span>
+</span><span data-line="14">
+</span><span data-line="15">Anything at all. Nothing in crowsnest ever rewrites this part.
 </span></pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">asked</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">said</span></code> are mechanical — the <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook below writes them from the transcript tail, so they are true without anyone deciding anything. <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">open</span> <span class="pre">questions</span></code> and <code class="docutils literal notranslate"><span class="pre">decisions</span></code> are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.</p>
+<p>The file is keyed by the session’s <em>name</em>, because it is a corpus’s memory: a <code class="docutils literal notranslate"><span class="pre">/clear</span></code>, a restart or <code class="docutils literal notranslate"><span class="pre">claude</span> <span class="pre">-n</span> <span class="pre">&lt;same</span> <span class="pre">name&gt;</span></code> tomorrow brings a new session id and must land in the same file. <em>Who</em> wrote it lives inside: the <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook appends every new session id to <code class="docutils literal notranslate"><span class="pre">sessions</span></code> (with its home and name), once. That makes three things visible that used to be silent: two live sessions sharing a name (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span></code> flags it <code class="docutils literal notranslate"><span class="pre">!!</span></code>), two names that map to one file (<code class="docutils literal notranslate"><span class="pre">cn/xa</span></code> and <code class="docutils literal notranslate"><span class="pre">cn:xa</span></code> both become <code class="docutils literal notranslate"><span class="pre">cn-xa.md</span></code>; flagged, and <code class="docutils literal notranslate"><span class="pre">spawn</span></code> refuses the second), and a rename (the old and new ledgers get <code class="docutils literal notranslate"><span class="pre">renamed</span> <span class="pre">to:</span></code> / <code class="docutils literal notranslate"><span class="pre">renamed</span> <span class="pre">from:</span></code>). <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span> <span class="pre">&lt;session</span> <span class="pre">id</span> <span class="pre">or</span> <span class="pre">prefix&gt;</span></code> finds the ledger a session wrote.</p>
 </section>
 <section id="a-page-that-stays-fresh-without-a-session">
 <h2>A page that stays fresh without a session<a class="headerlink" href="#a-page-that-stays-fresh-without-a-session" title="Link to this heading">#</a></h2>
@@ -538,7 +541,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 21:03 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/9552f8686fd92a80516dde3e8212d58fffe46407">9552f86</a> (main) · crowsnest 0.0.90 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-14 05:11 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/286362da209cfa20e68b6794523e5a8a89f25ac5">286362d</a> (main) · crowsnest 0.0.91 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -573,7 +576,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=38a06c88"></script>
+      <script src="_static/documentation_options.js?v=9cd8e891"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

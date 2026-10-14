@@ -118,11 +118,15 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.ledger.FREE_HEADING"><code class="docutils literal notranslate"><span class="pre">FREE_HEADING</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.LEDGER_DIRNAME"><code class="docutils literal notranslate"><span class="pre">LEDGER_DIRNAME</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.STAMP_SEP"><code class="docutils literal notranslate"><span class="pre">STAMP_SEP</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.ledger.find_ledgers"><code class="docutils literal notranslate"><span class="pre">find_ledgers()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.ledger.ledger_conflicts"><code class="docutils literal notranslate"><span class="pre">ledger_conflicts()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.ledger_dir"><code class="docutils literal notranslate"><span class="pre">ledger_dir()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.ledger_path"><code class="docutils literal notranslate"><span class="pre">ledger_path()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.list_ledgers"><code class="docutils literal notranslate"><span class="pre">list_ledgers()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.read_ledger"><code class="docutils literal notranslate"><span class="pre">read_ledger()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.ledger.record_session"><code class="docutils literal notranslate"><span class="pre">record_session()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.safe_name"><code class="docutils literal notranslate"><span class="pre">safe_name()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.ledger.session_entries"><code class="docutils literal notranslate"><span class="pre">session_entries()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.split_stamp"><code class="docutils literal notranslate"><span class="pre">split_stamp()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.stamped"><code class="docutils literal notranslate"><span class="pre">stamped()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.ledger.update_ledger"><code class="docutils literal notranslate"><span class="pre">update_ledger()</span></code></a></li>
@@ -240,6 +244,12 @@ somewhere else.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.ledger.find_ledgers" title="crowsnest.ledger.find_ledgers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_ledgers</span></code></a>(session_id, *[, ledger_dir])</p></td>
+<td><p>The names of the ledgers a session has written to; <code class="docutils literal notranslate"><span class="pre">session_id</span></code> may be a prefix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.ledger.ledger_conflicts" title="crowsnest.ledger.ledger_conflicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger_conflicts</span></code></a>(page, *[, live_ids])</p></td>
+<td><p>What is wrong with who writes this ledger, one sentence each; <code class="docutils literal notranslate"><span class="pre">[]</span></code> when nothing.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.ledger.ledger_dir" title="crowsnest.ledger.ledger_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger_dir</span></code></a>([path])</p></td>
 <td><p>Where ledgers live: <code class="docutils literal notranslate"><span class="pre">path</span></code> when given, else <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/ledger</span></code>.</p></td>
 </tr>
@@ -252,8 +262,14 @@ somewhere else.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.ledger.read_ledger" title="crowsnest.ledger.read_ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_ledger</span></code></a>(name, *[, ledger_dir])</p></td>
 <td><p>One session's ledger as a JSON-able dict; a shaped empty one when there is none.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.ledger.safe_name" title="crowsnest.ledger.safe_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">safe_name</span></code></a>(name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.ledger.record_session" title="crowsnest.ledger.record_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_session</span></code></a>(name, session_id, *[, home, ...])</p></td>
+<td><p>Append <code class="docutils literal notranslate"><span class="pre">session_id</span></code> to the ledger's <code class="docutils literal notranslate"><span class="pre">sessions</span></code> unless it is already there.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.ledger.safe_name" title="crowsnest.ledger.safe_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">safe_name</span></code></a>(name)</p></td>
 <td><p>A session name as a file stem: anything outside <code class="docutils literal notranslate"><span class="pre">[A-Za-z0-9._-]</span></code> becomes a dash.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.ledger.session_entries" title="crowsnest.ledger.session_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">session_entries</span></code></a>(value)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">sessions</span></code> field's entries as <code class="docutils literal notranslate"><span class="pre">{id,</span> <span class="pre">home,</span> <span class="pre">name,</span> <span class="pre">first_seen}</span></code> dicts.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.ledger.split_stamp" title="crowsnest.ledger.split_stamp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_stamp</span></code></a>(value)</p></td>
 <td><p>A stamped value back into <code class="docutils literal notranslate"><span class="pre">(when,</span> <span class="pre">what)</span></code>; <code class="docutils literal notranslate"><span class="pre">('',</span> <span class="pre">value)</span></code> when it carries no time.</p></td>
@@ -269,10 +285,13 @@ somewhere else.</p>
 </div>
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.ledger.FIELDS">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('state',</span> <span class="pre">'last_asked',</span> <span class="pre">'last_said',</span> <span class="pre">'open_questions',</span> <span class="pre">'decisions')</span></span><a class="headerlink" href="#crowsnest.ledger.FIELDS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">FIELDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('state',</span> <span class="pre">'last_asked',</span> <span class="pre">'last_said',</span> <span class="pre">'open_questions',</span> <span class="pre">'decisions',</span> <span class="pre">'sessions',</span> <span class="pre">'renamed_from',</span> <span class="pre">'renamed_to')</span></span><a class="headerlink" href="#crowsnest.ledger.FIELDS" title="Link to this definition">#</a></dt>
 <dd><p>The fixed fields, in the order they are written. Two are mechanical (<code class="docutils literal notranslate"><span class="pre">last_asked</span></code>,
 <code class="docutils literal notranslate"><span class="pre">last_said</span></code>: the hook writes them from the transcript) and three are judgements
-(<code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">open_questions</span></code>, <code class="docutils literal notranslate"><span class="pre">decisions</span></code>: the session itself writes those).</p>
+(<code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">open_questions</span></code>, <code class="docutils literal notranslate"><span class="pre">decisions</span></code>: the session itself writes those). The
+last three are identity, also mechanical: <code class="docutils literal notranslate"><span class="pre">sessions</span></code> is the append-only list of
+every session that has written here (<a class="reference internal" href="#crowsnest.ledger.record_session" title="crowsnest.ledger.record_session"><code class="xref py py-func docutils literal notranslate"><span class="pre">record_session()</span></code></a>), and <code class="docutils literal notranslate"><span class="pre">renamed_from</span></code> /
+<code class="docutils literal notranslate"><span class="pre">renamed_to</span></code> link the ledgers one session wrote under two names (crowsnest#42).</p>
 </dd></dl>
 
 <dl class="py data">
@@ -292,6 +311,41 @@ rewritten. A new ledger is created with this one heading and nothing under it.</
 <dt class="sig sig-object py" id="crowsnest.ledger.STAMP_SEP">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">STAMP_SEP</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'</span> <span class="pre">·</span> <span class="pre">'</span></span><a class="headerlink" href="#crowsnest.ledger.STAMP_SEP" title="Link to this definition">#</a></dt>
 <dd><p>What separates a field’s timestamp from its text, in the fields that carry one.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.find_ledgers">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">find_ledgers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#find_ledgers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.find_ledgers" title="Link to this definition">#</a></dt>
+<dd><p>The names of the ledgers a session has written to; <code class="docutils literal notranslate"><span class="pre">session_id</span></code> may be a prefix.</p>
+<p>The search the issue wanted the id in the filename for, without the per-process
+shards that would cost: grep the <code class="docutils literal notranslate"><span class="pre">sessions</span></code> fields.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.ledger_conflicts">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">ledger_conflicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">live_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#ledger_conflicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.ledger_conflicts" title="Link to this definition">#</a></dt>
+<dd><p>What is wrong with who writes this ledger, one sentence each; <code class="docutils literal notranslate"><span class="pre">[]</span></code> when nothing.</p>
+<p>Two conditions, both of which used to be silent: distinct session <em>names</em> writing
+one file (<a class="reference internal" href="#crowsnest.ledger.safe_name" title="crowsnest.ledger.safe_name"><code class="xref py py-func docutils literal notranslate"><span class="pre">safe_name()</span></code></a> maps them to one stem), and more than one of
+<code class="docutils literal notranslate"><span class="pre">live_ids</span></code> – the sessions running now – writing it (two live sessions sharing a
+name). A <code class="docutils literal notranslate"><span class="pre">/clear</span></code> is neither: the old id is no longer live.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">page</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'fields'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'sessions'</span><span class="p">:</span> <span class="s1">'- a1@main as cn/xa · first seen t</span><span class="se">\n</span><span class="s1">- b2@main as cn:xa · first seen t'</span><span class="p">}}</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">problem</span> <span class="ow">in</span> <span class="n">ledger_conflicts</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">live_ids</span><span class="o">=</span><span class="p">{</span><span class="s1">'a1'</span><span class="p">,</span> <span class="s1">'b2'</span><span class="p">}):</span>
+</span><span data-line="3"><span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">names cn/xa, cn:xa all map to this one file</span>
+</span><span data-line="5"><span class="go">2 live sessions write here: a1@main, b2@main</span>
+</span></pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -349,6 +403,22 @@ never has to test for a key. <code class="docutils literal notranslate"><span cl
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.record_session">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">record_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#record_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.record_session" title="Link to this definition">#</a></dt>
+<dd><p>Append <code class="docutils literal notranslate"><span class="pre">session_id</span></code> to the ledger’s <code class="docutils literal notranslate"><span class="pre">sessions</span></code> unless it is already there.</p>
+<p>Returns the updated page, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when nothing was written (the session was
+already recorded) – the common case, every turn after a session’s first.</p>
+<p>When the session is new <em>here</em> but already recorded in another ledger, it has been
+renamed: each ledger’s <code class="docutils literal notranslate"><span class="pre">renamed_from</span></code> / <code class="docutils literal notranslate"><span class="pre">renamed_to</span></code> names the other, so the old
+one no longer reads like the ledger of a session that simply ended.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.ledger.safe_name">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">safe_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#safe_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.safe_name" title="Link to this definition">#</a></dt>
 <dd><p>A session name as a file stem: anything outside <code class="docutils literal notranslate"><span class="pre">[A-Za-z0-9._-]</span></code> becomes a dash.</p>
@@ -362,6 +432,22 @@ never has to test for a key. <code class="docutils literal notranslate"><span cl
 </span><span data-line="2"><span class="go">'cn-xa-needs-you'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">safe_name</span><span class="p">(</span><span class="s1">'  '</span><span class="p">)</span>
 </span><span data-line="4"><span class="go">'unnamed'</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.ledger.session_entries">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">session_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#session_entries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.session_entries" title="Link to this definition">#</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">sessions</span></code> field’s entries as <code class="docutils literal notranslate"><span class="pre">{id,</span> <span class="pre">home,</span> <span class="pre">name,</span> <span class="pre">first_seen}</span></code> dicts.</p>
+<p>A line that is not an entry (a human’s note in the list) is skipped, not an error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">session_entries</span><span class="p">(</span><span class="s1">'- 5ef2882a@main as cn-proj · first seen 2026-09-09T08:12Z'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">[{'id': '5ef2882a', 'home': 'main', 'name': 'cn-proj', 'first_seen': '2026-09-09T08:12Z'}]</span>
 </span></pre></div>
 </div>
 </dd></dl>
@@ -459,7 +545,7 @@ silently wrote nothing would be worse than a stack trace.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=38a06c88"></script>
+      <script src="../_static/documentation_options.js?v=9cd8e891"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
