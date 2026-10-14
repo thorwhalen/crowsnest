@@ -73,9 +73,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from crowsnest.activity import Activity, read_activity
-from crowsnest.ledger import stamped, update_ledger
+from crowsnest.ledger import record_session, stamped, update_ledger
 from crowsnest.paths import data_dir
-from crowsnest.registry import live_sessions
+from crowsnest.registry import claude_home, live_sessions
 
 __all__ = [
     "DETAIL_LIMIT",
@@ -260,6 +260,41 @@ def _write_ledger(
         return ""
 
 
+def _home_label(home: str | Path | None) -> str:
+    """The configured name of the home this hook runs in (``main``, ``local``...).
+
+    Matched by path against the config's homes; the directory's own name when none
+    matches, so an entry always says *which* account wrote it.
+    """
+    root = claude_home(home)
+    try:
+        from crowsnest.config import homes
+
+        for h in homes():
+            if Path(h.path).expanduser().resolve() == root.resolve():
+                return h.name
+    except Exception as exc:  # noqa: BLE001 -- a bad config must not cost the ledger write
+        _log(f"home label: {exc!r}")
+    return root.name
+
+
+def _record_session(
+    name: str,
+    session_id: str,
+    *,
+    home: str | Path | None,
+    at: str,
+    ledger_dir: str | Path | None = None,
+) -> None:
+    """Who wrote this ledger (crowsnest#42): appended once per session, then a no-op."""
+    try:
+        record_session(
+            name, session_id, home=_home_label(home), at=at, ledger_dir=ledger_dir
+        )
+    except Exception as exc:  # noqa: BLE001 -- the fields already landed; keep them
+        _log(f"ledger {name!r} sessions: {exc!r}")
+
+
 #: Set to ``1`` in a session crowsnest starts for itself; its hooks then record nothing.
 QUIET_ENV_VAR = "CROWSNEST_QUIET_HOOKS"
 
@@ -311,6 +346,10 @@ def handle(
         ledger = ""
         if kind == "stop" and name:
             ledger = _write_ledger(name, record, activity, ledger_dir=ledger_dir)
+            if ledger:
+                _record_session(
+                    name, session_id, home=home, at=record["at"], ledger_dir=ledger_dir
+                )
         return {"ok": True, "record": record, "events": str(written), "ledger": ledger}
     except Exception as exc:  # noqa: BLE001 -- a broken crowsnest may not break a session
         _log(f"{event!r}: {exc!r}")

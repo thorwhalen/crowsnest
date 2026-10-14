@@ -966,15 +966,37 @@ def hook(event: str, *, home: str | None = None):
         pass
 
 
+def _live_ids() -> set[str]:
+    """Every live session id across the configured homes; empty when they cannot be read."""
+    try:
+        from crowsnest.tools import sessions
+
+        return {s.session_id for s in sessions(all_homes=True)}
+    except Exception:  # noqa: BLE001 -- a listing without conflict marks beats none
+        return set()
+
+
+#: A ``crowsnest ledger`` argument that names no ledger is tried as a session id (or a
+#: prefix of one) when it is at least this long, so a short typo is not a search.
+_MIN_ID_PREFIX = 6
+
+
 def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
     """One session's ledger, or -- with no name -- every ledger with its age.
 
     A ledger is the durable page a session leaves behind: what it was last asked and
     said, what it decided, what it is still waiting on you for. Printed verbatim,
-    because it is markdown a human wrote and a human reads.
+    because it is markdown a human wrote and a human reads. A session id (or a prefix of
+    one) finds the ledger(s) that session wrote. Ledgers written by two live sessions
+    at once, or by two names that share one file, are flagged ``!!`` (crowsnest#42).
     """
     if not name:
         rows = _ledger.list_ledgers(ledger_dir=ledger_dir)
+        live = _live_ids()
+        for row in rows:
+            row["conflicts"] = _ledger.ledger_conflicts(
+                {"fields": {"sessions": row["sessions"]}}, live_ids=live
+            )
         if json:
             return _json.dumps(rows, indent=2)
         lines = [
@@ -983,20 +1005,33 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
             f"{_one_line(_ledger.split_stamp(row['last_said'])[1], 60)}".rstrip()
             for row in rows
         ]
+        lines += [
+            f"!! {row['name']}: {problem}" for row in rows for problem in row["conflicts"]
+        ]
         lines.append(f"-- {len(rows)} in {_ledger.ledger_dir(ledger_dir)}")
         return "\n".join(lines)
-    pages = [_ledger.read_ledger(one, ledger_dir=ledger_dir) for one in name]
+    pages = []
+    for one in name:
+        page = _ledger.read_ledger(one, ledger_dir=ledger_dir)
+        if not page["exists"] and len(one) >= _MIN_ID_PREFIX:
+            pages += [
+                _ledger.read_ledger(found, ledger_dir=ledger_dir)
+                for found in _ledger.find_ledgers(one, ledger_dir=ledger_dir)
+            ] or [page]
+        else:
+            pages.append(page)
     if json:
         return _json.dumps(pages if len(pages) > 1 else pages[0], indent=2)
     known = ", ".join(row["name"] for row in _ledger.list_ledgers(ledger_dir=ledger_dir))
-    return "\n\n".join(
-        (
-            page["text"].rstrip()
-            if page["exists"]
-            else f"(no ledger for {page['name']!r}; known: {known or 'none'})"
-        )
-        for page in pages
-    )
+    live = _live_ids()
+
+    def shown(page):
+        if not page["exists"]:
+            return f"(no ledger for {page['name']!r}; known: {known or 'none'})"
+        flags = [f"!! {p}" for p in _ledger.ledger_conflicts(page, live_ids=live)]
+        return "\n".join([page["text"].rstrip(), *flags])
+
+    return "\n\n".join(shown(page) for page in pages)
 
 
 def brief(

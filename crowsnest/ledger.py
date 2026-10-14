@@ -71,11 +71,15 @@ __all__ = [
     "FREE_HEADING",
     "LEDGER_DIRNAME",
     "STAMP_SEP",
+    "find_ledgers",
+    "ledger_conflicts",
     "ledger_dir",
     "ledger_path",
     "list_ledgers",
     "read_ledger",
+    "record_session",
     "safe_name",
+    "session_entries",
     "split_stamp",
     "stamped",
     "update_ledger",
@@ -86,8 +90,24 @@ LEDGER_DIRNAME = "ledger"
 
 #: The fixed fields, in the order they are written. Two are mechanical (``last_asked``,
 #: ``last_said``: the hook writes them from the transcript) and three are judgements
-#: (``state``, ``open_questions``, ``decisions``: the session itself writes those).
-FIELDS = ("state", "last_asked", "last_said", "open_questions", "decisions")
+#: (``state``, ``open_questions``, ``decisions``: the session itself writes those). The
+#: last three are identity, also mechanical: ``sessions`` is the append-only list of
+#: every session that has written here (:func:`record_session`), and ``renamed_from`` /
+#: ``renamed_to`` link the ledgers one session wrote under two names (crowsnest#42).
+FIELDS = (
+    "state",
+    "last_asked",
+    "last_said",
+    "open_questions",
+    "decisions",
+    "sessions",
+    "renamed_from",
+    "renamed_to",
+)
+
+#: The fields a new ledger is created with. The rename links are added only when a
+#: rename happens, so an ordinary ledger does not carry two empty lines about one.
+_TEMPLATE_FIELDS = FIELDS[:6]
 
 #: Everything from the first heading at this level down is the human's, and is never
 #: rewritten. A new ledger is created with this one heading and nothing under it.
@@ -237,7 +257,7 @@ def _render(label: str, value: str | Sequence[str] | None) -> list[str]:
 
 
 def _template(name: str) -> str:
-    body = "\n".join(f"{label}:" for label in _LABELS)
+    body = "\n".join(f"{field.replace('_', ' ')}:" for field in _TEMPLATE_FIELDS)
     return f"# {name}\n\n{body}\n\n{FREE_HEADING}\n"
 
 
@@ -341,8 +361,155 @@ def list_ledgers(*, ledger_dir: str | Path | None = None) -> list[dict]:
                 "path": page["path"],
                 "state": page["fields"]["state"],
                 "last_said": page["fields"]["last_said"],
+                "sessions": page["fields"]["sessions"],
                 "updated_at": page["updated_at"],
                 "age_seconds": max(0.0, now - page["updated_at"]),
             }
         )
     return sorted(rows, key=lambda row: -row["updated_at"])
+
+
+# --------------------------------------------------------------------------------------
+# Who has been writing (crowsnest#42)
+#
+# The ledger is keyed by *name* on purpose: it is a corpus's memory, and a ``/clear``, a
+# restart or ``claude -n <same name>`` tomorrow all bring a new session id that must land
+# in the same file. What the name alone cannot say is *who* wrote it -- so two live
+# sessions sharing a name, two names that :func:`safe_name` maps to one stem, and a
+# rename all used to land silently. Identity therefore lives *inside* the file.
+
+#: One ``sessions`` entry: ``<session id>@<home> as <name> · first seen <when>``.
+_SESSION_RE = re.compile(
+    r"^-?\s*(?P<id>[0-9A-Za-z-]+)@(?P<home>\S*)\s+as\s+(?P<name>.*?)"
+    + re.escape(STAMP_SEP)
+    + r"first seen\s*(?P<at>\S*)\s*$"
+)
+
+
+def session_entries(value: str) -> list[dict]:
+    """The ``sessions`` field's entries as ``{id, home, name, first_seen}`` dicts.
+
+    A line that is not an entry (a human's note in the list) is skipped, not an error.
+
+    >>> session_entries('- 5ef2882a@main as cn-proj · first seen 2026-09-09T08:12Z')
+    [{'id': '5ef2882a', 'home': 'main', 'name': 'cn-proj', 'first_seen': '2026-09-09T08:12Z'}]
+    """
+    out = []
+    for line in (value or "").splitlines():
+        match = _SESSION_RE.match(line.strip())
+        if match:
+            out.append(
+                {
+                    "id": match["id"],
+                    "home": match["home"],
+                    "name": match["name"],
+                    "first_seen": match["at"],
+                }
+            )
+    return out
+
+
+def _bullets(value: str) -> list[str]:
+    return [
+        line.strip().removeprefix("- ")
+        for line in (value or "").splitlines()
+        if line.strip()
+    ]
+
+
+def _one_or_list(items: list[str]) -> str | list[str]:
+    """One item inline (``renamed from: old``), several as bullets."""
+    return items[0] if len(items) == 1 else items
+
+
+def find_ledgers(session_id: str, *, ledger_dir: str | Path | None = None) -> list[str]:
+    """The names of the ledgers a session has written to; ``session_id`` may be a prefix.
+
+    The search the issue wanted the id in the filename for, without the per-process
+    shards that would cost: grep the ``sessions`` fields.
+    """
+    wanted = (session_id or "").strip().lower()
+    if not wanted:
+        return []
+    return [
+        row["name"]
+        for row in list_ledgers(ledger_dir=ledger_dir)
+        if any(
+            e["id"].lower().startswith(wanted) for e in session_entries(row["sessions"])
+        )
+    ]
+
+
+def record_session(
+    name: str,
+    session_id: str,
+    *,
+    home: str = "",
+    at: str = "",
+    ledger_dir: str | Path | None = None,
+) -> dict | None:
+    """Append ``session_id`` to the ledger's ``sessions`` unless it is already there.
+
+    Returns the updated page, or ``None`` when nothing was written (the session was
+    already recorded) -- the common case, every turn after a session's first.
+
+    When the session is new *here* but already recorded in another ledger, it has been
+    renamed: each ledger's ``renamed_from`` / ``renamed_to`` names the other, so the old
+    one no longer reads like the ledger of a session that simply ended.
+    """
+    if not session_id:
+        return None
+    home = "-".join(str(home or "").split())  # one token, or the entry would never parse
+    page = read_ledger(name, ledger_dir=ledger_dir)
+    entries = session_entries(page["fields"]["sessions"])
+    if any(e["id"] == session_id and e["home"] == home for e in entries):
+        return None
+    lines = _bullets(page["fields"]["sessions"])
+    lines.append(f"{session_id}@{home} as {name}{STAMP_SEP}first seen {at}".rstrip())
+    earlier = [
+        other
+        for other in find_ledgers(session_id, ledger_dir=ledger_dir)
+        if safe_name(other) != safe_name(name)
+    ]
+    fields: dict = {"sessions": lines}
+    if earlier:
+        froms = _bullets(page["fields"]["renamed_from"])
+        fields["renamed_from"] = _one_or_list(
+            froms + [o for o in earlier if o not in froms]
+        )
+        for other in earlier:
+            tos = _bullets(
+                read_ledger(other, ledger_dir=ledger_dir)["fields"]["renamed_to"]
+            )
+            if name not in tos:
+                update_ledger(
+                    other, renamed_to=_one_or_list(tos + [name]), ledger_dir=ledger_dir
+                )
+    return update_ledger(name, ledger_dir=ledger_dir, **fields)
+
+
+def ledger_conflicts(
+    page: dict, *, live_ids: set[str] | frozenset[str] = frozenset()
+) -> list[str]:
+    """What is wrong with who writes this ledger, one sentence each; ``[]`` when nothing.
+
+    Two conditions, both of which used to be silent: distinct session *names* writing
+    one file (:func:`safe_name` maps them to one stem), and more than one of
+    ``live_ids`` -- the sessions running now -- writing it (two live sessions sharing a
+    name). A ``/clear`` is neither: the old id is no longer live.
+
+    >>> page = {'fields': {'sessions': '- a1@main as cn/xa · first seen t\\n- b2@main as cn:xa · first seen t'}}
+    >>> for problem in ledger_conflicts(page, live_ids={'a1', 'b2'}):
+    ...     print(problem)
+    names cn/xa, cn:xa all map to this one file
+    2 live sessions write here: a1@main, b2@main
+    """
+    entries = session_entries(page["fields"]["sessions"])
+    problems = []
+    names = sorted({e["name"] for e in entries})
+    if len(names) > 1:
+        problems.append(f"names {', '.join(names)} all map to this one file")
+    live = [f"{e['id']}@{e['home']}" for e in entries if e["id"] in live_ids]
+    if len(live) > 1:
+        problems.append(f"{len(live)} live sessions write here: {', '.join(live)}")
+    return problems

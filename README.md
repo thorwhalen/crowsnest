@@ -252,6 +252,8 @@ open questions:
 - squash or rebase for the release?
 decisions:
 - the ledger lives under ~/.local/share/crowsnest
+sessions:
+- 5ef2882a-…@main as lookout · first seen 2026-09-06T18:12:03Z
 
 ## Notes
 
@@ -259,6 +261,8 @@ Anything at all. Nothing in crowsnest ever rewrites this part.
 ```
 
 `last asked` and `last said` are mechanical — the `Stop` hook below writes them from the transcript tail, so they are true without anyone deciding anything. `state`, `open questions` and `decisions` are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.
+
+The file is keyed by the session's *name*, because it is a corpus's memory: a `/clear`, a restart or `claude -n <same name>` tomorrow brings a new session id and must land in the same file. *Who* wrote it lives inside: the `Stop` hook appends every new session id to `sessions` (with its home and name), once. That makes three things visible that used to be silent: two live sessions sharing a name (`crowsnest ledger` flags it `!!`), two names that map to one file (`cn/xa` and `cn:xa` both become `cn-xa.md`; flagged, and `spawn` refuses the second), and a rename (the old and new ledgers get `renamed to:` / `renamed from:`). `crowsnest ledger <session id or prefix>` finds the ledger a session wrote.
 
 ## A page that stays fresh without a session
 

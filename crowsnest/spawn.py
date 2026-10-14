@@ -524,6 +524,47 @@ def _find_by_name(
         time.sleep(min(_POLL_INTERVAL, max(wait, 0.0)) or _POLL_INTERVAL)
 
 
+def _refuse_taken_name(
+    name: str,
+    *,
+    home: str | Path,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+) -> None:
+    """Raise ``ValueError`` when ``name`` is live in any home, or its ledger is another's."""
+    from crowsnest.config import configured_homes
+    from crowsnest.ledger import read_ledger, session_entries
+    from crowsnest.registry import fresh_within
+
+    live = list(live_sessions(home=home))
+    try:
+        # The *configured* homes only: ``home`` itself is checked above, and the
+        # default-home fallback would be whatever account this process runs under.
+        for h in configured_homes(path=config):
+            if Path(h.path).expanduser().resolve() != Path(home).expanduser().resolve():
+                # A synced copy of another machine's registry: its pids mean nothing
+                # here, so liveness is the roster's freshness rule, as in `sessions`.
+                rule = fresh_within(h.fresh_seconds) if h.remote else None
+                live += live_sessions(home=h.path, home_name=h.name, is_live=rule)
+    except Exception:  # noqa: BLE001, S110 -- an unreadable config narrows the check to `home`
+        pass
+    taken = [s for s in live if s.name == name]
+    if taken:
+        where = f" on home {taken[0].home}" if taken[0].home else ""
+        raise ValueError(
+            f"a live session is already named {name!r} (pid {taken[0].pid}, in "
+            f"{taken[0].cwd}{where}); pick another name, for instance {name!r} with a suffix"
+        )
+    page = read_ledger(name, ledger_dir=ledger_dir)
+    owners = {e["name"] for e in session_entries(page["fields"]["sessions"])}
+    if owners and name not in owners:
+        raise ValueError(
+            f"{name!r} would write the ledger {page['path']}, which belongs to "
+            f"{', '.join(sorted(owners))} (the file name keeps only [A-Za-z0-9._-]); "
+            "pick a name that differs in those characters"
+        )
+
+
 def spawn(
     name: str,
     *,
@@ -591,15 +632,13 @@ def spawn(
 
     A name that a live session already carries is refused (``ValueError``): the name is
     the address for everything after -- ``show``, ``open``, a message -- and two sessions
-    behind one name make all of them ambiguous. Pick another, a suffix will do.
+    behind one name make all of them ambiguous, and write one ledger. Every configured
+    home is checked, not only the one the session starts in (crowsnest#42). So is a name
+    whose ledger file already belongs to a *different* name (``cn/xa`` and ``cn:xa``
+    share ``cn-xa.md``). Pick another, a suffix will do.
     """
     home = account_home(home=home, profile=profile, config=config)
-    taken = [s for s in live_sessions(home=home) if s.name == name]
-    if taken:
-        raise ValueError(
-            f"a live session is already named {name!r} (pid {taken[0].pid}, in "
-            f"{taken[0].cwd}); pick another name, for instance {name!r} with a suffix"
-        )
+    _refuse_taken_name(name, home=home, config=config)
     how = "custom"
     builtin = spawner is None
     if spawner is None:
