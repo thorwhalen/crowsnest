@@ -839,7 +839,8 @@ def test_claude_argv_passes_a_named_mode_as_permission_mode():
     ]
     for alias in ("bypass", "bypassPermissions", "dangerously-skip-permissions"):
         assert "--dangerously-skip-permissions" in claude_argv("d", permission_mode=alias)
-    for bad in ("--evil", "two words"):
+    assert "--dangerously-skip-permissions" in claude_argv("d", permission_mode="Bypass")
+    for bad in ("--evil", "two words", "yolo"):
         with pytest.raises(ValueError, match="not a permission mode"):
             claude_argv("d", permission_mode=bad)
 
@@ -884,10 +885,10 @@ def test_spawner_permission_mode_reads_the_spawning_sessions_command_line():
     assert (
         spawner_permission_mode({"CLAUDE_PID": "7"}, argv_of=_argv_of({7: talky})) == ""
     )
-    # outside a session, unreadable, garbage pid: no mode stated
-    assert spawner_permission_mode({}, argv_of=_argv_of({})) == ""
-    assert spawner_permission_mode({"CLAUDE_PID": "9"}, argv_of=_argv_of({})) == ""
-    assert spawner_permission_mode({"CLAUDE_PID": "nope"}, argv_of=_argv_of({})) == ""
+    # outside a session, unreadable, garbage pid: unknown (None), not "no mode"
+    assert spawner_permission_mode({}, argv_of=_argv_of({})) is None
+    assert spawner_permission_mode({"CLAUDE_PID": "9"}, argv_of=_argv_of({})) is None
+    assert spawner_permission_mode({"CLAUDE_PID": "nope"}, argv_of=_argv_of({})) is None
 
 
 def test_spawner_permission_mode_reads_this_process_for_real():
@@ -905,29 +906,65 @@ def test_pick_permission_mode_order(tmp_path):
 
     env = {"CLAUDE_PID": "1"}
     bypassing = _argv_of({1: ["claude", "--dangerously-skip-permissions"]})
+    normal = _argv_of({1: ["claude", "-n", "x"]})
     none_cfg = tmp_path / "none.toml"
-    # 1. the spawning session's own mode when nothing else says anything
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "bypass"\n')
+    # 1. inside a session: its own mode, whatever the config says
     assert (
         pick_permission_mode(None, environ=env, config=none_cfg, argv_of=bypassing)
         == "bypassPermissions"
     )
-    # 2. the config file outranks it -- and "" there is a stated choice
-    cfg = tmp_path / "config.toml"
-    cfg.write_text('spawn_permission_mode = "acceptEdits"\n')
     assert (
-        pick_permission_mode(None, environ=env, config=cfg, argv_of=bypassing)
-        == "acceptEdits"
+        pick_permission_mode(None, environ=env, config=cfg, argv_of=normal) == ""
+    )  # never implied
+    # 2. outside any session (a watchdog's cron job): the config file
+    assert pick_permission_mode(None, environ={}, config=cfg) == "bypassPermissions"
+    # an unreadable command line counts as outside
+    assert (
+        pick_permission_mode(None, environ=env, config=cfg, argv_of=_argv_of({}))
+        == "bypassPermissions"
     )
-    cfg.write_text('spawn_permission_mode = ""\n')
-    assert pick_permission_mode(None, environ=env, config=cfg, argv_of=bypassing) == ""
-    # 3. an explicit argument outranks both ("" included)
+    # 3. neither: claude's own default
+    assert pick_permission_mode(None, environ={}, config=none_cfg) == ""
+    # an explicit argument outranks everything ("" included), and is canonicalized
     assert (
-        pick_permission_mode("plan", environ=env, config=cfg, argv_of=bypassing) == "plan"
+        pick_permission_mode("PLAN", environ=env, config=cfg, argv_of=bypassing) == "plan"
     )
     assert pick_permission_mode("", environ=env, config=none_cfg, argv_of=bypassing) == ""
     cfg.write_text("spawn_permission_mode = 3\n")
     with pytest.raises(TypeError, match="spawn_permission_mode"):
-        pick_permission_mode(None, environ=env, config=cfg, argv_of=bypassing)
+        pick_permission_mode(None, environ={}, config=cfg)
+    cfg.write_text('spawn_permission_mode = "yolo"\n')
+    with pytest.raises(ValueError, match="not a permission mode"):
+        pick_permission_mode(None, environ={}, config=cfg)
+
+
+def test_a_misplaced_spawn_permission_mode_is_refused(tmp_path):
+    from crowsnest.config import spawn_permission_mode_setting
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('[publish]\nto = "x"\nspawn_permission_mode = "bypass"\n')
+    with pytest.raises(ValueError, match="inside the \\[publish\\] table"):
+        spawn_permission_mode_setting(path=cfg)
+
+
+def test_the_watchdog_path_keeps_bypass_through_the_config(monkeypatch, tmp_path):
+    """tw's cron watchdog restarts the lookout with `crowsnest spawn` from outside any
+    session; tw's config file says `bypass`, so it comes up exactly as it always did."""
+    monkeypatch.delenv("CLAUDE_PID", raising=False)
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "bypass"\n')
+    argv = _record_spawn(monkeypatch, tmp_path, config=cfg, model="opus")
+    assert argv == [
+        "claude",
+        "--remote-control",
+        "--dangerously-skip-permissions",
+        "-n",
+        "probe",
+        "--model",
+        "opus",
+    ]
 
 
 def _record_spawn(monkeypatch, tmp_path, **spawn_kwargs):
@@ -939,13 +976,13 @@ def _record_spawn(monkeypatch, tmp_path, **spawn_kwargs):
 
     monkeypatch.setattr(spawn_module, "_find_by_name", lambda *a, **k: None)
     monkeypatch.setattr(spawn_module, "_refuse_taken_name", lambda *a, **k: None)
+    spawn_kwargs.setdefault("config", tmp_path / "no-config.toml")
     spawn(
         "probe",
         cwd=str(tmp_path),
         spawner=spawner,
         wait=0,
         lineage_path=tmp_path / "lineage.jsonl",
-        config=tmp_path / "no-config.toml",
         peek=lambda name: "",
         **spawn_kwargs,
     )

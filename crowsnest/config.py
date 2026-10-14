@@ -190,14 +190,14 @@ def spawn_permission_mode_setting(*, path: str | Path | None = None) -> str | No
 
         spawn_permission_mode = "acceptEdits"   # or "bypass", "plan", ... ; "" = claude's own
 
-    ``None`` (absent) and ``""`` (present, empty) differ on purpose: an empty value is a
-    stated choice -- start spawned sessions in Claude Code's own default mode, whatever
-    the spawning session runs in -- while an absent one leaves the choice to
-    :func:`crowsnest.spawn.pick_permission_mode`'s next fallback.
+    It is the mode for spawns from *outside* any session -- a watchdog's cron job, a
+    shell; a session spawning another passes on its own mode instead
+    (:func:`crowsnest.spawn.pick_permission_mode`). ``None`` when the file names none.
     """
     data = _loaded(path)
     value = data.get(SPAWN_PERMISSION_MODE_KEY)
     if value is None:
+        _refuse_a_misplaced_key(data, path, SPAWN_PERMISSION_MODE_KEY)
         return None
     if not isinstance(value, str):
         raise TypeError(
@@ -208,17 +208,22 @@ def spawn_permission_mode_setting(*, path: str | Path | None = None) -> str | No
 
 
 def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:
-    """Raise if ``claude_bin`` was written under a table: a ``[[homes]]`` entry, ``[attention]``.
+    """Raise if ``claude_bin`` was written under a table (see :func:`_refuse_a_misplaced_key`)."""
+    _refuse_a_misplaced_key(data, path, CLAUDE_BIN_KEY)
+
+
+def _refuse_a_misplaced_key(data: dict, path: str | Path | None, top_key: str) -> None:
+    """Raise if top-level ``top_key`` was written under a table: a ``[[homes]]`` entry, ``[attention]``.
 
     The easy mistake, and a silent one: TOML hands every key after a table header to
-    that table, so a ``claude_bin`` added at the end of the file becomes a field of the
-    last table -- read by nothing, reported by nothing, and the launcher stays whatever
+    that table, so a key like ``claude_bin`` added at the end of the file becomes a field of the
+    last table -- read by nothing, reported by nothing, and the setting stays whatever
     it was. Cheaper to say so than to let someone re-read their own config file.
     """
     for key, value in data.items():
         entries = value if isinstance(value, list) else [value]
         for entry in entries:
-            if not (isinstance(entry, dict) and CLAUDE_BIN_KEY in entry):
+            if not (isinstance(entry, dict) and top_key in entry):
                 continue
             where = (
                 f"[[{key}]] entry {entry.get('name', '?')!r}"
@@ -226,7 +231,7 @@ def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:
                 else f"[{key}] table"
             )
             raise ValueError(
-                f"{config_path(path)}: {CLAUDE_BIN_KEY} is inside the {where}, where "
+                f"{config_path(path)}: {top_key} is inside the {where}, where "
                 f"it does nothing -- TOML gives every key after a table header to that "
                 f"table. Move it above the first table header."
             )

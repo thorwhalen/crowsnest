@@ -1242,10 +1242,11 @@ def spawn(
 
     `--permission-mode MODE` starts the session in that Claude Code permission mode
     (`acceptEdits`, `plan`, ..., or `bypass` for `--dangerously-skip-permissions`; `""`
-    for claude's own default). Left out: `spawn_permission_mode` from the config file,
-    else the mode this session itself was started in -- a lookout running with
-    `--dangerously-skip-permissions` spawns workers that skip permissions too, and one in
-    a normal mode spawns them in that mode. Skipping permissions is never implied.
+    for claude's own default). Left out: the mode this session itself was started in -- a
+    lookout running with `--dangerously-skip-permissions` spawns workers that skip
+    permissions too, and one in a normal mode spawns them in that mode; from outside any
+    session (cron, a shell), `spawn_permission_mode` from the config file. Skipping
+    permissions is never implied.
 
     `--model` and `--effort` are worth stating on every spawn: left out, the session
     inherits the account's default, which is the expensive one exactly when nobody was
