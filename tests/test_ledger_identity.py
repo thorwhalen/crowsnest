@@ -13,6 +13,7 @@ import importlib
 
 from crowsnest import hook, registry
 from crowsnest import __main__ as cli
+
 spawn = importlib.import_module("crowsnest.spawn")
 from crowsnest.ledger import (
     find_ledgers,
@@ -30,14 +31,24 @@ def where(tmp_path):
 
 
 def _ids(name, where):
-    return [e["id"] for e in session_entries(read_ledger(name, ledger_dir=where)["fields"]["sessions"])]
+    return [
+        e["id"]
+        for e in session_entries(
+            read_ledger(name, ledger_dir=where)["fields"]["sessions"]
+        )
+    ]
 
 
 def test_a_session_is_recorded_once_and_a_clear_lands_in_the_same_ledger(where):
     update_ledger("cn-proj", state="working", ledger_dir=where)
     assert record_session("cn-proj", "aaaa1111", home="main", at="t1", ledger_dir=where)
-    assert record_session("cn-proj", "aaaa1111", home="main", at="t2", ledger_dir=where) is None
-    record_session("cn-proj", "bbbb2222", home="main", at="t3", ledger_dir=where)  # /clear
+    assert (
+        record_session("cn-proj", "aaaa1111", home="main", at="t2", ledger_dir=where)
+        is None
+    )
+    record_session(
+        "cn-proj", "bbbb2222", home="main", at="t3", ledger_dir=where
+    )  # /clear
     assert _ids("cn-proj", where) == ["aaaa1111", "bbbb2222"]
     page = read_ledger("cn-proj", ledger_dir=where)
     assert page["fields"]["state"] == "working"  # nothing else touched
@@ -63,7 +74,9 @@ def test_two_names_on_one_file_are_reported(where):
 def test_a_rename_links_both_ledgers(where):
     record_session("old-name", "cccc3333", home="main", at="t1", ledger_dir=where)
     record_session("new-name", "cccc3333", home="main", at="t2", ledger_dir=where)
-    assert read_ledger("new-name", ledger_dir=where)["fields"]["renamed_from"] == "old-name"
+    assert (
+        read_ledger("new-name", ledger_dir=where)["fields"]["renamed_from"] == "old-name"
+    )
     assert read_ledger("old-name", ledger_dir=where)["fields"]["renamed_to"] == "new-name"
     # and the link is written once, not again on the next turn
     record_session("new-name", "cccc3333", home="main", at="t3", ledger_dir=where)
@@ -101,13 +114,13 @@ def test_the_stop_hook_records_the_session(tmp_path, monkeypatch):
     )
     home = demo_home(tmp_path)
     transcript = str(home / "projects" / "-w-demo" / "s1.jsonl")
-    done = hook.handle("stop", hook_payload("Stop", session="s1", transcript=transcript), home=home)
+    done = hook.handle(
+        "stop", hook_payload("Stop", session="s1", transcript=transcript), home=home
+    )
     assert done["ok"] is True
     [entry] = session_entries(read_ledger("fixer")["fields"]["sessions"])
     assert (entry["id"], entry["name"]) == ("s1", "fixer")
     assert entry["home"]  # which account wrote it is always said
-
-
 
 
 def test_spawn_refuses_a_name_whose_ledger_belongs_to_another(tmp_path, monkeypatch):
@@ -123,7 +136,8 @@ def test_spawn_checks_every_configured_home(tmp_path, monkeypatch):
 
     other, synced = tmp_path / "other-home", tmp_path / "synced-home"
     monkeypatch.setattr(
-        config, "configured_homes",
+        config,
+        "configured_homes",
         lambda **kw: [
             config.Home(name="main", path=tmp_path),
             config.Home(name="side", path=other),
@@ -148,6 +162,8 @@ def test_spawn_checks_every_configured_home(tmp_path, monkeypatch):
 
 def test_a_home_name_with_spaces_is_recorded_once(where):
     record_session("x", "aaaa1111", home="my mac", at="t", ledger_dir=where)
-    assert record_session("x", "aaaa1111", home="my mac", at="t2", ledger_dir=where) is None
+    assert (
+        record_session("x", "aaaa1111", home="my mac", at="t2", ledger_dir=where) is None
+    )
     [entry] = session_entries(read_ledger("x", ledger_dir=where)["fields"]["sessions"])
     assert entry["home"] == "my-mac"

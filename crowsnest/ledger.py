@@ -410,8 +410,11 @@ def session_entries(value: str) -> list[dict]:
 
 
 def _bullets(value: str) -> list[str]:
-    return [line.strip()[2:] if line.strip().startswith("- ") else line.strip()
-            for line in (value or "").splitlines() if line.strip()]
+    return [
+        line.strip().removeprefix("- ")
+        for line in (value or "").splitlines()
+        if line.strip()
+    ]
 
 
 def _one_or_list(items: list[str]) -> str | list[str]:
@@ -431,7 +434,9 @@ def find_ledgers(session_id: str, *, ledger_dir: str | Path | None = None) -> li
     return [
         row["name"]
         for row in list_ledgers(ledger_dir=ledger_dir)
-        if any(e["id"].lower().startswith(wanted) for e in session_entries(row["sessions"]))
+        if any(
+            e["id"].lower().startswith(wanted) for e in session_entries(row["sessions"])
+        )
     ]
 
 
@@ -462,21 +467,30 @@ def record_session(
     lines = _bullets(page["fields"]["sessions"])
     lines.append(f"{session_id}@{home} as {name}{STAMP_SEP}first seen {at}".rstrip())
     earlier = [
-        other for other in find_ledgers(session_id, ledger_dir=ledger_dir)
+        other
+        for other in find_ledgers(session_id, ledger_dir=ledger_dir)
         if safe_name(other) != safe_name(name)
     ]
     fields: dict = {"sessions": lines}
     if earlier:
         froms = _bullets(page["fields"]["renamed_from"])
-        fields["renamed_from"] = _one_or_list(froms + [o for o in earlier if o not in froms])
+        fields["renamed_from"] = _one_or_list(
+            froms + [o for o in earlier if o not in froms]
+        )
         for other in earlier:
-            tos = _bullets(read_ledger(other, ledger_dir=ledger_dir)["fields"]["renamed_to"])
+            tos = _bullets(
+                read_ledger(other, ledger_dir=ledger_dir)["fields"]["renamed_to"]
+            )
             if name not in tos:
-                update_ledger(other, renamed_to=_one_or_list(tos + [name]), ledger_dir=ledger_dir)
+                update_ledger(
+                    other, renamed_to=_one_or_list(tos + [name]), ledger_dir=ledger_dir
+                )
     return update_ledger(name, ledger_dir=ledger_dir, **fields)
 
 
-def ledger_conflicts(page: dict, *, live_ids: set[str] | frozenset[str] = frozenset()) -> list[str]:
+def ledger_conflicts(
+    page: dict, *, live_ids: set[str] | frozenset[str] = frozenset()
+) -> list[str]:
     """What is wrong with who writes this ledger, one sentence each; ``[]`` when nothing.
 
     Two conditions, both of which used to be silent: distinct session *names* writing

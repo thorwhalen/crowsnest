@@ -279,7 +279,11 @@ def _home_label(home: str | Path | None) -> str:
 
 
 def _record_session(
-    name: str, session_id: str, *, home: str | Path | None, at: str,
+    name: str,
+    session_id: str,
+    *,
+    home: str | Path | None,
+    at: str,
     ledger_dir: str | Path | None = None,
 ) -> None:
     """Who wrote this ledger (crowsnest#42): appended once per session, then a no-op."""

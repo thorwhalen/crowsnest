@@ -525,7 +525,10 @@ def _find_by_name(
 
 
 def _refuse_taken_name(
-    name: str, *, home: str | Path, config: str | Path | None = None,
+    name: str,
+    *,
+    home: str | Path,
+    config: str | Path | None = None,
     ledger_dir: str | Path | None = None,
 ) -> None:
     """Raise ``ValueError`` when ``name`` is live in any home, or its ledger is another's."""
