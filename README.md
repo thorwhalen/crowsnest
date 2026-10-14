@@ -236,7 +236,17 @@ The two persistent settings are checked, because they are claims about *this* ma
 
 Either has to be something that can actually be executed — a script on your `PATH` or an absolute path (a relative path is refused in the config file, which is read from every directory). **A shell alias is not.** Aliases exist only inside an interactive shell, and a session is started by `tmux` or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints `command not found` and closes. If you have an alias you want to reuse, make it a two-line script instead.
 
-Before you do: a wrapper whose whole job is `--dangerously-skip-permissions` and `env -u ANTHROPIC_API_KEY` — the usual shape — has nothing to add, because `crowsnest spawn` already does both.
+Before you do: a wrapper whose whole job is `env -u ANTHROPIC_API_KEY` has nothing to add, because `crowsnest spawn` already drops that variable. Nor does one that only adds `--dangerously-skip-permissions`: the permission mode is a setting of its own.
+
+### Which permission mode a spawned session starts in
+
+By default, the mode of the session that spawned it. A session started with `--dangerously-skip-permissions` spawns sessions that skip permissions too, and one in a normal mode spawns them in that mode. Crowsnest reads that mode off the spawning session's command line. A spawn from *outside* any session (a watchdog's cron job, your shell) has no spawning session, so it takes `spawn_permission_mode` from the config file, and falls back to Claude Code's own default when that is unset:
+
+```toml
+spawn_permission_mode = "bypass"   # or "acceptEdits", "plan", "auto", ...; "" = Claude Code's default
+```
+
+`--permission-mode MODE` on `crowsnest spawn` (or `permission_mode=` in Python) overrides both for one spawn. `bypass` is emitted as `--dangerously-skip-permissions`, which Claude Code refuses as root unless `IS_SANDBOX=1` is set (#101). An unknown mode name is refused before anything starts.
 
 ## The ledger: what a session leaves behind
 

@@ -91,6 +91,7 @@ __all__ = [
     "DFLT_FRESH_SECONDS",
     "PUBLISH_KEY",
     "REPORT_KEY",
+    "SPAWN_PERMISSION_MODE_KEY",
     "AttentionSettings",
     "Home",
     "PublishSettings",
@@ -102,11 +103,16 @@ __all__ = [
     "homes",
     "publish_settings",
     "report_settings",
+    "spawn_permission_mode_setting",
 ]
 
 #: The top-level config key naming the command that starts a session. See
 #: :func:`crowsnest.account.claude_bin` for what a person would put there and why.
 CLAUDE_BIN_KEY = "claude_bin"
+
+#: The top-level config key naming the permission mode a spawned session starts in. See
+#: :func:`crowsnest.spawn.pick_permission_mode` for the order the choices are taken in.
+SPAWN_PERMISSION_MODE_KEY = "spawn_permission_mode"
 
 #: Overrides the config file location outright.
 CONFIG_ENV_VAR = "CROWSNEST_CONFIG"
@@ -177,18 +183,47 @@ def claude_bin_setting(*, path: str | Path | None = None) -> str:
     return value.strip()
 
 
+def spawn_permission_mode_setting(*, path: str | Path | None = None) -> str | None:
+    """The ``spawn_permission_mode`` the config file names, or ``None`` when it names none.
+
+    .. code-block:: toml
+
+        spawn_permission_mode = "acceptEdits"   # or "bypass", "plan", ... ; "" = claude's own
+
+    It is the mode for spawns from *outside* any session -- a watchdog's cron job, a
+    shell; a session spawning another passes on its own mode instead
+    (:func:`crowsnest.spawn.pick_permission_mode`). ``None`` when the file names none.
+    """
+    data = _loaded(path)
+    value = data.get(SPAWN_PERMISSION_MODE_KEY)
+    if value is None:
+        _refuse_a_misplaced_key(data, path, SPAWN_PERMISSION_MODE_KEY)
+        return None
+    if not isinstance(value, str):
+        raise TypeError(
+            f"{config_path(path)}: {SPAWN_PERMISSION_MODE_KEY} must be a string naming a "
+            f"permission mode, not {type(value).__name__} ({value!r})"
+        )
+    return value.strip()
+
+
 def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:
-    """Raise if ``claude_bin`` was written under a table: a ``[[homes]]`` entry, ``[attention]``.
+    """Raise if ``claude_bin`` was written under a table (see :func:`_refuse_a_misplaced_key`)."""
+    _refuse_a_misplaced_key(data, path, CLAUDE_BIN_KEY)
+
+
+def _refuse_a_misplaced_key(data: dict, path: str | Path | None, top_key: str) -> None:
+    """Raise if top-level ``top_key`` was written under a table: a ``[[homes]]`` entry, ``[attention]``.
 
     The easy mistake, and a silent one: TOML hands every key after a table header to
-    that table, so a ``claude_bin`` added at the end of the file becomes a field of the
-    last table -- read by nothing, reported by nothing, and the launcher stays whatever
+    that table, so a key like ``claude_bin`` added at the end of the file becomes a field of the
+    last table -- read by nothing, reported by nothing, and the setting stays whatever
     it was. Cheaper to say so than to let someone re-read their own config file.
     """
     for key, value in data.items():
         entries = value if isinstance(value, list) else [value]
         for entry in entries:
-            if not (isinstance(entry, dict) and CLAUDE_BIN_KEY in entry):
+            if not (isinstance(entry, dict) and top_key in entry):
                 continue
             where = (
                 f"[[{key}]] entry {entry.get('name', '?')!r}"
@@ -196,7 +231,7 @@ def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:
                 else f"[{key}] table"
             )
             raise ValueError(
-                f"{config_path(path)}: {CLAUDE_BIN_KEY} is inside the {where}, where "
+                f"{config_path(path)}: {top_key} is inside the {where}, where "
                 f"it does nothing -- TOML gives every key after a table header to that "
                 f"table. Move it above the first table header."
             )

@@ -18,8 +18,18 @@ line a remote spawner is handed stays runnable where it is going.
 ``home=`` puts the child under another home, ``profile=`` names one
 (:mod:`crowsnest.account`), and :data:`crowsnest.account.DROPPED_VARS` never travels.
 
+**Permissions.** A spawned session starts in the *spawning* session's permission mode
+by default -- read off its command line (:func:`spawner_permission_mode`) -- so a lookout
+running with ``--dangerously-skip-permissions`` spawns workers that do too, and one
+running in a normal mode spawns workers in that mode. A spawn from outside any session
+(a watchdog's cron job, a shell) takes ``spawn_permission_mode`` from the config file,
+else claude's default; ``permission_mode=`` overrides both. :func:`pick_permission_mode`
+is the order. Bypass is never implied by anything else.
+
 >>> claude_argv('demo', prompt='hello')
-['claude', '--remote-control', '--dangerously-skip-permissions', '-n', 'demo', 'hello']
+['claude', '--remote-control', '-n', 'demo', 'hello']
+>>> claude_argv('demo', permission_mode='bypass', remote_control=False)
+['claude', '--dangerously-skip-permissions', '-n', 'demo']
 """
 
 from __future__ import annotations
@@ -40,16 +50,21 @@ from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessio
 
 __all__ = [
     "ACCOUNT_VARS",
+    "BYPASS_MODES",
     "CLAUDE_BIN",
+    "KNOWN_MODES",
     "SESSION_VARS",
     "UntrustedFolder",
+    "canonical_permission_mode",
     "child_env",
     "claude_argv",
     "default_spawner",
     "env_prefix",
     "local_argv",
     "pane_state",
+    "pick_permission_mode",
     "spawn",
+    "spawner_permission_mode",
     "trust_config_path",
     "trusted",
 ]
@@ -137,9 +152,175 @@ SESSION_VARS = (
     "CLAUDE_SESSION_ID",
 )
 
+#: The names that mean "skip every permission check". Claude Code calls the mode
+#: ``bypassPermissions``; its flag is ``--dangerously-skip-permissions``, and that flag
+#: is what :func:`claude_argv` emits for it -- the exact line spawns used before the mode
+#: became a choice, so a bypass spawn starts byte for byte as it always did.
+BYPASS_MODES = frozenset({"bypass", "bypassPermissions", "dangerously-skip-permissions"})
+_BYPASS_FLAG = "--dangerously-skip-permissions"
+_MODE_FLAG = "--permission-mode"
+
+#: The modes ``claude --permission-mode`` accepts (2.1.x ``--help``; ``default`` is the
+#: older name of ``manual``). A name outside it is refused here, because claude refuses
+#: it too -- after tmux has already swallowed the error (#101), so the spawn would only
+#: ever read "not confirmed". A mode a newer claude adds goes here.
+KNOWN_MODES = frozenset(
+    {"acceptEdits", "auto", "bypassPermissions", "default", "dontAsk", "manual", "plan"}
+)
+
 #: How long `spawn` waits, by default, for the registry to notice the new session.
 DFLT_WAIT = 20.0
 _POLL_INTERVAL = 0.5
+
+
+def canonical_permission_mode(mode: str) -> str:
+    """``mode`` spelled as claude spells it; ``''`` stays ``''`` (claude's own default).
+
+    Case-insensitive, and every bypass alias (:data:`BYPASS_MODES`) is
+    ``'bypassPermissions'``. An unknown name raises ``ValueError`` listing the known
+    ones (:data:`KNOWN_MODES`).
+
+    >>> canonical_permission_mode('Bypass'), canonical_permission_mode('acceptedits')
+    ('bypassPermissions', 'acceptEdits')
+    """
+    mode = (mode or "").strip()
+    if not mode:
+        return ""
+    folded = mode.lower()
+    if folded in {m.lower() for m in BYPASS_MODES}:
+        return "bypassPermissions"
+    for known in KNOWN_MODES:
+        if known.lower() == folded:
+            return known
+    raise ValueError(
+        f"not a permission mode: {mode!r}; use one of {sorted(KNOWN_MODES)} or 'bypass'"
+    )
+
+
+def _mode_args(mode: str) -> list[str]:
+    """The flags that start a session in permission ``mode`` (``''``: none)."""
+    mode = canonical_permission_mode(mode)
+    if not mode:
+        return []
+    if mode == "bypassPermissions":
+        return [_BYPASS_FLAG]
+    return [_MODE_FLAG, mode]
+
+
+def _mode_in(argv: Sequence[str]) -> str:
+    """The permission mode a ``claude`` command line asks for (``''``: none stated)."""
+    mode = ""
+    for i, arg in enumerate(argv):
+        if arg == _BYPASS_FLAG:
+            return "bypassPermissions"  # wins over any --permission-mode, as in claude
+        if arg == _MODE_FLAG and i + 1 < len(argv):
+            mode = argv[i + 1]
+        elif arg.startswith(_MODE_FLAG + "="):
+            mode = arg.split("=", 1)[1]
+    return mode
+
+
+def _process_argv(pid: int) -> list[str] | None:
+    """The command line of process ``pid``, exactly, or ``None`` when it cannot be read.
+
+    ``/proc`` keeps each argument whole. ``ps`` (macOS) only gives the line joined with
+    spaces, so an argument with a space in it -- the prompt -- splits; only flag tokens
+    are looked for in it, and a prompt spelling a flag is the one way to fool it.
+    """
+    proc = Path(f"/proc/{pid}/cmdline")
+    try:
+        raw = proc.read_bytes()
+    except OSError:
+        raw = None
+    if raw:
+        return [a.decode(errors="replace") for a in raw.split(b"\0") if a]
+    try:
+        out = subprocess.run(
+            ["ps", "-ww", "-o", "args=", "-p", str(pid)],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out.split() or None
+
+
+def spawner_permission_mode(
+    environ: dict[str, str] | None = None,
+    *,
+    argv_of: Callable[[int], list[str] | None] | None = None,
+) -> str | None:
+    """The permission mode the *spawning* session was started in.
+
+    Read from the command line of the session ``$CLAUDE_PID`` names, which Claude Code
+    sets for everything a session runs: ``--dangerously-skip-permissions`` reads as
+    ``'bypassPermissions'``, ``--permission-mode X`` as ``X``, and a line with neither as
+    ``''`` -- the child, started without a mode flag on the same account, then gets the
+    same default from the same settings. ``None`` means *unknown*: not inside a session
+    (a cron job, a shell) or a command line that cannot be read. (A mode switched
+    *during* the session, shift-tab, is on no command line and is not seen.) ``argv_of``
+    is the seam a test or another host replaces.
+
+    >>> spawner_permission_mode({'CLAUDE_PID': '7'}, argv_of=lambda pid: [
+    ...     'claude', '-n', 'lookout', '--dangerously-skip-permissions'])
+    'bypassPermissions'
+    >>> spawner_permission_mode({'CLAUDE_PID': '7'}, argv_of=lambda pid: [
+    ...     'claude', '--permission-mode', 'acceptEdits'])
+    'acceptEdits'
+    >>> spawner_permission_mode({}) is None
+    True
+    """
+    env = os.environ if environ is None else environ
+    try:
+        pid = int(env.get("CLAUDE_PID", ""))
+    except ValueError:
+        return None
+    if pid <= 0:
+        return None
+    argv = (argv_of or _process_argv)(pid)
+    return _mode_in(argv) if argv else None
+
+
+def pick_permission_mode(
+    mode: str | None = None,
+    *,
+    environ: dict[str, str] | None = None,
+    config: str | Path | None = None,
+    argv_of: Callable[[int], list[str] | None] | None = None,
+) -> str:
+    """The permission mode a new session starts in; ``''`` lets claude decide.
+
+    The first that says anything:
+
+    1. ``mode`` -- an explicit choice (``''`` is one too: claude's own default);
+    2. the spawning session's own mode (:func:`spawner_permission_mode`), when this runs
+       inside a session whose command line can be read -- so a session in a normal mode
+       never spawns a bypassed one, and a bypassed one spawns its like;
+    3. ``spawn_permission_mode`` in the config file
+       (:func:`crowsnest.config.spawn_permission_mode_setting`) -- the mode for spawns
+       from *outside* any session: a watchdog's cron job, a shell;
+    4. nothing.
+
+    ``'bypass'`` (or ``'bypassPermissions'``) is the only way to skip permissions; the
+    fallbacks reach it only from a spawner that itself runs bypassed, or from a config
+    file that says so.
+
+    >>> pick_permission_mode('plan')
+    'plan'
+    >>> pick_permission_mode(None, environ={}, config='/no/such/config.toml')
+    ''
+    """
+    if mode is not None:
+        return canonical_permission_mode(mode)
+    own = spawner_permission_mode(environ, argv_of=argv_of)
+    if own is not None:
+        return canonical_permission_mode(own)
+    from crowsnest.config import spawn_permission_mode_setting
+
+    configured = spawn_permission_mode_setting(path=config)
+    return canonical_permission_mode(configured or "")
 
 
 def claude_argv(
@@ -151,6 +332,7 @@ def claude_argv(
     remote_control: bool = True,
     add_dirs: Sequence[str] = (),
     binary: str = CLAUDE_BIN,
+    permission_mode: str = "",
 ) -> list[str]:
     """The ``claude`` command line for a new named session.
 
@@ -161,13 +343,18 @@ def claude_argv(
     the local spawners substitute :func:`local_argv` when they run the line here, and a
     spawner that sends it elsewhere keeps a command line its target can resolve.
 
-    Permissions are skipped because a spawned session has no one at the keyboard to
-    approve them. ``--remote-control`` takes an *optional* value and so would swallow
+    ``permission_mode`` is passed as ``--permission-mode <mode>``, except a bypass mode
+    (:data:`BYPASS_MODES`), which is ``--dangerously-skip-permissions``; ``''`` adds
+    neither. This builder states only what it is told -- :func:`spawn` is what picks the
+    mode (:func:`pick_permission_mode`). ``--remote-control`` takes an *optional* value and so would swallow
     the prompt if it came right before it; it goes first instead, where the next token
     is always another flag. Empty strings mean "let claude decide" and are omitted.
 
-    >>> claude_argv('demo', model='opus', effort='high', remote_control=False)
+    >>> claude_argv('demo', model='opus', effort='high', remote_control=False,
+    ...             permission_mode='bypass')
     ['claude', '--dangerously-skip-permissions', '-n', 'demo', '--model', 'opus', '--effort', 'high']
+    >>> claude_argv('demo', remote_control=False, permission_mode='acceptEdits')
+    ['claude', '--permission-mode', 'acceptEdits', '-n', 'demo']
     >>> claude_argv('demo', binary='/v/2.1.263')[0]
     '/v/2.1.263'
     """
@@ -176,7 +363,7 @@ def claude_argv(
         argv.append("--remote-control")
     if add_dirs:
         argv += ["--add-dir", *[str(d) for d in add_dirs]]
-    argv += ["--dangerously-skip-permissions", "-n", name]
+    argv += [*_mode_args(permission_mode), "-n", name]
     if model:
         argv += ["--model", model]
     if effort:
@@ -583,6 +770,7 @@ def spawn(
     lineage_path: str | Path | None = None,
     trust: bool = False,
     peek: Callable[[str], str] | None = None,
+    permission_mode: str | None = None,
 ) -> dict:
     """Start a session named ``name`` in ``cwd``, and wait for the registry to see it.
 
@@ -619,6 +807,14 @@ def spawn(
     a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this
     command was not run from inside a session -- the honest answer for a person at a shell
     prompt -- and the whole dict is ``{}`` only when the record could not be written.
+
+    **Permissions.** ``permission_mode`` picks the new session's permission mode;
+    ``None`` (the default) means the spawning session's own mode, else -- from outside
+    any session -- the config file's ``spawn_permission_mode``, else claude's default
+    (:func:`pick_permission_mode`). A
+    session spawned by one running with ``--dangerously-skip-permissions`` therefore
+    starts that way too, exactly as before this was a choice; ``'bypass'`` asks for it
+    outright.
 
     **Trust.** A folder the account has never opened stops the new session at Claude
     Code's workspace trust dialog, where it never registers. With one of this module's
@@ -669,6 +865,7 @@ def spawn(
         remote_control=remote_control,
         add_dirs=add_dirs,
         binary=binary,
+        permission_mode=pick_permission_mode(permission_mode, config=config),
     )
     spawner(argv, cwd=cwd, name=name, home=home)
     where = str(home) if home is not None else ""

@@ -167,6 +167,7 @@ SPAWN_VALUE_FLAGS = frozenset(
         "--binary",
         "--add-dirs",
         "--wait",
+        "--permission-mode",
     }
 )
 
