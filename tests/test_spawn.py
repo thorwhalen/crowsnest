@@ -891,6 +891,7 @@ def test_spawner_permission_mode_reads_the_spawning_sessions_command_line():
     assert spawner_permission_mode({"CLAUDE_PID": "nope"}, argv_of=_argv_of({})) is None
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="no /proc and no ps on Windows")
 def test_spawner_permission_mode_reads_this_process_for_real():
     import os
 
