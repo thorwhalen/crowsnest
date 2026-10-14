@@ -1,4 +1,4 @@
-> built 2026-10-14 05:11 UTC from 286362d (main) · crowsnest 0.0.91. Details: build_info.json
+> built 2026-10-14 07:32 UTC from 2df35d6 (main) · crowsnest 0.0.92. Details: build_info.json
 
 # index.html.md
 
@@ -241,7 +241,17 @@ The two persistent settings are checked, because they are claims about *this* ma
 
 Either has to be something that can actually be executed — a script on your `PATH` or an absolute path (a relative path is refused in the config file, which is read from every directory). **A shell alias is not.** Aliases exist only inside an interactive shell, and a session is started by `tmux` or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints `command not found` and closes. If you have an alias you want to reuse, make it a two-line script instead.
 
-Before you do: a wrapper whose whole job is `--dangerously-skip-permissions` and `env -u ANTHROPIC_API_KEY` — the usual shape — has nothing to add, because `crowsnest spawn` already does both.
+Before you do: a wrapper whose whole job is `env -u ANTHROPIC_API_KEY` has nothing to add, because `crowsnest spawn` already drops that variable. Nor does one that only adds `--dangerously-skip-permissions`: the permission mode is a setting of its own.
+
+### Which permission mode a spawned session starts in
+
+By default, the mode of the session that spawned it. A session started with `--dangerously-skip-permissions` spawns sessions that skip permissions too, and one in a normal mode spawns them in that mode. Crowsnest reads that mode off the spawning session’s command line. A spawn from *outside* any session (a watchdog’s cron job, your shell) has no spawning session, so it takes `spawn_permission_mode` from the config file, and falls back to Claude Code’s own default when that is unset:
+
+```toml
+spawn_permission_mode = "bypass"   # or "acceptEdits", "plan", "auto", ...; "" = Claude Code's default
+```
+
+`--permission-mode MODE` on `crowsnest spawn` (or `permission_mode=` in Python) overrides both for one spawn. `bypass` is emitted as `--dangerously-skip-permissions`, which Claude Code refuses as root unless `IS_SANDBOX=1` is set (#101). An unknown mode name is refused before anything starts.
 
 ## The ledger: what a session leaves behind
 
@@ -1644,24 +1654,26 @@ and nothing in this module pretends otherwise.
 
 ### Module Attributes
 
-| [`CLAUDE_BIN_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.CLAUDE_BIN_KEY)     | The top-level config key naming the command that starts a session.               |
-|---------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`CONFIG_ENV_VAR`](_autosummary/crowsnest.config.html.md#crowsnest.config.CONFIG_ENV_VAR)     | Overrides the config file location outright.                                     |
-| [`DFLT_FRESH_SECONDS`](_autosummary/crowsnest.config.html.md#crowsnest.config.DFLT_FRESH_SECONDS) | How recently a remote home's registry record must have changed to count as live. |
-| [`ATTENTION_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.ATTENTION_KEY)      | The config table holding the attention settings.                                 |
-| [`REPORT_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.REPORT_KEY)         | The config table saying how the report's rows are built.                         |
-| [`PUBLISH_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.PUBLISH_KEY)        | The config table saying where `crowsnest publish` sends the page.                |
+| [`CLAUDE_BIN_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.CLAUDE_BIN_KEY)            | The top-level config key naming the command that starts a session.               |
+|----------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`SPAWN_PERMISSION_MODE_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.SPAWN_PERMISSION_MODE_KEY) | The top-level config key naming the permission mode a spawned session starts in. |
+| [`CONFIG_ENV_VAR`](_autosummary/crowsnest.config.html.md#crowsnest.config.CONFIG_ENV_VAR)            | Overrides the config file location outright.                                     |
+| [`DFLT_FRESH_SECONDS`](_autosummary/crowsnest.config.html.md#crowsnest.config.DFLT_FRESH_SECONDS)        | How recently a remote home's registry record must have changed to count as live. |
+| [`ATTENTION_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.ATTENTION_KEY)             | The config table holding the attention settings.                                 |
+| [`REPORT_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.REPORT_KEY)                | The config table saying how the report's rows are built.                         |
+| [`PUBLISH_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.PUBLISH_KEY)               | The config table saying where `crowsnest publish` sends the page.                |
 
 ### Functions
 
-| [`attention_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings)(\*[, path])   | The config file's `[attention]` table, or the defaults when it has none.         |
-|-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`claude_bin_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)(\*[, path])   | The `claude_bin` the config file names, or `''` when it names none.              |
-| [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
-| [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
-| [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
-| [`publish_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)(\*[, path])     | The config file's `[publish]` table, or the defaults when it has none.           |
-| [`report_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)(\*[, path])      | The config file's `[report]` table, or the defaults when it has none.            |
+| [`attention_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings)(\*[, path])            | The config file's `[attention]` table, or the defaults when it has none.         |
+|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`claude_bin_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)(\*[, path])            | The `claude_bin` the config file names, or `''` when it names none.              |
+| [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])                       | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
+| [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])              | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
+| [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                         | The configured homes, or the default one when the config file names none.        |
+| [`publish_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.           |
+| [`report_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.            |
+| [`spawn_permission_mode_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none. |
 
 ### Classes
 
@@ -1741,6 +1753,11 @@ verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_au
 >>> ReportSettings().ledger_dir is None
 True
 ```
+
+### crowsnest.config.SPAWN_PERMISSION_MODE_KEY *= 'spawn_permission_mode'*
+
+The top-level config key naming the permission mode a spawned session starts in. See
+`crowsnest.spawn.pick_permission_mode()` for the order the choices are taken in.
 
 ### crowsnest.config.attention_settings(, path=None)
 
@@ -1839,6 +1856,21 @@ end. A key the table does not know is an error, as in `[attention]`.
 
 * **Return type:**
   [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)
+
+### crowsnest.config.spawn_permission_mode_setting(, path=None)
+
+The `spawn_permission_mode` the config file names, or `None` when it names none.
+
+```toml
+spawn_permission_mode = "acceptEdits"   # or "bypass", "plan", ... ; "" = claude's own
+```
+
+It is the mode for spawns from *outside* any session – a watchdog’s cron job, a
+shell; a session spawning another passes on its own mode instead
+(`crowsnest.spawn.pick_permission_mode()`). `None` when the file names none.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 
 # _autosummary/crowsnest.courier.html.md
@@ -2726,7 +2758,7 @@ every [`roster()`](_autosummary/crowsnest.html.md#crowsnest.roster) row does –
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None)
+### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None)
 
 Start a session named `name` in `cwd`, and wait for the registry to see it.
 
@@ -2763,6 +2795,14 @@ is recovery work if it is not written down now, so one `spawn` line goes into
 a test’s `tmp_path` being why it is an argument). Its `name` is empty when this
 command was not run from inside a session – the honest answer for a person at a shell
 prompt – and the whole dict is `{}` only when the record could not be written.
+
+**Permissions.** `permission_mode` picks the new session’s permission mode;
+`None` (the default) means the spawning session’s own mode, else – from outside
+any session – the config file’s `spawn_permission_mode`, else claude’s default
+(`pick_permission_mode()`). A
+session spawned by one running with `--dangerously-skip-permissions` therefore
+starts that way too, exactly as before this was a choice; `'bypass'` asks for it
+outright.
 
 **Trust.** A folder the account has never opened stops the new session at Claude
 Code’s workspace trust dialog, where it never registers. With one of this module’s
@@ -3386,7 +3426,7 @@ The event name a spawn record carries in `events.jsonl`. Chosen so that
 [`crowsnest.watch.hook_event()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.hook_event) and every existing reader skip it unchanged: an
 event kind nobody knows is already specified to be logged and ignored.
 
-### crowsnest.lineage.SPAWN_VALUE_FLAGS *= frozenset({'--add-dirs', '--binary', '--cwd', '--effort', '--home', '--model', '--profile', '--prompt', '--wait', '-p'})*
+### crowsnest.lineage.SPAWN_VALUE_FLAGS *= frozenset({'--add-dirs', '--binary', '--cwd', '--effort', '--home', '--model', '--permission-mode', '--profile', '--prompt', '--wait', '-p'})*
 
 The `crowsnest spawn` flags that take a separate value, so the backfill knows which
 token after a flag is that flag’s and which is the session name.
@@ -7041,18 +7081,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-14 05:11 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/286362da209cfa20e68b6794523e5a8a89f25ac5"><code>286362d</code></a> on branch <code>main</code>, for **crowsnest 0.0.91** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 07:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/2df35d6eae967aff1e56f058775bdea971dd80a5"><code>2df35d6</code></a> on branch <code>main</code>, for **crowsnest 0.0.92** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.91) is behind the latest release on PyPI (0.0.92): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/286362da209cfa20e68b6794523e5a8a89f25ac5"><code>286362da209cfa20e68b6794523e5a8a89f25ac5</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/2df35d6eae967aff1e56f058775bdea971dd80a5"><code>2df35d6eae967aff1e56f058775bdea971dd80a5</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7063,9 +7101,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/38515124826">38515124826</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/38528743057">38528743057</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>286362da209cfa20e68b6794523e5a8a89f25ac5</code> (in the history of the built commit) |
+| Event commit | <code>2df35d6eae967aff1e56f058775bdea971dd80a5</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7090,13 +7128,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.92/">0.0.92</a>, newer than the documented version (0.0.91).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.92/">0.0.92</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 286362da209cfa20e68b6794523e5a8a89f25ac5
+git checkout 2df35d6eae967aff1e56f058775bdea971dd80a5
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

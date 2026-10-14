@@ -123,6 +123,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#who-started-whom">Who started whom</a></li>
 <li><a class="reference internal" href="#several-accounts-and-machines-in-one-roster">Several accounts and machines in one roster</a><ul>
 <li><a class="reference internal" href="#which-claude-gets-started">Which <code class="docutils literal notranslate"><span class="pre">claude</span></code> gets started</a></li>
+<li><a class="reference internal" href="#which-permission-mode-a-spawned-session-starts-in">Which permission mode a spawned session starts in</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#the-ledger-what-a-session-leaves-behind">The ledger: what a session leaves behind</a></li>
@@ -378,7 +379,15 @@ data-aria-dark="Switch to auto color mode">
 <p>and <code class="docutils literal notranslate"><span class="pre">--binary</span> <span class="pre">PATH</span></code> names one for a single spawn. <code class="docutils literal notranslate"><span class="pre">--binary</span></code> is handed to the spawner <strong>verbatim and unchecked</strong>, because a spawner may run the line on another machine where this one’s <code class="docutils literal notranslate"><span class="pre">PATH</span></code> means nothing — so an absolute path or a name only the target resolves both survive it. The corollary is that <code class="docutils literal notranslate"><span class="pre">--binary</span> <span class="pre">claude</span></code> means <em>the bare name</em>, which a local spawner then resolves through the settings above; to force the plain one, say <code class="docutils literal notranslate"><span class="pre">--binary</span> <span class="pre">&quot;$(which</span> <span class="pre">claude)&quot;</span></code>.</p>
 <p>The two persistent settings are checked, because they are claims about <em>this</em> machine: <code class="docutils literal notranslate"><span class="pre">$CROWSNEST_CLAUDE_BIN</span></code> first, then <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code>, then the inherited binary.</p>
 <p>Either has to be something that can actually be executed — a script on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> or an absolute path (a relative path is refused in the config file, which is read from every directory). <strong>A shell alias is not.</strong> Aliases exist only inside an interactive shell, and a session is started by <code class="docutils literal notranslate"><span class="pre">tmux</span></code> or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints <code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">not</span> <span class="pre">found</span></code> and closes. If you have an alias you want to reuse, make it a two-line script instead.</p>
-<p>Before you do: a wrapper whose whole job is <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code> and <code class="docutils literal notranslate"><span class="pre">env</span> <span class="pre">-u</span> <span class="pre">ANTHROPIC_API_KEY</span></code> — the usual shape — has nothing to add, because <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> already does both.</p>
+<p>Before you do: a wrapper whose whole job is <code class="docutils literal notranslate"><span class="pre">env</span> <span class="pre">-u</span> <span class="pre">ANTHROPIC_API_KEY</span></code> has nothing to add, because <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> already drops that variable. Nor does one that only adds <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code>: the permission mode is a setting of its own.</p>
+</section>
+<section id="which-permission-mode-a-spawned-session-starts-in">
+<h3>Which permission mode a spawned session starts in<a class="headerlink" href="#which-permission-mode-a-spawned-session-starts-in" title="Link to this heading">#</a></h3>
+<p>By default, the mode of the session that spawned it. A session started with <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code> spawns sessions that skip permissions too, and one in a normal mode spawns them in that mode. Crowsnest reads that mode off the spawning session’s command line. A spawn from <em>outside</em> any session (a watchdog’s cron job, your shell) has no spawning session, so it takes <code class="docutils literal notranslate"><span class="pre">spawn_permission_mode</span></code> from the config file, and falls back to Claude Code’s own default when that is unset:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">spawn_permission_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bypass"</span><span class="w">   </span><span class="c1"># or "acceptEdits", "plan", "auto", ...; "" = Claude Code's default</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--permission-mode</span> <span class="pre">MODE</span></code> on <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> (or <code class="docutils literal notranslate"><span class="pre">permission_mode=</span></code> in Python) overrides both for one spawn. <code class="docutils literal notranslate"><span class="pre">bypass</span></code> is emitted as <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code>, which Claude Code refuses as root unless <code class="docutils literal notranslate"><span class="pre">IS_SANDBOX=1</span></code> is set (#101). An unknown mode name is refused before anything starts.</p>
 </section>
 </section>
 <section id="the-ledger-what-a-session-leaves-behind">
@@ -541,7 +550,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-14 05:11 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/286362da209cfa20e68b6794523e5a8a89f25ac5">286362d</a> (main) · crowsnest 0.0.91 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-14 07:32 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/2df35d6eae967aff1e56f058775bdea971dd80a5">2df35d6</a> (main) · crowsnest 0.0.92 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -576,7 +585,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=9cd8e891"></script>
+      <script src="_static/documentation_options.js?v=ab2062fb"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

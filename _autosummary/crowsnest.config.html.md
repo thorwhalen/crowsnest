@@ -72,24 +72,26 @@ and nothing in this module pretends otherwise.
 
 ### Module Attributes
 
-| [`CLAUDE_BIN_KEY`](#crowsnest.config.CLAUDE_BIN_KEY)     | The top-level config key naming the command that starts a session.               |
-|---------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`CONFIG_ENV_VAR`](#crowsnest.config.CONFIG_ENV_VAR)     | Overrides the config file location outright.                                     |
-| [`DFLT_FRESH_SECONDS`](#crowsnest.config.DFLT_FRESH_SECONDS) | How recently a remote home's registry record must have changed to count as live. |
-| [`ATTENTION_KEY`](#crowsnest.config.ATTENTION_KEY)      | The config table holding the attention settings.                                 |
-| [`REPORT_KEY`](#crowsnest.config.REPORT_KEY)         | The config table saying how the report's rows are built.                         |
-| [`PUBLISH_KEY`](#crowsnest.config.PUBLISH_KEY)        | The config table saying where `crowsnest publish` sends the page.                |
+| [`CLAUDE_BIN_KEY`](#crowsnest.config.CLAUDE_BIN_KEY)            | The top-level config key naming the command that starts a session.               |
+|----------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`SPAWN_PERMISSION_MODE_KEY`](#crowsnest.config.SPAWN_PERMISSION_MODE_KEY) | The top-level config key naming the permission mode a spawned session starts in. |
+| [`CONFIG_ENV_VAR`](#crowsnest.config.CONFIG_ENV_VAR)            | Overrides the config file location outright.                                     |
+| [`DFLT_FRESH_SECONDS`](#crowsnest.config.DFLT_FRESH_SECONDS)        | How recently a remote home's registry record must have changed to count as live. |
+| [`ATTENTION_KEY`](#crowsnest.config.ATTENTION_KEY)             | The config table holding the attention settings.                                 |
+| [`REPORT_KEY`](#crowsnest.config.REPORT_KEY)                | The config table saying how the report's rows are built.                         |
+| [`PUBLISH_KEY`](#crowsnest.config.PUBLISH_KEY)               | The config table saying where `crowsnest publish` sends the page.                |
 
 ### Functions
 
-| [`attention_settings`](#crowsnest.config.attention_settings)(\*[, path])   | The config file's `[attention]` table, or the defaults when it has none.         |
-|-----------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`claude_bin_setting`](#crowsnest.config.claude_bin_setting)(\*[, path])   | The `claude_bin` the config file names, or `''` when it names none.              |
-| [`config_path`](#crowsnest.config.config_path)([path])              | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
-| [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])     | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
-| [`homes`](#crowsnest.config.homes)(\*[, path])                | The configured homes, or the default one when the config file names none.        |
-| [`publish_settings`](#crowsnest.config.publish_settings)(\*[, path])     | The config file's `[publish]` table, or the defaults when it has none.           |
-| [`report_settings`](#crowsnest.config.report_settings)(\*[, path])      | The config file's `[report]` table, or the defaults when it has none.            |
+| [`attention_settings`](#crowsnest.config.attention_settings)(\*[, path])            | The config file's `[attention]` table, or the defaults when it has none.         |
+|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`claude_bin_setting`](#crowsnest.config.claude_bin_setting)(\*[, path])            | The `claude_bin` the config file names, or `''` when it names none.              |
+| [`config_path`](#crowsnest.config.config_path)([path])                       | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
+| [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])              | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
+| [`homes`](#crowsnest.config.homes)(\*[, path])                         | The configured homes, or the default one when the config file names none.        |
+| [`publish_settings`](#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.           |
+| [`report_settings`](#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.            |
+| [`spawn_permission_mode_setting`](#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none. |
 
 ### Classes
 
@@ -169,6 +171,11 @@ verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](cro
 >>> ReportSettings().ledger_dir is None
 True
 ```
+
+### crowsnest.config.SPAWN_PERMISSION_MODE_KEY *= 'spawn_permission_mode'*
+
+The top-level config key naming the permission mode a spawned session starts in. See
+`crowsnest.spawn.pick_permission_mode()` for the order the choices are taken in.
 
 ### crowsnest.config.attention_settings(, path=None)
 
@@ -267,3 +274,18 @@ end. A key the table does not know is an error, as in `[attention]`.
 
 * **Return type:**
   [`ReportSettings`](#crowsnest.config.ReportSettings)
+
+### crowsnest.config.spawn_permission_mode_setting(, path=None)
+
+The `spawn_permission_mode` the config file names, or `None` when it names none.
+
+```toml
+spawn_permission_mode = "acceptEdits"   # or "bypass", "plan", ... ; "" = claude's own
+```
+
+It is the mode for spawns from *outside* any session – a watchdog’s cron job, a
+shell; a session spawning another passes on its own mode instead
+(`crowsnest.spawn.pick_permission_mode()`). `None` when the file names none.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)

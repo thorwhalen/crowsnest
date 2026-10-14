@@ -124,6 +124,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.PublishSettings"><code class="docutils literal notranslate"><span class="pre">PublishSettings</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.REPORT_KEY"><code class="docutils literal notranslate"><span class="pre">REPORT_KEY</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.ReportSettings"><code class="docutils literal notranslate"><span class="pre">ReportSettings</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.SPAWN_PERMISSION_MODE_KEY"><code class="docutils literal notranslate"><span class="pre">SPAWN_PERMISSION_MODE_KEY</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.attention_settings"><code class="docutils literal notranslate"><span class="pre">attention_settings()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.claude_bin_setting"><code class="docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.config_path"><code class="docutils literal notranslate"><span class="pre">config_path()</span></code></a></li>
@@ -131,6 +132,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.homes"><code class="docutils literal notranslate"><span class="pre">homes()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.publish_settings"><code class="docutils literal notranslate"><span class="pre">publish_settings()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.report_settings"><code class="docutils literal notranslate"><span class="pre">report_settings()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting"><code class="docutils literal notranslate"><span class="pre">spawn_permission_mode_setting()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -236,19 +238,22 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.CLAUDE_BIN_KEY" title="crowsnest.config.CLAUDE_BIN_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CLAUDE_BIN_KEY</span></code></a></p></td>
 <td><p>The top-level config key naming the command that starts a session.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.CONFIG_ENV_VAR" title="crowsnest.config.CONFIG_ENV_VAR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CONFIG_ENV_VAR</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.SPAWN_PERMISSION_MODE_KEY" title="crowsnest.config.SPAWN_PERMISSION_MODE_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SPAWN_PERMISSION_MODE_KEY</span></code></a></p></td>
+<td><p>The top-level config key naming the permission mode a spawned session starts in.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.CONFIG_ENV_VAR" title="crowsnest.config.CONFIG_ENV_VAR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CONFIG_ENV_VAR</span></code></a></p></td>
 <td><p>Overrides the config file location outright.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.DFLT_FRESH_SECONDS" title="crowsnest.config.DFLT_FRESH_SECONDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_FRESH_SECONDS</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.DFLT_FRESH_SECONDS" title="crowsnest.config.DFLT_FRESH_SECONDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_FRESH_SECONDS</span></code></a></p></td>
 <td><p>How recently a remote home's registry record must have changed to count as live.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.ATTENTION_KEY" title="crowsnest.config.ATTENTION_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ATTENTION_KEY</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.ATTENTION_KEY" title="crowsnest.config.ATTENTION_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ATTENTION_KEY</span></code></a></p></td>
 <td><p>The config table holding the attention settings.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.REPORT_KEY" title="crowsnest.config.REPORT_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REPORT_KEY</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.REPORT_KEY" title="crowsnest.config.REPORT_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REPORT_KEY</span></code></a></p></td>
 <td><p>The config table saying how the report's rows are built.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.PUBLISH_KEY" title="crowsnest.config.PUBLISH_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PUBLISH_KEY</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.PUBLISH_KEY" title="crowsnest.config.PUBLISH_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PUBLISH_KEY</span></code></a></p></td>
 <td><p>The config table saying where <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">publish</span></code> sends the page.</p></td>
 </tr>
 </tbody>
@@ -278,6 +283,9 @@ and nothing in this module pretends otherwise.</p>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.report_settings" title="crowsnest.config.report_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report_settings</span></code></a>(*[, path])</p></td>
 <td><p>The config file's <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table, or the defaults when it has none.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting" title="crowsnest.config.spawn_permission_mode_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_permission_mode_setting</span></code></a>(*[, path])</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">spawn_permission_mode</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p></td>
 </tr>
 </tbody>
 </table>
@@ -390,6 +398,13 @@ verbs and the watcher must build the same way (<a class="reference internal" hre
 </div>
 <dl class="field-list simple">
 </dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.config.SPAWN_PERMISSION_MODE_KEY">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">SPAWN_PERMISSION_MODE_KEY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'spawn_permission_mode'</span></span><a class="headerlink" href="#crowsnest.config.SPAWN_PERMISSION_MODE_KEY" title="Link to this definition">#</a></dt>
+<dd><p>The top-level config key naming the permission mode a spawned session starts in. See
+<code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.spawn.pick_permission_mode()</span></code> for the order the choices are taken in.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -508,6 +523,23 @@ end. A key the table does not know is an error, as in <code class="docutils lite
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.config.spawn_permission_mode_setting">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">spawn_permission_mode_setting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#spawn_permission_mode_setting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.spawn_permission_mode_setting" title="Link to this definition">#</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">spawn_permission_mode</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">spawn_permission_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"acceptEdits"</span><span class="w">   </span><span class="c1"># or "bypass", "plan", ... ; "" = claude's own</span>
+</span></pre></div>
+</div>
+<p>It is the mode for spawns from <em>outside</em> any session – a watchdog’s cron job, a
+shell; a session spawning another passes on its own mode instead
+(<code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.spawn.pick_permission_mode()</span></code>). <code class="docutils literal notranslate"><span class="pre">None</span></code> when the file names none.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article><button class="back-to-top" type="button">
@@ -550,7 +582,7 @@ end. A key the table does not know is an error, as in <code class="docutils lite
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=9cd8e891"></script>
+      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
