@@ -121,17 +121,33 @@ def test_spawn_refuses_a_name_whose_ledger_belongs_to_another(tmp_path, monkeypa
 def test_spawn_checks_every_configured_home(tmp_path, monkeypatch):
     from crowsnest import config
 
-    other = tmp_path / "other-home"
+    other, synced = tmp_path / "other-home", tmp_path / "synced-home"
     monkeypatch.setattr(
-        config, "homes",
-        lambda **kw: [config.Home(name="main", path=tmp_path), config.Home(name="side", path=other)],
+        config, "configured_homes",
+        lambda **kw: [
+            config.Home(name="main", path=tmp_path),
+            config.Home(name="side", path=other),
+            config.Home(name="server", path=synced, remote=True),
+        ],
     )
+    seen = {}
 
     class _S:
         name, pid, cwd, home = "busy", 7, "/w", "side"
 
-    monkeypatch.setattr(
-        spawn, "live_sessions", lambda *, home, home_name="", **kw: [_S] if home == other else []
-    )
+    def fake_live(*, home, home_name="", is_live=None, **kw):
+        seen[home_name or "start"] = is_live
+        return [_S] if home == other else []
+
+    monkeypatch.setattr(spawn, "live_sessions", fake_live)
     with pytest.raises(ValueError, match="on home side"):
         spawn._refuse_taken_name("busy", home=tmp_path)
+    # a synced remote home is judged by freshness, never by local pids
+    assert seen["side"] is None and callable(seen["server"])
+
+
+def test_a_home_name_with_spaces_is_recorded_once(where):
+    record_session("x", "aaaa1111", home="my mac", at="t", ledger_dir=where)
+    assert record_session("x", "aaaa1111", home="my mac", at="t2", ledger_dir=where) is None
+    [entry] = session_entries(read_ledger("x", ledger_dir=where)["fields"]["sessions"])
+    assert entry["home"] == "my-mac"

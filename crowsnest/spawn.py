@@ -529,14 +529,20 @@ def _refuse_taken_name(
     ledger_dir: str | Path | None = None,
 ) -> None:
     """Raise ``ValueError`` when ``name`` is live in any home, or its ledger is another's."""
-    from crowsnest.config import homes
+    from crowsnest.config import configured_homes
     from crowsnest.ledger import read_ledger, session_entries
+    from crowsnest.registry import fresh_within
 
     live = list(live_sessions(home=home))
     try:
-        for h in homes(path=config):
+        # The *configured* homes only: ``home`` itself is checked above, and the
+        # default-home fallback would be whatever account this process runs under.
+        for h in configured_homes(path=config):
             if Path(h.path).expanduser().resolve() != Path(home).expanduser().resolve():
-                live += live_sessions(home=h.path, home_name=h.name)
+                # A synced copy of another machine's registry: its pids mean nothing
+                # here, so liveness is the roster's freshness rule, as in `sessions`.
+                rule = fresh_within(h.fresh_seconds) if h.remote else None
+                live += live_sessions(home=h.path, home_name=h.name, is_live=rule)
     except Exception:  # noqa: BLE001, S110 -- an unreadable config narrows the check to `home`
         pass
     taken = [s for s in live if s.name == name]

@@ -428,13 +428,11 @@ def find_ledgers(session_id: str, *, ledger_dir: str | Path | None = None) -> li
     wanted = (session_id or "").strip().lower()
     if not wanted:
         return []
-    found = []
-    for row in list_ledgers(ledger_dir=ledger_dir):
-        page = read_ledger(row["name"], ledger_dir=ledger_dir)
-        if any(e["id"].lower().startswith(wanted)
-               for e in session_entries(page["fields"]["sessions"])):
-            found.append(page["name"])
-    return found
+    return [
+        row["name"]
+        for row in list_ledgers(ledger_dir=ledger_dir)
+        if any(e["id"].lower().startswith(wanted) for e in session_entries(row["sessions"]))
+    ]
 
 
 def record_session(
@@ -456,6 +454,7 @@ def record_session(
     """
     if not session_id:
         return None
+    home = "-".join(str(home or "").split())  # one token, or the entry would never parse
     page = read_ledger(name, ledger_dir=ledger_dir)
     entries = session_entries(page["fields"]["sessions"])
     if any(e["id"] == session_id and e["home"] == home for e in entries):
