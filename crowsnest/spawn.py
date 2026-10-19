@@ -1021,7 +1021,7 @@ def spawn(
                 else "; nothing is showing"
                 + (
                     " (the tmux session is gone: claude likely exited at startup -- "
-                    f"run `{shlex.join(argv)}` by hand to see why)"
+                    f"run `{shlex.join(argv[: -1 if prompt else None])}` by hand to see why)"
                     if how == "tmux" and reader
                     else ""
                 )

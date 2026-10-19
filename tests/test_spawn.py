@@ -1133,3 +1133,12 @@ def test_root_refuses_an_explicit_bypass_and_drops_an_inherited_one(tmp_path):
     assert pick_permission_mode(None, environ={}, config=cfg, euid=1000) == (
         "bypassPermissions"
     )
+
+
+def test_the_default_euid_is_the_process_own(monkeypatch, tmp_path):
+    from crowsnest.spawn import pick_permission_mode
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "bypass"\n')
+    monkeypatch.setattr("os.geteuid", lambda: 0, raising=False)
+    assert pick_permission_mode(None, environ={}, config=cfg) == ""
