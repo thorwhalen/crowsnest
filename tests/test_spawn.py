@@ -1113,3 +1113,32 @@ def test_spawn_explicit_permission_mode_wins(monkeypatch, tmp_path):
     assert "--dangerously-skip-permissions" not in _record_spawn(
         monkeypatch, tmp_path, permission_mode=""
     )
+
+
+@pytest.fixture(autouse=True)
+def _not_root(monkeypatch):
+    """The suite may run as root (a server); the bypass tests assume a normal user."""
+    monkeypatch.setattr("os.geteuid", lambda: 1000, raising=False)
+
+
+def test_root_refuses_an_explicit_bypass_and_drops_an_inherited_one(tmp_path):
+    from crowsnest.spawn import pick_permission_mode
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "bypass"\n')
+    with pytest.raises(ValueError, match="root"):
+        pick_permission_mode("bypass", euid=0)
+    assert pick_permission_mode("plan", euid=0) == "plan"
+    assert pick_permission_mode(None, environ={}, config=cfg, euid=0) == ""
+    assert pick_permission_mode(None, environ={}, config=cfg, euid=1000) == (
+        "bypassPermissions"
+    )
+
+
+def test_the_default_euid_is_the_process_own(monkeypatch, tmp_path):
+    from crowsnest.spawn import pick_permission_mode
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "bypass"\n')
+    monkeypatch.setattr("os.geteuid", lambda: 0, raising=False)
+    assert pick_permission_mode(None, environ={}, config=cfg) == ""

@@ -291,6 +291,7 @@ def pick_permission_mode(
     environ: dict[str, str] | None = None,
     config: str | Path | None = None,
     argv_of: Callable[[int], list[str] | None] | None = None,
+    euid: int | None = None,
 ) -> str:
     """The permission mode a new session starts in; ``''`` lets claude decide.
 
@@ -309,20 +310,42 @@ def pick_permission_mode(
     fallbacks reach it only from a spawner that itself runs bypassed, or from a config
     file that says so.
 
+    Claude Code refuses the bypass flag to root (#101), and the refusal is invisible
+    behind tmux. So under ``euid`` 0 (default: this process's) an *explicit* bypass
+    raises ``ValueError``, and a bypass that was only inherited or configured degrades
+    to ``''``: the machine's own settings decide, as they would for a person there.
+
     >>> pick_permission_mode('plan')
     'plan'
     >>> pick_permission_mode(None, environ={}, config='/no/such/config.toml')
     ''
+    >>> pick_permission_mode('bypass', euid=0)
+    Traceback (most recent call last):
+      ...
+    ValueError: Claude Code refuses --dangerously-skip-permissions to root; pick another --permission-mode (or none) for this machine.
     """
-    if mode is not None:
-        return canonical_permission_mode(mode)
-    own = spawner_permission_mode(environ, argv_of=argv_of)
-    if own is not None:
-        return canonical_permission_mode(own)
-    from crowsnest.config import spawn_permission_mode_setting
+    if euid is None:
+        euid = os.geteuid() if hasattr(os, "geteuid") else -1
+    root = euid == 0
 
-    configured = spawn_permission_mode_setting(path=config)
-    return canonical_permission_mode(configured or "")
+    def is_bypass(picked: str) -> bool:
+        return _mode_args(picked)[:1] == [_BYPASS_FLAG]
+
+    if mode is not None:
+        picked = canonical_permission_mode(mode)
+        if root and is_bypass(picked):
+            raise ValueError(
+                f"Claude Code refuses {_BYPASS_FLAG} to root; pick another "
+                "--permission-mode (or none) for this machine."
+            )
+        return picked
+    own = spawner_permission_mode(environ, argv_of=argv_of)
+    if own is None:
+        from crowsnest.config import spawn_permission_mode_setting
+
+        own = spawn_permission_mode_setting(path=config)
+    picked = canonical_permission_mode(own or "")
+    return "" if root and is_bypass(picked) else picked
 
 
 def claude_argv(
@@ -992,7 +1015,17 @@ def spawn(
             "pid": 0,
             "session_id": "",
             "how": f"{how}: no registry file for {name!r} within {wait:.0f}s"
-            + (f"; the session is showing {shown}" if shown else ""),
+            + (
+                f"; the session is showing {shown}"
+                if shown
+                else "; nothing is showing"
+                + (
+                    " (the tmux session is gone: claude likely exited at startup -- "
+                    f"run `{shlex.join(argv[: -1 if prompt else None])}` by hand to see why)"
+                    if how == "tmux" and reader
+                    else ""
+                )
+            ),
             "home": where,
             "parent": parent,
         }
