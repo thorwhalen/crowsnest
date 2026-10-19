@@ -126,9 +126,6 @@ one file ([`safe_name()`](#crowsnest.ledger.safe_name) maps them to one stem), a
 `live_ids` – the sessions running now – writing it (two live sessions sharing a
 name). A `/clear` is neither: the old id is no longer live.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> page = {'fields': {'sessions': '- a1@main as cn/xa · first seen t\n- b2@main as cn:xa · first seen t'}}
 >>> for problem in ledger_conflicts(page, live_ids={'a1', 'b2'}):
@@ -136,6 +133,9 @@ name). A `/clear` is neither: the old id is no longer live.
 names cn/xa, cn:xa all map to this one file
 2 live sessions write here: a1@main, b2@main
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### crowsnest.ledger.ledger_dir(path=None)
 
@@ -150,13 +150,13 @@ The directory is not created here; [`update_ledger()`](#crowsnest.ledger.update_
 
 The file one session’s ledger lives in, whether or not it exists yet.
 
-* **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
-
 ```pycon
 >>> ledger_path('lookout', ledger_dir='/x/y').as_posix()
 '/x/y/lookout.md'
 ```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### crowsnest.ledger.list_ledgers(, ledger_dir=None)
 
@@ -199,9 +199,6 @@ A session name as a file stem: anything outside `[A-Za-z0-9._-]` becomes a dash.
 
 Session names come from `claude -n <name>` and are not constrained to be filenames.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> safe_name('cn/xa needs you')
 'cn-xa-needs-you'
@@ -209,26 +206,26 @@ Session names come from `claude -n <name>` and are not constrained to be filenam
 'unnamed'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.ledger.session_entries(value)
 
 The `sessions` field’s entries as `{id, home, name, first_seen}` dicts.
 
 A line that is not an entry (a human’s note in the list) is skipped, not an error.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
-
 ```pycon
 >>> session_entries('- 5ef2882a@main as cn-proj · first seen 2026-09-09T08:12Z')
 [{'id': '5ef2882a', 'home': 'main', 'name': 'cn-proj', 'first_seen': '2026-09-09T08:12Z'}]
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
 ### crowsnest.ledger.split_stamp(value)
 
 A stamped value back into `(when, what)`; `('', value)` when it carries no time.
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> split_stamp('2026-09-06T18:14:22+00:00 · Fixed and merged.')
@@ -237,12 +234,12 @@ A stamped value back into `(when, what)`; `('', value)` when it carries no time.
 ('', 'just words')
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### crowsnest.ledger.stamped(text, at='')
 
 A one-line field value carrying its time: `<when> · <what>`.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> stamped('Fixed and merged.', '2026-09-06T18:14:22+00:00')
@@ -250,6 +247,9 @@ A one-line field value carrying its time: `<when> · <what>`.
 >>> stamped('two\nlines')
 'two lines'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.ledger.update_ledger(name, , ledger_dir=None, \*\*fields)
 

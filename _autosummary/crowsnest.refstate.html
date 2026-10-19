@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -274,17 +275,17 @@ at most <code class="docutils literal notranslate"><span class="pre">limit</span
 <dt class="sig sig-object py" id="crowsnest.refstate.repos_of">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.refstate.</span></span><span class="sig-name descname"><span class="pre">repos_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/refstate.html#repos_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.refstate.repos_of" title="Link to this definition">#</a></dt>
 <dd><p>Every <code class="docutils literal notranslate"><span class="pre">&quot;owner/repo&quot;</span></code> a row’s references point into, issues and pull requests only.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">repos_of</span><span class="p">([{</span><span class="s1">'links'</span><span class="p">:</span> <span class="p">[{</span><span class="s1">'url'</span><span class="p">:</span> <span class="s1">'https://github.com/o/r/issues/3'</span><span class="p">},</span>
 </span><span data-line="2"><span class="gp">... </span>                     <span class="p">{</span><span class="s1">'url'</span><span class="p">:</span> <span class="s1">'https://github.com/o/r/pull/4'</span><span class="p">},</span>
 </span><span data-line="3"><span class="gp">... </span>                     <span class="p">{</span><span class="s1">'url'</span><span class="p">:</span> <span class="s1">'https://github.com/o/s/commit/abc'</span><span class="p">}]}])</span>
 </span><span data-line="4"><span class="go">['o/r']</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -292,11 +293,6 @@ at most <code class="docutils literal notranslate"><span class="pre">limit</span
 <span class="sig-prename descclassname"><span class="pre">crowsnest.refstate.</span></span><span class="sig-name descname"><span class="pre">state_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.timedelta(seconds=21600)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/refstate.html#state_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.refstate.state_of" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">{&quot;state&quot;,</span> <span class="pre">&quot;title&quot;,</span> <span class="pre">&quot;closed_at&quot;}</span></code> for an issue or pull request URL, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when
 it is not one, the store has not seen it, or what it knows is older than <code class="docutils literal notranslate"><span class="pre">stale_after</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">store</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'o/r'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'fetched_at'</span><span class="p">:</span> <span class="s1">'2026-02-01T12:00:00+00:00'</span><span class="p">,</span>
 </span><span data-line="2"><span class="gp">... </span>                 <span class="s1">'items'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'3'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'state'</span><span class="p">:</span> <span class="s1">'closed'</span><span class="p">,</span> <span class="s1">'title'</span><span class="p">:</span> <span class="s1">'Fix it'</span><span class="p">,</span> <span class="s1">'closed_at'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}}}}</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">at</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
@@ -306,6 +302,11 @@ it is not one, the store has not seen it, or what it knows is older than <code c
 </span><span data-line="7"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -350,7 +351,7 @@ it is not one, the store has not seen it, or what it knows is older than <code c
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -219,13 +219,13 @@ The homes the config file’s `[[homes]]` entries name; `[]` when it names none.
 wrong for anything that must mean the same home in another account’s terminal: a
 command printed for later pasting ([`crowsnest.lineage.open_command()`](crowsnest.lineage.html.md#crowsnest.lineage.open_command)), say.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](#crowsnest.config.Home)]
-
 ```pycon
 >>> configured_homes(path='/nonexistent-config-for-doctest')
 []
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](#crowsnest.config.Home)]
 
 ### crowsnest.config.homes(, path=None)
 

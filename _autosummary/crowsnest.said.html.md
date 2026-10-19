@@ -81,9 +81,6 @@ that is the item whose time counts.
 
 Unix seconds as an ISO instant in UTC; `''` for nothing, zero, or nonsense.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> from_epoch(0), from_epoch(None), from_epoch('x')
 ('', '', '')
@@ -91,14 +88,14 @@ Unix seconds as an ISO instant in UTC; `''` for nothing, zero, or nonsense.
 '2026-01-01T00:00:00+00:00'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.said.from_stamp(text)
 
 An ISO timestamp normalised to UTC seconds; `''` when it is not an instant.
 
 A timestamp with no zone is not an instant, so it is not read as one.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> from_stamp('2026-01-01T09:30:00.000Z')
@@ -109,14 +106,14 @@ A timestamp with no zone is not an instant, so it is not read as one.
 ('', '')
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.said.heading_date(heading)
 
 The date that opens a heading, as `said_at`; `''` when it does not open with one.
 
 A time is kept only with a zone. A date before 1970 is not taken.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> heading_date('### 2026-09-12 — all four stages landed')
@@ -130,6 +127,9 @@ A time is kept only with a zone. A date before 1970 is not taken.
 >>> heading_date('## 2026-13-45 not a date'), heading_date('## 0001-01-01 notes')
 ('', '')
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.said.of_activity(row)
 
@@ -154,21 +154,18 @@ reason. If the verdict carries no time, the answer is *unknown*: another time on
 row belongs to different words, so it is never borrowed. Every other row falls back
 to [`of_activity()`](#crowsnest.said.of_activity).
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> of_row({'status': 'idle', 'activity': {'last_text_at': '2026-01-01T09:30:00Z'},
 ...         'verdict': {'group': 'safe_to_close', 'said_at': ''}})
 ('', '')
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### crowsnest.said.parse(said_at)
 
 A `said_at` read back: an aware `datetime`, a `date` for a bare day, or `None`.
-
-* **Return type:**
-  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ```pycon
 >>> parse('2026-01-05')
@@ -178,6 +175,9 @@ datetime.date(2026, 1, 5)
 >>> parse('') is None and parse('2026-13-01') is None
 True
 ```
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.said.when_said(said_at, , now, zone=None)
 
@@ -192,9 +192,6 @@ unknown rather than as “today”. The first is a time later than `now` by more
 (`None` means this machine’s zone); a future date names a plan or a deadline. The
 third is anything before 1970.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> now = 1767268800.0  # 2026-01-01T12:00:00Z
 >>> when_said('2026-01-01T11:00:00+00:00', now=now)
@@ -207,14 +204,17 @@ True
 True
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
 ### crowsnest.said.with_said(row)
 
 `row` with its `said_at` and `said_at_basis` set by [`of_row()`](#crowsnest.said.of_row).
-
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ```pycon
 >>> with_said({'status': 'waiting', 'status_since': 1767225600})['said_at_basis']
 'registry'
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

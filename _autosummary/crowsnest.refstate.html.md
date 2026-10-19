@@ -74,9 +74,6 @@ Returns `{"refreshed": [...], "failed": {repo: reason}, "fresh": n}`.
 
 Every `"owner/repo"` a row’s references point into, issues and pull requests only.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> repos_of([{'links': [{'url': 'https://github.com/o/r/issues/3'},
 ...                      {'url': 'https://github.com/o/r/pull/4'},
@@ -84,13 +81,13 @@ Every `"owner/repo"` a row’s references point into, issues and pull requests o
 ['o/r']
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### crowsnest.refstate.state_of(url, , store=None, now=None, stale_after=datetime.timedelta(seconds=21600))
 
 `{"state", "title", "closed_at"}` for an issue or pull request URL, or `None` when
 it is not one, the store has not seen it, or what it knows is older than `stale_after`.
-
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ```pycon
 >>> store = {'o/r': {'fetched_at': '2026-02-01T12:00:00+00:00',
@@ -101,3 +98,6 @@ it is not one, the store has not seen it, or what it knows is older than `stale_
 >>> state_of('https://github.com/o/r/issues/3', store=store, now=at + timedelta(days=1)) is None
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)

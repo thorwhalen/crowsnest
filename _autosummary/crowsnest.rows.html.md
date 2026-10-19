@@ -119,10 +119,10 @@ never applies the store.
 
 The context a surface uses when it is given none: the config file’s.
 
-* **Return type:**
-  [`RowContext`](#crowsnest.rows.RowContext)
-
 ```pycon
 >>> dflt_row_context(config='/nonexistent-config-for-doctest') == RowContext()
 True
 ```
+
+* **Return type:**
+  [`RowContext`](#crowsnest.rows.RowContext)

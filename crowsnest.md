@@ -1,4 +1,4 @@
-> built 2026-10-14 07:32 UTC from 2df35d6 (main) · crowsnest 0.0.92. Details: build_info.json
+> built 2026-10-19 00:32 UTC from c4405b1 (main) · crowsnest 0.0.93. Details: build_info.json
 
 # index.html.md
 
@@ -510,14 +510,14 @@ account” – which is not the same as the default account, and is why this ret
 `None` rather than `~/.claude`. `$CROWSNEST_PROFILE` stands in for `profile`
 so a watching session states its account once instead of on every spawn.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> account_home(environ={})
 >>> account_home(home='/h/.claude-iq', environ={})
 '/h/.claude-iq'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.account.claude_bin(environ=None, , config=None)
 
@@ -537,14 +537,14 @@ generated line (#129).
 The order is deliberate: a stated preference outranks inheritance, because a person
 who names a launcher is usually saying “not the one you would have picked”.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': '', 'HOME': '/no/such/home'},
 ...            config='/no/such/config')
 'claude'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.account.configured_claude_bin(environ=None, , config=None)
 
@@ -561,13 +561,13 @@ a claim about *this* one, and the failure it otherwise produces – a terminal t
 opens, prints “command not found” and closes – is invisible to the spawner, which
 only reports that the registry never saw the session.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> configured_claude_bin({}, config='/nonexistent-config-for-doctest')
 ''
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.account.profile_home(name, , config=None, resolver=None)
 
@@ -647,7 +647,7 @@ no watcher and reads no project’s instructions.
 
 The most words a line may have; a reference counts as one.
 
-### crowsnest.actions.claude_synthesiser(\*, model='haiku', binary=None, timeout=90, prompt='You write ONE line that tells a busy person what they must do next, for a\\\\ndashboard of their coding sessions. Read the session\\\\'s request below and answer with JSON\\\\nonly, no prose, exactly: {"line": "...", "cites": ["repo#N", ...], "verdict": "ok"}.\\\\n\\\\nRules for "line":\\\\n- Start with an imperative verb (Say, Decide, Approve, Set, Log in, Reply, Confirm, Close,\\\\n  Run, Review, Merge, Answer). Never a noun phrase, never "the user", never "awaiting".\\\\n- At most 8 words, a reference like repo#12 counts as one word. No trailing period. No\\\\n  hedges. Do not name the session.\\\\n- Name the object: the thing to decide or the artefact to touch. Every noun must come from\\\\n  the request, the references\\\\' titles, or the kind. Invent nothing.\\\\n- Cite a reference in "cites" only when the instruction lives in it.\\\\nIf the request names no object you could act on, answer {"line": null, "cites": [], "verdict": "null"}.\\\\nIf the request asks for nothing ("none", "nothing yet", a status table), answer\\\\n{"line": null, "cites": [], "verdict": "no_ask"}.\\\\n\\\\nThe session\\\\'s request, as JSON:\\\\n')
+### crowsnest.actions.claude_synthesiser(, model='haiku', binary=None, timeout=90, prompt='You write ONE line that tells a busy person what they must do next, for a\\ndashboard of their coding sessions. Read the session\\'s request below and answer with JSON\\nonly, no prose, exactly: {"line": "...", "cites": ["repo#N", ...], "verdict": "ok"}.\\n\\nRules for "line":\\n- Start with an imperative verb (Say, Decide, Approve, Set, Log in, Reply, Confirm, Close,\\n  Run, Review, Merge, Answer). Never a noun phrase, never "the user", never "awaiting".\\n- At most 8 words, a reference like repo#12 counts as one word. No trailing period. No\\n  hedges. Do not name the session.\\n- Name the object: the thing to decide or the artefact to touch. Every noun must come from\\n  the request, the references\\' titles, or the kind. Invent nothing.\\n- Cite a reference in "cites" only when the instruction lives in it.\\nIf the request names no object you could act on, answer {"line": null, "cites": [], "verdict": "null"}.\\nIf the request asks for nothing ("none", "nothing yet", a status table), answer\\n{"line": null, "cites": [], "verdict": "no_ask"}.\\n\\nThe session\\'s request, as JSON:\\n')
 
 A synthesiser that asks `claude -p` (`model`, JSON out, no session kept), run in
 an empty directory with its hooks quiet, so it reads no project’s instructions and
@@ -778,9 +778,6 @@ One exchange: a human prompt, what the assistant did, and its last words.
 
 One line naming a tool call: the tool, and the argument that says what it did.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> describe_tool('Bash', {'command': 'ls -la', 'description': 'List files'})
 'Bash: List files'
@@ -791,6 +788,9 @@ One line naming a tool call: the tool, and the argument that says what it did.
 >>> describe_tool('ListAgents', {})
 'ListAgents'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.activity.load_records(path)
 
@@ -826,13 +826,13 @@ The records in the last `tail_bytes` of a transcript, widening until `enough`.
 Returns the records and whether the window reached the start of the file. The first
 line of a window that starts mid-file is a fragment and is dropped.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
-
 ```pycon
 >>> tail_records('/nonexistent-file-for-doctest')
 ([], True)
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
 
 
 # _autosummary/crowsnest.attention.html.md
@@ -1137,9 +1137,6 @@ because one ask makes the same three-part tuple. Any other `needs_you` item show
 `changed` once: those are the items whose old revision missed part of what they
 ask. Ids are untouched. Both halves are tests in `tests/test_attention_refute.py`.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
-
 ```pycon
 >>> dflt_material({'status': 'busy', 'activity': {'last_assistant_text': 'hi'}})
 ('busy',)
@@ -1154,6 +1151,9 @@ ask. Ids are untouched. Both halves are tests in `tests/test_attention_refute.py
 >>> dflt_material({'verdict': {**asked, 'asks': two}})
 ('needs_you', 'decision', 'squash?', 'rotate the key.')
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 
 ### crowsnest.attention.dflt_store(rootdir=None)
 
@@ -1197,13 +1197,13 @@ Hashed as JSON, so the components cannot run into each other. A `material` that
 returns something JSON cannot encode (a set, whose order is not stable) raises
 `TypeError` rather than producing a revision that changes between runs.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> len(fingerprint({'status': 'busy'})) == 2 * FINGERPRINT_BYTES
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.attention.holds_a_record(store=None)
 
@@ -1212,13 +1212,13 @@ Does `store` hold a document that reads as a record? Stops at the first one.
 What decides whether a page applies the store at all: one that holds none renders as
 it did before attention existed.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> holds_a_record({}), holds_a_record({item_id({'session_id': 'x'}): {'seen_rev': 'r'}})
 (False, True)
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.attention.import_docs(docs, , store=None)
 
@@ -1241,9 +1241,6 @@ offset ([`Record`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.
 without one as its viewer’s local time. A *naive datetime* handed to a function here
 is a wall-clock time, and is read as local.
 
-* **Return type:**
-  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime)
-
 ```pycon
 >>> instant('2026-09-15T12:00:00.000Z') == instant('2026-09-15T12:00:00+00:00')
 True
@@ -1251,17 +1248,20 @@ True
 '2026-01-01T00:00:00+00:00'
 ```
 
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime)
+
 ### crowsnest.attention.is_item_id(key)
 
 Is `key` an item id as [`item_id()`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.item_id) spells one? Anything else never names a file.
-
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ```pycon
 >>> is_item_id(item_id({'session_id': 'x'})), is_item_id('../etc/passwd')
 (True, False)
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.attention.item_id(row, , identity=None)
 
@@ -1272,13 +1272,13 @@ share an id however many components they have – `("ask", "s1:x")` and
 `("ask", "s1", "x")` are two items. A session id contains neither character, so the
 default is hashed as literally `session:<id>`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> item_id({'session_id': 'e7c1', 'name': 'a'}) == item_id({'session_id': 'e7c1', 'name': 'b'})
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.attention.later(record, rev, , until, on_change=True, plan='', seen_as=None, now=None)
 
@@ -1301,15 +1301,15 @@ which is what the button turns into (triage-ux 2.5). `tomorrow` is the next cale
 day at `morning_hour`. Hours are the wall clock of `now`’s timezone, local when
 `now` is naive or not given; `config` is [`crowsnest.config.attention_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings).
 
-* **Return type:**
-  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> from datetime import datetime, timezone
 >>> noon = datetime(2026, 1, 5, 12, tzinfo=timezone.utc)
 >>> later_until('evening', now=noon).isoformat()
 '2026-01-05T18:00:00+00:00'
 ```
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.attention.note(record, text, , now=None)
 
@@ -1338,13 +1338,13 @@ item shows what the restored snapshot shows.
 
 `phone` for a question or a decision, `terminal` for an action, else `''`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> reach({'verdict': {'group': 'needs_you', 'why': 'action'}})
 'terminal'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.attention.read_doc(item, , store=None)
 
@@ -1374,15 +1374,15 @@ out; a record that cannot be read counts as none, as it does on the page.
 It answers for any store. The page draws the band only once the store holds a record
 (the degradation table in discussion #51), so an empty store changes nothing there.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
-
 ```pycon
 >>> row = {'session_id': 'e7c1', 'status': 'idle',
 ...        'verdict': {'group': 'unclassified', 'reason': 'said nothing'}}
 >>> [entry['kind'] for entry in review([row], store={})]
 ['unclassified']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### crowsnest.attention.review_entries(named, , now=None, config=None)
 
@@ -1463,15 +1463,15 @@ What a row is, as [`SeenAs`](_autosummary/crowsnest.attention.html.md#crowsnest.
 
 The same whatever `material=` a caller uses: it describes the verdict, not the hash.
 
-* **Return type:**
-  [`SeenAs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.SeenAs) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> seen_as_of({'verdict': {'group': 'needs_you', 'why': 'action', 'reason': 'attach'}})
 SeenAs(group='needs_you', why='action')
 >>> seen_as_of({'status': 'idle'}) is None
 True
 ```
+
+* **Return type:**
+  [`SeenAs`](_autosummary/crowsnest.attention.html.md#crowsnest.attention.SeenAs) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.attention.undo(record, , now=None)
 
@@ -1801,13 +1801,13 @@ The homes the config file’s `[[homes]]` entries name; `[]` when it names none.
 wrong for anything that must mean the same home in another account’s terminal: a
 command printed for later pasting ([`crowsnest.lineage.open_command()`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.open_command)), say.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)]
-
 ```pycon
 >>> configured_homes(path='/nonexistent-config-for-doctest')
 []
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)]
 
 ### crowsnest.config.homes(, path=None)
 
@@ -2050,9 +2050,6 @@ One field, safe to place in the document.
 
 `text` without any word that an ellipsis ends; each ellipsis stays.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> drop_cut_words('Bash: use ghp_AAAAAAAA…')
 'Bash: use …'
@@ -2061,6 +2058,9 @@ One field, safe to place in the document.
 >>> drop_cut_words('Read: notes.md')
 'Read: notes.md'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/crowsnest.envelope_cache.html.md
@@ -2202,21 +2202,18 @@ One JSON file per message under `root` (default `<data dir>/questions/gists`).
 The model’s questions that keep to the rules: a gist within its length, a known
 state, and an answer only when there is one. Anything else is dropped, not trusted.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
-
 ```pycon
 >>> kept({"questions": [{"source": "Why?", "q": "Why is CI slow?", "a": "The cache was cold",
 ...                      "state": "answered", "sure": True}, {"q": "x " * 20}]})
 [{'source': 'Why?', 'q': 'Why is CI slow?', 'a': 'The cache was cold', 'state': 'answered', 'sure': True}]
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
 ### crowsnest.gists.kept_pair(answer, count)
 
 The model’s pairing when it keeps to the rules, else no match.
-
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ```pycon
 >>> kept_pair({"match": 1, "a": "Yes: it fires once", "state": "answered"}, 2)["match"]
@@ -2224,6 +2221,9 @@ The model’s pairing when it keeps to the rules, else no match.
 >>> kept_pair({"match": 5, "a": "x", "state": "answered"}, 2)["match"] is None
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.gists.key_of(session, prompt_uuid)
 
@@ -2758,7 +2758,7 @@ every [`roster()`](_autosummary/crowsnest.html.md#crowsnest.roster) row does –
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None)
+### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None)
 
 Start a session named `name` in `cwd`, and wait for the registry to see it.
 
@@ -2978,9 +2978,6 @@ matcher gains one command, and a command already registered anywhere under that 
 is not registered twice. Nothing is ever removed – the file belongs to the user, and
 the desktop notifier already on their `Stop` hook has to keep working.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]]
-
 ```pycon
 >>> settings, added = merged_hooks({}, HOOKS[1:2])
 >>> settings['hooks']['Stop'][0]['hooks']
@@ -2991,17 +2988,20 @@ the desktop notifier already on their `Stop` hook has to keep working.
 []
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]]
+
 ### crowsnest.init.settings_snippet(hooks=({'async': True, 'command': 'crowsnest hook notification', 'event': 'Notification', 'matcher': '', 'scope': 'user', 'why': 'a session is asking its human for something'}, {'async': True, 'command': 'crowsnest hook stop', 'event': 'Stop', 'matcher': '', 'scope': 'user', 'why': 'a session finished a turn; record its last words'}, {'async': False, 'command': 'crowsnest --brief', 'event': 'SessionStart', 'matcher': 'startup|clear|compact', 'scope': 'project', 'why': 're-print the roster after every start, clear and compaction'}))
 
 The `settings.json` fragment these hooks amount to, for a human to paste.
-
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ```pycon
 >>> settings_snippet(HOOKS[2:])['hooks']['SessionStart']
 [{'matcher': 'startup|clear|compact', 'hooks': [{'type': 'command', 'command': 'crowsnest --brief'}]}]
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.init.template_path()
 
@@ -3014,13 +3014,13 @@ The bundled `CLAUDE.md` a watching session is given.
 
 The text of the bundled `CLAUDE.md`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> template_text().splitlines()[0]
 '# The lookout session'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/crowsnest.ledger.html.md
@@ -3153,9 +3153,6 @@ one file ([`safe_name()`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger
 `live_ids` – the sessions running now – writing it (two live sessions sharing a
 name). A `/clear` is neither: the old id is no longer live.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> page = {'fields': {'sessions': '- a1@main as cn/xa · first seen t\n- b2@main as cn:xa · first seen t'}}
 >>> for problem in ledger_conflicts(page, live_ids={'a1', 'b2'}):
@@ -3163,6 +3160,9 @@ name). A `/clear` is neither: the old id is no longer live.
 names cn/xa, cn:xa all map to this one file
 2 live sessions write here: a1@main, b2@main
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### crowsnest.ledger.ledger_dir(path=None)
 
@@ -3177,13 +3177,13 @@ The directory is not created here; [`update_ledger()`](_autosummary/crowsnest.le
 
 The file one session’s ledger lives in, whether or not it exists yet.
 
-* **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
-
 ```pycon
 >>> ledger_path('lookout', ledger_dir='/x/y').as_posix()
 '/x/y/lookout.md'
 ```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### crowsnest.ledger.list_ledgers(, ledger_dir=None)
 
@@ -3226,9 +3226,6 @@ A session name as a file stem: anything outside `[A-Za-z0-9._-]` becomes a dash.
 
 Session names come from `claude -n <name>` and are not constrained to be filenames.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> safe_name('cn/xa needs you')
 'cn-xa-needs-you'
@@ -3236,26 +3233,26 @@ Session names come from `claude -n <name>` and are not constrained to be filenam
 'unnamed'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.ledger.session_entries(value)
 
 The `sessions` field’s entries as `{id, home, name, first_seen}` dicts.
 
 A line that is not an entry (a human’s note in the list) is skipped, not an error.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
-
 ```pycon
 >>> session_entries('- 5ef2882a@main as cn-proj · first seen 2026-09-09T08:12Z')
 [{'id': '5ef2882a', 'home': 'main', 'name': 'cn-proj', 'first_seen': '2026-09-09T08:12Z'}]
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
 ### crowsnest.ledger.split_stamp(value)
 
 A stamped value back into `(when, what)`; `('', value)` when it carries no time.
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> split_stamp('2026-09-06T18:14:22+00:00 · Fixed and merged.')
@@ -3264,12 +3261,12 @@ A stamped value back into `(when, what)`; `('', value)` when it carries no time.
 ('', 'just words')
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### crowsnest.ledger.stamped(text, at='')
 
 A one-line field value carrying its time: `<when> · <what>`.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> stamped('Fixed and merged.', '2026-09-06T18:14:22+00:00')
@@ -3277,6 +3274,9 @@ A one-line field value carrying its time: `<when> · <what>`.
 >>> stamped('two\nlines')
 'two lines'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.ledger.update_ledger(name, , ledger_dir=None, \*\*fields)
 
@@ -3712,14 +3712,14 @@ that a reader can tell “spawned by nobody we could name” (`parent` present, 
 `name` empty) from “written by a version that did not record parents” (no
 `parent` at all).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> line = spawn_event('kid', parent={'name': 'boss'}, at='2026-01-01T00:00:00+00:00')
 >>> line['event'], line['name'], line['parent']['name']
 ('spawn', 'kid', 'boss')
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
 # _autosummary/crowsnest.links.html.md
@@ -3861,13 +3861,13 @@ seven hex letters (`decade`, `defaced`) is the false positive this accepts; it
 costs a link nobody clicks, where the alternative – not linking shas at all – costs
 the one reference a person most often wants to look up.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
-
 ```pycon
 >>> from_commits('fixed in 7d30838', {'repo_url': 'https://github.com/o/r'})[0].text
 'r@7d30838'
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
 
 ### crowsnest.links.from_issue_refs(text, context)
 
@@ -3881,15 +3881,15 @@ Nothing is produced without a `repo_url` in the context – a wrong repository i
 worse than no link, because a link that goes somewhere plausible and wrong is one
 nobody checks.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
-
 ```pycon
 >>> from_issue_refs('closes #17', {'repo_url': 'https://github.com/o/r'})[0].url
 'https://github.com/o/r/issues/17'
 >>> from_issue_refs('closes #17', {})
 []
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
 
 ### crowsnest.links.from_markdown_links(text, context)
 
@@ -3898,13 +3898,13 @@ nobody checks.
 The best source available and the cheapest: a session that wrote a markdown link had
 the whole reference in hand and named it for a reader. Nothing is inferred.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
-
 ```pycon
 >>> from_markdown_links('see [PR 27](https://github.com/o/r/pull/27)', {})[0].text
 'PR 27'
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
 
 ### crowsnest.links.from_repo_refs(text, context)
 
@@ -3914,32 +3914,29 @@ The issue-or-pull-request ambiguity is left as `issue`: GitHub redirects an issu
 URL to the pull request when that is what the number is, so the link works either
 way, and guessing would be a guess.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
-
 ```pycon
 >>> from_repo_refs('see i2mint/mergeset#12', {})[0].url
 'https://github.com/i2mint/mergeset/issues/12'
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
+
 ### crowsnest.links.from_urls(text, context)
 
 A bare URL, typed by where it points and labelled the way a person would say it.
-
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
 
 ```pycon
 >>> [(l.type, l.text) for l in from_urls('see https://github.com/o/r/issues/3', {})]
 [('issue', 'r#3')]
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](_autosummary/crowsnest.links.html.md#crowsnest.links.Link)]
+
 ### crowsnest.links.github_ref(url)
 
 A GitHub URL as `(kind, owner, repo, number)`; empty strings when it is not one.
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> github_ref('https://github.com/i2mint/mergeset/pull/27')
@@ -3951,6 +3948,9 @@ A GitHub URL as `(kind, owner, repo, number)`; empty strings when it is not one.
 >>> github_ref('https://www.github.com/o/r/issues/3')
 ('issue', 'o', 'r', '3')
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### crowsnest.links.identity(url)
 
@@ -3967,9 +3967,6 @@ Two spellings of one commit also collapse. A session writes `eb0774d0a` in one p
 and the full forty characters in another, and both are the same commit; the longer
 prefix wins on length, so they are compared on the shorter one’s length.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> identity('https://github.com/o/r/pull/45') == identity('https://github.com/o/r/issues/45')
 True
@@ -3979,12 +3976,12 @@ False
 True
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.links.kind_of(url)
 
 What a bare URL points at, as one word.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> kind_of('https://github.com/o/r/pull/1'), kind_of('https://x.slack.com/archives/C1/p2')
@@ -3992,6 +3989,9 @@ What a bare URL points at, as one word.
 >>> kind_of('https://claude.ai/code/artifact/abc'), kind_of('https://example.org')
 ('artifact', 'link')
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.links.label_for(url, text='')
 
@@ -4001,9 +4001,6 @@ The report calls this for references that reached it without a label – openloo
 own locators carry a URL and nothing else – so that nothing renders as a bare,
 unclickable-looking blank.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> label_for('https://github.com/o/r/pull/27')
 'r#27'
@@ -4011,12 +4008,12 @@ unclickable-looking blank.
 'the release PR'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.links.looks_like_a_secret(url)
 
 Is this a URL that *is* a credential, rather than one that merely needs one?
-
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ```pycon
 >>> looks_like_a_secret('https://hooks.slack.com/services/T0/B0/XXXX')
@@ -4024,6 +4021,9 @@ True
 >>> looks_like_a_secret('https://github.com/o/r/issues/1')
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.links.resolve(text, , context=None, resolvers=None, limit=12)
 
@@ -4041,13 +4041,13 @@ the markdown links a session wrote out in full first, the shas it happened to me
 last – because a page shows the first few and those should be the best few.
 `limit` bounds the result because this feeds a page meant to be read.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
-
 ```pycon
 >>> [l['text'] for l in resolve('see #1 and o/r#2', context={'repo_url': 'https://github.com/o/r'})]
 ['r#2', 'r#1']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### crowsnest.links.without_written_out_links(text)
 
@@ -4064,13 +4064,13 @@ hundred issues is a page that exists and is about something else.
 Blanked rather than removed so that every offset in the string still means what it
 meant – lookbehinds on either side of a match keep working.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> without_written_out_links('see [#1](https://github.com/o/r/pull/1) and #2')
 'see                                     and #2'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/crowsnest.live.html.md
@@ -4191,9 +4191,6 @@ markup would. A word an earlier clip cut (one ending in an ellipsis) is dropped 
 that many characters, and the clip is sanitised again, by the plain sanitiser: its
 ellipsis follows a word that is already clean, and must not cost that word.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> publishable('a < b')
 'a < b'
@@ -4203,17 +4200,20 @@ ellipsis follows a word that is already clean, and must not cost that word.
 'one two…'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.live.reads_in_flight(status)
 
 Whether a session in `status` has its tail read for the call in flight.
-
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ```pycon
 >>> reads_in_flight('busy'), reads_in_flight('idle')
 (True, False)
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.live.recap_lines(session, activity, digest, , text_limit=200)
 
@@ -4225,9 +4225,6 @@ and `digest` openloops’ digest of it (`openloops.tools.show()`), or `None`.
 The lines, in order: status; what it was asked last; what it said last; what is in
 flight or what it asks; the digest.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> lines = recap_lines({'label': 'fixer', 'status': 'idle', 'status_since': 0},
 ...                     {'last_assistant_text': 'Shipped.',
@@ -4235,6 +4232,9 @@ flight or what it asks; the digest.
 >>> len(lines), lines[2]
 (5, 'said 2026-01-01 09:30 UTC: Shipped.')
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### crowsnest.live.uncut(text)
 
@@ -4246,13 +4246,13 @@ the sanitiser no longer recognises, so publishing the cut word publishes most of
 secret. A text ending in an ellipsis therefore loses the word the ellipsis ends; the
 ellipsis stays, to say something was left out.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> uncut('Bash: use ghp_AAAAAAAA…'), uncut('Read: notes.md')
 ('Bash: use …', 'Read: notes.md')
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/crowsnest.open.html.md
@@ -4547,15 +4547,15 @@ rsync over ssh for a `[user@]host:path`, an atomic local write for anything else
 
 Whether `to` names a file on another machine (`[user@]host:path`).
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_remote("me@box:/srv/page.html"), is_remote("box:page.html")
 (True, True)
 >>> is_remote("~/Sync/page.html"), is_remote("C:/page.html"), is_remote("./a:b")
 (False, False, False)
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.publish.rsync_argv(page, to, , timeout=20, connect_timeout=10)
 
@@ -4575,13 +4575,13 @@ connection per host open for `control_persist` seconds under `control_dir`
 whose ssh has no control sockets, nor under a directory whose path holds a space,
 which rsync’s `-e` would split.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> ssh_command(control_dir='/tmp/cn-ssh').split(' -o ')[1:3]
 ['BatchMode=yes', 'ConnectTimeout=10']
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.publish.to_path(page, to)
 
@@ -4820,9 +4820,6 @@ Returns `{"refreshed": [...], "failed": {repo: reason}, "fresh": n}`.
 
 Every `"owner/repo"` a row’s references point into, issues and pull requests only.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> repos_of([{'links': [{'url': 'https://github.com/o/r/issues/3'},
 ...                      {'url': 'https://github.com/o/r/pull/4'},
@@ -4830,13 +4827,13 @@ Every `"owner/repo"` a row’s references point into, issues and pull requests o
 ['o/r']
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### crowsnest.refstate.state_of(url, , store=None, now=None, stale_after=datetime.timedelta(seconds=21600))
 
 `{"state", "title", "closed_at"}` for an issue or pull request URL, or `None` when
 it is not one, the store has not seen it, or what it knows is older than `stale_after`.
-
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ```pycon
 >>> store = {'o/r': {'fetched_at': '2026-02-01T12:00:00+00:00',
@@ -4847,6 +4844,9 @@ it is not one, the store has not seen it, or what it knows is older than `stale_
 >>> state_of('https://github.com/o/r/issues/3', store=store, now=at + timedelta(days=1)) is None
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 
 # _autosummary/crowsnest.registry.html.md
@@ -4940,13 +4940,13 @@ a kind of busy), then what is resting. Anything unrecognised sorts last.
 
 The Claude Code config directory: `path`, else `$CLAUDE_CONFIG_DIR`, else `~/.claude`.
 
-* **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
-
 ```pycon
 >>> claude_home('/x/y').as_posix()
 '/x/y'
 ```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### crowsnest.registry.fresh_within(seconds, \*, now=<built-in function time>)
 
@@ -4955,9 +4955,6 @@ A liveness rule for a synced copy of another machine’s home: alive while fresh
 The pids in such a copy belong to the other machine, so the only evidence of life is
 that the record changed recently. Pass the result as `is_live=`.
 
-* **Return type:**
-  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`LiveSession`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
-
 ```pycon
 >>> rule = fresh_within(60, now=lambda: 1000.0)
 >>> rule(LiveSession(1, 's', '', '/w', '', 'idle', '', 990.0, 0, False, '', ''))
@@ -4965,6 +4962,9 @@ True
 >>> rule(LiveSession(1, 's', '', '/w', '', 'idle', '', 900.0, 0, False, '', ''))
 False
 ```
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`LiveSession`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
 
 ### crowsnest.registry.live_sessions(\*, home=None, is_alive=<function pid_alive>, is_live=None, home_name='')
 
@@ -5482,13 +5482,13 @@ never applies the store.
 
 The context a surface uses when it is given none: the config file’s.
 
-* **Return type:**
-  [`RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)
-
 ```pycon
 >>> dflt_row_context(config='/nonexistent-config-for-doctest') == RowContext()
 True
 ```
+
+* **Return type:**
+  [`RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)
 
 
 # _autosummary/crowsnest.said.html.md
@@ -5576,9 +5576,6 @@ that is the item whose time counts.
 
 Unix seconds as an ISO instant in UTC; `''` for nothing, zero, or nonsense.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> from_epoch(0), from_epoch(None), from_epoch('x')
 ('', '', '')
@@ -5586,14 +5583,14 @@ Unix seconds as an ISO instant in UTC; `''` for nothing, zero, or nonsense.
 '2026-01-01T00:00:00+00:00'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.said.from_stamp(text)
 
 An ISO timestamp normalised to UTC seconds; `''` when it is not an instant.
 
 A timestamp with no zone is not an instant, so it is not read as one.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> from_stamp('2026-01-01T09:30:00.000Z')
@@ -5604,14 +5601,14 @@ A timestamp with no zone is not an instant, so it is not read as one.
 ('', '')
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.said.heading_date(heading)
 
 The date that opens a heading, as `said_at`; `''` when it does not open with one.
 
 A time is kept only with a zone. A date before 1970 is not taken.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> heading_date('### 2026-09-12 — all four stages landed')
@@ -5625,6 +5622,9 @@ A time is kept only with a zone. A date before 1970 is not taken.
 >>> heading_date('## 2026-13-45 not a date'), heading_date('## 0001-01-01 notes')
 ('', '')
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.said.of_activity(row)
 
@@ -5649,21 +5649,18 @@ reason. If the verdict carries no time, the answer is *unknown*: another time on
 row belongs to different words, so it is never borrowed. Every other row falls back
 to [`of_activity()`](_autosummary/crowsnest.said.html.md#crowsnest.said.of_activity).
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> of_row({'status': 'idle', 'activity': {'last_text_at': '2026-01-01T09:30:00Z'},
 ...         'verdict': {'group': 'safe_to_close', 'said_at': ''}})
 ('', '')
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
 ### crowsnest.said.parse(said_at)
 
 A `said_at` read back: an aware `datetime`, a `date` for a bare day, or `None`.
-
-* **Return type:**
-  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ```pycon
 >>> parse('2026-01-05')
@@ -5673,6 +5670,9 @@ datetime.date(2026, 1, 5)
 >>> parse('') is None and parse('2026-13-01') is None
 True
 ```
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.said.when_said(said_at, , now, zone=None)
 
@@ -5687,9 +5687,6 @@ unknown rather than as “today”. The first is a time later than `now` by more
 (`None` means this machine’s zone); a future date names a plan or a deadline. The
 third is anything before 1970.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> now = 1767268800.0  # 2026-01-01T12:00:00Z
 >>> when_said('2026-01-01T11:00:00+00:00', now=now)
@@ -5702,17 +5699,20 @@ True
 True
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) | [`None`](https://docs.python.org/3/builtins/constants.html#None)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
 ### crowsnest.said.with_said(row)
 
 `row` with its `said_at` and `said_at_basis` set by [`of_row()`](_autosummary/crowsnest.said.html.md#crowsnest.said.of_row).
-
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ```pycon
 >>> with_said({'status': 'waiting', 'status_since': 1767225600})['said_at_basis']
 'registry'
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
 # _autosummary/crowsnest.skills.html.md
@@ -5772,14 +5772,14 @@ Links each into `target` (default `$CLAUDE_CONFIG_DIR` or `~/.claude`). Returns
 the plan: one row per asset with its action – `install`, `ok` (already ours) or
 `conflict` (something else is there; left alone unless `force`).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> plan = install_skills(target='/nonexistent/host', dry_run=True)
 >>> plan['counts']
 {'install': 5, 'ok': 0, 'conflict': 0}
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
 # _autosummary/crowsnest.themes.html.md
@@ -6421,7 +6421,7 @@ a cycle or a custom layout, where silently drawing nothing is the worst answer.
 The most rows one figure draws. A picture longer than this is not a picture; the text
 tree (`crowsnest lineage`) is the thing that scales, and the figure says so.
 
-### *class* crowsnest.tree.Placed(name, label, depth, row, kind='session', status='idle', alive=True, confidence='', detail='', count=1, parent_row=-1, node=<factory>)
+### *class* crowsnest.tree.Placed(name, label, depth, row, kind='session', status='idle', alive=True, confidence='', detail='', count=1, parent_row=-1, node=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -6799,13 +6799,13 @@ an old all-clear as today’s verdict is exactly the mistake this module exists 
 With no headings at all the whole thing is the latest section, which is right for a
 short ledger and harmless for a long one that never structured itself.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> latest_section('## Mon\n\nall landed\n\n## Wed\n\nblocked on the key').strip()
 '## Wed\n\nblocked on the key'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.triage.without_code(text)
 
@@ -6813,13 +6813,13 @@ short ledger and harmless for a long one that never structured itself.
 
 A comment inside a shell block is not the session speaking.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> without_code('a\n```\nnothing outstanding\n```\nb').split()
 ['a', 'b']
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/crowsnest.watch.html.md
@@ -6989,9 +6989,6 @@ for, so it goes in `waiting_for`.
 A notification whose type is in [`QUIET_NOTIFICATIONS`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.QUIET_NOTIFICATIONS) is not streamed either:
 it is Claude Code noticing a session is idle, not the session asking for anything.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> hook_event({'event': 'stop', 'name': 'lookout', 'detail': 'Merged.'})['kind']
 'stopped'
@@ -7002,6 +6999,9 @@ True
 >>> hook_event({'event': 'notification', 'notification_type': 'permission_prompt'})['kind']
 'needs-you'
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.watch.line(event, , plain=False)
 
@@ -7016,9 +7016,6 @@ gives the unformatted line the stream always printed
 (`14:12  waiting  sweep2-qh (crowsnest) — Squash or rebase?`). `--json` is
 neither: it prints the event itself.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> event = {"at": "2026-09-28T14:12:00+00:00", "kind": "busy", "name": "x",
 ...          "project": "p", "home": "", "detail": ""}
@@ -7026,18 +7023,21 @@ neither: it prints the event itself.
 True
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.watch.local_time(stamp, , now=None)
 
 An ISO timestamp as local `HH:MM`, with the date in front when it is not today’s,
 or the raw value when it cannot be read.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> local_time("not a time")
 'not a time'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.watch.snapshot(\*, home=None, is_alive=<function pid_alive>, all_homes=False, config=None)
 
@@ -7066,13 +7066,13 @@ fragment – a line the writer has not finished – is left for the next read.
 
 Where a reader that wants only *new* lines should start: the end of the file now.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]
-
 ```pycon
 >>> tail_position('/nonexistent-file-for-doctest')
 (-1, 0)
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]
 
 
 # about-this-build.html.md
@@ -7081,16 +7081,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-14 07:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/2df35d6eae967aff1e56f058775bdea971dd80a5"><code>2df35d6</code></a> on branch <code>main</code>, for **crowsnest 0.0.92** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 00:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c4405b11ec23c31cbf2faa42c54c4818e61dd4db"><code>c4405b1</code></a> on branch <code>main</code>, for **crowsnest 0.0.93** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.93) is behind the latest release on PyPI (0.0.94): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/2df35d6eae967aff1e56f058775bdea971dd80a5"><code>2df35d6eae967aff1e56f058775bdea971dd80a5</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c4405b11ec23c31cbf2faa42c54c4818e61dd4db"><code>c4405b11ec23c31cbf2faa42c54c4818e61dd4db</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7101,9 +7103,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/38528743057">38528743057</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39181039996">39181039996</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>2df35d6eae967aff1e56f058775bdea971dd80a5</code> (in the history of the built commit) |
+| Event commit | <code>c4405b11ec23c31cbf2faa42c54c4818e61dd4db</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7128,13 +7130,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.92/">0.0.92</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.94/">0.0.94</a>, newer than the documented version (0.0.93).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 2df35d6eae967aff1e56f058775bdea971dd80a5
+git checkout c4405b11ec23c31cbf2faa42c54c4818e61dd4db
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

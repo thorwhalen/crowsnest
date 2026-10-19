@@ -117,15 +117,15 @@ rsync over ssh for a `[user@]host:path`, an atomic local write for anything else
 
 Whether `to` names a file on another machine (`[user@]host:path`).
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_remote("me@box:/srv/page.html"), is_remote("box:page.html")
 (True, True)
 >>> is_remote("~/Sync/page.html"), is_remote("C:/page.html"), is_remote("./a:b")
 (False, False, False)
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.publish.rsync_argv(page, to, , timeout=20, connect_timeout=10)
 
@@ -145,13 +145,13 @@ connection per host open for `control_persist` seconds under `control_dir`
 whose ssh has no control sockets, nor under a directory whose path holds a space,
 which rsync’s `-e` would split.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> ssh_command(control_dir='/tmp/cn-ssh').split(' -o ')[1:3]
 ['BatchMode=yes', 'ConnectTimeout=10']
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.publish.to_path(page, to)
 

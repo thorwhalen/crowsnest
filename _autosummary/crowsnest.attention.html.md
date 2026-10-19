@@ -298,9 +298,6 @@ because one ask makes the same three-part tuple. Any other `needs_you` item show
 `changed` once: those are the items whose old revision missed part of what they
 ask. Ids are untouched. Both halves are tests in `tests/test_attention_refute.py`.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
-
 ```pycon
 >>> dflt_material({'status': 'busy', 'activity': {'last_assistant_text': 'hi'}})
 ('busy',)
@@ -315,6 +312,9 @@ ask. Ids are untouched. Both halves are tests in `tests/test_attention_refute.py
 >>> dflt_material({'verdict': {**asked, 'asks': two}})
 ('needs_you', 'decision', 'squash?', 'rotate the key.')
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 
 ### crowsnest.attention.dflt_store(rootdir=None)
 
@@ -358,13 +358,13 @@ Hashed as JSON, so the components cannot run into each other. A `material` that
 returns something JSON cannot encode (a set, whose order is not stable) raises
 `TypeError` rather than producing a revision that changes between runs.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> len(fingerprint({'status': 'busy'})) == 2 * FINGERPRINT_BYTES
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.attention.holds_a_record(store=None)
 
@@ -373,13 +373,13 @@ Does `store` hold a document that reads as a record? Stops at the first one.
 What decides whether a page applies the store at all: one that holds none renders as
 it did before attention existed.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> holds_a_record({}), holds_a_record({item_id({'session_id': 'x'}): {'seen_rev': 'r'}})
 (False, True)
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.attention.import_docs(docs, , store=None)
 
@@ -402,9 +402,6 @@ offset ([`Record`](#crowsnest.attention.Record) refuses one that does not), beca
 without one as its viewer’s local time. A *naive datetime* handed to a function here
 is a wall-clock time, and is read as local.
 
-* **Return type:**
-  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime)
-
 ```pycon
 >>> instant('2026-09-15T12:00:00.000Z') == instant('2026-09-15T12:00:00+00:00')
 True
@@ -412,17 +409,20 @@ True
 '2026-01-01T00:00:00+00:00'
 ```
 
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime)
+
 ### crowsnest.attention.is_item_id(key)
 
 Is `key` an item id as [`item_id()`](#crowsnest.attention.item_id) spells one? Anything else never names a file.
-
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ```pycon
 >>> is_item_id(item_id({'session_id': 'x'})), is_item_id('../etc/passwd')
 (True, False)
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.attention.item_id(row, , identity=None)
 
@@ -433,13 +433,13 @@ share an id however many components they have – `("ask", "s1:x")` and
 `("ask", "s1", "x")` are two items. A session id contains neither character, so the
 default is hashed as literally `session:<id>`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> item_id({'session_id': 'e7c1', 'name': 'a'}) == item_id({'session_id': 'e7c1', 'name': 'b'})
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.attention.later(record, rev, , until, on_change=True, plan='', seen_as=None, now=None)
 
@@ -462,15 +462,15 @@ which is what the button turns into (triage-ux 2.5). `tomorrow` is the next cale
 day at `morning_hour`. Hours are the wall clock of `now`’s timezone, local when
 `now` is naive or not given; `config` is [`crowsnest.config.attention_settings()`](crowsnest.config.html.md#crowsnest.config.attention_settings).
 
-* **Return type:**
-  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> from datetime import datetime, timezone
 >>> noon = datetime(2026, 1, 5, 12, tzinfo=timezone.utc)
 >>> later_until('evening', now=noon).isoformat()
 '2026-01-05T18:00:00+00:00'
 ```
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.attention.note(record, text, , now=None)
 
@@ -499,13 +499,13 @@ item shows what the restored snapshot shows.
 
 `phone` for a question or a decision, `terminal` for an action, else `''`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> reach({'verdict': {'group': 'needs_you', 'why': 'action'}})
 'terminal'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.attention.read_doc(item, , store=None)
 
@@ -535,15 +535,15 @@ out; a record that cannot be read counts as none, as it does on the page.
 It answers for any store. The page draws the band only once the store holds a record
 (the degradation table in discussion #51), so an empty store changes nothing there.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
-
 ```pycon
 >>> row = {'session_id': 'e7c1', 'status': 'idle',
 ...        'verdict': {'group': 'unclassified', 'reason': 'said nothing'}}
 >>> [entry['kind'] for entry in review([row], store={})]
 ['unclassified']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### crowsnest.attention.review_entries(named, , now=None, config=None)
 
@@ -624,15 +624,15 @@ What a row is, as [`SeenAs`](#crowsnest.attention.SeenAs) records it: its verdic
 
 The same whatever `material=` a caller uses: it describes the verdict, not the hash.
 
-* **Return type:**
-  [`SeenAs`](#crowsnest.attention.SeenAs) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> seen_as_of({'verdict': {'group': 'needs_you', 'why': 'action', 'reason': 'attach'}})
 SeenAs(group='needs_you', why='action')
 >>> seen_as_of({'status': 'idle'}) is None
 True
 ```
+
+* **Return type:**
+  [`SeenAs`](#crowsnest.attention.SeenAs) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.attention.undo(record, , now=None)
 

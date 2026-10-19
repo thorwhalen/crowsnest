@@ -108,7 +108,7 @@ a cycle or a custom layout, where silently drawing nothing is the worst answer.
 The most rows one figure draws. A picture longer than this is not a picture; the text
 tree (`crowsnest lineage`) is the thing that scales, and the figure says so.
 
-### *class* crowsnest.tree.Placed(name, label, depth, row, kind='session', status='idle', alive=True, confidence='', detail='', count=1, parent_row=-1, node=<factory>)
+### *class* crowsnest.tree.Placed(name, label, depth, row, kind='session', status='idle', alive=True, confidence='', detail='', count=1, parent_row=-1, node=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 

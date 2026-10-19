@@ -53,11 +53,11 @@ Links each into `target` (default `$CLAUDE_CONFIG_DIR` or `~/.claude`). Returns
 the plan: one row per asset with its action – `install`, `ok` (already ours) or
 `conflict` (something else is there; left alone unless `force`).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> plan = install_skills(target='/nonexistent/host', dry_run=True)
 >>> plan['counts']
 {'install': 5, 'ok': 0, 'conflict': 0}
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

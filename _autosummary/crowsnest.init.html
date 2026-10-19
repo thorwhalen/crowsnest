@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -266,11 +267,6 @@ user file’s row and <code class="docutils literal notranslate"><span class="pr
 matcher gains one command, and a command already registered anywhere under that event
 is not registered twice. Nothing is ever removed – the file belongs to the user, and
 the desktop notifier already on their <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook has to keep working.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="p">,</span> <span class="n">added</span> <span class="o">=</span> <span class="n">merged_hooks</span><span class="p">({},</span> <span class="n">HOOKS</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="p">[</span><span class="s1">'hooks'</span><span class="p">][</span><span class="s1">'Stop'</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">'hooks'</span><span class="p">]</span>
 </span><span data-line="3"><span class="go">[{'type': 'command', 'command': 'crowsnest hook stop', 'async': True}]</span>
@@ -280,21 +276,26 @@ the desktop notifier already on their <code class="docutils literal notranslate"
 </span><span data-line="7"><span class="go">[]</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.init.settings_snippet">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">settings_snippet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hooks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">({'async':</span> <span class="pre">True,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">hook</span> <span class="pre">notification',</span> <span class="pre">'event':</span> <span class="pre">'Notification',</span> <span class="pre">'matcher':</span> <span class="pre">'',</span> <span class="pre">'scope':</span> <span class="pre">'user',</span> <span class="pre">'why':</span> <span class="pre">'a</span> <span class="pre">session</span> <span class="pre">is</span> <span class="pre">asking</span> <span class="pre">its</span> <span class="pre">human</span> <span class="pre">for</span> <span class="pre">something'},</span> <span class="pre">{'async':</span> <span class="pre">True,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">hook</span> <span class="pre">stop',</span> <span class="pre">'event':</span> <span class="pre">'Stop',</span> <span class="pre">'matcher':</span> <span class="pre">'',</span> <span class="pre">'scope':</span> <span class="pre">'user',</span> <span class="pre">'why':</span> <span class="pre">'a</span> <span class="pre">session</span> <span class="pre">finished</span> <span class="pre">a</span> <span class="pre">turn;</span> <span class="pre">record</span> <span class="pre">its</span> <span class="pre">last</span> <span class="pre">words'},</span> <span class="pre">{'async':</span> <span class="pre">False,</span> <span class="pre">'command':</span> <span class="pre">'crowsnest</span> <span class="pre">--brief',</span> <span class="pre">'event':</span> <span class="pre">'SessionStart',</span> <span class="pre">'matcher':</span> <span class="pre">'startup|clear|compact',</span> <span class="pre">'scope':</span> <span class="pre">'project',</span> <span class="pre">'why':</span> <span class="pre">'re-print</span> <span class="pre">the</span> <span class="pre">roster</span> <span class="pre">after</span> <span class="pre">every</span> <span class="pre">start,</span> <span class="pre">clear</span> <span class="pre">and</span> <span class="pre">compaction'})</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/init.html#settings_snippet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.init.settings_snippet" title="Link to this definition">#</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">settings.json</span></code> fragment these hooks amount to, for a human to paste.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">settings_snippet</span><span class="p">(</span><span class="n">HOOKS</span><span class="p">[</span><span class="mi">2</span><span class="p">:])[</span><span class="s1">'hooks'</span><span class="p">][</span><span class="s1">'SessionStart'</span><span class="p">]</span>
+</span><span data-line="2"><span class="go">[{'matcher': 'startup|clear|compact', 'hooks': [{'type': 'command', 'command': 'crowsnest --brief'}]}]</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">settings_snippet</span><span class="p">(</span><span class="n">HOOKS</span><span class="p">[</span><span class="mi">2</span><span class="p">:])[</span><span class="s1">'hooks'</span><span class="p">][</span><span class="s1">'SessionStart'</span><span class="p">]</span>
-</span><span data-line="2"><span class="go">[{'matcher': 'startup|clear|compact', 'hooks': [{'type': 'command', 'command': 'crowsnest --brief'}]}]</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -312,15 +313,15 @@ the desktop notifier already on their <code class="docutils literal notranslate"
 <dt class="sig sig-object py" id="crowsnest.init.template_text">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">template_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/init.html#template_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.init.template_text" title="Link to this definition">#</a></dt>
 <dd><p>The text of the bundled <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">template_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="2"><span class="go">'# The lookout session'</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">template_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-</span><span data-line="2"><span class="go">'# The lookout session'</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 </section>
@@ -365,7 +366,7 @@ the desktop notifier already on their <code class="docutils literal notranslate"
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -163,9 +163,6 @@ for, so it goes in `waiting_for`.
 A notification whose type is in [`QUIET_NOTIFICATIONS`](#crowsnest.watch.QUIET_NOTIFICATIONS) is not streamed either:
 it is Claude Code noticing a session is idle, not the session asking for anything.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> hook_event({'event': 'stop', 'name': 'lookout', 'detail': 'Merged.'})['kind']
 'stopped'
@@ -176,6 +173,9 @@ True
 >>> hook_event({'event': 'notification', 'notification_type': 'permission_prompt'})['kind']
 'needs-you'
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.watch.line(event, , plain=False)
 
@@ -190,9 +190,6 @@ gives the unformatted line the stream always printed
 (`14:12  waiting  sweep2-qh (crowsnest) — Squash or rebase?`). `--json` is
 neither: it prints the event itself.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> event = {"at": "2026-09-28T14:12:00+00:00", "kind": "busy", "name": "x",
 ...          "project": "p", "home": "", "detail": ""}
@@ -200,18 +197,21 @@ neither: it prints the event itself.
 True
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.watch.local_time(stamp, , now=None)
 
 An ISO timestamp as local `HH:MM`, with the date in front when it is not today’s,
 or the raw value when it cannot be read.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> local_time("not a time")
 'not a time'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.watch.snapshot(\*, home=None, is_alive=<function pid_alive>, all_homes=False, config=None)
 
@@ -240,10 +240,10 @@ fragment – a line the writer has not finished – is left for the next read.
 
 Where a reader that wants only *new* lines should start: the end of the file now.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]
-
 ```pycon
 >>> tail_position('/nonexistent-file-for-doctest')
 (-1, 0)
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]

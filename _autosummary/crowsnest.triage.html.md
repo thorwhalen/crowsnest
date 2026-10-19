@@ -274,13 +274,13 @@ an old all-clear as today’s verdict is exactly the mistake this module exists 
 With no headings at all the whole thing is the latest section, which is right for a
 short ledger and harmless for a long one that never structured itself.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> latest_section('## Mon\n\nall landed\n\n## Wed\n\nblocked on the key').strip()
 '## Wed\n\nblocked on the key'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.triage.without_code(text)
 
@@ -288,10 +288,10 @@ short ledger and harmless for a long one that never structured itself.
 
 A comment inside a shell block is not the session speaking.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> without_code('a\n```\nnothing outstanding\n```\nb').split()
 ['a', 'b']
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

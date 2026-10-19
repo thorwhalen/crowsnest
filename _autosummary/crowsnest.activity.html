@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -287,11 +288,6 @@ few milliseconds. The window doubles until it holds a human prompt.</p>
 <dt class="sig sig-object py" id="crowsnest.activity.describe_tool">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">describe_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#describe_tool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.describe_tool" title="Link to this definition">#</a></dt>
 <dd><p>One line naming a tool call: the tool, and the argument that says what it did.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'Bash'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'command'</span><span class="p">:</span> <span class="s1">'ls -la'</span><span class="p">,</span> <span class="s1">'description'</span><span class="p">:</span> <span class="s1">'List files'</span><span class="p">})</span>
 </span><span data-line="2"><span class="go">'Bash: List files'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">describe_tool</span><span class="p">(</span><span class="s1">'Read'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'file_path'</span><span class="p">:</span> <span class="s1">'/a/b/c.py'</span><span class="p">})</span>
@@ -302,6 +298,11 @@ few milliseconds. The window doubles until it holds a human prompt.</p>
 </span><span data-line="8"><span class="go">'ListAgents'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -347,15 +348,15 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 <dd><p>The records in the last <code class="docutils literal notranslate"><span class="pre">tail_bytes</span></code> of a transcript, widening until <code class="docutils literal notranslate"><span class="pre">enough</span></code>.</p>
 <p>Returns the records and whether the window reached the start of the file. The first
 line of a window that starts mid-file is a fragment and is dropped.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tail_records</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">([], True)</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tail_records</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">([], True)</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 </section>
@@ -400,7 +401,7 @@ line of a window that starts mid-file is a fragment and is dropped.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

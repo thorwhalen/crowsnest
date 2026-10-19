@@ -414,11 +414,11 @@ that a reader can tell “spawned by nobody we could name” (`parent` present, 
 `name` empty) from “written by a version that did not record parents” (no
 `parent` at all).
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
-
 ```pycon
 >>> line = spawn_event('kid', parent={'name': 'boss'}, at='2026-01-01T00:00:00+00:00')
 >>> line['event'], line['name'], line['parent']['name']
 ('spawn', 'kid', 'boss')
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

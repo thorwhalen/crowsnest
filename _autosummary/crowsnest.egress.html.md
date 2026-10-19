@@ -55,9 +55,6 @@ One field, safe to place in the document.
 
 `text` without any word that an ellipsis ends; each ellipsis stays.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> drop_cut_words('Bash: use ghp_AAAAAAAA…')
 'Bash: use …'
@@ -66,3 +63,6 @@ One field, safe to place in the document.
 >>> drop_cut_words('Read: notes.md')
 'Read: notes.md'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

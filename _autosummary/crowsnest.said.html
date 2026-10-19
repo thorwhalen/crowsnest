@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -297,17 +298,17 @@ that is the item whose time counts.</p>
 <dt class="sig sig-object py" id="crowsnest.said.from_epoch">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">from_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#from_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.from_epoch" title="Link to this definition">#</a></dt>
 <dd><p>Unix seconds as an ISO instant in UTC; <code class="docutils literal notranslate"><span class="pre">''</span></code> for nothing, zero, or nonsense.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_epoch</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">from_epoch</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">from_epoch</span><span class="p">(</span><span class="s1">'x'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">('', '', '')</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_epoch</span><span class="p">(</span><span class="mi">1767225600</span><span class="p">)</span>
 </span><span data-line="4"><span class="go">'2026-01-01T00:00:00+00:00'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -315,11 +316,6 @@ that is the item whose time counts.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">from_stamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#from_stamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.from_stamp" title="Link to this definition">#</a></dt>
 <dd><p>An ISO timestamp normalised to UTC seconds; <code class="docutils literal notranslate"><span class="pre">''</span></code> when it is not an instant.</p>
 <p>A timestamp with no zone is not an instant, so it is not read as one.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_stamp</span><span class="p">(</span><span class="s1">'2026-01-01T09:30:00.000Z'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">'2026-01-01T09:30:00+00:00'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">from_stamp</span><span class="p">(</span><span class="s1">'2026-01-01T11:30:00+02:00'</span><span class="p">)</span>
@@ -328,6 +324,11 @@ that is the item whose time counts.</p>
 </span><span data-line="6"><span class="go">('', '')</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -335,11 +336,6 @@ that is the item whose time counts.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">heading_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">heading</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#heading_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.heading_date" title="Link to this definition">#</a></dt>
 <dd><p>The date that opens a heading, as <code class="docutils literal notranslate"><span class="pre">said_at</span></code>; <code class="docutils literal notranslate"><span class="pre">''</span></code> when it does not open with one.</p>
 <p>A time is kept only with a zone. A date before 1970 is not taken.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">heading_date</span><span class="p">(</span><span class="s1">'### 2026-09-12 — all four stages landed'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">'2026-09-12'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">heading_date</span><span class="p">(</span><span class="s1">'## 2026-09-12T09:40Z handoff'</span><span class="p">)</span>
@@ -352,6 +348,11 @@ that is the item whose time counts.</p>
 </span><span data-line="10"><span class="go">('', '')</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -381,27 +382,22 @@ the registry recorded that status.</p></li>
 reason. If the verdict carries no time, the answer is <em>unknown</em>: another time on the
 row belongs to different words, so it is never borrowed. Every other row falls back
 to <a class="reference internal" href="#crowsnest.said.of_activity" title="crowsnest.said.of_activity"><code class="xref py py-func docutils literal notranslate"><span class="pre">of_activity()</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">of_row</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'activity'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'last_text_at'</span><span class="p">:</span> <span class="s1">'2026-01-01T09:30:00Z'</span><span class="p">},</span>
 </span><span data-line="2"><span class="gp">... </span>        <span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'safe_to_close'</span><span class="p">,</span> <span class="s1">'said_at'</span><span class="p">:</span> <span class="s1">''</span><span class="p">}})</span>
 </span><span data-line="3"><span class="go">('', '')</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.said.parse">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">said_at</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.parse" title="Link to this definition">#</a></dt>
 <dd><p>A <code class="docutils literal notranslate"><span class="pre">said_at</span></code> read back: an aware <code class="docutils literal notranslate"><span class="pre">datetime</span></code>, a <code class="docutils literal notranslate"><span class="pre">date</span></code> for a bare day, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse</span><span class="p">(</span><span class="s1">'2026-01-05'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">datetime.date(2026, 1, 5)</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">parse</span><span class="p">(</span><span class="s1">'2026-01-05T08:00:00+00:00'</span><span class="p">)</span><span class="o">.</span><span class="n">hour</span>
@@ -410,6 +406,11 @@ to <a class="reference internal" href="#crowsnest.said.of_activity" title="crows
 </span><span data-line="6"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -424,11 +425,6 @@ unknown rather than as “today”. The first is a time later than <code class="
 <a class="reference internal" href="#crowsnest.said.CLOCK_SLACK" title="crowsnest.said.CLOCK_SLACK"><code class="xref py py-data docutils literal notranslate"><span class="pre">CLOCK_SLACK</span></code></a>. The second is a date later than <code class="docutils literal notranslate"><span class="pre">now</span></code>’s day in <code class="docutils literal notranslate"><span class="pre">zone</span></code>
 (<code class="docutils literal notranslate"><span class="pre">None</span></code> means this machine’s zone); a future date names a plan or a deadline. The
 third is anything before 1970.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">now</span> <span class="o">=</span> <span class="mf">1767268800.0</span>  <span class="c1"># 2026-01-01T12:00:00Z</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">when_said</span><span class="p">(</span><span class="s1">'2026-01-01T11:00:00+00:00'</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">)</span>
 </span><span data-line="3"><span class="go">(1767265200.0, None)</span>
@@ -440,21 +436,26 @@ third is anything before 1970.</p>
 </span><span data-line="9"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.said.with_said">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.said.</span></span><span class="sig-name descname"><span class="pre">with_said</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/said.html#with_said"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.said.with_said" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">row</span></code> with its <code class="docutils literal notranslate"><span class="pre">said_at</span></code> and <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code> set by <a class="reference internal" href="#crowsnest.said.of_row" title="crowsnest.said.of_row"><code class="xref py py-func docutils literal notranslate"><span class="pre">of_row()</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">with_said</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'waiting'</span><span class="p">,</span> <span class="s1">'status_since'</span><span class="p">:</span> <span class="mi">1767225600</span><span class="p">})[</span><span class="s1">'said_at_basis'</span><span class="p">]</span>
+</span><span data-line="2"><span class="go">'registry'</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">with_said</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'waiting'</span><span class="p">,</span> <span class="s1">'status_since'</span><span class="p">:</span> <span class="mi">1767225600</span><span class="p">})[</span><span class="s1">'said_at_basis'</span><span class="p">]</span>
-</span><span data-line="2"><span class="go">'registry'</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 </section>
@@ -499,7 +500,7 @@ third is anything before 1970.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

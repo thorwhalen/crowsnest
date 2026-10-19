@@ -88,9 +88,6 @@ One exchange: a human prompt, what the assistant did, and its last words.
 
 One line naming a tool call: the tool, and the argument that says what it did.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> describe_tool('Bash', {'command': 'ls -la', 'description': 'List files'})
 'Bash: List files'
@@ -101,6 +98,9 @@ One line naming a tool call: the tool, and the argument that says what it did.
 >>> describe_tool('ListAgents', {})
 'ListAgents'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.activity.load_records(path)
 
@@ -136,10 +136,10 @@ The records in the last `tail_bytes` of a transcript, widening until `enough`.
 Returns the records and whether the window reached the start of the file. The first
 line of a window that starts mid-file is a fragment and is dropped.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
-
 ```pycon
 >>> tail_records('/nonexistent-file-for-doctest')
 ([], True)
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]

@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -309,11 +310,6 @@ markup would. A word an earlier clip cut (one ending in an ellipsis) is dropped 
 (<a class="reference internal" href="crowsnest.egress.html#module-crowsnest.egress" title="crowsnest.egress"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.egress</span></code></a>). <code class="docutils literal notranslate"><span class="pre">limit</span></code> clips the result’s whitespace-collapsed text to
 that many characters, and the clip is sanitised again, by the plain sanitiser: its
 ellipsis follows a word that is already clean, and must not cost that word.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">publishable</span><span class="p">(</span><span class="s1">'a &lt; b'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">'a &lt; b'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">publishable</span><span class="p">(</span><span class="s1">'token='</span> <span class="o">+</span> <span class="s1">'ghp_'</span> <span class="o">+</span> <span class="s1">'A'</span> <span class="o">*</span> <span class="mi">36</span><span class="p">)</span>
@@ -322,21 +318,26 @@ ellipsis follows a word that is already clean, and must not cost that word.</p>
 </span><span data-line="6"><span class="go">'one two…'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.live.reads_in_flight">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.live.</span></span><span class="sig-name descname"><span class="pre">reads_in_flight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/live.html#reads_in_flight"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.live.reads_in_flight" title="Link to this definition">#</a></dt>
 <dd><p>Whether a session in <code class="docutils literal notranslate"><span class="pre">status</span></code> has its tail read for the call in flight.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">reads_in_flight</span><span class="p">(</span><span class="s1">'busy'</span><span class="p">),</span> <span class="n">reads_in_flight</span><span class="p">(</span><span class="s1">'idle'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">(True, False)</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">reads_in_flight</span><span class="p">(</span><span class="s1">'busy'</span><span class="p">),</span> <span class="n">reads_in_flight</span><span class="p">(</span><span class="s1">'idle'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">(True, False)</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -348,11 +349,6 @@ ellipsis follows a word that is already clean, and must not cost that word.</p>
 and <code class="docutils literal notranslate"><span class="pre">digest</span></code> openloops’ digest of it (<code class="xref py py-func docutils literal notranslate"><span class="pre">openloops.tools.show()</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code>.
 The lines, in order: status; what it was asked last; what it said last; what is in
 flight or what it asks; the digest.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">lines</span> <span class="o">=</span> <span class="n">recap_lines</span><span class="p">({</span><span class="s1">'label'</span><span class="p">:</span> <span class="s1">'fixer'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'status_since'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
 </span><span data-line="2"><span class="gp">... </span>                    <span class="p">{</span><span class="s1">'last_assistant_text'</span><span class="p">:</span> <span class="s1">'Shipped.'</span><span class="p">,</span>
 </span><span data-line="3"><span class="gp">... </span>                     <span class="s1">'last_text_at'</span><span class="p">:</span> <span class="s1">'2026-01-01T09:30:00Z'</span><span class="p">},</span> <span class="kc">None</span><span class="p">)</span>
@@ -360,6 +356,11 @@ flight or what it asks; the digest.</p>
 </span><span data-line="5"><span class="go">(5, 'said 2026-01-01 09:30 UTC: Shipped.')</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -371,15 +372,15 @@ flight or what it asks; the digest.</p>
 the sanitiser no longer recognises, so publishing the cut word publishes most of the
 secret. A text ending in an ellipsis therefore loses the word the ellipsis ends; the
 ellipsis stays, to say something was left out.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">uncut</span><span class="p">(</span><span class="s1">'Bash: use ghp_AAAAAAAA…'</span><span class="p">),</span> <span class="n">uncut</span><span class="p">(</span><span class="s1">'Read: notes.md'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">('Bash: use …', 'Read: notes.md')</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">uncut</span><span class="p">(</span><span class="s1">'Bash: use ghp_AAAAAAAA…'</span><span class="p">),</span> <span class="n">uncut</span><span class="p">(</span><span class="s1">'Read: notes.md'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">('Bash: use …', 'Read: notes.md')</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 </section>
@@ -424,7 +425,7 @@ ellipsis stays, to say something was left out.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

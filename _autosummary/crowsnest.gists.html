@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -276,33 +277,33 @@ sentences the heuristics flagged.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.gists.</span></span><span class="sig-name descname"><span class="pre">kept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">answer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/gists.html#kept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.gists.kept" title="Link to this definition">#</a></dt>
 <dd><p>The model’s questions that keep to the rules: a gist within its length, a known
 state, and an answer only when there is one. Anything else is dropped, not trusted.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">kept</span><span class="p">({</span><span class="s2">"questions"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"Why?"</span><span class="p">,</span> <span class="s2">"q"</span><span class="p">:</span> <span class="s2">"Why is CI slow?"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="s2">"The cache was cold"</span><span class="p">,</span>
 </span><span data-line="2"><span class="gp">... </span>                     <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"answered"</span><span class="p">,</span> <span class="s2">"sure"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span> <span class="p">{</span><span class="s2">"q"</span><span class="p">:</span> <span class="s2">"x "</span> <span class="o">*</span> <span class="mi">20</span><span class="p">}]})</span>
 </span><span data-line="3"><span class="go">[{'source': 'Why?', 'q': 'Why is CI slow?', 'a': 'The cache was cold', 'state': 'answered', 'sure': True}]</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.gists.kept_pair">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.gists.</span></span><span class="sig-name descname"><span class="pre">kept_pair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">answer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/gists.html#kept_pair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.gists.kept_pair" title="Link to this definition">#</a></dt>
 <dd><p>The model’s pairing when it keeps to the rules, else no match.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">kept_pair</span><span class="p">({</span><span class="s2">"match"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="s2">"Yes: it fires once"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"answered"</span><span class="p">},</span> <span class="mi">2</span><span class="p">)[</span><span class="s2">"match"</span><span class="p">]</span>
 </span><span data-line="2"><span class="go">1</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">kept_pair</span><span class="p">({</span><span class="s2">"match"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"answered"</span><span class="p">},</span> <span class="mi">2</span><span class="p">)[</span><span class="s2">"match"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
 </span><span data-line="4"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -333,7 +334,7 @@ state, and an answer only when there is one. Anything else is dropped, not trust
 <dd><p>The stored pairing of a question, when it was made from these candidates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -419,7 +420,7 @@ ended, or a later one carried) makes the stored gist stale.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

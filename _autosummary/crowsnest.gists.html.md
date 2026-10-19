@@ -70,21 +70,18 @@ One JSON file per message under `root` (default `<data dir>/questions/gists`).
 The model’s questions that keep to the rules: a gist within its length, a known
 state, and an answer only when there is one. Anything else is dropped, not trusted.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
-
 ```pycon
 >>> kept({"questions": [{"source": "Why?", "q": "Why is CI slow?", "a": "The cache was cold",
 ...                      "state": "answered", "sure": True}, {"q": "x " * 20}]})
 [{'source': 'Why?', 'q': 'Why is CI slow?', 'a': 'The cache was cold', 'state': 'answered', 'sure': True}]
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
 ### crowsnest.gists.kept_pair(answer, count)
 
 The model’s pairing when it keeps to the rules, else no match.
-
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ```pycon
 >>> kept_pair({"match": 1, "a": "Yes: it fires once", "state": "answered"}, 2)["match"]
@@ -92,6 +89,9 @@ The model’s pairing when it keeps to the rules, else no match.
 >>> kept_pair({"match": 5, "a": "x", "state": "answered"}, 2)["match"] is None
 True
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.gists.key_of(session, prompt_uuid)
 

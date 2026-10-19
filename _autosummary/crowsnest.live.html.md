@@ -114,9 +114,6 @@ markup would. A word an earlier clip cut (one ending in an ellipsis) is dropped 
 that many characters, and the clip is sanitised again, by the plain sanitiser: its
 ellipsis follows a word that is already clean, and must not cost that word.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> publishable('a < b')
 'a < b'
@@ -126,17 +123,20 @@ ellipsis follows a word that is already clean, and must not cost that word.
 'one two…'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.live.reads_in_flight(status)
 
 Whether a session in `status` has its tail read for the call in flight.
-
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ```pycon
 >>> reads_in_flight('busy'), reads_in_flight('idle')
 (True, False)
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.live.recap_lines(session, activity, digest, , text_limit=200)
 
@@ -148,9 +148,6 @@ and `digest` openloops’ digest of it (`openloops.tools.show()`), or `None`.
 The lines, in order: status; what it was asked last; what it said last; what is in
 flight or what it asks; the digest.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> lines = recap_lines({'label': 'fixer', 'status': 'idle', 'status_since': 0},
 ...                     {'last_assistant_text': 'Shipped.',
@@ -158,6 +155,9 @@ flight or what it asks; the digest.
 >>> len(lines), lines[2]
 (5, 'said 2026-01-01 09:30 UTC: Shipped.')
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### crowsnest.live.uncut(text)
 
@@ -169,10 +169,10 @@ the sanitiser no longer recognises, so publishing the cut word publishes most of
 secret. A text ending in an ellipsis therefore loses the word the ellipsis ends; the
 ellipsis stays, to say something was left out.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> uncut('Bash: use ghp_AAAAAAAA…'), uncut('Read: notes.md')
 ('Bash: use …', 'Read: notes.md')
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -309,15 +310,15 @@ never applies the store.</p>
 <dt class="sig sig-object py" id="crowsnest.rows.dflt_row_context">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.rows.</span></span><span class="sig-name descname"><span class="pre">dflt_row_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/rows.html#dflt_row_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.rows.dflt_row_context" title="Link to this definition">#</a></dt>
 <dd><p>The context a surface uses when it is given none: the config file’s.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">dflt_row_context</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="s1">'/nonexistent-config-for-doctest'</span><span class="p">)</span> <span class="o">==</span> <span class="n">RowContext</span><span class="p">()</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowContext</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">dflt_row_context</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="s1">'/nonexistent-config-for-doctest'</span><span class="p">)</span> <span class="o">==</span> <span class="n">RowContext</span><span class="p">()</span>
-</span><span data-line="2"><span class="go">True</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 </section>
@@ -362,7 +363,7 @@ never applies the store.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

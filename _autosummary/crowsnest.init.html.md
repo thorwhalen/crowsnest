@@ -91,9 +91,6 @@ matcher gains one command, and a command already registered anywhere under that 
 is not registered twice. Nothing is ever removed – the file belongs to the user, and
 the desktop notifier already on their `Stop` hook has to keep working.
 
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]]
-
 ```pycon
 >>> settings, added = merged_hooks({}, HOOKS[1:2])
 >>> settings['hooks']['Stop'][0]['hooks']
@@ -104,17 +101,20 @@ the desktop notifier already on their `Stop` hook has to keep working.
 []
 ```
 
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]]
+
 ### crowsnest.init.settings_snippet(hooks=({'async': True, 'command': 'crowsnest hook notification', 'event': 'Notification', 'matcher': '', 'scope': 'user', 'why': 'a session is asking its human for something'}, {'async': True, 'command': 'crowsnest hook stop', 'event': 'Stop', 'matcher': '', 'scope': 'user', 'why': 'a session finished a turn; record its last words'}, {'async': False, 'command': 'crowsnest --brief', 'event': 'SessionStart', 'matcher': 'startup|clear|compact', 'scope': 'project', 'why': 're-print the roster after every start, clear and compaction'}))
 
 The `settings.json` fragment these hooks amount to, for a human to paste.
-
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ```pycon
 >>> settings_snippet(HOOKS[2:])['hooks']['SessionStart']
 [{'matcher': 'startup|clear|compact', 'hooks': [{'type': 'command', 'command': 'crowsnest --brief'}]}]
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.init.template_path()
 
@@ -127,10 +127,10 @@ The bundled `CLAUDE.md` a watching session is given.
 
 The text of the bundled `CLAUDE.md`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> template_text().splitlines()[0]
 '# The lookout session'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

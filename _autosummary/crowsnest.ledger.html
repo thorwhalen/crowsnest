@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -334,11 +335,6 @@ shards that would cost: grep the <code class="docutils literal notranslate"><spa
 one file (<a class="reference internal" href="#crowsnest.ledger.safe_name" title="crowsnest.ledger.safe_name"><code class="xref py py-func docutils literal notranslate"><span class="pre">safe_name()</span></code></a> maps them to one stem), and more than one of
 <code class="docutils literal notranslate"><span class="pre">live_ids</span></code> – the sessions running now – writing it (two live sessions sharing a
 name). A <code class="docutils literal notranslate"><span class="pre">/clear</span></code> is neither: the old id is no longer live.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">page</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'fields'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'sessions'</span><span class="p">:</span> <span class="s1">'- a1@main as cn/xa · first seen t</span><span class="se">\n</span><span class="s1">- b2@main as cn:xa · first seen t'</span><span class="p">}}</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">problem</span> <span class="ow">in</span> <span class="n">ledger_conflicts</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">live_ids</span><span class="o">=</span><span class="p">{</span><span class="s1">'a1'</span><span class="p">,</span> <span class="s1">'b2'</span><span class="p">}):</span>
 </span><span data-line="3"><span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
@@ -346,6 +342,11 @@ name). A <code class="docutils literal notranslate"><span class="pre">/clear</sp
 </span><span data-line="5"><span class="go">2 live sessions write here: a1@main, b2@main</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -364,15 +365,15 @@ name). A <code class="docutils literal notranslate"><span class="pre">/clear</sp
 <dt class="sig sig-object py" id="crowsnest.ledger.ledger_path">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">ledger_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ledger_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#ledger_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.ledger_path" title="Link to this definition">#</a></dt>
 <dd><p>The file one session’s ledger lives in, whether or not it exists yet.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">ledger_path</span><span class="p">(</span><span class="s1">'lookout'</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="s1">'/x/y'</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+</span><span data-line="2"><span class="go">'/x/y/lookout.md'</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">ledger_path</span><span class="p">(</span><span class="s1">'lookout'</span><span class="p">,</span> <span class="n">ledger_dir</span><span class="o">=</span><span class="s1">'/x/y'</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-</span><span data-line="2"><span class="go">'/x/y/lookout.md'</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -413,7 +414,7 @@ renamed: each ledger’s <code class="docutils literal notranslate"><span class=
 one no longer reads like the ledger of a session that simply ended.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -423,17 +424,17 @@ one no longer reads like the ledger of a session that simply ended.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">safe_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#safe_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.safe_name" title="Link to this definition">#</a></dt>
 <dd><p>A session name as a file stem: anything outside <code class="docutils literal notranslate"><span class="pre">[A-Za-z0-9._-]</span></code> becomes a dash.</p>
 <p>Session names come from <code class="docutils literal notranslate"><span class="pre">claude</span> <span class="pre">-n</span> <span class="pre">&lt;name&gt;</span></code> and are not constrained to be filenames.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">safe_name</span><span class="p">(</span><span class="s1">'cn/xa needs you'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">'cn-xa-needs-you'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">safe_name</span><span class="p">(</span><span class="s1">'  '</span><span class="p">)</span>
 </span><span data-line="4"><span class="go">'unnamed'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -441,49 +442,49 @@ one no longer reads like the ledger of a session that simply ended.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">session_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#session_entries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.session_entries" title="Link to this definition">#</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">sessions</span></code> field’s entries as <code class="docutils literal notranslate"><span class="pre">{id,</span> <span class="pre">home,</span> <span class="pre">name,</span> <span class="pre">first_seen}</span></code> dicts.</p>
 <p>A line that is not an entry (a human’s note in the list) is skipped, not an error.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">session_entries</span><span class="p">(</span><span class="s1">'- 5ef2882a@main as cn-proj · first seen 2026-09-09T08:12Z'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">[{'id': '5ef2882a', 'home': 'main', 'name': 'cn-proj', 'first_seen': '2026-09-09T08:12Z'}]</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">session_entries</span><span class="p">(</span><span class="s1">'- 5ef2882a@main as cn-proj · first seen 2026-09-09T08:12Z'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">[{'id': '5ef2882a', 'home': 'main', 'name': 'cn-proj', 'first_seen': '2026-09-09T08:12Z'}]</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.ledger.split_stamp">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">split_stamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#split_stamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.split_stamp" title="Link to this definition">#</a></dt>
 <dd><p>A stamped value back into <code class="docutils literal notranslate"><span class="pre">(when,</span> <span class="pre">what)</span></code>; <code class="docutils literal notranslate"><span class="pre">('',</span> <span class="pre">value)</span></code> when it carries no time.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">split_stamp</span><span class="p">(</span><span class="s1">'2026-09-06T18:14:22+00:00 · Fixed and merged.'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">('2026-09-06T18:14:22+00:00', 'Fixed and merged.')</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">split_stamp</span><span class="p">(</span><span class="s1">'just words'</span><span class="p">)</span>
 </span><span data-line="4"><span class="go">('', 'just words')</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.ledger.stamped">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.ledger.</span></span><span class="sig-name descname"><span class="pre">stamped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/ledger.html#stamped"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.ledger.stamped" title="Link to this definition">#</a></dt>
 <dd><p>A one-line field value carrying its time: <code class="docutils literal notranslate"><span class="pre">&lt;when&gt;</span> <span class="pre">·</span> <span class="pre">&lt;what&gt;</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">stamped</span><span class="p">(</span><span class="s1">'Fixed and merged.'</span><span class="p">,</span> <span class="s1">'2026-09-06T18:14:22+00:00'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">'2026-09-06T18:14:22+00:00 · Fixed and merged.'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">stamped</span><span class="p">(</span><span class="s1">'two</span><span class="se">\n</span><span class="s1">lines'</span><span class="p">)</span>
 </span><span data-line="4"><span class="go">'two lines'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -545,7 +546,7 @@ silently wrote nothing would be worse than a stack trace.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

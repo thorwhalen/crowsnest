@@ -135,13 +135,13 @@ seven hex letters (`decade`, `defaced`) is the false positive this accepts; it
 costs a link nobody clicks, where the alternative – not linking shas at all – costs
 the one reference a person most often wants to look up.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
-
 ```pycon
 >>> from_commits('fixed in 7d30838', {'repo_url': 'https://github.com/o/r'})[0].text
 'r@7d30838'
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
 
 ### crowsnest.links.from_issue_refs(text, context)
 
@@ -155,15 +155,15 @@ Nothing is produced without a `repo_url` in the context – a wrong repository i
 worse than no link, because a link that goes somewhere plausible and wrong is one
 nobody checks.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
-
 ```pycon
 >>> from_issue_refs('closes #17', {'repo_url': 'https://github.com/o/r'})[0].url
 'https://github.com/o/r/issues/17'
 >>> from_issue_refs('closes #17', {})
 []
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
 
 ### crowsnest.links.from_markdown_links(text, context)
 
@@ -172,13 +172,13 @@ nobody checks.
 The best source available and the cheapest: a session that wrote a markdown link had
 the whole reference in hand and named it for a reader. Nothing is inferred.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
-
 ```pycon
 >>> from_markdown_links('see [PR 27](https://github.com/o/r/pull/27)', {})[0].text
 'PR 27'
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
 
 ### crowsnest.links.from_repo_refs(text, context)
 
@@ -188,32 +188,29 @@ The issue-or-pull-request ambiguity is left as `issue`: GitHub redirects an issu
 URL to the pull request when that is what the number is, so the link works either
 way, and guessing would be a guess.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
-
 ```pycon
 >>> from_repo_refs('see i2mint/mergeset#12', {})[0].url
 'https://github.com/i2mint/mergeset/issues/12'
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
+
 ### crowsnest.links.from_urls(text, context)
 
 A bare URL, typed by where it points and labelled the way a person would say it.
-
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
 
 ```pycon
 >>> [(l.type, l.text) for l in from_urls('see https://github.com/o/r/issues/3', {})]
 [('issue', 'r#3')]
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Link`](#crowsnest.links.Link)]
+
 ### crowsnest.links.github_ref(url)
 
 A GitHub URL as `(kind, owner, repo, number)`; empty strings when it is not one.
-
-* **Return type:**
-  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ```pycon
 >>> github_ref('https://github.com/i2mint/mergeset/pull/27')
@@ -225,6 +222,9 @@ A GitHub URL as `(kind, owner, repo, number)`; empty strings when it is not one.
 >>> github_ref('https://www.github.com/o/r/issues/3')
 ('issue', 'o', 'r', '3')
 ```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### crowsnest.links.identity(url)
 
@@ -241,9 +241,6 @@ Two spellings of one commit also collapse. A session writes `eb0774d0a` in one p
 and the full forty characters in another, and both are the same commit; the longer
 prefix wins on length, so they are compared on the shorter one’s length.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> identity('https://github.com/o/r/pull/45') == identity('https://github.com/o/r/issues/45')
 True
@@ -253,12 +250,12 @@ False
 True
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.links.kind_of(url)
 
 What a bare URL points at, as one word.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> kind_of('https://github.com/o/r/pull/1'), kind_of('https://x.slack.com/archives/C1/p2')
@@ -266,6 +263,9 @@ What a bare URL points at, as one word.
 >>> kind_of('https://claude.ai/code/artifact/abc'), kind_of('https://example.org')
 ('artifact', 'link')
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.links.label_for(url, text='')
 
@@ -275,9 +275,6 @@ The report calls this for references that reached it without a label – openloo
 own locators carry a URL and nothing else – so that nothing renders as a bare,
 unclickable-looking blank.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> label_for('https://github.com/o/r/pull/27')
 'r#27'
@@ -285,12 +282,12 @@ unclickable-looking blank.
 'the release PR'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### crowsnest.links.looks_like_a_secret(url)
 
 Is this a URL that *is* a credential, rather than one that merely needs one?
-
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ```pycon
 >>> looks_like_a_secret('https://hooks.slack.com/services/T0/B0/XXXX')
@@ -298,6 +295,9 @@ True
 >>> looks_like_a_secret('https://github.com/o/r/issues/1')
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.links.resolve(text, , context=None, resolvers=None, limit=12)
 
@@ -315,13 +315,13 @@ the markdown links a session wrote out in full first, the shas it happened to me
 last – because a page shows the first few and those should be the best few.
 `limit` bounds the result because this feeds a page meant to be read.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
-
 ```pycon
 >>> [l['text'] for l in resolve('see #1 and o/r#2', context={'repo_url': 'https://github.com/o/r'})]
 ['r#2', 'r#1']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### crowsnest.links.without_written_out_links(text)
 
@@ -338,10 +338,10 @@ hundred issues is a page that exists and is about something else.
 Blanked rather than removed so that every offset in the string still means what it
 meant – lookbehinds on either side of a match keep working.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> without_written_out_links('see [#1](https://github.com/o/r/pull/1) and #2')
 'see                                     and #2'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

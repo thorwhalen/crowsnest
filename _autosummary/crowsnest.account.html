@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -295,16 +296,16 @@ to every spawn.</p>
 account” – which is not the same as the default account, and is why this returns
 <code class="docutils literal notranslate"><span class="pre">None</span></code> rather than <code class="docutils literal notranslate"><span class="pre">~/.claude</span></code>. <code class="docutils literal notranslate"><span class="pre">$CROWSNEST_PROFILE</span></code> stands in for <code class="docutils literal notranslate"><span class="pre">profile</span></code>
 so a watching session states its account once instead of on every spawn.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">account_home</span><span class="p">(</span><span class="n">environ</span><span class="o">=</span><span class="p">{})</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">account_home</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="s1">'/h/.claude-iq'</span><span class="p">,</span> <span class="n">environ</span><span class="o">=</span><span class="p">{})</span>
 </span><span data-line="3"><span class="go">'/h/.claude-iq'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -322,16 +323,16 @@ does not reach <code class="docutils literal notranslate"><span class="pre">~/.l
 generated line (#129).</p>
 <p>The order is deliberate: a stated preference outranks inheritance, because a person
 who names a launcher is usually saying “not the one you would have picked”.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">claude_bin</span><span class="p">({</span><span class="s1">'CLAUDE_CODE_EXECPATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'PATH'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'HOME'</span><span class="p">:</span> <span class="s1">'/no/such/home'</span><span class="p">},</span>
 </span><span data-line="2"><span class="gp">... </span>           <span class="n">config</span><span class="o">=</span><span class="s1">'/no/such/config'</span><span class="p">)</span>
 </span><span data-line="3"><span class="go">'claude'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -347,15 +348,15 @@ a promise that some other machine will resolve it; a name typed into a config fi
 a claim about <em>this</em> one, and the failure it otherwise produces – a terminal that
 opens, prints “command not found” and closes – is invisible to the spawner, which
 only reports that the registry never saw the session.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">configured_claude_bin</span><span class="p">({},</span> <span class="n">config</span><span class="o">=</span><span class="s1">'/nonexistent-config-for-doctest'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">''</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">configured_claude_bin</span><span class="p">({},</span> <span class="n">config</span><span class="o">=</span><span class="s1">'/nonexistent-config-for-doctest'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">''</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -438,7 +439,7 @@ outright and fails for a name it does not know. Only an absolute path is believe
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

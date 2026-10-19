@@ -98,14 +98,14 @@ account” – which is not the same as the default account, and is why this ret
 `None` rather than `~/.claude`. `$CROWSNEST_PROFILE` stands in for `profile`
 so a watching session states its account once instead of on every spawn.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
-
 ```pycon
 >>> account_home(environ={})
 >>> account_home(home='/h/.claude-iq', environ={})
 '/h/.claude-iq'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.account.claude_bin(environ=None, , config=None)
 
@@ -125,14 +125,14 @@ generated line (#129).
 The order is deliberate: a stated preference outranks inheritance, because a person
 who names a launcher is usually saying “not the one you would have picked”.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> claude_bin({'CLAUDE_CODE_EXECPATH': '', 'PATH': '', 'HOME': '/no/such/home'},
 ...            config='/no/such/config')
 'claude'
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.account.configured_claude_bin(environ=None, , config=None)
 
@@ -149,13 +149,13 @@ a claim about *this* one, and the failure it otherwise produces – a terminal t
 opens, prints “command not found” and closes – is invisible to the spawner, which
 only reports that the registry never saw the session.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> configured_claude_bin({}, config='/nonexistent-config-for-doctest')
 ''
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.account.profile_home(name, , config=None, resolver=None)
 

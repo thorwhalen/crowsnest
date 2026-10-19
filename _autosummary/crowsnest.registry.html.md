@@ -87,13 +87,13 @@ a kind of busy), then what is resting. Anything unrecognised sorts last.
 
 The Claude Code config directory: `path`, else `$CLAUDE_CONFIG_DIR`, else `~/.claude`.
 
-* **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
-
 ```pycon
 >>> claude_home('/x/y').as_posix()
 '/x/y'
 ```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### crowsnest.registry.fresh_within(seconds, \*, now=<built-in function time>)
 
@@ -102,9 +102,6 @@ A liveness rule for a synced copy of another machine’s home: alive while fresh
 The pids in such a copy belong to the other machine, so the only evidence of life is
 that the record changed recently. Pass the result as `is_live=`.
 
-* **Return type:**
-  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`LiveSession`](#crowsnest.registry.LiveSession)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
-
 ```pycon
 >>> rule = fresh_within(60, now=lambda: 1000.0)
 >>> rule(LiveSession(1, 's', '', '/w', '', 'idle', '', 990.0, 0, False, '', ''))
@@ -112,6 +109,9 @@ True
 >>> rule(LiveSession(1, 's', '', '/w', '', 'idle', '', 900.0, 0, False, '', ''))
 False
 ```
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`LiveSession`](#crowsnest.registry.LiveSession)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
 
 ### crowsnest.registry.live_sessions(\*, home=None, is_alive=<function pid_alive>, is_live=None, home_name='')
 

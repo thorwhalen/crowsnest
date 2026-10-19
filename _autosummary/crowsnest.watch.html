@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -375,11 +376,6 @@ notification’s kind (<code class="docutils literal notranslate"><span class="p
 for, so it goes in <code class="docutils literal notranslate"><span class="pre">waiting_for</span></code>.</p>
 <p>A notification whose type is in <a class="reference internal" href="#crowsnest.watch.QUIET_NOTIFICATIONS" title="crowsnest.watch.QUIET_NOTIFICATIONS"><code class="xref py py-data docutils literal notranslate"><span class="pre">QUIET_NOTIFICATIONS</span></code></a> is not streamed either:
 it is Claude Code noticing a session is idle, not the session asking for anything.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hook_event</span><span class="p">({</span><span class="s1">'event'</span><span class="p">:</span> <span class="s1">'stop'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'lookout'</span><span class="p">,</span> <span class="s1">'detail'</span><span class="p">:</span> <span class="s1">'Merged.'</span><span class="p">})[</span><span class="s1">'kind'</span><span class="p">]</span>
 </span><span data-line="2"><span class="go">'stopped'</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">hook_event</span><span class="p">({</span><span class="s1">'event'</span><span class="p">:</span> <span class="s1">'session-start'</span><span class="p">})</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -390,6 +386,11 @@ it is Claude Code noticing a session is idle, not the session asking for anythin
 </span><span data-line="8"><span class="go">'needs-you'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -404,17 +405,17 @@ home reads <code class="docutils literal notranslate"><span class="pre">name&#64
 gives the unformatted line the stream always printed
 (<code class="docutils literal notranslate"><span class="pre">14:12</span>&#160; <span class="pre">waiting</span>&#160; <span class="pre">sweep2-qh</span> <span class="pre">(crowsnest)</span> <span class="pre">—</span> <span class="pre">Squash</span> <span class="pre">or</span> <span class="pre">rebase?</span></code>). <code class="docutils literal notranslate"><span class="pre">--json</span></code> is
 neither: it prints the event itself.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"at"</span><span class="p">:</span> <span class="s2">"2026-09-28T14:12:00+00:00"</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">,</span>
 </span><span data-line="2"><span class="gp">... </span>         <span class="s2">"project"</span><span class="p">:</span> <span class="s2">"p"</span><span class="p">,</span> <span class="s2">"home"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"detail"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"** **x**: busy (p)"</span><span class="p">)</span>
 </span><span data-line="4"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -422,15 +423,15 @@ neither: it prints the event itself.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">local_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stamp</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/watch.html#local_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.local_time" title="Link to this definition">#</a></dt>
 <dd><p>An ISO timestamp as local <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code>, with the date in front when it is not today’s,
 or the raw value when it cannot be read.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">local_time</span><span class="p">(</span><span class="s2">"not a time"</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">'not a time'</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">local_time</span><span class="p">(</span><span class="s2">"not a time"</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">'not a time'</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -466,15 +467,15 @@ fragment – a line the writer has not finished – is left for the next read.</
 <dt class="sig sig-object py" id="crowsnest.watch.tail_position">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">tail_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/watch.html#tail_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.tail_position" title="Link to this definition">#</a></dt>
 <dd><p>Where a reader that wants only <em>new</em> lines should start: the end of the file now.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tail_position</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">(-1, 0)</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tail_position</span><span class="p">(</span><span class="s1">'/nonexistent-file-for-doctest'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">(-1, 0)</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 </section>
@@ -519,7 +520,7 @@ fragment – a line the writer has not finished – is left for the next read.</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -677,16 +678,16 @@ every caller that is a session.</p>
 that a reader can tell “spawned by nobody we could name” (<code class="docutils literal notranslate"><span class="pre">parent</span></code> present, its
 <code class="docutils literal notranslate"><span class="pre">name</span></code> empty) from “written by a version that did not record parents” (no
 <code class="docutils literal notranslate"><span class="pre">parent</span></code> at all).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">line</span> <span class="o">=</span> <span class="n">spawn_event</span><span class="p">(</span><span class="s1">'kid'</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'boss'</span><span class="p">},</span> <span class="n">at</span><span class="o">=</span><span class="s1">'2026-01-01T00:00:00+00:00'</span><span class="p">)</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="p">[</span><span class="s1">'event'</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="s1">'name'</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="s1">'parent'</span><span class="p">][</span><span class="s1">'name'</span><span class="p">]</span>
 </span><span data-line="3"><span class="go">('spawn', 'kid', 'boss')</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -731,7 +732,7 @@ that a reader can tell “spawned by nobody we could name” (<code class="docut
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

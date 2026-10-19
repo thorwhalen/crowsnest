@@ -7,6 +7,7 @@
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
     <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -679,11 +680,6 @@ a <code class="docutils literal notranslate"><span class="pre">needs_you</span><
 because one ask makes the same three-part tuple. Any other <code class="docutils literal notranslate"><span class="pre">needs_you</span></code> item shows
 <code class="docutils literal notranslate"><span class="pre">changed</span></code> once: those are the items whose old revision missed part of what they
 ask. Ids are untouched. Both halves are tests in <code class="docutils literal notranslate"><span class="pre">tests/test_attention_refute.py</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">dflt_material</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'busy'</span><span class="p">,</span> <span class="s1">'activity'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'last_assistant_text'</span><span class="p">:</span> <span class="s1">'hi'</span><span class="p">}})</span>
 </span><span data-line="2"><span class="go">('busy',)</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">dflt_material</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">'activity'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'last_assistant_text'</span><span class="p">:</span> <span class="s1">'Merged.'</span><span class="p">},</span>
@@ -698,6 +694,11 @@ ask. Ids are untouched. Both halves are tests in <code class="docutils literal n
 </span><span data-line="12"><span class="go">('needs_you', 'decision', 'squash?', 'rotate the key.')</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -751,15 +752,15 @@ stopping every other record from moving.</p>
 <p>Hashed as JSON, so the components cannot run into each other. A <code class="docutils literal notranslate"><span class="pre">material</span></code> that
 returns something JSON cannot encode (a set, whose order is not stable) raises
 <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> rather than producing a revision that changes between runs.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">fingerprint</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'busy'</span><span class="p">}))</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">FINGERPRINT_BYTES</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">fingerprint</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'busy'</span><span class="p">}))</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">FINGERPRINT_BYTES</span>
-</span><span data-line="2"><span class="go">True</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -768,15 +769,15 @@ returns something JSON cannot encode (a set, whose order is not stable) raises
 <dd><p>Does <code class="docutils literal notranslate"><span class="pre">store</span></code> hold a document that reads as a record? Stops at the first one.</p>
 <p>What decides whether a page applies the store at all: one that holds none renders as
 it did before attention existed.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">holds_a_record</span><span class="p">({}),</span> <span class="n">holds_a_record</span><span class="p">({</span><span class="n">item_id</span><span class="p">({</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'x'</span><span class="p">}):</span> <span class="p">{</span><span class="s1">'seen_rev'</span><span class="p">:</span> <span class="s1">'r'</span><span class="p">}})</span>
+</span><span data-line="2"><span class="go">(False, True)</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">holds_a_record</span><span class="p">({}),</span> <span class="n">holds_a_record</span><span class="p">({</span><span class="n">item_id</span><span class="p">({</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'x'</span><span class="p">}):</span> <span class="p">{</span><span class="s1">'seen_rev'</span><span class="p">:</span> <span class="s1">'r'</span><span class="p">}})</span>
-</span><span data-line="2"><span class="go">(False, True)</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -802,32 +803,32 @@ object travels with it; any other key a mirror adds (its own <code class="docuti
 offset (<a class="reference internal" href="#crowsnest.attention.Record" title="crowsnest.attention.Record"><code class="xref py py-class docutils literal notranslate"><span class="pre">Record</span></code></a> refuses one that does not), because a page reads a time
 without one as its viewer’s local time. A <em>naive datetime</em> handed to a function here
 is a wall-clock time, and is read as local.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">instant</span><span class="p">(</span><span class="s1">'2026-09-15T12:00:00.000Z'</span><span class="p">)</span> <span class="o">==</span> <span class="n">instant</span><span class="p">(</span><span class="s1">'2026-09-15T12:00:00+00:00'</span><span class="p">)</span>
 </span><span data-line="2"><span class="go">True</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">instant</span><span class="p">(</span><span class="s1">'2026-01-01'</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 </span><span data-line="4"><span class="go">'2026-01-01T00:00:00+00:00'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.attention.is_item_id">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">is_item_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#is_item_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.is_item_id" title="Link to this definition">#</a></dt>
 <dd><p>Is <code class="docutils literal notranslate"><span class="pre">key</span></code> an item id as <a class="reference internal" href="#crowsnest.attention.item_id" title="crowsnest.attention.item_id"><code class="xref py py-func docutils literal notranslate"><span class="pre">item_id()</span></code></a> spells one? Anything else never names a file.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">is_item_id</span><span class="p">(</span><span class="n">item_id</span><span class="p">({</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'x'</span><span class="p">})),</span> <span class="n">is_item_id</span><span class="p">(</span><span class="s1">'../etc/passwd'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">(True, False)</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">is_item_id</span><span class="p">(</span><span class="n">item_id</span><span class="p">({</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'x'</span><span class="p">})),</span> <span class="n">is_item_id</span><span class="p">(</span><span class="s1">'../etc/passwd'</span><span class="p">)</span>
-</span><span data-line="2"><span class="go">(True, False)</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -838,15 +839,15 @@ is a wall-clock time, and is read as local.</p>
 share an id however many components they have – <code class="docutils literal notranslate"><span class="pre">(&quot;ask&quot;,</span> <span class="pre">&quot;s1:x&quot;)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">(&quot;ask&quot;,</span> <span class="pre">&quot;s1&quot;,</span> <span class="pre">&quot;x&quot;)</span></code> are two items. A session id contains neither character, so the
 default is hashed as literally <code class="docutils literal notranslate"><span class="pre">session:&lt;id&gt;</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">item_id</span><span class="p">({</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'e7c1'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">})</span> <span class="o">==</span> <span class="n">item_id</span><span class="p">({</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'e7c1'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">})</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">item_id</span><span class="p">({</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'e7c1'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">})</span> <span class="o">==</span> <span class="n">item_id</span><span class="p">({</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'e7c1'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">})</span>
-</span><span data-line="2"><span class="go">True</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -872,17 +873,17 @@ default is hashed as literally <code class="docutils literal notranslate"><span 
 which is what the button turns into (triage-ux 2.5). <code class="docutils literal notranslate"><span class="pre">tomorrow</span></code> is the next calendar
 day at <code class="docutils literal notranslate"><span class="pre">morning_hour</span></code>. Hours are the wall clock of <code class="docutils literal notranslate"><span class="pre">now</span></code>’s timezone, local when
 <code class="docutils literal notranslate"><span class="pre">now</span></code> is naive or not given; <code class="docutils literal notranslate"><span class="pre">config</span></code> is <a class="reference internal" href="crowsnest.config.html#crowsnest.config.attention_settings" title="crowsnest.config.attention_settings"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.config.attention_settings()</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">noon</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">later_until</span><span class="p">(</span><span class="s1">'evening'</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">noon</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 </span><span data-line="4"><span class="go">'2026-01-05T18:00:00+00:00'</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -918,15 +919,15 @@ item shows what the restored snapshot shows.</p>
 <dt class="sig sig-object py" id="crowsnest.attention.reach">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">reach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#reach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.reach" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">phone</span></code> for a question or a decision, <code class="docutils literal notranslate"><span class="pre">terminal</span></code> for an action, else <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">reach</span><span class="p">({</span><span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'needs_you'</span><span class="p">,</span> <span class="s1">'why'</span><span class="p">:</span> <span class="s1">'action'</span><span class="p">}})</span>
+</span><span data-line="2"><span class="go">'terminal'</span>
+</span></pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">reach</span><span class="p">({</span><span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'needs_you'</span><span class="p">,</span> <span class="s1">'why'</span><span class="p">:</span> <span class="s1">'action'</span><span class="p">}})</span>
-</span><span data-line="2"><span class="go">'terminal'</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -935,7 +936,7 @@ item shows what the restored snapshot shows.</p>
 <dd><p><code class="docutils literal notranslate"><span class="pre">item</span></code>’s stored document as it is, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when there is none.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -946,7 +947,7 @@ item shows what the restored snapshot shows.</p>
 <dd><p>The record for <code class="docutils literal notranslate"><span class="pre">item</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when the person has never acted on it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.attention.Record" title="crowsnest.attention.Record"><code class="xref py py-class docutils literal notranslate"><span class="pre">Record</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.attention.Record" title="crowsnest.attention.Record"><code class="xref py py-class docutils literal notranslate"><span class="pre">Record</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -963,17 +964,17 @@ the verbs were given. A row with no identity, or one a revision cannot hash, is 
 out; a record that cannot be read counts as none, as it does on the page.</p>
 <p>It answers for any store. The page draws the band only once the store holds a record
 (the degradation table in discussion #51), so an empty store changes nothing there.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'session_id'</span><span class="p">:</span> <span class="s1">'e7c1'</span><span class="p">,</span> <span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">,</span>
 </span><span data-line="2"><span class="gp">... </span>       <span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'unclassified'</span><span class="p">,</span> <span class="s1">'reason'</span><span class="p">:</span> <span class="s1">'said nothing'</span><span class="p">}}</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">review</span><span class="p">([</span><span class="n">row</span><span class="p">],</span> <span class="n">store</span><span class="o">=</span><span class="p">{})]</span>
 </span><span data-line="4"><span class="go">['unclassified']</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -1061,7 +1062,7 @@ means what it says: a note counts as touching an item.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1090,17 +1091,17 @@ must not describe this one.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.attention.</span></span><span class="sig-name descname"><span class="pre">seen_as_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/attention.html#seen_as_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.attention.seen_as_of" title="Link to this definition">#</a></dt>
 <dd><p>What a row is, as <a class="reference internal" href="#crowsnest.attention.SeenAs" title="crowsnest.attention.SeenAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeenAs</span></code></a> records it: its verdict’s group and why, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <p>The same whatever <code class="docutils literal notranslate"><span class="pre">material=</span></code> a caller uses: it describes the verdict, not the hash.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.attention.SeenAs" title="crowsnest.attention.SeenAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeenAs</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">seen_as_of</span><span class="p">({</span><span class="s1">'verdict'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'group'</span><span class="p">:</span> <span class="s1">'needs_you'</span><span class="p">,</span> <span class="s1">'why'</span><span class="p">:</span> <span class="s1">'action'</span><span class="p">,</span> <span class="s1">'reason'</span><span class="p">:</span> <span class="s1">'attach'</span><span class="p">}})</span>
 </span><span data-line="2"><span class="go">SeenAs(group='needs_you', why='action')</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">seen_as_of</span><span class="p">({</span><span class="s1">'status'</span><span class="p">:</span> <span class="s1">'idle'</span><span class="p">})</span> <span class="ow">is</span> <span class="kc">None</span>
 </span><span data-line="4"><span class="go">True</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.attention.SeenAs" title="crowsnest.attention.SeenAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeenAs</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -1194,7 +1195,7 @@ overwrite a broken file would leave that item stuck for good.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab2062fb"></script>
+      <script src="../_static/documentation_options.js?v=0f58e6e2"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
