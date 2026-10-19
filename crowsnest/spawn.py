@@ -42,6 +42,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 
@@ -54,6 +55,8 @@ __all__ = [
     "CLAUDE_BIN",
     "KNOWN_MODES",
     "SESSION_VARS",
+    "STARTUP_DIALOGS",
+    "StartupDialog",
     "UntrustedFolder",
     "canonical_permission_mode",
     "child_env",
@@ -66,6 +69,7 @@ __all__ = [
     "pick_permission_mode",
     "spawn",
     "spawner_permission_mode",
+    "startup_dialog",
     "trust_config_path",
     "trust_dialog_key",
     "trusted",
@@ -708,9 +712,11 @@ def _accept_trust(folder: str | Path, *, home: str | Path | None) -> None:
     os.replace(tmp, config_file)
 
 
-#: What a pane that is not a running session shows, as ``(needle, state)`` pairs.
+#: What a pane that is not a running session shows, as ``(needle, state)`` pairs. The
+#: startup dialogs are not here: they are recognised by their option lines
+#: (:func:`startup_dialog`), because a bare word like "trust" is also in other dialogs'
+#: text and in prompts -- it named the imports dialog a trust dialog (crowsnest#157).
 _PANE_SIGNS = (
-    ("trust", "a workspace trust dialog (the folder is not trusted for this account)"),
     ("/login", "a login prompt (the account is not signed in)"),
     ("log in", "a login prompt (the account is not signed in)"),
     ("cannot be used with root", "an error: the flag is refused under root/sudo"),
@@ -719,6 +725,9 @@ _PANE_SIGNS = (
 
 def pane_state(text: str, *, lines: int = 3) -> str:
     """One phrase for what a captured pane shows: a known blocker, else its last lines."""
+    shown = startup_dialog(text)
+    if shown is not None:
+        return shown[0].state
     low = text.lower()
     for needle, state in _PANE_SIGNS:
         if needle in low:
@@ -741,17 +750,85 @@ def _tmux_peek(name: str) -> str:
     return result.stdout if result.returncode == 0 else ""
 
 
-#: The trust dialog's two option lines, lower-cased. Matched as whole lines (after the
-#: pointer and border), so a prompt that merely quotes them never reads as the dialog.
-_TRUST_YES = "yes, i trust this folder"
-_TRUST_NO = ("no, exit", "no, continue without these permissions")
+@dataclass(frozen=True)
+class StartupDialog:
+    """A question Claude Code asks before a session starts, and how ``--trust`` answers it.
+
+    ``yes`` and ``no`` are its option labels, lower-cased; ``state`` is the phrase a
+    report uses for a pane showing it; ``fix`` is the one-time fix a refusal names.
+    """
+
+    name: str
+    yes: str
+    no: tuple[str, ...]
+    state: str
+    fix: str
+
+
+#: The dialogs a ``--trust`` spawn answers, in the order Claude Code asks them. Both list
+#: *No* first and focused, with no numbers, so a bare Enter declines.
+STARTUP_DIALOGS = (
+    StartupDialog(
+        "trust",
+        "yes, i trust this folder",
+        ("no, exit", "no, continue without these permissions"),
+        "a workspace trust dialog (the folder is not trusted for this account)",
+        "accept the trust dialog",
+    ),
+    StartupDialog(
+        "external imports",
+        "yes, allow external imports",
+        ("no, disable external imports",),
+        "an external-imports dialog (a CLAUDE.md imports files outside the folder)",
+        "allow the external CLAUDE.md imports",
+    ),
+)
 
 #: What may stand before an option label on its line: borders, and the focus pointer.
 _OPTION_FRAME = " \t\u2502|"
 
-#: How many keys the registration wait sends a trust dialog before leaving it be. The
-#: dialog ignores keys for a moment after it opens, so a refused one is simply sent again.
+#: How many keys the registration wait sends one dialog before leaving it be. A dialog
+#: ignores keys for a moment after it opens, so a refused one is simply sent again.
 _MAX_DIALOG_KEYS = 12
+
+
+def _options_shown(text: str, labels: Sequence[str]) -> dict[str, str]:
+    """``{label: what precedes it}`` for each label standing as a whole line in ``text``.
+
+    Whole lines only, so a prompt that merely quotes a dialog never reads as one.
+    """
+    options = {}
+    for line in text.lower().splitlines():
+        body = line.strip(_OPTION_FRAME)
+        for label in labels:
+            if body.endswith(label) and len(body) - len(label) <= 2:
+                options[label] = body[: -len(label)].strip()
+    return options
+
+
+def startup_dialog(
+    text: str, *, dialogs: Sequence[StartupDialog] = STARTUP_DIALOGS
+) -> tuple[StartupDialog, str] | None:
+    """The dialog ``text`` shows and the next key towards its *Yes*, or ``None``.
+
+    The key is ``"Down"`` until the *Yes* line carries the focus pointer, then
+    ``"Enter"``.
+
+    >>> pointer = "\N{HEAVY RIGHT-POINTING ANGLE QUOTATION MARK ORNAMENT} "
+    >>> pane = "{}No, disable external imports\\n{}Yes, allow external imports"
+    >>> dialog, key = startup_dialog(pane.format(pointer, "  "))
+    >>> dialog.name, key
+    ('external imports', 'Down')
+    >>> startup_dialog(pane.format("  ", pointer))[1]
+    'Enter'
+    >>> startup_dialog("> hello") is None
+    True
+    """
+    for dialog in dialogs:
+        options = _options_shown(text, (dialog.yes, *dialog.no))
+        if dialog.yes in options and any(no in options for no in dialog.no):
+            return dialog, ("Enter" if options[dialog.yes] else "Down")
+    return None
 
 
 def trust_dialog_key(text: str) -> str | None:
@@ -769,15 +846,8 @@ def trust_dialog_key(text: str) -> str | None:
     >>> trust_dialog_key("> hello") is None
     True
     """
-    options = {}
-    for line in text.lower().splitlines():
-        body = line.strip(_OPTION_FRAME)
-        for label in (_TRUST_YES, *_TRUST_NO):
-            if body.endswith(label) and len(body) - len(label) <= 2:
-                options[label] = body[: -len(label)].strip()
-    if _TRUST_YES not in options or not any(no in options for no in _TRUST_NO):
-        return None
-    return "Enter" if options[_TRUST_YES] else "Down"
+    shown = startup_dialog(text, dialogs=STARTUP_DIALOGS[:1])
+    return shown[1] if shown else None
 
 
 def _tmux_press(name: str, key: str) -> None:
@@ -972,28 +1042,40 @@ def spawn(
     reader = peek or (_tmux_peek if how == "tmux" else None)
     press = press or (_tmux_press if how == "tmux" else None)
     close = close or (_tmux_close if how == "tmux" else None)
-    keys_sent = []
+    keys_sent: dict[str, int] = {}
 
-    def answer_trust_dialog() -> None:
-        key = trust_dialog_key(reader(name))
-        if key is None or len(keys_sent) >= _MAX_DIALOG_KEYS:
-            return
+    def answer_dialog() -> bool:
+        """Send the next key to a dialog the pane shows; whether one is showing."""
+        shown = startup_dialog(reader(name))
+        if shown is None:
+            return False
+        dialog, key = shown
         if not trust:
             if close is not None:
                 close(name)
             raise UntrustedFolder(
-                f"session {name!r} stopped at Claude Code's trust dialog for {cwd}"
+                f"session {name!r} stopped at Claude Code's {dialog.name} dialog for "
+                f"{cwd}"
                 + (" and was closed" if close is not None else ", where it still waits")
-                + f". Open it once by hand (`cd {cwd} && claude`, accept the dialog), "
+                + f". Open it once by hand (`cd {cwd} && claude`, {dialog.fix}), "
                 "or spawn again with --trust."
             )
-        keys_sent.append(key)
-        press(name, key)
+        if keys_sent.get(dialog.name, 0) < _MAX_DIALOG_KEYS:
+            keys_sent[dialog.name] = keys_sent.get(dialog.name, 0) + 1
+            press(name, key)
+        return True
 
     watch = builtin and reader is not None and press is not None
+    deadline = time.monotonic() + wait
     found = _find_by_name(
-        name, home=home, wait=wait, on_poll=answer_trust_dialog if watch else None
+        name, home=home, wait=wait, on_poll=answer_dialog if watch else None
     )
+    # Registered is not settled: a dialog can follow the one that held registration up
+    # (trust, then external imports), so the pane is watched until it shows none.
+    while watch and found is not None and answer_dialog():
+        if time.monotonic() >= deadline:
+            break
+        time.sleep(_POLL_INTERVAL)
     # Recorded whether or not the registry saw it: a session that started slowly still
     # has a parent, and the name is the key the edge is kept under either way.
     # `home` is the *new* session's account; the caller is registered in its own, so
