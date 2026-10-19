@@ -1238,7 +1238,10 @@ def spawn(
 
     A `--cwd` or `--add-dirs` folder the account has never trusted is refused with the
     one-time fix (a session there would sit at the trust dialog); `--trust` records it as
-    trusted instead -- pass it only when you mean it.
+    trusted instead -- pass it only when you mean it. Inside a git repository only a record
+    up to the repository's root counts, as in Claude Code (#154). If the dialog shows up
+    anyway, `--trust` answers it in the tmux pane; without it the stuck session is closed
+    and the command fails with the same fix.
 
     `--permission-mode MODE` starts the session in that Claude Code permission mode
     (`acceptEdits`, `plan`, ..., or `bypass` for `--dangerously-skip-permissions`; `""`
