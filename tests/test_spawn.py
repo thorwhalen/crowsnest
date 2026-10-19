@@ -814,6 +814,79 @@ def test_a_registration_timeout_says_what_the_pane_shows(tmp_path):
     assert result["pid"] == 0 and "trust dialog" in result["how"]
 
 
+def test_a_trusted_ancestor_does_not_reach_into_a_git_repository(tmp_path, monkeypatch):
+    """crowsnest#154: Claude Code stops the ancestor walk at the git root, so must we."""
+    import json
+
+    repo = tmp_path / "work" / "repo"
+    (repo / ".git").mkdir(parents=True)
+    (repo / "sub").mkdir()
+    home = _home_with_trust(
+        tmp_path, {str(_resolved(tmp_path / "work")): {"hasTrustDialogAccepted": True}}
+    )
+    assert spawn_module.trusted(repo, home=home) is False
+    assert spawn_module.trusted(tmp_path / "work" / "plain", home=home) is True
+    calls = []
+    _noop_builtin(monkeypatch, calls)
+    with pytest.raises(spawn_module.UntrustedFolder):
+        spawn("demo", cwd=str(repo / "sub"), home=home, wait=0.05)
+    spawn("demo", cwd=str(repo / "sub"), home=home, wait=0.05, trust=True)
+    saved = json.loads((home / ".claude.json").read_text())["projects"]
+    assert saved[str(_resolved(repo / "sub"))]["hasTrustDialogAccepted"] is True
+    assert spawn_module.trusted(repo / "sub", home=home) is True
+    assert len(calls) == 1
+
+
+def _dialog(yes_focused):
+    no, yes = ("  ", "\u276f ") if yes_focused else ("\u276f ", "  ")
+    return (
+        "Do you trust the files in this folder?\n"
+        f"\u2502 {no}No, exit\n\u2502 {yes}Yes, I trust this folder\n"
+    )
+
+
+def test_trust_dialog_key_walks_to_yes_and_ignores_a_quoted_dialog():
+    assert spawn_module.trust_dialog_key(_dialog(False)) == "Down"
+    assert spawn_module.trust_dialog_key(_dialog(True)) == "Enter"
+    quoted = "> it sat at the dialog (No, exit / Yes, I trust this folder) for a day"
+    assert spawn_module.trust_dialog_key(quoted) is None
+
+
+def test_spawn_with_trust_answers_a_dialog_that_appears_anyway(tmp_path, monkeypatch):
+    monkeypatch.setattr(spawn_module, "_POLL_INTERVAL", 0.01)
+    _noop_builtin(monkeypatch, [])
+    pressed = []
+    screens = {0: _dialog(False), 1: _dialog(True)}
+    spawn(
+        "demo",
+        cwd=str(tmp_path),
+        home=tmp_path,
+        wait=0.3,
+        trust=True,
+        peek=lambda name: screens.get(len(pressed), "> "),
+        press=lambda name, key: pressed.append(key),
+        close=lambda name: pytest.fail("a --trust spawn never closes its session"),
+    )
+    assert pressed == ["Down", "Enter"]
+
+
+def test_spawn_without_trust_closes_a_session_stuck_at_the_dialog(tmp_path, monkeypatch):
+    monkeypatch.setattr(spawn_module, "_POLL_INTERVAL", 0.01)
+    _noop_builtin(monkeypatch, [])
+    pressed, closed = [], []
+    with pytest.raises(spawn_module.UntrustedFolder, match="--trust") as err:
+        spawn(
+            "stuck",
+            cwd=str(tmp_path),
+            home=tmp_path,
+            wait=0.3,
+            peek=lambda name: _dialog(False),
+            press=lambda name, key: pressed.append(key),
+            close=closed.append,
+        )
+    assert closed == ["stuck"] and pressed == [] and "closed" in str(err.value)
+
+
 def test_pane_state_names_blockers_and_falls_back_to_the_tail():
     assert "login" in spawn_module.pane_state("Please run /login")
     assert "root" in spawn_module.pane_state(

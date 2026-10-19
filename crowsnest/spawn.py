@@ -60,12 +60,14 @@ __all__ = [
     "claude_argv",
     "default_spawner",
     "env_prefix",
+    "git_root",
     "local_argv",
     "pane_state",
     "pick_permission_mode",
     "spawn",
     "spawner_permission_mode",
     "trust_config_path",
+    "trust_dialog_key",
     "trusted",
 ]
 
@@ -635,8 +637,23 @@ def _read_trust_projects(config_file: Path) -> dict | None:
     return projects if isinstance(projects, dict) else None
 
 
+def git_root(folder: str | Path) -> Path | None:
+    """The working tree ``folder`` is inside (the nearest ancestor holding ``.git``), if any.
+
+    >>> git_root('/') is None
+    True
+    """
+    path = _resolved(folder)
+    return next((p for p in (path, *path.parents) if (p / ".git").exists()), None)
+
+
 def trusted(folder: str | Path, *, home: str | Path | None = None) -> bool | None:
-    """Whether ``folder`` (or an ancestor, which Claude Code honours) is trusted for ``home``.
+    """Whether Claude Code would start in ``folder`` for ``home`` without the trust dialog.
+
+    A record for ``folder`` or an ancestor counts, **but inside a git working tree only up
+    to its root**: Claude Code stops the walk there, so a trusted ``$HOME`` does not make
+    every repository below it trusted (crowsnest#154). Outside any working tree, every
+    ancestor counts.
 
     ``None`` when this machine holds no trust record for that account (no config file, or
     nothing in it to go by): the answer is unknown and the caller should not block on it.
@@ -648,9 +665,12 @@ def trusted(folder: str | Path, *, home: str | Path | None = None) -> bool | Non
     if projects is None:
         return None
     path = _resolved(folder)
+    root = git_root(path)
+    walk = (path, *path.parents)
+    if root is not None:
+        walk = walk[: walk.index(root) + 1]
     return any(
-        (projects.get(str(p)) or {}).get("hasTrustDialogAccepted") is True
-        for p in (path, *path.parents)
+        (projects.get(str(p)) or {}).get("hasTrustDialogAccepted") is True for p in walk
     )
 
 
@@ -698,14 +718,69 @@ def _tmux_peek(name: str) -> str:
     return result.stdout if result.returncode == 0 else ""
 
 
+#: The trust dialog's two option lines, lower-cased. Matched as whole lines (after the
+#: pointer and border), so a prompt that merely quotes them never reads as the dialog.
+_TRUST_YES = "yes, i trust this folder"
+_TRUST_NO = ("no, exit", "no, continue without these permissions")
+
+#: What may stand before an option label on its line: borders, and the focus pointer.
+_OPTION_FRAME = " \t\u2502|"
+
+#: How many keys the registration wait sends a trust dialog before leaving it be. The
+#: dialog ignores keys for a moment after it opens, so a refused one is simply sent again.
+_MAX_DIALOG_KEYS = 12
+
+
+def trust_dialog_key(text: str) -> str | None:
+    """The next key towards *Yes, I trust this folder* when ``text`` shows the trust dialog.
+
+    The dialog lists *No, exit* first, focused, with no numbers, so a bare Enter exits:
+    the answer is ``"Down"`` until the *Yes* line carries the focus pointer, then
+    ``"Enter"``. ``None`` when the pane shows no trust dialog.
+
+    >>> dialog = "Do you trust the files in this folder?\\n{}No, exit\\n{}Yes, I trust this folder"
+    >>> trust_dialog_key(dialog.format("\N{HEAVY RIGHT-POINTING ANGLE QUOTATION MARK ORNAMENT} ", "  "))
+    'Down'
+    >>> trust_dialog_key(dialog.format("  ", "\N{HEAVY RIGHT-POINTING ANGLE QUOTATION MARK ORNAMENT} "))
+    'Enter'
+    >>> trust_dialog_key("> hello") is None
+    True
+    """
+    options = {}
+    for line in text.lower().splitlines():
+        body = line.strip(_OPTION_FRAME)
+        for label in (_TRUST_YES, *_TRUST_NO):
+            if body.endswith(label) and len(body) - len(label) <= 2:
+                options[label] = body[: -len(label)].strip()
+    if _TRUST_YES not in options or not any(no in options for no in _TRUST_NO):
+        return None
+    return "Enter" if options[_TRUST_YES] else "Down"
+
+
+def _tmux_press(name: str, key: str) -> None:
+    subprocess.run(
+        ["tmux", "send-keys", "-t", name, key], capture_output=True, check=False
+    )
+
+
+def _tmux_close(name: str) -> None:
+    subprocess.run(["tmux", "kill-session", "-t", name], capture_output=True, check=False)
+
+
 def _find_by_name(
-    name: str, *, home: str | Path | None, wait: float
+    name: str,
+    *,
+    home: str | Path | None,
+    wait: float,
+    on_poll: Callable[[], None] | None = None,
 ) -> LiveSession | None:
     deadline = time.monotonic() + wait
     while True:
         for session in live_sessions(home=home):
             if session.name == name:
                 return session
+        if on_poll is not None:
+            on_poll()
         if time.monotonic() >= deadline:
             return None
         time.sleep(min(_POLL_INTERVAL, max(wait, 0.0)) or _POLL_INTERVAL)
@@ -771,6 +846,8 @@ def spawn(
     trust: bool = False,
     peek: Callable[[str], str] | None = None,
     permission_mode: str | None = None,
+    press: Callable[[str, str], None] | None = None,
+    close: Callable[[str], None] | None = None,
 ) -> dict:
     """Start a session named ``name`` in ``cwd``, and wait for the registry to see it.
 
@@ -869,7 +946,31 @@ def spawn(
     )
     spawner(argv, cwd=cwd, name=name, home=home)
     where = str(home) if home is not None else ""
-    found = _find_by_name(name, home=home, wait=wait)
+    reader = peek or (_tmux_peek if how == "tmux" else None)
+    press = press or (_tmux_press if how == "tmux" else None)
+    close = close or (_tmux_close if how == "tmux" else None)
+    keys_sent = []
+
+    def answer_trust_dialog() -> None:
+        key = trust_dialog_key(reader(name))
+        if key is None or len(keys_sent) >= _MAX_DIALOG_KEYS:
+            return
+        if not trust:
+            if close is not None:
+                close(name)
+            raise UntrustedFolder(
+                f"session {name!r} stopped at Claude Code's trust dialog for {cwd}"
+                + (" and was closed" if close is not None else ", where it still waits")
+                + f". Open it once by hand (`cd {cwd} && claude`, accept the dialog), "
+                "or spawn again with --trust."
+            )
+        keys_sent.append(key)
+        press(name, key)
+
+    watch = builtin and reader is not None and press is not None
+    found = _find_by_name(
+        name, home=home, wait=wait, on_poll=answer_trust_dialog if watch else None
+    )
     # Recorded whether or not the registry saw it: a session that started slowly still
     # has a parent, and the name is the key the edge is kept under either way.
     # `home` is the *new* session's account; the caller is registered in its own, so
@@ -885,7 +986,6 @@ def spawn(
     )
     parent = record.get("parent", {}) if record else {}
     if found is None:
-        reader = peek or (_tmux_peek if how == "tmux" else None)
         shown = pane_state(reader(name)) if reader else ""
         return {
             "name": name,
