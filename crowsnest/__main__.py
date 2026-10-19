@@ -1240,8 +1240,9 @@ def spawn(
     one-time fix (a session there would sit at the trust dialog); `--trust` records it as
     trusted instead -- pass it only when you mean it. Inside a git repository only a record
     up to the repository's root counts, as in Claude Code (#154). If the dialog shows up
-    anyway, `--trust` answers it in the tmux pane; without it the stuck session is closed
-    and the command fails with the same fix.
+    anyway, `--trust` answers it in the tmux pane, and so the external CLAUDE.md imports
+    dialog after it (#157); without `--trust` a session stuck at either is closed and the
+    command fails with the fix.
 
     `--permission-mode MODE` starts the session in that Claude Code permission mode
     (`acceptEdits`, `plan`, ..., or `bypass` for `--dangerously-skip-permissions`; `""`

@@ -7,6 +7,7 @@ import sys
 import threading
 from itertools import pairwise
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from fixtures import registry_record, write_registry
@@ -807,7 +808,7 @@ def test_a_registration_timeout_says_what_the_pane_shows(tmp_path):
         "ghost",
         cwd="/some/repo",
         spawner=lambda *a, **k: None,
-        peek=lambda name: "Is this a project you created or one you trust?\n 1. Yes",
+        peek=lambda name: _dialog(False),
         home=home,
         wait=0.05,
     )
@@ -885,6 +886,89 @@ def test_spawn_without_trust_closes_a_session_stuck_at_the_dialog(tmp_path, monk
             close=closed.append,
         )
     assert closed == ["stuck"] and pressed == [] and "closed" in str(err.value)
+
+
+def _imports_dialog(yes_focused):
+    no, yes = ("  ", "\u276f ") if yes_focused else ("\u276f ", "  ")
+    return (
+        "Allow external CLAUDE.md file imports?\n"
+        "Important: Only use Claude Code with files you trust.\n"
+        f"{no}No, disable external imports\n{yes}Yes, allow external imports\n"
+    )
+
+
+def test_the_imports_dialog_is_not_named_a_trust_dialog():
+    """crowsnest#157: its warning says "trust", which the old needle took for the trust dialog."""
+    state = spawn_module.pane_state(_imports_dialog(False))
+    assert "external-imports" in state and "trust dialog" not in state
+    assert spawn_module.trust_dialog_key(_imports_dialog(False)) is None
+
+
+def test_spawn_with_trust_answers_a_sequence_of_dialogs(tmp_path, monkeypatch):
+    monkeypatch.setattr(spawn_module, "_POLL_INTERVAL", 0.01)
+    _noop_builtin(monkeypatch, [])
+    pressed = []
+    screens = [
+        _dialog(False),
+        _dialog(True),
+        _imports_dialog(False),
+        _imports_dialog(True),
+    ]
+    spawn(
+        "demo",
+        cwd=str(tmp_path),
+        home=tmp_path,
+        wait=0.3,
+        trust=True,
+        peek=lambda name: screens[len(pressed)] if len(pressed) < len(screens) else "> ",
+        press=lambda name, key: pressed.append(key),
+        close=lambda name: pytest.fail("a --trust spawn never closes its session"),
+    )
+    assert pressed == ["Down", "Enter", "Down", "Enter"]
+
+
+def test_spawn_keeps_answering_dialogs_after_the_session_registers(tmp_path, monkeypatch):
+    """The imports dialog can follow registration; spawn returns only once it is gone."""
+    monkeypatch.setattr(spawn_module, "_POLL_INTERVAL", 0.01)
+    _noop_builtin(monkeypatch, [])
+    monkeypatch.setattr(
+        spawn_module,
+        "_find_by_name",
+        lambda *a, **k: SimpleNamespace(pid=7, session_id="s7"),
+    )
+    pressed = []
+    screens = [_imports_dialog(False), _imports_dialog(True)]
+    monkeypatch.setattr("crowsnest.lineage.record_spawn", lambda *a, **k: {})
+    result = spawn(
+        "demo",
+        cwd=str(tmp_path),
+        home=tmp_path,
+        wait=0.3,
+        trust=True,
+        peek=lambda name: screens[len(pressed)] if len(pressed) < len(screens) else "> ",
+        press=lambda name, key: pressed.append(key),
+    )
+    assert pressed == ["Down", "Enter"]
+    assert result["pid"] == 7
+
+
+def test_spawn_without_trust_closes_a_session_at_the_imports_dialog(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(spawn_module, "_POLL_INTERVAL", 0.01)
+    _noop_builtin(monkeypatch, [])
+    closed = []
+    with pytest.raises(spawn_module.UntrustedFolder, match="external imports") as err:
+        spawn(
+            "stuck",
+            cwd=str(tmp_path),
+            home=tmp_path,
+            wait=0.3,
+            peek=lambda name: _imports_dialog(False),
+            press=lambda name, key: pytest.fail("no key without --trust"),
+            close=closed.append,
+        )
+    assert closed == ["stuck"] and "--trust" in str(err.value)
 
 
 def test_pane_state_names_blockers_and_falls_back_to_the_tail():
