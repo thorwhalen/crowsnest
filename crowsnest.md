@@ -1,4 +1,4 @@
-> built 2026-10-19 00:32 UTC from c4405b1 (main) · crowsnest 0.0.93. Details: build_info.json
+> built 2026-10-19 02:23 UTC from a668279 (main) · crowsnest 0.0.94. Details: build_info.json
 
 # index.html.md
 
@@ -7081,18 +7081,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-19 00:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c4405b11ec23c31cbf2faa42c54c4818e61dd4db"><code>c4405b1</code></a> on branch <code>main</code>, for **crowsnest 0.0.93** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 02:23 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/a6682796feef6843727d3f93b8097655d30c4887"><code>a668279</code></a> on branch <code>main</code>, for **crowsnest 0.0.94** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.93) is behind the latest release on PyPI (0.0.94): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c4405b11ec23c31cbf2faa42c54c4818e61dd4db"><code>c4405b11ec23c31cbf2faa42c54c4818e61dd4db</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/a6682796feef6843727d3f93b8097655d30c4887"><code>a6682796feef6843727d3f93b8097655d30c4887</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7103,9 +7101,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39181039996">39181039996</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39189533004">39189533004</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>c4405b11ec23c31cbf2faa42c54c4818e61dd4db</code> (in the history of the built commit) |
+| Event commit | <code>a6682796feef6843727d3f93b8097655d30c4887</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7130,13 +7128,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.94/">0.0.94</a>, newer than the documented version (0.0.93).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.94/">0.0.94</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout c4405b11ec23c31cbf2faa42c54c4818e61dd4db
+git checkout a6682796feef6843727d3f93b8097655d30c4887
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
