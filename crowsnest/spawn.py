@@ -448,8 +448,14 @@ def _read_trust_projects(config_file: Path) -> dict | None:
     return projects if isinstance(projects, dict) else None
 
 
-def trusted(folder: str | Path, *, home: str | Path | None = None) -> bool | None:
-    """Whether ``folder`` (or an ancestor, which Claude Code honours) is trusted for ``home``.
+def trusted(
+    folder: str | Path, *, home: str | Path | None = None, inherit: bool = True
+) -> bool | None:
+    """Whether ``folder`` (or, with ``inherit``, an ancestor) is trusted for ``home``.
+
+    Claude Code does not always honour an ancestor's trust (a freshly cloned repo under a
+    trusted parent still showed the dialog), so ``--trust`` asks with ``inherit=False``
+    and records the folder's own entry.
 
     ``None`` when this machine holds no trust record for that account (no config file, or
     nothing in it to go by): the answer is unknown and the caller should not block on it.
@@ -463,7 +469,7 @@ def trusted(folder: str | Path, *, home: str | Path | None = None) -> bool | Non
     path = _resolved(folder)
     return any(
         (projects.get(str(p)) or {}).get("hasTrustDialogAccepted") is True
-        for p in (path, *path.parents)
+        for p in ((path, *path.parents) if inherit else (path,))
     )
 
 
@@ -612,10 +618,10 @@ def spawn(
             spawner = partial(spawner, config=config)
     if builtin:
         for folder in (cwd, *add_dirs):
+            if trust and trusted(folder, home=home, inherit=False) is False:
+                _accept_trust(folder, home=home)
+                continue
             if trusted(folder, home=home) is False:
-                if trust:
-                    _accept_trust(folder, home=home)
-                    continue
                 raise UntrustedFolder(
                     f"{folder} is not trusted for this account, so the session would "
                     "stop at Claude Code's trust dialog and never register. Open it "

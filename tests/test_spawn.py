@@ -812,3 +812,17 @@ def test_pane_state_names_blockers_and_falls_back_to_the_tail():
     )
     assert "boom" in spawn_module.pane_state("a\n\nboom\n")
     assert spawn_module.pane_state("") == ""
+
+
+def test_spawn_trust_flag_records_the_folder_even_under_a_trusted_ancestor(tmp_path, monkeypatch):
+    import json
+
+    home = _home_with_trust(
+        tmp_path, {str(_resolved(tmp_path)): {"hasTrustDialogAccepted": True}}
+    )
+    repo = tmp_path / "fresh-clone"
+    calls = []
+    _noop_builtin(monkeypatch, calls)
+    spawn("demo", cwd=str(repo), home=home, wait=0.05, trust=True)
+    saved = json.loads((home / ".claude.json").read_text())["projects"]
+    assert saved[str(_resolved(repo))]["hasTrustDialogAccepted"] is True
