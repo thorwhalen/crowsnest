@@ -12,6 +12,7 @@ crowsnest.watch
       HOOK_KINDS
       QUIET_NOTIFICATIONS
       LOUD_KINDS
+      KINDS
       WORKING
    
    .. rubric:: Functions
@@ -22,8 +23,10 @@ crowsnest.watch
       diff
       events
       hook_event
+      kinds_of
       line
       local_time
+      selected
       snapshot
       tail_events
       tail_position

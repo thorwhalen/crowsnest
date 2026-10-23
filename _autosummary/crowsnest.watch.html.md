@@ -45,12 +45,13 @@ session’s conversation.
 
 ### Module Attributes
 
-| [`DFLT_INTERVAL`](#crowsnest.watch.DFLT_INTERVAL)       | Seconds between snapshots.                 |
-|----------------------------------------------------------------------|--------------------------------------------|
-| [`HOOK_KINDS`](#crowsnest.watch.HOOK_KINDS)          | What a hook event is called in the stream. |
-| [`QUIET_NOTIFICATIONS`](#crowsnest.watch.QUIET_NOTIFICATIONS) | Notification types that are not a request. |
-| [`LOUD_KINDS`](#crowsnest.watch.LOUD_KINDS)          | The kinds that need the person.            |
-| [`WORKING`](#crowsnest.watch.WORKING)             | the session is working.                    |
+| [`DFLT_INTERVAL`](#crowsnest.watch.DFLT_INTERVAL)       | Seconds between snapshots.                       |
+|----------------------------------------------------------------------|--------------------------------------------------|
+| [`HOOK_KINDS`](#crowsnest.watch.HOOK_KINDS)          | What a hook event is called in the stream.       |
+| [`QUIET_NOTIFICATIONS`](#crowsnest.watch.QUIET_NOTIFICATIONS) | Notification types that are not a request.       |
+| [`LOUD_KINDS`](#crowsnest.watch.LOUD_KINDS)          | The kinds that need the person.                  |
+| [`KINDS`](#crowsnest.watch.KINDS)               | the registry diff's, the hook log's, and `woke`. |
+| [`WORKING`](#crowsnest.watch.WORKING)             | the session is working.                          |
 
 ### Functions
 
@@ -59,8 +60,10 @@ session’s conversation.
 | [`diff`](#crowsnest.watch.diff)(before, after, \*[, activity])                | The events between two snapshots: started, exited, and every status change.                                                |
 | [`events`](#crowsnest.watch.events)(\*[, interval, home, is_alive, sleep, ...]) | Yield one dict per change, forever -- or for `ticks` snapshots when given.                                                 |
 | [`hook_event`](#crowsnest.watch.hook_event)(record)                                 | One line of the hook log as an event, or `None` for an event kind we do not stream.                                        |
+| [`kinds_of`](#crowsnest.watch.kinds_of)(spec)                                     | The kinds a selection names, or `None` for every kind.                                                                     |
 | [`line`](#crowsnest.watch.line)(event, \*[, plain])                           | One event as the line a watcher relays.                                                                                    |
 | [`local_time`](#crowsnest.watch.local_time)(stamp, \*[, now])                       | An ISO timestamp as local `HH:MM`, with the date in front when it is not today's, or the raw value when it cannot be read. |
+| [`selected`](#crowsnest.watch.selected)(stream, \*[, kinds, mute])                | The events of `stream` whose kind is in `kinds` (`None`: all) and whose session is not muted.                              |
 | [`snapshot`](#crowsnest.watch.snapshot)(\*[, home, is_alive, all_homes, config])  | The live sessions right now, keyed by session id.                                                                          |
 | [`tail_events`](#crowsnest.watch.tail_events)(path, position)                        | The JSON lines appended since `position`, and where to resume.                                                             |
 | [`tail_position`](#crowsnest.watch.tail_position)(path)                                | Where a reader that wants only *new* lines should start: the end of the file now.                                          |
@@ -74,6 +77,13 @@ to a human and two file listings per tick is nothing.
 
 What a hook event is called in the stream. `needs-you` and `stopped` are named for
 what the human should do about them, which is what the registry statuses are not.
+
+### crowsnest.watch.KINDS *= frozenset({'busy', 'error', 'exited', 'idle', 'intent', 'needs-you', 'shell', 'started', 'stopped', 'waiting', 'woke'})*
+
+the registry diff’s, the hook log’s, and `woke`.
+
+* **Type:**
+  Every kind [`events()`](#crowsnest.watch.events) yields
 
 ### crowsnest.watch.LOUD_KINDS *= frozenset({'error', 'intent', 'needs-you', 'waiting', 'woke'})*
 
@@ -177,6 +187,25 @@ True
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
+### crowsnest.watch.kinds_of(spec)
+
+The kinds a selection names, or `None` for every kind.
+
+`spec` is a comma-separated string or a list of kinds ([`KINDS`](#crowsnest.watch.KINDS)) and group
+names (`KIND_GROUPS`); empty, `None` or `all` select everything. A name
+that is neither raises `ValueError`: a misspelt kind that silently matched nothing
+would mute the stream it was meant to tune (#141).
+
+```pycon
+>>> sorted(kinds_of('error, stopped'))
+['error', 'stopped']
+>>> kinds_of('all') is None
+True
+```
+
+* **Return type:**
+  [`frozenset`](https://docs.python.org/3/builtins/stdtypes.html#frozenset)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
 ### crowsnest.watch.line(event, , plain=False)
 
 One event as the line a watcher relays.
@@ -212,6 +241,24 @@ or the raw value when it cannot be read.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.watch.selected(stream, , kinds=None, mute=())
+
+The events of `stream` whose kind is in `kinds` (`None`: all) and whose
+session is not muted.
+
+A session is muted by its name, or by `name@home` for one home only. This is the
+watcher’s filter kept as configuration rather than in a session’s context, where a
+compaction loses it and a line-format change breaks a `grep` silently (#141).
+
+```pycon
+>>> stream = [{'kind': 'busy', 'name': 'a'}, {'kind': 'waiting', 'name': 'b'}]
+>>> [e['name'] for e in selected(stream, kinds=frozenset({'waiting'}))]
+['b']
+```
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]]
 
 ### crowsnest.watch.snapshot(\*, home=None, is_alive=<function pid_alive>, all_homes=False, config=None)
 

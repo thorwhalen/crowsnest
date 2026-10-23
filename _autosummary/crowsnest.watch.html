@@ -117,6 +117,7 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#crowsnest.watch.DFLT_INTERVAL"><code class="docutils literal notranslate"><span class="pre">DFLT_INTERVAL</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.HOOK_KINDS"><code class="docutils literal notranslate"><span class="pre">HOOK_KINDS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.watch.KINDS"><code class="docutils literal notranslate"><span class="pre">KINDS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.LOUD_KINDS"><code class="docutils literal notranslate"><span class="pre">LOUD_KINDS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.QUIET_NOTIFICATIONS"><code class="docutils literal notranslate"><span class="pre">QUIET_NOTIFICATIONS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.WORKING"><code class="docutils literal notranslate"><span class="pre">WORKING</span></code></a></li>
@@ -124,8 +125,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.watch.diff"><code class="docutils literal notranslate"><span class="pre">diff()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.events"><code class="docutils literal notranslate"><span class="pre">events()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.hook_event"><code class="docutils literal notranslate"><span class="pre">hook_event()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.watch.kinds_of"><code class="docutils literal notranslate"><span class="pre">kinds_of()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.line"><code class="docutils literal notranslate"><span class="pre">line()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.local_time"><code class="docutils literal notranslate"><span class="pre">local_time()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.watch.selected"><code class="docutils literal notranslate"><span class="pre">selected()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.snapshot"><code class="docutils literal notranslate"><span class="pre">snapshot()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.tail_events"><code class="docutils literal notranslate"><span class="pre">tail_events()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.watch.tail_position"><code class="docutils literal notranslate"><span class="pre">tail_position()</span></code></a></li>
@@ -221,7 +224,10 @@ session’s conversation.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.LOUD_KINDS" title="crowsnest.watch.LOUD_KINDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LOUD_KINDS</span></code></a></p></td>
 <td><p>The kinds that need the person.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.WORKING" title="crowsnest.watch.WORKING"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WORKING</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.KINDS" title="crowsnest.watch.KINDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KINDS</span></code></a></p></td>
+<td><p>the registry diff's, the hook log's, and <code class="docutils literal notranslate"><span class="pre">woke</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.WORKING" title="crowsnest.watch.WORKING"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WORKING</span></code></a></p></td>
 <td><p>the session is working.</p></td>
 </tr>
 </tbody>
@@ -243,11 +249,17 @@ session’s conversation.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.hook_event" title="crowsnest.watch.hook_event"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hook_event</span></code></a>(record)</p></td>
 <td><p>One line of the hook log as an event, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for an event kind we do not stream.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.line" title="crowsnest.watch.line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">line</span></code></a>(event, *[, plain])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.kinds_of" title="crowsnest.watch.kinds_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kinds_of</span></code></a>(spec)</p></td>
+<td><p>The kinds a selection names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for every kind.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.line" title="crowsnest.watch.line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">line</span></code></a>(event, *[, plain])</p></td>
 <td><p>One event as the line a watcher relays.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.local_time" title="crowsnest.watch.local_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_time</span></code></a>(stamp, *[, now])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.local_time" title="crowsnest.watch.local_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_time</span></code></a>(stamp, *[, now])</p></td>
 <td><p>An ISO timestamp as local <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code>, with the date in front when it is not today's, or the raw value when it cannot be read.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.watch.selected" title="crowsnest.watch.selected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">selected</span></code></a>(stream, *[, kinds, mute])</p></td>
+<td><p>The events of <code class="docutils literal notranslate"><span class="pre">stream</span></code> whose kind is in <code class="docutils literal notranslate"><span class="pre">kinds</span></code> (<code class="docutils literal notranslate"><span class="pre">None</span></code>: all) and whose session is not muted.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.watch.snapshot" title="crowsnest.watch.snapshot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">snapshot</span></code></a>(*[, home, is_alive, all_homes, config])</p></td>
 <td><p>The live sessions right now, keyed by session id.</p></td>
@@ -273,6 +285,17 @@ to a human and two file listings per tick is nothing.</p>
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">HOOK_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'intent':</span> <span class="pre">'intent',</span> <span class="pre">'notification':</span> <span class="pre">'needs-you',</span> <span class="pre">'stop':</span> <span class="pre">'stopped'}</span></span><a class="headerlink" href="#crowsnest.watch.HOOK_KINDS" title="Link to this definition">#</a></dt>
 <dd><p>What a hook event is called in the stream. <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> and <code class="docutils literal notranslate"><span class="pre">stopped</span></code> are named for
 what the human should do about them, which is what the registry statuses are not.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.watch.KINDS">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'busy',</span> <span class="pre">'error',</span> <span class="pre">'exited',</span> <span class="pre">'idle',</span> <span class="pre">'intent',</span> <span class="pre">'needs-you',</span> <span class="pre">'shell',</span> <span class="pre">'started',</span> <span class="pre">'stopped',</span> <span class="pre">'waiting',</span> <span class="pre">'woke'})</span></span><a class="headerlink" href="#crowsnest.watch.KINDS" title="Link to this definition">#</a></dt>
+<dd><p>the registry diff’s, the hook log’s, and <code class="docutils literal notranslate"><span class="pre">woke</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Every kind <a class="reference internal" href="#crowsnest.watch.events" title="crowsnest.watch.events"><code class="xref py py-func docutils literal notranslate"><span class="pre">events()</span></code></a> yields</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py data">
@@ -394,6 +417,27 @@ it is Claude Code noticing a session is idle, not the session asking for anythin
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.watch.kinds_of">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">kinds_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/watch.html#kinds_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.kinds_of" title="Link to this definition">#</a></dt>
+<dd><p>The kinds a selection names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for every kind.</p>
+<p><code class="docutils literal notranslate"><span class="pre">spec</span></code> is a comma-separated string or a list of kinds (<a class="reference internal" href="#crowsnest.watch.KINDS" title="crowsnest.watch.KINDS"><code class="xref py py-data docutils literal notranslate"><span class="pre">KINDS</span></code></a>) and group
+names (<code class="xref py py-data docutils literal notranslate"><span class="pre">KIND_GROUPS</span></code>); empty, <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">all</span></code> select everything. A name
+that is neither raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>: a misspelt kind that silently matched nothing
+would mute the stream it was meant to tune (#141).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">kinds_of</span><span class="p">(</span><span class="s1">'error, stopped'</span><span class="p">))</span>
+</span><span data-line="2"><span class="go">['error', 'stopped']</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">kinds_of</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="4"><span class="go">True</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.watch.line">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">plain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/watch.html#line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.line" title="Link to this definition">#</a></dt>
 <dd><p>One event as the line a watcher relays.</p>
@@ -430,6 +474,26 @@ or the raw value when it cannot be read.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.watch.selected">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">selected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">kinds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/watch.html#selected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.watch.selected" title="Link to this definition">#</a></dt>
+<dd><p>The events of <code class="docutils literal notranslate"><span class="pre">stream</span></code> whose kind is in <code class="docutils literal notranslate"><span class="pre">kinds</span></code> (<code class="docutils literal notranslate"><span class="pre">None</span></code>: all) and whose
+session is not muted.</p>
+<p>A session is muted by its name, or by <code class="docutils literal notranslate"><span class="pre">name&#64;home</span></code> for one home only. This is the
+watcher’s filter kept as configuration rather than in a session’s context, where a
+compaction loses it and a line-format change breaks a <code class="docutils literal notranslate"><span class="pre">grep</span></code> silently (#141).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">stream</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'kind'</span><span class="p">:</span> <span class="s1">'busy'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'a'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'kind'</span><span class="p">:</span> <span class="s1">'waiting'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b'</span><span class="p">}]</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">kinds</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">({</span><span class="s1">'waiting'</span><span class="p">}))]</span>
+</span><span data-line="3"><span class="go">['b']</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -520,7 +584,7 @@ fragment – a line the writer has not finished – is left for the next read.</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=f329fc45"></script>
+      <script src="../_static/documentation_options.js?v=1b335f87"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

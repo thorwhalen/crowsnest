@@ -15,6 +15,7 @@ crowsnest.config
       ATTENTION_KEY
       REPORT_KEY
       PUBLISH_KEY
+      WATCH_KEY
    
    .. rubric:: Functions
 
@@ -30,6 +31,7 @@ crowsnest.config
       root_bypass_ok_setting
       spawn_model_setting
       spawn_permission_mode_setting
+      watch_settings
    
    .. rubric:: Classes
 
@@ -39,4 +41,5 @@ crowsnest.config
       Home
       PublishSettings
       ReportSettings
+      WatchSettings
    

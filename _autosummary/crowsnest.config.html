@@ -126,6 +126,8 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.REPORT_KEY"><code class="docutils literal notranslate"><span class="pre">REPORT_KEY</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.ReportSettings"><code class="docutils literal notranslate"><span class="pre">ReportSettings</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.SPAWN_PERMISSION_MODE_KEY"><code class="docutils literal notranslate"><span class="pre">SPAWN_PERMISSION_MODE_KEY</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.WATCH_KEY"><code class="docutils literal notranslate"><span class="pre">WATCH_KEY</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.WatchSettings"><code class="docutils literal notranslate"><span class="pre">WatchSettings</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.attention_settings"><code class="docutils literal notranslate"><span class="pre">attention_settings()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.claude_bin_setting"><code class="docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.config_path"><code class="docutils literal notranslate"><span class="pre">config_path()</span></code></a></li>
@@ -136,6 +138,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.root_bypass_ok_setting"><code class="docutils literal notranslate"><span class="pre">root_bypass_ok_setting()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.spawn_model_setting"><code class="docutils literal notranslate"><span class="pre">spawn_model_setting()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting"><code class="docutils literal notranslate"><span class="pre">spawn_permission_mode_setting()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.watch_settings"><code class="docutils literal notranslate"><span class="pre">watch_settings()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -259,6 +262,9 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.PUBLISH_KEY" title="crowsnest.config.PUBLISH_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PUBLISH_KEY</span></code></a></p></td>
 <td><p>The config table saying where <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">publish</span></code> sends the page.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.WATCH_KEY" title="crowsnest.config.WATCH_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WATCH_KEY</span></code></a></p></td>
+<td><p>The config table holding <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code>'s selection (#141).</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -296,6 +302,9 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting" title="crowsnest.config.spawn_permission_mode_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_permission_mode_setting</span></code></a>(*[, path])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">spawn_permission_mode</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.watch_settings" title="crowsnest.config.watch_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watch_settings</span></code></a>(*[, path])</p></td>
+<td><p>The config file's <code class="docutils literal notranslate"><span class="pre">[watch]</span></code> table, or the defaults (everything) when it has none.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -314,6 +323,9 @@ and nothing in this module pretends otherwise.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.ReportSettings" title="crowsnest.config.ReportSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReportSettings</span></code></a>([ledger_dir])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way (<a class="reference internal" href="crowsnest.rows.html#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">crowsnest.rows.RowContext</span></code></a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.WatchSettings" title="crowsnest.config.WatchSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WatchSettings</span></code></a>([kinds, mute])</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">[watch]</span></code> table, validated: which kinds <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> prints (<code class="docutils literal notranslate"><span class="pre">None</span></code>: all) and which sessions it never mentions.</p></td>
 </tr>
 </tbody>
 </table>
@@ -414,6 +426,26 @@ verbs and the watcher must build the same way (<a class="reference internal" hre
 <span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">SPAWN_PERMISSION_MODE_KEY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'spawn_permission_mode'</span></span><a class="headerlink" href="#crowsnest.config.SPAWN_PERMISSION_MODE_KEY" title="Link to this definition">#</a></dt>
 <dd><p>The top-level config key naming the permission mode a spawned session starts in. See
 <code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.spawn.pick_permission_mode()</span></code> for the order the choices are taken in.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.config.WATCH_KEY">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">WATCH_KEY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'watch'</span></span><a class="headerlink" href="#crowsnest.config.WATCH_KEY" title="Link to this definition">#</a></dt>
+<dd><p>The config table holding <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code>’s selection (#141).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.config.WatchSettings">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">WatchSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kinds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#WatchSettings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.WatchSettings" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">[watch]</span></code> table, validated: which kinds <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> prints
+(<code class="docutils literal notranslate"><span class="pre">None</span></code>: all) and which sessions it never mentions.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">WatchSettings</span><span class="p">()</span><span class="o">.</span><span class="n">kinds</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="2"><span class="go">True</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -585,6 +617,24 @@ shell; a session spawning another passes on its own mode instead
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.config.watch_settings">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">watch_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#watch_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.watch_settings" title="Link to this definition">#</a></dt>
+<dd><p>The config file’s <code class="docutils literal notranslate"><span class="pre">[watch]</span></code> table, or the defaults (everything) when it has none.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[watch]</span>
+</span><span data-line="2"><span class="n">kinds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"loud"</span><span class="w">            </span><span class="c1"># or a list: ["waiting", "error", "stopped"]; "all"</span>
+</span><span data-line="3"><span class="n">mute</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"noisy-sweep"</span><span class="p">]</span><span class="w">    </span><span class="c1"># session names, or name@home</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">kinds</span></code> takes the names <a class="reference internal" href="crowsnest.watch.html#crowsnest.watch.kinds_of" title="crowsnest.watch.kinds_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.watch.kinds_of()</span></code></a> knows; an unknown one, or
+a key the table does not know, is an error, as in <code class="docutils literal notranslate"><span class="pre">[attention]</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.config.WatchSettings" title="crowsnest.config.WatchSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">WatchSettings</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article><button class="back-to-top" type="button">
@@ -627,7 +677,7 @@ shell; a session spawning another passes on its own mode instead
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=f329fc45"></script>
+      <script src="../_static/documentation_options.js?v=1b335f87"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

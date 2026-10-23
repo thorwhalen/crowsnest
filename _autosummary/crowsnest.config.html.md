@@ -80,6 +80,7 @@ and nothing in this module pretends otherwise.
 | [`ATTENTION_KEY`](#crowsnest.config.ATTENTION_KEY)             | The config table holding the attention settings.                                 |
 | [`REPORT_KEY`](#crowsnest.config.REPORT_KEY)                | The config table saying how the report's rows are built.                         |
 | [`PUBLISH_KEY`](#crowsnest.config.PUBLISH_KEY)               | The config table saying where `crowsnest publish` sends the page.                |
+| [`WATCH_KEY`](#crowsnest.config.WATCH_KEY)                 | The config table holding `crowsnest watch`'s selection (#141).                   |
 
 ### Functions
 
@@ -94,6 +95,7 @@ and nothing in this module pretends otherwise.
 | [`root_bypass_ok_setting`](#crowsnest.config.root_bypass_ok_setting)(\*[, path])        | Whether the config file says the bypass flag works as root here (default `False`). |
 | [`spawn_model_setting`](#crowsnest.config.spawn_model_setting)(\*[, path])           | The `spawn_model` the config file names, or `None` when it names none.             |
 | [`spawn_permission_mode_setting`](#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none.   |
+| [`watch_settings`](#crowsnest.config.watch_settings)(\*[, path])                | The config file's `[watch]` table, or the defaults (everything) when it has none.  |
 
 ### Classes
 
@@ -102,6 +104,7 @@ and nothing in this module pretends otherwise.
 | [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds])    | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
 | [`PublishSettings`](#crowsnest.config.PublishSettings)([to, command, console, ...]) | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
 | [`ReportSettings`](#crowsnest.config.ReportSettings)([ledger_dir])                 | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
+| [`WatchSettings`](#crowsnest.config.WatchSettings)([kinds, mute])                 | The `[watch]` table, validated: which kinds `crowsnest watch` prints (`None`: all) and which sessions it never mentions.                                                                                                                   |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
 
@@ -178,6 +181,22 @@ True
 
 The top-level config key naming the permission mode a spawned session starts in. See
 `crowsnest.spawn.pick_permission_mode()` for the order the choices are taken in.
+
+### crowsnest.config.WATCH_KEY *= 'watch'*
+
+The config table holding `crowsnest watch`’s selection (#141).
+
+### *class* crowsnest.config.WatchSettings(kinds=None, mute=frozenset({}))
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[watch]` table, validated: which kinds `crowsnest watch` prints
+(`None`: all) and which sessions it never mentions.
+
+```pycon
+>>> WatchSettings().kinds is None
+True
+```
 
 ### crowsnest.config.attention_settings(, path=None)
 
@@ -323,3 +342,19 @@ shell; a session spawning another passes on its own mode instead
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.config.watch_settings(, path=None)
+
+The config file’s `[watch]` table, or the defaults (everything) when it has none.
+
+```toml
+[watch]
+kinds = "loud"            # or a list: ["waiting", "error", "stopped"]; "all"
+mute = ["noisy-sweep"]    # session names, or name@home
+```
+
+`kinds` takes the names [`crowsnest.watch.kinds_of()`](crowsnest.watch.html.md#crowsnest.watch.kinds_of) knows; an unknown one, or
+a key the table does not know, is an error, as in `[attention]`.
+
+* **Return type:**
+  [`WatchSettings`](#crowsnest.config.WatchSettings)

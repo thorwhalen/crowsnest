@@ -251,13 +251,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="19">crowsnest note|undo &lt;session&gt;      a note to yourself; one step back
 </span><span data-line="20">crowsnest attention export|import  your attention records as JSON, last write wins
 </span><span data-line="21">crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
-</span><span data-line="22">crowsnest ledger [&lt;session&gt;]       one session's durable page, or all of them with ages
-</span><span data-line="23">crowsnest hook &lt;event&gt;             called by your Stop and Notification hooks; reads their JSON on stdin
-</span><span data-line="24">crowsnest spawn &lt;name&gt; --cwd &lt;dir&gt; start a named session in &lt;dir&gt;, and wait for it to show up
-</span><span data-line="25">                                   (--profile NAME: on another account; --binary PATH: another claude)
-</span><span data-line="26">crowsnest open &lt;session&gt;           raise its terminal on the desktop, or say where it runs
-</span><span data-line="27">crowsnest init                     this session's CLAUDE.md, the data directory, the hook lines
-</span><span data-line="28">crowsnest install-skills           link the skills and the scout subagent into ~/.claude
+</span><span data-line="22">crowsnest watch --kinds loud       only what needs you; --mute a,b drops sessions; [watch] in the config sets both
+</span><span data-line="23">crowsnest ledger [&lt;session&gt;]       one session's durable page, or all of them with ages
+</span><span data-line="24">crowsnest hook &lt;event&gt;             called by your Stop and Notification hooks; reads their JSON on stdin
+</span><span data-line="25">crowsnest spawn &lt;name&gt; --cwd &lt;dir&gt; start a named session in &lt;dir&gt;, and wait for it to show up
+</span><span data-line="26">                                   (--profile NAME: on another account; --binary PATH: another claude)
+</span><span data-line="27">crowsnest open &lt;session&gt;           raise its terminal on the desktop, or say where it runs
+</span><span data-line="28">crowsnest init                     this session's CLAUDE.md, the data directory, the hook lines
+</span><span data-line="29">crowsnest install-skills           link the skills and the scout subagent into ~/.claude
 </span></pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">open</span></code> is a desktop command – it looks for an iTerm tab or a tmux session and has nothing to raise from a web page. So wherever <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code> cannot link a session (no Remote Control, so no claude.ai URL), the page shows the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">open</span></code> command that reaches it. You paste that into a terminal; the page never brings the terminal to the front for you.</p>
@@ -559,7 +560,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 09:59 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f">77aaaa3</a> (main) · crowsnest 0.0.97 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 10:02 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/c539e2e0939ae25b93bc6962fd8ce778d63be2c6">c539e2e</a> (main) · crowsnest 0.0.98 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -594,7 +595,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=f329fc45"></script>
+      <script src="_static/documentation_options.js?v=1b335f87"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
