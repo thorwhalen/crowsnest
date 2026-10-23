@@ -318,7 +318,9 @@ def brief_of(prompt: str) -> dict:
         if len(flat) <= BRIEF_HEAD_LIMIT
         else flat[: BRIEF_HEAD_LIMIT - 1].rstrip() + "…"
     )
-    refs = list(dict.fromkeys(m.group(0).rstrip(".,;:!?") for m in _BRIEF_REF.finditer(text)))
+    refs = list(
+        dict.fromkeys(m.group(0).rstrip(".,;:!?") for m in _BRIEF_REF.finditer(text))
+    )
     return {"head": head, "refs": refs[:BRIEF_REFS_LIMIT]}
 
 

@@ -768,11 +768,14 @@ def test_record_spawn_keeps_the_brief_head_and_what_it_points_at(tmp_path):
     brief = (
         "Fix https://github.com/o/r/issues/7 first.\n"
         "Read ~/.local/share/x/ledger/a.md and $PP/t/r/docs/plan.md, then land it. "
-        + "More words. " * 60
+        + "More words. "
+        * 60
     )
     record_spawn("kid", environ={}, home=tmp_path, lineage_path=path, brief=brief)
     rec = json.loads(path.read_text(encoding="utf-8"))
-    assert rec["brief"]["head"].startswith("Fix https://github.com/o/r/issues/7 first. Read")
+    assert rec["brief"]["head"].startswith(
+        "Fix https://github.com/o/r/issues/7 first. Read"
+    )
     assert "\n" not in rec["brief"]["head"] and len(rec["brief"]["head"]) <= 300
     assert rec["brief"]["refs"] == [
         "https://github.com/o/r/issues/7",
