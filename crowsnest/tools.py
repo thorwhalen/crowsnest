@@ -258,6 +258,10 @@ def roster(
     (:func:`crowsnest.config.report_settings`), the ledgers the report reads, else
     ``<data dir>/ledger``.
 
+    Every row carries ``model`` and ``model_source``: the model the session was started
+    on and where that was read (``'flag'``, ``'settings'`` for the account's default it
+    inherited, ``''`` when unknown or on another machine; :func:`crowsnest.spawn.session_model`).
+
     Every row carries ``said_at`` and ``said_at_basis``, which say when the thing the row
     quotes was said, taken from its source (:mod:`crowsnest.said`). That thing is the last
     words, the question the session waits on, or the call in flight. Both are empty when
@@ -291,9 +295,36 @@ def roster(
         )
         for s in found
     ]
+    for s, row in zip(found, rows):
+        row["model"], row["model_source"] = _model_row(
+            s, home=home, all_homes=all_homes, config=config
+        )
     from crowsnest.said import with_said
 
     return {"sessions": [with_said(r) for r in rows], "counts": _counts(rows)}
+
+
+def _session_model(pid: int, *, home: str | Path | None = None) -> tuple[str, str]:
+    """:func:`crowsnest.spawn.session_model`, looked up late so a test can replace it."""
+    from crowsnest.spawn import session_model
+
+    return session_model(pid, home=home)
+
+
+def _model_row(
+    s: LiveSession, *, home, all_homes: bool, config
+) -> tuple[str, str]:
+    """``(model, source)`` for a roster row (#160); ``('', '')`` for another machine's.
+
+    Read off the local process's command line, so a home marked ``remote`` -- whose pids
+    belong to another machine -- is never asked.
+    """
+    if not all_homes:
+        return _session_model(s.pid, home=home)
+    found = {h.name: h for h in homes(path=config)}.get(s.home)
+    if found is None or found.remote:
+        return "", ""
+    return _session_model(s.pid, home=found.path)
 
 
 def _counts(rows) -> dict:

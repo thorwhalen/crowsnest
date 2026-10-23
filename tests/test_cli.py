@@ -405,5 +405,32 @@ def test_spawn_row_echoes_the_model_it_started_with(tmp_path, monkeypatch, capsy
     out = capsys.readouterr().out
     assert "sonnet" in out and "effort medium" in out
 
+    # #160: no --model is the cheap default, echoed; --model "" is the account's own
     main(["spawn", "demo2", "--cwd", "/some/repo", "--wait", "0.1"])
-    assert "default model" in capsys.readouterr().out
+    assert "sonnet" in capsys.readouterr().out
+    main(["spawn", "demo3", "--cwd", "/some/repo", "--model", "", "--wait", "0.1"])
+    assert "account's default model" in capsys.readouterr().out
+
+
+def test_roster_shows_each_session_model_where_it_is_known(home, capsys, monkeypatch):
+    # #160: an expensive inherited default should be visible at a glance.
+    models = {101: ("opus", "flag"), 102: ("fable", "settings")}
+    monkeypatch.setattr(
+        tools, "_session_model", lambda pid, *, home=None: models.get(pid, ("", ""))
+    )
+    rows = {r["pid"]: r for r in tools.roster(home=home, activity=False)["sessions"]}
+    assert (rows[101]["model"], rows[101]["model_source"]) == ("opus", "flag")
+    assert (rows[102]["model"], rows[102]["model_source"]) == ("fable", "settings")
+    assert rows[103]["model"] == ""
+    main(["--home", str(home), "--brief"])
+    out = capsys.readouterr().out
+    assert "opus" in out and "fable*" in out  # * = inherited from the account's settings
+
+
+def test_roster_has_no_model_column_when_no_model_is_known(home, capsys, monkeypatch):
+    monkeypatch.setattr(tools, "_session_model", lambda pid, *, home=None: ("", ""))
+    main(["--home", str(home), "--brief"])
+    first = capsys.readouterr().out.splitlines()[0]
+    monkeypatch.setattr(tools, "_session_model", lambda pid, *, home=None: ("x", "flag"))
+    main(["--home", str(home), "--brief"])
+    assert len(capsys.readouterr().out.splitlines()[0]) > len(first)

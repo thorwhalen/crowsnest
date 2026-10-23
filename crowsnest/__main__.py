@@ -141,6 +141,9 @@ def roster(
     adds a column saying which -- which is also where a session spawned under another
     account shows up.
 
+    When any session's model is known, a column shows it (#160): the `--model` it was
+    started with, or the account's default it inherited, marked `*`.
+
     The age after the status is how long the session has been in it. The `(HH:MM, age)`
     before a row's last words, or before the call it has in flight, is when those were
     said, from the transcript. A waiting row has no second time: it began waiting on its
@@ -152,11 +155,13 @@ def roster(
         return _json.dumps(result, indent=2)
     lines = []
     tagged = any(row.get("home") for row in result["sessions"])
+    modelled = any(row.get("model") for row in result["sessions"])
     for row in result["sessions"]:
         where = f"{row['home'][:10]:<11}" if tagged else ""
         head = (
             f"{row['status']:<8}{_age(row['status_since']):>4}  {where}"
             f"{row['label'][:26]:<27}{row['project'][:16]:<17}"
+            + (f"{_model_cell(row):<14}" if modelled else "")
         )
         detail = ""
         if not brief:
@@ -170,6 +175,18 @@ def roster(
     summary = ", ".join(f"{n} {k}" for k, n in counts.items() if n)
     lines.append(f"-- {len(result['sessions'])} live: {summary or 'none'}")
     return "\n".join(lines)
+
+
+def _model_cell(row: dict) -> str:
+    """The roster's model column: ``*`` marks one inherited from the account's settings.
+
+    >>> _model_cell({'model': 'fable', 'model_source': 'settings'})
+    'fable*'
+    >>> _model_cell({'model': 'claude-opus-5-5', 'model_source': 'flag'})
+    'opus-5-5'
+    """
+    model = row.get("model", "").removeprefix("claude-")[:12]
+    return f"{model}*" if model and row.get("model_source") == "settings" else model
 
 
 def show(
@@ -1207,7 +1224,7 @@ def spawn(
     *,
     cwd: str = "",
     prompt: str = "",
-    model: str = "",
+    model: str | None = None,
     effort: str = "",
     remote_control: bool = True,
     home: str | None = None,
@@ -1253,9 +1270,10 @@ def spawn(
     session (cron, a shell), `spawn_permission_mode` from the config file. Skipping
     permissions is never implied.
 
-    `--model` and `--effort` are worth stating on every spawn: left out, the session
-    inherits the account's default, which is the expensive one exactly when nobody was
-    thinking about cost. Procedural work -- a sweep, a migration, applying a skill across
+    `--model` and `--effort` are worth stating on every spawn. Left out, `--model` is
+    `spawn_model` from the config file, else `sonnet` (#160); `--model ""` passes none, so
+    the session inherits the account's default, which is the expensive one exactly when
+    nobody was thinking about cost. Procedural work -- a sweep, a migration, applying a skill across
     repositories -- belongs on a small model at moderate effort; the big models are for
     design, architecture and novel debugging. The printed row echoes what was chosen.
 
@@ -1288,7 +1306,13 @@ def spawn(
     # copying the previous command line, and an unstated `--model` inherits the user's
     # default -- so the row says what this session will actually cost to run.
     how = " · ".join(
-        filter(None, (model or "default model", effort and f"effort {effort}"))
+        filter(
+            None,
+            (
+                result.get("model") or "account's default model",
+                effort and f"effort {effort}",
+            ),
+        )
     )
     if not result["pid"]:
         return f"{result['name']}: not confirmed ({result['how']}, {how}){where}"

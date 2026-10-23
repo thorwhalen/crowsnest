@@ -48,13 +48,20 @@ from functools import partial
 from pathlib import Path
 
 from crowsnest.account import CLAUDE_BIN, DROPPED_VARS, account_home, claude_bin
-from crowsnest.registry import DFLT_HOME, HOME_ENV_VAR, LiveSession, live_sessions
+from crowsnest.registry import (
+    DFLT_HOME,
+    HOME_ENV_VAR,
+    LiveSession,
+    claude_home,
+    live_sessions,
+)
 
 __all__ = [
     "ACCOUNT_VARS",
     "BYPASS_MODES",
     "CLAUDE_BIN",
     "KNOWN_MODES",
+    "DFLT_SPAWN_MODEL",
     "SANDBOX_VAR",
     "SESSION_VARS",
     "STARTUP_DIALOGS",
@@ -68,7 +75,9 @@ __all__ = [
     "git_root",
     "local_argv",
     "pane_state",
+    "pick_model",
     "pick_permission_mode",
+    "session_model",
     "spawn",
     "spawner_permission_mode",
     "startup_dialog",
@@ -184,6 +193,13 @@ KNOWN_MODES = frozenset(
     {"acceptEdits", "auto", "bypassPermissions", "default", "dontAsk", "manual", "plan"}
 )
 
+#: The model a spawn starts on when neither the caller nor the config file names one
+#: (#160). Left to the account, it was whatever settings.json said -- on one server the
+#: most expensive model, for seven workers in a day. ``spawn_model`` in the config file
+#: changes it; ``""`` there (or ``model=""``) is the account's default again.
+DFLT_SPAWN_MODEL = "sonnet"
+_MODEL_FLAG = "--model"
+
 #: How long `spawn` waits, by default, for the registry to notice the new session.
 DFLT_WAIT = 20.0
 _POLL_INTERVAL = 0.5
@@ -297,6 +313,57 @@ def spawner_permission_mode(
         return None
     argv = (argv_of or _process_argv)(pid)
     return _mode_in(argv) if argv else None
+
+
+def pick_model(model: str | None = None, *, config: str | Path | None = None) -> str:
+    """The model a new session starts on; ``''`` lets the account's settings decide.
+
+    ``model`` when given (``''`` included), else ``spawn_model`` in the config file
+    (:func:`crowsnest.config.spawn_model_setting`), else :data:`DFLT_SPAWN_MODEL`.
+
+    >>> pick_model('opus'), pick_model(''), pick_model(config='/no/such/config.toml')
+    ('opus', '', 'sonnet')
+    """
+    if model is not None:
+        return model.strip()
+    from crowsnest.config import spawn_model_setting
+
+    configured = spawn_model_setting(path=config)
+    return DFLT_SPAWN_MODEL if configured is None else configured
+
+
+def session_model(
+    pid: int,
+    *,
+    home: str | Path | None = None,
+    argv_of: Callable[[int], list[str] | None] | None = None,
+) -> tuple[str, str]:
+    """The model session ``pid`` was started on, and where that was read: ``(model, source)``.
+
+    ``source`` is ``'flag'`` for a ``--model`` on its command line, ``'settings'`` for the
+    ``model`` in the account's ``settings.json`` (under ``home``) that a session started
+    without one inherits, and ``''`` with ``model`` ``''`` when neither says. A model
+    switched *during* the session (``/model``) is on neither and is not seen. Local
+    processes only: a synced home's pids belong to another machine. ``argv_of`` is the
+    seam a test or another host replaces.
+
+    >>> session_model(7, home='/no/such/home', argv_of=lambda pid: ['claude', '--model', 'opus'])
+    ('opus', 'flag')
+    """
+    argv = (argv_of or _process_argv)(pid) or []
+    for i, arg in enumerate(argv):
+        if arg == _MODEL_FLAG and i + 1 < len(argv):
+            return argv[i + 1], "flag"
+        if arg.startswith(_MODEL_FLAG + "="):
+            return arg.split("=", 1)[1], "flag"
+    settings = claude_home(home) / "settings.json"
+    try:
+        configured = json.loads(settings.read_text()).get("model", "")
+    except (OSError, ValueError, AttributeError):
+        configured = ""
+    if isinstance(configured, str) and configured:
+        return configured, "settings"
+    return "", ""
 
 
 def pick_permission_mode(
@@ -955,7 +1022,7 @@ def spawn(
     *,
     cwd: str,
     prompt: str = "",
-    model: str = "",
+    model: str | None = None,
     effort: str = "",
     remote_control: bool = True,
     spawner: Callable[..., None] | None = None,
@@ -993,7 +1060,8 @@ def spawn(
     reads ``$CROWSNEST_PROFILE``); giving both is an error. ``binary`` is the ``claude``
     to run; left out, each local spawner runs the one this session runs.
 
-    Returns ``{"name", "pid", "session_id", "how", "home", "parent"}``, ``home`` being the
+    Returns ``{"name", "pid", "session_id", "how", "home", "parent", "model"}``, ``model``
+    being the one it was started on (:func:`pick_model`: ``''`` is the account's own) and ``home`` the
     account the session was started under (``""``: the spawning session's own). When the
     registry file never shows up within ``wait`` seconds, ``pid`` is ``0`` and ``how``
     says so -- the session may still be starting, or may have failed before it could
@@ -1007,6 +1075,10 @@ def spawn(
     a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this
     command was not run from inside a session -- the honest answer for a person at a shell
     prompt -- and the whole dict is ``{}`` only when the record could not be written.
+
+    **Model.** ``model=None`` (the default) is ``spawn_model`` from the config file, else
+    :data:`DFLT_SPAWN_MODEL`; ``''`` passes no ``--model``, so the account's settings
+    decide, as every spawn did before #160.
 
     **Permissions.** ``permission_mode`` picks the new session's permission mode;
     ``None`` (the default) means the spawning session's own mode, else -- from outside
@@ -1060,7 +1132,7 @@ def spawn(
     argv = claude_argv(
         name,
         prompt=prompt,
-        model=model,
+        model=(model := pick_model(model, config=config)),
         effort=effort,
         remote_control=remote_control,
         add_dirs=add_dirs,
@@ -1140,6 +1212,7 @@ def spawn(
             ),
             "home": where,
             "parent": parent,
+            "model": model,
         }
     return {
         "name": name,
@@ -1148,4 +1221,5 @@ def spawn(
         "how": how,
         "home": where,
         "parent": parent,
+        "model": model,
     }

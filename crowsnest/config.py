@@ -104,6 +104,7 @@ __all__ = [
     "publish_settings",
     "report_settings",
     "root_bypass_ok_setting",
+    "spawn_model_setting",
     "spawn_permission_mode_setting",
 ]
 
@@ -114,6 +115,10 @@ CLAUDE_BIN_KEY = "claude_bin"
 #: The top-level config key naming the permission mode a spawned session starts in. See
 #: :func:`crowsnest.spawn.pick_permission_mode` for the order the choices are taken in.
 SPAWN_PERMISSION_MODE_KEY = "spawn_permission_mode"
+
+#: The top-level config key naming the model a spawn starts on when none is given (#160).
+#: See :func:`crowsnest.spawn.pick_model`.
+SPAWN_MODEL_KEY = "spawn_model"
 
 #: The top-level config key saying that, on this machine, the bypass flag works as root
 #: (a launcher sets ``IS_SANDBOX=1``). See :func:`crowsnest.spawn.pick_permission_mode`.
@@ -208,6 +213,30 @@ def spawn_permission_mode_setting(*, path: str | Path | None = None) -> str | No
         raise TypeError(
             f"{config_path(path)}: {SPAWN_PERMISSION_MODE_KEY} must be a string naming a "
             f"permission mode, not {type(value).__name__} ({value!r})"
+        )
+    return value.strip()
+
+
+def spawn_model_setting(*, path: str | Path | None = None) -> str | None:
+    """The ``spawn_model`` the config file names, or ``None`` when it names none.
+
+    .. code-block:: toml
+
+        spawn_model = "sonnet"   # or "haiku", "opus", ... ; "" = the account's default
+
+    The model a spawn starts on when it names none (:func:`crowsnest.spawn.pick_model`).
+    ``""`` restores the old behaviour: no ``--model``, so the session inherits whatever
+    the account's settings say, which is the expensive model exactly when nobody chose.
+    """
+    data = _loaded(path)
+    value = data.get(SPAWN_MODEL_KEY)
+    if value is None:
+        _refuse_a_misplaced_key(data, path, SPAWN_MODEL_KEY)
+        return None
+    if not isinstance(value, str):
+        raise TypeError(
+            f"{config_path(path)}: {SPAWN_MODEL_KEY} must be a string naming a model, "
+            f"not {type(value).__name__} ({value!r})"
         )
     return value.strip()
 
