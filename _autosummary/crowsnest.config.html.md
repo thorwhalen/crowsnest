@@ -92,6 +92,7 @@ and nothing in this module pretends otherwise.
 | [`publish_settings`](#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.             |
 | [`report_settings`](#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.              |
 | [`root_bypass_ok_setting`](#crowsnest.config.root_bypass_ok_setting)(\*[, path])        | Whether the config file says the bypass flag works as root here (default `False`). |
+| [`spawn_model_setting`](#crowsnest.config.spawn_model_setting)(\*[, path])           | The `spawn_model` the config file names, or `None` when it names none.             |
 | [`spawn_permission_mode_setting`](#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none.   |
 
 ### Classes
@@ -292,6 +293,21 @@ here, and this key is how a person says so (#161).
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### crowsnest.config.spawn_model_setting(, path=None)
+
+The `spawn_model` the config file names, or `None` when it names none.
+
+```toml
+spawn_model = "sonnet"   # or "haiku", "opus", ... ; "" = the account's default
+```
+
+The model a spawn starts on when it names none (`crowsnest.spawn.pick_model()`).
+`""` restores the old behaviour: no `--model`, so the session inherits whatever
+the account’s settings say, which is the expensive model exactly when nobody chose.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.config.spawn_permission_mode_setting(, path=None)
 

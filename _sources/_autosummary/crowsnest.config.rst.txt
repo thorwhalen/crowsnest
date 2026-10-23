@@ -28,6 +28,7 @@ crowsnest.config
       publish_settings
       report_settings
       root_bypass_ok_setting
+      spawn_model_setting
       spawn_permission_mode_setting
    
    .. rubric:: Classes

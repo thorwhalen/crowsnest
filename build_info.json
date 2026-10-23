@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-23T09:50:48Z",
+  "built_at": "2026-10-23T09:59:23Z",
   "package": {
     "name": "crowsnest",
-    "version": "0.0.96",
+    "version": "0.0.97",
     "display_name": "crowsnest",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "ac4908a04e1b5972692a91ecbf96fcf5e7172d8e",
-    "short_commit": "ac4908a",
+    "commit": "77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f",
+    "short_commit": "77aaaa3",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/crowsnest",
-    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e",
+    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/crowsnest",
-    "sha": "ac4908a04e1b5972692a91ecbf96fcf5e7172d8e",
+    "sha": "77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "39934576823",
-    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/39934576823",
+    "run_id": "39935627796",
+    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/39935627796",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -56,20 +56,18 @@
   },
   "site": {
     "modules_documented": 33,
-    "objects_documented": 393
+    "objects_documented": 394
   },
   "pypi": {
     "checked": true,
     "latest": "0.0.97",
-    "relation": "behind",
+    "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout ac4908a04e1b5972692a91ecbf96fcf5e7172d8e\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
-    "aligned": false,
-    "notes": [
-      "The documented version (0.0.96) is behind the latest release on PyPI (0.0.97): `pip install crowsnest` gives newer code than these docs describe."
-    ]
+    "aligned": true,
+    "notes": []
   }
 }

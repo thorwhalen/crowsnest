@@ -124,6 +124,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#who-started-whom">Who started whom</a></li>
 <li><a class="reference internal" href="#several-accounts-and-machines-in-one-roster">Several accounts and machines in one roster</a><ul>
 <li><a class="reference internal" href="#which-claude-gets-started">Which <code class="docutils literal notranslate"><span class="pre">claude</span></code> gets started</a></li>
+<li><a class="reference internal" href="#which-model-a-spawned-session-starts-on">Which model a spawned session starts on</a></li>
 <li><a class="reference internal" href="#which-permission-mode-a-spawned-session-starts-in">Which permission mode a spawned session starts in</a></li>
 </ul>
 </li>
@@ -382,6 +383,13 @@ data-aria-dark="Switch to auto color mode">
 <p>Either has to be something that can actually be executed — a script on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> or an absolute path (a relative path is refused in the config file, which is read from every directory). <strong>A shell alias is not.</strong> Aliases exist only inside an interactive shell, and a session is started by <code class="docutils literal notranslate"><span class="pre">tmux</span></code> or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints <code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">not</span> <span class="pre">found</span></code> and closes. If you have an alias you want to reuse, make it a two-line script instead.</p>
 <p>Before you do: a wrapper whose whole job is <code class="docutils literal notranslate"><span class="pre">env</span> <span class="pre">-u</span> <span class="pre">ANTHROPIC_API_KEY</span></code> has nothing to add, because <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> already drops that variable. Nor does one that only adds <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code>: the permission mode is a setting of its own.</p>
 </section>
+<section id="which-model-a-spawned-session-starts-on">
+<h3>Which model a spawned session starts on<a class="headerlink" href="#which-model-a-spawned-session-starts-on" title="Link to this heading">#</a></h3>
+<p>The model <code class="docutils literal notranslate"><span class="pre">--model</span></code> names. Left out, <code class="docutils literal notranslate"><span class="pre">spawn_model</span></code> from the config file, else <code class="docutils literal notranslate"><span class="pre">sonnet</span></code>: an unstated model used to inherit the account’s default, which on some machines is the most expensive one (#160). <code class="docutils literal notranslate"><span class="pre">--model</span> <span class="pre">&quot;&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">spawn_model</span> <span class="pre">=</span> <span class="pre">&quot;&quot;</span></code>) passes no <code class="docutils literal notranslate"><span class="pre">--model</span></code>, so the account’s settings decide again. The confirmation row echoes the model, and the roster shows each local session’s model in a column, with <code class="docutils literal notranslate"><span class="pre">*</span></code> marking one inherited from the account’s settings.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">spawn_model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sonnet"</span><span class="w">   </span><span class="c1"># or "haiku", "opus", ...; "" = the account's default</span>
+</span></pre></div>
+</div>
+</section>
 <section id="which-permission-mode-a-spawned-session-starts-in">
 <h3>Which permission mode a spawned session starts in<a class="headerlink" href="#which-permission-mode-a-spawned-session-starts-in" title="Link to this heading">#</a></h3>
 <p>By default, the mode of the session that spawned it. A session started with <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code> spawns sessions that skip permissions too, and one in a normal mode spawns them in that mode. Crowsnest reads that mode off the spawning session’s command line. A spawn from <em>outside</em> any session (a watchdog’s cron job, your shell) has no spawning session, so it takes <code class="docutils literal notranslate"><span class="pre">spawn_permission_mode</span></code> from the config file, and falls back to Claude Code’s own default when that is unset:</p>
@@ -551,7 +559,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 09:50 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e">ac4908a</a> (main) · crowsnest 0.0.96 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 09:59 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f">77aaaa3</a> (main) · crowsnest 0.0.97 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -586,7 +594,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=5751785c"></script>
+      <script src="_static/documentation_options.js?v=f329fc45"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

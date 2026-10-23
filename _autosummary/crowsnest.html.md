@@ -285,6 +285,10 @@ listing – and `activity=False` promises “instant”. Pass `links=True` to ha
 ([`crowsnest.config.report_settings()`](crowsnest.config.html.md#crowsnest.config.report_settings)), the ledgers the report reads, else
 `<data dir>/ledger`.
 
+Every row carries `model` and `model_source`: the model the session was started
+on and where that was read (`'flag'`, `'settings'` for the account’s default it
+inherited, `''` when unknown or on another machine; `crowsnest.spawn.session_model()`).
+
 Every row carries `said_at` and `said_at_basis`, which say when the thing the row
 quotes was said, taken from its source ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
 words, the question the session waits on, or the call in flight. Both are empty when
@@ -309,7 +313,7 @@ every [`roster()`](#crowsnest.roster) row does – the two things a page naming 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None)
+### crowsnest.spawn(name, , cwd, prompt='', model=None, effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None)
 
 Start a session named `name` in `cwd`, and wait for the registry to see it.
 
@@ -332,7 +336,8 @@ a home instead of spelling it ([`crowsnest.account.account_home()`](crowsnest.ac
 reads `$CROWSNEST_PROFILE`); giving both is an error. `binary` is the `claude`
 to run; left out, each local spawner runs the one this session runs.
 
-Returns `{"name", "pid", "session_id", "how", "home", "parent"}`, `home` being the
+Returns `{"name", "pid", "session_id", "how", "home", "parent", "model"}`, `model`
+being the one it was started on (`pick_model()`: `''` is the account’s own) and `home` the
 account the session was started under (`""`: the spawning session’s own). When the
 registry file never shows up within `wait` seconds, `pid` is `0` and `how`
 says so – the session may still be starting, or may have failed before it could
@@ -346,6 +351,10 @@ is recovery work if it is not written down now, so one `spawn` line goes into
 a test’s `tmp_path` being why it is an argument). Its `name` is empty when this
 command was not run from inside a session – the honest answer for a person at a shell
 prompt – and the whole dict is `{}` only when the record could not be written.
+
+**Model.** `model=None` (the default) is `spawn_model` from the config file, else
+`DFLT_SPAWN_MODEL`; `''` passes no `--model`, so the account’s settings
+decide, as every spawn did before #160.
 
 **Permissions.** `permission_mode` picks the new session’s permission mode;
 `None` (the default) means the spawning session’s own mode, else – from outside

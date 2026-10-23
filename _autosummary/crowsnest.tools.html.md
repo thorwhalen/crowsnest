@@ -332,6 +332,10 @@ listing – and `activity=False` promises “instant”. Pass `links=True` to ha
 ([`crowsnest.config.report_settings()`](crowsnest.config.html.md#crowsnest.config.report_settings)), the ledgers the report reads, else
 `<data dir>/ledger`.
 
+Every row carries `model` and `model_source`: the model the session was started
+on and where that was read (`'flag'`, `'settings'` for the account’s default it
+inherited, `''` when unknown or on another machine; `crowsnest.spawn.session_model()`).
+
 Every row carries `said_at` and `said_at_basis`, which say when the thing the row
 quotes was said, taken from its source ([`crowsnest.said`](crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
 words, the question the session waits on, or the call in flight. Both are empty when

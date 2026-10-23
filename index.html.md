@@ -239,6 +239,14 @@ Either has to be something that can actually be executed — a script on your `P
 
 Before you do: a wrapper whose whole job is `env -u ANTHROPIC_API_KEY` has nothing to add, because `crowsnest spawn` already drops that variable. Nor does one that only adds `--dangerously-skip-permissions`: the permission mode is a setting of its own.
 
+### Which model a spawned session starts on
+
+The model `--model` names. Left out, `spawn_model` from the config file, else `sonnet`: an unstated model used to inherit the account’s default, which on some machines is the most expensive one (#160). `--model ""` (or `spawn_model = ""`) passes no `--model`, so the account’s settings decide again. The confirmation row echoes the model, and the roster shows each local session’s model in a column, with `*` marking one inherited from the account’s settings.
+
+```toml
+spawn_model = "sonnet"   # or "haiku", "opus", ...; "" = the account's default
+```
+
 ### Which permission mode a spawned session starts in
 
 By default, the mode of the session that spawned it. A session started with `--dangerously-skip-permissions` spawns sessions that skip permissions too, and one in a normal mode spawns them in that mode. Crowsnest reads that mode off the spawning session’s command line. A spawn from *outside* any session (a watchdog’s cron job, your shell) has no spawning session, so it takes `spawn_permission_mode` from the config file, and falls back to Claude Code’s own default when that is unset:

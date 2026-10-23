@@ -574,6 +574,9 @@ listing – and <code class="docutils literal notranslate"><span class="pre">act
 <p><code class="docutils literal notranslate"><span class="pre">ledger_dir=None</span></code> is the config file’s <code class="docutils literal notranslate"><span class="pre">[report]</span> <span class="pre">ledger_dir</span></code>
 (<a class="reference internal" href="crowsnest.config.html#crowsnest.config.report_settings" title="crowsnest.config.report_settings"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.config.report_settings()</span></code></a>), the ledgers the report reads, else
 <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/ledger</span></code>.</p>
+<p>Every row carries <code class="docutils literal notranslate"><span class="pre">model</span></code> and <code class="docutils literal notranslate"><span class="pre">model_source</span></code>: the model the session was started
+on and where that was read (<code class="docutils literal notranslate"><span class="pre">'flag'</span></code>, <code class="docutils literal notranslate"><span class="pre">'settings'</span></code> for the account’s default it
+inherited, <code class="docutils literal notranslate"><span class="pre">''</span></code> when unknown or on another machine; <code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.spawn.session_model()</span></code>).</p>
 <p>Every row carries <code class="docutils literal notranslate"><span class="pre">said_at</span></code> and <code class="docutils literal notranslate"><span class="pre">said_at_basis</span></code>, which say when the thing the row
 quotes was said, taken from its source (<a class="reference internal" href="crowsnest.said.html#module-crowsnest.said" title="crowsnest.said"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.said</span></code></a>). That thing is the last
 words, the question the session waits on, or the call in flight. Both are empty when
@@ -722,7 +725,7 @@ raises <code class="docutils literal notranslate"><span class="pre">ValueError</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=5751785c"></script>
+      <script src="../_static/documentation_options.js?v=f329fc45"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

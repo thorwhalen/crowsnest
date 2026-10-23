@@ -1,4 +1,4 @@
-> built 2026-10-23 09:50 UTC from ac4908a (main) · crowsnest 0.0.96. Details: build_info.json
+> built 2026-10-23 09:59 UTC from 77aaaa3 (main) · crowsnest 0.0.97. Details: build_info.json
 
 # index.html.md
 
@@ -242,6 +242,14 @@ The two persistent settings are checked, because they are claims about *this* ma
 Either has to be something that can actually be executed — a script on your `PATH` or an absolute path (a relative path is refused in the config file, which is read from every directory). **A shell alias is not.** Aliases exist only inside an interactive shell, and a session is started by `tmux` or a bare subprocess, neither of which reads your startup files; naming one is refused with an error that says so, rather than opening a terminal that prints `command not found` and closes. If you have an alias you want to reuse, make it a two-line script instead.
 
 Before you do: a wrapper whose whole job is `env -u ANTHROPIC_API_KEY` has nothing to add, because `crowsnest spawn` already drops that variable. Nor does one that only adds `--dangerously-skip-permissions`: the permission mode is a setting of its own.
+
+### Which model a spawned session starts on
+
+The model `--model` names. Left out, `spawn_model` from the config file, else `sonnet`: an unstated model used to inherit the account’s default, which on some machines is the most expensive one (#160). `--model ""` (or `spawn_model = ""`) passes no `--model`, so the account’s settings decide again. The confirmation row echoes the model, and the roster shows each local session’s model in a column, with `*` marking one inherited from the account’s settings.
+
+```toml
+spawn_model = "sonnet"   # or "haiku", "opus", ...; "" = the account's default
+```
 
 ### Which permission mode a spawned session starts in
 
@@ -1674,6 +1682,7 @@ and nothing in this module pretends otherwise.
 | [`publish_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.             |
 | [`report_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.              |
 | [`root_bypass_ok_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.root_bypass_ok_setting)(\*[, path])        | Whether the config file says the bypass flag works as root here (default `False`). |
+| [`spawn_model_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.spawn_model_setting)(\*[, path])           | The `spawn_model` the config file names, or `None` when it names none.             |
 | [`spawn_permission_mode_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none.   |
 
 ### Classes
@@ -1874,6 +1883,21 @@ here, and this key is how a person says so (#161).
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### crowsnest.config.spawn_model_setting(, path=None)
+
+The `spawn_model` the config file names, or `None` when it names none.
+
+```toml
+spawn_model = "sonnet"   # or "haiku", "opus", ... ; "" = the account's default
+```
+
+The model a spawn starts on when it names none (`crowsnest.spawn.pick_model()`).
+`""` restores the old behaviour: no `--model`, so the session inherits whatever
+the account’s settings say, which is the expensive model exactly when nobody chose.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.config.spawn_permission_mode_setting(, path=None)
 
@@ -2752,6 +2776,10 @@ listing – and `activity=False` promises “instant”. Pass `links=True` to ha
 ([`crowsnest.config.report_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)), the ledgers the report reads, else
 `<data dir>/ledger`.
 
+Every row carries `model` and `model_source`: the model the session was started
+on and where that was read (`'flag'`, `'settings'` for the account’s default it
+inherited, `''` when unknown or on another machine; `crowsnest.spawn.session_model()`).
+
 Every row carries `said_at` and `said_at_basis`, which say when the thing the row
 quotes was said, taken from its source ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
 words, the question the session waits on, or the call in flight. Both are empty when
@@ -2776,7 +2804,7 @@ every [`roster()`](_autosummary/crowsnest.html.md#crowsnest.roster) row does –
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.spawn(name, , cwd, prompt='', model='', effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None)
+### crowsnest.spawn(name, , cwd, prompt='', model=None, effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None)
 
 Start a session named `name` in `cwd`, and wait for the registry to see it.
 
@@ -2799,7 +2827,8 @@ a home instead of spelling it ([`crowsnest.account.account_home()`](_autosummary
 reads `$CROWSNEST_PROFILE`); giving both is an error. `binary` is the `claude`
 to run; left out, each local spawner runs the one this session runs.
 
-Returns `{"name", "pid", "session_id", "how", "home", "parent"}`, `home` being the
+Returns `{"name", "pid", "session_id", "how", "home", "parent", "model"}`, `model`
+being the one it was started on (`pick_model()`: `''` is the account’s own) and `home` the
 account the session was started under (`""`: the spawning session’s own). When the
 registry file never shows up within `wait` seconds, `pid` is `0` and `how`
 says so – the session may still be starting, or may have failed before it could
@@ -2813,6 +2842,10 @@ is recovery work if it is not written down now, so one `spawn` line goes into
 a test’s `tmp_path` being why it is an argument). Its `name` is empty when this
 command was not run from inside a session – the honest answer for a person at a shell
 prompt – and the whole dict is `{}` only when the record could not be written.
+
+**Model.** `model=None` (the default) is `spawn_model` from the config file, else
+`DFLT_SPAWN_MODEL`; `''` passes no `--model`, so the account’s settings
+decide, as every spawn did before #160.
 
 **Permissions.** `permission_mode` picks the new session’s permission mode;
 `None` (the default) means the spawning session’s own mode, else – from outside
@@ -6246,6 +6279,10 @@ listing – and `activity=False` promises “instant”. Pass `links=True` to ha
 ([`crowsnest.config.report_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)), the ledgers the report reads, else
 `<data dir>/ledger`.
 
+Every row carries `model` and `model_source`: the model the session was started
+on and where that was read (`'flag'`, `'settings'` for the account’s default it
+inherited, `''` when unknown or on another machine; `crowsnest.spawn.session_model()`).
+
 Every row carries `said_at` and `said_at_basis`, which say when the thing the row
 quotes was said, taken from its source ([`crowsnest.said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)). That thing is the last
 words, the question the session waits on, or the call in flight. Both are empty when
@@ -7099,18 +7136,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-23 09:50 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e"><code>ac4908a</code></a> on branch <code>main</code>, for **crowsnest 0.0.96** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 09:59 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f"><code>77aaaa3</code></a> on branch <code>main</code>, for **crowsnest 0.0.97** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.96) is behind the latest release on PyPI (0.0.97): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e"><code>ac4908a04e1b5972692a91ecbf96fcf5e7172d8e</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f"><code>77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7121,9 +7156,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39934576823">39934576823</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39935627796">39935627796</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>ac4908a04e1b5972692a91ecbf96fcf5e7172d8e</code> (in the history of the built commit) |
+| Event commit | <code>77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7148,13 +7183,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.97/">0.0.97</a>, newer than the documented version (0.0.96).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.97/">0.0.97</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout ac4908a04e1b5972692a91ecbf96fcf5e7172d8e
+git checkout 77aaaa3dd3ad7eb0c36d556adf7be96d3a4fcd8f
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

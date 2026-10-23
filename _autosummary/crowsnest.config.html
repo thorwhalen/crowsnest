@@ -134,6 +134,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.publish_settings"><code class="docutils literal notranslate"><span class="pre">publish_settings()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.report_settings"><code class="docutils literal notranslate"><span class="pre">report_settings()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.root_bypass_ok_setting"><code class="docutils literal notranslate"><span class="pre">root_bypass_ok_setting()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.spawn_model_setting"><code class="docutils literal notranslate"><span class="pre">spawn_model_setting()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting"><code class="docutils literal notranslate"><span class="pre">spawn_permission_mode_setting()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
@@ -289,7 +290,10 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.root_bypass_ok_setting" title="crowsnest.config.root_bypass_ok_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">root_bypass_ok_setting</span></code></a>(*[, path])</p></td>
 <td><p>Whether the config file says the bypass flag works as root here (default <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting" title="crowsnest.config.spawn_permission_mode_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_permission_mode_setting</span></code></a>(*[, path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.spawn_model_setting" title="crowsnest.config.spawn_model_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_model_setting</span></code></a>(*[, path])</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">spawn_model</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting" title="crowsnest.config.spawn_permission_mode_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_permission_mode_setting</span></code></a>(*[, path])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">spawn_permission_mode</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p></td>
 </tr>
 </tbody>
@@ -548,6 +552,23 @@ here, and this key is how a person says so (#161).</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.config.spawn_model_setting">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">spawn_model_setting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#spawn_model_setting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.spawn_model_setting" title="Link to this definition">#</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">spawn_model</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">spawn_model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sonnet"</span><span class="w">   </span><span class="c1"># or "haiku", "opus", ... ; "" = the account's default</span>
+</span></pre></div>
+</div>
+<p>The model a spawn starts on when it names none (<code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.spawn.pick_model()</span></code>).
+<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> restores the old behaviour: no <code class="docutils literal notranslate"><span class="pre">--model</span></code>, so the session inherits whatever
+the account’s settings say, which is the expensive model exactly when nobody chose.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.config.spawn_permission_mode_setting">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">spawn_permission_mode_setting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#spawn_permission_mode_setting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.spawn_permission_mode_setting" title="Link to this definition">#</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">spawn_permission_mode</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p>
@@ -606,7 +627,7 @@ shell; a session spawning another passes on its own mode instead
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=5751785c"></script>
+      <script src="../_static/documentation_options.js?v=f329fc45"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
