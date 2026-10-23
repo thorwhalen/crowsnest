@@ -589,8 +589,7 @@ def events(
         announced = {
             sid
             for sid in announced
-            if sid in this_tick
-            or (sid in after and after[sid].status == "waiting")
+            if sid in this_tick or (sid in after and after[sid].status == "waiting")
         }
         yield from attention_wakes(
             store=attention_store,

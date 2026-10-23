@@ -207,32 +207,55 @@ def test_a_waiting_episode_is_announced_once(tmp_path):
     # #141: every needs-you duplicated a registry `waiting` seconds earlier.
     home = demo_home(tmp_path)
     log = tmp_path / "events.jsonl"
-    needs = {**stop_line(name="parser", session="s2", detail="permission for Bash"),
-             "event": "notification", "notification_type": "permission_prompt"}
-    steps = iter([
-        lambda: write_registry(
-            home, registry_record(102, "s2", name="parser", status="waiting",
-                                  waiting_for="permission")),
-        lambda: write_events(log, needs),  # the hook, a tick later: already said
-        lambda: write_registry(home, registry_record(102, "s2", name="parser",
-                                                     status="busy")),
-        lambda: write_events(log, needs),  # a new episode: said again
-    ])
-    got = list(events(home=home, is_alive=alive, ticks=4,
-                      sleep=lambda _: next(steps)(), events_path=log))
+    needs = {
+        **stop_line(name="parser", session="s2", detail="permission for Bash"),
+        "event": "notification",
+        "notification_type": "permission_prompt",
+    }
+    steps = iter(
+        [
+            lambda: write_registry(
+                home,
+                registry_record(
+                    102, "s2", name="parser", status="waiting", waiting_for="permission"
+                ),
+            ),
+            lambda: write_events(log, needs),  # the hook, a tick later: already said
+            lambda: write_registry(
+                home, registry_record(102, "s2", name="parser", status="busy")
+            ),
+            lambda: write_events(log, needs),  # a new episode: said again
+        ]
+    )
+    got = list(
+        events(
+            home=home,
+            is_alive=alive,
+            ticks=4,
+            sleep=lambda _: next(steps)(),
+            events_path=log,
+        )
+    )
     assert [e["kind"] for e in got] == ["waiting", "busy", "needs-you"]
 
 
 def test_a_needs_you_first_suppresses_the_registry_waiting_of_the_same_episode(tmp_path):
     home = demo_home(tmp_path)
     log = tmp_path / "events.jsonl"
-    needs = {**stop_line(name="parser", session="s2", detail="permission for Bash"),
-             "event": "notification", "notification_type": "permission_prompt"}
+    needs = {
+        **stop_line(name="parser", session="s2", detail="permission for Bash"),
+        "event": "notification",
+        "notification_type": "permission_prompt",
+    }
 
     def sleep(_):
         write_events(log, needs)
-        write_registry(home, registry_record(102, "s2", name="parser", status="waiting",
-                                             waiting_for="permission"))
+        write_registry(
+            home,
+            registry_record(
+                102, "s2", name="parser", status="waiting", waiting_for="permission"
+            ),
+        )
 
     got = list(events(home=home, is_alive=alive, ticks=1, sleep=sleep, events_path=log))
     assert [e["kind"] for e in got] == ["needs-you"]

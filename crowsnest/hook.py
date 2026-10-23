@@ -365,7 +365,12 @@ def handle(
         if asks:
             # Its own line, so a watcher filtered to loud kinds still hears it (#141).
             append_event(
-                {**record, "event": "ask", "detail": _one_line(asks[0]), "asks": len(asks)},
+                {
+                    **record,
+                    "event": "ask",
+                    "detail": _one_line(asks[0]),
+                    "asks": len(asks),
+                },
                 events_path=events_path,
             )
         ledger = ""
