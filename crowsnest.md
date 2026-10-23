@@ -1,4 +1,4 @@
-> built 2026-10-23 10:17 UTC from 6a3f598 (main) · crowsnest 0.0.103. Details: build_info.json
+> built 2026-10-23 10:22 UTC from d2c5342 (main) · crowsnest 0.0.104. Details: build_info.json
 
 # index.html.md
 
@@ -85,6 +85,7 @@ crowsnest attention export|import  your attention records as JSON, last write wi
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest watch --kinds loud       only what needs you; --mute a,b drops sessions; [watch] in the config sets both
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
+crowsnest handoff --out FILE       the page a fresh watcher starts from: asks, sessions and their briefs, the watch filter
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
 crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
                                    (--profile NAME: on another account; --binary PATH: another claude)
@@ -3495,6 +3496,7 @@ long-lived dispatcher ever started would sit on the graph forever.
 | [`names_by_session_id`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.names_by_session_id)(\*[, events_path, ...])      | Every session id these two logs have ever named, mapped to that name.                                                  |
 | [`open_command`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.open_command)(row, \*[, home_dir])                | What to type in a terminal to reach one session: <br/><br/>```<br/>``<br/>```<br/><br/>crowsnest open .                |
 | [`record_spawn`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.record_spawn)(child, \*[, child_session_id, ...]) | Write the `spawn` line for a session just created.                                                                     |
+| [`spawn_briefs`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.spawn_briefs)(\*[, lineage_path])                 | The brief each spawned session was started with, as its `spawn` line kept it.                                          |
 | [`spawn_event`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.spawn_event)(child, \*[, child_session_id, ...])  | One `spawn` line for the event log, shaped like every other line in it.                                                |
 
 ### Classes
@@ -3822,6 +3824,18 @@ Returns the record written, or `{}` when nothing could be written.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.lineage.spawn_briefs(, lineage_path=None)
+
+The brief each spawned session was started with, as its `spawn` line kept it.
+
+Keyed by the child’s session id, and by `name:<name>` for the latest spawn under
+that name (names repeat over time, #42; a caller with an id should use it). Each value
+is `{head, refs, at, parent}`. Lines without a brief are left out; a malformed line
+is skipped, as in [`from_records()`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.from_records).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### crowsnest.lineage.spawn_event(child, , child_session_id='', project='', parent=None, at='', source='event', confidence='recorded', brief='')
 
@@ -7339,16 +7353,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-23 10:17 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/6a3f598930db8b18b20dd0ba9154d4d540599b27"><code>6a3f598</code></a> on branch <code>main</code>, for **crowsnest 0.0.103** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 10:22 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7"><code>d2c5342</code></a> on branch <code>main</code>, for **crowsnest 0.0.104** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.104) is behind the latest release on PyPI (0.0.105): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/6a3f598930db8b18b20dd0ba9154d4d540599b27"><code>6a3f598930db8b18b20dd0ba9154d4d540599b27</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7"><code>d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7359,9 +7375,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39937767656">39937767656</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39938484203">39938484203</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>6a3f598930db8b18b20dd0ba9154d4d540599b27</code> (in the history of the built commit) |
+| Event commit | <code>d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7386,13 +7402,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.103/">0.0.103</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.105/">0.0.105</a>, newer than the documented version (0.0.104).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 6a3f598930db8b18b20dd0ba9154d4d540599b27
+git checkout d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

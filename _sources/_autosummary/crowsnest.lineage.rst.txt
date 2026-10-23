@@ -32,6 +32,7 @@ crowsnest.lineage
       names_by_session_id
       open_command
       record_spawn
+      spawn_briefs
       spawn_event
    
    .. rubric:: Classes

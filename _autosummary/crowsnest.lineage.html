@@ -140,6 +140,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.lineage.names_by_session_id"><code class="docutils literal notranslate"><span class="pre">names_by_session_id()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.lineage.open_command"><code class="docutils literal notranslate"><span class="pre">open_command()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.lineage.record_spawn"><code class="docutils literal notranslate"><span class="pre">record_spawn()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.lineage.spawn_briefs"><code class="docutils literal notranslate"><span class="pre">spawn_briefs()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.lineage.spawn_event"><code class="docutils literal notranslate"><span class="pre">spawn_event()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
@@ -293,7 +294,10 @@ long-lived dispatcher ever started would sit on the graph forever.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.lineage.record_spawn" title="crowsnest.lineage.record_spawn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_spawn</span></code></a>(child, *[, child_session_id, ...])</p></td>
 <td><p>Write the <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line for a session just created.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.lineage.spawn_event" title="crowsnest.lineage.spawn_event"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_event</span></code></a>(child, *[, child_session_id, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.lineage.spawn_briefs" title="crowsnest.lineage.spawn_briefs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_briefs</span></code></a>(*[, lineage_path])</p></td>
+<td><p>The brief each spawned session was started with, as its <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line kept it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.lineage.spawn_event" title="crowsnest.lineage.spawn_event"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_event</span></code></a>(child, *[, child_session_id, ...])</p></td>
 <td><p>One <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line for the event log, shaped like every other line in it.</p></td>
 </tr>
 </tbody>
@@ -672,6 +676,21 @@ every caller that is a session.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.lineage.spawn_briefs">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">spawn_briefs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/lineage.html#spawn_briefs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.spawn_briefs" title="Link to this definition">#</a></dt>
+<dd><p>The brief each spawned session was started with, as its <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line kept it.</p>
+<p>Keyed by the child’s session id, and by <code class="docutils literal notranslate"><span class="pre">name:&lt;name&gt;</span></code> for the latest spawn under
+that name (names repeat over time, #42; a caller with an id should use it). Each value
+is <code class="docutils literal notranslate"><span class="pre">{head,</span> <span class="pre">refs,</span> <span class="pre">at,</span> <span class="pre">parent}</span></code>. Lines without a brief are left out; a malformed line
+is skipped, as in <a class="reference internal" href="#crowsnest.lineage.from_records" title="crowsnest.lineage.from_records"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_records()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.lineage.spawn_event">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">spawn_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">child</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'event'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'recorded'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brief</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/lineage.html#spawn_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.spawn_event" title="Link to this definition">#</a></dt>
 <dd><p>One <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line for the event log, shaped like every other line in it.</p>
@@ -735,7 +754,7 @@ it, under <code class="docutils literal notranslate"><span class="pre">brief</sp
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=97d53703"></script>
+      <script src="../_static/documentation_options.js?v=5c5ca7ce"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

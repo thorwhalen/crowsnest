@@ -77,6 +77,7 @@ long-lived dispatcher ever started would sit on the graph forever.
 | [`names_by_session_id`](#crowsnest.lineage.names_by_session_id)(\*[, events_path, ...])      | Every session id these two logs have ever named, mapped to that name.                                                  |
 | [`open_command`](#crowsnest.lineage.open_command)(row, \*[, home_dir])                | What to type in a terminal to reach one session: <br/><br/>```<br/>``<br/>```<br/><br/>crowsnest open .                |
 | [`record_spawn`](#crowsnest.lineage.record_spawn)(child, \*[, child_session_id, ...]) | Write the `spawn` line for a session just created.                                                                     |
+| [`spawn_briefs`](#crowsnest.lineage.spawn_briefs)(\*[, lineage_path])                 | The brief each spawned session was started with, as its `spawn` line kept it.                                          |
 | [`spawn_event`](#crowsnest.lineage.spawn_event)(child, \*[, child_session_id, ...])  | One `spawn` line for the event log, shaped like every other line in it.                                                |
 
 ### Classes
@@ -404,6 +405,18 @@ Returns the record written, or `{}` when nothing could be written.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.lineage.spawn_briefs(, lineage_path=None)
+
+The brief each spawned session was started with, as its `spawn` line kept it.
+
+Keyed by the child’s session id, and by `name:<name>` for the latest spawn under
+that name (names repeat over time, #42; a caller with an id should use it). Each value
+is `{head, refs, at, parent}`. Lines without a brief are left out; a malformed line
+is skipped, as in [`from_records()`](#crowsnest.lineage.from_records).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
 
 ### crowsnest.lineage.spawn_event(child, , child_session_id='', project='', parent=None, at='', source='event', confidence='recorded', brief='')
 

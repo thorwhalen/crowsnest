@@ -81,6 +81,7 @@ crowsnest attention export|import  your attention records as JSON, last write wi
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest watch --kinds loud       only what needs you; --mute a,b drops sessions; [watch] in the config sets both
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
+crowsnest handoff --out FILE       the page a fresh watcher starts from: asks, sessions and their briefs, the watch filter
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
 crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
                                    (--profile NAME: on another account; --binary PATH: another claude)
