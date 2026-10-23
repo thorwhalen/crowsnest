@@ -41,6 +41,7 @@ import shutil
 import subprocess
 import sys
 import time
+import warnings
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import partial
@@ -54,6 +55,7 @@ __all__ = [
     "BYPASS_MODES",
     "CLAUDE_BIN",
     "KNOWN_MODES",
+    "SANDBOX_VAR",
     "SESSION_VARS",
     "STARTUP_DIALOGS",
     "StartupDialog",
@@ -164,6 +166,14 @@ SESSION_VARS = (
 #: became a choice, so a bypass spawn starts byte for byte as it always did.
 BYPASS_MODES = frozenset({"bypass", "bypassPermissions", "dangerously-skip-permissions"})
 _BYPASS_FLAG = "--dangerously-skip-permissions"
+
+#: The variable under which Claude Code accepts :data:`_BYPASS_FLAG` from root (``"1"``).
+#: :func:`env_prefix` hands it on, since :func:`pick_permission_mode` trusts it (#161).
+SANDBOX_VAR = "IS_SANDBOX"
+_ROOT_BYPASS_FIX = (
+    f"set {SANDBOX_VAR}=1 where the session starts, or root_bypass_ok = true in the "
+    "config file if its claude_bin launcher sets it"
+)
 _MODE_FLAG = "--permission-mode"
 
 #: The modes ``claude --permission-mode`` accepts (2.1.x ``--help``; ``default`` is the
@@ -314,42 +324,62 @@ def pick_permission_mode(
     fallbacks reach it only from a spawner that itself runs bypassed, or from a config
     file that says so.
 
-    Claude Code refuses the bypass flag to root (#101), and the refusal is invisible
-    behind tmux. So under ``euid`` 0 (default: this process's) an *explicit* bypass
-    raises ``ValueError``, and a bypass that was only inherited or configured degrades
-    to ``''``: the machine's own settings decide, as they would for a person there.
+    Claude Code refuses the bypass flag to root (#101) unless ``IS_SANDBOX=1`` is in its
+    environment, and the refusal is invisible behind tmux. So under ``euid`` 0 (default:
+    this process's) the flag is passed only where it will work: ``environ`` has
+    ``IS_SANDBOX=1`` (:func:`env_prefix` hands it on), or the config file says
+    ``root_bypass_ok = true`` (:func:`crowsnest.config.root_bypass_ok_setting`), for a
+    launcher that sets it itself (#161). Elsewhere an *explicit* bypass raises
+    ``ValueError``, and one that was only inherited or configured degrades to ``''`` with
+    a ``UserWarning``: the machine's own settings decide, as they would for a person there.
 
     >>> pick_permission_mode('plan')
     'plan'
     >>> pick_permission_mode(None, environ={}, config='/no/such/config.toml')
     ''
-    >>> pick_permission_mode('bypass', euid=0)
+    >>> pick_permission_mode('bypass', environ={'IS_SANDBOX': '1'}, euid=0)
+    'bypassPermissions'
+    >>> pick_permission_mode('bypass', environ={}, config='/no/such.toml', euid=0)
     Traceback (most recent call last):
       ...
-    ValueError: Claude Code refuses --dangerously-skip-permissions to root; pick another --permission-mode (or none) for this machine.
+    ValueError: Claude Code refuses --dangerously-skip-permissions to root; set IS_SANDBOX=1 where the session starts, or root_bypass_ok = true in the config file if its claude_bin launcher sets it, or pick another --permission-mode (or none).
     """
+    from crowsnest.config import root_bypass_ok_setting, spawn_permission_mode_setting
+
     if euid is None:
         euid = os.geteuid() if hasattr(os, "geteuid") else -1
-    root = euid == 0
+    env = os.environ if environ is None else environ
 
-    def is_bypass(picked: str) -> bool:
-        return _mode_args(picked)[:1] == [_BYPASS_FLAG]
+    def refused(picked: str) -> bool:
+        """Whether claude would refuse ``picked`` here: bypass, as root, unsandboxed."""
+        return (
+            euid == 0
+            and _mode_args(picked)[:1] == [_BYPASS_FLAG]
+            and env.get(SANDBOX_VAR) != "1"
+            and not root_bypass_ok_setting(path=config)
+        )
 
     if mode is not None:
         picked = canonical_permission_mode(mode)
-        if root and is_bypass(picked):
+        if refused(picked):
             raise ValueError(
-                f"Claude Code refuses {_BYPASS_FLAG} to root; pick another "
-                "--permission-mode (or none) for this machine."
+                f"Claude Code refuses {_BYPASS_FLAG} to root; {_ROOT_BYPASS_FIX}, or "
+                "pick another --permission-mode (or none)."
             )
         return picked
     own = spawner_permission_mode(environ, argv_of=argv_of)
     if own is None:
-        from crowsnest.config import spawn_permission_mode_setting
-
         own = spawn_permission_mode_setting(path=config)
     picked = canonical_permission_mode(own or "")
-    return "" if root and is_bypass(picked) else picked
+    if refused(picked):
+        warnings.warn(
+            f"not passing {_BYPASS_FLAG}: Claude Code refuses it to root, so the new "
+            f"session starts in this machine's default mode. To keep bypass, "
+            f"{_ROOT_BYPASS_FIX}.",
+            stacklevel=2,
+        )
+        return ""
+    return picked
 
 
 def claude_argv(
@@ -506,7 +536,7 @@ def env_prefix(
         if k not in controlled:
             controlled.append(k)
     unset = [k for k in controlled if k not in env]
-    stated = set(controlled)
+    stated = {*controlled, SANDBOX_VAR}  # handed on, never unset: a launcher may set it
     assignments = [
         f"{k}={v}" for k, v in env.items() if k.startswith("CLAUDE") or k in stated
     ]

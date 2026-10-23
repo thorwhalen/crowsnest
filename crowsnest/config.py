@@ -103,6 +103,7 @@ __all__ = [
     "homes",
     "publish_settings",
     "report_settings",
+    "root_bypass_ok_setting",
     "spawn_permission_mode_setting",
 ]
 
@@ -113,6 +114,10 @@ CLAUDE_BIN_KEY = "claude_bin"
 #: The top-level config key naming the permission mode a spawned session starts in. See
 #: :func:`crowsnest.spawn.pick_permission_mode` for the order the choices are taken in.
 SPAWN_PERMISSION_MODE_KEY = "spawn_permission_mode"
+
+#: The top-level config key saying that, on this machine, the bypass flag works as root
+#: (a launcher sets ``IS_SANDBOX=1``). See :func:`crowsnest.spawn.pick_permission_mode`.
+ROOT_BYPASS_OK_KEY = "root_bypass_ok"
 
 #: Overrides the config file location outright.
 CONFIG_ENV_VAR = "CROWSNEST_CONFIG"
@@ -205,6 +210,32 @@ def spawn_permission_mode_setting(*, path: str | Path | None = None) -> str | No
             f"permission mode, not {type(value).__name__} ({value!r})"
         )
     return value.strip()
+
+
+def root_bypass_ok_setting(*, path: str | Path | None = None) -> bool:
+    """Whether the config file says the bypass flag works as root here (default ``False``).
+
+    .. code-block:: toml
+
+        claude_bin = "/usr/local/bin/claude-launcher"   # sets IS_SANDBOX=1 for root
+        root_bypass_ok = true
+
+    Claude Code refuses ``--dangerously-skip-permissions`` to root unless its own
+    environment has ``IS_SANDBOX=1``. When this process's environment has it, crowsnest
+    sees that for itself; a launcher that sets it only for the child is invisible from
+    here, and this key is how a person says so (#161).
+    """
+    data = _loaded(path)
+    value = data.get(ROOT_BYPASS_OK_KEY)
+    if value is None:
+        _refuse_a_misplaced_key(data, path, ROOT_BYPASS_OK_KEY)
+        return False
+    if not isinstance(value, bool):
+        raise TypeError(
+            f"{config_path(path)}: {ROOT_BYPASS_OK_KEY} must be true or false, "
+            f"not {type(value).__name__} ({value!r})"
+        )
+    return value
 
 
 def _refuse_a_misplaced_claude_bin(data: dict, path: str | Path | None) -> None:

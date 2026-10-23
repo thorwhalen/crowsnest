@@ -9,6 +9,7 @@ from crowsnest.account import CLAUDE_BIN_ENV_VAR
 from crowsnest.config import CONFIG_ENV_VAR
 from crowsnest.lineage import SESSION_ID_VAR, SESSION_PID_VAR
 from crowsnest.paths import DATA_DIR_ENV_VAR
+from crowsnest.spawn import SANDBOX_VAR
 
 
 @pytest.fixture(scope="session")
@@ -42,6 +43,8 @@ def _no_ambient_configuration(_absent_config, monkeypatch):
     # machine only. A test that wants a caller sets these itself, afterwards.
     for identity in (SESSION_ID_VAR, SESSION_PID_VAR):
         monkeypatch.delenv(identity, raising=False)
+    # A server's launcher may export it, and then bypass is allowed under root (#161).
+    monkeypatch.delenv(SANDBOX_VAR, raising=False)
 
 
 @pytest.fixture(autouse=True)
