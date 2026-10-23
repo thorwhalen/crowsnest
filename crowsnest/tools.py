@@ -565,7 +565,12 @@ def handoff(
         }
         for row in triaged["groups"].get("needs_you", ())
         for ask in (row.get("verdict") or {}).get("asks")
-        or [{"text": (row.get("verdict") or {}).get("reason"), "said_at": row.get("said_at")}]
+        or [
+            {
+                "text": (row.get("verdict") or {}).get("reason"),
+                "said_at": row.get("said_at"),
+            }
+        ]
     ]
     sessions = [
         {
