@@ -91,23 +91,6 @@ def test_a_row_put_off_into_later_keeps_its_placeholder():
     rev = RowContext().rev(rows[0])
     later = attention.later(None, rev, until=None, now=NOW)
     markup = page(rows, interactive=True, store={item: attention.as_doc(item, later)})
-    # The static register in <main>, not the inert template that also carries id="later"
-    # and follows it (#94).
-    assert 'id="later"' in markup.split("<template", 1)[0]
-    assert chips(li(markup, r["label"])) == [address], r["label"]
-    assert sorted(chips(markup)) == sorted(
-        ["asker", "finisher", "runner", "sleeper", "away@server"]
-    )
-
-
-def test_a_row_put_off_into_later_keeps_its_placeholder():
-    rows = fleet()
-    item = attention.item_id(rows[0])
-    from crowsnest.rows import RowContext
-
-    rev = RowContext().rev(rows[0])
-    later = attention.later(None, rev, until=None, now=NOW)
-    markup = page(rows, interactive=True, store={item: attention.as_doc(item, later)})
     # The static register, not the inert template that also carries id="later" (#94).
     assert (
         'register register--later" id="later"><summary'
