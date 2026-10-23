@@ -1162,7 +1162,9 @@ def init(
     """Set this directory up as a watching session's home: its CLAUDE.md, data dir, hooks.
 
     Writes `CLAUDE.md` from the bundled template (never over a different one without
-    `--force`), creates the data directory, and prints the hook lines. `--hooks` adds
+    `--force`, nor into a directory with git repositories beneath it: every session in
+    them would load the lookout's rules), creates the data directory, and prints the
+    hook lines. `--hooks` adds
     them to your settings for you, after a timestamped backup, removing nothing.
     """
     plan = _init.init(
@@ -1170,6 +1172,12 @@ def init(
     )
     verb = "would set up" if plan["dry_run"] else "set up"
     lines = [f"{verb} {plan['directory']}"]
+    if plan["repos_beneath"]:
+        lines.append(
+            f"warning: {plan['repos_beneath']} repositories lie beneath this directory, "
+            "and every session started in one loads its CLAUDE.md. A lookout belongs in a "
+            "directory with none beneath it (#116)."
+        )
     for label, row in (
         ("CLAUDE.md", plan["claude_md"]),
         ("data dir", plan["data_dir"]),
