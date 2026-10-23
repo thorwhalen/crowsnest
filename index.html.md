@@ -333,7 +333,7 @@ A session that no value matches is placed by its repository’s owner. Failing t
 "Notification": [{"hooks": [{"type": "command", "command": "crowsnest hook notification", "async": true}]}]
 ```
 
-With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session’s last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. `crowsnest hook` prints nothing and exits 0 whatever happens; `async` means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, `crowsnest watch` is exactly the registry diff it always was. `crowsnest init --hooks` writes all of this for you.
+With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session’s last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. A turn that ends by asking you for something (“For the user: …”, read the way a ledger’s requests are) also becomes an `ask` line, which `--kinds loud` keeps, and a wait is announced once, by whichever of `waiting` and `needs-you` comes first. `crowsnest hook` prints nothing and exits 0 whatever happens; `async` means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, `crowsnest watch` is exactly the registry diff it always was. `crowsnest init --hooks` writes all of this for you.
 
 ## One walk, end to end
 

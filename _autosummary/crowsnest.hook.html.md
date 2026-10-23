@@ -23,7 +23,10 @@ module is only what they call.)
 `<data dir>/events.jsonl`, which [`crowsnest.watch.events()`](crowsnest.watch.html.md#crowsnest.watch.events) tails – and, on a
 stop, writes the two *mechanical* ledger fields, `last asked` and `last said`, from
 the transcript tail. It writes nothing a human or the session would have had to think
-about: [`crowsnest.ledger`](crowsnest.ledger.html.md#module-crowsnest.ledger) says why.
+about: [`crowsnest.ledger`](crowsnest.ledger.html.md#module-crowsnest.ledger) says why. A stop whose final message asks the person for
+something (read as a ledger’s “for <person>” sections are,
+[`crowsnest.triage.asks_in()`](crowsnest.triage.html.md#crowsnest.triage.asks_in)) adds a second line, `ask`, so a watcher that only
+listens for loud kinds still hears it (#141).
 
 **It runs inside somebody else’s session, so it may not fail and may not be slow.** Every
 error is swallowed into one line in `<data dir>/hook.log` and reported in the returned

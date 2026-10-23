@@ -91,8 +91,9 @@ whose own store is already a seam) is the reader this exists to make room for.
 
 ### Functions
 
-| [`classify`](#crowsnest.triage.classify)(rows, \*[, ledgers, verdicts, owner])   | Every session, grouped by what it needs.                                                                                |
+| [`asks_in`](#crowsnest.triage.asks_in)(text, \*[, owner])                       | What free `text` -- a turn's final message, say -- asks of a person, each whole.                                        |
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| [`classify`](#crowsnest.triage.classify)(rows, \*[, ledgers, verdicts, owner])   | Every session, grouped by what it needs.                                                                                |
 | [`classify_row`](#crowsnest.triage.classify_row)(row, \*[, ledger, verdicts, owner]) | One session's verdict, as a JSON-able dict.                                                                             |
 | [`dflt_verdicts`](#crowsnest.triage.dflt_verdicts)([owner])                           | The readers [`classify()`](#crowsnest.triage.classify) uses when a caller names none, strongest first. |
 | [`from_ledger`](#crowsnest.triage.from_ledger)(row, ledger, \*[, owner])            | What the session wrote down for a person to read.                                                                       |
@@ -172,6 +173,26 @@ JSON-ready form, the asks as a list of dicts.
 Why a session needs a person, when it does. `question` is one it actually asked;
 `decision` is a choice only a person can make; `action` is something only a person
 can do – attach a file to an issue, run a command, approve a spend.
+
+### crowsnest.triage.asks_in(text, , owner='')
+
+What free `text` – a turn’s final message, say – asks of a person, each whole.
+
+Read exactly as a ledger’s free part is ([`from_ledger()`](#crowsnest.triage.from_ledger)): the first request, then
+every other one that opens a “for <person>” section; a statement that only mentions a
+person (“blocked on the user” restating it, “no manual-task needed”) is not a second
+ask. `owner` defaults to [`DFLT_OWNER`](#crowsnest.triage.DFLT_OWNER). This reads text; it changes nothing
+about where a ledger’s asks are bounded, so no stored revision moves (#141).
+
+```pycon
+>>> asks_in('Merged.\n\n**For the user:** pick a name.')
+['pick a name.']
+>>> asks_in('Merged. Nothing is pending.')
+[]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### crowsnest.triage.classify(rows, , ledgers=None, verdicts=None, owner='')
 

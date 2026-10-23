@@ -283,14 +283,14 @@ to a human and two file listings per tick is nothing.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.watch.HOOK_KINDS">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">HOOK_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'intent':</span> <span class="pre">'intent',</span> <span class="pre">'notification':</span> <span class="pre">'needs-you',</span> <span class="pre">'stop':</span> <span class="pre">'stopped'}</span></span><a class="headerlink" href="#crowsnest.watch.HOOK_KINDS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">HOOK_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'ask':</span> <span class="pre">'ask',</span> <span class="pre">'intent':</span> <span class="pre">'intent',</span> <span class="pre">'notification':</span> <span class="pre">'needs-you',</span> <span class="pre">'stop':</span> <span class="pre">'stopped'}</span></span><a class="headerlink" href="#crowsnest.watch.HOOK_KINDS" title="Link to this definition">#</a></dt>
 <dd><p>What a hook event is called in the stream. <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> and <code class="docutils literal notranslate"><span class="pre">stopped</span></code> are named for
 what the human should do about them, which is what the registry statuses are not.</p>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.watch.KINDS">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'busy',</span> <span class="pre">'error',</span> <span class="pre">'exited',</span> <span class="pre">'idle',</span> <span class="pre">'intent',</span> <span class="pre">'needs-you',</span> <span class="pre">'shell',</span> <span class="pre">'started',</span> <span class="pre">'stopped',</span> <span class="pre">'waiting',</span> <span class="pre">'woke'})</span></span><a class="headerlink" href="#crowsnest.watch.KINDS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'ask',</span> <span class="pre">'busy',</span> <span class="pre">'error',</span> <span class="pre">'exited',</span> <span class="pre">'idle',</span> <span class="pre">'intent',</span> <span class="pre">'needs-you',</span> <span class="pre">'shell',</span> <span class="pre">'started',</span> <span class="pre">'stopped',</span> <span class="pre">'waiting',</span> <span class="pre">'woke'})</span></span><a class="headerlink" href="#crowsnest.watch.KINDS" title="Link to this definition">#</a></dt>
 <dd><p>the registry diff’s, the hook log’s, and <code class="docutils literal notranslate"><span class="pre">woke</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
@@ -301,7 +301,7 @@ what the human should do about them, which is what the registry statuses are not
 
 <dl class="py data">
 <dt class="sig sig-object py" id="crowsnest.watch.LOUD_KINDS">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">LOUD_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'error',</span> <span class="pre">'intent',</span> <span class="pre">'needs-you',</span> <span class="pre">'waiting',</span> <span class="pre">'woke'})</span></span><a class="headerlink" href="#crowsnest.watch.LOUD_KINDS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.watch.</span></span><span class="sig-name descname"><span class="pre">LOUD_KINDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'ask',</span> <span class="pre">'error',</span> <span class="pre">'intent',</span> <span class="pre">'needs-you',</span> <span class="pre">'waiting',</span> <span class="pre">'woke'})</span></span><a class="headerlink" href="#crowsnest.watch.LOUD_KINDS" title="Link to this definition">#</a></dt>
 <dd><p>The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
 catches “waiting” and “error” without reading the line.</p>
 </dd></dl>
@@ -585,7 +585,7 @@ fragment – a line the writer has not finished – is left for the next read.</
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=04553970"></script>
+      <script src="../_static/documentation_options.js?v=33adb31a"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

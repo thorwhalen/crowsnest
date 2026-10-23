@@ -460,7 +460,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="3">"Notification": [{"hooks": [{"type": "command", "command": "crowsnest hook notification", "async": true}]}]
 </span></pre></div>
 </div>
-<p>With those two lines, a turn ending becomes a <code class="docutils literal notranslate"><span class="pre">stopped</span></code> line in <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> carrying the session’s last words, and a permission prompt or a question becomes a <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code> prints nothing and exits 0 whatever happens; <code class="docutils literal notranslate"><span class="pre">async</span></code> means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> is exactly the registry diff it always was. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">init</span> <span class="pre">--hooks</span></code> writes all of this for you.</p>
+<p>With those two lines, a turn ending becomes a <code class="docutils literal notranslate"><span class="pre">stopped</span></code> line in <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> carrying the session’s last words, and a permission prompt or a question becomes a <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. A turn that ends by asking you for something (“For the user: …”, read the way a ledger’s requests are) also becomes an <code class="docutils literal notranslate"><span class="pre">ask</span></code> line, which <code class="docutils literal notranslate"><span class="pre">--kinds</span> <span class="pre">loud</span></code> keeps, and a wait is announced once, by whichever of <code class="docutils literal notranslate"><span class="pre">waiting</span></code> and <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> comes first. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code> prints nothing and exits 0 whatever happens; <code class="docutils literal notranslate"><span class="pre">async</span></code> means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> is exactly the registry diff it always was. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">init</span> <span class="pre">--hooks</span></code> writes all of this for you.</p>
 </section>
 <section id="one-walk-end-to-end">
 <h2>One walk, end to end<a class="headerlink" href="#one-walk-end-to-end" title="Link to this heading">#</a></h2>
@@ -564,7 +564,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 10:11 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/cec235dde04af843b3ba0a1484e1fc15065eba5d">cec235d</a> (main) · crowsnest 0.0.101 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 10:14 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/005e8906a21c20cb5e5a579aea8179a17ca1f2d4">005e890</a> (main) · crowsnest 0.0.102 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -599,7 +599,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=04553970"></script>
+      <script src="_static/documentation_options.js?v=33adb31a"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

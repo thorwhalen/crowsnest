@@ -17,6 +17,7 @@ crowsnest.triage
 
    .. autosummary::
    
+      asks_in
       classify
       classify_row
       dflt_verdicts

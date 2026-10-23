@@ -125,6 +125,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#crowsnest.triage.WHYS"><code class="docutils literal notranslate"><span class="pre">WHYS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.triage.asks_in"><code class="docutils literal notranslate"><span class="pre">asks_in()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.triage.classify"><code class="docutils literal notranslate"><span class="pre">classify()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.triage.classify_row"><code class="docutils literal notranslate"><span class="pre">classify_row()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.triage.dflt_verdicts"><code class="docutils literal notranslate"><span class="pre">dflt_verdicts()</span></code></a></li>
@@ -283,25 +284,28 @@ whose own store is already a seam) is the reader this exists to make room for.</
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.classify" title="crowsnest.triage.classify"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify</span></code></a>(rows, *[, ledgers, verdicts, owner])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.asks_in" title="crowsnest.triage.asks_in"><code class="xref py py-obj docutils literal notranslate"><span class="pre">asks_in</span></code></a>(text, *[, owner])</p></td>
+<td><p>What free <code class="docutils literal notranslate"><span class="pre">text</span></code> -- a turn's final message, say -- asks of a person, each whole.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.triage.classify" title="crowsnest.triage.classify"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify</span></code></a>(rows, *[, ledgers, verdicts, owner])</p></td>
 <td><p>Every session, grouped by what it needs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.triage.classify_row" title="crowsnest.triage.classify_row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_row</span></code></a>(row, *[, ledger, verdicts, owner])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.classify_row" title="crowsnest.triage.classify_row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_row</span></code></a>(row, *[, ledger, verdicts, owner])</p></td>
 <td><p>One session's verdict, as a JSON-able dict.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.dflt_verdicts" title="crowsnest.triage.dflt_verdicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_verdicts</span></code></a>([owner])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.triage.dflt_verdicts" title="crowsnest.triage.dflt_verdicts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dflt_verdicts</span></code></a>([owner])</p></td>
 <td><p>The readers <a class="reference internal" href="#crowsnest.triage.classify" title="crowsnest.triage.classify"><code class="xref py py-func docutils literal notranslate"><span class="pre">classify()</span></code></a> uses when a caller names none, strongest first.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.triage.from_ledger" title="crowsnest.triage.from_ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_ledger</span></code></a>(row, ledger, *[, owner])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.from_ledger" title="crowsnest.triage.from_ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_ledger</span></code></a>(row, ledger, *[, owner])</p></td>
 <td><p>What the session wrote down for a person to read.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.from_registry" title="crowsnest.triage.from_registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_registry</span></code></a>(row, ledger)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.triage.from_registry" title="crowsnest.triage.from_registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_registry</span></code></a>(row, ledger)</p></td>
 <td><p>What the registry says <em>right now</em>, which outranks anything written earlier.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.triage.latest_section" title="crowsnest.triage.latest_section"><code class="xref py py-obj docutils literal notranslate"><span class="pre">latest_section</span></code></a>(text)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.latest_section" title="crowsnest.triage.latest_section"><code class="xref py py-obj docutils literal notranslate"><span class="pre">latest_section</span></code></a>(text)</p></td>
 <td><p>The last section of a ledger's free part -- the most recent thing it appended.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.triage.without_code" title="crowsnest.triage.without_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">without_code</span></code></a>(text)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.triage.without_code" title="crowsnest.triage.without_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">without_code</span></code></a>(text)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">text</span></code> with fenced code blocks blanked, lengths preserved.</p></td>
 </tr>
 </tbody>
@@ -397,6 +401,28 @@ none.</p>
 <dd><p>Why a session needs a person, when it does. <code class="docutils literal notranslate"><span class="pre">question</span></code> is one it actually asked;
 <code class="docutils literal notranslate"><span class="pre">decision</span></code> is a choice only a person can make; <code class="docutils literal notranslate"><span class="pre">action</span></code> is something only a person
 can do – attach a file to an issue, run a command, approve a spend.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.triage.asks_in">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.triage.</span></span><span class="sig-name descname"><span class="pre">asks_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/triage.html#asks_in"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.triage.asks_in" title="Link to this definition">#</a></dt>
+<dd><p>What free <code class="docutils literal notranslate"><span class="pre">text</span></code> – a turn’s final message, say – asks of a person, each whole.</p>
+<p>Read exactly as a ledger’s free part is (<a class="reference internal" href="#crowsnest.triage.from_ledger" title="crowsnest.triage.from_ledger"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_ledger()</span></code></a>): the first request, then
+every other one that opens a “for &lt;person&gt;” section; a statement that only mentions a
+person (“blocked on the user” restating it, “no manual-task needed”) is not a second
+ask. <code class="docutils literal notranslate"><span class="pre">owner</span></code> defaults to <a class="reference internal" href="#crowsnest.triage.DFLT_OWNER" title="crowsnest.triage.DFLT_OWNER"><code class="xref py py-data docutils literal notranslate"><span class="pre">DFLT_OWNER</span></code></a>. This reads text; it changes nothing
+about where a ledger’s asks are bounded, so no stored revision moves (#141).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">asks_in</span><span class="p">(</span><span class="s1">'Merged.</span><span class="se">\n\n</span><span class="s1">**For the user:** pick a name.'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">['pick a name.']</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">asks_in</span><span class="p">(</span><span class="s1">'Merged. Nothing is pending.'</span><span class="p">)</span>
+</span><span data-line="4"><span class="go">[]</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -574,7 +600,7 @@ short ledger and harmless for a long one that never structured itself.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=04553970"></script>
+      <script src="../_static/documentation_options.js?v=33adb31a"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

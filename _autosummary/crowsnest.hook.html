@@ -185,7 +185,10 @@ module is only what they call.)</p>
 <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/events.jsonl</span></code>, which <a class="reference internal" href="crowsnest.watch.html#crowsnest.watch.events" title="crowsnest.watch.events"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.watch.events()</span></code></a> tails – and, on a
 stop, writes the two <em>mechanical</em> ledger fields, <code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">asked</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">said</span></code>, from
 the transcript tail. It writes nothing a human or the session would have had to think
-about: <a class="reference internal" href="crowsnest.ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.ledger</span></code></a> says why.</p>
+about: <a class="reference internal" href="crowsnest.ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.ledger</span></code></a> says why. A stop whose final message asks the person for
+something (read as a ledger’s “for &lt;person&gt;” sections are,
+<a class="reference internal" href="crowsnest.triage.html#crowsnest.triage.asks_in" title="crowsnest.triage.asks_in"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.triage.asks_in()</span></code></a>) adds a second line, <code class="docutils literal notranslate"><span class="pre">ask</span></code>, so a watcher that only
+listens for loud kinds still hears it (#141).</p>
 <p><strong>It runs inside somebody else’s session, so it may not fail and may not be slow.</strong> Every
 error is swallowed into one line in <code class="docutils literal notranslate"><span class="pre">&lt;data</span> <span class="pre">dir&gt;/hook.log</span></code> and reported in the returned
 dict; the caller (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code>) prints nothing and exits 0 whatever happens. The
@@ -421,7 +424,7 @@ again at the beginning of the new file, which is what
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=04553970"></script>
+      <script src="../_static/documentation_options.js?v=33adb31a"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

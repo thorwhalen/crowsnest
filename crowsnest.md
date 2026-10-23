@@ -1,4 +1,4 @@
-> built 2026-10-23 10:11 UTC from cec235d (main) · crowsnest 0.0.101. Details: build_info.json
+> built 2026-10-23 10:14 UTC from 005e890 (main) · crowsnest 0.0.102. Details: build_info.json
 
 # index.html.md
 
@@ -337,7 +337,7 @@ A session that no value matches is placed by its repository’s owner. Failing t
 "Notification": [{"hooks": [{"type": "command", "command": "crowsnest hook notification", "async": true}]}]
 ```
 
-With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session’s last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. `crowsnest hook` prints nothing and exits 0 whatever happens; `async` means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, `crowsnest watch` is exactly the registry diff it always was. `crowsnest init --hooks` writes all of this for you.
+With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session’s last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. A turn that ends by asking you for something (“For the user: …”, read the way a ledger’s requests are) also becomes an `ask` line, which `--kinds loud` keeps, and a wait is announced once, by whichever of `waiting` and `needs-you` comes first. `crowsnest hook` prints nothing and exits 0 whatever happens; `async` means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, `crowsnest watch` is exactly the registry diff it always was. `crowsnest init --hooks` writes all of this for you.
 
 ## One walk, end to end
 
@@ -2384,7 +2384,10 @@ module is only what they call.)
 `<data dir>/events.jsonl`, which [`crowsnest.watch.events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events) tails – and, on a
 stop, writes the two *mechanical* ledger fields, `last asked` and `last said`, from
 the transcript tail. It writes nothing a human or the session would have had to think
-about: [`crowsnest.ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger) says why.
+about: [`crowsnest.ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger) says why. A stop whose final message asks the person for
+something (read as a ledger’s “for <person>” sections are,
+[`crowsnest.triage.asks_in()`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.asks_in)) adds a second line, `ask`, so a watcher that only
+listens for loud kinds still hears it (#141).
 
 **It runs inside somebody else’s session, so it may not fail and may not be slow.** Every
 error is swallowed into one line in `<data dir>/hook.log` and reported in the returned
@@ -6799,8 +6802,9 @@ whose own store is already a seam) is the reader this exists to make room for.
 
 ### Functions
 
-| [`classify`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.classify)(rows, \*[, ledgers, verdicts, owner])   | Every session, grouped by what it needs.                                                                                |
+| [`asks_in`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.asks_in)(text, \*[, owner])                       | What free `text` -- a turn's final message, say -- asks of a person, each whole.                                        |
 |---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| [`classify`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.classify)(rows, \*[, ledgers, verdicts, owner])   | Every session, grouped by what it needs.                                                                                |
 | [`classify_row`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.classify_row)(row, \*[, ledger, verdicts, owner]) | One session's verdict, as a JSON-able dict.                                                                             |
 | [`dflt_verdicts`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.dflt_verdicts)([owner])                           | The readers [`classify()`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.classify) uses when a caller names none, strongest first. |
 | [`from_ledger`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.from_ledger)(row, ledger, \*[, owner])            | What the session wrote down for a person to read.                                                                       |
@@ -6880,6 +6884,26 @@ JSON-ready form, the asks as a list of dicts.
 Why a session needs a person, when it does. `question` is one it actually asked;
 `decision` is a choice only a person can make; `action` is something only a person
 can do – attach a file to an issue, run a command, approve a spend.
+
+### crowsnest.triage.asks_in(text, , owner='')
+
+What free `text` – a turn’s final message, say – asks of a person, each whole.
+
+Read exactly as a ledger’s free part is ([`from_ledger()`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.from_ledger)): the first request, then
+every other one that opens a “for <person>” section; a statement that only mentions a
+person (“blocked on the user” restating it, “no manual-task needed”) is not a second
+ask. `owner` defaults to [`DFLT_OWNER`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.DFLT_OWNER). This reads text; it changes nothing
+about where a ledger’s asks are bounded, so no stored revision moves (#141).
+
+```pycon
+>>> asks_in('Merged.\n\n**For the user:** pick a name.')
+['pick a name.']
+>>> asks_in('Merged. Nothing is pending.')
+[]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### crowsnest.triage.classify(rows, , ledgers=None, verdicts=None, owner='')
 
@@ -7082,19 +7106,19 @@ session’s conversation.
 Seconds between snapshots. A turn takes seconds to minutes; five seconds is invisible
 to a human and two file listings per tick is nothing.
 
-### crowsnest.watch.HOOK_KINDS *= {'intent': 'intent', 'notification': 'needs-you', 'stop': 'stopped'}*
+### crowsnest.watch.HOOK_KINDS *= {'ask': 'ask', 'intent': 'intent', 'notification': 'needs-you', 'stop': 'stopped'}*
 
 What a hook event is called in the stream. `needs-you` and `stopped` are named for
 what the human should do about them, which is what the registry statuses are not.
 
-### crowsnest.watch.KINDS *= frozenset({'busy', 'error', 'exited', 'idle', 'intent', 'needs-you', 'shell', 'started', 'stopped', 'waiting', 'woke'})*
+### crowsnest.watch.KINDS *= frozenset({'ask', 'busy', 'error', 'exited', 'idle', 'intent', 'needs-you', 'shell', 'started', 'stopped', 'waiting', 'woke'})*
 
 the registry diff’s, the hook log’s, and `woke`.
 
 * **Type:**
   Every kind [`events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events) yields
 
-### crowsnest.watch.LOUD_KINDS *= frozenset({'error', 'intent', 'needs-you', 'waiting', 'woke'})*
+### crowsnest.watch.LOUD_KINDS *= frozenset({'ask', 'error', 'intent', 'needs-you', 'waiting', 'woke'})*
 
 The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
 catches “waiting” and “error” without reading the line.
@@ -7311,18 +7335,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-23 10:11 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/cec235dde04af843b3ba0a1484e1fc15065eba5d"><code>cec235d</code></a> on branch <code>main</code>, for **crowsnest 0.0.101** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 10:14 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/005e8906a21c20cb5e5a579aea8179a17ca1f2d4"><code>005e890</code></a> on branch <code>main</code>, for **crowsnest 0.0.102** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.101) is ahead of the latest release on PyPI (0.0.100): these docs describe unreleased code.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/cec235dde04af843b3ba0a1484e1fc15065eba5d"><code>cec235dde04af843b3ba0a1484e1fc15065eba5d</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/005e8906a21c20cb5e5a579aea8179a17ca1f2d4"><code>005e8906a21c20cb5e5a579aea8179a17ca1f2d4</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7333,9 +7355,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39937128236">39937128236</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39937467107">39937467107</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>cec235dde04af843b3ba0a1484e1fc15065eba5d</code> (in the history of the built commit) |
+| Event commit | <code>005e8906a21c20cb5e5a579aea8179a17ca1f2d4</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7360,13 +7382,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.100/">0.0.100</a>, older than the documented version (0.0.101).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.102/">0.0.102</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout cec235dde04af843b3ba0a1484e1fc15065eba5d
+git checkout 005e8906a21c20cb5e5a579aea8179a17ca1f2d4
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

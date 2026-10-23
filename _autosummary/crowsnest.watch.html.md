@@ -73,19 +73,19 @@ session’s conversation.
 Seconds between snapshots. A turn takes seconds to minutes; five seconds is invisible
 to a human and two file listings per tick is nothing.
 
-### crowsnest.watch.HOOK_KINDS *= {'intent': 'intent', 'notification': 'needs-you', 'stop': 'stopped'}*
+### crowsnest.watch.HOOK_KINDS *= {'ask': 'ask', 'intent': 'intent', 'notification': 'needs-you', 'stop': 'stopped'}*
 
 What a hook event is called in the stream. `needs-you` and `stopped` are named for
 what the human should do about them, which is what the registry statuses are not.
 
-### crowsnest.watch.KINDS *= frozenset({'busy', 'error', 'exited', 'idle', 'intent', 'needs-you', 'shell', 'started', 'stopped', 'waiting', 'woke'})*
+### crowsnest.watch.KINDS *= frozenset({'ask', 'busy', 'error', 'exited', 'idle', 'intent', 'needs-you', 'shell', 'started', 'stopped', 'waiting', 'woke'})*
 
 the registry diff’s, the hook log’s, and `woke`.
 
 * **Type:**
   Every kind [`events()`](#crowsnest.watch.events) yields
 
-### crowsnest.watch.LOUD_KINDS *= frozenset({'error', 'intent', 'needs-you', 'waiting', 'woke'})*
+### crowsnest.watch.LOUD_KINDS *= frozenset({'ask', 'error', 'intent', 'needs-you', 'waiting', 'woke'})*
 
 The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
 catches “waiting” and “error” without reading the line.
