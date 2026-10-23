@@ -965,7 +965,9 @@ def watch(
 
     table = watch_settings()
     picked = table.kinds if kinds is None else _watch.kinds_of(kinds)
-    muted = table.mute if mute is None else {m.strip() for m in mute.split(",") if m.strip()}
+    muted = (
+        table.mute if mute is None else {m.strip() for m in mute.split(",") if m.strip()}
+    )
     stream = _watch.events(
         interval=interval,
         home=home,

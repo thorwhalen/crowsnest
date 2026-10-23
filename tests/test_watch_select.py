@@ -9,9 +9,17 @@ from crowsnest.watch import KINDS, LOUD_KINDS, kinds_of, selected
 
 
 def _event(kind, name="w1", home=""):
-    return {"at": "2026-10-23T10:00:00+00:00", "kind": kind, "name": name, "home": home,
-            "project": "p", "session_id": name, "status": "", "waiting_for": "",
-            "detail": ""}
+    return {
+        "at": "2026-10-23T10:00:00+00:00",
+        "kind": kind,
+        "name": name,
+        "home": home,
+        "project": "p",
+        "session_id": name,
+        "status": "",
+        "waiting_for": "",
+        "detail": "",
+    }
 
 
 def test_kinds_of_reads_a_group_a_list_or_nothing():
@@ -25,12 +33,20 @@ def test_kinds_of_reads_a_group_a_list_or_nothing():
 
 
 def test_selected_keeps_the_kinds_asked_for_and_drops_muted_sessions():
-    stream = [_event("busy"), _event("waiting"), _event("stopped", "noisy"),
-              _event("waiting", "noisy"), _event("error", "w2", home="mac")]
+    stream = [
+        _event("busy"),
+        _event("waiting"),
+        _event("stopped", "noisy"),
+        _event("waiting", "noisy"),
+        _event("error", "w2", home="mac"),
+    ]
     assert [e["kind"] for e in selected(stream)] == [e["kind"] for e in stream]
     loud = list(selected(stream, kinds=kinds_of("loud")))
     assert [(e["name"], e["kind"]) for e in loud] == [
-        ("w1", "waiting"), ("noisy", "waiting"), ("w2", "error")]
+        ("w1", "waiting"),
+        ("noisy", "waiting"),
+        ("w2", "error"),
+    ]
     quiet = list(selected(stream, kinds=kinds_of("loud"), mute={"noisy", "w2@mac"}))
     assert [(e["name"], e["kind"]) for e in quiet] == [("w1", "waiting")]
 
@@ -69,13 +85,20 @@ def test_watch_flags_select_and_the_config_table_is_their_default(
     monkeypatch, capsys, tmp_path
 ):
     stream = [_event("busy"), _event("waiting"), _event("waiting", "noisy")]
-    out = _run_watch(monkeypatch, capsys, stream, "--plain", "--kinds", "loud",
-                     "--mute", "noisy")
+    out = _run_watch(
+        monkeypatch, capsys, stream, "--plain", "--kinds", "loud", "--mute", "noisy"
+    )
     assert len(out) == 1 and "waiting" in out[0] and "noisy" not in out[0]
     cfg = tmp_path / "config.toml"
     cfg.write_text('[watch]\nkinds = "loud"\nmute = ["noisy"]\n')
     monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
     assert len(_run_watch(monkeypatch, capsys, stream, "--plain")) == 1
     # the flags outrank the table: `--kinds all` and an empty `--mute` see everything
-    assert len(_run_watch(monkeypatch, capsys, stream, "--plain", "--kinds", "all",
-                          "--mute", "")) == 3
+    assert (
+        len(
+            _run_watch(
+                monkeypatch, capsys, stream, "--plain", "--kinds", "all", "--mute", ""
+            )
+        )
+        == 3
+    )
