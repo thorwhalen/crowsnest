@@ -1,4 +1,4 @@
-> built 2026-10-23 10:02 UTC from c539e2e (main) · crowsnest 0.0.98. Details: build_info.json
+> built 2026-10-23 10:06 UTC from 6024533 (main) · crowsnest 0.0.99. Details: build_info.json
 
 # index.html.md
 
@@ -19,6 +19,8 @@ pip install crowsnest          # Python 3.10+. Puts a `crowsnest` command on you
 crowsnest install-skills       # link the skills and the scout subagent into ~/.claude
 crowsnest init --hooks         # in the directory you will run the lookout from
 ```
+
+Run the lookout from a directory of its own, such as `~/lookout`, not from your projects folder. Claude Code loads `CLAUDE.md` from a session’s directory and from every directory above it, so a lookout `CLAUDE.md` above your repositories reaches every session started in one of them and tells it never to do corpus work. `init` counts the git repositories beneath its directory and will not write the file there without `--force`.
 
 `init` writes that directory’s `CLAUDE.md` (the rules that keep a watching session small enough to be cleared at any moment), creates `~/.local/share/crowsnest/`, and — with `--hooks` — adds three lines to your `settings.json`, after backing it up and removing nothing. Without `--hooks` it prints them for you to paste. The two that push events (`Stop`, `Notification`) are registered `async`, so watching costs the watched sessions no wall-clock; the `SessionStart` one blocks, because its roster is meant to be read.
 
@@ -3008,12 +3010,13 @@ Three things get set up, and each is idempotent because a person will run this a
 
 ### Functions
 
-| [`init`](_autosummary/crowsnest.init.html.md#crowsnest.init.init)(\*[, directory, home, store, hooks, ...])   | Set a directory up as a watching session's home.                            |
-|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| [`merged_hooks`](_autosummary/crowsnest.init.html.md#crowsnest.init.merged_hooks)(settings[, hooks])                  | A copy of `settings` with every hook present, and the ones that were added. |
-| [`settings_snippet`](_autosummary/crowsnest.init.html.md#crowsnest.init.settings_snippet)([hooks])                        | The `settings.json` fragment these hooks amount to, for a human to paste.   |
-| [`template_path`](_autosummary/crowsnest.init.html.md#crowsnest.init.template_path)()                                  | The bundled `CLAUDE.md` a watching session is given.                        |
-| [`template_text`](_autosummary/crowsnest.init.html.md#crowsnest.init.template_text)()                                  | The text of the bundled `CLAUDE.md`.                                        |
+| [`init`](_autosummary/crowsnest.init.html.md#crowsnest.init.init)(\*[, directory, home, store, hooks, ...])   | Set a directory up as a watching session's home.                                     |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`merged_hooks`](_autosummary/crowsnest.init.html.md#crowsnest.init.merged_hooks)(settings[, hooks])                  | A copy of `settings` with every hook present, and the ones that were added.          |
+| [`repos_beneath`](_autosummary/crowsnest.init.html.md#crowsnest.init.repos_beneath)(directory, \*[, max_depth])        | How many git repositories lie strictly beneath `directory`, `max_depth` levels down. |
+| [`settings_snippet`](_autosummary/crowsnest.init.html.md#crowsnest.init.settings_snippet)([hooks])                        | The `settings.json` fragment these hooks amount to, for a human to paste.            |
+| [`template_path`](_autosummary/crowsnest.init.html.md#crowsnest.init.template_path)()                                  | The bundled `CLAUDE.md` a watching session is given.                                 |
+| [`template_text`](_autosummary/crowsnest.init.html.md#crowsnest.init.template_text)()                                  | The text of the bundled `CLAUDE.md`.                                                 |
 
 ### crowsnest.init.HOOKS *= ({'async': True, 'command': 'crowsnest hook notification', 'event': 'Notification', 'matcher': '', 'scope': 'user', 'why': 'a session is asking its human for something'}, {'async': True, 'command': 'crowsnest hook stop', 'event': 'Stop', 'matcher': '', 'scope': 'user', 'why': 'a session finished a turn; record its last words'}, {'async': False, 'command': 'crowsnest --brief', 'event': 'SessionStart', 'matcher': 'startup|clear|compact', 'scope': 'project', 'why': 're-print the roster after every start, clear and compaction'})*
 
@@ -3053,6 +3056,12 @@ Returns the plan: one row per thing, each with an `action` – `write` / `create
 something else was there, `skipped` when it was not asked for. `settings` is the
 user file’s row and `project_settings` the project file’s.
 
+`repos_beneath` counts the git repositories under `directory`
+([`repos_beneath()`](_autosummary/crowsnest.init.html.md#crowsnest.init.repos_beneath)). Claude Code loads `CLAUDE.md` from every ancestor of a
+session’s working directory, so a lookout above them hands its rules – “never do
+corpus work” – to every session started in one (#116). A new `CLAUDE.md` is then
+not written without `force`; one already there is reported, never moved.
+
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
@@ -3077,6 +3086,23 @@ the desktop notifier already on their `Stop` hook has to keep working.
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]]
+
+### crowsnest.init.repos_beneath(directory, , max_depth=3)
+
+How many git repositories lie strictly beneath `directory`, `max_depth` levels down.
+
+The search does not enter a repository it found, nor a hidden directory, nor follow a
+symlink: the question is whether `directory` is an *ancestor* of sessions’ working
+directories (#116), and one repository answers it as well as its submodules would.
+`directory`’s own `.git` does not count.
+
+```pycon
+>>> repos_beneath('/no/such/directory')
+0
+```
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 ### crowsnest.init.settings_snippet(hooks=({'async': True, 'command': 'crowsnest hook notification', 'event': 'Notification', 'matcher': '', 'scope': 'user', 'why': 'a session is asking its human for something'}, {'async': True, 'command': 'crowsnest hook stop', 'event': 'Stop', 'matcher': '', 'scope': 'user', 'why': 'a session finished a turn; record its last words'}, {'async': False, 'command': 'crowsnest --brief', 'event': 'SessionStart', 'matcher': 'startup|clear|compact', 'scope': 'project', 'why': 're-print the roster after every start, clear and compaction'}))
 
@@ -7219,18 +7245,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-23 10:02 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c539e2e0939ae25b93bc6962fd8ce778d63be2c6"><code>c539e2e</code></a> on branch <code>main</code>, for **crowsnest 0.0.98** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 10:06 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/602453349d779f8028bcb50ea7ae99e3e604011b"><code>6024533</code></a> on branch <code>main</code>, for **crowsnest 0.0.99** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.98) is behind the latest release on PyPI (0.0.99): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c539e2e0939ae25b93bc6962fd8ce778d63be2c6"><code>c539e2e0939ae25b93bc6962fd8ce778d63be2c6</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/602453349d779f8028bcb50ea7ae99e3e604011b"><code>602453349d779f8028bcb50ea7ae99e3e604011b</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7241,9 +7265,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39935956050">39935956050</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39936474057">39936474057</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>c539e2e0939ae25b93bc6962fd8ce778d63be2c6</code> (in the history of the built commit) |
+| Event commit | <code>602453349d779f8028bcb50ea7ae99e3e604011b</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7268,13 +7292,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.99/">0.0.99</a>, newer than the documented version (0.0.98).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.99/">0.0.99</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout c539e2e0939ae25b93bc6962fd8ce778d63be2c6
+git checkout 602453349d779f8028bcb50ea7ae99e3e604011b
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

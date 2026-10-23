@@ -34,12 +34,13 @@ Three things get set up, and each is idempotent because a person will run this a
 
 ### Functions
 
-| [`init`](#crowsnest.init.init)(\*[, directory, home, store, hooks, ...])   | Set a directory up as a watching session's home.                            |
-|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| [`merged_hooks`](#crowsnest.init.merged_hooks)(settings[, hooks])                  | A copy of `settings` with every hook present, and the ones that were added. |
-| [`settings_snippet`](#crowsnest.init.settings_snippet)([hooks])                        | The `settings.json` fragment these hooks amount to, for a human to paste.   |
-| [`template_path`](#crowsnest.init.template_path)()                                  | The bundled `CLAUDE.md` a watching session is given.                        |
-| [`template_text`](#crowsnest.init.template_text)()                                  | The text of the bundled `CLAUDE.md`.                                        |
+| [`init`](#crowsnest.init.init)(\*[, directory, home, store, hooks, ...])   | Set a directory up as a watching session's home.                                     |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`merged_hooks`](#crowsnest.init.merged_hooks)(settings[, hooks])                  | A copy of `settings` with every hook present, and the ones that were added.          |
+| [`repos_beneath`](#crowsnest.init.repos_beneath)(directory, \*[, max_depth])        | How many git repositories lie strictly beneath `directory`, `max_depth` levels down. |
+| [`settings_snippet`](#crowsnest.init.settings_snippet)([hooks])                        | The `settings.json` fragment these hooks amount to, for a human to paste.            |
+| [`template_path`](#crowsnest.init.template_path)()                                  | The bundled `CLAUDE.md` a watching session is given.                                 |
+| [`template_text`](#crowsnest.init.template_text)()                                  | The text of the bundled `CLAUDE.md`.                                                 |
 
 ### crowsnest.init.HOOKS *= ({'async': True, 'command': 'crowsnest hook notification', 'event': 'Notification', 'matcher': '', 'scope': 'user', 'why': 'a session is asking its human for something'}, {'async': True, 'command': 'crowsnest hook stop', 'event': 'Stop', 'matcher': '', 'scope': 'user', 'why': 'a session finished a turn; record its last words'}, {'async': False, 'command': 'crowsnest --brief', 'event': 'SessionStart', 'matcher': 'startup|clear|compact', 'scope': 'project', 'why': 're-print the roster after every start, clear and compaction'})*
 
@@ -79,6 +80,12 @@ Returns the plan: one row per thing, each with an `action` – `write` / `create
 something else was there, `skipped` when it was not asked for. `settings` is the
 user file’s row and `project_settings` the project file’s.
 
+`repos_beneath` counts the git repositories under `directory`
+([`repos_beneath()`](#crowsnest.init.repos_beneath)). Claude Code loads `CLAUDE.md` from every ancestor of a
+session’s working directory, so a lookout above them hands its rules – “never do
+corpus work” – to every session started in one (#116). A new `CLAUDE.md` is then
+not written without `force`; one already there is reported, never moved.
+
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
@@ -103,6 +110,23 @@ the desktop notifier already on their `Stop` hook has to keep working.
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]]
+
+### crowsnest.init.repos_beneath(directory, , max_depth=3)
+
+How many git repositories lie strictly beneath `directory`, `max_depth` levels down.
+
+The search does not enter a repository it found, nor a hidden directory, nor follow a
+symlink: the question is whether `directory` is an *ancestor* of sessions’ working
+directories (#116), and one repository answers it as well as its submodules would.
+`directory`’s own `.git` does not count.
+
+```pycon
+>>> repos_beneath('/no/such/directory')
+0
+```
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 ### crowsnest.init.settings_snippet(hooks=({'async': True, 'command': 'crowsnest hook notification', 'event': 'Notification', 'matcher': '', 'scope': 'user', 'why': 'a session is asking its human for something'}, {'async': True, 'command': 'crowsnest hook stop', 'event': 'Stop', 'matcher': '', 'scope': 'user', 'why': 'a session finished a turn; record its last words'}, {'async': False, 'command': 'crowsnest --brief', 'event': 'SessionStart', 'matcher': 'startup|clear|compact', 'scope': 'project', 'why': 're-print the roster after every start, clear and compaction'}))
 

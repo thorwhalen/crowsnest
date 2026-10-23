@@ -16,6 +16,7 @@ crowsnest.init
    
       init
       merged_hooks
+      repos_beneath
       settings_snippet
       template_path
       template_text

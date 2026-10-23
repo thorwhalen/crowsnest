@@ -118,6 +118,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.init.HOOKS"><code class="docutils literal notranslate"><span class="pre">HOOKS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.init.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.init.merged_hooks"><code class="docutils literal notranslate"><span class="pre">merged_hooks()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.init.repos_beneath"><code class="docutils literal notranslate"><span class="pre">repos_beneath()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.init.settings_snippet"><code class="docutils literal notranslate"><span class="pre">settings_snippet()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.init.template_path"><code class="docutils literal notranslate"><span class="pre">template_path()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.init.template_text"><code class="docutils literal notranslate"><span class="pre">template_text()</span></code></a></li>
@@ -205,13 +206,16 @@ to the existing hook arrays and removing nothing.</p></li>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.init.merged_hooks" title="crowsnest.init.merged_hooks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merged_hooks</span></code></a>(settings[, hooks])</p></td>
 <td><p>A copy of <code class="docutils literal notranslate"><span class="pre">settings</span></code> with every hook present, and the ones that were added.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.init.settings_snippet" title="crowsnest.init.settings_snippet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">settings_snippet</span></code></a>([hooks])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.init.repos_beneath" title="crowsnest.init.repos_beneath"><code class="xref py py-obj docutils literal notranslate"><span class="pre">repos_beneath</span></code></a>(directory, *[, max_depth])</p></td>
+<td><p>How many git repositories lie strictly beneath <code class="docutils literal notranslate"><span class="pre">directory</span></code>, <code class="docutils literal notranslate"><span class="pre">max_depth</span></code> levels down.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.init.settings_snippet" title="crowsnest.init.settings_snippet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">settings_snippet</span></code></a>([hooks])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">settings.json</span></code> fragment these hooks amount to, for a human to paste.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.init.template_path" title="crowsnest.init.template_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">template_path</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.init.template_path" title="crowsnest.init.template_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">template_path</span></code></a>()</p></td>
 <td><p>The bundled <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> a watching session is given.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.init.template_text" title="crowsnest.init.template_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">template_text</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.init.template_text" title="crowsnest.init.template_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">template_text</span></code></a>()</p></td>
 <td><p>The text of the bundled <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code>.</p></td>
 </tr>
 </tbody>
@@ -252,6 +256,11 @@ backup. See <a class="reference internal" href="#crowsnest.init.HOOKS" title="cr
 / <code class="docutils literal notranslate"><span class="pre">add</span></code> when it changed, <code class="docutils literal notranslate"><span class="pre">ok</span></code> when it was already right, <code class="docutils literal notranslate"><span class="pre">conflict</span></code> when
 something else was there, <code class="docutils literal notranslate"><span class="pre">skipped</span></code> when it was not asked for. <code class="docutils literal notranslate"><span class="pre">settings</span></code> is the
 user file’s row and <code class="docutils literal notranslate"><span class="pre">project_settings</span></code> the project file’s.</p>
+<p><code class="docutils literal notranslate"><span class="pre">repos_beneath</span></code> counts the git repositories under <code class="docutils literal notranslate"><span class="pre">directory</span></code>
+(<a class="reference internal" href="#crowsnest.init.repos_beneath" title="crowsnest.init.repos_beneath"><code class="xref py py-func docutils literal notranslate"><span class="pre">repos_beneath()</span></code></a>). Claude Code loads <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> from every ancestor of a
+session’s working directory, so a lookout above them hands its rules – “never do
+corpus work” – to every session started in one (#116). A new <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> is then
+not written without <code class="docutils literal notranslate"><span class="pre">force</span></code>; one already there is reported, never moved.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -279,6 +288,25 @@ the desktop notifier already on their <code class="docutils literal notranslate"
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.init.repos_beneath">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.init.</span></span><span class="sig-name descname"><span class="pre">repos_beneath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/init.html#repos_beneath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.init.repos_beneath" title="Link to this definition">#</a></dt>
+<dd><p>How many git repositories lie strictly beneath <code class="docutils literal notranslate"><span class="pre">directory</span></code>, <code class="docutils literal notranslate"><span class="pre">max_depth</span></code> levels down.</p>
+<p>The search does not enter a repository it found, nor a hidden directory, nor follow a
+symlink: the question is whether <code class="docutils literal notranslate"><span class="pre">directory</span></code> is an <em>ancestor</em> of sessions’ working
+directories (#116), and one repository answers it as well as its submodules would.
+<code class="docutils literal notranslate"><span class="pre">directory</span></code>’s own <code class="docutils literal notranslate"><span class="pre">.git</span></code> does not count.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">repos_beneath</span><span class="p">(</span><span class="s1">'/no/such/directory'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">0</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -366,7 +394,7 @@ the desktop notifier already on their <code class="docutils literal notranslate"
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=1b335f87"></script>
+      <script src="../_static/documentation_options.js?v=bf4bdb9e"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

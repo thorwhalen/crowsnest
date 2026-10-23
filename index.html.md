@@ -16,6 +16,8 @@ crowsnest install-skills       # link the skills and the scout subagent into ~/.
 crowsnest init --hooks         # in the directory you will run the lookout from
 ```
 
+Run the lookout from a directory of its own, such as `~/lookout`, not from your projects folder. Claude Code loads `CLAUDE.md` from a session’s directory and from every directory above it, so a lookout `CLAUDE.md` above your repositories reaches every session started in one of them and tells it never to do corpus work. `init` counts the git repositories beneath its directory and will not write the file there without `--force`.
+
 `init` writes that directory’s `CLAUDE.md` (the rules that keep a watching session small enough to be cleared at any moment), creates `~/.local/share/crowsnest/`, and — with `--hooks` — adds three lines to your `settings.json`, after backing it up and removing nothing. Without `--hooks` it prints them for you to paste. The two that push events (`Stop`, `Notification`) are registered `async`, so watching costs the watched sessions no wall-clock; the `SessionStart` one blocks, because its roster is meant to be read.
 
 Then open a session, name it, and ask in whatever words you would have used anyway:

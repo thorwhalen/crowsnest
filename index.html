@@ -177,6 +177,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="3">crowsnest<span class="w"> </span>init<span class="w"> </span>--hooks<span class="w">         </span><span class="c1"># in the directory you will run the lookout from</span>
 </span></pre></div>
 </div>
+<p>Run the lookout from a directory of its own, such as <code class="docutils literal notranslate"><span class="pre">~/lookout</span></code>, not from your projects folder. Claude Code loads <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> from a session’s directory and from every directory above it, so a lookout <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> above your repositories reaches every session started in one of them and tells it never to do corpus work. <code class="docutils literal notranslate"><span class="pre">init</span></code> counts the git repositories beneath its directory and will not write the file there without <code class="docutils literal notranslate"><span class="pre">--force</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">init</span></code> writes that directory’s <code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code> (the rules that keep a watching session small enough to be cleared at any moment), creates <code class="docutils literal notranslate"><span class="pre">~/.local/share/crowsnest/</span></code>, and — with <code class="docutils literal notranslate"><span class="pre">--hooks</span></code> — adds three lines to your <code class="docutils literal notranslate"><span class="pre">settings.json</span></code>, after backing it up and removing nothing. Without <code class="docutils literal notranslate"><span class="pre">--hooks</span></code> it prints them for you to paste. The two that push events (<code class="docutils literal notranslate"><span class="pre">Stop</span></code>, <code class="docutils literal notranslate"><span class="pre">Notification</span></code>) are registered <code class="docutils literal notranslate"><span class="pre">async</span></code>, so watching costs the watched sessions no wall-clock; the <code class="docutils literal notranslate"><span class="pre">SessionStart</span></code> one blocks, because its roster is meant to be read.</p>
 <p>Then open a session, name it, and ask in whatever words you would have used anyway:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">claude<span class="w"> </span>-n<span class="w"> </span>lookout
@@ -560,7 +561,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 10:02 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/c539e2e0939ae25b93bc6962fd8ce778d63be2c6">c539e2e</a> (main) · crowsnest 0.0.98 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 10:06 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/602453349d779f8028bcb50ea7ae99e3e604011b">6024533</a> (main) · crowsnest 0.0.99 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -595,7 +596,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=1b335f87"></script>
+      <script src="_static/documentation_options.js?v=bf4bdb9e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
