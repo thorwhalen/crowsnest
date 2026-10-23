@@ -39,6 +39,7 @@ __all__ = [
     "HOOKS",
     "init",
     "merged_hooks",
+    "repos_beneath",
     "settings_snippet",
     "template_path",
     "template_text",
@@ -214,8 +215,53 @@ def _backup(path: Path, *, now: datetime) -> Path:
     return destination
 
 
-def _claude_md_plan(path: Path, wanted: str, *, force: bool) -> dict:
+#: How many directory levels below the lookout's directory ``init`` looks for repositories.
+#: A projects folder holds its repositories one or two levels down (``t/crowsnest``).
+DFLT_REPO_DEPTH = 3
+
+
+def repos_beneath(directory: str | Path, *, max_depth: int = DFLT_REPO_DEPTH) -> int:
+    """How many git repositories lie strictly beneath ``directory``, ``max_depth`` levels down.
+
+    The search does not enter a repository it found, nor a hidden directory, nor follow a
+    symlink: the question is whether ``directory`` is an *ancestor* of sessions' working
+    directories (#116), and one repository answers it as well as its submodules would.
+    ``directory``'s own ``.git`` does not count.
+
+    >>> repos_beneath('/no/such/directory')
+    0
+    """
+    count = 0
+    frontier = [(Path(directory).expanduser(), 0)]
+    while frontier:
+        folder, depth = frontier.pop()
+        if depth >= max_depth:
+            continue
+        try:
+            children = [
+                c
+                for c in folder.iterdir()
+                if not c.name.startswith(".") and not c.is_symlink() and c.is_dir()
+            ]
+        except OSError:
+            continue
+        for child in children:
+            if (child / ".git").exists():
+                count += 1
+            else:
+                frontier.append((child, depth + 1))
+    return count
+
+
+def _claude_md_plan(path: Path, wanted: str, *, force: bool, repos: int = 0) -> dict:
     if not path.exists():
+        if repos and not force:
+            return {
+                "action": "conflict",
+                "reason": f"would be an ancestor of {repos} repositories, and every "
+                "session started in one would load the lookout's rules; run init in a "
+                "directory with none beneath it, or pass --force",
+            }
         return {"action": "write", "reason": "not there yet"}
     if path.read_text(encoding="utf-8") == wanted:
         return {"action": "ok", "reason": "already the template"}
@@ -247,13 +293,23 @@ def init(
     / ``add`` when it changed, ``ok`` when it was already right, ``conflict`` when
     something else was there, ``skipped`` when it was not asked for. ``settings`` is the
     user file's row and ``project_settings`` the project file's.
+
+    ``repos_beneath`` counts the git repositories under ``directory``
+    (:func:`repos_beneath`). Claude Code loads ``CLAUDE.md`` from every ancestor of a
+    session's working directory, so a lookout above them hands its rules -- "never do
+    corpus work" -- to every session started in one (#116). A new ``CLAUDE.md`` is then
+    not written without ``force``; one already there is reported, never moved.
     """
     now = now or datetime.now(timezone.utc).astimezone()
     where = Path(directory).expanduser() if directory else Path.cwd()
     wanted = template_text()
 
     claude_md = where / "CLAUDE.md"
-    md = {"path": str(claude_md), **_claude_md_plan(claude_md, wanted, force=force)}
+    repos = repos_beneath(where)
+    md = {
+        "path": str(claude_md),
+        **_claude_md_plan(claude_md, wanted, force=force, repos=repos),
+    }
     if md["action"] == "write" and not dry_run:
         claude_md.parent.mkdir(parents=True, exist_ok=True)
         claude_md.write_text(wanted, encoding="utf-8")
@@ -289,6 +345,7 @@ def init(
 
     return {
         "directory": str(where),
+        "repos_beneath": repos,
         "dry_run": dry_run,
         "claude_md": md,
         "data_dir": data,

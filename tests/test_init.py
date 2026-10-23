@@ -182,3 +182,61 @@ def test_the_snippet_is_what_a_person_would_paste():
     snippet = settings_snippet()
     assert set(snippet["hooks"]) == {"Notification", "Stop", "SessionStart"}
     assert json.loads(json.dumps(snippet)) == snippet  # JSON-able, no surprises
+
+
+def _repos(root, *names):
+    for name in names:
+        (root / name / ".git").mkdir(parents=True)
+
+
+def test_a_directory_above_repositories_is_refused_until_forced(tmp_path):
+    # #116: Claude Code loads CLAUDE.md from every ancestor of a session's cwd, so a
+    # lookout above the fleet hands its rules to every session in it.
+    where, store = tmp_path / "projects", tmp_path / "data"
+    _repos(where, "a", "group/b", "group/c")
+    kwargs = {"directory": where, "home": tmp_path / "claude", "store": store}
+    plan = init(**kwargs)
+    assert plan["claude_md"]["action"] == "conflict"
+    assert "3 repositories" in plan["claude_md"]["reason"]
+    assert plan["repos_beneath"] == 3
+    assert not (where / "CLAUDE.md").exists()
+    forced = init(**kwargs, force=True)
+    assert forced["claude_md"]["action"] == "write" and forced["repos_beneath"] == 3
+
+
+def test_a_lookout_already_above_repositories_is_told_so(tmp_path):
+    where, store = tmp_path / "projects", tmp_path / "data"
+    where.mkdir()
+    (where / "CLAUDE.md").write_text(template_text(), encoding="utf-8")
+    _repos(where, "a")
+    plan = init(directory=where, home=tmp_path / "claude", store=store)
+    assert plan["claude_md"]["action"] == "ok" and plan["repos_beneath"] == 1
+
+
+def test_a_leaf_directory_or_a_repository_itself_is_fine(tmp_path):
+    where, store = tmp_path / "lookout", tmp_path / "data"
+    plan = init(directory=where, home=tmp_path / "claude", store=store)
+    assert plan["repos_beneath"] == 0 and plan["claude_md"]["action"] == "write"
+    repo = tmp_path / "repo"
+    _repos(tmp_path, "repo")  # the directory's own .git is not a repository beneath it
+    plan = init(directory=repo, home=tmp_path / "claude", store=store)
+    assert plan["repos_beneath"] == 0
+
+
+def test_the_search_stops_at_a_depth_and_at_each_repository(tmp_path):
+    from crowsnest.init import repos_beneath
+
+    _repos(tmp_path, "a", "a/vendored", "x/y/z/deep")
+    assert repos_beneath(tmp_path) == 1  # `a` only: deep is too deep, vendored inside a
+    assert repos_beneath(tmp_path, max_depth=4) == 2
+
+
+def test_the_cli_warns_about_an_ancestor_lookout(tmp_path, monkeypatch, capsys):
+    from crowsnest.__main__ import main
+
+    where = tmp_path / "projects"
+    _repos(where, "a", "b")
+    monkeypatch.setenv("CROWSNEST_DATA_DIR", str(tmp_path / "data"))
+    main(["init", "--directory", str(where), "--home", str(tmp_path / "claude")])
+    out = capsys.readouterr().out
+    assert "2 repositories" in out and "--force" in out
