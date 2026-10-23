@@ -1,4 +1,4 @@
-> built 2026-10-23 10:09 UTC from fa85ceb (main) · crowsnest 0.0.100. Details: build_info.json
+> built 2026-10-23 10:11 UTC from cec235d (main) · crowsnest 0.0.101. Details: build_info.json
 
 # index.html.md
 
@@ -75,6 +75,8 @@ crowsnest report [--out FILE]      the roster as one phone-readable HTML page, n
                                     GitHub; what it could not resolve reads ?, and without them the page is unchanged)
 crowsnest publish [--to DEST]      render that page and send it where you read it: a path, host:path, or [publish] in the config
 crowsnest groups [--by project]    every session under a theme ([themes] in the config, else inferred) or a project
+                                   (--by session: under the live session that started it)
+crowsnest synopsis NAME [--by ...] one group in five timed lines: what needs you, working, finished, silent
 crowsnest questions [--unanswered]  what you asked your sessions in the last two weeks, and what each answered
 crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
 crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
@@ -2965,6 +2967,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`rows`](_autosummary/crowsnest.rows.html.md#module-crowsnest.rows)                     | How an item's row is built and hashed: one value, taken whole by every surface that pins it.                                         |
 | [`said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)                     | When the thing an item quotes was said: its own time, taken from its own source.                                                     |
 | [`skills`](_autosummary/crowsnest.skills.html.md#module-crowsnest.skills)                 | The agent-facing surface: the skills, the subagent, and the command that installs them.                                              |
+| [`synopsis`](_autosummary/crowsnest.synopsis.html.md#module-crowsnest.synopsis)             | A group's synopsis: a few lines on what needs the person, what is working, what finished.                                            |
 | [`themes`](_autosummary/crowsnest.themes.html.md#module-crowsnest.themes)                 | Which theme each session belongs to: the person's `[themes]` table first, then what the row itself says (the action-first pass, C1). |
 | [`tools`](_autosummary/crowsnest.tools.html.md#module-crowsnest.tools)                   | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                                                     |
 | [`tree`](_autosummary/crowsnest.tree.html.md#module-crowsnest.tree)                     | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                                                              |
@@ -5895,6 +5898,69 @@ the plan: one row per asset with its action – `install`, `ok` (already ours) o
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
+# _autosummary/crowsnest.synopsis.html.md
+
+# crowsnest.synopsis
+
+A group’s synopsis: a few lines on what needs the person, what is working, what finished.
+
+Issue #108 asks for a short “what’s up” per group of sessions (a theme, a project, a
+session and the ones it started), every line carrying the time its source gave. This is
+tier 0 of that design: a deterministic template over rows [`crowsnest.triage.classify()`](_autosummary/crowsnest.triage.html.md#crowsnest.triage.classify)
+already judged, so it is always available, costs nothing, and quotes only what the
+sessions wrote (their asks and verdicts), never a transcript. A model’s rewrite of these
+lines is tier 1, and belongs behind a `synthesiser=` seam when it is built.
+
+```pycon
+>>> row = {'label': 'w1', 'said_at': '', 'verdict': {'group': 'needs_you',
+...        'asks': [{'text': 'run the deploy', 'said_at': ''}]}}
+>>> [line['text'] for line in synopsis([row])]
+['w1 needs you: run the deploy']
+```
+
+### Module Attributes
+
+| [`DFLT_LIMIT`](_autosummary/crowsnest.synopsis.html.md#crowsnest.synopsis.DFLT_LIMIT)      | the last one says what the rest were.                                                   |
+|------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| [`DFLT_TEXT_LIMIT`](_autosummary/crowsnest.synopsis.html.md#crowsnest.synopsis.DFLT_TEXT_LIMIT) | How many characters of an ask a line quotes.                                            |
+| [`SUMMARIES`](_autosummary/crowsnest.synopsis.html.md#crowsnest.synopsis.SUMMARIES)       | The verdict groups summarised in one line each, after the asks, and how a line says it. |
+
+### Functions
+
+| [`synopsis`](_autosummary/crowsnest.synopsis.html.md#crowsnest.synopsis.synopsis)(rows, \*[, limit, text_limit])   | At most `limit` lines `{text, said_at, sessions}` about triaged `rows`.   |
+|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+
+### crowsnest.synopsis.DFLT_LIMIT *= 5*
+
+the last one says what the rest were.
+
+* **Type:**
+  How many lines a synopsis holds at most
+
+### crowsnest.synopsis.DFLT_TEXT_LIMIT *= 160*
+
+How many characters of an ask a line quotes. The ask itself is whole in the triage;
+a synopsis is for scanning.
+
+### crowsnest.synopsis.SUMMARIES *= (('working', 'working'), ('safe_to_close', 'finished'), ('unclassified', 'has not said where it stands'))*
+
+The verdict groups summarised in one line each, after the asks, and how a line says it.
+
+### crowsnest.synopsis.synopsis(rows, , limit=5, text_limit=160)
+
+At most `limit` lines `{text, said_at, sessions}` about triaged `rows`.
+
+Every ask of a `needs_you` row first, one line each with the ask’s own time (its
+verdict’s reason when it has none), in the rows’ order, which is the roster’s: most
+urgent first. Then one line per group in [`SUMMARIES`](_autosummary/crowsnest.synopsis.html.md#crowsnest.synopsis.SUMMARIES) that has members, naming
+them, at the latest time any of them said something. Past `limit`, the last line
+folds the rest into one. `said_at` is `''` when no source gave a time, never the
+time of reading. An ask is quoted on one line, up to `text_limit` characters.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+
 # _autosummary/crowsnest.themes.html.md
 
 # crowsnest.themes
@@ -7245,16 +7311,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-23 10:09 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/fa85ceb75ef521b16e84b9ba98cd34dd1e04136e"><code>fa85ceb</code></a> on branch <code>main</code>, for **crowsnest 0.0.100** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 10:11 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/cec235dde04af843b3ba0a1484e1fc15065eba5d"><code>cec235d</code></a> on branch <code>main</code>, for **crowsnest 0.0.101** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.101) is ahead of the latest release on PyPI (0.0.100): these docs describe unreleased code.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/fa85ceb75ef521b16e84b9ba98cd34dd1e04136e"><code>fa85ceb75ef521b16e84b9ba98cd34dd1e04136e</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/cec235dde04af843b3ba0a1484e1fc15065eba5d"><code>cec235dde04af843b3ba0a1484e1fc15065eba5d</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7265,9 +7333,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39936829722">39936829722</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39937128236">39937128236</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>fa85ceb75ef521b16e84b9ba98cd34dd1e04136e</code> (in the history of the built commit) |
+| Event commit | <code>cec235dde04af843b3ba0a1484e1fc15065eba5d</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7292,13 +7360,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.100/">0.0.100</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.100/">0.0.100</a>, older than the documented version (0.0.101).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout fa85ceb75ef521b16e84b9ba98cd34dd1e04136e
+git checkout cec235dde04af843b3ba0a1484e1fc15065eba5d
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

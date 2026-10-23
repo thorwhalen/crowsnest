@@ -436,6 +436,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`rows`](crowsnest.rows.html.md#module-crowsnest.rows)                     | How an item's row is built and hashed: one value, taken whole by every surface that pins it.                                         |
 | [`said`](crowsnest.said.html.md#module-crowsnest.said)                     | When the thing an item quotes was said: its own time, taken from its own source.                                                     |
 | [`skills`](crowsnest.skills.html.md#module-crowsnest.skills)                 | The agent-facing surface: the skills, the subagent, and the command that installs them.                                              |
+| [`synopsis`](crowsnest.synopsis.html.md#module-crowsnest.synopsis)             | A group's synopsis: a few lines on what needs the person, what is working, what finished.                                            |
 | [`themes`](crowsnest.themes.html.md#module-crowsnest.themes)                 | Which theme each session belongs to: the person's `[themes]` table first, then what the row itself says (the action-first pass, C1). |
 | [`tools`](crowsnest.tools.html.md#module-crowsnest.tools)                   | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                                                     |
 | [`tree`](crowsnest.tree.html.md#module-crowsnest.tree)                     | The spawn forest as a picture: laid out in Python, drawn as inline SVG.                                                              |

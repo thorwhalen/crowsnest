@@ -1,0 +1,20 @@
+crowsnest.synopsis
+==================
+
+.. automodule:: crowsnest.synopsis
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_LIMIT
+      DFLT_TEXT_LIMIT
+      SUMMARIES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      synopsis
+   

@@ -2,16 +2,18 @@
 
 # About this build
 
-This documentation was built on **2026-10-23 10:09 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/fa85ceb75ef521b16e84b9ba98cd34dd1e04136e"><code>fa85ceb</code></a> on branch <code>main</code>, for **crowsnest 0.0.100** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 10:11 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/cec235dde04af843b3ba0a1484e1fc15065eba5d"><code>cec235d</code></a> on branch <code>main</code>, for **crowsnest 0.0.101** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.101) is ahead of the latest release on PyPI (0.0.100): these docs describe unreleased code.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/fa85ceb75ef521b16e84b9ba98cd34dd1e04136e"><code>fa85ceb75ef521b16e84b9ba98cd34dd1e04136e</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/cec235dde04af843b3ba0a1484e1fc15065eba5d"><code>cec235dde04af843b3ba0a1484e1fc15065eba5d</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -22,9 +24,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39936829722">39936829722</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39937128236">39937128236</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>fa85ceb75ef521b16e84b9ba98cd34dd1e04136e</code> (in the history of the built commit) |
+| Event commit | <code>cec235dde04af843b3ba0a1484e1fc15065eba5d</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -49,13 +51,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.100/">0.0.100</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.100/">0.0.100</a>, older than the documented version (0.0.101).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout fa85ceb75ef521b16e84b9ba98cd34dd1e04136e
+git checkout cec235dde04af843b3ba0a1484e1fc15065eba5d
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

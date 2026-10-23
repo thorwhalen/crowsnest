@@ -64,6 +64,7 @@
    rows
    said
    skills
+   synopsis
    themes
    tools
    tree
