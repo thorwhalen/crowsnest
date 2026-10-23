@@ -1099,7 +1099,7 @@ def questions(
 
 
 #: What ``groups`` can group by.
-GROUPINGS = ("theme", "project")
+GROUPINGS = ("theme", "project", "session")
 
 
 def groups(
@@ -1117,14 +1117,16 @@ def groups(
     ``by="theme"`` reads ``themes`` (``{theme: [value, ...]}``), else the config file's
     ``[themes]`` table, then infers; each group says ``override``, ``inferred`` or
     ``mixed`` and which rules placed its sessions. ``by="project"`` groups by the
-    repository behind each session's directory, else the folder.
+    repository behind each session's directory, else the folder. ``by="session"`` puts
+    each session under the live session that started it, or its starter's starter, as
+    far up the spawn lineage as a live one goes (#108).
     """
     from crowsnest import themes as _themes
 
     if by not in GROUPINGS:
         raise ValueError(f"by must be one of {', '.join(GROUPINGS)}, not {by!r}")
     rows = roster(home=home, all_homes=all_homes, config=config)["sessions"]
-    if by == "theme":
+    if by in ("theme", "session"):
         graph = lineage(
             home=home,
             all_homes=all_homes,
@@ -1133,6 +1135,12 @@ def groups(
             sessions_read=rows,
             sources=[lambda: _from_records(lineage_path=lineage_path)],
         )
+    if by == "session":
+        root_of = _live_roots(rows, _themes.parents_of(graph))
+
+        def place(row):
+            return root_of[str(row.get("session_id") or "")], 0
+    elif by == "theme":
         table = theme_table(path=config) if themes is None else themes
         theme_of = _themes.infer(
             rows,
@@ -1173,6 +1181,68 @@ def groups(
         "by": by,
         "groups": out,
         "counts": {"groups": len(out), "sessions": len(rows)},
+    }
+
+
+def _live_roots(rows, parents: Mapping[str, str]) -> dict[str, str]:
+    """Each row's session id to the tag of its furthest live ancestor (itself, if none)."""
+    tags = {
+        str(r.get("session_id") or ""): (
+            f"{r.get('label')}@{r['home']}" if r.get("home") else str(r.get("label") or "")
+        )
+        for r in rows
+    }
+    roots = {}
+    for sid in tags:
+        root, seen = sid, {sid}
+        while (up := parents.get(root)) in tags and up not in seen:
+            root = up
+            seen.add(up)
+        roots[sid] = tags[root]
+    return roots
+
+
+def synopsis(
+    name: str,
+    *,
+    by: str = "theme",
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    limit: int | None = None,
+) -> dict:
+    """A short "what's up" for one group of :func:`groups` (#108): its asks first, then
+    what is working, what finished, and what has not said, each line with its time.
+
+    Tier 0, a template over :func:`triage`'s verdicts (:func:`crowsnest.synopsis.synopsis`):
+    from ledgers and recorded asks only, never a transcript. An unknown ``name`` raises
+    ``KeyError`` listing the groups there are.
+    """
+    from crowsnest.synopsis import DFLT_LIMIT
+    from crowsnest.synopsis import synopsis as _synopsis
+
+    found = groups(by=by, home=home, all_homes=all_homes, config=config)
+    by_name = {g["name"]: g for g in found["groups"]}
+    if name not in by_name:
+        raise KeyError(
+            f"no {by} group named {name!r}; there are: {', '.join(sorted(by_name))}"
+        )
+    members = by_name[name]["sessions"]
+    triaged = triage(home=home, all_homes=all_homes, config=config, ledger_dir=ledger_dir)
+    rows = [
+        r
+        for group in triaged["groups"].values()
+        for r in group
+        if (f"{r.get('label')}@{r['home']}" if r.get("home") else r.get("label"))
+        in members
+    ]
+    return {
+        "group": name,
+        "by": by,
+        "sessions": members,
+        "lines": _synopsis(rows, limit=DFLT_LIMIT if limit is None else limit),
+        "made_at": _now(),
     }
 
 

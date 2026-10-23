@@ -70,6 +70,8 @@ crowsnest report [--out FILE]      the roster as one phone-readable HTML page, n
                                     GitHub; what it could not resolve reads ?, and without them the page is unchanged)
 crowsnest publish [--to DEST]      render that page and send it where you read it: a path, host:path, or [publish] in the config
 crowsnest groups [--by project]    every session under a theme ([themes] in the config, else inferred) or a project
+                                   (--by session: under the live session that started it)
+crowsnest synopsis NAME [--by ...] one group in five timed lines: what needs you, working, finished, silent
 crowsnest questions [--unanswered]  what you asked your sessions in the last two weeks, and what each answered
 crowsnest seen|done <session>      you read it / you handled it: until what it asks for changes
 crowsnest later <session> 1h       put it off: 1h, evening, tomorrow, or change (--plan "next step")
