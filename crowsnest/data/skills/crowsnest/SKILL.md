@@ -123,6 +123,13 @@ At the start of a monitoring session, arm the event stream with the `Monitor` to
 Monitor({ command: "crowsnest watch", description: "session events", persistent: true })
 ```
 
+To be woken only for what needs the person, filter with the stream's own flags, never
+with a `grep` chain you keep in context (a compaction loses it, a line-format change
+breaks it silently): `crowsnest watch --kinds loud --mute noisy-sweep`, or the same once
+in the config file's `[watch]` table (`kinds = "loud"`, `mute = [...]`), so the command
+stays the bare `crowsnest watch`. `loud` is waiting, error, needs-you, woke and intent;
+add `stopped` if workers end turns with questions, since a stop line may carry one.
+
 Each printed line becomes a notification here: a session started or exited, went idle
 (with its last words), went busy, started **waiting** (with what for), ended with an
 error, or an item the person put off **woke** (its time passed, or it changed while

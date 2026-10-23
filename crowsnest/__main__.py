@@ -930,6 +930,8 @@ def watch(
     json: bool = False,
     plain: bool = False,
     ledger_dir: str | None = None,
+    kinds: str | None = None,
+    mute: str | None = None,
 ):
     """Print one line per change, forever: started, exited, idle, busy, waiting, error.
 
@@ -950,16 +952,28 @@ def watch(
     Plus `woke`: an item a `later` put off whose time passed, or that changed while
     `on_change` -- computed, not scheduled, once a tick, from the attention store.
 
+    `--kinds` prints only those kinds (comma-separated; `loud` is waiting, error,
+    needs-you, woke and intent; `all` is everything), and `--mute a,b` never mentions
+    those sessions (a name, or `name@home`). Each defaults to the config file's `[watch]`
+    table, else everything (#141): the filter is configuration, not a `grep` kept in a
+    watcher's context. `--kinds all` and `--mute ""` undo the table for one run.
+
     Built for Claude Code's `Monitor` tool: each line becomes a notification in the
     watching session. Stop with Ctrl-C.
     """
+    from crowsnest.config import watch_settings
+
+    table = watch_settings()
+    picked = table.kinds if kinds is None else _watch.kinds_of(kinds)
+    muted = table.mute if mute is None else {m.strip() for m in mute.split(",") if m.strip()}
+    stream = _watch.events(
+        interval=interval,
+        home=home,
+        all_homes=all_homes,
+        row_context=_row_context(ledger_dir),
+    )
     try:
-        for event in _watch.events(
-            interval=interval,
-            home=home,
-            all_homes=all_homes,
-            row_context=_row_context(ledger_dir),
-        ):
+        for event in _watch.selected(stream, kinds=picked, mute=muted):
             line = _json.dumps(event) if json else _watch.line(event, plain=plain)
             print(line, flush=True)
     except KeyboardInterrupt:
