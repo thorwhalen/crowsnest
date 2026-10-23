@@ -1213,7 +1213,8 @@ def test_root_refuses_an_explicit_bypass_and_drops_an_inherited_one(tmp_path):
     with pytest.raises(ValueError, match="root"):
         pick_permission_mode("bypass", euid=0)
     assert pick_permission_mode("plan", euid=0) == "plan"
-    assert pick_permission_mode(None, environ={}, config=cfg, euid=0) == ""
+    with pytest.warns(UserWarning, match="root"):
+        assert pick_permission_mode(None, environ={}, config=cfg, euid=0) == ""
     assert pick_permission_mode(None, environ={}, config=cfg, euid=1000) == (
         "bypassPermissions"
     )
@@ -1225,4 +1226,90 @@ def test_the_default_euid_is_the_process_own(monkeypatch, tmp_path):
     cfg = tmp_path / "config.toml"
     cfg.write_text('spawn_permission_mode = "bypass"\n')
     monkeypatch.setattr("os.geteuid", lambda: 0, raising=False)
-    assert pick_permission_mode(None, environ={}, config=cfg) == ""
+    with pytest.warns(UserWarning, match="root"):
+        assert pick_permission_mode(None, environ={}, config=cfg) == ""
+
+
+def test_root_may_bypass_where_the_sandbox_variable_says_so(tmp_path):
+    # #161: Claude Code accepts the bypass flag from root when IS_SANDBOX=1, which a
+    # server's launcher (or the spawning session's own environment) may set.
+    from crowsnest.spawn import pick_permission_mode
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "bypass"\n')
+    sandbox = {"IS_SANDBOX": "1"}
+    assert pick_permission_mode("bypass", environ=sandbox, euid=0) == (
+        "bypassPermissions"
+    )
+    assert pick_permission_mode(None, environ=sandbox, config=cfg, euid=0) == (
+        "bypassPermissions"
+    )
+    inherited = {"IS_SANDBOX": "1", "CLAUDE_PID": "1"}
+    bypassing = _argv_of({1: ["claude", "--dangerously-skip-permissions"]})
+    assert (
+        pick_permission_mode(None, environ=inherited, argv_of=bypassing, euid=0)
+        == "bypassPermissions"
+    )
+    # only "1" counts, as in Claude Code
+    with pytest.raises(ValueError, match="root"):
+        pick_permission_mode("bypass", environ={"IS_SANDBOX": "0"}, euid=0)
+
+
+def test_root_may_bypass_where_the_config_says_the_launcher_allows_it(tmp_path):
+    from crowsnest.spawn import pick_permission_mode
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "bypass"\nroot_bypass_ok = true\n')
+    assert pick_permission_mode("bypass", environ={}, config=cfg, euid=0) == (
+        "bypassPermissions"
+    )
+    assert pick_permission_mode(None, environ={}, config=cfg, euid=0) == (
+        "bypassPermissions"
+    )
+    cfg.write_text('spawn_permission_mode = "bypass"\nroot_bypass_ok = false\n')
+    with pytest.warns(UserWarning):
+        assert pick_permission_mode(None, environ={}, config=cfg, euid=0) == ""
+    cfg.write_text('root_bypass_ok = "yes"\n')
+    with pytest.raises(TypeError, match="root_bypass_ok"):
+        pick_permission_mode("bypass", environ={}, config=cfg, euid=0)
+    cfg.write_text("[report]\nroot_bypass_ok = true\n")
+    with pytest.raises(ValueError, match="root_bypass_ok"):
+        pick_permission_mode("bypass", environ={}, config=cfg, euid=0)
+
+
+def test_root_says_so_when_it_drops_a_bypass_and_how_to_keep_it(tmp_path):
+    from crowsnest.spawn import pick_permission_mode
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "bypass"\n')
+    with pytest.warns(UserWarning, match="IS_SANDBOX=1.*root_bypass_ok"):
+        assert pick_permission_mode(None, environ={}, config=cfg, euid=0) == ""
+    with pytest.raises(ValueError, match="IS_SANDBOX=1.*root_bypass_ok"):
+        pick_permission_mode("bypass", environ={}, config=cfg, euid=0)
+
+
+def test_no_warning_when_nothing_is_dropped(tmp_path, recwarn):
+    from crowsnest.spawn import pick_permission_mode
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_permission_mode = "acceptEdits"\n')
+    assert pick_permission_mode(None, environ={}, config=cfg, euid=0) == "acceptEdits"
+    assert pick_permission_mode(None, environ={}, config=cfg, euid=1000) == "acceptEdits"
+    assert not [w for w in recwarn if issubclass(w.category, UserWarning)]
+
+
+def test_env_prefix_carries_the_sandbox_variable_the_guard_relied_on():
+    # The guard trusts IS_SANDBOX=1 in this process's environment, so the child, which a
+    # tmux server starts with *its* environment, must be handed it explicitly.
+    tokens = env_prefix({"IS_SANDBOX": "1", "PATH": "/b"}, environ={"PATH": "/b"})
+    assert "IS_SANDBOX=1" in tokens
+    # and it is never unset: a launcher that sets it itself is left to do so
+    tokens = env_prefix({"PATH": "/b"}, environ={"PATH": "/b"})
+    assert "IS_SANDBOX" not in " ".join(tokens)
+
+
+def test_the_cli_prints_a_warning_as_one_plain_line():
+    from crowsnest.__main__ import _cli_warning
+
+    line = _cli_warning(UserWarning("kept the default"), UserWarning, "spawn.py", 9)
+    assert line == "crowsnest: warning: kept the default\n"

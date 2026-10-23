@@ -246,7 +246,7 @@ By default, the mode of the session that spawned it. A session started with `--d
 spawn_permission_mode = "bypass"   # or "acceptEdits", "plan", "auto", ...; "" = Claude Code's default
 ```
 
-`--permission-mode MODE` on `crowsnest spawn` (or `permission_mode=` in Python) overrides both for one spawn. `bypass` is emitted as `--dangerously-skip-permissions`, which Claude Code refuses as root unless `IS_SANDBOX=1` is set (#101). An unknown mode name is refused before anything starts.
+`--permission-mode MODE` on `crowsnest spawn` (or `permission_mode=` in Python) overrides both for one spawn. `bypass` is emitted as `--dangerously-skip-permissions`, which Claude Code refuses as root unless `IS_SANDBOX=1` is set (#101). So as root crowsnest passes it only where it will work: `IS_SANDBOX=1` is in the environment of the spawn (crowsnest hands it on to the new session), or the config file says `root_bypass_ok = true`, for a `claude_bin` launcher that sets the variable itself (#161). Anywhere else an explicit `--permission-mode bypass` is refused, and an inherited or configured one is dropped with a warning naming these two fixes. An unknown mode name is refused before anything starts.
 
 ## The ledger: what a session leaves behind
 

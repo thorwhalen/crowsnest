@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json as _json
 import sys
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -1347,9 +1348,20 @@ _groups = {
 }
 
 
+def _cli_warning(message, category, filename, lineno, line=None) -> str:
+    """A warning as a person at the command line should read it: no file, no line.
+
+    >>> _cli_warning(UserWarning('kept the default mode'), UserWarning, 'x.py', 1)
+    'crowsnest: warning: kept the default mode\\n'
+    """
+    return f"crowsnest: warning: {message}\n"
+
+
 def main(argv: list[str] | None = None) -> None:
     """Dispatch the ``crowsnest`` command. Bare ``crowsnest`` runs :func:`roster`."""
     import cw
+
+    warnings.formatwarning = _cli_warning
 
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0].startswith("-") and argv[0] not in ("-h", "--help"):
