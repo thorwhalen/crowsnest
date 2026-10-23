@@ -976,13 +976,15 @@ def watch(
     then be the one the verbs and the report were given.
 
     Plus `needs-you` and `stopped`, pushed by Claude Code's own hooks the moment they
-    happen, when `crowsnest hook` is installed on them.
+    happen, when `crowsnest hook` is installed on them, and `ask` when a turn ended
+    asking you for something. A wait gets one line, `waiting` or `needs-you`, whichever
+    comes first.
 
     Plus `woke`: an item a `later` put off whose time passed, or that changed while
     `on_change` -- computed, not scheduled, once a tick, from the attention store.
 
     `--kinds` prints only those kinds (comma-separated; `loud` is waiting, error,
-    needs-you, woke and intent; `all` is everything), and `--mute a,b` never mentions
+    needs-you, woke, intent and ask; `all` is everything), and `--mute a,b` never mentions
     those sessions (a name, or `name@home`). Each defaults to the config file's `[watch]`
     table, else everything (#141): the filter is configuration, not a `grep` kept in a
     watcher's context. `--kinds all` and `--mute ""` undo the table for one run.

@@ -109,6 +109,7 @@ __all__ = [
     "WHYS",
     "Ask",
     "Verdict",
+    "asks_in",
     "classify",
     "classify_row",
     "dflt_verdicts",
@@ -766,6 +767,28 @@ def _asks(page: _Page, requests: Sequence[_Request], ledger: Mapping) -> tuple[A
         said_at, basis = _said_in(ledger, page.shown, request.at)
         found.setdefault(" ".join(text.split()).casefold(), Ask(text, said_at, basis))
     return tuple(found.values())
+
+
+def asks_in(text: str, *, owner: str = "") -> list[str]:
+    """What free ``text`` -- a turn's final message, say -- asks of a person, each whole.
+
+    Read exactly as a ledger's free part is (:func:`from_ledger`): the first request, then
+    every other one that opens a "for <person>" section; a statement that only mentions a
+    person ("blocked on the user" restating it, "no manual-task needed") is not a second
+    ask. ``owner`` defaults to :data:`DFLT_OWNER`. This reads text; it changes nothing
+    about where a ledger's asks are bounded, so no stored revision moves (#141).
+
+    >>> asks_in('Merged.\\n\\n**For the user:** pick a name.')
+    ['pick a name.']
+    >>> asks_in('Merged. Nothing is pending.')
+    []
+    """
+    owner = owner or DFLT_OWNER
+    page = _page_of(text, owner)
+    requests = _requests(page, owner)
+    if not requests:
+        return []
+    return [ask.text for ask in _asks(page, requests, {})]
 
 
 def _why(text: str) -> str:

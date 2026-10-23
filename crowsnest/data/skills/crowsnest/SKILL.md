@@ -127,8 +127,10 @@ To be woken only for what needs the person, filter with the stream's own flags, 
 with a `grep` chain you keep in context (a compaction loses it, a line-format change
 breaks it silently): `crowsnest watch --kinds loud --mute noisy-sweep`, or the same once
 in the config file's `[watch]` table (`kinds = "loud"`, `mute = [...]`), so the command
-stays the bare `crowsnest watch`. `loud` is waiting, error, needs-you, woke and intent;
-add `stopped` if workers end turns with questions, since a stop line may carry one.
+stays the bare `crowsnest watch`. `loud` is waiting, error, needs-you, woke, intent and
+ask. An **ask** is a turn that ended asking the person for something ("For the user: ..."),
+promoted from its stop line by the hook, so filtering out `stopped` does not lose it. A
+wait is announced once, by whichever of `waiting` and `needs-you` comes first.
 
 Each printed line becomes a notification here: a session started or exited, went idle
 (with its last words), went busy, started **waiting** (with what for), ended with an

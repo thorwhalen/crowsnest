@@ -19,7 +19,10 @@ module is only what they call.)
 ``<data dir>/events.jsonl``, which :func:`crowsnest.watch.events` tails -- and, on a
 stop, writes the two *mechanical* ledger fields, ``last asked`` and ``last said``, from
 the transcript tail. It writes nothing a human or the session would have had to think
-about: :mod:`crowsnest.ledger` says why.
+about: :mod:`crowsnest.ledger` says why. A stop whose final message asks the person for
+something (read as a ledger's "for <person>" sections are,
+:func:`crowsnest.triage.asks_in`) adds a second line, ``ask``, so a watcher that only
+listens for loud kinds still hears it (#141).
 
 **It runs inside somebody else's session, so it may not fail and may not be slow.** Every
 error is swallowed into one line in ``<data dir>/hook.log`` and reported in the returned
@@ -234,6 +237,21 @@ def _detail(kind: str, payload: dict, activity: Activity) -> str:
     return ""
 
 
+def _asks_said(kind: str, payload: dict, activity: Activity) -> list[str]:
+    """What a stop's final message asks of the person, read as a ledger's free part is
+    (:func:`crowsnest.triage.asks_in`); nothing for any other event, or on any failure."""
+    if kind != "stop":
+        return []
+    said = payload.get("last_assistant_message") or activity.last_assistant_text
+    try:
+        from crowsnest.triage import asks_in
+
+        return asks_in(str(said or ""))
+    except Exception as exc:  # noqa: BLE001 -- the stop line already landed
+        _log(f"asks: {exc!r}")
+        return []
+
+
 def _write_ledger(
     name: str,
     record: dict,
@@ -343,6 +361,13 @@ def handle(
         if kind == "notification":
             record["notification_type"] = str(payload.get("notification_type") or "")
         written = append_event(record, events_path=events_path)
+        asks = _asks_said(kind, payload, activity)
+        if asks:
+            # Its own line, so a watcher filtered to loud kinds still hears it (#141).
+            append_event(
+                {**record, "event": "ask", "detail": _one_line(asks[0]), "asks": len(asks)},
+                events_path=events_path,
+            )
         ledger = ""
         if kind == "stop" and name:
             ledger = _write_ledger(name, record, activity, ledger_dir=ledger_dir)
@@ -350,7 +375,13 @@ def handle(
                 _record_session(
                     name, session_id, home=home, at=record["at"], ledger_dir=ledger_dir
                 )
-        return {"ok": True, "record": record, "events": str(written), "ledger": ledger}
+        return {
+            "ok": True,
+            "record": record,
+            "events": str(written),
+            "ledger": ledger,
+            "asks": len(asks),
+        }
     except Exception as exc:  # noqa: BLE001 -- a broken crowsnest may not break a session
         _log(f"{event!r}: {exc!r}")
         return {"ok": False, "event": str(event), "error": repr(exc)}
