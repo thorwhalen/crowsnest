@@ -488,7 +488,9 @@ def groups(
 
     Themes come from the `[themes]` table in the config file, then are inferred: the
     repository's owner, the session that started it, what its references point at, else
-    `unthemed`. `--by project` groups by repository instead.
+    `unthemed`. `--by project` groups by repository instead, and `--by session` puts each
+    session under the live one that started it. `crowsnest synopsis NAME` says what is up
+    in one group.
     """
     import json as _json
 
@@ -505,6 +507,33 @@ def groups(
         out.append(f"{group['name']} ({len(group['sessions'])}){how}")
         out.extend(f"  {tag}" for tag in group["sessions"])
     return "\n".join(out)
+
+
+def synopsis(
+    group: str,
+    *,
+    by: str = "theme",
+    home: str | None = None,
+    all_homes: bool = False,
+    ledger_dir: str | None = None,
+    json: bool = False,
+):
+    """A few lines on one group from `crowsnest groups`: what needs you, then what is
+    working, what finished and what has not said, each with when it was said.
+
+    `--by session` groups a session with the ones it started (`project`, `theme` as in
+    `crowsnest groups`). Built from the sessions' ledgers and asks, never a transcript.
+    """
+    import json as _json
+
+    found = tools.synopsis(
+        group, by=by, home=home, all_homes=all_homes, ledger_dir=ledger_dir
+    )
+    if json:
+        return _json.dumps(found, indent=2)
+    head = f"# {found['group']} ({len(found['sessions'])} sessions, by {found['by']})"
+    body = [f"{_when(line['said_at'])} {line['text']}" for line in found["lines"]]
+    return "\n".join([head, *(body or ["nothing to say"])])
 
 
 def questions(
@@ -1369,6 +1398,7 @@ _commands = [
     lineage,
     triage,
     groups,
+    synopsis,
     questions,
     report,
     publish,
