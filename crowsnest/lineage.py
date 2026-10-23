@@ -96,6 +96,7 @@ __all__ = [
     "names_by_session_id",
     "open_command",
     "record_spawn",
+    "spawn_briefs",
     "spawn_event",
 ]
 
@@ -437,6 +438,45 @@ def _edge_from_record(rec: Mapping) -> SpawnEdge | None:
         child_session_id=str(rec.get("session_id") or ""),
         parent_session_id=str(parent.get("session_id") or ""),
     )
+
+
+def spawn_briefs(*, lineage_path: str | Path | None = None) -> dict[str, dict]:
+    """The brief each spawned session was started with, as its ``spawn`` line kept it.
+
+    Keyed by the child's session id, and by ``name:<name>`` for the latest spawn under
+    that name (names repeat over time, #42; a caller with an id should use it). Each value
+    is ``{head, refs, at, parent}``. Lines without a brief are left out; a malformed line
+    is skipped, as in :func:`from_records`.
+    """
+    try:
+        text = _store(lineage_path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {}
+    found: dict[str, dict] = {}
+    for line in text.splitlines():
+        if '"brief"' not in line:
+            continue
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(rec, dict) or rec.get("event") != SPAWN_EVENT:
+            continue
+        brief = rec.get("brief")
+        if not isinstance(brief, Mapping):
+            continue
+        parent = rec.get("parent") if isinstance(rec.get("parent"), Mapping) else {}
+        kept = {
+            "head": str(brief.get("head") or ""),
+            "refs": [str(r) for r in brief.get("refs") or ()],
+            "at": str(rec.get("at") or ""),
+            "parent": str(parent.get("name") or ""),
+        }
+        if rec.get("session_id"):
+            found[str(rec["session_id"])] = kept
+        if rec.get("name"):
+            found[f"name:{rec['name']}"] = kept
+    return found
 
 
 def from_records(*, lineage_path: str | Path | None = None) -> list[SpawnEdge]:
