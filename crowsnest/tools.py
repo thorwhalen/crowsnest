@@ -311,9 +311,7 @@ def _session_model(pid: int, *, home: str | Path | None = None) -> tuple[str, st
     return session_model(pid, home=home)
 
 
-def _model_row(
-    s: LiveSession, *, home, all_homes: bool, config
-) -> tuple[str, str]:
+def _model_row(s: LiveSession, *, home, all_homes: bool, config) -> tuple[str, str]:
     """``(model, source)`` for a roster row (#160); ``('', '')`` for another machine's.
 
     Read off the local process's command line, so a home marked ``remote`` -- whose pids
