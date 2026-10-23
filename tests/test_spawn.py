@@ -363,6 +363,7 @@ def test_spawn_returns_pid_and_session_id_once_the_registry_sees_it(
         "home": str(home),
         # `spawn` records who asked for the session; the environment above is the caller.
         "parent": {"name": "parent-s", "session_id": "parent-session", "pid": 0},
+        "model": "sonnet",  # the default a spawn names no model gets (#160)
     }
     assert calls and calls[0][1] == "/some/repo" and calls[0][2] == "demo"
     assert calls[0][3] == home
@@ -1135,6 +1136,8 @@ def _record_spawn(monkeypatch, tmp_path, **spawn_kwargs):
     monkeypatch.setattr(spawn_module, "_find_by_name", lambda *a, **k: None)
     monkeypatch.setattr(spawn_module, "_refuse_taken_name", lambda *a, **k: None)
     spawn_kwargs.setdefault("config", tmp_path / "no-config.toml")
+    # "" is the account's default: the lines these tests pin predate #160's default model
+    spawn_kwargs.setdefault("model", "")
     spawn(
         "probe",
         cwd=str(tmp_path),
@@ -1313,3 +1316,58 @@ def test_the_cli_prints_a_warning_as_one_plain_line():
 
     line = _cli_warning(UserWarning("kept the default"), UserWarning, "spawn.py", 9)
     assert line == "crowsnest: warning: kept the default\n"
+
+
+def test_a_spawn_without_a_model_starts_on_the_cheap_default(monkeypatch, tmp_path):
+    # #160: an unstated --model used to inherit the account's default (Fable on tw).
+    from crowsnest.spawn import DFLT_SPAWN_MODEL
+
+    argv = _record_spawn(monkeypatch, tmp_path, model=None)
+    assert argv[argv.index("--model") + 1] == DFLT_SPAWN_MODEL == "sonnet"
+
+
+def test_the_config_file_names_the_spawn_model(monkeypatch, tmp_path):
+    cfg = tmp_path / "config.toml"
+    cfg.write_text('spawn_model = "haiku"\n')
+    argv = _record_spawn(monkeypatch, tmp_path, model=None, config=cfg)
+    assert argv[argv.index("--model") + 1] == "haiku"
+    # "" there means: inherit the account's default, as before #160
+    cfg.write_text('spawn_model = ""\n')
+    assert "--model" not in _record_spawn(monkeypatch, tmp_path, model=None, config=cfg)
+    # an explicit model, "" included, outranks the file
+    cfg.write_text('spawn_model = "haiku"\n')
+    argv = _record_spawn(monkeypatch, tmp_path, model="opus", config=cfg)
+    assert argv[argv.index("--model") + 1] == "opus"
+    assert "--model" not in _record_spawn(monkeypatch, tmp_path, model="", config=cfg)
+
+
+def test_a_bad_spawn_model_setting_is_refused(tmp_path):
+    from crowsnest.config import spawn_model_setting
+
+    cfg = tmp_path / "config.toml"
+    cfg.write_text("spawn_model = 3\n")
+    with pytest.raises(TypeError, match="spawn_model"):
+        spawn_model_setting(path=cfg)
+    cfg.write_text('[report]\nspawn_model = "haiku"\n')
+    with pytest.raises(ValueError, match="spawn_model"):
+        spawn_model_setting(path=cfg)
+    assert spawn_model_setting(path=tmp_path / "none.toml") is None
+
+
+def test_session_model_reads_the_flag_then_the_account_default(tmp_path):
+    from crowsnest.spawn import session_model
+
+    flagged = {7: ["claude", "-n", "x", "--model", "opus"]}
+    assert session_model(7, home=tmp_path, argv_of=flagged.get) == ("opus", "flag")
+    assert session_model(
+        7, home=tmp_path, argv_of={7: ["claude", "--model=haiku"]}.get
+    ) == ("haiku", "flag")
+    bare = {7: ["claude", "-n", "x"]}.get
+    assert session_model(7, home=tmp_path, argv_of=bare) == ("", "")
+    (tmp_path / "settings.json").write_text('{"model": "fable"}')
+    assert session_model(7, home=tmp_path, argv_of=bare) == ("fable", "settings")
+    # a prompt that mentions the flag is one argument, not the flag
+    prompt = {7: ["claude", "-n", "x", "rerun with --model opus"]}.get
+    assert session_model(7, home=tmp_path, argv_of=prompt) == ("fable", "settings")
+    # an unreadable command line falls back to the account default too
+    assert session_model(7, home=tmp_path, argv_of={}.get) == ("fable", "settings")

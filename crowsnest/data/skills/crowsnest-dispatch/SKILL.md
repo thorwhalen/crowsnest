@@ -135,9 +135,11 @@ crowsnest spawn <name> --cwd <dir> [--add-dirs <dir>,<dir>] --model sonnet --eff
 
 `--cwd` is the scope decision from step 3; `--add-dirs` only what the session edits.
 
-Always pass `--model` explicitly, even when it matches your own: left out, the session
-inherits whatever the user's default happens to be, which is the expensive one exactly
-when you were not thinking about cost. The confirmation row echoes the model it started
+Always pass `--model` and `--effort` explicitly, even when they match your own. Left out,
+`--model` is `spawn_model` from the config file, else `sonnet`, which is a guess about
+this work rather than a choice (#160); `--model ""` inherits the account's default, the
+expensive one exactly when nobody was thinking about cost. A session that spawns
+sub-sessions of its own must state both too: say so in its brief. The confirmation row echoes the model it started
 with, so read it — that row is your last chance to catch a copied flag.
 
 The row appears in `crowsnest` within seconds, named, in that directory, busy, and
