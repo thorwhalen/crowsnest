@@ -284,6 +284,44 @@ def current_session(
     return {"name": session_id[:8], "session_id": session_id, "pid": pid}
 
 
+#: How much of a spawn's brief its ``spawn`` line keeps, and how many references.
+BRIEF_HEAD_LIMIT = 300
+BRIEF_REFS_LIMIT = 20
+
+#: What a brief points at: a URL, or a path of two or more parts starting at ``/``,
+#: ``~`` or a ``$VARIABLE``, standing as a word of its own.
+_BRIEF_REF = re.compile(
+    r"https?://[^\s<>()\[\]`'\"]+"
+    r"|(?:(?<=[\s(`'\"])|^)(?:~|\$[A-Za-z_]\w*)?/[\w.@+-]+(?:/[\w.@+-]+)+",
+    re.MULTILINE,
+)
+
+
+def brief_of(prompt: str) -> dict:
+    """What a spawn line keeps of the brief it was given: ``{head, refs}``, or ``{}``.
+
+    ``head`` is its start on one line, ``refs`` the URLs and paths it names in order, so
+    a rollover can say which session was handed which issue or ledger without anyone
+    having kept a copy (#141). Trailing punctuation is not part of a reference.
+
+    >>> brief_of('Fix https://x.io/i/7. Then read ~/notes/a.md.')['refs']
+    ['https://x.io/i/7', '~/notes/a.md']
+    >>> brief_of('')
+    {}
+    """
+    text = str(prompt or "").strip()
+    if not text:
+        return {}
+    flat = " ".join(text.split())
+    head = (
+        flat
+        if len(flat) <= BRIEF_HEAD_LIMIT
+        else flat[: BRIEF_HEAD_LIMIT - 1].rstrip() + "…"
+    )
+    refs = list(dict.fromkeys(m.group(0).rstrip(".,;:!?") for m in _BRIEF_REF.finditer(text)))
+    return {"head": head, "refs": refs[:BRIEF_REFS_LIMIT]}
+
+
 def spawn_event(
     child: str,
     *,
@@ -293,6 +331,7 @@ def spawn_event(
     at: str = "",
     source: str = "event",
     confidence: str = "recorded",
+    brief: str = "",
 ) -> dict:
     """One ``spawn`` line for the event log, shaped like every other line in it.
 
@@ -304,8 +343,12 @@ def spawn_event(
     >>> line = spawn_event('kid', parent={'name': 'boss'}, at='2026-01-01T00:00:00+00:00')
     >>> line['event'], line['name'], line['parent']['name']
     ('spawn', 'kid', 'boss')
+
+    ``brief`` is the prompt the child was started with; the line keeps :func:`brief_of`
+    it, under ``brief``, and has no such field when there was none.
     """
     parent = dict(parent or {})
+    kept = brief_of(brief)
     return {
         "at": at,
         "event": SPAWN_EVENT,
@@ -320,6 +363,7 @@ def spawn_event(
         },
         "source": source,
         "confidence": confidence,
+        **({"brief": kept} if kept else {}),
     }
 
 
@@ -332,6 +376,7 @@ def record_spawn(
     environ: Mapping[str, str] | None = None,
     lineage_path: str | Path | None = None,
     at: str = "",
+    brief: str = "",
 ) -> dict:
     """Write the ``spawn`` line for a session just created. **Never raises.**
 
@@ -357,6 +402,7 @@ def record_spawn(
             project=project,
             parent=parent,
             at=at or _now(),
+            brief=brief,
         )
         _append(record, lineage_path=lineage_path)
         return record

@@ -757,3 +757,33 @@ def test_spawn_value_flags_matches_the_cli():
     }
     spelled = {f.lstrip("-").replace("-", "_") for f in lineage.SPAWN_VALUE_FLAGS}
     assert takes_a_value <= spelled, f"the CLI grew a flag: {takes_a_value - spelled}"
+
+
+def test_record_spawn_keeps_the_brief_head_and_what_it_points_at(tmp_path):
+    # #141: a rollover rebuilds "which session got which brief" from the lineage, not
+    # from a watcher's context or a hand-kept briefs folder.
+    import json
+
+    path = tmp_path / "lineage.jsonl"
+    brief = (
+        "Fix https://github.com/o/r/issues/7 first.\n"
+        "Read ~/.local/share/x/ledger/a.md and $PP/t/r/docs/plan.md, then land it. "
+        + "More words. " * 60
+    )
+    record_spawn("kid", environ={}, home=tmp_path, lineage_path=path, brief=brief)
+    rec = json.loads(path.read_text(encoding="utf-8"))
+    assert rec["brief"]["head"].startswith("Fix https://github.com/o/r/issues/7 first. Read")
+    assert "\n" not in rec["brief"]["head"] and len(rec["brief"]["head"]) <= 300
+    assert rec["brief"]["refs"] == [
+        "https://github.com/o/r/issues/7",
+        "~/.local/share/x/ledger/a.md",
+        "$PP/t/r/docs/plan.md",
+    ]
+
+
+def test_a_spawn_without_a_brief_records_none(tmp_path):
+    import json
+
+    path = tmp_path / "lineage.jsonl"
+    record_spawn("kid", environ={}, home=tmp_path, lineage_path=path)
+    assert "brief" not in json.loads(path.read_text(encoding="utf-8"))

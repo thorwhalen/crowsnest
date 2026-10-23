@@ -1371,3 +1371,14 @@ def test_session_model_reads_the_flag_then_the_account_default(tmp_path):
     assert session_model(7, home=tmp_path, argv_of=prompt) == ("fable", "settings")
     # an unreadable command line falls back to the account default too
     assert session_model(7, home=tmp_path, argv_of={}.get) == ("fable", "settings")
+
+
+def test_spawn_records_the_prompt_head_in_the_lineage(monkeypatch, tmp_path):
+    import json
+
+    _record_spawn(monkeypatch, tmp_path, prompt="Fix #7, then read ~/notes/a.md.")
+    rec = json.loads((tmp_path / "lineage.jsonl").read_text(encoding="utf-8"))
+    assert rec["brief"] == {
+        "head": "Fix #7, then read ~/notes/a.md.",
+        "refs": ["~/notes/a.md"],
+    }

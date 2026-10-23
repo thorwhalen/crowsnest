@@ -1072,7 +1072,8 @@ def spawn(
     spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --
     is recovery work if it is not written down now, so one ``spawn`` line goes into
     ``lineage.jsonl`` (:func:`crowsnest.lineage.record_spawn`; ``lineage_path`` is where,
-    a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this
+    a test's ``tmp_path`` being why it is an argument), keeping the head of ``prompt``
+    and the URLs and paths it names (:func:`crowsnest.lineage.brief_of`, #141). Its ``name`` is empty when this
     command was not run from inside a session -- the honest answer for a person at a shell
     prompt -- and the whole dict is ``{}`` only when the record could not be written.
 
@@ -1190,6 +1191,7 @@ def spawn(
         child_session_id=found.session_id if found else "",
         project=Path(cwd).name if cwd else "",
         lineage_path=lineage_path,
+        brief=prompt,
     )
     parent = record.get("parent", {}) if record else {}
     if found is None:
