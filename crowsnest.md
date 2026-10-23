@@ -1,4 +1,4 @@
-> built 2026-10-23 10:14 UTC from 005e890 (main) · crowsnest 0.0.102. Details: build_info.json
+> built 2026-10-23 10:17 UTC from 6a3f598 (main) · crowsnest 0.0.103. Details: build_info.json
 
 # index.html.md
 
@@ -2882,7 +2882,8 @@ register.
 spawn graph on the report, `crowsnest lineage`, “whose children are these six” –
 is recovery work if it is not written down now, so one `spawn` line goes into
 `lineage.jsonl` ([`crowsnest.lineage.record_spawn()`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.record_spawn); `lineage_path` is where,
-a test’s `tmp_path` being why it is an argument). Its `name` is empty when this
+a test’s `tmp_path` being why it is an argument), keeping the head of `prompt`
+and the URLs and paths it names (`crowsnest.lineage.brief_of()`, #141). Its `name` is empty when this
 command was not run from inside a session – the honest answer for a person at a shell
 prompt – and the whole dict is `{}` only when the record could not be written.
 
@@ -3801,7 +3802,7 @@ any of the user’s terminals on this machine, whichever account a terminal is s
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.lineage.record_spawn(child, , child_session_id='', project='', home=None, environ=None, lineage_path=None, at='')
+### crowsnest.lineage.record_spawn(child, , child_session_id='', project='', home=None, environ=None, lineage_path=None, at='', brief='')
 
 Write the `spawn` line for a session just created. **Never raises.**
 
@@ -3822,7 +3823,7 @@ Returns the record written, or `{}` when nothing could be written.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.lineage.spawn_event(child, , child_session_id='', project='', parent=None, at='', source='event', confidence='recorded')
+### crowsnest.lineage.spawn_event(child, , child_session_id='', project='', parent=None, at='', source='event', confidence='recorded', brief='')
 
 One `spawn` line for the event log, shaped like every other line in it.
 
@@ -3836,6 +3837,9 @@ that a reader can tell “spawned by nobody we could name” (`parent` present, 
 >>> line['event'], line['name'], line['parent']['name']
 ('spawn', 'kid', 'boss')
 ```
+
+`brief` is the prompt the child was started with; the line keeps `brief_of()`
+it, under `brief`, and has no such field when there was none.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -7335,7 +7339,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-23 10:14 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/005e8906a21c20cb5e5a579aea8179a17ca1f2d4"><code>005e890</code></a> on branch <code>main</code>, for **crowsnest 0.0.102** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 10:17 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/6a3f598930db8b18b20dd0ba9154d4d540599b27"><code>6a3f598</code></a> on branch <code>main</code>, for **crowsnest 0.0.103** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -7344,7 +7348,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/005e8906a21c20cb5e5a579aea8179a17ca1f2d4"><code>005e8906a21c20cb5e5a579aea8179a17ca1f2d4</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/6a3f598930db8b18b20dd0ba9154d4d540599b27"><code>6a3f598930db8b18b20dd0ba9154d4d540599b27</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7355,9 +7359,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39937467107">39937467107</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39937767656">39937767656</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>005e8906a21c20cb5e5a579aea8179a17ca1f2d4</code> (in the history of the built commit) |
+| Event commit | <code>6a3f598930db8b18b20dd0ba9154d4d540599b27</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7382,13 +7386,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.102/">0.0.102</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.103/">0.0.103</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 005e8906a21c20cb5e5a579aea8179a17ca1f2d4
+git checkout 6a3f598930db8b18b20dd0ba9154d4d540599b27
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

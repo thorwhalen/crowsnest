@@ -1222,157 +1222,159 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="1072"><span class="sd">    spawn graph on the report, ``crowsnest lineage``, "whose children are these six" --</span>
 </span><span data-line="1073"><span class="sd">    is recovery work if it is not written down now, so one ``spawn`` line goes into</span>
 </span><span data-line="1074"><span class="sd">    ``lineage.jsonl`` (:func:`crowsnest.lineage.record_spawn`; ``lineage_path`` is where,</span>
-</span><span data-line="1075"><span class="sd">    a test's ``tmp_path`` being why it is an argument). Its ``name`` is empty when this</span>
-</span><span data-line="1076"><span class="sd">    command was not run from inside a session -- the honest answer for a person at a shell</span>
-</span><span data-line="1077"><span class="sd">    prompt -- and the whole dict is ``{}`` only when the record could not be written.</span>
-</span><span data-line="1078">
-</span><span data-line="1079"><span class="sd">    **Model.** ``model=None`` (the default) is ``spawn_model`` from the config file, else</span>
-</span><span data-line="1080"><span class="sd">    :data:`DFLT_SPAWN_MODEL`; ``''`` passes no ``--model``, so the account's settings</span>
-</span><span data-line="1081"><span class="sd">    decide, as every spawn did before #160.</span>
-</span><span data-line="1082">
-</span><span data-line="1083"><span class="sd">    **Permissions.** ``permission_mode`` picks the new session's permission mode;</span>
-</span><span data-line="1084"><span class="sd">    ``None`` (the default) means the spawning session's own mode, else -- from outside</span>
-</span><span data-line="1085"><span class="sd">    any session -- the config file's ``spawn_permission_mode``, else claude's default</span>
-</span><span data-line="1086"><span class="sd">    (:func:`pick_permission_mode`). A</span>
-</span><span data-line="1087"><span class="sd">    session spawned by one running with ``--dangerously-skip-permissions`` therefore</span>
-</span><span data-line="1088"><span class="sd">    starts that way too, exactly as before this was a choice; ``'bypass'`` asks for it</span>
-</span><span data-line="1089"><span class="sd">    outright.</span>
-</span><span data-line="1090">
-</span><span data-line="1091"><span class="sd">    **Trust.** A folder the account has never opened stops the new session at Claude</span>
-</span><span data-line="1092"><span class="sd">    Code's workspace trust dialog, where it never registers. With one of this module's</span>
-</span><span data-line="1093"><span class="sd">    own spawners, ``cwd`` and every ``add_dirs`` entry are checked first</span>
-</span><span data-line="1094"><span class="sd">    (:func:`trusted`) and an untrusted one raises :class:`UntrustedFolder` naming it and</span>
-</span><span data-line="1095"><span class="sd">    the one-time fix. ``trust=True`` -- only ever a person's explicit flag -- records the</span>
-</span><span data-line="1096"><span class="sd">    folders as trusted instead. A caller's ``spawner`` is not checked: it may run</span>
-</span><span data-line="1097"><span class="sd">    elsewhere, where this machine's record says nothing. When the registry never sees the</span>
-</span><span data-line="1098"><span class="sd">    session, ``peek`` (``(name) -&gt; str``; tmux's pane by default) says what it displays,</span>
-</span><span data-line="1099"><span class="sd">    and ``how`` carries that.</span>
-</span><span data-line="1100">
-</span><span data-line="1101"><span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
-</span><span data-line="1102"><span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
-</span><span data-line="1103"><span class="sd">    behind one name make all of them ambiguous, and write one ledger. Every configured</span>
-</span><span data-line="1104"><span class="sd">    home is checked, not only the one the session starts in (crowsnest#42). So is a name</span>
-</span><span data-line="1105"><span class="sd">    whose ledger file already belongs to a *different* name (``cn/xa`` and ``cn:xa``</span>
-</span><span data-line="1106"><span class="sd">    share ``cn-xa.md``). Pick another, a suffix will do.</span>
-</span><span data-line="1107"><span class="sd">    """</span>
-</span><span data-line="1108">    <span class="n">home</span> <span class="o">=</span> <span class="n">account_home</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1109">    <span class="n">_refuse_taken_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1110">    <span class="n">how</span> <span class="o">=</span> <span class="s2">"custom"</span>
-</span><span data-line="1111">    <span class="n">builtin</span> <span class="o">=</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span>
-</span><span data-line="1112">    <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1113">        <span class="n">spawner</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">default_spawner</span><span class="p">()</span>
-</span><span data-line="1114">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">in</span> <span class="n">_BUILTIN_SPAWNERS</span><span class="p">:</span>
-</span><span data-line="1115">            <span class="c1"># Ours alone are told which config file names the launcher. The seam's</span>
-</span><span data-line="1116">            <span class="c1"># signature stays `(argv, *, cwd, name, home)`, so nothing else -- a</span>
-</span><span data-line="1117">            <span class="c1"># caller's spawner, a replaced `default_spawner` -- is handed a keyword it</span>
-</span><span data-line="1118">            <span class="c1"># never asked for. Anything else resolves its own binary for its own target.</span>
-</span><span data-line="1119">            <span class="n">spawner</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">spawner</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1120">    <span class="k">if</span> <span class="n">builtin</span><span class="p">:</span>
-</span><span data-line="1121">        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="o">*</span><span class="n">add_dirs</span><span class="p">):</span>
-</span><span data-line="1122">            <span class="k">if</span> <span class="n">trusted</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-</span><span data-line="1123">                <span class="k">if</span> <span class="n">trust</span><span class="p">:</span>
-</span><span data-line="1124">                    <span class="n">_accept_trust</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="1125">                    <span class="k">continue</span>
-</span><span data-line="1126">                <span class="k">raise</span> <span class="n">UntrustedFolder</span><span class="p">(</span>
-</span><span data-line="1127">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2"> is not trusted for this account, so the session would "</span>
-</span><span data-line="1128">                    <span class="s2">"stop at Claude Code's trust dialog and never register. Open it "</span>
-</span><span data-line="1129">                    <span class="sa">f</span><span class="s2">"once by hand (`cd </span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2"> &amp;&amp; claude`, accept the dialog), or "</span>
-</span><span data-line="1130">                    <span class="s2">"pass --trust to record it as trusted."</span>
-</span><span data-line="1131">                <span class="p">)</span>
-</span><span data-line="1132">    <span class="n">argv</span> <span class="o">=</span> <span class="n">claude_argv</span><span class="p">(</span>
-</span><span data-line="1133">        <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1134">        <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
-</span><span data-line="1135">        <span class="n">model</span><span class="o">=</span><span class="p">(</span><span class="n">model</span> <span class="o">:=</span> <span class="n">pick_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)),</span>
-</span><span data-line="1136">        <span class="n">effort</span><span class="o">=</span><span class="n">effort</span><span class="p">,</span>
-</span><span data-line="1137">        <span class="n">remote_control</span><span class="o">=</span><span class="n">remote_control</span><span class="p">,</span>
-</span><span data-line="1138">        <span class="n">add_dirs</span><span class="o">=</span><span class="n">add_dirs</span><span class="p">,</span>
-</span><span data-line="1139">        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
-</span><span data-line="1140">        <span class="n">permission_mode</span><span class="o">=</span><span class="n">pick_permission_mode</span><span class="p">(</span><span class="n">permission_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
-</span><span data-line="1141">    <span class="p">)</span>
-</span><span data-line="1142">    <span class="n">spawner</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="1143">    <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="1144">    <span class="n">reader</span> <span class="o">=</span> <span class="n">peek</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_tmux_peek</span> <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="1145">    <span class="n">press</span> <span class="o">=</span> <span class="n">press</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_tmux_press</span> <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="1146">    <span class="n">close</span> <span class="o">=</span> <span class="n">close</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_tmux_close</span> <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="1147">    <span class="n">keys_sent</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span data-line="1148">
-</span><span data-line="1149">    <span class="k">def</span><span class="w"> </span><span class="nf">answer_dialog</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="1150"><span class="w">        </span><span class="sd">"""Send the next key to a dialog the pane shows; whether one is showing."""</span>
-</span><span data-line="1151">        <span class="n">shown</span> <span class="o">=</span> <span class="n">startup_dialog</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
-</span><span data-line="1152">        <span class="k">if</span> <span class="n">shown</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1153">            <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="1154">        <span class="n">dialog</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">shown</span>
-</span><span data-line="1155">        <span class="k">if</span> <span class="ow">not</span> <span class="n">trust</span><span class="p">:</span>
-</span><span data-line="1156">            <span class="k">if</span> <span class="n">close</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1157">                <span class="n">close</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="1158">            <span class="k">raise</span> <span class="n">UntrustedFolder</span><span class="p">(</span>
-</span><span data-line="1159">                <span class="sa">f</span><span class="s2">"session </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> stopped at Claude Code's </span><span class="si">{</span><span class="n">dialog</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> dialog for "</span>
-</span><span data-line="1160">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cwd</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="1161">                <span class="o">+</span> <span class="p">(</span><span class="s2">" and was closed"</span> <span class="k">if</span> <span class="n">close</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">", where it still waits"</span><span class="p">)</span>
-</span><span data-line="1162">                <span class="o">+</span> <span class="sa">f</span><span class="s2">". Open it once by hand (`cd </span><span class="si">{</span><span class="n">cwd</span><span class="si">}</span><span class="s2"> &amp;&amp; claude`, </span><span class="si">{</span><span class="n">dialog</span><span class="o">.</span><span class="n">fix</span><span class="si">}</span><span class="s2">), "</span>
-</span><span data-line="1163">                <span class="s2">"or spawn again with --trust."</span>
-</span><span data-line="1164">            <span class="p">)</span>
-</span><span data-line="1165">        <span class="k">if</span> <span class="n">keys_sent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dialog</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">_MAX_DIALOG_KEYS</span><span class="p">:</span>
-</span><span data-line="1166">            <span class="n">keys_sent</span><span class="p">[</span><span class="n">dialog</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">keys_sent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dialog</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-</span><span data-line="1167">            <span class="n">press</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-</span><span data-line="1168">        <span class="k">return</span> <span class="kc">True</span>
-</span><span data-line="1169">
-</span><span data-line="1170">    <span class="n">watch</span> <span class="o">=</span> <span class="n">builtin</span> <span class="ow">and</span> <span class="n">reader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">press</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="1171">    <span class="n">deadline</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">+</span> <span class="n">wait</span>
-</span><span data-line="1172">    <span class="n">found</span> <span class="o">=</span> <span class="n">_find_by_name</span><span class="p">(</span>
-</span><span data-line="1173">        <span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">,</span> <span class="n">on_poll</span><span class="o">=</span><span class="n">answer_dialog</span> <span class="k">if</span> <span class="n">watch</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="1174">    <span class="p">)</span>
-</span><span data-line="1175">    <span class="c1"># Registered is not settled: a dialog can follow the one that held registration up</span>
-</span><span data-line="1176">    <span class="c1"># (trust, then external imports), so the pane is watched until it shows none.</span>
-</span><span data-line="1177">    <span class="k">while</span> <span class="n">watch</span> <span class="ow">and</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">answer_dialog</span><span class="p">():</span>
-</span><span data-line="1178">        <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">deadline</span><span class="p">:</span>
-</span><span data-line="1179">            <span class="k">break</span>
-</span><span data-line="1180">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">_POLL_INTERVAL</span><span class="p">)</span>
-</span><span data-line="1181">    <span class="c1"># Recorded whether or not the registry saw it: a session that started slowly still</span>
-</span><span data-line="1182">    <span class="c1"># has a parent, and the name is the key the edge is kept under either way.</span>
-</span><span data-line="1183">    <span class="c1"># `home` is the *new* session's account; the caller is registered in its own, so</span>
-</span><span data-line="1184">    <span class="c1"># `record_spawn` is deliberately not told one. Passing the target's would make</span>
-</span><span data-line="1185">    <span class="c1"># `--profile` record an 8-character session-id prefix as the parent.</span>
-</span><span data-line="1186">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_spawn</span>
-</span><span data-line="1187">
-</span><span data-line="1188">    <span class="n">record</span> <span class="o">=</span> <span class="n">record_spawn</span><span class="p">(</span>
-</span><span data-line="1189">        <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1190">        <span class="n">child_session_id</span><span class="o">=</span><span class="n">found</span><span class="o">.</span><span class="n">session_id</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1191">        <span class="n">project</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1192">        <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
-</span><span data-line="1193">    <span class="p">)</span>
-</span><span data-line="1194">    <span class="n">parent</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">record</span> <span class="k">else</span> <span class="p">{}</span>
-</span><span data-line="1195">    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1196">        <span class="n">shown</span> <span class="o">=</span> <span class="n">pane_state</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">if</span> <span class="n">reader</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="1197">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1198">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1199">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="1200">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1201">            <span class="s2">"how"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">: no registry file for </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> within </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span>
-</span><span data-line="1202">            <span class="o">+</span> <span class="p">(</span>
-</span><span data-line="1203">                <span class="sa">f</span><span class="s2">"; the session is showing </span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="1204">                <span class="k">if</span> <span class="n">shown</span>
-</span><span data-line="1205">                <span class="k">else</span> <span class="s2">"; nothing is showing"</span>
-</span><span data-line="1206">                <span class="o">+</span> <span class="p">(</span>
-</span><span data-line="1207">                    <span class="s2">" (the tmux session is gone: claude likely exited at startup -- "</span>
-</span><span data-line="1208">                    <span class="sa">f</span><span class="s2">"run `</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">argv</span><span class="p">[:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">prompt</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="kc">None</span><span class="p">])</span><span class="si">}</span><span class="s2">` by hand to see why)"</span>
-</span><span data-line="1209">                    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="ow">and</span> <span class="n">reader</span>
-</span><span data-line="1210">                    <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="1211">                <span class="p">)</span>
-</span><span data-line="1212">            <span class="p">),</span>
-</span><span data-line="1213">            <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
-</span><span data-line="1214">            <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
-</span><span data-line="1215">            <span class="s2">"model"</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
-</span><span data-line="1216">        <span class="p">}</span>
-</span><span data-line="1217">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1218">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1219">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
-</span><span data-line="1220">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-</span><span data-line="1221">        <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
-</span><span data-line="1222">        <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
-</span><span data-line="1223">        <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
-</span><span data-line="1224">        <span class="s2">"model"</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
-</span><span data-line="1225">    <span class="p">}</span></div>
+</span><span data-line="1075"><span class="sd">    a test's ``tmp_path`` being why it is an argument), keeping the head of ``prompt``</span>
+</span><span data-line="1076"><span class="sd">    and the URLs and paths it names (:func:`crowsnest.lineage.brief_of`, #141). Its ``name`` is empty when this</span>
+</span><span data-line="1077"><span class="sd">    command was not run from inside a session -- the honest answer for a person at a shell</span>
+</span><span data-line="1078"><span class="sd">    prompt -- and the whole dict is ``{}`` only when the record could not be written.</span>
+</span><span data-line="1079">
+</span><span data-line="1080"><span class="sd">    **Model.** ``model=None`` (the default) is ``spawn_model`` from the config file, else</span>
+</span><span data-line="1081"><span class="sd">    :data:`DFLT_SPAWN_MODEL`; ``''`` passes no ``--model``, so the account's settings</span>
+</span><span data-line="1082"><span class="sd">    decide, as every spawn did before #160.</span>
+</span><span data-line="1083">
+</span><span data-line="1084"><span class="sd">    **Permissions.** ``permission_mode`` picks the new session's permission mode;</span>
+</span><span data-line="1085"><span class="sd">    ``None`` (the default) means the spawning session's own mode, else -- from outside</span>
+</span><span data-line="1086"><span class="sd">    any session -- the config file's ``spawn_permission_mode``, else claude's default</span>
+</span><span data-line="1087"><span class="sd">    (:func:`pick_permission_mode`). A</span>
+</span><span data-line="1088"><span class="sd">    session spawned by one running with ``--dangerously-skip-permissions`` therefore</span>
+</span><span data-line="1089"><span class="sd">    starts that way too, exactly as before this was a choice; ``'bypass'`` asks for it</span>
+</span><span data-line="1090"><span class="sd">    outright.</span>
+</span><span data-line="1091">
+</span><span data-line="1092"><span class="sd">    **Trust.** A folder the account has never opened stops the new session at Claude</span>
+</span><span data-line="1093"><span class="sd">    Code's workspace trust dialog, where it never registers. With one of this module's</span>
+</span><span data-line="1094"><span class="sd">    own spawners, ``cwd`` and every ``add_dirs`` entry are checked first</span>
+</span><span data-line="1095"><span class="sd">    (:func:`trusted`) and an untrusted one raises :class:`UntrustedFolder` naming it and</span>
+</span><span data-line="1096"><span class="sd">    the one-time fix. ``trust=True`` -- only ever a person's explicit flag -- records the</span>
+</span><span data-line="1097"><span class="sd">    folders as trusted instead. A caller's ``spawner`` is not checked: it may run</span>
+</span><span data-line="1098"><span class="sd">    elsewhere, where this machine's record says nothing. When the registry never sees the</span>
+</span><span data-line="1099"><span class="sd">    session, ``peek`` (``(name) -&gt; str``; tmux's pane by default) says what it displays,</span>
+</span><span data-line="1100"><span class="sd">    and ``how`` carries that.</span>
+</span><span data-line="1101">
+</span><span data-line="1102"><span class="sd">    A name that a live session already carries is refused (``ValueError``): the name is</span>
+</span><span data-line="1103"><span class="sd">    the address for everything after -- ``show``, ``open``, a message -- and two sessions</span>
+</span><span data-line="1104"><span class="sd">    behind one name make all of them ambiguous, and write one ledger. Every configured</span>
+</span><span data-line="1105"><span class="sd">    home is checked, not only the one the session starts in (crowsnest#42). So is a name</span>
+</span><span data-line="1106"><span class="sd">    whose ledger file already belongs to a *different* name (``cn/xa`` and ``cn:xa``</span>
+</span><span data-line="1107"><span class="sd">    share ``cn-xa.md``). Pick another, a suffix will do.</span>
+</span><span data-line="1108"><span class="sd">    """</span>
+</span><span data-line="1109">    <span class="n">home</span> <span class="o">=</span> <span class="n">account_home</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1110">    <span class="n">_refuse_taken_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1111">    <span class="n">how</span> <span class="o">=</span> <span class="s2">"custom"</span>
+</span><span data-line="1112">    <span class="n">builtin</span> <span class="o">=</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="1113">    <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1114">        <span class="n">spawner</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="n">default_spawner</span><span class="p">()</span>
+</span><span data-line="1115">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">in</span> <span class="n">_BUILTIN_SPAWNERS</span><span class="p">:</span>
+</span><span data-line="1116">            <span class="c1"># Ours alone are told which config file names the launcher. The seam's</span>
+</span><span data-line="1117">            <span class="c1"># signature stays `(argv, *, cwd, name, home)`, so nothing else -- a</span>
+</span><span data-line="1118">            <span class="c1"># caller's spawner, a replaced `default_spawner` -- is handed a keyword it</span>
+</span><span data-line="1119">            <span class="c1"># never asked for. Anything else resolves its own binary for its own target.</span>
+</span><span data-line="1120">            <span class="n">spawner</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">spawner</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1121">    <span class="k">if</span> <span class="n">builtin</span><span class="p">:</span>
+</span><span data-line="1122">        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="o">*</span><span class="n">add_dirs</span><span class="p">):</span>
+</span><span data-line="1123">            <span class="k">if</span> <span class="n">trusted</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+</span><span data-line="1124">                <span class="k">if</span> <span class="n">trust</span><span class="p">:</span>
+</span><span data-line="1125">                    <span class="n">_accept_trust</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="1126">                    <span class="k">continue</span>
+</span><span data-line="1127">                <span class="k">raise</span> <span class="n">UntrustedFolder</span><span class="p">(</span>
+</span><span data-line="1128">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2"> is not trusted for this account, so the session would "</span>
+</span><span data-line="1129">                    <span class="s2">"stop at Claude Code's trust dialog and never register. Open it "</span>
+</span><span data-line="1130">                    <span class="sa">f</span><span class="s2">"once by hand (`cd </span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2"> &amp;&amp; claude`, accept the dialog), or "</span>
+</span><span data-line="1131">                    <span class="s2">"pass --trust to record it as trusted."</span>
+</span><span data-line="1132">                <span class="p">)</span>
+</span><span data-line="1133">    <span class="n">argv</span> <span class="o">=</span> <span class="n">claude_argv</span><span class="p">(</span>
+</span><span data-line="1134">        <span class="n">name</span><span class="p">,</span>
+</span><span data-line="1135">        <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
+</span><span data-line="1136">        <span class="n">model</span><span class="o">=</span><span class="p">(</span><span class="n">model</span> <span class="o">:=</span> <span class="n">pick_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)),</span>
+</span><span data-line="1137">        <span class="n">effort</span><span class="o">=</span><span class="n">effort</span><span class="p">,</span>
+</span><span data-line="1138">        <span class="n">remote_control</span><span class="o">=</span><span class="n">remote_control</span><span class="p">,</span>
+</span><span data-line="1139">        <span class="n">add_dirs</span><span class="o">=</span><span class="n">add_dirs</span><span class="p">,</span>
+</span><span data-line="1140">        <span class="n">binary</span><span class="o">=</span><span class="n">binary</span><span class="p">,</span>
+</span><span data-line="1141">        <span class="n">permission_mode</span><span class="o">=</span><span class="n">pick_permission_mode</span><span class="p">(</span><span class="n">permission_mode</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
+</span><span data-line="1142">    <span class="p">)</span>
+</span><span data-line="1143">    <span class="n">spawner</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="1144">    <span class="n">where</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">home</span><span class="p">)</span> <span class="k">if</span> <span class="n">home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="1145">    <span class="n">reader</span> <span class="o">=</span> <span class="n">peek</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_tmux_peek</span> <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="1146">    <span class="n">press</span> <span class="o">=</span> <span class="n">press</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_tmux_press</span> <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="1147">    <span class="n">close</span> <span class="o">=</span> <span class="n">close</span> <span class="ow">or</span> <span class="p">(</span><span class="n">_tmux_close</span> <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="1148">    <span class="n">keys_sent</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="1149">
+</span><span data-line="1150">    <span class="k">def</span><span class="w"> </span><span class="nf">answer_dialog</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="1151"><span class="w">        </span><span class="sd">"""Send the next key to a dialog the pane shows; whether one is showing."""</span>
+</span><span data-line="1152">        <span class="n">shown</span> <span class="o">=</span> <span class="n">startup_dialog</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+</span><span data-line="1153">        <span class="k">if</span> <span class="n">shown</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1154">            <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="1155">        <span class="n">dialog</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">shown</span>
+</span><span data-line="1156">        <span class="k">if</span> <span class="ow">not</span> <span class="n">trust</span><span class="p">:</span>
+</span><span data-line="1157">            <span class="k">if</span> <span class="n">close</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1158">                <span class="n">close</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="1159">            <span class="k">raise</span> <span class="n">UntrustedFolder</span><span class="p">(</span>
+</span><span data-line="1160">                <span class="sa">f</span><span class="s2">"session </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> stopped at Claude Code's </span><span class="si">{</span><span class="n">dialog</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> dialog for "</span>
+</span><span data-line="1161">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cwd</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="1162">                <span class="o">+</span> <span class="p">(</span><span class="s2">" and was closed"</span> <span class="k">if</span> <span class="n">close</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">", where it still waits"</span><span class="p">)</span>
+</span><span data-line="1163">                <span class="o">+</span> <span class="sa">f</span><span class="s2">". Open it once by hand (`cd </span><span class="si">{</span><span class="n">cwd</span><span class="si">}</span><span class="s2"> &amp;&amp; claude`, </span><span class="si">{</span><span class="n">dialog</span><span class="o">.</span><span class="n">fix</span><span class="si">}</span><span class="s2">), "</span>
+</span><span data-line="1164">                <span class="s2">"or spawn again with --trust."</span>
+</span><span data-line="1165">            <span class="p">)</span>
+</span><span data-line="1166">        <span class="k">if</span> <span class="n">keys_sent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dialog</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">_MAX_DIALOG_KEYS</span><span class="p">:</span>
+</span><span data-line="1167">            <span class="n">keys_sent</span><span class="p">[</span><span class="n">dialog</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">keys_sent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dialog</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span data-line="1168">            <span class="n">press</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+</span><span data-line="1169">        <span class="k">return</span> <span class="kc">True</span>
+</span><span data-line="1170">
+</span><span data-line="1171">    <span class="n">watch</span> <span class="o">=</span> <span class="n">builtin</span> <span class="ow">and</span> <span class="n">reader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">press</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="1172">    <span class="n">deadline</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">+</span> <span class="n">wait</span>
+</span><span data-line="1173">    <span class="n">found</span> <span class="o">=</span> <span class="n">_find_by_name</span><span class="p">(</span>
+</span><span data-line="1174">        <span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">,</span> <span class="n">on_poll</span><span class="o">=</span><span class="n">answer_dialog</span> <span class="k">if</span> <span class="n">watch</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="1175">    <span class="p">)</span>
+</span><span data-line="1176">    <span class="c1"># Registered is not settled: a dialog can follow the one that held registration up</span>
+</span><span data-line="1177">    <span class="c1"># (trust, then external imports), so the pane is watched until it shows none.</span>
+</span><span data-line="1178">    <span class="k">while</span> <span class="n">watch</span> <span class="ow">and</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">answer_dialog</span><span class="p">():</span>
+</span><span data-line="1179">        <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">deadline</span><span class="p">:</span>
+</span><span data-line="1180">            <span class="k">break</span>
+</span><span data-line="1181">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">_POLL_INTERVAL</span><span class="p">)</span>
+</span><span data-line="1182">    <span class="c1"># Recorded whether or not the registry saw it: a session that started slowly still</span>
+</span><span data-line="1183">    <span class="c1"># has a parent, and the name is the key the edge is kept under either way.</span>
+</span><span data-line="1184">    <span class="c1"># `home` is the *new* session's account; the caller is registered in its own, so</span>
+</span><span data-line="1185">    <span class="c1"># `record_spawn` is deliberately not told one. Passing the target's would make</span>
+</span><span data-line="1186">    <span class="c1"># `--profile` record an 8-character session-id prefix as the parent.</span>
+</span><span data-line="1187">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">record_spawn</span>
+</span><span data-line="1188">
+</span><span data-line="1189">    <span class="n">record</span> <span class="o">=</span> <span class="n">record_spawn</span><span class="p">(</span>
+</span><span data-line="1190">        <span class="n">name</span><span class="p">,</span>
+</span><span data-line="1191">        <span class="n">child_session_id</span><span class="o">=</span><span class="n">found</span><span class="o">.</span><span class="n">session_id</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1192">        <span class="n">project</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">cwd</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1193">        <span class="n">lineage_path</span><span class="o">=</span><span class="n">lineage_path</span><span class="p">,</span>
+</span><span data-line="1194">        <span class="n">brief</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
+</span><span data-line="1195">    <span class="p">)</span>
+</span><span data-line="1196">    <span class="n">parent</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">record</span> <span class="k">else</span> <span class="p">{}</span>
+</span><span data-line="1197">    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1198">        <span class="n">shown</span> <span class="o">=</span> <span class="n">pane_state</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">if</span> <span class="n">reader</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="1199">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1200">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="1201">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="1202">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1203">            <span class="s2">"how"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">: no registry file for </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> within </span><span class="si">{</span><span class="n">wait</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">s"</span>
+</span><span data-line="1204">            <span class="o">+</span> <span class="p">(</span>
+</span><span data-line="1205">                <span class="sa">f</span><span class="s2">"; the session is showing </span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="1206">                <span class="k">if</span> <span class="n">shown</span>
+</span><span data-line="1207">                <span class="k">else</span> <span class="s2">"; nothing is showing"</span>
+</span><span data-line="1208">                <span class="o">+</span> <span class="p">(</span>
+</span><span data-line="1209">                    <span class="s2">" (the tmux session is gone: claude likely exited at startup -- "</span>
+</span><span data-line="1210">                    <span class="sa">f</span><span class="s2">"run `</span><span class="si">{</span><span class="n">shlex</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">argv</span><span class="p">[:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">prompt</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="kc">None</span><span class="p">])</span><span class="si">}</span><span class="s2">` by hand to see why)"</span>
+</span><span data-line="1211">                    <span class="k">if</span> <span class="n">how</span> <span class="o">==</span> <span class="s2">"tmux"</span> <span class="ow">and</span> <span class="n">reader</span>
+</span><span data-line="1212">                    <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="1213">                <span class="p">)</span>
+</span><span data-line="1214">            <span class="p">),</span>
+</span><span data-line="1215">            <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+</span><span data-line="1216">            <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
+</span><span data-line="1217">            <span class="s2">"model"</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
+</span><span data-line="1218">        <span class="p">}</span>
+</span><span data-line="1219">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1220">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="1221">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
+</span><span data-line="1222">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="1223">        <span class="s2">"how"</span><span class="p">:</span> <span class="n">how</span><span class="p">,</span>
+</span><span data-line="1224">        <span class="s2">"home"</span><span class="p">:</span> <span class="n">where</span><span class="p">,</span>
+</span><span data-line="1225">        <span class="s2">"parent"</span><span class="p">:</span> <span class="n">parent</span><span class="p">,</span>
+</span><span data-line="1226">        <span class="s2">"model"</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
+</span><span data-line="1227">    <span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -1401,7 +1403,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=33adb31a"></script>
+      <script src="../../_static/documentation_options.js?v=97d53703"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

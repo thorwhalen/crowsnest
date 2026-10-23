@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-23T10:14:29Z",
+  "built_at": "2026-10-23T10:17:14Z",
   "package": {
     "name": "crowsnest",
-    "version": "0.0.102",
+    "version": "0.0.103",
     "display_name": "crowsnest",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "005e8906a21c20cb5e5a579aea8179a17ca1f2d4",
-    "short_commit": "005e890",
+    "commit": "6a3f598930db8b18b20dd0ba9154d4d540599b27",
+    "short_commit": "6a3f598",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/crowsnest",
-    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/005e8906a21c20cb5e5a579aea8179a17ca1f2d4",
+    "commit_url": "https://github.com/thorwhalen/crowsnest/commit/6a3f598930db8b18b20dd0ba9154d4d540599b27",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/crowsnest",
-    "sha": "005e8906a21c20cb5e5a579aea8179a17ca1f2d4",
+    "sha": "6a3f598930db8b18b20dd0ba9154d4d540599b27",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "39937467107",
-    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/39937467107",
+    "run_id": "39937767656",
+    "run_url": "https://github.com/thorwhalen/crowsnest/actions/runs/39937767656",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -60,11 +60,11 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.102",
+    "latest": "0.0.103",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 005e8906a21c20cb5e5a579aea8179a17ca1f2d4\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/crowsnest && cd crowsnest\ngit checkout 6a3f598930db8b18b20dd0ba9154d4d540599b27\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,

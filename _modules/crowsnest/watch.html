@@ -769,19 +769,18 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="589">        <span class="n">announced</span> <span class="o">=</span> <span class="p">{</span>
 </span><span data-line="590">            <span class="n">sid</span>
 </span><span data-line="591">            <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">announced</span>
-</span><span data-line="592">            <span class="k">if</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">this_tick</span>
-</span><span data-line="593">            <span class="ow">or</span> <span class="p">(</span><span class="n">sid</span> <span class="ow">in</span> <span class="n">after</span> <span class="ow">and</span> <span class="n">after</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">)</span>
-</span><span data-line="594">        <span class="p">}</span>
-</span><span data-line="595">        <span class="k">yield from</span> <span class="n">attention_wakes</span><span class="p">(</span>
-</span><span data-line="596">            <span class="n">store</span><span class="o">=</span><span class="n">attention_store</span><span class="p">,</span>
-</span><span data-line="597">            <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="598">            <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
-</span><span data-line="599">            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span data-line="600">            <span class="n">announced</span><span class="o">=</span><span class="n">woken</span><span class="p">,</span>
-</span><span data-line="601">            <span class="n">row_context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
-</span><span data-line="602">        <span class="p">)</span>
-</span><span data-line="603">        <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
-</span><span data-line="604">        <span class="n">taken</span> <span class="o">+=</span> <span class="mi">1</span></div>
+</span><span data-line="592">            <span class="k">if</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">this_tick</span> <span class="ow">or</span> <span class="p">(</span><span class="n">sid</span> <span class="ow">in</span> <span class="n">after</span> <span class="ow">and</span> <span class="n">after</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">)</span>
+</span><span data-line="593">        <span class="p">}</span>
+</span><span data-line="594">        <span class="k">yield from</span> <span class="n">attention_wakes</span><span class="p">(</span>
+</span><span data-line="595">            <span class="n">store</span><span class="o">=</span><span class="n">attention_store</span><span class="p">,</span>
+</span><span data-line="596">            <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="597">            <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span>
+</span><span data-line="598">            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span data-line="599">            <span class="n">announced</span><span class="o">=</span><span class="n">woken</span><span class="p">,</span>
+</span><span data-line="600">            <span class="n">row_context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
+</span><span data-line="601">        <span class="p">)</span>
+</span><span data-line="602">        <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+</span><span data-line="603">        <span class="n">taken</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -810,7 +809,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=33adb31a"></script>
+      <script src="../../_static/documentation_options.js?v=97d53703"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

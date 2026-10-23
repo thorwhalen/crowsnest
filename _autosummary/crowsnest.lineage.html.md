@@ -384,7 +384,7 @@ any of the user’s terminals on this machine, whichever account a terminal is s
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.lineage.record_spawn(child, , child_session_id='', project='', home=None, environ=None, lineage_path=None, at='')
+### crowsnest.lineage.record_spawn(child, , child_session_id='', project='', home=None, environ=None, lineage_path=None, at='', brief='')
 
 Write the `spawn` line for a session just created. **Never raises.**
 
@@ -405,7 +405,7 @@ Returns the record written, or `{}` when nothing could be written.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.lineage.spawn_event(child, , child_session_id='', project='', parent=None, at='', source='event', confidence='recorded')
+### crowsnest.lineage.spawn_event(child, , child_session_id='', project='', parent=None, at='', source='event', confidence='recorded', brief='')
 
 One `spawn` line for the event log, shaped like every other line in it.
 
@@ -419,6 +419,9 @@ that a reader can tell “spawned by nobody we could name” (`parent` present, 
 >>> line['event'], line['name'], line['parent']['name']
 ('spawn', 'kid', 'boss')
 ```
+
+`brief` is the prompt the child was started with; the line keeps `brief_of()`
+it, under `brief`, and has no such field when there was none.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

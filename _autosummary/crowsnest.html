@@ -576,7 +576,8 @@ register.</p>
 spawn graph on the report, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">lineage</span></code>, “whose children are these six” –
 is recovery work if it is not written down now, so one <code class="docutils literal notranslate"><span class="pre">spawn</span></code> line goes into
 <code class="docutils literal notranslate"><span class="pre">lineage.jsonl</span></code> (<a class="reference internal" href="crowsnest.lineage.html#crowsnest.lineage.record_spawn" title="crowsnest.lineage.record_spawn"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.lineage.record_spawn()</span></code></a>; <code class="docutils literal notranslate"><span class="pre">lineage_path</span></code> is where,
-a test’s <code class="docutils literal notranslate"><span class="pre">tmp_path</span></code> being why it is an argument). Its <code class="docutils literal notranslate"><span class="pre">name</span></code> is empty when this
+a test’s <code class="docutils literal notranslate"><span class="pre">tmp_path</span></code> being why it is an argument), keeping the head of <code class="docutils literal notranslate"><span class="pre">prompt</span></code>
+and the URLs and paths it names (<code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.lineage.brief_of()</span></code>, #141). Its <code class="docutils literal notranslate"><span class="pre">name</span></code> is empty when this
 command was not run from inside a session – the honest answer for a person at a shell
 prompt – and the whole dict is <code class="docutils literal notranslate"><span class="pre">{}</span></code> only when the record could not be written.</p>
 <p><strong>Model.</strong> <code class="docutils literal notranslate"><span class="pre">model=None</span></code> (the default) is <code class="docutils literal notranslate"><span class="pre">spawn_model</span></code> from the config file, else
@@ -787,7 +788,7 @@ silently wrote nothing would be worse than a stack trace.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=33adb31a"></script>
+      <script src="../_static/documentation_options.js?v=97d53703"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
