@@ -536,6 +536,64 @@ def synopsis(
     return "\n".join([head, *(body or ["nothing to say"])])
 
 
+def handoff(
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    ledger_dir: str | None = None,
+    out: str = "",
+    json: bool = False,
+):
+    """The page a fresh watcher starts from: what needs you, who is alive with which
+    brief, and the watch filter, from files rather than a session's memory.
+
+    `--out FILE` writes it there (Markdown) and prints the path; otherwise it prints it.
+    Replacing a long-lived watcher is then: `crowsnest handoff --out FILE`, start the new
+    one, and have it read FILE first.
+    """
+    import json as _json
+
+    found = tools.handoff(home=home, all_homes=all_homes, ledger_dir=ledger_dir)
+    if json:
+        return _json.dumps(found, indent=2)
+    page = _handoff_page(found)
+    if not out:
+        return page
+    target = Path(out).expanduser()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(page, encoding="utf-8")
+    return f"wrote {target}"
+
+
+def _handoff_page(found: dict) -> str:
+    """:func:`tools.handoff`'s dict as Markdown, one line per item, no hard wraps."""
+    lines = [f"# Handoff {_when(found['made_at'])}", ""]
+    asks = found["needs_you"]
+    lines.append(f"## Needs you ({len(asks)})")
+    lines += [
+        f"- {_when(a['said_at'])} **{a['session']}**: {a['text']}" for a in asks
+    ] or ["- nothing"]
+    sessions = found["sessions"]
+    lines += ["", f"## Sessions ({len(sessions)} live)"]
+    for s in sessions:
+        head = " · ".join(p for p in (s["status"], s["project"], s["model"]) if p)
+        brief = s["brief"]
+        said = f" — brief: {brief['head']}" if brief.get("head") else ""
+        refs = f" ({', '.join(brief['refs'])})" if brief.get("refs") else ""
+        lines.append(f"- **{s['session']}** {head}{said}{refs}")
+    kinds = found["watch"]["kinds"]
+    mute = found["watch"]["mute"]
+    lines += [
+        "",
+        "## Watch filter",
+        f"- kinds: {', '.join(kinds) if kinds else 'all'}",
+        f"- mute: {', '.join(mute) if mute else 'none'}",
+        "",
+        "Each session's ledger: `crowsnest ledger <name>`.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def questions(
     *,
     home: str | None = None,
@@ -1401,6 +1459,7 @@ _commands = [
     triage,
     groups,
     synopsis,
+    handoff,
     questions,
     report,
     publish,

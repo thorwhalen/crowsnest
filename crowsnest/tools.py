@@ -532,6 +532,70 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def handoff(
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    ledger_dir: str | Path | None = None,
+    lineage_path: str | Path | None = None,
+) -> dict:
+    """What a fresh watcher needs to take over from one being replaced (#141, step 5).
+
+    Built from files, never from a session's context: every ask a session has made of
+    the person (:func:`triage`'s ``needs_you``, one entry per ask, on one line), every
+    live session with its status, model and the brief it was spawned with
+    (:func:`crowsnest.lineage.spawn_briefs`), and the ``[watch]`` filter the stream runs
+    under. ``crowsnest handoff --out FILE`` writes it as a page the new watcher reads
+    first; the ledgers stay where they are, one ``crowsnest ledger <name>`` away.
+    """
+    from crowsnest.config import watch_settings
+    from crowsnest.lineage import spawn_briefs
+
+    rows = roster(home=home, all_homes=all_homes, config=config, activity=False)[
+        "sessions"
+    ]
+    triaged = triage(home=home, all_homes=all_homes, config=config, ledger_dir=ledger_dir)
+    briefs = spawn_briefs(lineage_path=lineage_path)
+    needs_you = [
+        {
+            "session": _tag_of(row),
+            "text": " ".join(str(ask.get("text") or "").split()),
+            "said_at": str(ask.get("said_at") or ""),
+        }
+        for row in triaged["groups"].get("needs_you", ())
+        for ask in (row.get("verdict") or {}).get("asks")
+        or [{"text": (row.get("verdict") or {}).get("reason"), "said_at": row.get("said_at")}]
+    ]
+    sessions = [
+        {
+            "session": _tag_of(row),
+            "status": row.get("status", ""),
+            "project": row.get("project", ""),
+            "model": row.get("model", ""),
+            "brief": briefs.get(str(row.get("session_id") or ""))
+            or briefs.get(f"name:{row.get('label')}")
+            or {},
+        }
+        for row in rows
+    ]
+    table = watch_settings(path=config)
+    return {
+        "made_at": _now(),
+        "needs_you": needs_you,
+        "sessions": sessions,
+        "watch": {
+            "kinds": sorted(table.kinds) if table.kinds is not None else None,
+            "mute": sorted(table.mute),
+        },
+    }
+
+
+def _tag_of(row: Mapping) -> str:
+    label = str(row.get("label") or "")
+    return f"{label}@{row['home']}" if row.get("home") else label
+
+
 def show(
     session: str,
     *,
