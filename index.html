@@ -388,7 +388,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">spawn_permission_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bypass"</span><span class="w">   </span><span class="c1"># or "acceptEdits", "plan", "auto", ...; "" = Claude Code's default</span>
 </span></pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">--permission-mode</span> <span class="pre">MODE</span></code> on <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> (or <code class="docutils literal notranslate"><span class="pre">permission_mode=</span></code> in Python) overrides both for one spawn. <code class="docutils literal notranslate"><span class="pre">bypass</span></code> is emitted as <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code>, which Claude Code refuses as root unless <code class="docutils literal notranslate"><span class="pre">IS_SANDBOX=1</span></code> is set (#101). An unknown mode name is refused before anything starts.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--permission-mode</span> <span class="pre">MODE</span></code> on <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> (or <code class="docutils literal notranslate"><span class="pre">permission_mode=</span></code> in Python) overrides both for one spawn. <code class="docutils literal notranslate"><span class="pre">bypass</span></code> is emitted as <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code>, which Claude Code refuses as root unless <code class="docutils literal notranslate"><span class="pre">IS_SANDBOX=1</span></code> is set (#101). So as root crowsnest passes it only where it will work: <code class="docutils literal notranslate"><span class="pre">IS_SANDBOX=1</span></code> is in the environment of the spawn (crowsnest hands it on to the new session), or the config file says <code class="docutils literal notranslate"><span class="pre">root_bypass_ok</span> <span class="pre">=</span> <span class="pre">true</span></code>, for a <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code> launcher that sets the variable itself (#161). Anywhere else an explicit <code class="docutils literal notranslate"><span class="pre">--permission-mode</span> <span class="pre">bypass</span></code> is refused, and an inherited or configured one is dropped with a warning naming these two fixes. An unknown mode name is refused before anything starts.</p>
 </section>
 </section>
 <section id="the-ledger-what-a-session-leaves-behind">
@@ -551,7 +551,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 10:22 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/414e9c291ca6262e0ba7530a96535d3eebf1a8ce">414e9c2</a> (main) · crowsnest 0.0.95 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 09:50 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e">ac4908a</a> (main) · crowsnest 0.0.96 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -586,7 +586,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=60a9f236"></script>
+      <script src="_static/documentation_options.js?v=5751785c"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

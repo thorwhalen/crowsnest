@@ -2,18 +2,18 @@
 
 # About this build
 
-This documentation was built on **2026-10-19 10:22 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/414e9c291ca6262e0ba7530a96535d3eebf1a8ce"><code>414e9c2</code></a> on branch <code>main</code>, for **crowsnest 0.0.95** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 09:50 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e"><code>ac4908a</code></a> on branch <code>main</code>, for **crowsnest 0.0.96** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.95) is behind the latest release on PyPI (0.0.96): `pip install crowsnest` gives newer code than these docs describe.
+- The documented version (0.0.96) is behind the latest release on PyPI (0.0.97): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/414e9c291ca6262e0ba7530a96535d3eebf1a8ce"><code>414e9c291ca6262e0ba7530a96535d3eebf1a8ce</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e"><code>ac4908a04e1b5972692a91ecbf96fcf5e7172d8e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -24,16 +24,16 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39236685110">39236685110</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39934576823">39934576823</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>414e9c291ca6262e0ba7530a96535d3eebf1a8ce</code> (in the history of the built commit) |
+| Event commit | <code>ac4908a04e1b5972692a91ecbf96fcf5e7172d8e</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.17  |
-| Sphinx   | 9.1.0   |
+| epythet  | 0.2.22  |
+| Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
 
@@ -51,14 +51,14 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.96/">0.0.96</a>, newer than the documented version (0.0.95).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.97/">0.0.97</a>, newer than the documented version (0.0.96).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 414e9c291ca6262e0ba7530a96535d3eebf1a8ce
-pip install "epythet==0.2.17"
+git checkout ac4908a04e1b5972692a91ecbf96fcf5e7172d8e
+pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

@@ -1,4 +1,4 @@
-> built 2026-10-19 10:22 UTC from 414e9c2 (main) · crowsnest 0.0.95. Details: build_info.json
+> built 2026-10-23 09:50 UTC from ac4908a (main) · crowsnest 0.0.96. Details: build_info.json
 
 # index.html.md
 
@@ -251,7 +251,7 @@ By default, the mode of the session that spawned it. A session started with `--d
 spawn_permission_mode = "bypass"   # or "acceptEdits", "plan", "auto", ...; "" = Claude Code's default
 ```
 
-`--permission-mode MODE` on `crowsnest spawn` (or `permission_mode=` in Python) overrides both for one spawn. `bypass` is emitted as `--dangerously-skip-permissions`, which Claude Code refuses as root unless `IS_SANDBOX=1` is set (#101). An unknown mode name is refused before anything starts.
+`--permission-mode MODE` on `crowsnest spawn` (or `permission_mode=` in Python) overrides both for one spawn. `bypass` is emitted as `--dangerously-skip-permissions`, which Claude Code refuses as root unless `IS_SANDBOX=1` is set (#101). So as root crowsnest passes it only where it will work: `IS_SANDBOX=1` is in the environment of the spawn (crowsnest hands it on to the new session), or the config file says `root_bypass_ok = true`, for a `claude_bin` launcher that sets the variable itself (#161). Anywhere else an explicit `--permission-mode bypass` is refused, and an inherited or configured one is dropped with a warning naming these two fixes. An unknown mode name is refused before anything starts.
 
 ## The ledger: what a session leaves behind
 
@@ -1665,15 +1665,16 @@ and nothing in this module pretends otherwise.
 
 ### Functions
 
-| [`attention_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings)(\*[, path])            | The config file's `[attention]` table, or the defaults when it has none.         |
-|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`claude_bin_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)(\*[, path])            | The `claude_bin` the config file names, or `''` when it names none.              |
-| [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])                       | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
-| [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])              | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
-| [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                         | The configured homes, or the default one when the config file names none.        |
-| [`publish_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.           |
-| [`report_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.            |
-| [`spawn_permission_mode_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none. |
+| [`attention_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.attention_settings)(\*[, path])            | The config file's `[attention]` table, or the defaults when it has none.           |
+|--------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`claude_bin_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)(\*[, path])            | The `claude_bin` the config file names, or `''` when it names none.                |
+| [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])                       | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`.   |
+| [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])              | The homes the config file's `[[homes]]` entries name; `[]` when it names none.     |
+| [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                         | The configured homes, or the default one when the config file names none.          |
+| [`publish_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.             |
+| [`report_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.              |
+| [`root_bypass_ok_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.root_bypass_ok_setting)(\*[, path])        | Whether the config file says the bypass flag works as root here (default `False`). |
+| [`spawn_permission_mode_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none.   |
 
 ### Classes
 
@@ -1856,6 +1857,23 @@ end. A key the table does not know is an error, as in `[attention]`.
 
 * **Return type:**
   [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)
+
+### crowsnest.config.root_bypass_ok_setting(, path=None)
+
+Whether the config file says the bypass flag works as root here (default `False`).
+
+```toml
+claude_bin = "/usr/local/bin/claude-launcher"   # sets IS_SANDBOX=1 for root
+root_bypass_ok = true
+```
+
+Claude Code refuses `--dangerously-skip-permissions` to root unless its own
+environment has `IS_SANDBOX=1`. When this process’s environment has it, crowsnest
+sees that for itself; a launcher that sets it only for the child is invisible from
+here, and this key is how a person says so (#161).
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.config.spawn_permission_mode_setting(, path=None)
 
@@ -7081,18 +7099,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-19 10:22 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/414e9c291ca6262e0ba7530a96535d3eebf1a8ce"><code>414e9c2</code></a> on branch <code>main</code>, for **crowsnest 0.0.95** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-23 09:50 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e"><code>ac4908a</code></a> on branch <code>main</code>, for **crowsnest 0.0.96** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.95) is behind the latest release on PyPI (0.0.96): `pip install crowsnest` gives newer code than these docs describe.
+- The documented version (0.0.96) is behind the latest release on PyPI (0.0.97): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/414e9c291ca6262e0ba7530a96535d3eebf1a8ce"><code>414e9c291ca6262e0ba7530a96535d3eebf1a8ce</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/ac4908a04e1b5972692a91ecbf96fcf5e7172d8e"><code>ac4908a04e1b5972692a91ecbf96fcf5e7172d8e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7103,16 +7121,16 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39236685110">39236685110</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39934576823">39934576823</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>414e9c291ca6262e0ba7530a96535d3eebf1a8ce</code> (in the history of the built commit) |
+| Event commit | <code>ac4908a04e1b5972692a91ecbf96fcf5e7172d8e</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.17  |
-| Sphinx   | 9.1.0   |
+| epythet  | 0.2.22  |
+| Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
 
@@ -7130,14 +7148,14 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.96/">0.0.96</a>, newer than the documented version (0.0.95).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.97/">0.0.97</a>, newer than the documented version (0.0.96).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 414e9c291ca6262e0ba7530a96535d3eebf1a8ce
-pip install "epythet==0.2.17"
+git checkout ac4908a04e1b5972692a91ecbf96fcf5e7172d8e
+pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

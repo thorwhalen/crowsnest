@@ -83,15 +83,16 @@ and nothing in this module pretends otherwise.
 
 ### Functions
 
-| [`attention_settings`](#crowsnest.config.attention_settings)(\*[, path])            | The config file's `[attention]` table, or the defaults when it has none.         |
-|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`claude_bin_setting`](#crowsnest.config.claude_bin_setting)(\*[, path])            | The `claude_bin` the config file names, or `''` when it names none.              |
-| [`config_path`](#crowsnest.config.config_path)([path])                       | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`. |
-| [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])              | The homes the config file's `[[homes]]` entries name; `[]` when it names none.   |
-| [`homes`](#crowsnest.config.homes)(\*[, path])                         | The configured homes, or the default one when the config file names none.        |
-| [`publish_settings`](#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.           |
-| [`report_settings`](#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.            |
-| [`spawn_permission_mode_setting`](#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none. |
+| [`attention_settings`](#crowsnest.config.attention_settings)(\*[, path])            | The config file's `[attention]` table, or the defaults when it has none.           |
+|--------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`claude_bin_setting`](#crowsnest.config.claude_bin_setting)(\*[, path])            | The `claude_bin` the config file names, or `''` when it names none.                |
+| [`config_path`](#crowsnest.config.config_path)([path])                       | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`.   |
+| [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])              | The homes the config file's `[[homes]]` entries name; `[]` when it names none.     |
+| [`homes`](#crowsnest.config.homes)(\*[, path])                         | The configured homes, or the default one when the config file names none.          |
+| [`publish_settings`](#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.             |
+| [`report_settings`](#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.              |
+| [`root_bypass_ok_setting`](#crowsnest.config.root_bypass_ok_setting)(\*[, path])        | Whether the config file says the bypass flag works as root here (default `False`). |
+| [`spawn_permission_mode_setting`](#crowsnest.config.spawn_permission_mode_setting)(\*[, path]) | The `spawn_permission_mode` the config file names, or `None` when it names none.   |
 
 ### Classes
 
@@ -274,6 +275,23 @@ end. A key the table does not know is an error, as in `[attention]`.
 
 * **Return type:**
   [`ReportSettings`](#crowsnest.config.ReportSettings)
+
+### crowsnest.config.root_bypass_ok_setting(, path=None)
+
+Whether the config file says the bypass flag works as root here (default `False`).
+
+```toml
+claude_bin = "/usr/local/bin/claude-launcher"   # sets IS_SANDBOX=1 for root
+root_bypass_ok = true
+```
+
+Claude Code refuses `--dangerously-skip-permissions` to root unless its own
+environment has `IS_SANDBOX=1`. When this process’s environment has it, crowsnest
+sees that for itself; a launcher that sets it only for the child is invisible from
+here, and this key is how a person says so (#161).
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### crowsnest.config.spawn_permission_mode_setting(, path=None)
 
