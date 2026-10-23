@@ -92,10 +92,12 @@ __all__ = [
     "PUBLISH_KEY",
     "REPORT_KEY",
     "SPAWN_PERMISSION_MODE_KEY",
+    "WATCH_KEY",
     "AttentionSettings",
     "Home",
     "PublishSettings",
     "ReportSettings",
+    "WatchSettings",
     "attention_settings",
     "claude_bin_setting",
     "config_path",
@@ -106,6 +108,7 @@ __all__ = [
     "root_bypass_ok_setting",
     "spawn_model_setting",
     "spawn_permission_mode_setting",
+    "watch_settings",
 ]
 
 #: The top-level config key naming the command that starts a session. See
@@ -638,6 +641,60 @@ class CourierSettings:
     """
 
     remote: str = ""
+
+
+#: The config table holding ``crowsnest watch``'s selection (#141).
+WATCH_KEY = "watch"
+
+
+@dataclass(frozen=True)
+class WatchSettings:
+    """The ``[watch]`` table, validated: which kinds ``crowsnest watch`` prints
+    (``None``: all) and which sessions it never mentions.
+
+    >>> WatchSettings().kinds is None
+    True
+    """
+
+    kinds: frozenset[str] | None = None
+    mute: frozenset[str] = frozenset()
+
+
+def watch_settings(*, path: str | Path | None = None) -> WatchSettings:
+    """The config file's ``[watch]`` table, or the defaults (everything) when it has none.
+
+    .. code-block:: toml
+
+        [watch]
+        kinds = "loud"            # or a list: ["waiting", "error", "stopped"]; "all"
+        mute = ["noisy-sweep"]    # session names, or name@home
+
+    ``kinds`` takes the names :func:`crowsnest.watch.kinds_of` knows; an unknown one, or
+    a key the table does not know, is an error, as in ``[attention]``.
+    """
+    from crowsnest.watch import kinds_of
+
+    file = config_path(path)
+    table = _loaded(path).get(WATCH_KEY)
+    if table is None:
+        return WatchSettings()
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{WATCH_KEY}] must be a table")  # noqa: TRY004
+    known = {f.name for f in fields(WatchSettings)}
+    unknown = sorted(set(table) - known)
+    if unknown:
+        raise ValueError(
+            f"{file}: [{WATCH_KEY}] has no {', '.join(unknown)}; "
+            f"it knows {', '.join(sorted(known))}"
+        )
+    mute = table.get("mute", [])
+    if not isinstance(mute, list) or not all(isinstance(m, str) for m in mute):
+        raise ValueError(f"{file}: [{WATCH_KEY}] mute must be a list of session names")
+    try:
+        kinds = kinds_of(table.get("kinds"))
+    except ValueError as exc:
+        raise ValueError(f"{file}: [{WATCH_KEY}] {exc}") from None
+    return WatchSettings(kinds=kinds, mute=frozenset(m.strip() for m in mute))
 
 
 def courier_settings(*, path: str | Path | None = None) -> CourierSettings:

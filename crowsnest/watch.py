@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Callable, Iterator, Mapping, MutableMapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -56,6 +56,7 @@ from crowsnest.registry import LiveSession, live_sessions, pid_alive
 __all__ = [
     "DFLT_INTERVAL",
     "HOOK_KINDS",
+    "KINDS",
     "LOUD_KINDS",
     "QUIET_NOTIFICATIONS",
     "WORKING",
@@ -63,8 +64,10 @@ __all__ = [
     "diff",
     "events",
     "hook_event",
+    "kinds_of",
     "line",
     "local_time",
+    "selected",
     "snapshot",
     "tail_events",
     "tail_position",
@@ -95,6 +98,75 @@ def _now() -> str:
 #: The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
 #: catches "waiting" and "error" without reading the line.
 LOUD_KINDS = frozenset({"waiting", "error", "needs-you", "woke", "intent"})
+
+
+#: Every kind :func:`events` yields: the registry diff's, the hook log's, and ``woke``.
+KINDS = frozenset(
+    {"started", "exited", "waiting", "busy", "shell", "idle", "error", "woke"}
+    | set(HOOK_KINDS.values())
+)
+
+#: The names a kind selection may use for a set of kinds. ``all`` selects nothing out.
+KIND_GROUPS = {"loud": LOUD_KINDS, "all": KINDS}
+
+
+def kinds_of(spec: str | Iterable[str] | None) -> frozenset[str] | None:
+    """The kinds a selection names, or ``None`` for every kind.
+
+    ``spec`` is a comma-separated string or a list of kinds (:data:`KINDS`) and group
+    names (:data:`KIND_GROUPS`); empty, ``None`` or ``all`` select everything. A name
+    that is neither raises ``ValueError``: a misspelt kind that silently matched nothing
+    would mute the stream it was meant to tune (#141).
+
+    >>> sorted(kinds_of('error, stopped'))
+    ['error', 'stopped']
+    >>> kinds_of('all') is None
+    True
+    """
+    if spec is None:
+        return None
+    names = spec.split(",") if isinstance(spec, str) else list(spec)
+    picked: set[str] = set()
+    for name in (str(n).strip() for n in names):
+        if not name:
+            continue
+        if name in KIND_GROUPS:
+            picked |= KIND_GROUPS[name]
+        elif name in KINDS:
+            picked.add(name)
+        else:
+            raise ValueError(
+                f"not a watch kind: {name!r}; use {', '.join(sorted(KIND_GROUPS))} or "
+                f"any of {', '.join(sorted(KINDS))}"
+            )
+    return None if not picked or picked >= KINDS else frozenset(picked)
+
+
+def selected(
+    stream: Iterable[Mapping[str, Any]],
+    *,
+    kinds: frozenset[str] | None = None,
+    mute: Iterable[str] = (),
+) -> Iterator[Mapping[str, Any]]:
+    """The events of ``stream`` whose kind is in ``kinds`` (``None``: all) and whose
+    session is not muted.
+
+    A session is muted by its name, or by ``name@home`` for one home only. This is the
+    watcher's filter kept as configuration rather than in a session's context, where a
+    compaction loses it and a line-format change breaks a ``grep`` silently (#141).
+
+    >>> stream = [{'kind': 'busy', 'name': 'a'}, {'kind': 'waiting', 'name': 'b'}]
+    >>> [e['name'] for e in selected(stream, kinds=frozenset({'waiting'}))]
+    ['b']
+    """
+    muted = frozenset(mute)
+    for event in stream:
+        if kinds is not None and event.get("kind") not in kinds:
+            continue
+        name, home = event.get("name", ""), event.get("home", "")
+        if name in muted or (home and f"{name}@{home}" in muted):
+            continue
+        yield event
 
 
 def local_time(stamp: str, *, now: datetime | None = None) -> str:
