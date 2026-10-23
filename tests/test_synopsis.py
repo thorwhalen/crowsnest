@@ -15,7 +15,9 @@ def _row(label, group, *, said_at="", asks=(), reason="", sid=None, home=""):
         "verdict": {
             "group": group,
             "reason": reason,
-            "asks": [{"text": a, "said_at": t, "said_at_basis": "ledger"} for a, t in asks],
+            "asks": [
+                {"text": a, "said_at": t, "said_at_basis": "ledger"} for a, t in asks
+            ],
         },
     }
 
@@ -52,9 +54,9 @@ def test_a_needs_you_row_without_asks_quotes_its_reason():
 
 
 def test_the_synopsis_is_short_and_says_what_it_left_out():
-    rows = [
-        _row(f"s{i}", "needs_you", asks=[(f"ask {i}", "")]) for i in range(6)
-    ] + [_row("w", "working")]
+    rows = [_row(f"s{i}", "needs_you", asks=[(f"ask {i}", "")]) for i in range(6)] + [
+        _row("w", "working")
+    ]
     lines = synopsis(rows, limit=5)
     assert len(lines) == 5
     assert lines[-1]["text"] == "and 2 more: s4, s5 need you; working: w"
@@ -70,12 +72,21 @@ def _graph(*edges):
 
 
 def test_groups_by_session_put_each_session_under_its_live_root(monkeypatch):
-    rows = [{"label": n, "session_id": n, "home": "", "repo_url": "", "project": "p"}
-            for n in ("lead", "w1", "w2", "solo")]
+    rows = [
+        {"label": n, "session_id": n, "home": "", "repo_url": "", "project": "p"}
+        for n in ("lead", "w1", "w2", "solo")
+    ]
     monkeypatch.setattr(tools, "roster", lambda **kw: {"sessions": rows})
     # w2 was started by w1, which lead started; `gone` has exited, so `orphan` is a root
-    rows.append({"label": "orphan", "session_id": "orphan", "home": "", "repo_url": "",
-                 "project": "p"})
+    rows.append(
+        {
+            "label": "orphan",
+            "session_id": "orphan",
+            "home": "",
+            "repo_url": "",
+            "project": "p",
+        }
+    )
     graph = _graph(("w1", "lead"), ("w2", "w1"), ("orphan", "gone"))
     monkeypatch.setattr(tools, "lineage", lambda **kw: graph)
     found = {g["name"]: g["sessions"] for g in tools.groups(by="session")["groups"]}
@@ -89,16 +100,22 @@ def test_the_synopsis_verb_reads_one_group(monkeypatch):
         _row("solo", "safe_to_close"),
     ]
     monkeypatch.setattr(
-        tools, "groups",
-        lambda **kw: {"by": "session", "groups": [
-            {"name": "lead", "sessions": ["lead", "w1"]},
-            {"name": "solo", "sessions": ["solo"]},
-        ]},
+        tools,
+        "groups",
+        lambda **kw: {
+            "by": "session",
+            "groups": [
+                {"name": "lead", "sessions": ["lead", "w1"]},
+                {"name": "solo", "sessions": ["solo"]},
+            ],
+        },
     )
     monkeypatch.setattr(tools, "triage", lambda **kw: {"groups": {"all": rows}})
     found = tools.synopsis("lead", by="session")
     assert [line["text"] for line in found["lines"]] == [
-        "w1 needs you: run the deploy", "working: lead"]
+        "w1 needs you: run the deploy",
+        "working: lead",
+    ]
     assert found["group"] == "lead" and found["sessions"] == ["lead", "w1"]
     with pytest.raises(KeyError, match="nope"):
         tools.synopsis("nope", by="session")
@@ -110,9 +127,12 @@ def test_the_cli_prints_a_head_and_one_timed_line_each(monkeypatch, capsys):
     monkeypatch.setattr(
         tools,
         "synopsis",
-        lambda name, **kw: {"group": name, "by": kw["by"], "sessions": ["a", "b"],
-                            "lines": [{"text": "a needs you: go", "said_at": "",
-                                       "sessions": ["a"]}]},
+        lambda name, **kw: {
+            "group": name,
+            "by": kw["by"],
+            "sessions": ["a", "b"],
+            "lines": [{"text": "a needs you: go", "said_at": "", "sessions": ["a"]}],
+        },
     )
     main(["synopsis", "lead", "--by", "session"])
     out = capsys.readouterr().out.splitlines()

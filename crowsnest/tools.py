@@ -1188,7 +1188,9 @@ def _live_roots(rows, parents: Mapping[str, str]) -> dict[str, str]:
     """Each row's session id to the tag of its furthest live ancestor (itself, if none)."""
     tags = {
         str(r.get("session_id") or ""): (
-            f"{r.get('label')}@{r['home']}" if r.get("home") else str(r.get("label") or "")
+            f"{r.get('label')}@{r['home']}"
+            if r.get("home")
+            else str(r.get("label") or "")
         )
         for r in rows
     }
