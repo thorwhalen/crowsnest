@@ -203,3 +203,39 @@ def test_the_explicit_keywords_win_over_the_data_directory(tmp_path, home):
     )
     assert done["events"] == str(log) and log.is_file()
     assert done["ledger"] == str(ledgers / "fixer.md")
+
+
+def test_a_stop_whose_last_words_ask_the_person_adds_an_ask_event(data, home):
+    # #141: a fifth of the stop lines a watcher relayed carried an ask; with the stream
+    # filtered to loud kinds they would be lost, so the ask is promoted to its own event.
+    transcript = str(home / "projects" / "-w-demo" / "s1.jsonl")
+    said = (
+        "Merged the fix.\n\n**For the user:** pick a name for the package, "
+        "`crowsnest` or `lookout`.\n\nAlso blocked on the user: the PyPI token."
+    )
+    done = hook.handle(
+        "stop",
+        hook_payload(session="s1", transcript=transcript, last_assistant_message=said),
+        home=home,
+    )
+    stop, ask = events_written(data)
+    assert stop["event"] == "stop" and ask["event"] == "ask"
+    assert ask["session_id"] == stop["session_id"] and ask["name"] == "fixer"
+    # the section after the lead-in, bounded as a ledger's "for <person>" section is
+    assert ask["detail"].startswith("pick a name for the package, `crowsnest` or")
+    assert ask["asks"] == 1  # the statement restates; only the request is an ask
+    assert done["asks"] == 1
+
+
+def test_a_stop_that_asks_nothing_adds_no_ask_event(data, home):
+    transcript = str(home / "projects" / "-w-demo" / "s1.jsonl")
+    hook.handle(
+        "stop",
+        hook_payload(
+            session="s1",
+            transcript=transcript,
+            last_assistant_message="Done. No manual-task needed; nothing for the user.",
+        ),
+        home=home,
+    )
+    assert [e["event"] for e in events_written(data)] == ["stop"]

@@ -82,7 +82,12 @@ DETAIL_LIMIT = 200
 
 #: What a hook event is called in the stream. ``needs-you`` and ``stopped`` are named for
 #: what the human should do about them, which is what the registry statuses are not.
-HOOK_KINDS = {"notification": "needs-you", "stop": "stopped", "intent": "intent"}
+HOOK_KINDS = {
+    "notification": "needs-you",
+    "stop": "stopped",
+    "intent": "intent",
+    "ask": "ask",
+}
 
 #: Notification types that are not a request. Claude Code sends ``idle_prompt`` when a
 #: session has merely sat idle for a minute after finishing a turn -- which the ``stop``
@@ -97,7 +102,7 @@ def _now() -> str:
 
 #: The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
 #: catches "waiting" and "error" without reading the line.
-LOUD_KINDS = frozenset({"waiting", "error", "needs-you", "woke", "intent"})
+LOUD_KINDS = frozenset({"waiting", "error", "needs-you", "woke", "intent", "ask"})
 
 
 #: Every kind :func:`events` yields: the registry diff's, the hook log's, and ``woke``.
@@ -553,18 +558,40 @@ def events(
     position = tail_position(log)
     woken: set[str] = set()
     taken = 0
+    # Sessions whose current wait already has a line: the registry's `waiting` and the
+    # hook's `needs-you` describe one episode, seconds apart, and one line is enough (#141).
+    announced: set[str] = set()
     while ticks is None or taken < ticks:
         sleep(interval)
         records, position = tail_events(log, position)
         pushed = [event for event in map(hook_event, records) if event]
-        yield from pushed
+        this_tick: set[str] = set()
+        for event in pushed:
+            if event["kind"] == "needs-you":
+                if event["session_id"] in announced:
+                    continue
+                this_tick.add(event["session_id"])
+                announced.add(event["session_id"])
+            yield event
         stopped = {e["session_id"] for e in pushed if e["kind"] == "stopped"}
         after = snapshot(home=home, is_alive=is_alive, all_homes=all_homes, config=config)
         for event in diff(before, after):
             # A hook already said this turn ended, and said why. One line, not two.
             if event["kind"] == "idle" and event["session_id"] in stopped:
                 continue
+            if event["kind"] == "waiting":
+                if event["session_id"] in announced:
+                    continue
+                announced.add(event["session_id"])
             yield event
+        # A wait ends when the registry leaves `waiting`; a hook's line keeps its mark
+        # for one tick, so the registry can catch up with it.
+        announced = {
+            sid
+            for sid in announced
+            if sid in this_tick
+            or (sid in after and after[sid].status == "waiting")
+        }
         yield from attention_wakes(
             store=attention_store,
             home=home,
