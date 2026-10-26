@@ -1450,9 +1450,10 @@ def reap(*, apply: bool = False, home: str | None = None, json: bool = False) ->
     A session is closed only when all of these hold: it is not in `[guard] protect`, not
     the session running this, and spawned no live session; it is idle (never busy,
     waiting or running a shell); idle for `[guard] idle_hours` (24 by default); its ledger
-    says it is done (triage's *safe to close*); and nothing it touched is unlanded -- no
-    uncommitted or untracked change, no operation in progress, no commit or branch it made
-    that is on no remote, no stash newer than it. Without `--apply` nothing is closed.
+    says it is done (triage's *safe to close*), newer than its last prompt; and nothing it
+    touched is unlanded -- no uncommitted or untracked change, no operation in progress,
+    no commit or branch it made that is not merged into a remote's default branch, no
+    stash newer than it. Without `--apply` nothing is closed.
     With it, at most `[guard] max_closes` sessions get SIGTERM (never SIGKILL), each
     re-checked first, and each is logged with the `claude --resume` line that brings it
     back. A lookout never runs `--apply`: closing sessions is the person's or the timer's.

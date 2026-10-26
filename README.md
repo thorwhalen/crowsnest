@@ -270,8 +270,9 @@ Each Claude Code session takes roughly 250 to 330 MB. On a small server, two doz
 - **A reaper.** `crowsnest reap` lists every session as *close* or *keep*, and gives the reasons for each keep. It closes a session only when all of the following hold, and only with `--apply`. Each close is re-checked first, sent as SIGTERM (never SIGKILL), and logged with its `claude --resume` line:
   - it is not protected, not the caller, and not the parent of a live session;
   - it is idle (not busy, waiting or running a shell), and has been for `idle_hours`;
-  - its ledger says it is done;
-  - nothing it touched is unlanded. That means no uncommitted or untracked change, no merge or rebase in progress, and no commit, branch or stash of its own that is on no remote.
+  - its ledger says it is done (triage's *safe to close*);
+  - nothing it touched is unlanded. That means no uncommitted or untracked change, no merge or rebase in progress, and no commit, branch or stash of its own that is not merged into a remote's default branch (pushed is not landed). It looks in every checkout the session or its subagents named, by `cwd`, by an edit's path or by an absolute path in a shell command, and in any other worktree of those repositories that moved during the session;
+  - its ledger's all-clear is newer than the last thing it was asked.
 - **OOM tiers.** On Linux, every session's process tree gets an `oom_score_adj` matching its state: protected −300, busy 300, waiting 500, idle 800. When memory does run out, the kernel takes an idle worker first and the lookout last.
 
 `crowsnest guard tick` runs the OOM pass and then the reaper, in the mode `reap` names: `report` (the default, which only plans), `apply`, or `off`. A systemd timer runs it every five minutes:

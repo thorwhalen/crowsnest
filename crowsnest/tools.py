@@ -1816,11 +1816,35 @@ def reap(
     return guard.reap(apply=apply, home=home, config=config)
 
 
-def _url_of(pid: int, *, home: str | Path | None) -> str:
-    for s in live_sessions(home=home):
-        if s.pid == pid:
-            return s.session_url
-    return ""
+def _url_of(
+    pid: int, *, home: str | Path | None, wait: float = 20.0, step: float = 1.0
+) -> str:
+    """The Remote Control link of the session running as ``pid``; it can register a
+    moment after the session does, so this waits up to ``wait`` seconds for it."""
+    import time
+
+    deadline = time.monotonic() + wait
+    while True:
+        for s in live_sessions(home=home):
+            if s.pid == pid and s.session_url:
+                return s.session_url
+        if time.monotonic() >= deadline:
+            return ""
+        time.sleep(step)
+
+
+def _no_gate(name, **_):
+    """A restart replaces a session that died; it never adds one, so it is never refused."""
+
+
+def _close_stuck(name: str) -> None:
+    """End a tmux session left by a start that never registered, so the next can begin."""
+    import shutil
+
+    if shutil.which("tmux"):
+        subprocess.run(
+            ["tmux", "kill-session", "-t", name], capture_output=True, check=False
+        )
 
 
 def revive(
@@ -1839,11 +1863,14 @@ def revive(
     """Make sure a session named ``name`` runs -- the one it was, when that is possible.
 
     For a watchdog. Already live: nothing is done. Otherwise the last session that went by
-    the name (:func:`crowsnest.guard.last_session`) is resumed when its transcript changed
-    within ``resume_within_hours``, which keeps its Remote Control link -- a phone still
-    open on it reconnects instead of facing a dead link -- and it is sent
-    ``resume_prompt``. With nothing to resume, or a resume that never registers, a fresh
-    session starts with ``prompt``; its new link is pushed to ``[guard] notify``.
+    the name (:func:`crowsnest.guard.last_session`), and that is not running under any
+    other name, is resumed in its own folder when its transcript changed within
+    ``resume_within_hours``. That keeps its Remote Control link -- a phone still open on
+    it reconnects instead of facing a dead link -- and it is sent ``resume_prompt``. With
+    nothing to resume, or a resume that never registers (its tmux session is then
+    closed), a fresh session starts in ``cwd`` with ``prompt``; its new link is pushed to
+    ``[guard] notify``. A restart is never refused by the memory gate: it replaces a
+    session, it does not add one.
 
     Returns ``{"action": "alive"|"resumed"|"fresh"|"failed", "name", "pid",
     "session_id", "session_url", "same_link"}``.
@@ -1854,7 +1881,8 @@ def revive(
     from crowsnest.config import guard_settings
     from crowsnest.spawn import spawn as _spawn_session
 
-    for s in live_sessions(home=home, is_alive=guard.claude_alive):
+    live = guard._local_sessions(home=home, config=config, is_alive=guard.claude_alive)
+    for s in live:
         if s.name == name:
             return {
                 "action": "alive",
@@ -1864,19 +1892,28 @@ def revive(
                 "session_url": s.session_url,
                 "same_link": True,
             }
-    settings = guard_settings(path=config)
+    try:
+        push = guard_settings(path=config).notify
+    except ValueError:
+        push = ""  # a broken [guard] table must not stop the lookout coming back
     common = {
-        "cwd": cwd,
         "model": model,
         "effort": effort,
         "home": home,
         "config": config,
         "spawner": spawner,
+        "gate": _no_gate,
     }
     last = guard.last_session(name, home=home)
-    if last and time.time() - last["active_at"] <= resume_within_hours * 3600:
+    running = {s.session_id for s in live}
+    if (
+        last
+        and last["session_id"] not in running
+        and time.time() - last["active_at"] <= resume_within_hours * 3600
+    ):
+        where = last["cwd"] if last.get("cwd") and Path(last["cwd"]).is_dir() else cwd
         started = _spawn_session(
-            name, resume=last["session_id"], prompt=resume_prompt, **common
+            name, cwd=where, resume=last["session_id"], prompt=resume_prompt, **common
         )
         if started["pid"]:
             url = _url_of(started["pid"], home=home)
@@ -1886,8 +1923,8 @@ def revive(
                 else ""
             )
             same = bool(url) and url == before
-            if url and before and not same:
-                guard.notify(settings.notify, f"{name} is back on a new link", url)
+            if url and not same:
+                guard.notify(push, f"{name} is back on a new link", url)
             return {
                 "action": "resumed",
                 "name": name,
@@ -1896,7 +1933,9 @@ def revive(
                 "session_url": url,
                 "same_link": same,
             }
-    started = _spawn_session(name, prompt=prompt, **common)
+        if spawner is None:
+            _close_stuck(name)
+    started = _spawn_session(name, cwd=cwd, prompt=prompt, **common)
     if not started["pid"]:
         return {
             "action": "failed",
@@ -1908,8 +1947,9 @@ def revive(
             "how": started["how"],
         }
     url = _url_of(started["pid"], home=home)
-    if url:
-        guard.notify(settings.notify, f"{name} restarted on a new link", url)
+    guard.notify(
+        push, f"{name} restarted on a new link", url or "(no Remote Control link)"
+    )
     return {
         "action": "fresh",
         "name": name,

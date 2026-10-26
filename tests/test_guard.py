@@ -12,6 +12,7 @@ import os
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 import pytest
 from fixtures import registry_record, write_registry
@@ -289,7 +290,7 @@ def test_commits_on_main_not_pushed_are_unlanded(repo):
     (repo / "c.txt").write_text("c")
     _git("add", "c.txt", cwd=repo)
     _git("commit", "-qm", "c", cwd=repo)
-    assert any("on no remote" in r for r in guard.unlanded([str(repo)], since=0.0))
+    assert any("not merged" in r for r in guard.unlanded([str(repo)], since=0.0))
 
 
 def test_a_detached_worktree_with_its_own_commit_is_unlanded(repo, tmp_path):
@@ -342,8 +343,10 @@ def _ctx(**kw):
     return ReapContext(**kw)
 
 
-def _done(*sessions):
-    return {s.session_id: "safe_to_close" for s in sessions}
+def _done(*sessions, said_at="2099-01-01T00:00:00Z"):
+    return {
+        s.session_id: {"group": "safe_to_close", "said_at": said_at} for s in sessions
+    }
 
 
 def test_a_finished_session_in_a_clean_checkout_would_close(repo, tmp_path):
@@ -547,7 +550,7 @@ def test_the_closer_keeps_a_pid_that_is_no_longer_a_claude():
     got = guard.sigterm_closer(
         s, reread=lambda _: _rec(s), kill=lambda *a: None, is_alive=lambda p: False
     )
-    assert "no longer a claude" in got
+    assert "no longer that claude" in got
 
 
 def test_the_closer_sends_sigterm_and_never_sigkill():
@@ -738,7 +741,11 @@ def test_idle_is_measured_from_the_last_turn_not_from_housekeeping(tmp_path):
     records = [
         user("do the thing", at=turn_at),
         assistant("done", at=turn_at),
-        {"type": "system", "subtype": "informational", "timestamp": "2026-10-26T13:41:02Z"},
+        {
+            "type": "system",
+            "subtype": "informational",
+            "timestamp": "2026-10-26T13:41:02Z",
+        },
     ]
     t = _transcript(tmp_path, records)
     now = guard._epoch("2026-10-26T13:45:00Z")
@@ -746,3 +753,143 @@ def test_idle_is_measured_from_the_last_turn_not_from_housekeeping(tmp_path):
     s = _session(transcript=str(t), status_since=now - 60)
     assert guard.check_idle_for(s, _ctx(now=now)) is None
     assert guard._last_active(s) == guard._epoch(turn_at)
+
+
+# --------------------------------------------------------------------------------------
+# The adversarial review's findings, one test each
+
+
+def test_a_pushed_but_unmerged_branch_is_not_landed(repo):
+    _git("checkout", "-qb", "feature", cwd=repo)
+    (repo / "f.txt").write_text("f")
+    _git("add", "f.txt", cwd=repo)
+    _git("commit", "-qm", "f", cwd=repo)
+    _git("push", "-q", "-u", "origin", "feature", cwd=repo)
+    _git("checkout", "-q", "main", cwd=repo)
+    found = guard.unlanded([str(repo)], since=time.time() - 60)
+    assert any("branch feature" in r for r in found)
+
+
+def test_a_dirty_subagent_worktree_nobody_named_is_found(repo):
+    agent = repo / ".claude" / "worktrees" / "agent-1"
+    _git("worktree", "add", "-q", "-b", "agent-1", str(agent), cwd=repo)
+    (agent / "half-done.py").write_text("x")
+    found = guard.unlanded([str(repo)], since=time.time() - 60)
+    assert any("agent-1" in r for r in found)
+
+
+def test_an_old_untouched_worktree_is_not_this_sessions_work(repo, tmp_path):
+    other = tmp_path / "old-wt"
+    _git("worktree", "add", "-q", "--detach", str(other), cwd=repo)
+    (other / "scratch").write_text("x")
+    git_dir = Path(_git("rev-parse", "--absolute-git-dir", cwd=other).strip())
+    for f in (git_dir / "logs" / "HEAD", git_dir / "index"):
+        if f.exists():
+            os.utime(f, (978_307_200, 978_307_200))
+    assert guard.unlanded([str(repo)], since=time.time() - 60) == []
+
+
+def test_a_subdirectory_of_a_checkout_resolves_to_its_repository(repo):
+    (repo / "pkg").mkdir()
+    (repo / "pkg" / "m.py").write_text("x")
+    assert any("uncommitted" in r for r in guard.unlanded([str(repo / "pkg")], since=0.0))
+
+
+def test_paths_named_in_shell_commands_and_subagent_transcripts_count(tmp_path):
+    t = _transcript(
+        tmp_path,
+        [
+            {
+                "message": {
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "input": {
+                                "command": "git -C /srv/a/repo commit -m x && cat /tmp/x"
+                            },
+                        }
+                    ]
+                }
+            }
+        ],
+    )
+    sub = t.parent / t.stem / "subagents"
+    sub.mkdir(parents=True)
+    (sub / "agent-1.jsonl").write_text(
+        json.dumps({"input": {"file_path": "/srv/b/repo/x.py"}}) + "\n"
+    )
+    dirs = guard._touched_dirs(t, cache_dir=tmp_path / "c")
+    assert "/srv/a/repo" in dirs and "/srv/b/repo" in dirs
+    assert not any(d.startswith("/tmp") for d in dirs)
+
+
+def test_an_all_clear_older_than_the_last_prompt_or_without_a_time_keeps(tmp_path):
+    from fixtures import assistant, user
+
+    t = _transcript(
+        tmp_path,
+        [
+            user("one more thing", at="2026-10-24T16:00:00Z"),
+            assistant("ok", at="2026-10-24T16:01:00Z"),
+        ],
+    )
+    s = _session(transcript=str(t))
+    stale = _ctx(verdicts=_done(s, said_at="2026-10-24T15:00:00Z"))
+    assert "older than its last prompt" in guard.check_ledger_done(s, stale)
+    timeless = _ctx(verdicts=_done(s, said_at=""))
+    assert "no time" in guard.check_ledger_done(s, timeless)
+    fresh = _ctx(verdicts=_done(s, said_at="2026-10-24T17:00:00Z"))
+    assert guard.check_ledger_done(s, fresh) is None
+
+
+def test_a_reused_pid_is_not_the_session_that_wrote_the_record(tmp_path):
+    proc = _proc(tmp_path, {10: (1, ["claude"])})
+    (proc / "10" / "stat").write_text(
+        "10 (claude) S 1 " + " ".join(["0"] * 17) + " 5555 0 0\n"
+    )
+    assert guard.same_process(10, {"procStart": "5555"}, proc=proc)
+    assert not guard.same_process(10, {"procStart": "1234"}, proc=proc)
+    assert guard.same_process(10, {"procStart": "Mon Oct 26 13:48:38 2026"}, proc=proc)
+
+
+def test_a_hook_script_under_dot_claude_is_not_a_claude():
+    assert guard._is_claude([b"/root/.local/bin/claude", b"-n"])
+    assert guard._is_claude([b"/home/u/.local/share/claude/versions/2.1.310"])
+    assert guard._is_claude(
+        [b"node", b"/usr/lib/node_modules/@anthropic-ai/claude-code/cli.js"]
+    )
+    assert not guard._is_claude([b"/bin/bash", b"/root/.claude/hooks/status.sh"])
+    assert not guard._is_claude([b"python3", b"/x/claude_helper.py"])
+
+
+def test_a_tmux_server_holding_the_lookouts_value_is_reset(tmp_path):
+    proc = _proc(tmp_path, {5: (1, ["tmux"]), 10: (5, ["claude"])})
+    (proc / "5" / "comm").write_text("tmux: server\n")
+    (proc / "5" / "oom_score_adj").write_text("-300\n")
+    guard.oom_pass(settings=GuardSettings(), sessions=[_session(10)], proc=proc)
+    assert (proc / "5" / "oom_score_adj").read_text() == "0"
+    assert (proc / "10" / "oom_score_adj").read_text() == "800"
+
+
+def test_revive_is_never_refused_by_the_gate(tmp_path, monkeypatch):
+    # The derived cap on tw is 12 while 12-25 sessions run: a gated restart would leave
+    # the lookout down until someone closed sessions by hand.
+    config = tmp_path / "config.toml"
+    config.write_text("[guard]\nmax_sessions = 1\n")
+    home = _homes(tmp_path, ["idle", "idle"])
+    monkeypatch.setattr(guard, "claude_alive", lambda pid, proc=None: True)
+
+    def fake_spawner(argv, *, cwd, name, home, **_):
+        write_registry(
+            home,
+            {
+                **registry_record(os.getpid(), "fresh", name=name),
+                "bridgeSessionId": "session_N",
+            },
+        )
+
+    monkeypatch.setattr(spawn_module, "default_spawner", lambda: (fake_spawner, "fake"))
+    got = tools.revive(
+        "cn-tw", cwd=str(tmp_path), prompt="brief", home=home, config=config
+    )
+    assert got["action"] == "fresh" and got["session_url"].endswith("session_N")

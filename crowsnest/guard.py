@@ -124,8 +124,20 @@ def session_cap(settings: GuardSettings, mem: Mapping[str, int]) -> int | None:
     return max(1, spare // settings.session_mb)
 
 
+def _is_claude(argv: Sequence[bytes]) -> bool:
+    """Is this command line Claude Code: a ``claude`` binary (or one under a ``claude``
+    folder, as its versioned installs are), or node/bun running Claude Code's script?
+    A hook script under ``~/.claude/`` run by a shell is not."""
+    if not argv or not argv[0]:
+        return False
+    first = Path(argv[0].decode(errors="replace"))
+    if first.name.startswith("claude") or "claude" in first.parts:
+        return True
+    return first.name in ("node", "bun") and len(argv) > 1 and b"claude" in argv[1]
+
+
 def claude_alive(pid: int, *, proc: Path | None = None) -> bool:
-    """Is ``pid`` a running ``claude``? With ``/proc``, the command line must say so.
+    """Is ``pid`` a running ``claude``? With ``/proc``, its command line must say so.
 
     A registry file outlives a session that was OOM-killed, and its pid is reused; signal
     0 alone would count that stranger as the session. Without ``/proc`` this is
@@ -138,8 +150,24 @@ def claude_alive(pid: int, *, proc: Path | None = None) -> bool:
         argv = (proc / str(pid) / "cmdline").read_bytes().split(b"\0")
     except OSError:
         return False
-    # `claude` itself, or an interpreter running Claude Code's script.
-    return any(b"claude" in a for a in argv[:2])
+    return _is_claude(argv)
+
+
+def same_process(pid: int, record: Mapping, *, proc: Path | None = None) -> bool:
+    """Is ``pid`` still the process that wrote ``record``? On Linux Claude Code records
+    its kernel start time (``procStart``, clock ticks since boot), which a reused pid
+    cannot share. Elsewhere, or for a record without one, this cannot tell: ``True``."""
+    proc = PROC if proc is None else proc
+    started = str(record.get("procStart") or "")
+    if not started.isdigit() or not proc.is_dir():
+        return True
+    try:
+        stat = (proc / str(pid) / "stat").read_text()
+    except OSError:
+        return False
+    fields_ = stat.rsplit(")", 1)[-1].split()
+    # After the command name: state, ppid, ... starttime is field 22, the 20th here.
+    return len(fields_) > 19 and fields_[19] == started
 
 
 def _local_sessions(
@@ -223,38 +251,79 @@ def gate(
 # What a session touched, and whether any of it is unlanded
 
 
-_PATH_KEYS = re.compile(rb'"(cwd|file_path|notebook_path)"\s*:\s*"((?:[^"\\]|\\.)*)"')
+_PATH_KEYS = re.compile(
+    rb'"(cwd|file_path|notebook_path|command)"\s*:\s*"((?:[^"\\]|\\.)*)"'
+)
+
+#: An absolute (or ``~``) path standing as a word of its own in a shell command.
+_COMMAND_PATH = re.compile(r"""(?:(?<=[\s=:'"`(])|^)(~?/[^\s'"`;|&()<>$*?]+)""")
+
+#: Paths a command names that are never a checkout's work: the system and scratch space.
+_NOT_WORK = (
+    "/tmp",
+    "/proc",
+    "/dev",
+    "/sys",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/lib",
+    "/etc",
+    "/run",
+    "/var",
+    "/private/tmp",
+)
 
 
 def _first_stamp(path: Path) -> float | None:
     """The first record's timestamp in a transcript, as epoch seconds."""
-    from datetime import datetime
-
     try:
         with path.open("rb") as f:
             for _, line in zip(range(50), f):
-                found = re.search(rb'"timestamp":"([^"]+)"', line)
+                found = re.search(rb'"timestamp"\s*:\s*"([^"]+)"', line)
                 if found:
-                    text = found.group(1).decode().replace("Z", "+00:00")
-                    return datetime.fromisoformat(text).timestamp()
-    except (OSError, ValueError):
+                    return _epoch(found.group(1).decode()) or None
+    except OSError:
         return None
     return None
 
 
+def _transcripts(transcript: Path) -> list[Path]:
+    """A session's transcript and its subagents' (``<id>/subagents/*.jsonl``), whose
+    edits are the session's work too."""
+    return [
+        transcript,
+        *sorted((transcript.parent / transcript.stem / "subagents").glob("*.jsonl")),
+    ]
+
+
+def _paths_in(kind: bytes, value: str) -> Iterable[str]:
+    if kind != b"command":
+        if value.startswith("/"):
+            yield value if kind == b"cwd" else str(Path(value).parent)
+        return
+    home = str(Path.home())
+    for token in _COMMAND_PATH.findall(value):
+        path = home + token[1:] if token.startswith("~") else token
+        if not path.startswith(_NOT_WORK):
+            yield path
+
+
 def _touched_dirs(transcript: Path, *, cache_dir: Path | None = None) -> list[str]:
-    """Directories a transcript's records name: each record's ``cwd`` (it follows ``cd``)
-    and the folder of every ``file_path`` an edit named.
+    """Paths a session's transcripts name: each record's ``cwd`` (it follows ``cd``), the
+    folder of every ``file_path`` an edit named, and every absolute path a shell command
+    names (``git -C``, ``sed -i``, a heredoc) -- its subagents' transcripts included.
 
     Path *metadata* only -- no turn, prompt or reply is read, which is openloops' business.
-    Cached by size and mtime under ``data_dir()/guard/touched/``, since an idle session's
-    transcript does not change between runs. Raises ``OSError`` when it cannot be read: a
+    Taking too many paths only keeps more sessions. Cached under ``data_dir()/guard/
+    touched/`` by each file's size and mtime, since an idle session's transcripts do not
+    change between runs. Raises ``OSError`` when the main transcript cannot be read: a
     caller keeps the session then.
     """
-    stat = transcript.stat()
+    files = _transcripts(transcript)
+    key = [[f.name, f.stat().st_size, f.stat().st_mtime_ns] for f in files]
     cache_dir = data_dir() / "guard" / "touched" if cache_dir is None else cache_dir
     cache = cache_dir / f"{transcript.stem}.json"
-    key = [stat.st_size, stat.st_mtime_ns]
     try:
         cached = json.loads(cache.read_text())
         if cached.get("key") == key:
@@ -262,16 +331,15 @@ def _touched_dirs(transcript: Path, *, cache_dir: Path | None = None) -> list[st
     except (OSError, ValueError, AttributeError, KeyError):
         pass
     found: set[str] = set()
-    with transcript.open("rb") as f:
-        for line in f:
-            for kind, raw in _PATH_KEYS.findall(line):
-                try:
-                    value = json.loads(b'"' + raw + b'"')
-                except ValueError:
-                    continue
-                if not value.startswith("/"):
-                    continue
-                found.add(value if kind == b"cwd" else str(Path(value).parent))
+    for file in files:
+        with file.open("rb") as f:
+            for line in f:
+                for kind, raw in _PATH_KEYS.findall(line):
+                    try:
+                        value = json.loads(b'"' + raw + b'"')
+                    except ValueError:
+                        continue
+                    found.update(_paths_in(kind, value))
     dirs = sorted(found)
     try:
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -298,26 +366,27 @@ def _git(args: Sequence[str], *, cwd: str | Path) -> str:
 
 
 def _checkouts(dirs: Iterable[str]) -> dict[str, set[str]]:
-    """``{git common dir: {worktree roots}}`` for every directory that is in a git checkout."""
+    """``{git common dir: {worktree roots}}`` for every directory that is in a git checkout.
+
+    A path that does not exist is walked up to the nearest folder that does. Git prints
+    the common dir relative to the folder it ran in, so it is resolved against that one.
+    """
     found: dict[str, set[str]] = {}
+    seen: set[Path] = set()
     for d in dirs:
         here = Path(d)
         while not here.is_dir() and here != here.parent:
             here = here.parent
-        if here == here.parent:
+        if here == here.parent or here in seen:
             continue
+        seen.add(here)
         try:
             top, common = _git(
                 ["rev-parse", "--show-toplevel", "--git-common-dir"], cwd=here
             ).splitlines()[:2]
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError, OSError, subprocess.TimeoutExpired):
             continue
-        common_path = (
-            (Path(top) / common).resolve()
-            if not Path(common).is_absolute()
-            else Path(common)
-        )
-        found.setdefault(str(common_path), set()).add(top)
+        found.setdefault(str((here / common).resolve()), set()).add(top)
     return found
 
 
@@ -331,34 +400,89 @@ _IN_PROGRESS = (
 )
 
 
-def unlanded(dirs: Iterable[str], *, since: float) -> list[str]:
+def _default_branches(repo: Path) -> list[str]:
+    """Each remote's default branch: what ``refs/remotes/<r>/HEAD`` points at, else its
+    ``main`` or ``master``. ``[]`` for a repository with no remote."""
+    lines = _git(
+        ["for-each-ref", "--format=%(refname)%09%(symref)", "refs/remotes"], cwd=repo
+    )
+    refs = dict(line.split("\t", 1) for line in lines.splitlines() if "\t" in line)
+    heads = [target for ref, target in refs.items() if ref.endswith("/HEAD") and target]
+    if heads:
+        return heads
+    return [ref for ref in refs if ref.rsplit("/", 1)[-1] in ("main", "master")]
+
+
+def on_default_branch(repo: Path, rev: str) -> bool:
+    """Is ``rev`` merged into a remote's default branch? Pushed is not landed: a branch on
+    the remote with an open (or closed) pull request is still unlanded work."""
+    targets = _default_branches(repo)
+    if not targets:
+        return False
+    return not _git(["rev-list", "-n1", rev, "--not", *targets], cwd=repo).strip()
+
+
+def _worktrees(repo: Path) -> list[str]:
+    lines = _git(["worktree", "list", "--porcelain"], cwd=repo).splitlines()
+    return [
+        line.removeprefix("worktree ") for line in lines if line.startswith("worktree ")
+    ]
+
+
+def _active_since(worktree: str, since: float) -> bool:
+    """Did anything move in this worktree after ``since`` (its ``HEAD`` log or index)?"""
+    try:
+        git_dir = Path(_git(["rev-parse", "--absolute-git-dir"], cwd=worktree).strip())
+    except (RuntimeError, OSError, subprocess.TimeoutExpired):
+        return True
+    stamps = [
+        p.stat().st_mtime
+        for p in (git_dir / "logs" / "HEAD", git_dir / "index")
+        if p.exists()
+    ]
+    return max(stamps, default=0.0) >= since
+
+
+def unlanded(
+    dirs: Iterable[str],
+    *,
+    since: float,
+    is_landed: Callable[[Path, str], bool] | None = None,
+) -> list[str]:
     """Why work in these directories is not landed; ``[]`` when all of it is.
 
-    For every git checkout the directories are in:
+    For every git checkout the directories are in, over the worktrees they name plus any
+    other worktree of the repository that moved after ``since`` (a subagent's
+    ``.claude/worktrees/agent-*``):
 
-    * any change in a touched worktree, untracked files included (ignored ones not);
-    * a merge, rebase, cherry-pick, revert or bisect in progress there;
-    * a touched worktree whose ``HEAD`` has commits on no remote (a detached session
-      worktree included);
-    * any branch of the repository with commits on no remote, when the branch moved or
-      was committed to after ``since`` -- a branch older than the session is not its work;
+    * any change, untracked files included (ignored ones not);
+    * a merge, rebase, cherry-pick, revert or bisect in progress;
+    * a ``HEAD`` that is not landed (a detached session worktree included);
+    * any branch of the repository that is not landed, when it moved or was committed to
+      after ``since`` -- a branch older than the session is not its work;
     * a stash pushed after ``since``.
 
-    A repository with no remote has nothing landed, so any commit there counts. Raises
-    when git cannot answer; the caller keeps the session.
+    *Landed* is ``is_landed(repo, rev)``, by default :func:`on_default_branch`: merged
+    into a remote's default branch. Pushed is not landed, and a repository with no
+    remote has nothing landed. Raises when git cannot answer; the caller keeps the
+    session.
     """
+    is_landed = on_default_branch if is_landed is None else is_landed
     reasons: list[str] = []
-    for common, worktrees in sorted(_checkouts(dirs).items()):
-        for wt in sorted(worktrees):
+    for common, touched in sorted(_checkouts(dirs).items()):
+        repo = Path(common)
+        name = repo.parent.name if repo.name == ".git" else repo.name
+        others = [w for w in _worktrees(repo) if w not in touched and Path(w).is_dir()]
+        for wt in sorted(touched) + [w for w in others if _active_since(w, since)]:
             if _git(["status", "--porcelain"], cwd=wt).strip():
                 reasons.append(f"uncommitted changes in {wt}")
             git_dir = Path(_git(["rev-parse", "--absolute-git-dir"], cwd=wt).strip())
             busy = [m for m in _IN_PROGRESS if (git_dir / m).exists()]
             if busy:
                 reasons.append(f"{busy[0]} in progress in {wt}")
-            if _git(["rev-list", "-n1", "HEAD", "--not", "--remotes"], cwd=wt).strip():
-                reasons.append(f"{wt} has commits on no remote")
-        repo = Path(common)
+            head = _git(["rev-parse", "HEAD"], cwd=wt).strip()
+            if head and not is_landed(repo, head):
+                reasons.append(f"{wt}'s HEAD is not merged into the default branch")
         refs = _git(
             ["for-each-ref", "--format=%(refname)%09%(committerdate:unix)", "refs/heads"],
             cwd=repo,
@@ -369,13 +493,13 @@ def unlanded(dirs: Iterable[str], *, since: float) -> list[str]:
             moved = log.stat().st_mtime if log.exists() else 0.0
             if max(float(committed or 0), moved) < since:
                 continue
-            if _git(["rev-list", "-n1", ref, "--not", "--remotes"], cwd=repo).strip():
+            if not is_landed(repo, ref):
                 reasons.append(
-                    f"branch {ref.removeprefix('refs/heads/')} of {repo.parent.name} is on no remote"
+                    f"branch {ref.removeprefix('refs/heads/')} of {name} is not merged"
                 )
         stash_log = repo / "logs" / "refs" / "stash"
         if stash_log.exists() and stash_log.stat().st_mtime >= since:
-            reasons.append(f"a stash in {repo.parent.name} newer than the session")
+            reasons.append(f"a stash in {name} newer than the session")
     return reasons
 
 
@@ -387,17 +511,19 @@ def unlanded(dirs: Iterable[str], *, since: float) -> list[str]:
 class ReapContext:
     """What every check reads, gathered once per run.
 
-    ``verdicts`` maps a session id to its triage group; ``parents`` holds the names of
-    sessions that spawned a live one; ``callers`` the session ids of whoever runs this.
+    ``verdicts`` maps a session id to its triage verdict (``group``, ``said_at``);
+    ``parents`` holds the names of sessions that spawned a live one; ``callers`` the
+    session ids of whoever runs this; ``is_landed`` is :func:`unlanded`'s.
     """
 
     settings: GuardSettings
     now: float = field(default_factory=time.time)
-    verdicts: Mapping[str, str] = field(default_factory=dict)
+    verdicts: Mapping[str, Mapping] = field(default_factory=dict)
     parents: frozenset[str] = frozenset()
     callers: frozenset[str] = frozenset()
     argv_of: Callable[[int], list[str] | None] = lambda pid: None
     touched_cache: Path | None = None
+    is_landed: Callable[[Path, str], bool] | None = None
 
 
 def _add_dirs(argv: Sequence[str] | None) -> list[str]:
@@ -475,9 +601,24 @@ def check_idle_for(session: LiveSession, ctx: ReapContext) -> str | None:
 def check_ledger_done(session: LiveSession, ctx: ReapContext) -> str | None:
     if not ctx.settings.require_done:
         return None
-    group = ctx.verdicts.get(session.session_id, "unclassified")
+    verdict = ctx.verdicts.get(session.session_id) or {}
+    group = verdict.get("group", "unclassified")
     if group != "safe_to_close":
         return f"its ledger does not say it is done ({group})"
+    # The all-clear must be this session's, and newer than the last thing it was asked:
+    # a ledger is keyed by name, so a reused name inherits one, and a session given new
+    # work after writing it is no longer done.
+    said = _epoch(str(verdict.get("said_at") or ""))
+    if not said:
+        return "its ledger's all-clear has no time, so it may predate its last work"
+    from crowsnest.activity import read_activity
+
+    asked = _epoch(
+        read_activity(session.transcript, session_id=session.session_id).last_prompt_at
+    )
+    began = _first_stamp(Path(session.transcript)) or session.started_at
+    if said < max(asked, began):
+        return "its ledger's all-clear is older than its last prompt"
     return None
 
 
@@ -488,7 +629,7 @@ def check_nothing_unlanded(session: LiveSession, ctx: ReapContext) -> str | None
     if not _checkouts(dirs):
         return "it touched no git checkout, so whether its work landed cannot be told"
     since = min(filter(None, (_first_stamp(transcript), session.started_at)), default=0.0)
-    found = unlanded(dirs, since=since)
+    found = unlanded(dirs, since=since, is_landed=ctx.is_landed)
     if found:
         more = f" (+{len(found) - 2} more)" if len(found) > 2 else ""
         return "unlanded work: " + "; ".join(found[:2]) + more
@@ -536,12 +677,15 @@ def _context(
     from crowsnest.lineage import current_session, from_records
     from crowsnest.spawn import _process_argv
 
-    verdicts: dict[str, str] = {}
+    verdicts: dict[str, dict] = {}
     found = tools.triage(home=home, config=config, activity=False)
     for group, rows in found["groups"].items():
         for row in rows:
             if row.get("session_id"):
-                verdicts[str(row["session_id"])] = group
+                verdicts[str(row["session_id"])] = {
+                    "group": group,
+                    "said_at": str(row.get("said_at") or ""),
+                }
     live_names = {s.label for s in sessions}
     parents = frozenset(e.parent for e in from_records() if e.child in live_names)
     me = current_session(home=home)
@@ -628,8 +772,8 @@ def sigterm_closer(
     since = (rec.get("statusUpdatedAt") or rec.get("updatedAt") or 0) / 1000
     if abs(since - session.status_since) > 1:
         return "kept: its status changed since the plan"
-    if not is_alive(session.pid):
-        return "kept: its pid is no longer a claude"
+    if not is_alive(session.pid) or not same_process(session.pid, rec):
+        return "kept: its pid is no longer that claude"
     kill(session.pid, signal.SIGTERM)
     deadline = time.monotonic() + wait
     while time.monotonic() < deadline:
@@ -763,7 +907,10 @@ def oom_pass(
 
     A descendant that is itself a registered session keeps its own tier. Only registered
     sessions are touched: an unregistered ``claude -p`` is left to whatever else manages
-    it. A no-op without ``/proc``. Returns ``{"set": {pid: value}, "errors": [...]}``.
+    it. The one exception is a session's ``tmux`` server holding a *negative* value --
+    inherited when the lookout's tree started it, and passed to every pane opened after
+    -- which is reset to ``0``. A process that exits mid-pass is skipped. A no-op without
+    ``/proc``. Returns ``{"set": {pid: value}, "errors": [...]}``.
     """
     proc = PROC if proc is None else proc
     if not proc.is_dir():
@@ -777,19 +924,38 @@ def oom_pass(
     registered = {s.pid for s in sessions}
     written: dict[int, int] = {}
     errors: list[str] = []
+    parent = {kid: pid for pid, many in kids.items() for kid in many}
+
+    def put(pid: int, value: int, *, only_if_below: int | None = None) -> None:
+        target = proc / str(pid) / "oom_score_adj"
+        try:
+            now = int(target.read_text().strip() or 0)
+            if only_if_below is not None and now >= only_if_below:
+                return
+            if now != value:
+                target.write_text(str(value))
+            written[pid] = value
+        except FileNotFoundError:
+            pass  # exited since the listing
+        except (OSError, ValueError) as exc:
+            errors.append(f"{pid}: {exc}")
+
     for s in sessions:
         value = tier_of(s, settings)
         todo = [s.pid]
         while todo:
             pid = todo.pop()
-            target = proc / str(pid) / "oom_score_adj"
-            try:
-                if target.read_text().strip() != str(value):
-                    target.write_text(str(value))
-                written[pid] = value
-            except OSError as exc:
-                errors.append(f"{pid}: {exc}")
+            put(pid, value)
             todo += [k for k in kids.get(pid, ()) if k not in registered]
+        server = parent.get(s.pid)
+        try:
+            is_tmux = server and (proc / str(server) / "comm").read_text().startswith(
+                "tmux"
+            )
+        except OSError:
+            is_tmux = False
+        if is_tmux:
+            put(server, 0, only_if_below=0)
     return {"set": written, "errors": errors}
 
 
