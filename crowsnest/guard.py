@@ -303,8 +303,10 @@ def _transcripts(transcript: Path) -> list[Path]:
 
 def _paths_in(kind: bytes, value: str) -> Iterable[str]:
     if kind != b"command":
-        if value.startswith("/"):
-            yield value if kind == b"cwd" else str(Path(value).parent)
+        # `isabs` alone misses `/x` on Windows from Python 3.13; `dirname` keeps the
+        # separators the transcript wrote.
+        if value.startswith("/") or os.path.isabs(value):
+            yield value if kind == b"cwd" else os.path.dirname(value)
         return
     home = str(Path.home())
     for token in _COMMAND_PATH.findall(value):

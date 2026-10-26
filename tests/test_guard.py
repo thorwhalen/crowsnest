@@ -299,8 +299,9 @@ def test_a_detached_worktree_with_its_own_commit_is_unlanded(repo, tmp_path):
     (wt / "d.txt").write_text("d")
     _git("add", "d.txt", cwd=wt)
     _git("commit", "-qm", "d", cwd=wt)
-    # Only the worktree was touched; its commit is still found.
-    assert any(str(wt) in r for r in guard.unlanded([str(wt)], since=0.0))
+    # Only the worktree was touched; its commit is still found. (git prints the path with
+    # forward slashes on Windows, so the reason is matched, not the path.)
+    assert any("HEAD is not merged" in r for r in guard.unlanded([str(wt)], since=0.0))
 
 
 def test_a_stash_made_during_the_session_is_unlanded(repo):
