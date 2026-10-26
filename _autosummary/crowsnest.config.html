@@ -76,6 +76,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
@@ -121,6 +122,8 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.CLAUDE_BIN_KEY"><code class="docutils literal notranslate"><span class="pre">CLAUDE_BIN_KEY</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.CONFIG_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">CONFIG_ENV_VAR</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.DFLT_FRESH_SECONDS"><code class="docutils literal notranslate"><span class="pre">DFLT_FRESH_SECONDS</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.GUARD_KEY"><code class="docutils literal notranslate"><span class="pre">GUARD_KEY</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.GuardSettings"><code class="docutils literal notranslate"><span class="pre">GuardSettings</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.Home"><code class="docutils literal notranslate"><span class="pre">Home</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.PUBLISH_KEY"><code class="docutils literal notranslate"><span class="pre">PUBLISH_KEY</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.PublishSettings"><code class="docutils literal notranslate"><span class="pre">PublishSettings</span></code></a></li>
@@ -133,6 +136,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.claude_bin_setting"><code class="docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.config_path"><code class="docutils literal notranslate"><span class="pre">config_path()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.configured_homes"><code class="docutils literal notranslate"><span class="pre">configured_homes()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.guard_settings"><code class="docutils literal notranslate"><span class="pre">guard_settings()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.homes"><code class="docutils literal notranslate"><span class="pre">homes()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.publish_settings"><code class="docutils literal notranslate"><span class="pre">publish_settings()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.report_settings"><code class="docutils literal notranslate"><span class="pre">report_settings()</span></code></a></li>
@@ -266,6 +270,9 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.WATCH_KEY" title="crowsnest.config.WATCH_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WATCH_KEY</span></code></a></p></td>
 <td><p>The config table holding <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code>'s selection (#141).</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.GUARD_KEY" title="crowsnest.config.GUARD_KEY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GUARD_KEY</span></code></a></p></td>
+<td><p>The config table bounding how many sessions a machine runs, and how it sheds them (#171).</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -285,25 +292,28 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.configured_homes" title="crowsnest.config.configured_homes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">configured_homes</span></code></a>(*[, path])</p></td>
 <td><p>The homes the config file's <code class="docutils literal notranslate"><span class="pre">[[homes]]</span></code> entries name; <code class="docutils literal notranslate"><span class="pre">[]</span></code> when it names none.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.homes" title="crowsnest.config.homes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">homes</span></code></a>(*[, path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.guard_settings" title="crowsnest.config.guard_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guard_settings</span></code></a>(*[, path])</p></td>
+<td><p>The config file's <code class="docutils literal notranslate"><span class="pre">[guard]</span></code> table, or the defaults when it has none.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.homes" title="crowsnest.config.homes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">homes</span></code></a>(*[, path])</p></td>
 <td><p>The configured homes, or the default one when the config file names none.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.publish_settings" title="crowsnest.config.publish_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish_settings</span></code></a>(*[, path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.publish_settings" title="crowsnest.config.publish_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish_settings</span></code></a>(*[, path])</p></td>
 <td><p>The config file's <code class="docutils literal notranslate"><span class="pre">[publish]</span></code> table, or the defaults when it has none.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.report_settings" title="crowsnest.config.report_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report_settings</span></code></a>(*[, path])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.report_settings" title="crowsnest.config.report_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report_settings</span></code></a>(*[, path])</p></td>
 <td><p>The config file's <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table, or the defaults when it has none.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.root_bypass_ok_setting" title="crowsnest.config.root_bypass_ok_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">root_bypass_ok_setting</span></code></a>(*[, path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.root_bypass_ok_setting" title="crowsnest.config.root_bypass_ok_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">root_bypass_ok_setting</span></code></a>(*[, path])</p></td>
 <td><p>Whether the config file says the bypass flag works as root here (default <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.spawn_model_setting" title="crowsnest.config.spawn_model_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_model_setting</span></code></a>(*[, path])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.spawn_model_setting" title="crowsnest.config.spawn_model_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_model_setting</span></code></a>(*[, path])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">spawn_model</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting" title="crowsnest.config.spawn_permission_mode_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_permission_mode_setting</span></code></a>(*[, path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.spawn_permission_mode_setting" title="crowsnest.config.spawn_permission_mode_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spawn_permission_mode_setting</span></code></a>(*[, path])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">spawn_permission_mode</span></code> the config file names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it names none.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.watch_settings" title="crowsnest.config.watch_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watch_settings</span></code></a>(*[, path])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.watch_settings" title="crowsnest.config.watch_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watch_settings</span></code></a>(*[, path])</p></td>
 <td><p>The config file's <code class="docutils literal notranslate"><span class="pre">[watch]</span></code> table, or the defaults (everything) when it has none.</p></td>
 </tr>
 </tbody>
@@ -316,16 +326,19 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.AttentionSettings" title="crowsnest.config.AttentionSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AttentionSettings</span></code></a>([evening_hour, ...])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">[attention]</span></code> table, validated.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.Home" title="crowsnest.config.Home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Home</span></code></a>(name, path[, remote, fresh_seconds])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.GuardSettings" title="crowsnest.config.GuardSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GuardSettings</span></code></a>([protect, max_sessions, ...])</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">[guard]</span></code> table, validated: the spawn gate, the reaper and the OOM tiers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.Home" title="crowsnest.config.Home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Home</span></code></a>(name, path[, remote, fresh_seconds])</p></td>
 <td><p>One Claude Code config directory to read, and how to judge liveness in it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.PublishSettings" title="crowsnest.config.PublishSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PublishSettings</span></code></a>([to, command, console, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.PublishSettings" title="crowsnest.config.PublishSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PublishSettings</span></code></a>([to, command, console, ...])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">[publish]</span></code> table, validated: where the page goes (<a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.publish</span></code></a>).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.ReportSettings" title="crowsnest.config.ReportSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReportSettings</span></code></a>([ledger_dir])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.ReportSettings" title="crowsnest.config.ReportSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReportSettings</span></code></a>([ledger_dir])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">[report]</span></code> table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way (<a class="reference internal" href="crowsnest.rows.html#crowsnest.rows.RowContext" title="crowsnest.rows.RowContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">crowsnest.rows.RowContext</span></code></a>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.WatchSettings" title="crowsnest.config.WatchSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WatchSettings</span></code></a>([kinds, mute])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.WatchSettings" title="crowsnest.config.WatchSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WatchSettings</span></code></a>([kinds, mute])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">[watch]</span></code> table, validated: which kinds <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> prints (<code class="docutils literal notranslate"><span class="pre">None</span></code>: all) and which sessions it never mentions.</p></td>
 </tr>
 </tbody>
@@ -371,6 +384,32 @@ and nothing in this module pretends otherwise.</p>
 <dt class="sig sig-object py" id="crowsnest.config.DFLT_FRESH_SECONDS">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">DFLT_FRESH_SECONDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3600.0</span></span><a class="headerlink" href="#crowsnest.config.DFLT_FRESH_SECONDS" title="Link to this definition">#</a></dt>
 <dd><p>How recently a remote home’s registry record must have changed to count as live.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.config.GUARD_KEY">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">GUARD_KEY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'guard'</span></span><a class="headerlink" href="#crowsnest.config.GUARD_KEY" title="Link to this definition">#</a></dt>
+<dd><p>The config table bounding how many sessions a machine runs, and how it sheds them (#171).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crowsnest.config.GuardSettings">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">GuardSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sessions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_available_mb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1536</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_mb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">330</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reserve_mb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idle_hours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">24.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_done</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'report'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_closes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#GuardSettings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.GuardSettings" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">[guard]</span></code> table, validated: the spawn gate, the reaper and the OOM tiers.</p>
+<p>Sizes are in megabytes. <code class="docutils literal notranslate"><span class="pre">max_sessions</span></code> <code class="docutils literal notranslate"><span class="pre">None</span></code> derives the cap from the machine’s
+memory (<a class="reference internal" href="crowsnest.guard.html#crowsnest.guard.session_cap" title="crowsnest.guard.session_cap"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.guard.session_cap()</span></code></a>); <code class="docutils literal notranslate"><span class="pre">reap</span></code> is what <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">guard</span>
+<span class="pre">tick</span></code> does with the sessions it would close: <code class="docutils literal notranslate"><span class="pre">&quot;report&quot;</span></code> (the default) only says.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">GuardSettings</span><span class="p">()</span><span class="o">.</span><span class="n">reap</span><span class="p">,</span> <span class="n">GuardSettings</span><span class="p">()</span><span class="o">.</span><span class="n">oom</span><span class="p">[</span><span class="s2">"idle"</span><span class="p">]</span>
+</span><span data-line="2"><span class="go">('report', 800)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">GuardSettings</span><span class="p">(</span><span class="n">reap</span><span class="o">=</span><span class="s1">'kill'</span><span class="p">)</span>
+</span><span data-line="4"><span class="gt">Traceback (most recent call last):</span>
+</span><span data-line="5"><span class="w">  </span><span class="c">...</span>
+</span><span data-line="6"><span class="gr">ValueError</span>: <span class="n">reap must be one of off, report, apply, not 'kill'</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -506,6 +545,37 @@ command printed for later pasting (<a class="reference internal" href="crowsnest
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.config.Home" title="crowsnest.config.Home"><code class="xref py py-class docutils literal notranslate"><span class="pre">Home</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.config.guard_settings">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">guard_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#guard_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.guard_settings" title="Link to this definition">#</a></dt>
+<dd><p>The config file’s <code class="docutils literal notranslate"><span class="pre">[guard]</span></code> table, or the defaults when it has none.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[guard]</span>
+</span><span data-line="2"><span class="n">protect</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"cn-tw"</span><span class="p">]</span><span class="w">        </span><span class="c1"># never gated, never reaped, OOM tier "protected"</span>
+</span><span data-line="3"><span class="n">max_sessions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12</span><span class="w">          </span><span class="c1"># default: derived from MemTotal, reserve and session_mb</span>
+</span><span data-line="4"><span class="n">min_available</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1.5G"</span><span class="w">     </span><span class="c1"># refuse a spawn that would leave less MemAvailable</span>
+</span><span data-line="5"><span class="n">session_mb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">330</span><span class="w">           </span><span class="c1"># what one more session is expected to take</span>
+</span><span data-line="6"><span class="n">reserve</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2G"</span><span class="w">             </span><span class="c1"># memory kept for everything that is not a session</span>
+</span><span data-line="7"><span class="n">idle_hours</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span><span class="w">            </span><span class="c1"># the reaper's idle threshold</span>
+</span><span data-line="8"><span class="n">require_done</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">        </span><span class="c1"># the reaper closes only a session whose ledger says done</span>
+</span><span data-line="9"><span class="n">reap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"report"</span><span class="w">            </span><span class="c1"># what `crowsnest guard tick` does: off, report, apply</span>
+</span><span data-line="10"><span class="n">max_closes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="w">             </span><span class="c1"># at most this many closes per run</span>
+</span><span data-line="11"><span class="n">notify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://ntfy.sh/&lt;topic&gt;"</span><span class="w">   </span><span class="c1"># where closes and new lookout links are pushed</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="k">[guard.oom]</span>
+</span><span data-line="14"><span class="n">protected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-300</span>
+</span><span data-line="15"><span class="n">busy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">300</span>
+</span><span data-line="16"><span class="n">waiting</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">500</span>
+</span><span data-line="17"><span class="n">idle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">800</span>
+</span></pre></div>
+</div>
+<p>A key the table does not know is an error, as in <code class="docutils literal notranslate"><span class="pre">[attention]</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#crowsnest.config.GuardSettings" title="crowsnest.config.GuardSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">GuardSettings</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -678,7 +748,7 @@ a key the table does not know, is an error, as in <code class="docutils literal 
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=5c5ca7ce"></script>
+      <script src="../_static/documentation_options.js?v=f82423d7"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

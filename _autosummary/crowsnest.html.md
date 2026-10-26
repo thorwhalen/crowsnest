@@ -58,7 +58,12 @@ Those are the writes, and they are all of them: a session started, and files tha
 crowsnest’s own and live outside any repository – the ledgers, the hook event log, the
 spawn records, the attention records (all four under [`crowsnest.paths.data_dir()`](crowsnest.paths.html.md#crowsnest.paths.data_dir)),
 and the symlinks the skill installer makes.
-crowsnest never sends into, kills, or writes into a session that already exists.
+crowsnest never sends into or writes into a session that already exists. It ends one in
+exactly one place, [`crowsnest.guard`](crowsnest.guard.html.md#module-crowsnest.guard)’s reaper (#171): only a resting session whose
+ledger says it is done and whose work is all landed, only when a person or the guard’s
+timer runs it with `apply`, and with SIGTERM – the session can be resumed after. The
+guard also sets each session’s `oom_score_adj` on Linux, and refuses a spawn when the
+machine is out of room.
 
 ```pycon
 >>> from crowsnest import live_sessions, roster
@@ -313,7 +318,7 @@ every [`roster()`](#crowsnest.roster) row does – the two things a page naming 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.spawn(name, , cwd, prompt='', model=None, effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None)
+### crowsnest.spawn(name, , cwd, prompt='', model=None, effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None, resume='', gate=None)
 
 Start a session named `name` in `cwd`, and wait for the registry to see it.
 
@@ -382,6 +387,16 @@ home is checked, not only the one the session starts in (crowsnest#42). So is a 
 whose ledger file already belongs to a *different* name (`cn/xa` and `cn:xa`
 share `cn-xa.md`). Pick another, a suffix will do.
 
+**Memory.** `gate` (`(name, *, home, config)`) runs before anything starts and
+raises to refuse; the default, with one of this module’s own spawners, is
+[`crowsnest.guard.gate()`](crowsnest.guard.html.md#crowsnest.guard.gate) (a session cap and a `MemAvailable` floor, from the
+config file’s `[guard]`). A caller’s `spawner` is gated only by a `gate` it
+passes. Once the session registers, its process gets its OOM tier at once
+([`crowsnest.guard.tier_of()`](crowsnest.guard.html.md#crowsnest.guard.tier_of)) rather than at the guard’s next tick.
+
+`resume` continues that session id instead of starting a new one: same transcript,
+same Remote Control link (measured, #171), `prompt` its next message.
+
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
@@ -420,6 +435,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`egress`](crowsnest.egress.html.md#module-crowsnest.egress)                 | The page's sanitiser, made safe against text that an earlier clip has already cut (#83).                                             |
 | [`envelope_cache`](crowsnest.envelope_cache.html.md#module-crowsnest.envelope_cache) | A cached openloops envelope: asked for at most once per `every`, read by the page.                                                   |
 | [`gists`](crowsnest.gists.html.md#module-crowsnest.gists)                   | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
+| [`guard`](crowsnest.guard.html.md#module-crowsnest.guard)                   | Keep a machine's sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).                                           |
 | [`hook`](crowsnest.hook.html.md#module-crowsnest.hook)                     | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
 | [`init`](crowsnest.init.html.md#module-crowsnest.init)                     | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
 | [`ledger`](crowsnest.ledger.html.md#module-crowsnest.ledger)                 | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |

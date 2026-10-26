@@ -19,15 +19,19 @@ here prints, exits, or knows which surface called it.
 | [`backfill_lineage`](#crowsnest.tools.backfill_lineage)(\*[, home, all_homes, ...])       | Recover parentage from transcripts, once, and write it into the lineage log.                                                                                                                                                              |
 | [`brief`](#crowsnest.tools.brief)(session, \*[, home, all_homes, config, ...]) | openloops' digest for one live session: what it has been doing, dated, in its words.                                                                                                                                                      |
 | [`done`](#crowsnest.tools.done)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item handled: hidden until what it asks for changes.                                                                                                                                                                     |
+| [`guard_tick`](#crowsnest.tools.guard_tick)(\*[, home, config])                     | The OOM pass, then the reaper in the mode `[guard] reap` names (report by default).                                                                                                                                                       |
+| [`guard_units`](#crowsnest.tools.guard_units)(\*[, to])                              | The systemd units that run the guard, rendered for this machine; written to `to` (a directory, e.g. `/etc/systemd/system`) when given.                                                                                                    |
 | [`later`](#crowsnest.tools.later)(session, preset, \*[, plan, on_change, ...]) | Put `session`'s item off until a preset time, or until it changes, whichever first.                                                                                                                                                       |
 | [`lineage`](#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
 | [`live`](#crowsnest.tools.live)(\*[, home, all_homes, config, activity, ...]) | What every live session is doing now, as the page's `live/roster` document.                                                                                                                                                               |
 | [`note`](#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
 | [`publish`](#crowsnest.tools.publish)(\*[, to, command, publisher, home, ...])   | Render the report as a whole page and deliver it where its owner reads it.                                                                                                                                                                |
+| [`reap`](#crowsnest.tools.reap)(\*[, apply, home, config])                    | Which sessions the reaper would close, and why every other one is kept.                                                                                                                                                                   |
 | [`recap`](#crowsnest.tools.recap)(session, \*[, home, all_homes, config, ...]) | Five lines about one live session, read from disk: the answer to a `recap` intent.                                                                                                                                                        |
 | [`repo_url`](#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](#crowsnest.tools.roster) returns. |
 | [`resolve`](#crowsnest.tools.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                                                                                                                                                              |
+| [`revive`](#crowsnest.tools.revive)(name, \*, cwd[, prompt, model, ...])        | Make sure a session named `name` runs -- the one it was, when that is possible.                                                                                                                                                           |
 | [`roster`](#crowsnest.tools.roster)(\*[, home, all_homes, config, ...])         | Every live session, most urgent first, each with a clipped view of its activity.                                                                                                                                                          |
 | [`seen`](#crowsnest.tools.seen)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item seen at its current revision: it dims until it changes.                                                                                                                                                             |
 | [`sessions`](#crowsnest.tools.sessions)(\*[, home, all_homes, config])            | The live sessions of one home, or of every configured home when `all_homes`.                                                                                                                                                              |
@@ -96,6 +100,21 @@ state for a session started minutes ago – and `why` says so.
 ### crowsnest.tools.done(session, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Mark `session`’s item handled: hidden until what it asks for changes.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.guard_tick(, home=None, config=None)
+
+The OOM pass, then the reaper in the mode `[guard] reap` names (report by default).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.guard_units(, to='')
+
+The systemd units that run the guard, rendered for this machine; written to `to`
+(a directory, e.g. `/etc/systemd/system`) when given.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -184,6 +203,16 @@ referenced issues and pull requests are now ([`report()`](#crowsnest.tools.repor
 
 The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
 so the last one sent can be looked at locally.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.reap(, apply=False, home=None, config=None)
+
+Which sessions the reaper would close, and why every other one is kept.
+
+`apply=True` closes them (at most `[guard] max_closes`), each re-verified first,
+with SIGTERM; the default only reports. See [`crowsnest.guard`](crowsnest.guard.html.md#module-crowsnest.guard) for the checks.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -309,6 +338,26 @@ prefix: an id that happens to begin another session’s id would otherwise be am
 
 * **Return type:**
   [`LiveSession`](crowsnest.registry.html.md#crowsnest.registry.LiveSession)
+
+### crowsnest.tools.revive(name, , cwd, prompt='', model=None, effort='', resume_within_hours=168.0, resume_prompt='You were restarted (your process had exited, probably killed). Anything you were watching died with it: re-arm your watchers, then carry on.', home=None, config=None, spawner=None)
+
+Make sure a session named `name` runs – the one it was, when that is possible.
+
+For a watchdog. Already live: nothing is done. Otherwise the last session that went by
+the name ([`crowsnest.guard.last_session()`](crowsnest.guard.html.md#crowsnest.guard.last_session)), and that is not running under any
+other name, is resumed in its own folder when its transcript changed within
+`resume_within_hours`. That keeps its Remote Control link – a phone still open on
+it reconnects instead of facing a dead link – and it is sent `resume_prompt`. With
+nothing to resume, or a resume that never registers (its tmux session is then
+closed), a fresh session starts in `cwd` with `prompt`; its new link is pushed to
+`[guard] notify`. A restart is never refused by the memory gate: it replaces a
+session, it does not add one.
+
+Returns `{"action": "alive"|"resumed"|"fresh"|"failed", "name", "pid",
+"session_id", "session_url", "same_link"}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.tools.roster(, home=None, all_homes=False, config=None, activity=True, links=None, ledger_dir=None, resolvers=None, text_limit=240, \_pages=None)
 

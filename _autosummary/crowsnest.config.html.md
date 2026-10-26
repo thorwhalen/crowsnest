@@ -72,15 +72,16 @@ and nothing in this module pretends otherwise.
 
 ### Module Attributes
 
-| [`CLAUDE_BIN_KEY`](#crowsnest.config.CLAUDE_BIN_KEY)            | The top-level config key naming the command that starts a session.               |
-|----------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`SPAWN_PERMISSION_MODE_KEY`](#crowsnest.config.SPAWN_PERMISSION_MODE_KEY) | The top-level config key naming the permission mode a spawned session starts in. |
-| [`CONFIG_ENV_VAR`](#crowsnest.config.CONFIG_ENV_VAR)            | Overrides the config file location outright.                                     |
-| [`DFLT_FRESH_SECONDS`](#crowsnest.config.DFLT_FRESH_SECONDS)        | How recently a remote home's registry record must have changed to count as live. |
-| [`ATTENTION_KEY`](#crowsnest.config.ATTENTION_KEY)             | The config table holding the attention settings.                                 |
-| [`REPORT_KEY`](#crowsnest.config.REPORT_KEY)                | The config table saying how the report's rows are built.                         |
-| [`PUBLISH_KEY`](#crowsnest.config.PUBLISH_KEY)               | The config table saying where `crowsnest publish` sends the page.                |
-| [`WATCH_KEY`](#crowsnest.config.WATCH_KEY)                 | The config table holding `crowsnest watch`'s selection (#141).                   |
+| [`CLAUDE_BIN_KEY`](#crowsnest.config.CLAUDE_BIN_KEY)            | The top-level config key naming the command that starts a session.                        |
+|----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| [`SPAWN_PERMISSION_MODE_KEY`](#crowsnest.config.SPAWN_PERMISSION_MODE_KEY) | The top-level config key naming the permission mode a spawned session starts in.          |
+| [`CONFIG_ENV_VAR`](#crowsnest.config.CONFIG_ENV_VAR)            | Overrides the config file location outright.                                              |
+| [`DFLT_FRESH_SECONDS`](#crowsnest.config.DFLT_FRESH_SECONDS)        | How recently a remote home's registry record must have changed to count as live.          |
+| [`ATTENTION_KEY`](#crowsnest.config.ATTENTION_KEY)             | The config table holding the attention settings.                                          |
+| [`REPORT_KEY`](#crowsnest.config.REPORT_KEY)                | The config table saying how the report's rows are built.                                  |
+| [`PUBLISH_KEY`](#crowsnest.config.PUBLISH_KEY)               | The config table saying where `crowsnest publish` sends the page.                         |
+| [`WATCH_KEY`](#crowsnest.config.WATCH_KEY)                 | The config table holding `crowsnest watch`'s selection (#141).                            |
+| [`GUARD_KEY`](#crowsnest.config.GUARD_KEY)                 | The config table bounding how many sessions a machine runs, and how it sheds them (#171). |
 
 ### Functions
 
@@ -89,6 +90,7 @@ and nothing in this module pretends otherwise.
 | [`claude_bin_setting`](#crowsnest.config.claude_bin_setting)(\*[, path])            | The `claude_bin` the config file names, or `''` when it names none.                |
 | [`config_path`](#crowsnest.config.config_path)([path])                       | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`.   |
 | [`configured_homes`](#crowsnest.config.configured_homes)(\*[, path])              | The homes the config file's `[[homes]]` entries name; `[]` when it names none.     |
+| [`guard_settings`](#crowsnest.config.guard_settings)(\*[, path])                | The config file's `[guard]` table, or the defaults when it has none.               |
 | [`homes`](#crowsnest.config.homes)(\*[, path])                         | The configured homes, or the default one when the config file names none.          |
 | [`publish_settings`](#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.             |
 | [`report_settings`](#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.              |
@@ -101,6 +103,7 @@ and nothing in this module pretends otherwise.
 
 | [`AttentionSettings`](#crowsnest.config.AttentionSettings)([evening_hour, ...])       | The `[attention]` table, validated.                                                                                                                                                                                                        |
 |-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`GuardSettings`](#crowsnest.config.GuardSettings)([protect, max_sessions, ...])  | The `[guard]` table, validated: the spawn gate, the reaper and the OOM tiers.                                                                                                                                                              |
 | [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds])    | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
 | [`PublishSettings`](#crowsnest.config.PublishSettings)([to, command, console, ...]) | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
 | [`ReportSettings`](#crowsnest.config.ReportSettings)([ledger_dir])                 | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
@@ -137,6 +140,29 @@ Overrides the config file location outright.
 ### crowsnest.config.DFLT_FRESH_SECONDS *= 3600.0*
 
 How recently a remote home’s registry record must have changed to count as live.
+
+### crowsnest.config.GUARD_KEY *= 'guard'*
+
+The config table bounding how many sessions a machine runs, and how it sheds them (#171).
+
+### *class* crowsnest.config.GuardSettings(protect=frozenset({}), max_sessions=None, min_available_mb=1536, session_mb=330, reserve_mb=2048, idle_hours=24.0, require_done=True, reap='report', max_closes=3, notify='', oom=<factory>)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[guard]` table, validated: the spawn gate, the reaper and the OOM tiers.
+
+Sizes are in megabytes. `max_sessions` `None` derives the cap from the machine’s
+memory ([`crowsnest.guard.session_cap()`](crowsnest.guard.html.md#crowsnest.guard.session_cap)); `reap` is what `crowsnest guard
+tick` does with the sessions it would close: `"report"` (the default) only says.
+
+```pycon
+>>> GuardSettings().reap, GuardSettings().oom["idle"]
+('report', 800)
+>>> GuardSettings(reap='kill')
+Traceback (most recent call last):
+  ...
+ValueError: reap must be one of off, report, apply, not 'kill'
+```
 
 ### *class* crowsnest.config.Home(name, path, remote=False, fresh_seconds=3600.0)
 
@@ -247,6 +273,35 @@ command printed for later pasting ([`crowsnest.lineage.open_command()`](crowsnes
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](#crowsnest.config.Home)]
+
+### crowsnest.config.guard_settings(, path=None)
+
+The config file’s `[guard]` table, or the defaults when it has none.
+
+```toml
+[guard]
+protect = ["cn-tw"]        # never gated, never reaped, OOM tier "protected"
+max_sessions = 12          # default: derived from MemTotal, reserve and session_mb
+min_available = "1.5G"     # refuse a spawn that would leave less MemAvailable
+session_mb = 330           # what one more session is expected to take
+reserve = "2G"             # memory kept for everything that is not a session
+idle_hours = 24            # the reaper's idle threshold
+require_done = true        # the reaper closes only a session whose ledger says done
+reap = "report"            # what `crowsnest guard tick` does: off, report, apply
+max_closes = 3             # at most this many closes per run
+notify = "https://ntfy.sh/<topic>"   # where closes and new lookout links are pushed
+
+[guard.oom]
+protected = -300
+busy = 300
+waiting = 500
+idle = 800
+```
+
+A key the table does not know is an error, as in `[attention]`.
+
+* **Return type:**
+  [`GuardSettings`](#crowsnest.config.GuardSettings)
 
 ### crowsnest.config.homes(, path=None)
 

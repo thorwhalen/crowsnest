@@ -1,4 +1,4 @@
-> built 2026-10-23 10:22 UTC from d2c5342 (main) · crowsnest 0.0.104. Details: build_info.json
+> built 2026-10-26 14:53 UTC from 237e5bd (main) · crowsnest 0.0.105. Details: build_info.json
 
 # index.html.md
 
@@ -267,6 +267,37 @@ spawn_permission_mode = "bypass"   # or "acceptEdits", "plan", "auto", ...; "" =
 
 `--permission-mode MODE` on `crowsnest spawn` (or `permission_mode=` in Python) overrides both for one spawn. `bypass` is emitted as `--dangerously-skip-permissions`, which Claude Code refuses as root unless `IS_SANDBOX=1` is set (#101). So as root crowsnest passes it only where it will work: `IS_SANDBOX=1` is in the environment of the spawn (crowsnest hands it on to the new session), or the config file says `root_bypass_ok = true`, for a `claude_bin` launcher that sets the variable itself (#161). Anywhere else an explicit `--permission-mode bypass` is refused, and an inherited or configured one is dropped with a warning naming these two fixes. An unknown mode name is refused before anything starts.
 
+## Keeping a machine inside its memory
+
+Each Claude Code session takes roughly 250 to 330 MB. On a small server, two dozen of them fill RAM and swap, and the kernel’s OOM killer starts taking sessions, the lookout among them (#171). `crowsnest guard` does three things about that, all set in the config file’s `[guard]` table:
+
+- **A spawn gate.** `crowsnest spawn` refuses (exit 75) when the machine already runs its cap of sessions, or when one more would leave `MemAvailable` below `min_available`. The cap is `max_sessions`, or else it is derived from memory: (MemTotal − `reserve` − `min_available`) / `session_mb`, which comes to 12 on a 7.6 GB server. A name in `protect` (the lookout) is never refused. Where there is no `/proc/meminfo` (macOS), only a configured `max_sessions` applies.
+- **A reaper.** `crowsnest reap` lists every session as *close* or *keep*, and gives the reasons for each keep. It closes a session only when all of the following hold, and only with `--apply`. Each close is re-checked first, sent as SIGTERM (never SIGKILL), and logged with its `claude --resume` line:
+  - it is not protected, not the caller, and not the parent of a live session;
+  - it is idle (not busy, waiting or running a shell), and has been for `idle_hours`;
+  - its ledger says it is done (triage’s *safe to close*);
+  - nothing it touched is unlanded. That means no uncommitted or untracked change, no merge or rebase in progress, and no commit, branch or stash of its own that is not merged into a remote’s default branch (pushed is not landed). It looks in every checkout the session or its subagents named, by `cwd`, by an edit’s path or by an absolute path in a shell command, and in any other worktree of those repositories that moved during the session;
+  - its ledger’s all-clear is newer than the last thing it was asked.
+- **OOM tiers.** On Linux, every session’s process tree gets an `oom_score_adj` matching its state: protected −300, busy 300, waiting 500, idle 800. When memory does run out, the kernel takes an idle worker first and the lookout last.
+
+`crowsnest guard tick` runs the OOM pass and then the reaper, in the mode `reap` names: `report` (the default, which only plans), `apply`, or `off`. A systemd timer runs it every five minutes:
+
+```bash
+crowsnest guard units --to /etc/systemd/system
+systemctl daemon-reload && systemctl enable --now crowsnest-guard.timer
+journalctl -u crowsnest-guard -n 40     # what it would close, and why it keeps the rest
+```
+
+```toml
+[guard]
+protect = ["cn-tw"]          # the lookout: never gated, never reaped, OOM tier "protected"
+min_available = "1.5G"
+reap = "report"              # "apply" once you have read a few reports
+notify = "https://ntfy.sh/<topic>"   # closes, and a lookout's new link, are pushed here
+```
+
+`crowsnest revive NAME --cwd DIR -p BRIEF` is the watchdog’s restart. If the session is live, it does nothing. Otherwise it **resumes** the last session that had that name, which keeps its Remote Control link, so a phone still open on it reconnects instead of facing a dead link. Only when there is nothing recent to resume does it start fresh with the brief, and then it pushes the new link to `notify`. `crowsnest spawn --resume SESSION_ID` does the same resume for one session.
+
 ## The ledger: what a session leaves behind
 
 The roster and the transcript both describe *now*. Neither survives a `/clear` in the watching session, and neither says what a session decided or what it is still waiting on you for. So each session gets a small markdown file — `~/.local/share/crowsnest/ledger/<name>.md` — that it writes and a watcher reads:
@@ -385,8 +416,9 @@ Nothing into another session, and nothing into a repository. Everything crowsnes
 - `events.jsonl`: one line per hook event, append-only, rotated by size. `crowsnest watch` tails it.
 - `hook.log`: one line for anything `crowsnest hook` swallowed, so “the hook did nothing” is a question with an answer.
 - `attention/<item-id>.json`: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.
+- `guard/`: the guard’s last tick (`last.json`), every close it made (`reaped.jsonl`, with the line that resumes each), and a cache of which folders each transcript names.
 
-The only other writes in the package are `crowsnest spawn`, which starts a session, and `install-skills`, which writes symlinks.
+The only other writes in the package are `crowsnest spawn`, which starts a session, `install-skills`, which writes symlinks, and the guard: `oom_score_adj` on Linux, and the SIGTERM of `crowsnest reap --apply`.
 
 ## From Python
 
@@ -1668,15 +1700,16 @@ and nothing in this module pretends otherwise.
 
 ### Module Attributes
 
-| [`CLAUDE_BIN_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.CLAUDE_BIN_KEY)            | The top-level config key naming the command that starts a session.               |
-|----------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`SPAWN_PERMISSION_MODE_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.SPAWN_PERMISSION_MODE_KEY) | The top-level config key naming the permission mode a spawned session starts in. |
-| [`CONFIG_ENV_VAR`](_autosummary/crowsnest.config.html.md#crowsnest.config.CONFIG_ENV_VAR)            | Overrides the config file location outright.                                     |
-| [`DFLT_FRESH_SECONDS`](_autosummary/crowsnest.config.html.md#crowsnest.config.DFLT_FRESH_SECONDS)        | How recently a remote home's registry record must have changed to count as live. |
-| [`ATTENTION_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.ATTENTION_KEY)             | The config table holding the attention settings.                                 |
-| [`REPORT_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.REPORT_KEY)                | The config table saying how the report's rows are built.                         |
-| [`PUBLISH_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.PUBLISH_KEY)               | The config table saying where `crowsnest publish` sends the page.                |
-| [`WATCH_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.WATCH_KEY)                 | The config table holding `crowsnest watch`'s selection (#141).                   |
+| [`CLAUDE_BIN_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.CLAUDE_BIN_KEY)            | The top-level config key naming the command that starts a session.                        |
+|----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| [`SPAWN_PERMISSION_MODE_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.SPAWN_PERMISSION_MODE_KEY) | The top-level config key naming the permission mode a spawned session starts in.          |
+| [`CONFIG_ENV_VAR`](_autosummary/crowsnest.config.html.md#crowsnest.config.CONFIG_ENV_VAR)            | Overrides the config file location outright.                                              |
+| [`DFLT_FRESH_SECONDS`](_autosummary/crowsnest.config.html.md#crowsnest.config.DFLT_FRESH_SECONDS)        | How recently a remote home's registry record must have changed to count as live.          |
+| [`ATTENTION_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.ATTENTION_KEY)             | The config table holding the attention settings.                                          |
+| [`REPORT_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.REPORT_KEY)                | The config table saying how the report's rows are built.                                  |
+| [`PUBLISH_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.PUBLISH_KEY)               | The config table saying where `crowsnest publish` sends the page.                         |
+| [`WATCH_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.WATCH_KEY)                 | The config table holding `crowsnest watch`'s selection (#141).                            |
+| [`GUARD_KEY`](_autosummary/crowsnest.config.html.md#crowsnest.config.GUARD_KEY)                 | The config table bounding how many sessions a machine runs, and how it sheds them (#171). |
 
 ### Functions
 
@@ -1685,6 +1718,7 @@ and nothing in this module pretends otherwise.
 | [`claude_bin_setting`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)(\*[, path])            | The `claude_bin` the config file names, or `''` when it names none.                |
 | [`config_path`](_autosummary/crowsnest.config.html.md#crowsnest.config.config_path)([path])                       | `path`, else `$CROWSNEST_CONFIG`, else `$XDG_CONFIG_HOME/crowsnest/config.toml`.   |
 | [`configured_homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.configured_homes)(\*[, path])              | The homes the config file's `[[homes]]` entries name; `[]` when it names none.     |
+| [`guard_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.guard_settings)(\*[, path])                | The config file's `[guard]` table, or the defaults when it has none.               |
 | [`homes`](_autosummary/crowsnest.config.html.md#crowsnest.config.homes)(\*[, path])                         | The configured homes, or the default one when the config file names none.          |
 | [`publish_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)(\*[, path])              | The config file's `[publish]` table, or the defaults when it has none.             |
 | [`report_settings`](_autosummary/crowsnest.config.html.md#crowsnest.config.report_settings)(\*[, path])               | The config file's `[report]` table, or the defaults when it has none.              |
@@ -1697,6 +1731,7 @@ and nothing in this module pretends otherwise.
 
 | [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])       | The `[attention]` table, validated.                                                                                                                                                                                                        |
 |-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`GuardSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.GuardSettings)([protect, max_sessions, ...])  | The `[guard]` table, validated: the spawn gate, the reaper and the OOM tiers.                                                                                                                                                              |
 | [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds])    | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
 | [`PublishSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.PublishSettings)([to, command, console, ...]) | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
 | [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)([ledger_dir])                 | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
@@ -1733,6 +1768,29 @@ Overrides the config file location outright.
 ### crowsnest.config.DFLT_FRESH_SECONDS *= 3600.0*
 
 How recently a remote home’s registry record must have changed to count as live.
+
+### crowsnest.config.GUARD_KEY *= 'guard'*
+
+The config table bounding how many sessions a machine runs, and how it sheds them (#171).
+
+### *class* crowsnest.config.GuardSettings(protect=frozenset({}), max_sessions=None, min_available_mb=1536, session_mb=330, reserve_mb=2048, idle_hours=24.0, require_done=True, reap='report', max_closes=3, notify='', oom=<factory>)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The `[guard]` table, validated: the spawn gate, the reaper and the OOM tiers.
+
+Sizes are in megabytes. `max_sessions` `None` derives the cap from the machine’s
+memory ([`crowsnest.guard.session_cap()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.session_cap)); `reap` is what `crowsnest guard
+tick` does with the sessions it would close: `"report"` (the default) only says.
+
+```pycon
+>>> GuardSettings().reap, GuardSettings().oom["idle"]
+('report', 800)
+>>> GuardSettings(reap='kill')
+Traceback (most recent call last):
+  ...
+ValueError: reap must be one of off, report, apply, not 'kill'
+```
 
 ### *class* crowsnest.config.Home(name, path, remote=False, fresh_seconds=3600.0)
 
@@ -1843,6 +1901,35 @@ command printed for later pasting ([`crowsnest.lineage.open_command()`](_autosum
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)]
+
+### crowsnest.config.guard_settings(, path=None)
+
+The config file’s `[guard]` table, or the defaults when it has none.
+
+```toml
+[guard]
+protect = ["cn-tw"]        # never gated, never reaped, OOM tier "protected"
+max_sessions = 12          # default: derived from MemTotal, reserve and session_mb
+min_available = "1.5G"     # refuse a spawn that would leave less MemAvailable
+session_mb = 330           # what one more session is expected to take
+reserve = "2G"             # memory kept for everything that is not a session
+idle_hours = 24            # the reaper's idle threshold
+require_done = true        # the reaper closes only a session whose ledger says done
+reap = "report"            # what `crowsnest guard tick` does: off, report, apply
+max_closes = 3             # at most this many closes per run
+notify = "https://ntfy.sh/<topic>"   # where closes and new lookout links are pushed
+
+[guard.oom]
+protected = -300
+busy = 300
+waiting = 500
+idle = 800
+```
+
+A key the table does not know is an error, as in `[attention]`.
+
+* **Return type:**
+  [`GuardSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.GuardSettings)
 
 ### crowsnest.config.homes(, path=None)
 
@@ -2358,6 +2445,251 @@ ended, or a later one carried) makes the stored gist stale.
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
+# _autosummary/crowsnest.guard.html.md
+
+# crowsnest.guard
+
+Keep a machine’s sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).
+
+On 2026-10-25/26 about 25 Claude Code sessions on a 7.6 GB server filled its RAM and its
+swap, and the kernel OOM-killed sessions six times in two hours – the lookout among them.
+Three mechanisms here, each answering one way that happened:
+
+* **The gate** ([`gate()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.gate)), which `crowsnest.spawn.spawn()` calls before it starts
+  anything: a spawn is refused ([`SpawnRefused`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.SpawnRefused)) when the machine already runs
+  [`session_cap()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.session_cap) sessions, or when one more would leave `MemAvailable` below the
+  > configured floor. A name in `[guard] protect` – the lookout – is never refused, so a
+  > watchdog restarting it always gets through. Refused, not queued: the caller (a lookout)
+  > retries when it next wakes, and that is the queue.
+* **The reaper** ([`plan()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.plan), [`reap()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.reap)), which closes a session only when every
+  check in [`DFLT_CHECKS`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.DFLT_CHECKS) passes: not protected, idle (never busy, waiting or running
+  a shell), idle for `idle_hours`, its ledger saying it is done (triage’s
+  `safe_to_close`, which never guesses), and **no unlanded work** in any repository it
+  touched ([`unlanded()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.unlanded)). A check that raises keeps the session – the opposite of
+  triage’s swallow-and-decline, because here the expensive error is closing live work.
+  Dry run unless told otherwise; each close is re-verified first and is a SIGTERM, never a
+  SIGKILL, and is logged with the `claude --resume` line that brings the session back.
+* **OOM tiers** ([`oom_pass()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.oom_pass)): every registered session’s process tree gets an
+  `oom_score_adj` by what it is doing, so that when memory runs out anyway the kernel
+  takes an idle worker first and the lookout last.
+
+[`tick()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.tick) runs the OOM pass and then the reaper in the mode `[guard] reap` names; a
+systemd timer ([`units()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.units)) runs it every few minutes. Nothing here prints or exits.
+
+Where there is no `/proc` (macOS), the memory test and the OOM pass are no-ops and the
+cap applies only when `max_sessions` is configured.
+
+```pycon
+>>> meminfo('/nonexistent/meminfo')
+{}
+>>> session_cap(GuardSettings(), {})
+>>> session_cap(GuardSettings(), {'MemTotal': 7_751 * 1024 * 1024})  # tw
+12
+```
+
+### Module Attributes
+
+| [`DFLT_CHECKS`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.DFLT_CHECKS)   | The reaper's checks, cheap first.   |
+|----------------------------------------------------------------|-------------------------------------|
+
+### Functions
+
+| [`claude_alive`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.claude_alive)(pid, \*[, proc])                      | Is `pid` a running `claude`? With `/proc`, its command line must say so.                                               |
+|-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| [`gate`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.gate)(name, \*[, home, config, settings, mem, ...]) | Refuse a spawn of `name` when the machine is full; else say what was measured.                                         |
+| [`last_session`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.last_session)(name, \*[, home, names])              | The most recent session that went by `name`: `{session_id, cwd, transcript, active_at, bridge_session_id}`, or `None`. |
+| [`meminfo`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.meminfo)([path])                                    | `/proc/meminfo` in bytes, `{}` where there is none (macOS, a test's path).                                             |
+| [`notify`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.notify)(url, title, body, \*[, timeout])            | POST `body` to an ntfy-style URL; `False` (never an exception) when it fails.                                          |
+| [`oom_pass`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.oom_pass)(\*[, home, config, settings, ...])        | Write each registered session's tier into its process and every descendant.                                            |
+| [`plan`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.plan)(\*[, home, config, settings, sessions, ...])  | Every live session, each `{"session": row, "close": bool, "keep_because": [...]}`.                                     |
+| [`reap`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.reap)(\*[, apply, home, config, settings, ...])     | The plan, and -- only with `apply=True` -- the closes, at most `max_closes`.                                           |
+| [`session_cap`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.session_cap)(settings, mem)                         | How many sessions this machine may run: `max_sessions`, else derived from memory.                                      |
+| [`tick`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.tick)(\*[, home, config, settings])                 | What the timer runs: the OOM pass, then the reaper in `[guard] reap`'s mode.                                           |
+| [`tier_of`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.tier_of)(session, settings)                         | The `oom_score_adj` a session's processes get, by what it is doing.                                                    |
+| [`units`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.units)(\*[, python, home, path])                    | The systemd units that run [`tick()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.tick), rendered for this machine.         |
+| [`unlanded`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.unlanded)(dirs, \*, since[, is_landed])             | Why work in these directories is not landed; `[]` when all of it is.                                                   |
+
+### Classes
+
+| [`ReapContext`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.ReapContext)(settings[, now, verdicts, ...])   | What every check reads, gathered once per run.   |
+|------------------------------------------------------------------------------------------------|--------------------------------------------------|
+
+### Exceptions
+
+| [`SpawnRefused`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.SpawnRefused)   | The machine is at its session cap or memory floor; the spawn was not started.   |
+|-----------------------------------------------------------------|---------------------------------------------------------------------------------|
+
+### crowsnest.guard.DFLT_CHECKS *: [tuple](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[LiveSession](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession), [ReapContext](_autosummary/crowsnest.guard.html.md#crowsnest.guard.ReapContext)], [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)], ...]* *= (<function check_protected>, <function check_resting>, <function check_idle_for>, <function check_ledger_done>, <function check_nothing_unlanded>)*
+
+The reaper’s checks, cheap first. Each returns why the session is kept, or `None`.
+`nothing_unlanded` runs git, so it runs only once every cheaper check has passed.
+
+### *class* crowsnest.guard.ReapContext(settings, now=time(), verdicts=dict(), parents=frozenset({}), callers=frozenset({}), argv_of=<function ReapContext.<lambda>>, touched_cache=None, is_landed=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What every check reads, gathered once per run.
+
+`verdicts` maps a session id to its triage verdict (`group`, `said_at`);
+`parents` holds the names of sessions that spawned a live one; `callers` the
+session ids of whoever runs this; `is_landed` is [`unlanded()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.unlanded)’s.
+
+### *exception* crowsnest.guard.SpawnRefused
+
+Bases: [`ValueError`](https://docs.python.org/3/builtins/exceptions.html#ValueError)
+
+The machine is at its session cap or memory floor; the spawn was not started.
+
+### crowsnest.guard.claude_alive(pid, , proc=None)
+
+Is `pid` a running `claude`? With `/proc`, its command line must say so.
+
+A registry file outlives a session that was OOM-killed, and its pid is reused; signal
+0 alone would count that stranger as the session. Without `/proc` this is
+[`crowsnest.registry.pid_alive()`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.pid_alive).
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### crowsnest.guard.gate(name, , home=None, config=None, settings=None, mem=None, is_alive=None)
+
+Refuse a spawn of `name` when the machine is full; else say what was measured.
+
+Raises [`SpawnRefused`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.SpawnRefused) when the live sessions already reach [`session_cap()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.session_cap),
+or when `MemAvailable` minus one session’s `session_mb` would fall below
+`min_available`. The message names the measure and the idle sessions that have been
+resting longest, which are what a person (or `crowsnest reap`) would close first.
+A name in `protect` passes always: the watchdog restarting the lookout must never be
+the spawn that is turned away.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.guard.last_session(name, , home=None, names=None)
+
+The most recent session that went by `name`: `{session_id, cwd, transcript,
+active_at, bridge_session_id}`, or `None`.
+
+Candidates are every registry record under that name, live or left behind by a
+process that died (an OOM kill leaves its file), and every session id the event and
+lineage logs ever named so ([`crowsnest.lineage.names_by_session_id()`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.names_by_session_id)). The one
+whose transcript changed last wins.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.guard.meminfo(path=None)
+
+`/proc/meminfo` in bytes, `{}` where there is none (macOS, a test’s path).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`int`](https://docs.python.org/3/builtins/functions.html#int)]
+
+### crowsnest.guard.notify(url, title, body, , timeout=10.0)
+
+POST `body` to an ntfy-style URL; `False` (never an exception) when it fails.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### crowsnest.guard.oom_pass(, home=None, config=None, settings=None, sessions=None, proc=None)
+
+Write each registered session’s tier into its process and every descendant.
+
+A descendant that is itself a registered session keeps its own tier. Only registered
+sessions are touched: an unregistered `claude -p` is left to whatever else manages
+it. The one exception is a session’s `tmux` server holding a *negative* value –
+inherited when the lookout’s tree started it, and passed to every pane opened after
+– which is reset to `0`. A process that exits mid-pass is skipped. A no-op without
+`/proc`. Returns `{"set": {pid: value}, "errors": [...]}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.guard.plan(\*, home=None, config=None, settings=None, sessions=None, ctx=None, checks=(<function check_protected>, <function check_resting>, <function check_idle_for>, <function check_ledger_done>, <function check_nothing_unlanded>), is_alive=None)
+
+Every live session, each `{"session": row, "close": bool, "keep_because": [...]}`.
+
+`close` only when no check found a reason to keep it. `checks` is the seam; each is
+`(session, ctx) -> reason | None`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.guard.reap(\*, apply=False, home=None, config=None, settings=None, sessions=None, ctx=None, checks=(<function check_protected>, <function check_resting>, <function check_idle_for>, <function check_ledger_done>, <function check_nothing_unlanded>), closer=None, log_path=None)
+
+The plan, and – only with `apply=True` – the closes, at most `max_closes`.
+
+`closer` is the seam that ends a session (`sigterm_closer()` by default). Every
+close appends `{name, session_id, cwd, resume, result}` to
+`data_dir()/guard/reaped.jsonl` and is pushed to `[guard] notify`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.guard.session_cap(settings, mem)
+
+How many sessions this machine may run: `max_sessions`, else derived from memory.
+
+Derived: `(MemTotal - reserve - min_available) / session_mb`, floored – what is
+left for sessions after everything else and the headroom a tool call’s spike needs.
+`None` (no cap) when neither is known.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.guard.tick(, home=None, config=None, settings=None)
+
+What the timer runs: the OOM pass, then the reaper in `[guard] reap`’s mode.
+
+`"report"` (the default) plans and closes nothing; `"apply"` closes; `"off"`
+skips the reaper. The last result is kept at `data_dir()/guard/last.json`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.guard.tier_of(session, settings)
+
+The `oom_score_adj` a session’s processes get, by what it is doing.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
+### crowsnest.guard.units(, python='', home='', path='')
+
+The systemd units that run [`tick()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.tick), rendered for this machine.
+
+Rendered rather than shipped verbatim so a checkout’s own interpreter and `$HOME`
+go in and nothing machine-specific lives in the repository; a `git pull` is still
+the whole deploy, since the unit runs `python -m crowsnest` from the checkout.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.guard.unlanded(dirs, , since, is_landed=None)
+
+Why work in these directories is not landed; `[]` when all of it is.
+
+For every git checkout the directories are in, over the worktrees they name plus any
+other worktree of the repository that moved after `since` (a subagent’s
+`.claude/worktrees/agent-*`):
+
+* any change, untracked files included (ignored ones not);
+* a merge, rebase, cherry-pick, revert or bisect in progress;
+* a `HEAD` that is not landed (a detached session worktree included);
+* any branch of the repository that is not landed, when it moved or was committed to
+  after `since` – a branch older than the session is not its work;
+* a stash pushed after `since`.
+
+*Landed* is `is_landed(repo, rev)`, by default `on_default_branch()`: merged
+into a remote’s default branch. Pushed is not landed, and a repository with no
+remote has nothing landed. Raises when git cannot answer; the caller keeps the
+session.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+
 # _autosummary/crowsnest.hook.html.md
 
 # crowsnest.hook
@@ -2593,7 +2925,12 @@ Those are the writes, and they are all of them: a session started, and files tha
 crowsnest’s own and live outside any repository – the ledgers, the hook event log, the
 spawn records, the attention records (all four under [`crowsnest.paths.data_dir()`](_autosummary/crowsnest.paths.html.md#crowsnest.paths.data_dir)),
 and the symlinks the skill installer makes.
-crowsnest never sends into, kills, or writes into a session that already exists.
+crowsnest never sends into or writes into a session that already exists. It ends one in
+exactly one place, [`crowsnest.guard`](_autosummary/crowsnest.guard.html.md#module-crowsnest.guard)’s reaper (#171): only a resting session whose
+ledger says it is done and whose work is all landed, only when a person or the guard’s
+timer runs it with `apply`, and with SIGTERM – the session can be resumed after. The
+guard also sets each session’s `oom_score_adj` on Linux, and refuses a spawn when the
+machine is out of room.
 
 ```pycon
 >>> from crowsnest import live_sessions, roster
@@ -2848,7 +3185,7 @@ every [`roster()`](_autosummary/crowsnest.html.md#crowsnest.roster) row does –
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.spawn(name, , cwd, prompt='', model=None, effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None)
+### crowsnest.spawn(name, , cwd, prompt='', model=None, effort='', remote_control=True, spawner=None, home=None, profile='', config=None, wait=20.0, add_dirs=(), binary='', lineage_path=None, trust=False, peek=None, permission_mode=None, press=None, close=None, resume='', gate=None)
 
 Start a session named `name` in `cwd`, and wait for the registry to see it.
 
@@ -2917,6 +3254,16 @@ home is checked, not only the one the session starts in (crowsnest#42). So is a 
 whose ledger file already belongs to a *different* name (`cn/xa` and `cn:xa`
 share `cn-xa.md`). Pick another, a suffix will do.
 
+**Memory.** `gate` (`(name, *, home, config)`) runs before anything starts and
+raises to refuse; the default, with one of this module’s own spawners, is
+[`crowsnest.guard.gate()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.gate) (a session cap and a `MemAvailable` floor, from the
+config file’s `[guard]`). A caller’s `spawner` is gated only by a `gate` it
+passes. Once the session registers, its process gets its OOM tier at once
+([`crowsnest.guard.tier_of()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.tier_of)) rather than at the guard’s next tick.
+
+`resume` continues that session id instead of starting a new one: same transcript,
+same Remote Control link (measured, #171), `prompt` its next message.
+
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
@@ -2955,6 +3302,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`egress`](_autosummary/crowsnest.egress.html.md#module-crowsnest.egress)                 | The page's sanitiser, made safe against text that an earlier clip has already cut (#83).                                             |
 | [`envelope_cache`](_autosummary/crowsnest.envelope_cache.html.md#module-crowsnest.envelope_cache) | A cached openloops envelope: asked for at most once per `every`, read by the page.                                                   |
 | [`gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)                   | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
+| [`guard`](_autosummary/crowsnest.guard.html.md#module-crowsnest.guard)                   | Keep a machine's sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).                                           |
 | [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)                     | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
 | [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)                     | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
 | [`ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)                 | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
@@ -3548,7 +3896,7 @@ The event name a spawn record carries in `events.jsonl`. Chosen so that
 [`crowsnest.watch.hook_event()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.hook_event) and every existing reader skip it unchanged: an
 event kind nobody knows is already specified to be logged and ignored.
 
-### crowsnest.lineage.SPAWN_VALUE_FLAGS *= frozenset({'--add-dirs', '--binary', '--cwd', '--effort', '--home', '--model', '--permission-mode', '--profile', '--prompt', '--wait', '-p'})*
+### crowsnest.lineage.SPAWN_VALUE_FLAGS *= frozenset({'--add-dirs', '--binary', '--cwd', '--effort', '--home', '--model', '--permission-mode', '--profile', '--prompt', '--resume', '--wait', '-p'})*
 
 The `crowsnest spawn` flags that take a separate value, so the backfill knows which
 token after a flag is that flag’s and which is the session name.
@@ -6115,15 +6463,19 @@ here prints, exits, or knows which surface called it.
 | [`backfill_lineage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.backfill_lineage)(\*[, home, all_homes, ...])       | Recover parentage from transcripts, once, and write it into the lineage log.                                                                                                                                                              |
 | [`brief`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.brief)(session, \*[, home, all_homes, config, ...]) | openloops' digest for one live session: what it has been doing, dated, in its words.                                                                                                                                                      |
 | [`done`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.done)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item handled: hidden until what it asks for changes.                                                                                                                                                                     |
+| [`guard_tick`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.guard_tick)(\*[, home, config])                     | The OOM pass, then the reaper in the mode `[guard] reap` names (report by default).                                                                                                                                                       |
+| [`guard_units`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.guard_units)(\*[, to])                              | The systemd units that run the guard, rendered for this machine; written to `to` (a directory, e.g. `/etc/systemd/system`) when given.                                                                                                    |
 | [`later`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.later)(session, preset, \*[, plan, on_change, ...]) | Put `session`'s item off until a preset time, or until it changes, whichever first.                                                                                                                                                       |
 | [`lineage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
 | [`live`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.live)(\*[, home, all_homes, config, activity, ...]) | What every live session is doing now, as the page's `live/roster` document.                                                                                                                                                               |
 | [`note`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
 | [`publish`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.publish)(\*[, to, command, publisher, home, ...])   | Render the report as a whole page and deliver it where its owner reads it.                                                                                                                                                                |
+| [`reap`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.reap)(\*[, apply, home, config])                    | Which sessions the reaper would close, and why every other one is kept.                                                                                                                                                                   |
 | [`recap`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.recap)(session, \*[, home, all_homes, config, ...]) | Five lines about one live session, read from disk: the answer to a `recap` intent.                                                                                                                                                        |
 | [`repo_url`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. |
 | [`resolve`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                                                                                                                                                              |
+| [`revive`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.revive)(name, \*, cwd[, prompt, model, ...])        | Make sure a session named `name` runs -- the one it was, when that is possible.                                                                                                                                                           |
 | [`roster`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster)(\*[, home, all_homes, config, ...])         | Every live session, most urgent first, each with a clipped view of its activity.                                                                                                                                                          |
 | [`seen`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.seen)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item seen at its current revision: it dims until it changes.                                                                                                                                                             |
 | [`sessions`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.sessions)(\*[, home, all_homes, config])            | The live sessions of one home, or of every configured home when `all_homes`.                                                                                                                                                              |
@@ -6192,6 +6544,21 @@ state for a session started minutes ago – and `why` says so.
 ### crowsnest.tools.done(session, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Mark `session`’s item handled: hidden until what it asks for changes.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.guard_tick(, home=None, config=None)
+
+The OOM pass, then the reaper in the mode `[guard] reap` names (report by default).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.guard_units(, to='')
+
+The systemd units that run the guard, rendered for this machine; written to `to`
+(a directory, e.g. `/etc/systemd/system`) when given.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -6280,6 +6647,16 @@ referenced issues and pull requests are now ([`report()`](_autosummary/crowsnest
 
 The rendered page is kept at `page_path` (default `<data dir>/publish/index.html`),
 so the last one sent can be looked at locally.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.reap(, apply=False, home=None, config=None)
+
+Which sessions the reaper would close, and why every other one is kept.
+
+`apply=True` closes them (at most `[guard] max_closes`), each re-verified first,
+with SIGTERM; the default only reports. See [`crowsnest.guard`](_autosummary/crowsnest.guard.html.md#module-crowsnest.guard) for the checks.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -6405,6 +6782,26 @@ prefix: an id that happens to begin another session’s id would otherwise be am
 
 * **Return type:**
   [`LiveSession`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession)
+
+### crowsnest.tools.revive(name, , cwd, prompt='', model=None, effort='', resume_within_hours=168.0, resume_prompt='You were restarted (your process had exited, probably killed). Anything you were watching died with it: re-arm your watchers, then carry on.', home=None, config=None, spawner=None)
+
+Make sure a session named `name` runs – the one it was, when that is possible.
+
+For a watchdog. Already live: nothing is done. Otherwise the last session that went by
+the name ([`crowsnest.guard.last_session()`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.last_session)), and that is not running under any
+other name, is resumed in its own folder when its transcript changed within
+`resume_within_hours`. That keeps its Remote Control link – a phone still open on
+it reconnects instead of facing a dead link – and it is sent `resume_prompt`. With
+nothing to resume, or a resume that never registers (its tmux session is then
+closed), a fresh session starts in `cwd` with `prompt`; its new link is pushed to
+`[guard] notify`. A restart is never refused by the memory gate: it replaces a
+session, it does not add one.
+
+Returns `{"action": "alive"|"resumed"|"fresh"|"failed", "name", "pid",
+"session_id", "session_url", "same_link"}`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.tools.roster(, home=None, all_homes=False, config=None, activity=True, links=None, ledger_dir=None, resolvers=None, text_limit=240, \_pages=None)
 
@@ -7353,18 +7750,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-23 10:22 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7"><code>d2c5342</code></a> on branch <code>main</code>, for **crowsnest 0.0.104** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 14:53 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/237e5bd82cffa6bec24e0e18dedd29eb700cb615"><code>237e5bd</code></a> on branch <code>main</code>, for **crowsnest 0.0.105** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.104) is behind the latest release on PyPI (0.0.105): `pip install crowsnest` gives newer code than these docs describe.
+- The documented version (0.0.105) is behind the latest release on PyPI (0.0.106): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7"><code>d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/237e5bd82cffa6bec24e0e18dedd29eb700cb615"><code>237e5bd82cffa6bec24e0e18dedd29eb700cb615</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7375,9 +7772,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/39938484203">39938484203</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/40343454748">40343454748</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7</code> (in the history of the built commit) |
+| Event commit | <code>237e5bd82cffa6bec24e0e18dedd29eb700cb615</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7402,13 +7799,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.105/">0.0.105</a>, newer than the documented version (0.0.104).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.106/">0.0.106</a>, newer than the documented version (0.0.105).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7
+git checkout 237e5bd82cffa6bec24e0e18dedd29eb700cb615
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

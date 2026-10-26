@@ -47,6 +47,7 @@
    egress
    envelope_cache
    gists
+   guard
    hook
    init
    ledger

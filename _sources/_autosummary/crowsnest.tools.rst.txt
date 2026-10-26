@@ -13,15 +13,19 @@ crowsnest.tools
       backfill_lineage
       brief
       done
+      guard_tick
+      guard_units
       later
       lineage
       live
       note
       publish
+      reap
       recap
       repo_url
       report
       resolve
+      revive
       roster
       seen
       sessions

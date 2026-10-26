@@ -1,0 +1,42 @@
+crowsnest.guard
+===============
+
+.. automodule:: crowsnest.guard
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DFLT_CHECKS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      claude_alive
+      gate
+      last_session
+      meminfo
+      notify
+      oom_pass
+      plan
+      reap
+      session_cap
+      tick
+      tier_of
+      units
+      unlanded
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ReapContext
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      SpawnRefused
+   

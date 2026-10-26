@@ -263,6 +263,37 @@ spawn_permission_mode = "bypass"   # or "acceptEdits", "plan", "auto", ...; "" =
 
 `--permission-mode MODE` on `crowsnest spawn` (or `permission_mode=` in Python) overrides both for one spawn. `bypass` is emitted as `--dangerously-skip-permissions`, which Claude Code refuses as root unless `IS_SANDBOX=1` is set (#101). So as root crowsnest passes it only where it will work: `IS_SANDBOX=1` is in the environment of the spawn (crowsnest hands it on to the new session), or the config file says `root_bypass_ok = true`, for a `claude_bin` launcher that sets the variable itself (#161). Anywhere else an explicit `--permission-mode bypass` is refused, and an inherited or configured one is dropped with a warning naming these two fixes. An unknown mode name is refused before anything starts.
 
+## Keeping a machine inside its memory
+
+Each Claude Code session takes roughly 250 to 330 MB. On a small server, two dozen of them fill RAM and swap, and the kernel’s OOM killer starts taking sessions, the lookout among them (#171). `crowsnest guard` does three things about that, all set in the config file’s `[guard]` table:
+
+- **A spawn gate.** `crowsnest spawn` refuses (exit 75) when the machine already runs its cap of sessions, or when one more would leave `MemAvailable` below `min_available`. The cap is `max_sessions`, or else it is derived from memory: (MemTotal − `reserve` − `min_available`) / `session_mb`, which comes to 12 on a 7.6 GB server. A name in `protect` (the lookout) is never refused. Where there is no `/proc/meminfo` (macOS), only a configured `max_sessions` applies.
+- **A reaper.** `crowsnest reap` lists every session as *close* or *keep*, and gives the reasons for each keep. It closes a session only when all of the following hold, and only with `--apply`. Each close is re-checked first, sent as SIGTERM (never SIGKILL), and logged with its `claude --resume` line:
+  - it is not protected, not the caller, and not the parent of a live session;
+  - it is idle (not busy, waiting or running a shell), and has been for `idle_hours`;
+  - its ledger says it is done (triage’s *safe to close*);
+  - nothing it touched is unlanded. That means no uncommitted or untracked change, no merge or rebase in progress, and no commit, branch or stash of its own that is not merged into a remote’s default branch (pushed is not landed). It looks in every checkout the session or its subagents named, by `cwd`, by an edit’s path or by an absolute path in a shell command, and in any other worktree of those repositories that moved during the session;
+  - its ledger’s all-clear is newer than the last thing it was asked.
+- **OOM tiers.** On Linux, every session’s process tree gets an `oom_score_adj` matching its state: protected −300, busy 300, waiting 500, idle 800. When memory does run out, the kernel takes an idle worker first and the lookout last.
+
+`crowsnest guard tick` runs the OOM pass and then the reaper, in the mode `reap` names: `report` (the default, which only plans), `apply`, or `off`. A systemd timer runs it every five minutes:
+
+```bash
+crowsnest guard units --to /etc/systemd/system
+systemctl daemon-reload && systemctl enable --now crowsnest-guard.timer
+journalctl -u crowsnest-guard -n 40     # what it would close, and why it keeps the rest
+```
+
+```toml
+[guard]
+protect = ["cn-tw"]          # the lookout: never gated, never reaped, OOM tier "protected"
+min_available = "1.5G"
+reap = "report"              # "apply" once you have read a few reports
+notify = "https://ntfy.sh/<topic>"   # closes, and a lookout's new link, are pushed here
+```
+
+`crowsnest revive NAME --cwd DIR -p BRIEF` is the watchdog’s restart. If the session is live, it does nothing. Otherwise it **resumes** the last session that had that name, which keeps its Remote Control link, so a phone still open on it reconnects instead of facing a dead link. Only when there is nothing recent to resume does it start fresh with the brief, and then it pushes the new link to `notify`. `crowsnest spawn --resume SESSION_ID` does the same resume for one session.
+
 ## The ledger: what a session leaves behind
 
 The roster and the transcript both describe *now*. Neither survives a `/clear` in the watching session, and neither says what a session decided or what it is still waiting on you for. So each session gets a small markdown file — `~/.local/share/crowsnest/ledger/<name>.md` — that it writes and a watcher reads:
@@ -381,8 +412,9 @@ Nothing into another session, and nothing into a repository. Everything crowsnes
 - `events.jsonl`: one line per hook event, append-only, rotated by size. `crowsnest watch` tails it.
 - `hook.log`: one line for anything `crowsnest hook` swallowed, so “the hook did nothing” is a question with an answer.
 - `attention/<item-id>.json`: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.
+- `guard/`: the guard’s last tick (`last.json`), every close it made (`reaped.jsonl`, with the line that resumes each), and a cache of which folders each transcript names.
 
-The only other writes in the package are `crowsnest spawn`, which starts a session, and `install-skills`, which writes symlinks.
+The only other writes in the package are `crowsnest spawn`, which starts a session, `install-skills`, which writes symlinks, and the guard: `oom_score_adj` on Linux, and the SIGTERM of `crowsnest reap --apply`.
 
 ## From Python
 

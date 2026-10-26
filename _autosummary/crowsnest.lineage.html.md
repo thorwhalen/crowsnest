@@ -129,7 +129,7 @@ The event name a spawn record carries in `events.jsonl`. Chosen so that
 [`crowsnest.watch.hook_event()`](crowsnest.watch.html.md#crowsnest.watch.hook_event) and every existing reader skip it unchanged: an
 event kind nobody knows is already specified to be logged and ignored.
 
-### crowsnest.lineage.SPAWN_VALUE_FLAGS *= frozenset({'--add-dirs', '--binary', '--cwd', '--effort', '--home', '--model', '--permission-mode', '--profile', '--prompt', '--wait', '-p'})*
+### crowsnest.lineage.SPAWN_VALUE_FLAGS *= frozenset({'--add-dirs', '--binary', '--cwd', '--effort', '--home', '--model', '--permission-mode', '--profile', '--prompt', '--resume', '--wait', '-p'})*
 
 The `crowsnest spawn` flags that take a separate value, so the backfill knows which
 token after a flag is that flag’s and which is the session name.

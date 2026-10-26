@@ -76,6 +76,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.gists.html">crowsnest.gists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.init.html">crowsnest.init</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
@@ -129,6 +130,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#which-permission-mode-a-spawned-session-starts-in">Which permission mode a spawned session starts in</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#keeping-a-machine-inside-its-memory">Keeping a machine inside its memory</a></li>
 <li><a class="reference internal" href="#the-ledger-what-a-session-leaves-behind">The ledger: what a session leaves behind</a></li>
 <li><a class="reference internal" href="#a-page-that-stays-fresh-without-a-session">A page that stays fresh without a session</a></li>
 <li><a class="reference internal" href="#being-told-instead-of-polling">Being told instead of polling</a></li>
@@ -405,6 +407,37 @@ data-aria-dark="Switch to auto color mode">
 <p><code class="docutils literal notranslate"><span class="pre">--permission-mode</span> <span class="pre">MODE</span></code> on <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> (or <code class="docutils literal notranslate"><span class="pre">permission_mode=</span></code> in Python) overrides both for one spawn. <code class="docutils literal notranslate"><span class="pre">bypass</span></code> is emitted as <code class="docutils literal notranslate"><span class="pre">--dangerously-skip-permissions</span></code>, which Claude Code refuses as root unless <code class="docutils literal notranslate"><span class="pre">IS_SANDBOX=1</span></code> is set (#101). So as root crowsnest passes it only where it will work: <code class="docutils literal notranslate"><span class="pre">IS_SANDBOX=1</span></code> is in the environment of the spawn (crowsnest hands it on to the new session), or the config file says <code class="docutils literal notranslate"><span class="pre">root_bypass_ok</span> <span class="pre">=</span> <span class="pre">true</span></code>, for a <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code> launcher that sets the variable itself (#161). Anywhere else an explicit <code class="docutils literal notranslate"><span class="pre">--permission-mode</span> <span class="pre">bypass</span></code> is refused, and an inherited or configured one is dropped with a warning naming these two fixes. An unknown mode name is refused before anything starts.</p>
 </section>
 </section>
+<section id="keeping-a-machine-inside-its-memory">
+<h2>Keeping a machine inside its memory<a class="headerlink" href="#keeping-a-machine-inside-its-memory" title="Link to this heading">#</a></h2>
+<p>Each Claude Code session takes roughly 250 to 330 MB. On a small server, two dozen of them fill RAM and swap, and the kernel’s OOM killer starts taking sessions, the lookout among them (#171). <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">guard</span></code> does three things about that, all set in the config file’s <code class="docutils literal notranslate"><span class="pre">[guard]</span></code> table:</p>
+<ul class="simple">
+<li><p><strong>A spawn gate.</strong> <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> refuses (exit 75) when the machine already runs its cap of sessions, or when one more would leave <code class="docutils literal notranslate"><span class="pre">MemAvailable</span></code> below <code class="docutils literal notranslate"><span class="pre">min_available</span></code>. The cap is <code class="docutils literal notranslate"><span class="pre">max_sessions</span></code>, or else it is derived from memory: (MemTotal − <code class="docutils literal notranslate"><span class="pre">reserve</span></code> − <code class="docutils literal notranslate"><span class="pre">min_available</span></code>) / <code class="docutils literal notranslate"><span class="pre">session_mb</span></code>, which comes to 12 on a 7.6 GB server. A name in <code class="docutils literal notranslate"><span class="pre">protect</span></code> (the lookout) is never refused. Where there is no <code class="docutils literal notranslate"><span class="pre">/proc/meminfo</span></code> (macOS), only a configured <code class="docutils literal notranslate"><span class="pre">max_sessions</span></code> applies.</p></li>
+<li><p><strong>A reaper.</strong> <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">reap</span></code> lists every session as <em>close</em> or <em>keep</em>, and gives the reasons for each keep. It closes a session only when all of the following hold, and only with <code class="docutils literal notranslate"><span class="pre">--apply</span></code>. Each close is re-checked first, sent as SIGTERM (never SIGKILL), and logged with its <code class="docutils literal notranslate"><span class="pre">claude</span> <span class="pre">--resume</span></code> line:</p>
+<ul>
+<li><p>it is not protected, not the caller, and not the parent of a live session;</p></li>
+<li><p>it is idle (not busy, waiting or running a shell), and has been for <code class="docutils literal notranslate"><span class="pre">idle_hours</span></code>;</p></li>
+<li><p>its ledger says it is done (triage’s <em>safe to close</em>);</p></li>
+<li><p>nothing it touched is unlanded. That means no uncommitted or untracked change, no merge or rebase in progress, and no commit, branch or stash of its own that is not merged into a remote’s default branch (pushed is not landed). It looks in every checkout the session or its subagents named, by <code class="docutils literal notranslate"><span class="pre">cwd</span></code>, by an edit’s path or by an absolute path in a shell command, and in any other worktree of those repositories that moved during the session;</p></li>
+<li><p>its ledger’s all-clear is newer than the last thing it was asked.</p></li>
+</ul>
+</li>
+<li><p><strong>OOM tiers.</strong> On Linux, every session’s process tree gets an <code class="docutils literal notranslate"><span class="pre">oom_score_adj</span></code> matching its state: protected −300, busy 300, waiting 500, idle 800. When memory does run out, the kernel takes an idle worker first and the lookout last.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">guard</span> <span class="pre">tick</span></code> runs the OOM pass and then the reaper, in the mode <code class="docutils literal notranslate"><span class="pre">reap</span></code> names: <code class="docutils literal notranslate"><span class="pre">report</span></code> (the default, which only plans), <code class="docutils literal notranslate"><span class="pre">apply</span></code>, or <code class="docutils literal notranslate"><span class="pre">off</span></code>. A systemd timer runs it every five minutes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">crowsnest<span class="w"> </span>guard<span class="w"> </span>units<span class="w"> </span>--to<span class="w"> </span>/etc/systemd/system
+</span><span data-line="2">systemctl<span class="w"> </span>daemon-reload<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>crowsnest-guard.timer
+</span><span data-line="3">journalctl<span class="w"> </span>-u<span class="w"> </span>crowsnest-guard<span class="w"> </span>-n<span class="w"> </span><span class="m">40</span><span class="w">     </span><span class="c1"># what it would close, and why it keeps the rest</span>
+</span></pre></div>
+</div>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[guard]</span>
+</span><span data-line="2"><span class="n">protect</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"cn-tw"</span><span class="p">]</span><span class="w">          </span><span class="c1"># the lookout: never gated, never reaped, OOM tier "protected"</span>
+</span><span data-line="3"><span class="n">min_available</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"1.5G"</span>
+</span><span data-line="4"><span class="n">reap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"report"</span><span class="w">              </span><span class="c1"># "apply" once you have read a few reports</span>
+</span><span data-line="5"><span class="n">notify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://ntfy.sh/&lt;topic&gt;"</span><span class="w">   </span><span class="c1"># closes, and a lookout's new link, are pushed here</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">revive</span> <span class="pre">NAME</span> <span class="pre">--cwd</span> <span class="pre">DIR</span> <span class="pre">-p</span> <span class="pre">BRIEF</span></code> is the watchdog’s restart. If the session is live, it does nothing. Otherwise it <strong>resumes</strong> the last session that had that name, which keeps its Remote Control link, so a phone still open on it reconnects instead of facing a dead link. Only when there is nothing recent to resume does it start fresh with the brief, and then it pushes the new link to <code class="docutils literal notranslate"><span class="pre">notify</span></code>. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span> <span class="pre">--resume</span> <span class="pre">SESSION_ID</span></code> does the same resume for one session.</p>
+</section>
 <section id="the-ledger-what-a-session-leaves-behind">
 <h2>The ledger: what a session leaves behind<a class="headerlink" href="#the-ledger-what-a-session-leaves-behind" title="Link to this heading">#</a></h2>
 <p>The roster and the transcript both describe <em>now</em>. Neither survives a <code class="docutils literal notranslate"><span class="pre">/clear</span></code> in the watching session, and neither says what a session decided or what it is still waiting on you for. So each session gets a small markdown file — <code class="docutils literal notranslate"><span class="pre">~/.local/share/crowsnest/ledger/&lt;name&gt;.md</span></code> — that it writes and a watcher reads:</p>
@@ -527,8 +560,9 @@ data-aria-dark="Switch to auto color mode">
 <li><p><code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>: one line per hook event, append-only, rotated by size. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> tails it.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hook.log</span></code>: one line for anything <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code> swallowed, so “the hook did nothing” is a question with an answer.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">attention/&lt;item-id&gt;.json</span></code>: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">guard/</span></code>: the guard’s last tick (<code class="docutils literal notranslate"><span class="pre">last.json</span></code>), every close it made (<code class="docutils literal notranslate"><span class="pre">reaped.jsonl</span></code>, with the line that resumes each), and a cache of which folders each transcript names.</p></li>
 </ul>
-<p>The only other writes in the package are <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code>, which starts a session, and <code class="docutils literal notranslate"><span class="pre">install-skills</span></code>, which writes symlinks.</p>
+<p>The only other writes in the package are <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code>, which starts a session, <code class="docutils literal notranslate"><span class="pre">install-skills</span></code>, which writes symlinks, and the guard: <code class="docutils literal notranslate"><span class="pre">oom_score_adj</span></code> on Linux, and the SIGTERM of <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">reap</span> <span class="pre">--apply</span></code>.</p>
 </section>
 <section id="from-python">
 <h2>From Python<a class="headerlink" href="#from-python" title="Link to this heading">#</a></h2>
@@ -565,7 +599,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-23 10:22 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/d2c5342d961c5ed6e78aa1f1bb66c5e85c7b80e7">d2c5342</a> (main) · crowsnest 0.0.104 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-26 14:53 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/237e5bd82cffa6bec24e0e18dedd29eb700cb615">237e5bd</a> (main) · crowsnest 0.0.105 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -600,7 +634,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=5c5ca7ce"></script>
+      <script src="_static/documentation_options.js?v=f82423d7"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

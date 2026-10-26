@@ -73,6 +73,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.gists.html">crowsnest.gists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.init.html">crowsnest.init</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
@@ -213,103 +214,106 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="65">
 </span><span data-line="66"><span class="k">def</span><span class="w"> </span><span class="nf">_has_tmux_session</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 </span><span data-line="67">    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span data-line="68">        <span class="p">[</span><span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"has-session"</span><span class="p">,</span> <span class="s2">"-t"</span><span class="p">,</span> <span class="n">name</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
-</span><span data-line="69">    <span class="p">)</span>
-</span><span data-line="70">    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
-</span><span data-line="71">
-</span><span data-line="72">
-</span><span data-line="73"><span class="k">def</span><span class="w"> </span><span class="nf">_tmux_opener</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="74"><span class="w">    </span><span class="sd">"""A tmux session named ``session.name``: attach it in a new iTerm tab, else say the command."""</span>
-</span><span data-line="75">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"tmux"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_has_tmux_session</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="p">)):</span>
-</span><span data-line="76">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="77">    <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"tmux attach -t </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="78">    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"darwin"</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"osascript"</span><span class="p">):</span>
-</span><span data-line="79">        <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="80">            <span class="s1">'tell application "iTerm2"</span><span class="se">\n</span><span class="s1">'</span>
-</span><span data-line="81">            <span class="s2">"  activate</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="82">            <span class="s2">"  if (count of windows) = 0 then</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="83">            <span class="s2">"    create window with default profile</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="84">            <span class="s2">"  end if</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="85">            <span class="s2">"  tell current window</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="86">            <span class="s2">"    set newTab to (create tab with default profile)</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="87">            <span class="s2">"    tell current session of newTab</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="88">            <span class="sa">f</span><span class="s1">'      write text "</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">"</span><span class="se">\n</span><span class="s1">'</span>
-</span><span data-line="89">            <span class="s2">"    end tell</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="90">            <span class="s2">"  end tell</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="91">            <span class="s2">"end tell</span><span class="se">\n</span><span class="s2">"</span>
-</span><span data-line="92">        <span class="p">)</span>
-</span><span data-line="93">        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span data-line="94">            <span class="p">[</span><span class="s2">"osascript"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">script</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+</span><span data-line="68">        <span class="p">[</span><span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"has-session"</span><span class="p">,</span> <span class="s2">"-t"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"=</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
+</span><span data-line="69">        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="70">        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="71">        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="72">    <span class="p">)</span>
+</span><span data-line="73">    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+</span><span data-line="74">
+</span><span data-line="75">
+</span><span data-line="76"><span class="k">def</span><span class="w"> </span><span class="nf">_tmux_opener</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="77"><span class="w">    </span><span class="sd">"""A tmux session named ``session.name``: attach it in a new iTerm tab, else say the command."""</span>
+</span><span data-line="78">    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"tmux"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_has_tmux_session</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="p">)):</span>
+</span><span data-line="79">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="80">    <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"tmux attach -t </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="81">    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"darwin"</span> <span class="ow">and</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"osascript"</span><span class="p">):</span>
+</span><span data-line="82">        <span class="n">script</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="83">            <span class="s1">'tell application "iTerm2"</span><span class="se">\n</span><span class="s1">'</span>
+</span><span data-line="84">            <span class="s2">"  activate</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="85">            <span class="s2">"  if (count of windows) = 0 then</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="86">            <span class="s2">"    create window with default profile</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="87">            <span class="s2">"  end if</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="88">            <span class="s2">"  tell current window</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="89">            <span class="s2">"    set newTab to (create tab with default profile)</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="90">            <span class="s2">"    tell current session of newTab</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="91">            <span class="sa">f</span><span class="s1">'      write text "</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">"</span><span class="se">\n</span><span class="s1">'</span>
+</span><span data-line="92">            <span class="s2">"    end tell</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="93">            <span class="s2">"  end tell</span><span class="se">\n</span><span class="s2">"</span>
+</span><span data-line="94">            <span class="s2">"end tell</span><span class="se">\n</span><span class="s2">"</span>
 </span><span data-line="95">        <span class="p">)</span>
-</span><span data-line="96">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="97">            <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="98">                <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"tmux"</span><span class="p">,</span>
-</span><span data-line="99">                <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"opened a new iTerm tab running `</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">`"</span><span class="p">,</span>
-</span><span data-line="100">            <span class="p">}</span>
-</span><span data-line="101">    <span class="k">return</span> <span class="p">{</span><span class="s2">"how"</span><span class="p">:</span> <span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"detail"</span><span class="p">:</span> <span class="n">command</span><span class="p">}</span>
-</span><span data-line="102">
-</span><span data-line="103">
+</span><span data-line="96">        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span data-line="97">            <span class="p">[</span><span class="s2">"osascript"</span><span class="p">,</span> <span class="s2">"-e"</span><span class="p">,</span> <span class="n">script</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+</span><span data-line="98">        <span class="p">)</span>
+</span><span data-line="99">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="100">            <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="101">                <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"tmux"</span><span class="p">,</span>
+</span><span data-line="102">                <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"opened a new iTerm tab running `</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">`"</span><span class="p">,</span>
+</span><span data-line="103">            <span class="p">}</span>
+</span><span data-line="104">    <span class="k">return</span> <span class="p">{</span><span class="s2">"how"</span><span class="p">:</span> <span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"detail"</span><span class="p">:</span> <span class="n">command</span><span class="p">}</span>
+</span><span data-line="105">
+</span><span data-line="106">
 <div class="viewcode-block" id="default_opener">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.open.html#crowsnest.open.default_opener">[docs]</a>
-</span><span data-line="104"><span class="k">def</span><span class="w"> </span><span class="nf">default_opener</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
-</span><span data-line="105"><span class="w">    </span><span class="sd">"""The strongest opener this machine offers, tried in order: iTerm tab, then tmux.</span>
-</span><span data-line="106">
-</span><span data-line="107"><span class="sd">    Elsewhere than macOS -- or with no ``osascript`` -- the iTerm strategy never matches</span>
-</span><span data-line="108"><span class="sd">    and the tmux one only reports the attach command; there is nothing to focus.</span>
-</span><span data-line="109"><span class="sd">    """</span>
-</span><span data-line="110">
-</span><span data-line="111">    <span class="k">def</span><span class="w"> </span><span class="nf">_opener</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="112">        <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_iterm_tab_opener</span><span class="p">,</span> <span class="n">_tmux_opener</span><span class="p">):</span>
-</span><span data-line="113">            <span class="n">found</span> <span class="o">=</span> <span class="n">strategy</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
-</span><span data-line="114">            <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="115">                <span class="k">return</span> <span class="n">found</span>
-</span><span data-line="116">        <span class="k">return</span> <span class="kc">None</span>
-</span><span data-line="117">
-</span><span data-line="118">    <span class="k">return</span> <span class="n">_opener</span></div>
-
-</span><span data-line="119">
+</span><span data-line="107"><span class="k">def</span><span class="w"> </span><span class="nf">default_opener</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+</span><span data-line="108"><span class="w">    </span><span class="sd">"""The strongest opener this machine offers, tried in order: iTerm tab, then tmux.</span>
+</span><span data-line="109">
+</span><span data-line="110"><span class="sd">    Elsewhere than macOS -- or with no ``osascript`` -- the iTerm strategy never matches</span>
+</span><span data-line="111"><span class="sd">    and the tmux one only reports the attach command; there is nothing to focus.</span>
+</span><span data-line="112"><span class="sd">    """</span>
+</span><span data-line="113">
+</span><span data-line="114">    <span class="k">def</span><span class="w"> </span><span class="nf">_opener</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="115">        <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_iterm_tab_opener</span><span class="p">,</span> <span class="n">_tmux_opener</span><span class="p">):</span>
+</span><span data-line="116">            <span class="n">found</span> <span class="o">=</span> <span class="n">strategy</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+</span><span data-line="117">            <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="118">                <span class="k">return</span> <span class="n">found</span>
+</span><span data-line="119">        <span class="k">return</span> <span class="kc">None</span>
 </span><span data-line="120">
+</span><span data-line="121">    <span class="k">return</span> <span class="n">_opener</span></div>
+
+</span><span data-line="122">
+</span><span data-line="123">
 <div class="viewcode-block" id="open_session">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.open.html#crowsnest.open.open_session">[docs]</a>
-</span><span data-line="121"><span class="k">def</span><span class="w"> </span><span class="nf">open_session</span><span class="p">(</span>
-</span><span data-line="122">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="123">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="124">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="125">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="126">    <span class="n">opener</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="127">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="128"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="129"><span class="w">    </span><span class="sd">"""Raise ``session``'s terminal, or say where it runs when none can be found.</span>
-</span><span data-line="130">
-</span><span data-line="131"><span class="sd">    ``opener`` is the seam: a callable ``(session: LiveSession) -&gt; dict | None``</span>
-</span><span data-line="132"><span class="sd">    returning ``{"how", "detail"}`` on success, ``None`` when it found nothing -- the</span>
-</span><span data-line="133"><span class="sd">    default composes the iTerm-then-tmux strategies in :func:`default_opener`. Never</span>
-</span><span data-line="134"><span class="sd">    sends keys into the session; only selects and focuses what is already there.</span>
-</span><span data-line="135">
-</span><span data-line="136"><span class="sd">    Returns ``{"name", "how", "detail"}``; ``how`` is ``"not found"`` when no strategy</span>
-</span><span data-line="137"><span class="sd">    matched, with the pid and cwd in ``detail`` so the caller can say where it runs.</span>
+</span><span data-line="124"><span class="k">def</span><span class="w"> </span><span class="nf">open_session</span><span class="p">(</span>
+</span><span data-line="125">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="126">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="127">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="128">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="129">    <span class="n">opener</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="130">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="131"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="132"><span class="w">    </span><span class="sd">"""Raise ``session``'s terminal, or say where it runs when none can be found.</span>
+</span><span data-line="133">
+</span><span data-line="134"><span class="sd">    ``opener`` is the seam: a callable ``(session: LiveSession) -&gt; dict | None``</span>
+</span><span data-line="135"><span class="sd">    returning ``{"how", "detail"}`` on success, ``None`` when it found nothing -- the</span>
+</span><span data-line="136"><span class="sd">    default composes the iTerm-then-tmux strategies in :func:`default_opener`. Never</span>
+</span><span data-line="137"><span class="sd">    sends keys into the session; only selects and focuses what is already there.</span>
 </span><span data-line="138">
-</span><span data-line="139"><span class="sd">    **A session in a remote home is never handed to the opener.** Its registry is a synced</span>
-</span><span data-line="140"><span class="sd">    copy of another machine's, so it has no terminal here. The opener matches terminals</span>
-</span><span data-line="141"><span class="sd">    by *name*, so it would raise whichever local tab happened to share that name.</span>
-</span><span data-line="142"><span class="sd">    ``how`` is then ``"remote"`` and ``detail`` says which home it runs on.</span>
-</span><span data-line="143"><span class="sd">    """</span>
-</span><span data-line="144">    <span class="n">found</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="145">    <span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">home</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">remote</span> <span class="ow">and</span> <span class="n">h</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">found</span><span class="o">.</span><span class="n">home</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)):</span>
-</span><span data-line="146">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="147">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-</span><span data-line="148">            <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"remote"</span><span class="p">,</span>
-</span><span data-line="149">            <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"runs on </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">home</span><span class="si">}</span><span class="s2">, not this machine; nothing here to raise"</span><span class="p">,</span>
-</span><span data-line="150">        <span class="p">}</span>
-</span><span data-line="151">    <span class="n">opener</span> <span class="o">=</span> <span class="n">opener</span> <span class="ow">or</span> <span class="n">default_opener</span><span class="p">()</span>
-</span><span data-line="152">    <span class="n">result</span> <span class="o">=</span> <span class="n">opener</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
-</span><span data-line="153">    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="154">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="155">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-</span><span data-line="156">            <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"not found"</span><span class="p">,</span>
-</span><span data-line="157">            <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"pid </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-</span><span data-line="158">        <span class="p">}</span>
-</span><span data-line="159">    <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">result</span><span class="p">}</span></div>
+</span><span data-line="139"><span class="sd">    Returns ``{"name", "how", "detail"}``; ``how`` is ``"not found"`` when no strategy</span>
+</span><span data-line="140"><span class="sd">    matched, with the pid and cwd in ``detail`` so the caller can say where it runs.</span>
+</span><span data-line="141">
+</span><span data-line="142"><span class="sd">    **A session in a remote home is never handed to the opener.** Its registry is a synced</span>
+</span><span data-line="143"><span class="sd">    copy of another machine's, so it has no terminal here. The opener matches terminals</span>
+</span><span data-line="144"><span class="sd">    by *name*, so it would raise whichever local tab happened to share that name.</span>
+</span><span data-line="145"><span class="sd">    ``how`` is then ``"remote"`` and ``detail`` says which home it runs on.</span>
+</span><span data-line="146"><span class="sd">    """</span>
+</span><span data-line="147">    <span class="n">found</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="148">    <span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">home</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">remote</span> <span class="ow">and</span> <span class="n">h</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">found</span><span class="o">.</span><span class="n">home</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)):</span>
+</span><span data-line="149">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="150">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+</span><span data-line="151">            <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"remote"</span><span class="p">,</span>
+</span><span data-line="152">            <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"runs on </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">home</span><span class="si">}</span><span class="s2">, not this machine; nothing here to raise"</span><span class="p">,</span>
+</span><span data-line="153">        <span class="p">}</span>
+</span><span data-line="154">    <span class="n">opener</span> <span class="o">=</span> <span class="n">opener</span> <span class="ow">or</span> <span class="n">default_opener</span><span class="p">()</span>
+</span><span data-line="155">    <span class="n">result</span> <span class="o">=</span> <span class="n">opener</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+</span><span data-line="156">    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="157">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="158">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+</span><span data-line="159">            <span class="s2">"how"</span><span class="p">:</span> <span class="s2">"not found"</span><span class="p">,</span>
+</span><span data-line="160">            <span class="s2">"detail"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"pid </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">found</span><span class="o">.</span><span class="n">cwd</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span data-line="161">        <span class="p">}</span>
+</span><span data-line="162">    <span class="k">return</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">found</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">result</span><span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -338,7 +342,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=5c5ca7ce"></script>
+      <script src="../../_static/documentation_options.js?v=f82423d7"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

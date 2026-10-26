@@ -76,6 +76,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
@@ -217,7 +218,12 @@ what it asks for changes. <code class="docutils literal notranslate"><span class
 crowsnest’s own and live outside any repository – the ledgers, the hook event log, the
 spawn records, the attention records (all four under <a class="reference internal" href="crowsnest.paths.html#crowsnest.paths.data_dir" title="crowsnest.paths.data_dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.paths.data_dir()</span></code></a>),
 and the symlinks the skill installer makes.
-crowsnest never sends into, kills, or writes into a session that already exists.</p>
+crowsnest never sends into or writes into a session that already exists. It ends one in
+exactly one place, <a class="reference internal" href="crowsnest.guard.html#module-crowsnest.guard" title="crowsnest.guard"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.guard</span></code></a>’s reaper (#171): only a resting session whose
+ledger says it is done and whose work is all landed, only when a person or the guard’s
+timer runs it with <code class="docutils literal notranslate"><span class="pre">apply</span></code>, and with SIGTERM – the session can be resumed after. The
+guard also sets each session’s <code class="docutils literal notranslate"><span class="pre">oom_score_adj</span></code> on Linux, and refuses a spawn when the
+machine is out of room.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">live_sessions</span><span class="p">,</span> <span class="n">roster</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="s1">'/nonexistent-dir-for-doctest'</span><span class="p">)</span>
 </span><span data-line="3"><span class="go">[]</span>
@@ -547,7 +553,7 @@ every <a class="reference internal" href="#crowsnest.roster" title="crowsnest.ro
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.spawn">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.</span></span><span class="sig-name descname"><span class="pre">spawn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_control</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_dirs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trust</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peek</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permission_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">press</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">close</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/spawn.html#spawn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.spawn" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.</span></span><span class="sig-name descname"><span class="pre">spawn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_control</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_dirs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineage_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trust</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peek</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permission_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">press</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">close</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/spawn.html#spawn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.spawn" title="Link to this definition">#</a></dt>
 <dd><p>Start a session named <code class="docutils literal notranslate"><span class="pre">name</span></code> in <code class="docutils literal notranslate"><span class="pre">cwd</span></code>, and wait for the registry to see it.</p>
 <p><code class="docutils literal notranslate"><span class="pre">add_dirs</span></code> are further directories the session is allowed to work in (a fleet
 manager gets every repository of its fleet this way).</p>
@@ -605,6 +611,14 @@ behind one name make all of them ambiguous, and write one ledger. Every configur
 home is checked, not only the one the session starts in (crowsnest#42). So is a name
 whose ledger file already belongs to a <em>different</em> name (<code class="docutils literal notranslate"><span class="pre">cn/xa</span></code> and <code class="docutils literal notranslate"><span class="pre">cn:xa</span></code>
 share <code class="docutils literal notranslate"><span class="pre">cn-xa.md</span></code>). Pick another, a suffix will do.</p>
+<p><strong>Memory.</strong> <code class="docutils literal notranslate"><span class="pre">gate</span></code> (<code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">*,</span> <span class="pre">home,</span> <span class="pre">config)</span></code>) runs before anything starts and
+raises to refuse; the default, with one of this module’s own spawners, is
+<a class="reference internal" href="crowsnest.guard.html#crowsnest.guard.gate" title="crowsnest.guard.gate"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.guard.gate()</span></code></a> (a session cap and a <code class="docutils literal notranslate"><span class="pre">MemAvailable</span></code> floor, from the
+config file’s <code class="docutils literal notranslate"><span class="pre">[guard]</span></code>). A caller’s <code class="docutils literal notranslate"><span class="pre">spawner</span></code> is gated only by a <code class="docutils literal notranslate"><span class="pre">gate</span></code> it
+passes. Once the session registers, its process gets its OOM tier at once
+(<a class="reference internal" href="crowsnest.guard.html#crowsnest.guard.tier_of" title="crowsnest.guard.tier_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.guard.tier_of()</span></code></a>) rather than at the guard’s next tick.</p>
+<p><code class="docutils literal notranslate"><span class="pre">resume</span></code> continues that session id instead of starting a new one: same transcript,
+same Remote Control link (measured, #171), <code class="docutils literal notranslate"><span class="pre">prompt</span></code> its next message.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
@@ -674,73 +688,76 @@ silently wrote nothing would be worse than a stack trace.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="crowsnest.gists.html#module-crowsnest.gists" title="crowsnest.gists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gists</span></code></a></p></td>
 <td><p>Gists for <em>Your questions</em> (#129): each question in a few words, and the answer it got.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.hook.html#module-crowsnest.hook" title="crowsnest.hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hook</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.guard.html#module-crowsnest.guard" title="crowsnest.guard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guard</span></code></a></p></td>
+<td><p>Keep a machine's sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.hook.html#module-crowsnest.hook" title="crowsnest.hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hook</span></code></a></p></td>
 <td><p>The push half of the stream: what Claude Code's own hooks tell crowsnest.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.init.html#module-crowsnest.init" title="crowsnest.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.init.html#module-crowsnest.init" title="crowsnest.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a></p></td>
 <td><p>Everything a crowsnest session needs before it can be one, set up in one command.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger</span></code></a></p></td>
 <td><p>The ledger: the durable page a session leaves for the watcher, one file per session.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.lineage.html#module-crowsnest.lineage" title="crowsnest.lineage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lineage</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.lineage.html#module-crowsnest.lineage" title="crowsnest.lineage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lineage</span></code></a></p></td>
 <td><p>Who started whom: the spawn graph, as data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.links.html#module-crowsnest.links" title="crowsnest.links"><code class="xref py py-obj docutils literal notranslate"><span class="pre">links</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.links.html#module-crowsnest.links" title="crowsnest.links"><code class="xref py py-obj docutils literal notranslate"><span class="pre">links</span></code></a></p></td>
 <td><p>References in a session's own words, turned into links you can click.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.live.html#module-crowsnest.live" title="crowsnest.live"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.live.html#module-crowsnest.live" title="crowsnest.live"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live</span></code></a></p></td>
 <td><p>What a published page may know about the sessions <em>now</em>: one small document, and a recap.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.open.html#module-crowsnest.open" title="crowsnest.open"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.open.html#module-crowsnest.open" title="crowsnest.open"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open</span></code></a></p></td>
 <td><p>Bring a live session's terminal to the front, or say where it runs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.owed.html#module-crowsnest.owed" title="crowsnest.owed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owed</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.owed.html#module-crowsnest.owed" title="crowsnest.owed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owed</span></code></a></p></td>
 <td><p>What the person owes their sessions: the open <code class="docutils literal notranslate"><span class="pre">manual-task</span></code> issues openloops lists.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paths</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paths</span></code></a></p></td>
 <td><p>Where crowsnest keeps what is not code: the data directory, and nothing else.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish</span></code></a></p></td>
 <td><p>Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.questions.html#module-crowsnest.questions" title="crowsnest.questions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">questions</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.questions.html#module-crowsnest.questions" title="crowsnest.questions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">questions</span></code></a></p></td>
 <td><p>Your questions: what the person asked their sessions, and what each answered (#129).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.refstate.html#module-crowsnest.refstate" title="crowsnest.refstate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refstate</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.refstate.html#module-crowsnest.refstate" title="crowsnest.refstate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refstate</span></code></a></p></td>
 <td><p>What a referenced issue or pull request is now: open or closed, and its title.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.registry.html#module-crowsnest.registry" title="crowsnest.registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.registry.html#module-crowsnest.registry" title="crowsnest.registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span></code></a></p></td>
 <td><p>Who is alive right now, read from the registry Claude Code keeps while a session runs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.report.html#module-crowsnest.report" title="crowsnest.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.report.html#module-crowsnest.report" title="crowsnest.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
 <td><p>The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.rows.html#module-crowsnest.rows" title="crowsnest.rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rows</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.rows.html#module-crowsnest.rows" title="crowsnest.rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rows</span></code></a></p></td>
 <td><p>How an item's row is built and hashed: one value, taken whole by every surface that pins it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.said.html#module-crowsnest.said" title="crowsnest.said"><code class="xref py py-obj docutils literal notranslate"><span class="pre">said</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.said.html#module-crowsnest.said" title="crowsnest.said"><code class="xref py py-obj docutils literal notranslate"><span class="pre">said</span></code></a></p></td>
 <td><p>When the thing an item quotes was said: its own time, taken from its own source.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.skills.html#module-crowsnest.skills" title="crowsnest.skills"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skills</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.skills.html#module-crowsnest.skills" title="crowsnest.skills"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skills</span></code></a></p></td>
 <td><p>The agent-facing surface: the skills, the subagent, and the command that installs them.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.synopsis.html#module-crowsnest.synopsis" title="crowsnest.synopsis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">synopsis</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.synopsis.html#module-crowsnest.synopsis" title="crowsnest.synopsis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">synopsis</span></code></a></p></td>
 <td><p>A group's synopsis: a few lines on what needs the person, what is working, what finished.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.themes.html#module-crowsnest.themes" title="crowsnest.themes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">themes</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.themes.html#module-crowsnest.themes" title="crowsnest.themes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">themes</span></code></a></p></td>
 <td><p>Which theme each session belongs to: the person's <code class="docutils literal notranslate"><span class="pre">[themes]</span></code> table first, then what the row itself says (the action-first pass, C1).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.tools.html#module-crowsnest.tools" title="crowsnest.tools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.tools.html#module-crowsnest.tools" title="crowsnest.tools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tools</span></code></a></p></td>
 <td><p>The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.tree.html#module-crowsnest.tree" title="crowsnest.tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tree</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.tree.html#module-crowsnest.tree" title="crowsnest.tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tree</span></code></a></p></td>
 <td><p>The spawn forest as a picture: laid out in Python, drawn as inline SVG.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.triage.html#module-crowsnest.triage" title="crowsnest.triage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triage</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.triage.html#module-crowsnest.triage" title="crowsnest.triage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triage</span></code></a></p></td>
 <td><p>Which sessions need you, which are safe to close, and which are still going.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.watch.html#module-crowsnest.watch" title="crowsnest.watch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watch</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.watch.html#module-crowsnest.watch" title="crowsnest.watch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">watch</span></code></a></p></td>
 <td><p>A stream of what changed, so a monitor is told instead of made to poll.</p></td>
 </tr>
 </tbody>
@@ -788,7 +805,7 @@ silently wrote nothing would be worse than a stack trace.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=5c5ca7ce"></script>
+      <script src="../_static/documentation_options.js?v=f82423d7"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

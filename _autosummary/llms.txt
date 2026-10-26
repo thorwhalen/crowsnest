@@ -16,6 +16,7 @@
 - [crowsnest.egress](crowsnest.egress.html.md): The page’s sanitiser, made safe against text that an earlier clip has already cut (#83).
 - [crowsnest.envelope_cache](crowsnest.envelope_cache.html.md): A cached openloops envelope: asked for at most once per &#96;every&#96;, read by the page.
 - [crowsnest.gists](crowsnest.gists.html.md): Gists for &#42;Your questions&#42; (#129): each question in a few words, and the answer it got.
+- [crowsnest.guard](crowsnest.guard.html.md): Keep a machine’s sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).
 - [crowsnest.hook](crowsnest.hook.html.md): The push half of the stream: what Claude Code’s own hooks tell crowsnest.
 - [crowsnest.init](crowsnest.init.html.md): Everything a crowsnest session needs before it can be one, set up in one command.
 - [crowsnest.ledger](crowsnest.ledger.html.md): The ledger: the durable page a session leaves for the watcher, one file per session.

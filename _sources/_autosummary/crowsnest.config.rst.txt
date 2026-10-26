@@ -16,6 +16,7 @@ crowsnest.config
       REPORT_KEY
       PUBLISH_KEY
       WATCH_KEY
+      GUARD_KEY
    
    .. rubric:: Functions
 
@@ -25,6 +26,7 @@ crowsnest.config
       claude_bin_setting
       config_path
       configured_homes
+      guard_settings
       homes
       publish_settings
       report_settings
@@ -38,6 +40,7 @@ crowsnest.config
    .. autosummary::
    
       AttentionSettings
+      GuardSettings
       Home
       PublishSettings
       ReportSettings
