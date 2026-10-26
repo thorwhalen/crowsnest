@@ -299,8 +299,9 @@ def test_a_detached_worktree_with_its_own_commit_is_unlanded(repo, tmp_path):
     (wt / "d.txt").write_text("d")
     _git("add", "d.txt", cwd=wt)
     _git("commit", "-qm", "d", cwd=wt)
-    # Only the worktree was touched; its commit is still found.
-    assert any(str(wt) in r for r in guard.unlanded([str(wt)], since=0.0))
+    # Only the worktree was touched; its commit is still found. (git prints the path with
+    # forward slashes on Windows, so the reason is matched, not the path.)
+    assert any("HEAD is not merged" in r for r in guard.unlanded([str(wt)], since=0.0))
 
 
 def test_a_stash_made_during_the_session_is_unlanded(repo):
@@ -953,3 +954,27 @@ def test_tmux_targets_are_exact_never_a_prefix():
     from crowsnest.spawn import tmux_exact
 
     assert tmux_exact("cn") == "=cn" and tmux_exact("cn", pane=True) == "=cn:"
+
+
+def test_the_previous_link_is_read_from_the_transcript_after_a_clean_exit(tmp_path):
+    # Measured on tw: a clean exit removes the registry record, the transcript keeps a
+    # `bridge-session` record naming `cse_<id>` for the link `session_<id>`.
+    home = tmp_path / "home"
+    path = _transcript_for(home, "/w", "gone", age_hours=1)
+    with path.open("a") as f:
+        f.write(
+            json.dumps(
+                {
+                    "type": "bridge-session",
+                    "sessionId": "gone",
+                    "bridgeSessionId": "cse_01Vz",
+                }
+            )
+            + "\n"
+        )
+    os.utime(path, (time.time(), time.time()))
+    got = guard.last_session("rv", home=home, names={"gone": "rv"})
+    assert got["bridge_session_id"] == "cse_01Vz"
+    assert guard.same_link(
+        "https://claude.ai/code/session_01Vz", got["bridge_session_id"]
+    )
