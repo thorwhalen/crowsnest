@@ -650,6 +650,20 @@ def local_argv(argv: list[str], *, config: str | Path | None = None) -> list[str
     return [claude_bin(config=config), *argv[1:]]
 
 
+def tmux_exact(name: str, *, pane: bool = False) -> str:
+    """A tmux target naming exactly the session ``name``.
+
+    A bare ``-t name`` is matched as a *prefix* (then as a pattern) when no session has
+    that exact name, so closing a stuck ``cn`` would kill a live ``cn-report``. ``=``
+    makes tmux accept only an exact match; a pane target adds the ``:`` that ends the
+    session part.
+
+    >>> tmux_exact('cn'), tmux_exact('cn', pane=True)
+    ('=cn', '=cn:')
+    """
+    return f"={name}:" if pane else f"={name}"
+
+
 def _tmux_spawner(
     argv: list[str],
     *,
@@ -853,7 +867,7 @@ def _tmux_peek(name: str) -> str:
     """What the tmux session ``name`` is displaying; empty when there is none to read."""
     try:
         result = subprocess.run(
-            ["tmux", "capture-pane", "-p", "-t", name],
+            ["tmux", "capture-pane", "-p", "-t", tmux_exact(name, pane=True)],
             capture_output=True,
             text=True,
             check=False,
@@ -965,12 +979,16 @@ def trust_dialog_key(text: str) -> str | None:
 
 def _tmux_press(name: str, key: str) -> None:
     subprocess.run(
-        ["tmux", "send-keys", "-t", name, key], capture_output=True, check=False
+        ["tmux", "send-keys", "-t", tmux_exact(name, pane=True), key],
+        capture_output=True,
+        check=False,
     )
 
 
 def _tmux_close(name: str) -> None:
-    subprocess.run(["tmux", "kill-session", "-t", name], capture_output=True, check=False)
+    subprocess.run(
+        ["tmux", "kill-session", "-t", tmux_exact(name)], capture_output=True, check=False
+    )
 
 
 def _set_tier(session: LiveSession, *, config: str | Path | None) -> None:

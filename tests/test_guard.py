@@ -327,10 +327,15 @@ def test_a_repository_with_no_remote_has_nothing_landed(tmp_path, git_env):
 # The reaper's plan
 
 
-def _transcript(tmp_path, records):
+def _transcript(tmp_path, records, *, asked=True):
+    """A transcript of ``records``, opened by a prompt unless ``asked=False``: the ledger
+    check keeps a session whose last prompt it cannot see."""
+    from fixtures import user
+
     path = tmp_path / "home" / "projects" / "p" / "sid.jsonl"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(json.dumps(r) + "\n" for r in records))
+    opening = [user("go", at="2026-01-01T00:00:00Z")] if asked else []
+    path.write_text("".join(json.dumps(r) + "\n" for r in opening + list(records)))
     old = NOW - 48 * 3600
     os.utime(path, (old, old))
     return path
@@ -458,10 +463,15 @@ def test_the_lookout_its_caller_and_any_parent_are_never_closed():
         assert guard.check_protected(s, ctx), s.name
 
 
-def test_a_ledger_that_does_not_say_done_keeps_the_session():
-    s = _session()
+def test_a_ledger_that_does_not_say_done_keeps_the_session(tmp_path):
+    s = _session(transcript=str(_transcript(tmp_path, [])))
     assert "unclassified" in guard.check_ledger_done(s, _ctx())
     assert guard.check_ledger_done(s, _ctx(verdicts=_done(s))) is None
+
+
+def test_an_all_clear_whose_last_prompt_is_out_of_view_keeps(tmp_path):
+    s = _session(transcript=str(_transcript(tmp_path, [], asked=False)))
+    assert "out of view" in guard.check_ledger_done(s, _ctx(verdicts=_done(s)))
 
 
 def test_recent_activity_keeps_the_session():
@@ -849,7 +859,14 @@ def test_a_reused_pid_is_not_the_session_that_wrote_the_record(tmp_path):
     )
     assert guard.same_process(10, {"procStart": "5555"}, proc=proc)
     assert not guard.same_process(10, {"procStart": "1234"}, proc=proc)
-    assert guard.same_process(10, {"procStart": "Mon Oct 26 13:48:38 2026"}, proc=proc)
+    # An unknown format with /proc present cannot be checked, so it keeps; without /proc
+    # (macOS writes a date there) there is nothing to compare.
+    assert not guard.same_process(
+        10, {"procStart": "Mon Oct 26 13:48:38 2026"}, proc=proc
+    )
+    assert guard.same_process(
+        10, {"procStart": "Mon Oct 26 13:48:38 2026"}, proc=tmp_path / "none"
+    )
 
 
 def test_a_hook_script_under_dot_claude_is_not_a_claude():
@@ -893,3 +910,46 @@ def test_revive_is_never_refused_by_the_gate(tmp_path, monkeypatch):
         "cn-tw", cwd=str(tmp_path), prompt="brief", home=home, config=config
     )
     assert got["action"] == "fresh" and got["session_url"].endswith("session_N")
+
+
+def test_a_remote_head_on_a_feature_branch_does_not_make_it_landed(repo):
+    _git("checkout", "-qb", "feature", cwd=repo)
+    (repo / "f.txt").write_text("f")
+    _git("add", "f.txt", cwd=repo)
+    _git("commit", "-qm", "f", cwd=repo)
+    _git("push", "-q", "-u", "origin", "feature", cwd=repo)
+    _git(
+        "symbolic-ref",
+        "refs/remotes/origin/HEAD",
+        "refs/remotes/origin/feature",
+        cwd=repo,
+    )
+    assert any(
+        "not merged" in r for r in guard.unlanded([str(repo)], since=time.time() - 60)
+    )
+
+
+def test_revive_finds_its_session_alive_under_another_name(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    write_registry(home, registry_record(os.getpid(), "live-id", name=""))
+    monkeypatch.setattr(guard, "claude_alive", lambda pid, proc=None: True)
+    monkeypatch.setattr(
+        guard,
+        "last_session",
+        lambda name, home=None: {
+            "session_id": "live-id",
+            "cwd": "/w",
+            "active_at": time.time(),
+            "bridge_session_id": "",
+        },
+    )
+    calls = []
+    monkeypatch.setattr(spawn_module, "spawn", lambda *a, **k: calls.append(k))
+    got = tools.revive("cn-tw", cwd=str(tmp_path), home=home)
+    assert got["action"] == "alive" and calls == []
+
+
+def test_tmux_targets_are_exact_never_a_prefix():
+    from crowsnest.spawn import tmux_exact
+
+    assert tmux_exact("cn") == "=cn" and tmux_exact("cn", pane=True) == "=cn:"

@@ -1841,9 +1841,13 @@ def _close_stuck(name: str) -> None:
     """End a tmux session left by a start that never registered, so the next can begin."""
     import shutil
 
+    from crowsnest.spawn import tmux_exact
+
     if shutil.which("tmux"):
         subprocess.run(
-            ["tmux", "kill-session", "-t", name], capture_output=True, check=False
+            ["tmux", "kill-session", "-t", tmux_exact(name)],
+            capture_output=True,
+            check=False,
         )
 
 
@@ -1905,12 +1909,19 @@ def revive(
         "gate": _no_gate,
     }
     last = guard.last_session(name, home=home)
-    running = {s.session_id for s in live}
-    if (
-        last
-        and last["session_id"] not in running
-        and time.time() - last["active_at"] <= resume_within_hours * 3600
-    ):
+    running = {s.session_id: s for s in live}
+    if last and last["session_id"] in running:
+        # Alive under another name, or none: starting another would make two lookouts.
+        s = running[last["session_id"]]
+        return {
+            "action": "alive",
+            "name": name,
+            "pid": s.pid,
+            "session_id": s.session_id,
+            "session_url": s.session_url,
+            "same_link": True,
+        }
+    if last and time.time() - last["active_at"] <= resume_within_hours * 3600:
         where = last["cwd"] if last.get("cwd") and Path(last["cwd"]).is_dir() else cwd
         started = _spawn_session(
             name, cwd=where, resume=last["session_id"], prompt=resume_prompt, **common

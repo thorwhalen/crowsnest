@@ -156,11 +156,15 @@ def claude_alive(pid: int, *, proc: Path | None = None) -> bool:
 def same_process(pid: int, record: Mapping, *, proc: Path | None = None) -> bool:
     """Is ``pid`` still the process that wrote ``record``? On Linux Claude Code records
     its kernel start time (``procStart``, clock ticks since boot), which a reused pid
-    cannot share. Elsewhere, or for a record without one, this cannot tell: ``True``."""
+    cannot share. Without ``/proc``, or for a record without one, this cannot tell:
+    ``True``. With ``/proc``, a ``procStart`` that is not a tick count is a format this
+    does not know, and the answer is ``False``: a check that cannot tell keeps."""
     proc = PROC if proc is None else proc
     started = str(record.get("procStart") or "")
-    if not started.isdigit() or not proc.is_dir():
+    if not started or not proc.is_dir():
         return True
+    if not started.isdigit():
+        return False
     try:
         stat = (proc / str(pid) / "stat").read_text()
     except OSError:
@@ -400,23 +404,36 @@ _IN_PROGRESS = (
 )
 
 
+#: The branch names that count as a remote's default. A remote's ``HEAD`` naming any other
+#: branch -- a remote cloned from a working checkout, whose HEAD is a feature branch -- is
+#: not trusted: work there would read as landed.
+DEFAULT_BRANCHES = ("main", "master")
+
+
 def _default_branches(repo: Path) -> list[str]:
-    """Each remote's default branch: what ``refs/remotes/<r>/HEAD`` points at, else its
-    ``main`` or ``master``. ``[]`` for a repository with no remote."""
+    """Each remote's default branch: ``refs/remotes/<r>/main`` or ``master`` (what its
+    ``HEAD`` points at, when that is one of them). ``[]`` for a repository with no remote."""
     lines = _git(
         ["for-each-ref", "--format=%(refname)%09%(symref)", "refs/remotes"], cwd=repo
     )
     refs = dict(line.split("\t", 1) for line in lines.splitlines() if "\t" in line)
-    heads = [target for ref, target in refs.items() if ref.endswith("/HEAD") and target]
+    heads = [
+        target
+        for ref, target in refs.items()
+        if ref.endswith("/HEAD") and target.rsplit("/", 1)[-1] in DEFAULT_BRANCHES
+    ]
     if heads:
         return heads
-    return [ref for ref in refs if ref.rsplit("/", 1)[-1] in ("main", "master")]
+    return [ref for ref in refs if ref.rsplit("/", 1)[-1] in DEFAULT_BRANCHES]
 
 
-def on_default_branch(repo: Path, rev: str) -> bool:
+def on_default_branch(
+    repo: Path, rev: str, *, targets: Sequence[str] | None = None
+) -> bool:
     """Is ``rev`` merged into a remote's default branch? Pushed is not landed: a branch on
-    the remote with an open (or closed) pull request is still unlanded work."""
-    targets = _default_branches(repo)
+    the remote with an open (or closed) pull request is still unlanded work. ``targets``
+    are the default branches, when a caller has already listed them."""
+    targets = _default_branches(repo) if targets is None else targets
     if not targets:
         return False
     return not _git(["rev-list", "-n1", rev, "--not", *targets], cwd=repo).strip()
@@ -467,7 +484,14 @@ def unlanded(
     remote has nothing landed. Raises when git cannot answer; the caller keeps the
     session.
     """
-    is_landed = on_default_branch if is_landed is None else is_landed
+    if is_landed is None:
+        listed: dict[Path, list[str]] = {}
+
+        def is_landed(repo: Path, rev: str) -> bool:
+            if repo not in listed:
+                listed[repo] = _default_branches(repo)
+            return on_default_branch(repo, rev, targets=listed[repo])
+
     reasons: list[str] = []
     for common, touched in sorted(_checkouts(dirs).items()):
         repo = Path(common)
@@ -616,6 +640,8 @@ def check_ledger_done(session: LiveSession, ctx: ReapContext) -> str | None:
     asked = _epoch(
         read_activity(session.transcript, session_id=session.session_id).last_prompt_at
     )
+    if not asked:
+        return "its last prompt is out of view, so its all-clear may predate it"
     began = _first_stamp(Path(session.transcript)) or session.started_at
     if said < max(asked, began):
         return "its ledger's all-clear is older than its last prompt"
