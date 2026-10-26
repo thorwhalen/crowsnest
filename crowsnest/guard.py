@@ -1076,7 +1076,47 @@ def last_session(
                 "active_at": mtime,
                 **info,
             }
+    if best is not None and not best["bridge_session_id"]:
+        # A clean exit removes the registry record; the transcript keeps the link.
+        best["bridge_session_id"] = _bridge_in(Path(best["transcript"]))
     return best
+
+
+_BRIDGE = re.compile(
+    rb'"type"\s*:\s*"bridge-session".*?"bridgeSessionId"\s*:\s*"([^"]+)"'
+)
+
+
+def _bridge_in(transcript: Path) -> str:
+    """The last Remote Control id a transcript's ``bridge-session`` records name; ``''``."""
+    found = ""
+    try:
+        with transcript.open("rb") as f:
+            for line in f:
+                if b"bridge-session" in line:
+                    hit = _BRIDGE.search(line)
+                    if hit:
+                        found = hit.group(1).decode(errors="replace")
+    except OSError:
+        return ""
+    return found
+
+
+def same_link(a: str, b: str) -> bool:
+    """Do two Remote Control ids (or links) name one session? The transcript writes
+    ``cse_<id>`` where the registry and the link say ``session_<id>``.
+
+    >>> same_link('https://claude.ai/code/session_01Vz', 'cse_01Vz')
+    True
+    >>> same_link('session_01Vz', '')
+    False
+    """
+
+    def suffix(x: str) -> str:
+        tail = x.rsplit("/", 1)[-1]
+        return tail.split("_", 1)[1] if "_" in tail else tail
+
+    return bool(a and b) and suffix(a) == suffix(b)
 
 
 # --------------------------------------------------------------------------------------

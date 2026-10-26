@@ -1928,12 +1928,7 @@ def revive(
         )
         if started["pid"]:
             url = _url_of(started["pid"], home=home)
-            before = (
-                f"https://claude.ai/code/{last['bridge_session_id']}"
-                if last.get("bridge_session_id")
-                else ""
-            )
-            same = bool(url) and url == before
+            same = guard.same_link(url, last.get("bridge_session_id", ""))
             if url and not same:
                 guard.notify(push, f"{name} is back on a new link", url)
             return {

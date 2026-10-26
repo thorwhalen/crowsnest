@@ -954,3 +954,27 @@ def test_tmux_targets_are_exact_never_a_prefix():
     from crowsnest.spawn import tmux_exact
 
     assert tmux_exact("cn") == "=cn" and tmux_exact("cn", pane=True) == "=cn:"
+
+
+def test_the_previous_link_is_read_from_the_transcript_after_a_clean_exit(tmp_path):
+    # Measured on tw: a clean exit removes the registry record, the transcript keeps a
+    # `bridge-session` record naming `cse_<id>` for the link `session_<id>`.
+    home = tmp_path / "home"
+    path = _transcript_for(home, "/w", "gone", age_hours=1)
+    with path.open("a") as f:
+        f.write(
+            json.dumps(
+                {
+                    "type": "bridge-session",
+                    "sessionId": "gone",
+                    "bridgeSessionId": "cse_01Vz",
+                }
+            )
+            + "\n"
+        )
+    os.utime(path, (time.time(), time.time()))
+    got = guard.last_session("rv", home=home, names={"gone": "rv"})
+    assert got["bridge_session_id"] == "cse_01Vz"
+    assert guard.same_link(
+        "https://claude.ai/code/session_01Vz", got["bridge_session_id"]
+    )
