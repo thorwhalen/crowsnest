@@ -414,7 +414,34 @@ def _add_dirs(argv: Sequence[str] | None) -> list[str]:
     return out
 
 
+def _epoch(stamp: str) -> float:
+    from datetime import datetime
+
+    try:
+        return datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return 0.0
+
+
 def _last_active(session: LiveSession) -> float:
+    """When the session last did something: its last prompt or reply.
+
+    Not the transcript's mtime or the registry's status time: Remote Control and Claude
+    Code's own housekeeping append records (``bridge-session``, ``system``) and refresh
+    the status while a session sits untouched for days, which measured on tw made every
+    idle session look active within the hour. When the transcript's tail holds no turn
+    at all, the later of those two is used, which can only make a session look *more*
+    recent -- the side that keeps it.
+    """
+    from crowsnest.activity import read_activity
+
+    try:
+        act = read_activity(session.transcript, session_id=session.session_id)
+        turn = max(_epoch(act.last_prompt_at), _epoch(act.last_text_at))
+    except (OSError, ValueError):
+        turn = 0.0
+    if turn:
+        return turn
     try:
         mtime = Path(session.transcript).stat().st_mtime
     except OSError:

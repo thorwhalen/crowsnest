@@ -727,3 +727,22 @@ def test_units_render_this_interpreter_and_no_brace_is_left():
 
 def test_last_session_is_none_for_a_name_never_seen(tmp_path):
     assert guard.last_session("ghost", home=tmp_path / "home", names={}) is None
+
+
+def test_idle_is_measured_from_the_last_turn_not_from_housekeeping(tmp_path):
+    # Measured on tw: Remote Control appends `bridge-session` and `system` records to a
+    # session idle for two days, refreshing the file's mtime and the registry's status.
+    from fixtures import assistant, user
+
+    turn_at = "2026-10-24T16:00:00Z"
+    records = [
+        user("do the thing", at=turn_at),
+        assistant("done", at=turn_at),
+        {"type": "system", "subtype": "informational", "timestamp": "2026-10-26T13:41:02Z"},
+    ]
+    t = _transcript(tmp_path, records)
+    now = guard._epoch("2026-10-26T13:45:00Z")
+    os.utime(t, (now, now))
+    s = _session(transcript=str(t), status_since=now - 60)
+    assert guard.check_idle_for(s, _ctx(now=now)) is None
+    assert guard._last_active(s) == guard._epoch(turn_at)
