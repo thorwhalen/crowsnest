@@ -42,15 +42,19 @@ __all__ = [
     "backfill_lineage",
     "brief",
     "done",
+    "guard_tick",
+    "guard_units",
     "later",
     "lineage",
     "live",
     "note",
     "publish",
+    "reap",
     "recap",
     "repo_url",
     "report",
     "resolve",
+    "revive",
     "roster",
     "seen",
     "sessions",
@@ -1774,3 +1778,158 @@ def brief(
         why = exc.args[0] if exc.args else str(exc)
         return {"session": s.as_dict(), "digest": None, "why": why}
     return {"session": s.as_dict(), "digest": digest, "why": ""}
+
+
+# --------------------------------------------------------------------------------------
+# The guard: memory, the reaper and the lookout's restart (#171)
+
+#: What a resumed session is told first: it was restarted, so whatever it was watching
+#: (a Monitor on `crowsnest watch`, a subscription) died with the process.
+DFLT_RESUME_PROMPT = (
+    "You were restarted (your process had exited, probably killed). Anything you were "
+    "watching died with it: re-arm your watchers, then carry on."
+)
+
+
+def guard_tick(
+    *, home: str | Path | None = None, config: str | Path | None = None
+) -> dict:
+    """The OOM pass, then the reaper in the mode ``[guard] reap`` names (report by default)."""
+    from crowsnest import guard
+
+    return guard.tick(home=home, config=config)
+
+
+def reap(
+    *,
+    apply: bool = False,
+    home: str | Path | None = None,
+    config: str | Path | None = None,
+) -> dict:
+    """Which sessions the reaper would close, and why every other one is kept.
+
+    ``apply=True`` closes them (at most ``[guard] max_closes``), each re-verified first,
+    with SIGTERM; the default only reports. See :mod:`crowsnest.guard` for the checks.
+    """
+    from crowsnest import guard
+
+    return guard.reap(apply=apply, home=home, config=config)
+
+
+def _url_of(pid: int, *, home: str | Path | None) -> str:
+    for s in live_sessions(home=home):
+        if s.pid == pid:
+            return s.session_url
+    return ""
+
+
+def revive(
+    name: str,
+    *,
+    cwd: str,
+    prompt: str = "",
+    model: str | None = None,
+    effort: str = "",
+    resume_within_hours: float = 168.0,
+    resume_prompt: str = DFLT_RESUME_PROMPT,
+    home: str | Path | None = None,
+    config: str | Path | None = None,
+    spawner=None,
+) -> dict:
+    """Make sure a session named ``name`` runs -- the one it was, when that is possible.
+
+    For a watchdog. Already live: nothing is done. Otherwise the last session that went by
+    the name (:func:`crowsnest.guard.last_session`) is resumed when its transcript changed
+    within ``resume_within_hours``, which keeps its Remote Control link -- a phone still
+    open on it reconnects instead of facing a dead link -- and it is sent
+    ``resume_prompt``. With nothing to resume, or a resume that never registers, a fresh
+    session starts with ``prompt``; its new link is pushed to ``[guard] notify``.
+
+    Returns ``{"action": "alive"|"resumed"|"fresh"|"failed", "name", "pid",
+    "session_id", "session_url", "same_link"}``.
+    """
+    import time
+
+    from crowsnest import guard
+    from crowsnest.config import guard_settings
+    from crowsnest.spawn import spawn as _spawn_session
+
+    for s in live_sessions(home=home, is_alive=guard.claude_alive):
+        if s.name == name:
+            return {
+                "action": "alive",
+                "name": name,
+                "pid": s.pid,
+                "session_id": s.session_id,
+                "session_url": s.session_url,
+                "same_link": True,
+            }
+    settings = guard_settings(path=config)
+    common = {
+        "cwd": cwd,
+        "model": model,
+        "effort": effort,
+        "home": home,
+        "config": config,
+        "spawner": spawner,
+    }
+    last = guard.last_session(name, home=home)
+    if last and time.time() - last["active_at"] <= resume_within_hours * 3600:
+        started = _spawn_session(
+            name, resume=last["session_id"], prompt=resume_prompt, **common
+        )
+        if started["pid"]:
+            url = _url_of(started["pid"], home=home)
+            before = (
+                f"https://claude.ai/code/{last['bridge_session_id']}"
+                if last.get("bridge_session_id")
+                else ""
+            )
+            same = bool(url) and url == before
+            if url and before and not same:
+                guard.notify(settings.notify, f"{name} is back on a new link", url)
+            return {
+                "action": "resumed",
+                "name": name,
+                "pid": started["pid"],
+                "session_id": started["session_id"],
+                "session_url": url,
+                "same_link": same,
+            }
+    started = _spawn_session(name, prompt=prompt, **common)
+    if not started["pid"]:
+        return {
+            "action": "failed",
+            "name": name,
+            "pid": 0,
+            "session_id": "",
+            "session_url": "",
+            "same_link": False,
+            "how": started["how"],
+        }
+    url = _url_of(started["pid"], home=home)
+    if url:
+        guard.notify(settings.notify, f"{name} restarted on a new link", url)
+    return {
+        "action": "fresh",
+        "name": name,
+        "pid": started["pid"],
+        "session_id": started["session_id"],
+        "session_url": url,
+        "same_link": False,
+    }
+
+
+def guard_units(*, to: str = "") -> dict:
+    """The systemd units that run the guard, rendered for this machine; written to ``to``
+    (a directory, e.g. ``/etc/systemd/system``) when given."""
+    from crowsnest import guard
+
+    rendered = guard.units()
+    written = []
+    if to:
+        for unit, text in rendered.items():
+            path = Path(to).expanduser() / unit
+            path.write_text(text)
+            written.append(str(path))
+    return {"units": rendered, "written": written}

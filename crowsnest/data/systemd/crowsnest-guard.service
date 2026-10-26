@@ -1,0 +1,20 @@
+# Rendered by `crowsnest guard units`; install with `crowsnest guard units --to /etc/systemd/system`.
+[Unit]
+Description=crowsnest guard: OOM tiers for Claude Code sessions, and the idle-session reaper (crowsnest#171)
+After=network-online.target
+
+[Service]
+Type=oneshot
+# What the reaper does is [guard] reap in ~/.config/crowsnest/config.toml (report by
+# default: plan only). Changing that never needs this unit edited.
+Environment=HOME={home}
+Environment=PATH={path}
+WorkingDirectory={home}
+ExecStart={python} -m crowsnest guard tick
+Nice=10
+TimeoutStartSec=170
+# The process that relieves memory pressure has to survive it.
+OOMScoreAdjust=-500
+MemoryMax=400M
+StandardOutput=journal
+StandardError=journal

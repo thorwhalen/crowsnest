@@ -56,7 +56,12 @@ Those are the writes, and they are all of them: a session started, and files tha
 crowsnest's own and live outside any repository -- the ledgers, the hook event log, the
 spawn records, the attention records (all four under :func:`crowsnest.paths.data_dir`),
 and the symlinks the skill installer makes.
-crowsnest never sends into, kills, or writes into a session that already exists.
+crowsnest never sends into or writes into a session that already exists. It ends one in
+exactly one place, :mod:`crowsnest.guard`'s reaper (#171): only a resting session whose
+ledger says it is done and whose work is all landed, only when a person or the guard's
+timer runs it with ``apply``, and with SIGTERM -- the session can be resumed after. The
+guard also sets each session's ``oom_score_adj`` on Linux, and refuses a spawn when the
+machine is out of room.
 
 >>> from crowsnest import live_sessions, roster
 >>> live_sessions(home='/nonexistent-dir-for-doctest')

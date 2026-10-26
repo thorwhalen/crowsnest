@@ -1347,6 +1347,7 @@ def spawn(
     wait: float = DFLT_WAIT,
     trust: bool = False,
     permission_mode: str | None = None,
+    resume: str = "",
 ) -> str:
     """Start a named session in `--cwd`; waits for it to register, then prints its row.
 
@@ -1396,6 +1397,13 @@ def spawn(
     session unreachable from claude.ai; leave it out for the default, Remote Control on.
     See #79 for why the obvious rename (`--no-remote-control`) is not a clean fix: it
     would also grab `-n`, which `claude -n NAME` (session naming) already needs.
+
+    `--resume SESSION_ID` continues that session instead of starting a new one: same
+    transcript, same Remote Control link; `--prompt` is then its next message.
+
+    The machine's limits come first (#171): a spawn is refused (exit 75) when the machine
+    already runs its cap of sessions, or one more would leave too little memory -- the
+    config file's `[guard]`. A name in `[guard] protect` (the lookout) is never refused.
     """
     if not cwd:
         raise ValueError("spawn requires --cwd <dir>")
@@ -1413,6 +1421,7 @@ def spawn(
         add_dirs=_dir_list(add_dirs),
         trust=trust,
         permission_mode=permission_mode,
+        resume=resume,
     )
     where = f" in {result['home']}" if result.get("home") else ""
     # The model is echoed because choosing it is the one decision a dispatcher makes by
@@ -1433,6 +1442,112 @@ def spawn(
         f"{result['name']:<20}pid {result['pid']:<8}"
         f"session {result['session_id'][:8]}  {how}  ({result['how']}){where}"
     )
+
+
+def reap(*, apply: bool = False, home: str | None = None, json: bool = False) -> str:
+    """List the sessions safe to close, and why every other one is kept; `--apply` closes.
+
+    A session is closed only when all of these hold: it is not in `[guard] protect`, not
+    the session running this, and spawned no live session; it is idle (never busy,
+    waiting or running a shell); idle for `[guard] idle_hours` (24 by default); its ledger
+    says it is done (triage's *safe to close*); and nothing it touched is unlanded -- no
+    uncommitted or untracked change, no operation in progress, no commit or branch it made
+    that is on no remote, no stash newer than it. Without `--apply` nothing is closed.
+    With it, at most `[guard] max_closes` sessions get SIGTERM (never SIGKILL), each
+    re-checked first, and each is logged with the `claude --resume` line that brings it
+    back. A lookout never runs `--apply`: closing sessions is the person's or the timer's.
+    """
+    result = tools.reap(apply=apply, home=home)
+    if json:
+        return _json.dumps(result, indent=2)
+    lines = []
+    for row in result["plan"]:
+        s = row["session"]
+        verdict = "CLOSE" if row["close"] else "keep "
+        why = "" if row["close"] else "  " + "; ".join(row["keep_because"])
+        lines.append(
+            f"{verdict} {s['name']:<20} {s['status']:<7} {s['idle_hours']:>6.1f}h{why}"
+        )
+    for c in result["closed"]:
+        lines.append(f"{c['name']}: {c['result']} (resume: {c['resume']})")
+    head = (
+        f"{len(result['would_close'])} of {len(result['plan'])} sessions would close"
+        + ("" if apply else " (dry run; --apply closes them)")
+    )
+    return "\n".join([head, *lines])
+
+
+def revive(
+    name: str,
+    *,
+    cwd: str = "",
+    prompt: str = "",
+    model: str | None = None,
+    effort: str = "",
+    resume_within_hours: float = 168.0,
+    resume_prompt: str = tools.DFLT_RESUME_PROMPT,
+    home: str | None = None,
+) -> str:
+    """Make sure a session named NAME runs: resume the last one under that name, else start one.
+
+    For a watchdog restarting a lookout. A live session of that name is left alone.
+    Otherwise the last session that had the name is resumed (when its transcript changed
+    within `--resume-within-hours`), which keeps its Remote Control link, so a phone
+    still open on it reconnects; it is sent `--resume-prompt`. With nothing to resume, a
+    new session starts in `--cwd` with `--prompt`, and its new link is pushed to
+    `[guard] notify`.
+    """
+    if not cwd:
+        raise ValueError("revive requires --cwd <dir>")
+    r = tools.revive(
+        name,
+        cwd=cwd,
+        prompt=prompt,
+        model=model,
+        effort=effort,
+        resume_within_hours=resume_within_hours,
+        resume_prompt=resume_prompt,
+        home=home,
+    )
+    link = r["session_url"] or "no Remote Control link"
+    same = " (same link)" if r["action"] == "resumed" and r["same_link"] else ""
+    extra = f": {r['how']}" if r.get("how") else ""
+    return f"{r['name']}: {r['action']} pid {r['pid']} {link}{same}{extra}"
+
+
+def guard_tick(*, home: str | None = None) -> str:
+    """What the guard timer runs: OOM tiers, then the reaper in `[guard] reap`'s mode."""
+    out = tools.guard_tick(home=home)
+    mem = out["memory"]
+    lines = [
+        f"{out['at']} sessions {out['sessions']}/{out['cap'] or '-'} "
+        f"available {mem.get('MemAvailable', '-')} MB, reap mode {out['mode']}, "
+        f"oom tiers set on {len(out['oom']['set'])} pids"
+        + (f", {len(out['oom']['errors'])} errors" if out["oom"]["errors"] else "")
+    ]
+    reaped = out.get("reap")
+    if reaped:
+        for row in reaped["plan"]:
+            s = row["session"]
+            verdict = "CLOSE" if row["close"] else "keep"
+            why = "" if row["close"] else ": " + "; ".join(row["keep_because"])
+            lines.append(
+                f"  {verdict} {s['name']} ({s['status']}, {s['idle_hours']}h){why}"
+            )
+        lines += [f"  {c['name']}: {c['result']}" for c in reaped["closed"]]
+    return "\n".join(lines)
+
+
+def guard_units(*, to: str = "") -> str:
+    """Print the systemd units that run `crowsnest guard tick`; `--to DIR` writes them.
+
+    On a server: `crowsnest guard units --to /etc/systemd/system && systemctl
+    daemon-reload && systemctl enable --now crowsnest-guard.timer`.
+    """
+    out = tools.guard_units(to=to)
+    if out["written"]:
+        return "wrote " + ", ".join(out["written"])
+    return "\n".join(f"# --- {name}\n{text}" for name, text in out["units"].items())
 
 
 def open(session: str, *, home: str | None = None, all_homes: bool = False) -> str:
@@ -1474,6 +1589,8 @@ _commands = [
     ledger,
     hook,
     spawn,
+    revive,
+    reap,
     open,
     init,
     install_skills,
@@ -1484,7 +1601,12 @@ _commands = [
 _groups = {
     "attention": {"export": attention_export, "import": attention_import},
     "intent": {"answer": intent_answer},
+    "guard": {"tick": guard_tick, "units": guard_units},
 }
+
+
+#: The exit code of a spawn the guard refused: try again later (sysexits' EX_TEMPFAIL).
+EX_TEMPFAIL = 75
 
 
 def _cli_warning(message, category, filename, lineno, line=None) -> str:
@@ -1512,8 +1634,13 @@ def main(argv: list[str] | None = None) -> None:
         prog="crowsnest",
         description=__doc__.splitlines()[0],
     )
+    from crowsnest.guard import SpawnRefused
+
     try:
         code = cw.run(parser, argv)
+    except SpawnRefused as exc:
+        print(f"crowsnest: {exc}", file=sys.stderr)
+        sys.exit(EX_TEMPFAIL)
     except (ValueError, KeyError) as exc:
         message = exc.args[0] if exc.args else str(exc)
         print(f"crowsnest: {message}", file=sys.stderr)
