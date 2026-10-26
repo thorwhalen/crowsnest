@@ -2151,65 +2151,60 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="1928">        <span class="p">)</span>
 </span><span data-line="1929">        <span class="k">if</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">]:</span>
 </span><span data-line="1930">            <span class="n">url</span> <span class="o">=</span> <span class="n">_url_of</span><span class="p">(</span><span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="1931">            <span class="n">before</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="1932">                <span class="sa">f</span><span class="s2">"https://claude.ai/code/</span><span class="si">{</span><span class="n">last</span><span class="p">[</span><span class="s1">'bridge_session_id'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="1933">                <span class="k">if</span> <span class="n">last</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bridge_session_id"</span><span class="p">)</span>
-</span><span data-line="1934">                <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="1935">            <span class="p">)</span>
-</span><span data-line="1936">            <span class="n">same</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="ow">and</span> <span class="n">url</span> <span class="o">==</span> <span class="n">before</span>
-</span><span data-line="1937">            <span class="k">if</span> <span class="n">url</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">same</span><span class="p">:</span>
-</span><span data-line="1938">                <span class="n">guard</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="n">push</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is back on a new link"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
-</span><span data-line="1939">            <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1940">                <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"resumed"</span><span class="p">,</span>
-</span><span data-line="1941">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1942">                <span class="s2">"pid"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span>
-</span><span data-line="1943">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
-</span><span data-line="1944">                <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
-</span><span data-line="1945">                <span class="s2">"same_link"</span><span class="p">:</span> <span class="n">same</span><span class="p">,</span>
-</span><span data-line="1946">            <span class="p">}</span>
-</span><span data-line="1947">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1948">            <span class="n">_close_stuck</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="1949">    <span class="n">started</span> <span class="o">=</span> <span class="n">_spawn_session</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span><span class="p">)</span>
-</span><span data-line="1950">    <span class="k">if</span> <span class="ow">not</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">]:</span>
-</span><span data-line="1951">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1952">            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"failed"</span><span class="p">,</span>
-</span><span data-line="1953">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1954">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="1955">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1956">            <span class="s2">"session_url"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1957">            <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1958">            <span class="s2">"how"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"how"</span><span class="p">],</span>
-</span><span data-line="1959">        <span class="p">}</span>
-</span><span data-line="1960">    <span class="n">url</span> <span class="o">=</span> <span class="n">_url_of</span><span class="p">(</span><span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="1961">    <span class="n">guard</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span>
-</span><span data-line="1962">        <span class="n">push</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> restarted on a new link"</span><span class="p">,</span> <span class="n">url</span> <span class="ow">or</span> <span class="s2">"(no Remote Control link)"</span>
-</span><span data-line="1963">    <span class="p">)</span>
-</span><span data-line="1964">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1965">        <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"fresh"</span><span class="p">,</span>
-</span><span data-line="1966">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1967">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span>
-</span><span data-line="1968">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
-</span><span data-line="1969">        <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
-</span><span data-line="1970">        <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1971">    <span class="p">}</span></div>
+</span><span data-line="1931">            <span class="n">same</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">same_link</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">last</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bridge_session_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+</span><span data-line="1932">            <span class="k">if</span> <span class="n">url</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">same</span><span class="p">:</span>
+</span><span data-line="1933">                <span class="n">guard</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="n">push</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is back on a new link"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+</span><span data-line="1934">            <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1935">                <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"resumed"</span><span class="p">,</span>
+</span><span data-line="1936">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="1937">                <span class="s2">"pid"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span>
+</span><span data-line="1938">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
+</span><span data-line="1939">                <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+</span><span data-line="1940">                <span class="s2">"same_link"</span><span class="p">:</span> <span class="n">same</span><span class="p">,</span>
+</span><span data-line="1941">            <span class="p">}</span>
+</span><span data-line="1942">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1943">            <span class="n">_close_stuck</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="1944">    <span class="n">started</span> <span class="o">=</span> <span class="n">_spawn_session</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span><span class="p">)</span>
+</span><span data-line="1945">    <span class="k">if</span> <span class="ow">not</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">]:</span>
+</span><span data-line="1946">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1947">            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"failed"</span><span class="p">,</span>
+</span><span data-line="1948">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="1949">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="1950">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1951">            <span class="s2">"session_url"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1952">            <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1953">            <span class="s2">"how"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"how"</span><span class="p">],</span>
+</span><span data-line="1954">        <span class="p">}</span>
+</span><span data-line="1955">    <span class="n">url</span> <span class="o">=</span> <span class="n">_url_of</span><span class="p">(</span><span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="1956">    <span class="n">guard</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span>
+</span><span data-line="1957">        <span class="n">push</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> restarted on a new link"</span><span class="p">,</span> <span class="n">url</span> <span class="ow">or</span> <span class="s2">"(no Remote Control link)"</span>
+</span><span data-line="1958">    <span class="p">)</span>
+</span><span data-line="1959">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1960">        <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"fresh"</span><span class="p">,</span>
+</span><span data-line="1961">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="1962">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span>
+</span><span data-line="1963">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
+</span><span data-line="1964">        <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+</span><span data-line="1965">        <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1966">    <span class="p">}</span></div>
 
-</span><span data-line="1972">
-</span><span data-line="1973">
+</span><span data-line="1967">
+</span><span data-line="1968">
 <div class="viewcode-block" id="guard_units">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.guard_units">[docs]</a>
-</span><span data-line="1974"><span class="k">def</span><span class="w"> </span><span class="nf">guard_units</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1975"><span class="w">    </span><span class="sd">"""The systemd units that run the guard, rendered for this machine; written to ``to``</span>
-</span><span data-line="1976"><span class="sd">    (a directory, e.g. ``/etc/systemd/system``) when given."""</span>
-</span><span data-line="1977">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
-</span><span data-line="1978">
-</span><span data-line="1979">    <span class="n">rendered</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">units</span><span class="p">()</span>
-</span><span data-line="1980">    <span class="n">written</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="1981">    <span class="k">if</span> <span class="n">to</span><span class="p">:</span>
-</span><span data-line="1982">        <span class="k">for</span> <span class="n">unit</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">rendered</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span data-line="1983">            <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">to</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">unit</span>
-</span><span data-line="1984">            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-</span><span data-line="1985">            <span class="n">written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
-</span><span data-line="1986">    <span class="k">return</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="n">rendered</span><span class="p">,</span> <span class="s2">"written"</span><span class="p">:</span> <span class="n">written</span><span class="p">}</span></div>
+</span><span data-line="1969"><span class="k">def</span><span class="w"> </span><span class="nf">guard_units</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1970"><span class="w">    </span><span class="sd">"""The systemd units that run the guard, rendered for this machine; written to ``to``</span>
+</span><span data-line="1971"><span class="sd">    (a directory, e.g. ``/etc/systemd/system``) when given."""</span>
+</span><span data-line="1972">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
+</span><span data-line="1973">
+</span><span data-line="1974">    <span class="n">rendered</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">units</span><span class="p">()</span>
+</span><span data-line="1975">    <span class="n">written</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="1976">    <span class="k">if</span> <span class="n">to</span><span class="p">:</span>
+</span><span data-line="1977">        <span class="k">for</span> <span class="n">unit</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">rendered</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="1978">            <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">to</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">unit</span>
+</span><span data-line="1979">            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="1980">            <span class="n">written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+</span><span data-line="1981">    <span class="k">return</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="n">rendered</span><span class="p">,</span> <span class="s2">"written"</span><span class="p">:</span> <span class="n">written</span><span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -2238,7 +2233,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=f82423d7"></script>
+      <script src="../../_static/documentation_options.js?v=cfdca9bd"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
