@@ -59,3 +59,18 @@ def _data_dir_is_never_the_real_one(tmp_path, monkeypatch):
     into the real ``events.jsonl``; one line here is cheaper than remembering.
     """
     monkeypatch.setenv(DATA_DIR_ENV_VAR, str(tmp_path / "crowsnest-data"))
+
+
+@pytest.fixture(autouse=True)
+def _no_host_memory_or_processes(tmp_path, monkeypatch):
+    """Keep the runner's own memory and process table out of every test (#171).
+
+    :func:`crowsnest.spawn.spawn` gates on ``/proc/meminfo`` and then writes an OOM tier
+    into ``/proc/<pid>``. On a Linux runner that would make a spawn test pass or fail on the
+    machine's free memory, and write into whatever process a fixture's pid names. A test
+    about the guard points these at a fake tree itself.
+    """
+    from crowsnest import guard
+
+    monkeypatch.setattr(guard, "PROC", tmp_path / "no-proc")
+    monkeypatch.setattr(guard, "MEMINFO", tmp_path / "no-proc" / "meminfo")

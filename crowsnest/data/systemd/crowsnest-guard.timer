@@ -1,0 +1,11 @@
+# Rendered by `crowsnest guard units`; enable with `systemctl enable --now crowsnest-guard.timer`.
+[Unit]
+Description=Run crowsnest guard every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

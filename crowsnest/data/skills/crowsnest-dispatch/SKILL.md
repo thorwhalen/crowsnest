@@ -151,6 +151,13 @@ confirm the session, do not spawn a second one — run `crowsnest --all-homes` a
 before you try again: a session that started but registered on another account is the one
 thing that looks like a failure and is not.
 
+**A refusal (exit 75) means the machine is full** (#171): it already runs its cap of
+sessions, or one more would leave too little memory (the config file's `[guard]`). Do not
+retry in a loop, and never try to get round it. Run `crowsnest reap` (a dry run) to see
+which sessions are finished and safe to close, and tell the user which ones it lists, or
+hand the work to a session that already exists. Never run `crowsnest reap --apply`
+yourself: closing sessions belongs to the user or to the guard's timer.
+
 For a session that already exists, `SendMessage` to its name from `ListAgents`, with the
 same six parts. Idle only — never a `busy` or `waiting` one.
 

@@ -73,7 +73,7 @@ import math
 import os
 import re
 import sys
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from datetime import timedelta
 from pathlib import Path
 
@@ -89,11 +89,13 @@ __all__ = [
     "CLAUDE_BIN_KEY",
     "CONFIG_ENV_VAR",
     "DFLT_FRESH_SECONDS",
+    "GUARD_KEY",
     "PUBLISH_KEY",
     "REPORT_KEY",
     "SPAWN_PERMISSION_MODE_KEY",
     "WATCH_KEY",
     "AttentionSettings",
+    "GuardSettings",
     "Home",
     "PublishSettings",
     "ReportSettings",
@@ -102,6 +104,7 @@ __all__ = [
     "claude_bin_setting",
     "config_path",
     "configured_homes",
+    "guard_settings",
     "homes",
     "publish_settings",
     "report_settings",
@@ -763,3 +766,192 @@ def configured_homes(*, path: str | Path | None = None) -> list[Home]:
             )
         )
     return found
+
+
+#: The config table bounding how many sessions a machine runs, and how it sheds them (#171).
+GUARD_KEY = "guard"
+
+#: What a session's process gets as ``oom_score_adj``, by what it is doing. A protected
+#: session (the lookout) sits below every worker and above production services, which
+#: their own units pin lower; idle workers are the kernel's first victims.
+DFLT_OOM_TIERS = {"protected": -300, "busy": 300, "waiting": 500, "idle": 800}
+
+#: Values an OOM tier may not take: ``0`` is a process nobody has biased, and ``700`` is
+#: the bias tw_platform's ``reap-stale-claude.sh`` writes and then reaps by. A tier equal
+#: to either would be mistaken for that script's own and killed at three days.
+RESERVED_OOM_VALUES = frozenset({0, 700})
+
+#: The modes ``crowsnest guard tick`` can run the reaper in.
+REAP_MODES = ("off", "report", "apply")
+
+_SIZE = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*([MG])B?\s*$", re.IGNORECASE)
+
+
+def _megabytes(value, *, key: str) -> int:
+    """A memory size in MB: a number of megabytes, or text like ``"800M"`` or ``"1.5G"``.
+
+    >>> _megabytes(330, key='x'), _megabytes('1.5G', key='x'), _megabytes('800M', key='x')
+    (330, 1536, 800)
+    """
+    if _is_int(value) and value >= 0:
+        return value
+    found = _SIZE.match(value) if isinstance(value, str) else None
+    if not found:
+        raise ValueError(
+            f"{key} must be a number of megabytes or text like '800M' or '1.5G', "
+            f"not {value!r}"
+        )
+    amount = float(found.group(1))
+    return int(amount * (1024 if found.group(2).upper() == "G" else 1))
+
+
+@dataclass(frozen=True)
+class GuardSettings:
+    """The ``[guard]`` table, validated: the spawn gate, the reaper and the OOM tiers.
+
+    Sizes are in megabytes. ``max_sessions`` ``None`` derives the cap from the machine's
+    memory (:func:`crowsnest.guard.session_cap`); ``reap`` is what ``crowsnest guard
+    tick`` does with the sessions it would close: ``"report"`` (the default) only says.
+
+    >>> GuardSettings().reap, GuardSettings().oom["idle"]
+    ('report', 800)
+    >>> GuardSettings(reap='kill')
+    Traceback (most recent call last):
+      ...
+    ValueError: reap must be one of off, report, apply, not 'kill'
+    """
+
+    protect: frozenset[str] = frozenset()
+    max_sessions: int | None = None
+    min_available_mb: int = 1536
+    session_mb: int = 330
+    reserve_mb: int = 2048
+    idle_hours: float = 24.0
+    require_done: bool = True
+    reap: str = "report"
+    max_closes: int = 3
+    notify: str = ""
+    oom: dict = field(default_factory=lambda: dict(DFLT_OOM_TIERS))
+
+    def __post_init__(self) -> None:
+        if self.reap not in REAP_MODES:
+            raise ValueError(
+                f"reap must be one of {', '.join(REAP_MODES)}, not {self.reap!r}"
+            )
+        if self.max_sessions is not None and (
+            not _is_int(self.max_sessions) or self.max_sessions < 1
+        ):
+            raise ValueError(
+                f"max_sessions must be a whole number of at least 1, not {self.max_sessions!r}"
+            )
+        if not _is_int(self.max_closes) or self.max_closes < 0:
+            raise ValueError(
+                f"max_closes must be a whole number, not {self.max_closes!r}"
+            )
+        if (
+            isinstance(self.idle_hours, bool)
+            or not isinstance(self.idle_hours, (int, float))
+            or not math.isfinite(self.idle_hours)
+            or self.idle_hours <= 0
+        ):
+            raise ValueError(
+                f"idle_hours must be a positive number, not {self.idle_hours!r}"
+            )
+        if not isinstance(self.require_done, bool):
+            # ValueError: `crowsnest` reports bad config cleanly only as ValueError.
+            raise ValueError(  # noqa: TRY004
+                f"require_done must be true or false, not {self.require_done!r}"
+            )
+        unknown = sorted(set(self.oom) - set(DFLT_OOM_TIERS))
+        if unknown:
+            raise ValueError(
+                f"oom has no {', '.join(unknown)}; it knows {', '.join(DFLT_OOM_TIERS)}"
+            )
+        for tier, value in self.oom.items():
+            if not _is_int(value) or not -1000 <= value <= 1000:
+                raise ValueError(
+                    f"oom {tier} must be a whole number from -1000 to 1000, not {value!r}"
+                )
+            if value in RESERVED_OOM_VALUES:
+                raise ValueError(
+                    f"oom {tier} may not be {value}: 0 is an unmanaged process and 700 is "
+                    "what tw_platform's reap-stale-claude.sh writes, and kills at three days"
+                )
+
+
+def guard_settings(*, path: str | Path | None = None) -> GuardSettings:
+    """The config file's ``[guard]`` table, or the defaults when it has none.
+
+    .. code-block:: toml
+
+        [guard]
+        protect = ["cn-tw"]        # never gated, never reaped, OOM tier "protected"
+        max_sessions = 12          # default: derived from MemTotal, reserve and session_mb
+        min_available = "1.5G"     # refuse a spawn that would leave less MemAvailable
+        session_mb = 330           # what one more session is expected to take
+        reserve = "2G"             # memory kept for everything that is not a session
+        idle_hours = 24            # the reaper's idle threshold
+        require_done = true        # the reaper closes only a session whose ledger says done
+        reap = "report"            # what `crowsnest guard tick` does: off, report, apply
+        max_closes = 3             # at most this many closes per run
+        notify = "https://ntfy.sh/<topic>"   # where closes and new lookout links are pushed
+
+        [guard.oom]
+        protected = -300
+        busy = 300
+        waiting = 500
+        idle = 800
+
+    A key the table does not know is an error, as in ``[attention]``.
+    """
+    file = config_path(path)
+    table = _loaded(path).get(GUARD_KEY)
+    if table is None:
+        return GuardSettings()
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{GUARD_KEY}] must be a table")  # noqa: TRY004
+    sizes = {
+        "min_available": "min_available_mb",
+        "session_mb": "session_mb",
+        "reserve": "reserve_mb",
+    }
+    known = {
+        "protect",
+        "max_sessions",
+        "min_available",
+        "session_mb",
+        "reserve",
+        "idle_hours",
+        "require_done",
+        "reap",
+        "max_closes",
+        "notify",
+        "oom",
+    }
+    unknown = sorted(set(table) - known)
+    if unknown:
+        raise ValueError(
+            f"{file}: [{GUARD_KEY}] has no {', '.join(unknown)}; "
+            f"it knows {', '.join(sorted(known))}"
+        )
+    values = {k: v for k, v in table.items() if k not in sizes}
+    try:
+        for key, attr in sizes.items():
+            if key in table:
+                values[attr] = _megabytes(table[key], key=key)
+        protect = values.pop("protect", [])
+        if not isinstance(protect, list) or not all(isinstance(p, str) for p in protect):
+            raise ValueError("protect must be a list of session names")
+        oom = values.pop("oom", {})
+        if not isinstance(oom, dict):
+            raise ValueError("[guard.oom] must be a table")  # noqa: TRY004
+        notify = values.get("notify", "")
+        if not isinstance(notify, str):
+            raise ValueError(f"notify must be a URL, not {notify!r}")  # noqa: TRY004 -- input
+        return GuardSettings(
+            protect=frozenset(p.strip() for p in protect if p.strip()),
+            oom={**DFLT_OOM_TIERS, **oom},
+            **values,
+        )
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"{file}: [{GUARD_KEY}] {exc}") from None

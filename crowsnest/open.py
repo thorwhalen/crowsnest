@@ -65,7 +65,10 @@ def _iterm_tab_opener(session: LiveSession) -> dict | None:
 
 def _has_tmux_session(name: str) -> bool:
     result = subprocess.run(
-        ["tmux", "has-session", "-t", name], capture_output=True, text=True, check=False
+        ["tmux", "has-session", "-t", f"={name}"],
+        capture_output=True,
+        text=True,
+        check=False,
     )
     return result.returncode == 0
 

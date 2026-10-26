@@ -3,9 +3,16 @@
 Every other module in this package only reads what Claude Code already writes. This is
 the exception the operating model needs: the watching session must be able to *create*
 the sessions it will then watch and message with :mod:`crowsnest.tools`, including from
-a phone over Remote Control. It never resumes or kills a session -- that stays with
-``xa`` (:func:`crowsnest.spawn.spawn` is the seam ``xa spawn`` replaces) -- it only starts
-one somewhere a person can find it, and waits for :mod:`crowsnest.registry` to see it.
+a phone over Remote Control. It never kills a session -- closing one is
+:mod:`crowsnest.guard`'s reaper, under its own checks -- and resumes one only when asked
+(``resume=``, which keeps the session's Remote Control link); it starts one somewhere a
+person can find it, and waits for :mod:`crowsnest.registry` to see it.
+(:func:`crowsnest.spawn.spawn` is the seam ``xa spawn`` replaces.)
+
+**The gate.** Before anything starts, :func:`crowsnest.guard.gate` may refuse the spawn
+(:class:`crowsnest.guard.SpawnRefused`) because the machine is at its session cap or its
+memory floor (#171); ``gate=`` replaces it, and a caller's own ``spawner`` -- which may
+start the session on another host -- is not gated unless it passes one.
 
 A spawned session runs, by default, as the session that spawned it: the same *account*
 and the same *binary*. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so
@@ -459,6 +466,7 @@ def claude_argv(
     add_dirs: Sequence[str] = (),
     binary: str = CLAUDE_BIN,
     permission_mode: str = "",
+    resume: str = "",
 ) -> list[str]:
     """The ``claude`` command line for a new named session.
 
@@ -476,6 +484,12 @@ def claude_argv(
     the prompt if it came right before it; it goes first instead, where the next token
     is always another flag. Empty strings mean "let claude decide" and are omitted.
 
+    ``resume`` is a session id to continue (``--resume``), which keeps its transcript and
+    its Remote Control link; ``prompt`` is then the next message to it.
+
+    >>> claude_argv('demo', resume='f94b442c', remote_control=False)
+    ['claude', '--resume', 'f94b442c', '-n', 'demo']
+
     >>> claude_argv('demo', model='opus', effort='high', remote_control=False,
     ...             permission_mode='bypass')
     ['claude', '--dangerously-skip-permissions', '-n', 'demo', '--model', 'opus', '--effort', 'high']
@@ -489,6 +503,8 @@ def claude_argv(
         argv.append("--remote-control")
     if add_dirs:
         argv += ["--add-dir", *[str(d) for d in add_dirs]]
+    if resume:
+        argv += ["--resume", resume]
     argv += [*_mode_args(permission_mode), "-n", name]
     if model:
         argv += ["--model", model]
@@ -632,6 +648,20 @@ def local_argv(argv: list[str], *, config: str | Path | None = None) -> list[str
     if not argv or argv[0] != CLAUDE_BIN:
         return argv
     return [claude_bin(config=config), *argv[1:]]
+
+
+def tmux_exact(name: str, *, pane: bool = False) -> str:
+    """A tmux target naming exactly the session ``name``.
+
+    A bare ``-t name`` is matched as a *prefix* (then as a pattern) when no session has
+    that exact name, so closing a stuck ``cn`` would kill a live ``cn-report``. ``=``
+    makes tmux accept only an exact match; a pane target adds the ``:`` that ends the
+    session part.
+
+    >>> tmux_exact('cn'), tmux_exact('cn', pane=True)
+    ('=cn', '=cn:')
+    """
+    return f"={name}:" if pane else f"={name}"
 
 
 def _tmux_spawner(
@@ -837,7 +867,7 @@ def _tmux_peek(name: str) -> str:
     """What the tmux session ``name`` is displaying; empty when there is none to read."""
     try:
         result = subprocess.run(
-            ["tmux", "capture-pane", "-p", "-t", name],
+            ["tmux", "capture-pane", "-p", "-t", tmux_exact(name, pane=True)],
             capture_output=True,
             text=True,
             check=False,
@@ -949,12 +979,29 @@ def trust_dialog_key(text: str) -> str | None:
 
 def _tmux_press(name: str, key: str) -> None:
     subprocess.run(
-        ["tmux", "send-keys", "-t", name, key], capture_output=True, check=False
+        ["tmux", "send-keys", "-t", tmux_exact(name, pane=True), key],
+        capture_output=True,
+        check=False,
     )
 
 
 def _tmux_close(name: str) -> None:
-    subprocess.run(["tmux", "kill-session", "-t", name], capture_output=True, check=False)
+    subprocess.run(
+        ["tmux", "kill-session", "-t", tmux_exact(name)], capture_output=True, check=False
+    )
+
+
+def _set_tier(session: LiveSession, *, config: str | Path | None) -> None:
+    """Give a new session its OOM tier now, best effort: a tmux server the lookout started
+    would otherwise hand the lookout's protected value to every worker until the next tick."""
+    from crowsnest import guard
+
+    if not guard.PROC.is_dir():
+        return
+    try:
+        guard.oom_pass(sessions=[session], config=config)
+    except (OSError, ValueError):
+        pass
 
 
 def _find_by_name(
@@ -1038,6 +1085,8 @@ def spawn(
     permission_mode: str | None = None,
     press: Callable[[str, str], None] | None = None,
     close: Callable[[str], None] | None = None,
+    resume: str = "",
+    gate: Callable[..., object] | None = None,
 ) -> dict:
     """Start a session named ``name`` in ``cwd``, and wait for the registry to see it.
 
@@ -1105,9 +1154,23 @@ def spawn(
     home is checked, not only the one the session starts in (crowsnest#42). So is a name
     whose ledger file already belongs to a *different* name (``cn/xa`` and ``cn:xa``
     share ``cn-xa.md``). Pick another, a suffix will do.
+
+    **Memory.** ``gate`` (``(name, *, home, config)``) runs before anything starts and
+    raises to refuse; the default, with one of this module's own spawners, is
+    :func:`crowsnest.guard.gate` (a session cap and a ``MemAvailable`` floor, from the
+    config file's ``[guard]``). A caller's ``spawner`` is gated only by a ``gate`` it
+    passes. Once the session registers, its process gets its OOM tier at once
+    (:func:`crowsnest.guard.tier_of`) rather than at the guard's next tick.
+
+    ``resume`` continues that session id instead of starting a new one: same transcript,
+    same Remote Control link (measured, #171), ``prompt`` its next message.
     """
     home = account_home(home=home, profile=profile, config=config)
     _refuse_taken_name(name, home=home, config=config)
+    if gate is None and spawner is None:
+        from crowsnest.guard import gate
+    if gate is not None:
+        gate(name, home=home, config=config)
     how = "custom"
     builtin = spawner is None
     if spawner is None:
@@ -1139,6 +1202,7 @@ def spawn(
         add_dirs=add_dirs,
         binary=binary,
         permission_mode=pick_permission_mode(permission_mode, config=config),
+        resume=resume,
     )
     spawner(argv, cwd=cwd, name=name, home=home)
     where = str(home) if home is not None else ""
@@ -1194,6 +1258,8 @@ def spawn(
         brief=prompt,
     )
     parent = record.get("parent", {}) if record else {}
+    if found is not None and builtin:
+        _set_tier(found, config=config)
     if found is None:
         shown = pane_state(reader(name)) if reader else ""
         return {
