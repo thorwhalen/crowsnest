@@ -245,7 +245,9 @@ def test_hand_reaches_the_watcher_and_can_be_answered(tmp_path):
     from crowsnest.watch import hook_event
 
     log = tmp_path / "events.jsonl"
-    doc = _c.hand("tell", "parser-dev", "Merge it.", mirror=tmp_path / "m", events_path=log)
+    doc = _c.hand(
+        "tell", "parser-dev", "Merge it.", mirror=tmp_path / "m", events_path=log
+    )
     assert doc["status"] == "handed"
     assert _c.DOC_ID.match(doc["id"])
     event = hook_event(json.loads(log.read_text().splitlines()[0]))

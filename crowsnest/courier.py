@@ -365,7 +365,9 @@ def hand(
     from crowsnest.hook import append_event
 
     if kind not in HANDED:
-        raise ValueError(f"an intent handed to a session is one of {HANDED}, not {kind!r}")
+        raise ValueError(
+            f"an intent handed to a session is one of {HANDED}, not {kind!r}"
+        )
     moment = datetime.now(timezone.utc) if now is None else now
     stamp = _iso(moment)
     intent = f"{moment:%Y%m%d%H%M%S}-{uuid.uuid4().hex[:8]}"
