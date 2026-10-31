@@ -238,3 +238,25 @@ def test_the_courier_reads_its_remote_from_the_config_file(tmp_path, monkeypatch
     cfg.write_text("[courier]\nwhere = 'x'\n")
     with pytest.raises(ValueError, match="has no where"):
         courier_settings(path=cfg)
+
+
+def test_hand_reaches_the_watcher_and_can_be_answered(tmp_path):
+    from crowsnest import courier as _c
+    from crowsnest.watch import hook_event
+
+    log = tmp_path / "events.jsonl"
+    doc = _c.hand("tell", "parser-dev", "Merge it.", mirror=tmp_path / "m", events_path=log)
+    assert doc["status"] == "handed"
+    assert _c.DOC_ID.match(doc["id"])
+    event = hook_event(json.loads(log.read_text().splitlines()[0]))
+    assert event["kind"] == "intent" and event["name"] == "parser-dev"
+    assert "Merge it." in event["detail"]
+    answered = _c.answer(doc["id"], "Sent.", mirror=tmp_path / "m")
+    assert answered["status"] == "done" and answered["answer"] == "Sent."
+
+
+def test_hand_refuses_a_kind_no_session_takes(tmp_path):
+    from crowsnest import courier as _c
+
+    with pytest.raises(ValueError, match="one of"):
+        _c.hand("delete", "x", "y", mirror=tmp_path / "m", events_path=tmp_path / "e")

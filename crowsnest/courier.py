@@ -33,6 +33,7 @@ import json
 import re
 import shlex
 import shutil
+import uuid
 from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -343,6 +344,55 @@ def tick(
         copy(str(mirror), remote, collection)
     _write(mirror / STATE_FILE, {**state, "exported": stamp, "ticked": stamp})
     return summary
+
+
+def hand(
+    kind: str,
+    session: str,
+    text: str,
+    *,
+    mirror: str | Path | None = None,
+    events_path: str | Path | None = None,
+    now: datetime | None = None,
+) -> dict:
+    """Hand an intent to the watching session, as a page button would, from this machine.
+
+    For a local surface that the owner already passed the gate of (a phone app behind their
+    login), so it needs no store to travel through. The intent lands in the mirror, where
+    :func:`answer` finds it and the next tick carries the answer, and as an ``intent`` line
+    in the event log, which ``crowsnest watch`` streams. ``kind`` is one of :data:`HANDED`.
+    """
+    from crowsnest.hook import append_event
+
+    if kind not in HANDED:
+        raise ValueError(f"an intent handed to a session is one of {HANDED}, not {kind!r}")
+    moment = datetime.now(timezone.utc) if now is None else now
+    stamp = _iso(moment)
+    intent = f"{moment:%Y%m%d%H%M%S}-{uuid.uuid4().hex[:8]}"
+    mirror = Path(mirror).expanduser() if mirror else dflt_mirror()
+    doc = {
+        "id": intent,
+        "kind": kind,
+        "session": session,
+        "text": text,
+        "status": "handed",
+        "at": stamp,
+        "answer": f"handed to the crowsnest session at {stamp[11:16]} UTC",
+        "answered_at": stamp,
+    }
+    (mirror / "intents").mkdir(parents=True, exist_ok=True)
+    _write(mirror / "intents" / f"{intent}.json", doc)
+    append_event(
+        {
+            "event": "intent",
+            "at": stamp,
+            "name": session,
+            "intent": intent,
+            "detail": _one_line(f"{kind} {intent}: {text}"),
+        },
+        events_path=events_path,
+    )
+    return doc
 
 
 def answer(
