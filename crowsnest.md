@@ -1,4 +1,4 @@
-> built 2026-10-31 10:09 UTC from e089cdd (main) · crowsnest 0.0.107. Details: build_info.json
+> built 2026-11-03 14:08 UTC from 8955aca (main) · crowsnest 0.0.108. Details: build_info.json
 
 # index.html.md
 
@@ -7750,18 +7750,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-10-31 10:09 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/e089cddf13d9b0530fc948a6da67997440a7cccb"><code>e089cdd</code></a> on branch <code>main</code>, for **crowsnest 0.0.107** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-03 14:08 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/8955aca019e4343e553ba03eccf6fcc6e98995c6"><code>8955aca</code></a> on branch <code>main</code>, for **crowsnest 0.0.108** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.107) is behind the latest release on PyPI (0.0.108): `pip install crowsnest` gives newer code than these docs describe.
+- The documented version (0.0.108) is behind the latest release on PyPI (0.0.109): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/e089cddf13d9b0530fc948a6da67997440a7cccb"><code>e089cddf13d9b0530fc948a6da67997440a7cccb</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/8955aca019e4343e553ba03eccf6fcc6e98995c6"><code>8955aca019e4343e553ba03eccf6fcc6e98995c6</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7772,9 +7772,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/41191456190">41191456190</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/41650499892">41650499892</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>e089cddf13d9b0530fc948a6da67997440a7cccb</code> (in the history of the built commit) |
+| Event commit | <code>8955aca019e4343e553ba03eccf6fcc6e98995c6</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7799,13 +7799,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.108/">0.0.108</a>, newer than the documented version (0.0.107).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.109/">0.0.109</a>, newer than the documented version (0.0.108).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout e089cddf13d9b0530fc948a6da67997440a7cccb
+git checkout 8955aca019e4343e553ba03eccf6fcc6e98995c6
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
@@ -7839,7 +7839,7 @@ Source: [`crowsnest/data/skills/crowsnest`](https://github.com/thorwhalen/crowsn
 
 ### `crowsnest-dispatch`
 
-Hand a corpus of work to a Claude Code session instead of doing it yourself. Use when the watching (crowsnest) session is asked to start work somewhere, when a conversation about one project has run on long enough that it belongs in that project’s own session, or when an existing session should be given the next thing to do. Triggers on: ‘start a session in X to do Y’, ‘get someone working on this’, ‘have X do the next issue’, ‘spin up a session for’, ‘tell the parser session to’, ‘hand this off’, ‘who should do this’, ‘take this over to that repo’. Covers naming, scoping (which cwd and add-dirs, so the session sees the routing documents and skills it needs), the model, the brief, spawning, subscribing to the finish, and recording the dispatch.
+Hand a corpus of work to a Claude Code session instead of doing it yourself. Use when the watching (crowsnest) session is asked to start work somewhere, when a conversation about one project has run on long enough that it belongs in that project’s own session, or when an existing session should be given the next thing to do. Also use in ANY session (not only the watcher) whose task spans several repositories or needs a long implementation: the user’s standing preference is to spawn one session per corpus and keep the current context small, rather than do it all inline. Triggers on: ‘start a session in X to do Y’, ‘get someone working on this’, ‘have X do the next issue’, ‘spin up a session for’, ‘tell the parser session to’, ‘hand this off’, ‘who should do this’, ‘take this over to that repo’. Covers naming, scoping (which cwd and add-dirs, so the session sees the routing documents and skills it needs), the model, the brief, spawning, subscribing to the finish, and recording the dispatch.
 
 ```bash
 gh skill install thorwhalen/crowsnest crowsnest-dispatch --agent claude-code

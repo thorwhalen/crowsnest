@@ -529,72 +529,74 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="365">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">append_event</span>
 </span><span data-line="366">
 </span><span data-line="367">    <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">HANDED</span><span class="p">:</span>
-</span><span data-line="368">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"an intent handed to a session is one of </span><span class="si">{</span><span class="n">HANDED</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="369">    <span class="n">moment</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
-</span><span data-line="370">    <span class="n">stamp</span> <span class="o">=</span> <span class="n">_iso</span><span class="p">(</span><span class="n">moment</span><span class="p">)</span>
-</span><span data-line="371">    <span class="n">intent</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">moment</span><span class="si">:</span><span class="s2">%Y%m%d%H%M%S</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="372">    <span class="n">mirror</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">mirror</span> <span class="k">else</span> <span class="n">dflt_mirror</span><span class="p">()</span>
-</span><span data-line="373">    <span class="n">doc</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="374">        <span class="s2">"id"</span><span class="p">:</span> <span class="n">intent</span><span class="p">,</span>
-</span><span data-line="375">        <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
-</span><span data-line="376">        <span class="s2">"session"</span><span class="p">:</span> <span class="n">session</span><span class="p">,</span>
-</span><span data-line="377">        <span class="s2">"text"</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
-</span><span data-line="378">        <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"handed"</span><span class="p">,</span>
-</span><span data-line="379">        <span class="s2">"at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
-</span><span data-line="380">        <span class="s2">"answer"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"handed to the crowsnest session at </span><span class="si">{</span><span class="n">stamp</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span><span class="si">}</span><span class="s2"> UTC"</span><span class="p">,</span>
-</span><span data-line="381">        <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
-</span><span data-line="382">    <span class="p">}</span>
-</span><span data-line="383">    <span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="s2">"intents"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="384">    <span class="n">_write</span><span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="s2">"intents"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">.json"</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
-</span><span data-line="385">    <span class="n">append_event</span><span class="p">(</span>
-</span><span data-line="386">        <span class="p">{</span>
-</span><span data-line="387">            <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"intent"</span><span class="p">,</span>
-</span><span data-line="388">            <span class="s2">"at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
-</span><span data-line="389">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="p">,</span>
-</span><span data-line="390">            <span class="s2">"intent"</span><span class="p">:</span> <span class="n">intent</span><span class="p">,</span>
-</span><span data-line="391">            <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span>
-</span><span data-line="392">        <span class="p">},</span>
-</span><span data-line="393">        <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span>
-</span><span data-line="394">    <span class="p">)</span>
-</span><span data-line="395">    <span class="k">return</span> <span class="n">doc</span>
-</span><span data-line="396">
-</span><span data-line="397">
+</span><span data-line="368">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="369">            <span class="sa">f</span><span class="s2">"an intent handed to a session is one of </span><span class="si">{</span><span class="n">HANDED</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="370">        <span class="p">)</span>
+</span><span data-line="371">    <span class="n">moment</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
+</span><span data-line="372">    <span class="n">stamp</span> <span class="o">=</span> <span class="n">_iso</span><span class="p">(</span><span class="n">moment</span><span class="p">)</span>
+</span><span data-line="373">    <span class="n">intent</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">moment</span><span class="si">:</span><span class="s2">%Y%m%d%H%M%S</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="374">    <span class="n">mirror</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">mirror</span> <span class="k">else</span> <span class="n">dflt_mirror</span><span class="p">()</span>
+</span><span data-line="375">    <span class="n">doc</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="376">        <span class="s2">"id"</span><span class="p">:</span> <span class="n">intent</span><span class="p">,</span>
+</span><span data-line="377">        <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
+</span><span data-line="378">        <span class="s2">"session"</span><span class="p">:</span> <span class="n">session</span><span class="p">,</span>
+</span><span data-line="379">        <span class="s2">"text"</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
+</span><span data-line="380">        <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"handed"</span><span class="p">,</span>
+</span><span data-line="381">        <span class="s2">"at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
+</span><span data-line="382">        <span class="s2">"answer"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"handed to the crowsnest session at </span><span class="si">{</span><span class="n">stamp</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span><span class="si">}</span><span class="s2"> UTC"</span><span class="p">,</span>
+</span><span data-line="383">        <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
+</span><span data-line="384">    <span class="p">}</span>
+</span><span data-line="385">    <span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="s2">"intents"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="386">    <span class="n">_write</span><span class="p">(</span><span class="n">mirror</span> <span class="o">/</span> <span class="s2">"intents"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">.json"</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+</span><span data-line="387">    <span class="n">append_event</span><span class="p">(</span>
+</span><span data-line="388">        <span class="p">{</span>
+</span><span data-line="389">            <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"intent"</span><span class="p">,</span>
+</span><span data-line="390">            <span class="s2">"at"</span><span class="p">:</span> <span class="n">stamp</span><span class="p">,</span>
+</span><span data-line="391">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="p">,</span>
+</span><span data-line="392">            <span class="s2">"intent"</span><span class="p">:</span> <span class="n">intent</span><span class="p">,</span>
+</span><span data-line="393">            <span class="s2">"detail"</span><span class="p">:</span> <span class="n">_one_line</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span>
+</span><span data-line="394">        <span class="p">},</span>
+</span><span data-line="395">        <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span>
+</span><span data-line="396">    <span class="p">)</span>
+</span><span data-line="397">    <span class="k">return</span> <span class="n">doc</span>
+</span><span data-line="398">
+</span><span data-line="399">
 <div class="viewcode-block" id="answer">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.courier.html#crowsnest.courier.answer">[docs]</a>
-</span><span data-line="398"><span class="k">def</span><span class="w"> </span><span class="nf">answer</span><span class="p">(</span>
-</span><span data-line="399">    <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="400">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="401">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="402">    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"done"</span><span class="p">,</span>
-</span><span data-line="403">    <span class="n">mirror</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="404">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="405"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="406"><span class="w">    </span><span class="sd">"""Write a session's one-line answer to a handed intent; the next tick carries it.</span>
-</span><span data-line="407">
-</span><span data-line="408"><span class="sd">    ``status`` is ``done`` or ``failed``. The text is kept to one line of at most</span>
-</span><span data-line="409"><span class="sd">    :data:`ANSWER_LIMIT` characters, scrubbed of credentials and home paths before it is</span>
-</span><span data-line="410"><span class="sd">    clipped. It is published to whoever can open the page, so it</span>
-</span><span data-line="411"><span class="sd">    says what happened in the page's own terms, never a command's output.</span>
-</span><span data-line="412"><span class="sd">    """</span>
-</span><span data-line="413">    <span class="k">if</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"done"</span><span class="p">,</span> <span class="s2">"failed"</span><span class="p">):</span>
-</span><span data-line="414">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"an answer's status is done or failed, not </span><span class="si">{</span><span class="n">status</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="415">    <span class="k">if</span> <span class="ow">not</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">intent</span><span class="p">):</span>
-</span><span data-line="416">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">!r}</span><span class="s2"> is not an intent id"</span><span class="p">)</span>
-</span><span data-line="417">    <span class="n">mirror</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">mirror</span> <span class="k">else</span> <span class="n">dflt_mirror</span><span class="p">()</span>
-</span><span data-line="418">    <span class="n">path</span> <span class="o">=</span> <span class="n">mirror</span> <span class="o">/</span> <span class="s2">"intents"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">.json"</span>
-</span><span data-line="419">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="420">        <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span data-line="421">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-</span><span data-line="422">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no intent </span><span class="si">{</span><span class="n">intent</span><span class="si">!r}</span><span class="s2"> in the courier's mirror"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-</span><span data-line="423">    <span class="c1"># Sanitised, then clipped: this text is published as given, and a clip made first</span>
-</span><span data-line="424">    <span class="c1"># could cut a credential to a prefix no pattern recognises (#83).</span>
-</span><span data-line="425">    <span class="n">line</span> <span class="o">=</span> <span class="n">publishable</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">ANSWER_LIMIT</span><span class="p">)</span>
-</span><span data-line="426">    <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
-</span><span data-line="427">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"an answer needs some text"</span><span class="p">)</span>
-</span><span data-line="428">    <span class="n">moment</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
-</span><span data-line="429">    <span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">doc</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span> <span class="s2">"answer"</span><span class="p">:</span> <span class="n">line</span><span class="p">,</span> <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">_iso</span><span class="p">(</span><span class="n">moment</span><span class="p">)}</span>
-</span><span data-line="430">    <span class="n">_write</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
-</span><span data-line="431">    <span class="k">return</span> <span class="n">doc</span></div>
+</span><span data-line="400"><span class="k">def</span><span class="w"> </span><span class="nf">answer</span><span class="p">(</span>
+</span><span data-line="401">    <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="402">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="403">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="404">    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"done"</span><span class="p">,</span>
+</span><span data-line="405">    <span class="n">mirror</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="406">    <span class="n">now</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="407"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="408"><span class="w">    </span><span class="sd">"""Write a session's one-line answer to a handed intent; the next tick carries it.</span>
+</span><span data-line="409">
+</span><span data-line="410"><span class="sd">    ``status`` is ``done`` or ``failed``. The text is kept to one line of at most</span>
+</span><span data-line="411"><span class="sd">    :data:`ANSWER_LIMIT` characters, scrubbed of credentials and home paths before it is</span>
+</span><span data-line="412"><span class="sd">    clipped. It is published to whoever can open the page, so it</span>
+</span><span data-line="413"><span class="sd">    says what happened in the page's own terms, never a command's output.</span>
+</span><span data-line="414"><span class="sd">    """</span>
+</span><span data-line="415">    <span class="k">if</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"done"</span><span class="p">,</span> <span class="s2">"failed"</span><span class="p">):</span>
+</span><span data-line="416">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"an answer's status is done or failed, not </span><span class="si">{</span><span class="n">status</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="417">    <span class="k">if</span> <span class="ow">not</span> <span class="n">DOC_ID</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">intent</span><span class="p">):</span>
+</span><span data-line="418">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">!r}</span><span class="s2"> is not an intent id"</span><span class="p">)</span>
+</span><span data-line="419">    <span class="n">mirror</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mirror</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="k">if</span> <span class="n">mirror</span> <span class="k">else</span> <span class="n">dflt_mirror</span><span class="p">()</span>
+</span><span data-line="420">    <span class="n">path</span> <span class="o">=</span> <span class="n">mirror</span> <span class="o">/</span> <span class="s2">"intents"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">.json"</span>
+</span><span data-line="421">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="422">        <span class="n">doc</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+</span><span data-line="423">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="424">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no intent </span><span class="si">{</span><span class="n">intent</span><span class="si">!r}</span><span class="s2"> in the courier's mirror"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+</span><span data-line="425">    <span class="c1"># Sanitised, then clipped: this text is published as given, and a clip made first</span>
+</span><span data-line="426">    <span class="c1"># could cut a credential to a prefix no pattern recognises (#83).</span>
+</span><span data-line="427">    <span class="n">line</span> <span class="o">=</span> <span class="n">publishable</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">ANSWER_LIMIT</span><span class="p">)</span>
+</span><span data-line="428">    <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+</span><span data-line="429">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"an answer needs some text"</span><span class="p">)</span>
+</span><span data-line="430">    <span class="n">moment</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">now</span>
+</span><span data-line="431">    <span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">doc</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span> <span class="s2">"answer"</span><span class="p">:</span> <span class="n">line</span><span class="p">,</span> <span class="s2">"answered_at"</span><span class="p">:</span> <span class="n">_iso</span><span class="p">(</span><span class="n">moment</span><span class="p">)}</span>
+</span><span data-line="432">    <span class="n">_write</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+</span><span data-line="433">    <span class="k">return</span> <span class="n">doc</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -623,7 +625,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=6ba42da4"></script>
+      <script src="../../_static/documentation_options.js?v=83be8e66"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
