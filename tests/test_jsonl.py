@@ -165,3 +165,31 @@ def test_tail_records_takes_the_decoder_too(tmp_path):
 
     tail, _ = tail_records(path, loads=loads)
     assert seen and len(seen) >= len(tail)
+
+
+def test_from_transcripts_takes_the_decoder_as_a_keyword(tmp_path):
+    from crowsnest.lineage import from_transcripts
+
+    line = {
+        "type": "assistant",
+        "sessionId": "p1",
+        "timestamp": stamp(1, 9),
+        "message": {
+            "content": [
+                {
+                    "type": "tool_use",
+                    "name": "Bash",
+                    "input": {"command": "crowsnest spawn child"},
+                }
+            ]
+        },
+    }
+    write_transcript(tmp_path, "/w/demo", "p1", [line])
+    seen = []
+
+    def loads(text):
+        seen.append(text)
+        return json.loads(text)
+
+    from_transcripts(home=tmp_path, loads=loads)
+    assert seen and all("spawn" in t for t in seen)

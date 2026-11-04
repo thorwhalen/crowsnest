@@ -18,6 +18,10 @@ for the two ways the decoders differ:
 Same policy as openloops' transcript reader. Nothing else differs: duplicate keys keep
 the last, key order is kept, and floats round the same way.
 
+>>> _usable(type('M', (), {'__version__': '3.9.15'})), _usable(type('M', (), {'__version__': '3.9.10'}))
+(True, False)
+>>> _usable(type('M', (), {'__version__': '3.11.0rc1'})), _usable(object())
+(False, False)
 >>> loads(b'{"a": [1, 2.5, null]}')
 {'a': [1, 2.5, None]}
 >>> loads(b'{"n": 123456789012345678901234567890}')['n']
@@ -33,12 +37,28 @@ from __future__ import annotations
 import json
 import re
 
+#: orjson before this has no recursion limit and segfaults on a deeply nested line
+#: (CVE-2024-27454); ``json.loads`` raises ``RecursionError`` instead.
+MIN_ORJSON = (3, 9, 15)
+
+
+def _usable(module) -> bool:
+    try:
+        version = tuple(int(p) for p in module.__version__.split(".")[:3])
+    except (AttributeError, ValueError):
+        return False
+    return version >= MIN_ORJSON
+
+
 try:  # optional: ``pip install crowsnest[fast]``
     import orjson
 except ImportError:  # pragma: no cover - exercised by the monkeypatched test
     orjson = None
+else:
+    if not _usable(orjson):  # pragma: no cover - depends on the installed orjson
+        orjson = None
 
-__all__ = ["WIDE", "loads"]
+__all__ = ["MIN_ORJSON", "WIDE", "loads"]
 
 #: A run of this many digits sends a line to ``json.loads`` (see the module docstring).
 WIDE = 19
