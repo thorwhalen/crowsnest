@@ -38,7 +38,8 @@ Repository = "https://github.com/thorwhalen/crowsnest"
 Issues = "https://github.com/thorwhalen/crowsnest/issues"
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "ruff>=0.1.0"]
+fast = ["orjson>=3.9.15"]
+dev = ["pytest>=7.0", "ruff>=0.1.0", "orjson>=3.9.15"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["crowsnest"]
@@ -60,6 +61,9 @@ target-version = "py310"
 
 [tool.wads.ci]
 project_name = "crowsnest"
+
+[tool.wads.ci.install]
+extras = "dev"
 
 [tool.wads.ci.testing]
 python_versions = ["3.10", "3.12"]

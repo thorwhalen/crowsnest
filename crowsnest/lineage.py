@@ -72,6 +72,7 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
 from crowsnest.hook import events_path as _events_path
+from crowsnest.jsonl import loads as _loads
 from crowsnest.paths import data_dir
 from crowsnest.registry import claude_home, live_sessions
 
@@ -809,6 +810,7 @@ def from_transcripts(
     *,
     home: str | Path | None = None,
     known: Iterable[str] | None = None,
+    loads: Callable = _loads,
 ) -> list[SpawnEdge]:
     """The backfill: every ``crowsnest spawn <name>`` still recorded in a transcript.
 
@@ -856,7 +858,7 @@ def from_transcripts(
             if "spawn" not in line or "tool_use" not in line:
                 continue
             try:
-                rec = json.loads(line)
+                rec = loads(line)
             except ValueError:
                 continue
             if not isinstance(rec, dict):
