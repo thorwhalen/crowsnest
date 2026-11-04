@@ -24,12 +24,13 @@ turn of the watched session's own context asking it.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from openloops.transcripts import parse_session
+
+from crowsnest.jsonl import loads as _loads
 
 __all__ = [
     "QUESTION_TOOL",
@@ -74,14 +75,19 @@ _PATH_KEYS = ("file_path", "path")
 _ARG_LIMIT = 80
 
 
-def _parse_lines(data: bytes) -> list[dict]:
+def _parse_lines(data: bytes, *, loads: Callable = _loads) -> list[dict]:
+    """The objects among ``data``'s JSON lines; a blank or unreadable line is skipped.
+
+    ``loads`` decodes one line (bytes) and raises ``ValueError`` for one it cannot read;
+    the default is orjson where it agrees with ``json.loads`` (:mod:`crowsnest.jsonl`).
+    """
     records = []
     for line in data.splitlines():
         line = line.strip()
         if not line:
             continue
         try:
-            rec = json.loads(line)
+            rec = loads(line)
         except ValueError:
             continue
         if isinstance(rec, dict):
@@ -89,10 +95,10 @@ def _parse_lines(data: bytes) -> list[dict]:
     return records
 
 
-def load_records(path: str | Path) -> list[dict]:
+def load_records(path: str | Path, *, loads: Callable = _loads) -> list[dict]:
     """Every record in a transcript, tolerating blank and malformed lines."""
     try:
-        return _parse_lines(Path(path).read_bytes())
+        return _parse_lines(Path(path).read_bytes(), loads=loads)
     except OSError:
         return []
 
@@ -106,6 +112,7 @@ def tail_records(
     *,
     tail_bytes: int = TAIL_BYTES,
     enough: Callable[[list[dict]], bool] = _has_prompt,
+    loads: Callable = _loads,
 ) -> tuple[list[dict], bool]:
     """The records in the last ``tail_bytes`` of a transcript, widening until ``enough``.
 
@@ -131,7 +138,7 @@ def tail_records(
             return [], True
         if start > 0:
             data = data.partition(b"\n")[2]
-        records = _parse_lines(data)
+        records = _parse_lines(data, loads=loads)
         if start == 0 or enough(records):
             return records, start == 0
         window *= 2
