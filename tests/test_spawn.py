@@ -1382,3 +1382,14 @@ def test_spawn_records_the_prompt_head_in_the_lineage(monkeypatch, tmp_path):
         "head": "Fix #7, then read ~/notes/a.md.",
         "refs": ["~/notes/a.md"],
     }
+
+
+def test_child_env_keeps_the_oauth_token_of_an_unattended_job():
+    """The token is the account: without it `claude -p` falls back to an expired login (tw_platform#563)."""
+    given = {"CLAUDECODE": "1", "CLAUDE_CODE_OAUTH_TOKEN": "tok", "PATH": "/usr/bin"}
+    assert child_env(given) == {"CLAUDE_CODE_OAUTH_TOKEN": "tok", "PATH": "/usr/bin"}
+
+
+def test_child_env_drops_the_oauth_token_for_another_account_home(tmp_path):
+    given = {"CLAUDE_CODE_OAUTH_TOKEN": "tok", "PATH": "/usr/bin"}
+    assert "CLAUDE_CODE_OAUTH_TOKEN" not in child_env(given, home=tmp_path / "other")
