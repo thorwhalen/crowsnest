@@ -65,7 +65,6 @@ from crowsnest.registry import (
 
 __all__ = [
     "ACCOUNT_VARS",
-    "TOKEN_VARS",
     "BYPASS_MODES",
     "CLAUDE_BIN",
     "DFLT_SPAWN_MODEL",
@@ -73,6 +72,7 @@ __all__ = [
     "SANDBOX_VAR",
     "SESSION_VARS",
     "STARTUP_DIALOGS",
+    "TOKEN_VARS",
     "StartupDialog",
     "UntrustedFolder",
     "canonical_permission_mode",
