@@ -1044,9 +1044,8 @@ def _refuse_taken_name(
     ledger_dir: str | Path | None = None,
 ) -> None:
     """Raise ``ValueError`` when ``name`` is live in any home, or its ledger is another's."""
-    from crowsnest.config import configured_homes
+    from crowsnest.config import configured_homes, liveness_rule
     from crowsnest.ledger import read_ledger, session_entries
-    from crowsnest.config import liveness_rule
 
     live = list(live_sessions(home=home))
     try:
