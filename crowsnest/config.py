@@ -24,6 +24,11 @@ into a list of :class:`Home` records so that every reader can loop over them.
     path = "~/.cache/xa/remotes/server"   # a synced copy
     remote = true                         # liveness by freshness, no pid check
 
+    [[homes]]
+    name = "mac"
+    path = "~/.cache/xa/remotes/mac"      # a mirror the Mac pushes (`xa push`)
+    liveness = "mirror"                   # alive while the mirror's stamp is fresh
+
 The one other top-level setting is ``claude_bin`` (:func:`claude_bin_setting`), for a
 machine whose Claude Code is not the ``claude`` a login shell finds first. **It goes
 above the first** ``[[homes]]``: TOML gives every key after a table header to that
@@ -60,7 +65,10 @@ double-quoted string treats a backslash as an escape.
 
 ``remote = true`` is the one thing a home needs to say about itself: its pids cannot be
 checked here, so a record counts as live while its status is fresh (``fresh_seconds``,
-default one hour). Reading crosses accounts and machines; messaging and spawning do not,
+default one hour). A *mirror* (``liveness = "mirror"``, which implies ``remote``) is a copy
+the other machine pushes holding only its live sessions, with a stamp file saying when
+(:data:`crowsnest.registry.MIRROR_STAMP`): every record in it is live while the stamp is
+fresh, however long a session has been idle. Reading crosses accounts and machines; messaging and spawning do not,
 and nothing in this module pretends otherwise.
 
 >>> homes(path='/nonexistent-config-for-doctest')[0].name
@@ -148,6 +156,39 @@ class Home:
     path: Path
     remote: bool = False
     fresh_seconds: float = DFLT_FRESH_SECONDS
+    #: ``""`` derives it: ``"fresh"`` for a remote home, else ``"pid"``.
+    liveness: str = ""
+
+    def __post_init__(self):
+        if not self.liveness:
+            object.__setattr__(self, "liveness", "fresh" if self.remote else "pid")
+        if self.liveness != "pid" and not self.remote:
+            object.__setattr__(self, "remote", True)
+        if self.liveness not in LIVENESS:
+            raise ValueError(f"home {self.name!r}: liveness is one of {LIVENESS}, not {self.liveness!r}")
+
+
+#: How a home's sessions are judged live: by pid (this machine), by how recently each
+#: record changed (a pulled copy), or by the stamp a pushed mirror carries.
+LIVENESS = ("pid", "fresh", "mirror")
+
+
+def liveness_rule(home: Home):
+    """The ``is_live`` rule :func:`crowsnest.registry.live_sessions` needs for ``home``.
+
+    ``None`` means the pid check. Every reader of several homes builds its rule here, so
+    a new kind of home is one branch, not one per caller.
+
+    >>> liveness_rule(Home("local", Path("/h"))) is None
+    True
+    """
+    from crowsnest.registry import fresh_within, mirror_fresh
+
+    if home.liveness == "mirror":
+        return mirror_fresh(home.path, home.fresh_seconds)
+    if home.liveness == "fresh":
+        return fresh_within(home.fresh_seconds)
+    return None
 
 
 def config_path(path: str | Path | None = None) -> Path:
@@ -763,6 +804,7 @@ def configured_homes(*, path: str | Path | None = None) -> list[Home]:
                 path=Path(str(entry["path"])).expanduser(),
                 remote=bool(entry.get("remote", False)),
                 fresh_seconds=float(entry.get("fresh_seconds", DFLT_FRESH_SECONDS)),
+                liveness=str(entry.get("liveness") or ""),
             )
         )
     return found

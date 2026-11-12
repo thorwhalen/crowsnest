@@ -72,3 +72,41 @@ def test_a_non_string_claude_bin_is_refused(tmp_path):
     with pytest.raises(TypeError) as exc:
         claude_bin_setting(path=cfg)
     assert "must be a string" in str(exc.value)
+
+
+def test_mirror_home_is_live_while_its_stamp_is_fresh(tmp_path):
+    import json
+    import os
+    import time
+
+    from crowsnest.config import homes, liveness_rule
+    from crowsnest.registry import MIRROR_STAMP, live_sessions
+
+    mirror = tmp_path / "mac"
+    (mirror / "sessions").mkdir(parents=True)
+    old = time.time() - 6 * 3600  # idle for hours: a freshness rule would drop it
+    (mirror / "sessions" / "4242.json").write_text(
+        json.dumps({"pid": 4242, "sessionId": "abc", "cwd": "/w", "name": "w", "status": "idle",
+                    "updatedAt": old * 1000, "statusUpdatedAt": old * 1000})
+    )
+    cfg = tmp_path / "c.toml"
+    cfg.write_text(f'[[homes]]\nname = "mac"\npath = "{mirror}"\nliveness = "mirror"\nfresh_seconds = 300\n')
+    (home,) = homes(path=cfg)
+    assert home.remote and home.liveness == "mirror"
+    rule = liveness_rule(home)
+    assert live_sessions(home=home.path, is_live=rule) == []  # no stamp: nobody is live
+    (mirror / MIRROR_STAMP).touch()
+    assert [s.pid for s in live_sessions(home=home.path, is_live=rule)] == [4242]
+    os.utime(mirror / MIRROR_STAMP, (old, old))  # the other machine stopped pushing
+    assert live_sessions(home=home.path, is_live=rule) == []
+
+
+def test_unknown_liveness_is_refused(tmp_path):
+    import pytest
+
+    from crowsnest.config import homes
+
+    cfg = tmp_path / "c.toml"
+    cfg.write_text('[[homes]]\nname = "x"\npath = "/x"\nliveness = "psychic"\n')
+    with pytest.raises(ValueError, match="liveness"):
+        homes(path=cfg)

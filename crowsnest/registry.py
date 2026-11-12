@@ -37,6 +37,8 @@ __all__ = [
     "LiveSession",
     "claude_home",
     "fresh_within",
+    "mirror_fresh",
+    "MIRROR_STAMP",
     "live_sessions",
     "pid_alive",
     "project_slug",
@@ -241,6 +243,31 @@ def fresh_within(
 
     def rule(session: LiveSession) -> bool:
         return now() - session.status_since <= seconds
+
+    return rule
+
+
+#: The file a pushed mirror of another machine's home carries at its root: its mtime is
+#: when the other machine last pushed. ``xa push`` writes it (same name, by contract).
+MIRROR_STAMP = ".mirrored-at"
+
+
+def mirror_fresh(
+    home: str | Path, seconds: float, *, now: Callable[[], float] = time.time
+) -> Callable[[LiveSession], bool]:
+    """A liveness rule for a pushed mirror: every record is live while the mirror is fresh.
+
+    A mirror holds only the sessions that were live when it was pushed, so the age of a
+    record says nothing (an idle session's record does not change for hours); the age of
+    the push does. A mirror with no stamp, or an old one, has nobody live in it.
+    """
+    stamp = Path(home).expanduser() / MIRROR_STAMP
+
+    def rule(session: LiveSession) -> bool:
+        try:
+            return now() - stamp.stat().st_mtime <= seconds
+        except OSError:
+            return False
 
     return rule
 

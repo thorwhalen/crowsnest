@@ -22,7 +22,7 @@ from pathlib import Path
 from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
-from crowsnest.config import attention_settings, configured_homes, homes, theme_table
+from crowsnest.config import attention_settings, configured_homes, homes, liveness_rule, theme_table
 from crowsnest.lineage import from_records as _from_records
 from crowsnest.lineage import open_command as _open_command
 from crowsnest.links import github_ref
@@ -30,7 +30,6 @@ from crowsnest.registry import (
     STATUSES,
     LiveSession,
     claude_home,
-    fresh_within,
     live_sessions,
 )
 from crowsnest.report import DFLT_TITLE, render_report
@@ -145,7 +144,7 @@ def sessions(
         return live_sessions(home=home)
     found: list[LiveSession] = []
     for h in homes(path=config):
-        rule = fresh_within(h.fresh_seconds) if h.remote else None
+        rule = liveness_rule(h)
         found.extend(live_sessions(home=h.path, home_name=h.name, is_live=rule))
     return found
 
