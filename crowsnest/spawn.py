@@ -72,6 +72,7 @@ __all__ = [
     "SANDBOX_VAR",
     "SESSION_VARS",
     "STARTUP_DIALOGS",
+    "TOKEN_VARS",
     "StartupDialog",
     "UntrustedFolder",
     "canonical_permission_mode",
@@ -98,6 +99,14 @@ __all__ = [
 #: profile scheme commonly pairs it with a ``CLAUDE_PROFILE`` label and re-derives one
 #: from the other, so the two travel together or not at all.
 ACCOUNT_VARS = (HOME_ENV_VAR, "CLAUDE_PROFILE")
+
+#: The long-lived login token (``claude setup-token``) an unattended job runs under. It *is*
+#: the account: ``claude`` reads it ahead of any stored login, so a child that loses it
+#: falls back to the home's interactive login, which expires and cannot be renewed
+#: headlessly (thorwhalen/tw_platform#563: every overview and Talk failed that way while the
+#: token sat in the service's environment). It travels with the spawner's own account, so
+#: :func:`child_env` keeps it, but drops it when ``home`` names a *different* account.
+TOKEN_VARS = ("CLAUDE_CODE_OAUTH_TOKEN",)
 _PROFILE_VAR = "CLAUDE_PROFILE"
 
 #: The ``CLAUDE*`` variables that identify *one running session* -- who it is, what
@@ -528,7 +537,8 @@ def child_env(
     reads them to register the new process as a *child* of the spawning session, under its
     name and effort, rather than as the standalone session `spawn` asked for.
 
-    The account stays. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so without
+    The account stays, including a ``CLAUDE_CODE_OAUTH_TOKEN`` (:data:`TOKEN_VARS`), unless
+    ``home`` is another account. Claude Code picks its account by ``CLAUDE_CONFIG_DIR``, so without
     it a session spawned from a second account would open under the default one, in a
     registry the spawner is not watching. With ``home`` the child runs under that home
     instead: ``CLAUDE_CONFIG_DIR`` set to it, or *unset* when it is the default home,
@@ -552,13 +562,16 @@ def child_env(
     env = {
         k: v
         for k, v in environ.items()
-        if (not k.startswith("CLAUDE") or k in ACCOUNT_VARS) and k not in dropped
+        if (not k.startswith("CLAUDE") or k in ACCOUNT_VARS or k in TOKEN_VARS)
+        and k not in dropped
     }
     if home is None:
         return env
     target = _resolved(home)
     if target != _resolved(environ.get(HOME_ENV_VAR) or DFLT_HOME):
         env.pop(_PROFILE_VAR, None)
+        for k in TOKEN_VARS:  # a token is one account's: not the other home's
+            env.pop(k, None)
     if target == _resolved(DFLT_HOME):
         env.pop(HOME_ENV_VAR, None)
     else:
