@@ -79,6 +79,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.jsonl.html">crowsnest.jsonl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
@@ -210,7 +211,7 @@ turn of the watched session’s own context asking it.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.describe_tool" title="crowsnest.activity.describe_tool"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe_tool</span></code></a>(name, inputs, *[, limit])</p></td>
 <td><p>One line naming a tool call: the tool, and the argument that says what it did.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.activity.load_records" title="crowsnest.activity.load_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_records</span></code></a>(path)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.activity.load_records" title="crowsnest.activity.load_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_records</span></code></a>(path, *[, loads])</p></td>
 <td><p>Every record in a transcript, tolerating blank and malformed lines.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.read_activity" title="crowsnest.activity.read_activity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_activity</span></code></a>(path, *[, session_id, ...])</p></td>
@@ -219,7 +220,7 @@ turn of the watched session’s own context asking it.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.activity.read_turns" title="crowsnest.activity.read_turns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_turns</span></code></a>(path, *[, last, before])</p></td>
 <td><p>The last <code class="docutils literal notranslate"><span class="pre">last</span></code> turns of a transcript, oldest first; <code class="docutils literal notranslate"><span class="pre">before=N</span></code> pages back.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.tail_records" title="crowsnest.activity.tail_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail_records</span></code></a>(path, *[, tail_bytes, enough])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.activity.tail_records" title="crowsnest.activity.tail_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail_records</span></code></a>(path, *[, tail_bytes, enough, ...])</p></td>
 <td><p>The records in the last <code class="docutils literal notranslate"><span class="pre">tail_bytes</span></code> of a transcript, widening until <code class="docutils literal notranslate"><span class="pre">enough</span></code>.</p></td>
 </tr>
 </tbody>
@@ -309,7 +310,7 @@ few milliseconds. The window doubles until it holds a human prompt.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.activity.load_records">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">load_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#load_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.load_records" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">load_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">loads&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#load_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.load_records" title="Link to this definition">#</a></dt>
 <dd><p>Every record in a transcript, tolerating blank and malformed lines.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -346,7 +347,7 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.activity.tail_records">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">tail_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">262144</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enough</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">_has_prompt&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#tail_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.tail_records" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.activity.</span></span><span class="sig-name descname"><span class="pre">tail_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">262144</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enough</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">_has_prompt&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">loads&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/activity.html#tail_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.activity.tail_records" title="Link to this definition">#</a></dt>
 <dd><p>The records in the last <code class="docutils literal notranslate"><span class="pre">tail_bytes</span></code> of a transcript, widening until <code class="docutils literal notranslate"><span class="pre">enough</span></code>.</p>
 <p>Returns the records and whether the window reached the start of the file. The first
 line of a window that starts mid-file is a fragment and is dropped.</p>
@@ -403,7 +404,7 @@ line of a window that starts mid-file is a fragment and is dropped.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=83be8e66"></script>
+      <script src="../_static/documentation_options.js?v=27c60a7f"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

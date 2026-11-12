@@ -50,6 +50,7 @@
    guard
    hook
    init
+   jsonl
    ledger
    lineage
    links

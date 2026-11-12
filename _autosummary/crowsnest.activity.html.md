@@ -34,12 +34,12 @@ turn of the watched session’s own context asking it.
 
 ### Functions
 
-| [`describe_tool`](#crowsnest.activity.describe_tool)(name, inputs, \*[, limit])     | One line naming a tool call: the tool, and the argument that says what it did.                   |
-|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| [`load_records`](#crowsnest.activity.load_records)(path)                           | Every record in a transcript, tolerating blank and malformed lines.                              |
-| [`read_activity`](#crowsnest.activity.read_activity)(path, \*[, session_id, ...])   | Read the tail of a transcript into an [`Activity`](#crowsnest.activity.Activity). |
-| [`read_turns`](#crowsnest.activity.read_turns)(path, \*[, last, before])         | The last `last` turns of a transcript, oldest first; `before=N` pages back.                      |
-| [`tail_records`](#crowsnest.activity.tail_records)(path, \*[, tail_bytes, enough]) | The records in the last `tail_bytes` of a transcript, widening until `enough`.                   |
+| [`describe_tool`](#crowsnest.activity.describe_tool)(name, inputs, \*[, limit])          | One line naming a tool call: the tool, and the argument that says what it did.                   |
+|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| [`load_records`](#crowsnest.activity.load_records)(path, \*[, loads])                   | Every record in a transcript, tolerating blank and malformed lines.                              |
+| [`read_activity`](#crowsnest.activity.read_activity)(path, \*[, session_id, ...])        | Read the tail of a transcript into an [`Activity`](#crowsnest.activity.Activity). |
+| [`read_turns`](#crowsnest.activity.read_turns)(path, \*[, last, before])              | The last `last` turns of a transcript, oldest first; `before=N` pages back.                      |
+| [`tail_records`](#crowsnest.activity.tail_records)(path, \*[, tail_bytes, enough, ...]) | The records in the last `tail_bytes` of a transcript, widening until `enough`.                   |
 
 ### Classes
 
@@ -102,7 +102,7 @@ One line naming a tool call: the tool, and the argument that says what it did.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.activity.load_records(path)
+### crowsnest.activity.load_records(path, \*, loads=<function loads>)
 
 Every record in a transcript, tolerating blank and malformed lines.
 
@@ -129,7 +129,7 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Turn`](#crowsnest.activity.Turn)]
 
-### crowsnest.activity.tail_records(path, \*, tail_bytes=262144, enough=<function \_has_prompt>)
+### crowsnest.activity.tail_records(path, \*, tail_bytes=262144, enough=<function \_has_prompt>, loads=<function loads>)
 
 The records in the last `tail_bytes` of a transcript, widening until `enough`.
 

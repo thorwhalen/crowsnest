@@ -71,7 +71,7 @@ long-lived dispatcher ever started would sit on the graph forever.
 | [`dflt_sources`](#crowsnest.lineage.dflt_sources)(\*[, home, lineage_path, sessions]) | The readers [`graph()`](#crowsnest.lineage.graph) uses when the caller names none, strongest first. |
 | [`from_processes`](#crowsnest.lineage.from_processes)(\*[, home, sessions, run])        | Edges visible in the process table right now, for sessions crowsnest did not start.                                    |
 | [`from_records`](#crowsnest.lineage.from_records)(\*[, lineage_path])                 | Every edge crowsnest recorded for itself, oldest first.                                                                |
-| [`from_transcripts`](#crowsnest.lineage.from_transcripts)(\*[, home, known])              | The backfill: every `crowsnest spawn <name>` still recorded in a transcript.                                           |
+| [`from_transcripts`](#crowsnest.lineage.from_transcripts)(\*[, home, known, loads])       | The backfill: every `crowsnest spawn <name>` still recorded in a transcript.                                           |
 | [`graph`](#crowsnest.lineage.graph)(\*[, sessions, sources, home, ...])        | The spawn forest: every live session as a node, every parent link as an edge.                                          |
 | [`lineage_path`](#crowsnest.lineage.lineage_path)([path])                             | Where recorded edges live: `path` when given, else `<data dir>/lineage.jsonl`.                                         |
 | [`names_by_session_id`](#crowsnest.lineage.names_by_session_id)(\*[, events_path, ...])      | Every session id these two logs have ever named, mapped to that name.                                                  |
@@ -245,7 +245,7 @@ dies on one bad byte would take the whole report with it.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`SpawnEdge`](#crowsnest.lineage.SpawnEdge)]
 
-### crowsnest.lineage.from_transcripts(, home=None, known=None)
+### crowsnest.lineage.from_transcripts(\*, home=None, known=None, loads=<function loads>)
 
 The backfill: every `crowsnest spawn <name>` still recorded in a transcript.
 

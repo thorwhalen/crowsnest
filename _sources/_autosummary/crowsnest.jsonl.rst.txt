@@ -1,0 +1,19 @@
+crowsnest.jsonl
+===============
+
+.. automodule:: crowsnest.jsonl
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MIN_ORJSON
+      WIDE
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      loads
+   

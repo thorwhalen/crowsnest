@@ -1,4 +1,4 @@
-> built 2026-11-03 14:08 UTC from 8955aca (main) · crowsnest 0.0.108. Details: build_info.json
+> built 2026-11-12 09:25 UTC from f048d0b (main) · crowsnest 0.0.109. Details: build_info.json
 
 # index.html.md
 
@@ -770,12 +770,12 @@ turn of the watched session’s own context asking it.
 
 ### Functions
 
-| [`describe_tool`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.describe_tool)(name, inputs, \*[, limit])     | One line naming a tool call: the tool, and the argument that says what it did.                   |
-|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| [`load_records`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.load_records)(path)                           | Every record in a transcript, tolerating blank and malformed lines.                              |
-| [`read_activity`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.read_activity)(path, \*[, session_id, ...])   | Read the tail of a transcript into an [`Activity`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.Activity). |
-| [`read_turns`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.read_turns)(path, \*[, last, before])         | The last `last` turns of a transcript, oldest first; `before=N` pages back.                      |
-| [`tail_records`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.tail_records)(path, \*[, tail_bytes, enough]) | The records in the last `tail_bytes` of a transcript, widening until `enough`.                   |
+| [`describe_tool`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.describe_tool)(name, inputs, \*[, limit])          | One line naming a tool call: the tool, and the argument that says what it did.                   |
+|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| [`load_records`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.load_records)(path, \*[, loads])                   | Every record in a transcript, tolerating blank and malformed lines.                              |
+| [`read_activity`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.read_activity)(path, \*[, session_id, ...])        | Read the tail of a transcript into an [`Activity`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.Activity). |
+| [`read_turns`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.read_turns)(path, \*[, last, before])              | The last `last` turns of a transcript, oldest first; `before=N` pages back.                      |
+| [`tail_records`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.tail_records)(path, \*[, tail_bytes, enough, ...]) | The records in the last `tail_bytes` of a transcript, widening until `enough`.                   |
 
 ### Classes
 
@@ -838,7 +838,7 @@ One line naming a tool call: the tool, and the argument that says what it did.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.activity.load_records(path)
+### crowsnest.activity.load_records(path, \*, loads=<function loads>)
 
 Every record in a transcript, tolerating blank and malformed lines.
 
@@ -865,7 +865,7 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Turn`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.Turn)]
 
-### crowsnest.activity.tail_records(path, \*, tail_bytes=262144, enough=<function \_has_prompt>)
+### crowsnest.activity.tail_records(path, \*, tail_bytes=262144, enough=<function \_has_prompt>, loads=<function loads>)
 
 The records in the last `tail_bytes` of a transcript, widening until `enough`.
 
@@ -3305,6 +3305,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`guard`](_autosummary/crowsnest.guard.html.md#module-crowsnest.guard)                   | Keep a machine's sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).                                           |
 | [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)                     | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
 | [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)                     | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
+| [`jsonl`](_autosummary/crowsnest.jsonl.html.md#module-crowsnest.jsonl)                   | Decode one line of a JSONL file: orjson where it provably agrees with `json.loads`.                                                  |
 | [`ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)                 | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
 | [`lineage`](_autosummary/crowsnest.lineage.html.md#module-crowsnest.lineage)               | Who started whom: the spawn graph, as data.                                                                                          |
 | [`links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)                   | References in a session's own words, turned into links you can click.                                                                |
@@ -3490,6 +3491,72 @@ The text of the bundled `CLAUDE.md`.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+
+# _autosummary/crowsnest.jsonl.html.md
+
+# crowsnest.jsonl
+
+Decode one line of a JSONL file: orjson where it provably agrees with `json.loads`.
+
+A transcript runs to megabytes and is decoded line by line on every poll, so the decoder
+is the hot spot. `orjson` is several times faster than the standard library, and it is
+optional: without it [`loads()`](_autosummary/crowsnest.jsonl.html.md#crowsnest.jsonl.loads) *is* `json.loads`.
+
+With it, [`loads()`](_autosummary/crowsnest.jsonl.html.md#crowsnest.jsonl.loads) falls back to `json.loads` – the answer a caller got before –
+for the two ways the decoders differ:
+
+- a line orjson rejects. It rejects `NaN`, `Infinity` and `-Infinity`, a lone
+  surrogate escape and a leading byte-order mark, which `json.loads` accepts; a line
+  both reject raises `ValueError` as before.
+- a line holding a run of [`WIDE`](_autosummary/crowsnest.jsonl.html.md#crowsnest.jsonl.WIDE) or more digits. orjson turns an integer beyond the
+  64-bit range into a float; `json.loads` returns the exact `int`. (Every such
+  integer has at least 20 digits; 19 also catches the edge of the range, and a
+  nanosecond timestamp, at the price of a slower decode for those rare lines.)
+
+Same policy as openloops’ transcript reader. Nothing else differs: duplicate keys keep
+the last, key order is kept, and floats round the same way.
+
+```pycon
+>>> _usable(type('M', (), {'__version__': '3.9.15'})), _usable(type('M', (), {'__version__': '3.9.10'}))
+(True, False)
+>>> _usable(type('M', (), {'__version__': '3.11.0rc1'})), _usable(object())
+(False, False)
+>>> loads(b'{"a": [1, 2.5, null]}')
+{'a': [1, 2.5, None]}
+>>> loads(b'{"n": 123456789012345678901234567890}')['n']
+123456789012345678901234567890
+>>> loads('{nope')
+Traceback (most recent call last):
+  ...
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+```
+
+### Module Attributes
+
+| [`MIN_ORJSON`](_autosummary/crowsnest.jsonl.html.md#crowsnest.jsonl.MIN_ORJSON)   | orjson before this has no recursion limit and segfaults on a deeply nested line (CVE-2024-27454); `json.loads` raises `RecursionError` instead.   |
+|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`WIDE`](_autosummary/crowsnest.jsonl.html.md#crowsnest.jsonl.WIDE)         | A run of this many digits sends a line to `json.loads` (see the module docstring).                                                                |
+
+### Functions
+
+| [`loads`](_autosummary/crowsnest.jsonl.html.md#crowsnest.jsonl.loads)(line)   | `json.loads(line)`, through orjson when that returns the same value.   |
+|----------------------------------------------------------------|------------------------------------------------------------------------|
+
+### crowsnest.jsonl.MIN_ORJSON *= (3, 9, 15)*
+
+orjson before this has no recursion limit and segfaults on a deeply nested line
+(CVE-2024-27454); `json.loads` raises `RecursionError` instead.
+
+### crowsnest.jsonl.WIDE *= 19*
+
+A run of this many digits sends a line to `json.loads` (see the module docstring).
+
+### crowsnest.jsonl.loads(line)
+
+`json.loads(line)`, through orjson when that returns the same value.
+
+Raises `ValueError` for a line neither decoder reads.
 
 
 # _autosummary/crowsnest.ledger.html.md
@@ -3838,7 +3905,7 @@ long-lived dispatcher ever started would sit on the graph forever.
 | [`dflt_sources`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.dflt_sources)(\*[, home, lineage_path, sessions]) | The readers [`graph()`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.graph) uses when the caller names none, strongest first. |
 | [`from_processes`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.from_processes)(\*[, home, sessions, run])        | Edges visible in the process table right now, for sessions crowsnest did not start.                                    |
 | [`from_records`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.from_records)(\*[, lineage_path])                 | Every edge crowsnest recorded for itself, oldest first.                                                                |
-| [`from_transcripts`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.from_transcripts)(\*[, home, known])              | The backfill: every `crowsnest spawn <name>` still recorded in a transcript.                                           |
+| [`from_transcripts`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.from_transcripts)(\*[, home, known, loads])       | The backfill: every `crowsnest spawn <name>` still recorded in a transcript.                                           |
 | [`graph`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.graph)(\*[, sessions, sources, home, ...])        | The spawn forest: every live session as a node, every parent link as an edge.                                          |
 | [`lineage_path`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.lineage_path)([path])                             | Where recorded edges live: `path` when given, else `<data dir>/lineage.jsonl`.                                         |
 | [`names_by_session_id`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.names_by_session_id)(\*[, events_path, ...])      | Every session id these two logs have ever named, mapped to that name.                                                  |
@@ -4012,7 +4079,7 @@ dies on one bad byte would take the whole report with it.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`SpawnEdge`](_autosummary/crowsnest.lineage.html.md#crowsnest.lineage.SpawnEdge)]
 
-### crowsnest.lineage.from_transcripts(, home=None, known=None)
+### crowsnest.lineage.from_transcripts(\*, home=None, known=None, loads=<function loads>)
 
 The backfill: every `crowsnest spawn <name>` still recorded in a transcript.
 
@@ -7750,18 +7817,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-03 14:08 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/8955aca019e4343e553ba03eccf6fcc6e98995c6"><code>8955aca</code></a> on branch <code>main</code>, for **crowsnest 0.0.108** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-12 09:25 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/f048d0bbee3778c5b075ffb7bee30497a05b813c"><code>f048d0b</code></a> on branch <code>main</code>, for **crowsnest 0.0.109** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.108) is behind the latest release on PyPI (0.0.109): `pip install crowsnest` gives newer code than these docs describe.
+- The documented version (0.0.109) is behind the latest release on PyPI (0.0.111): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/8955aca019e4343e553ba03eccf6fcc6e98995c6"><code>8955aca019e4343e553ba03eccf6fcc6e98995c6</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/f048d0bbee3778c5b075ffb7bee30497a05b813c"><code>f048d0bbee3778c5b075ffb7bee30497a05b813c</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7772,9 +7839,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/41650499892">41650499892</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/43191055666">43191055666</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>8955aca019e4343e553ba03eccf6fcc6e98995c6</code> (in the history of the built commit) |
+| Event commit | <code>f048d0bbee3778c5b075ffb7bee30497a05b813c</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7783,7 +7850,7 @@ The documentation and the package may be misaligned:
 | epythet  | 0.2.22  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
-| Python   | 3.12.15 |
+| Python   | 3.12.16 |
 
 ## Configuration as resolved
 
@@ -7799,13 +7866,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.109/">0.0.109</a>, newer than the documented version (0.0.108).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.111/">0.0.111</a>, newer than the documented version (0.0.109).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 8955aca019e4343e553ba03eccf6fcc6e98995c6
+git checkout f048d0bbee3778c5b075ffb7bee30497a05b813c
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

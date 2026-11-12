@@ -76,6 +76,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.jsonl.html">crowsnest.jsonl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.links.html">crowsnest.links</a></li>
@@ -173,361 +174,368 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="24">
 </span><span data-line="25"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span data-line="26">
-</span><span data-line="27"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-</span><span data-line="28"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
-</span><span data-line="29"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
-</span><span data-line="30"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span data-line="31">
-</span><span data-line="32"><span class="kn">from</span><span class="w"> </span><span class="nn">openloops.transcripts</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_session</span>
-</span><span data-line="33">
-</span><span data-line="34"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="35">    <span class="s2">"QUESTION_TOOL"</span><span class="p">,</span>
-</span><span data-line="36">    <span class="s2">"RECENT_TOOLS"</span><span class="p">,</span>
-</span><span data-line="37">    <span class="s2">"TAIL_BYTES"</span><span class="p">,</span>
-</span><span data-line="38">    <span class="s2">"Activity"</span><span class="p">,</span>
-</span><span data-line="39">    <span class="s2">"Turn"</span><span class="p">,</span>
-</span><span data-line="40">    <span class="s2">"describe_tool"</span><span class="p">,</span>
-</span><span data-line="41">    <span class="s2">"load_records"</span><span class="p">,</span>
-</span><span data-line="42">    <span class="s2">"read_activity"</span><span class="p">,</span>
-</span><span data-line="43">    <span class="s2">"read_turns"</span><span class="p">,</span>
-</span><span data-line="44">    <span class="s2">"tail_records"</span><span class="p">,</span>
-</span><span data-line="45"><span class="p">]</span>
-</span><span data-line="46">
-</span><span data-line="47"><span class="c1">#: How much of the file's end is read first. A turn of tool calls is a few kilobytes; a</span>
-</span><span data-line="48"><span class="c1">#: quarter megabyte covers the last several turns of nearly every session and costs a</span>
-</span><span data-line="49"><span class="c1">#: few milliseconds. The window doubles until it holds a human prompt.</span>
-</span><span data-line="50"><span class="n">TAIL_BYTES</span> <span class="o">=</span> <span class="mi">256</span> <span class="o">*</span> <span class="mi">1024</span>
-</span><span data-line="51">
-</span><span data-line="52"><span class="c1">#: How many recent tool calls an :class:`Activity` carries.</span>
-</span><span data-line="53"><span class="n">RECENT_TOOLS</span> <span class="o">=</span> <span class="mi">6</span>
-</span><span data-line="54">
-</span><span data-line="55"><span class="c1">#: The tool Claude Code uses to put a structured question to its human. A call to it with</span>
-</span><span data-line="56"><span class="c1">#: no result yet is a session waiting on a person.</span>
-</span><span data-line="57"><span class="n">QUESTION_TOOL</span> <span class="o">=</span> <span class="s2">"AskUserQuestion"</span>
-</span><span data-line="58">
-</span><span data-line="59"><span class="c1">#: Which input field best says what a tool call was about, first match wins. A</span>
-</span><span data-line="60"><span class="c1">#: ``description`` is written for a human; a path or a target is the next best thing.</span>
-</span><span data-line="61"><span class="n">_ARG_KEYS</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="62">    <span class="s2">"description"</span><span class="p">,</span>
-</span><span data-line="63">    <span class="s2">"file_path"</span><span class="p">,</span>
-</span><span data-line="64">    <span class="s2">"path"</span><span class="p">,</span>
-</span><span data-line="65">    <span class="s2">"pattern"</span><span class="p">,</span>
-</span><span data-line="66">    <span class="s2">"to"</span><span class="p">,</span>
-</span><span data-line="67">    <span class="s2">"query"</span><span class="p">,</span>
-</span><span data-line="68">    <span class="s2">"url"</span><span class="p">,</span>
-</span><span data-line="69">    <span class="s2">"prompt"</span><span class="p">,</span>
-</span><span data-line="70">    <span class="s2">"command"</span><span class="p">,</span>
-</span><span data-line="71">    <span class="s2">"message"</span><span class="p">,</span>
-</span><span data-line="72"><span class="p">)</span>
-</span><span data-line="73"><span class="n">_PATH_KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"file_path"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">)</span>
-</span><span data-line="74"><span class="n">_ARG_LIMIT</span> <span class="o">=</span> <span class="mi">80</span>
-</span><span data-line="75">
+</span><span data-line="27"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+</span><span data-line="28"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+</span><span data-line="29"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="30">
+</span><span data-line="31"><span class="kn">from</span><span class="w"> </span><span class="nn">openloops.transcripts</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_session</span>
+</span><span data-line="32">
+</span><span data-line="33"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.jsonl</span><span class="w"> </span><span class="kn">import</span> <span class="n">loads</span> <span class="k">as</span> <span class="n">_loads</span>
+</span><span data-line="34">
+</span><span data-line="35"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="36">    <span class="s2">"QUESTION_TOOL"</span><span class="p">,</span>
+</span><span data-line="37">    <span class="s2">"RECENT_TOOLS"</span><span class="p">,</span>
+</span><span data-line="38">    <span class="s2">"TAIL_BYTES"</span><span class="p">,</span>
+</span><span data-line="39">    <span class="s2">"Activity"</span><span class="p">,</span>
+</span><span data-line="40">    <span class="s2">"Turn"</span><span class="p">,</span>
+</span><span data-line="41">    <span class="s2">"describe_tool"</span><span class="p">,</span>
+</span><span data-line="42">    <span class="s2">"load_records"</span><span class="p">,</span>
+</span><span data-line="43">    <span class="s2">"read_activity"</span><span class="p">,</span>
+</span><span data-line="44">    <span class="s2">"read_turns"</span><span class="p">,</span>
+</span><span data-line="45">    <span class="s2">"tail_records"</span><span class="p">,</span>
+</span><span data-line="46"><span class="p">]</span>
+</span><span data-line="47">
+</span><span data-line="48"><span class="c1">#: How much of the file's end is read first. A turn of tool calls is a few kilobytes; a</span>
+</span><span data-line="49"><span class="c1">#: quarter megabyte covers the last several turns of nearly every session and costs a</span>
+</span><span data-line="50"><span class="c1">#: few milliseconds. The window doubles until it holds a human prompt.</span>
+</span><span data-line="51"><span class="n">TAIL_BYTES</span> <span class="o">=</span> <span class="mi">256</span> <span class="o">*</span> <span class="mi">1024</span>
+</span><span data-line="52">
+</span><span data-line="53"><span class="c1">#: How many recent tool calls an :class:`Activity` carries.</span>
+</span><span data-line="54"><span class="n">RECENT_TOOLS</span> <span class="o">=</span> <span class="mi">6</span>
+</span><span data-line="55">
+</span><span data-line="56"><span class="c1">#: The tool Claude Code uses to put a structured question to its human. A call to it with</span>
+</span><span data-line="57"><span class="c1">#: no result yet is a session waiting on a person.</span>
+</span><span data-line="58"><span class="n">QUESTION_TOOL</span> <span class="o">=</span> <span class="s2">"AskUserQuestion"</span>
+</span><span data-line="59">
+</span><span data-line="60"><span class="c1">#: Which input field best says what a tool call was about, first match wins. A</span>
+</span><span data-line="61"><span class="c1">#: ``description`` is written for a human; a path or a target is the next best thing.</span>
+</span><span data-line="62"><span class="n">_ARG_KEYS</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="63">    <span class="s2">"description"</span><span class="p">,</span>
+</span><span data-line="64">    <span class="s2">"file_path"</span><span class="p">,</span>
+</span><span data-line="65">    <span class="s2">"path"</span><span class="p">,</span>
+</span><span data-line="66">    <span class="s2">"pattern"</span><span class="p">,</span>
+</span><span data-line="67">    <span class="s2">"to"</span><span class="p">,</span>
+</span><span data-line="68">    <span class="s2">"query"</span><span class="p">,</span>
+</span><span data-line="69">    <span class="s2">"url"</span><span class="p">,</span>
+</span><span data-line="70">    <span class="s2">"prompt"</span><span class="p">,</span>
+</span><span data-line="71">    <span class="s2">"command"</span><span class="p">,</span>
+</span><span data-line="72">    <span class="s2">"message"</span><span class="p">,</span>
+</span><span data-line="73"><span class="p">)</span>
+</span><span data-line="74"><span class="n">_PATH_KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"file_path"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">)</span>
+</span><span data-line="75"><span class="n">_ARG_LIMIT</span> <span class="o">=</span> <span class="mi">80</span>
 </span><span data-line="76">
-</span><span data-line="77"><span class="k">def</span><span class="w"> </span><span class="nf">_parse_lines</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-</span><span data-line="78">    <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="79">    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-</span><span data-line="80">        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="81">        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
-</span><span data-line="82">            <span class="k">continue</span>
-</span><span data-line="83">        <span class="k">try</span><span class="p">:</span>
-</span><span data-line="84">            <span class="n">rec</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-</span><span data-line="85">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-</span><span data-line="86">            <span class="k">continue</span>
-</span><span data-line="87">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="88">            <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
-</span><span data-line="89">    <span class="k">return</span> <span class="n">records</span>
-</span><span data-line="90">
-</span><span data-line="91">
+</span><span data-line="77">
+</span><span data-line="78"><span class="k">def</span><span class="w"> </span><span class="nf">_parse_lines</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">loads</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_loads</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="79"><span class="w">    </span><span class="sd">"""The objects among ``data``'s JSON lines; a blank or unreadable line is skipped.</span>
+</span><span data-line="80">
+</span><span data-line="81"><span class="sd">    ``loads`` decodes one line (bytes) and raises ``ValueError`` for one it cannot read;</span>
+</span><span data-line="82"><span class="sd">    the default is orjson where it agrees with ``json.loads`` (:mod:`crowsnest.jsonl`).</span>
+</span><span data-line="83"><span class="sd">    """</span>
+</span><span data-line="84">    <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="85">    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+</span><span data-line="86">        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="87">        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+</span><span data-line="88">            <span class="k">continue</span>
+</span><span data-line="89">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="90">            <span class="n">rec</span> <span class="o">=</span> <span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</span><span data-line="91">        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+</span><span data-line="92">            <span class="k">continue</span>
+</span><span data-line="93">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="94">            <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+</span><span data-line="95">    <span class="k">return</span> <span class="n">records</span>
+</span><span data-line="96">
+</span><span data-line="97">
 <div class="viewcode-block" id="load_records">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.activity.html#crowsnest.load_records">[docs]</a>
-</span><span data-line="92"><span class="k">def</span><span class="w"> </span><span class="nf">load_records</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-</span><span data-line="93"><span class="w">    </span><span class="sd">"""Every record in a transcript, tolerating blank and malformed lines."""</span>
-</span><span data-line="94">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="95">        <span class="k">return</span> <span class="n">_parse_lines</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span>
-</span><span data-line="96">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-</span><span data-line="97">        <span class="k">return</span> <span class="p">[]</span></div>
+</span><span data-line="98"><span class="k">def</span><span class="w"> </span><span class="nf">load_records</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">loads</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_loads</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="99"><span class="w">    </span><span class="sd">"""Every record in a transcript, tolerating blank and malformed lines."""</span>
+</span><span data-line="100">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="101">        <span class="k">return</span> <span class="n">_parse_lines</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">(),</span> <span class="n">loads</span><span class="o">=</span><span class="n">loads</span><span class="p">)</span>
+</span><span data-line="102">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="103">        <span class="k">return</span> <span class="p">[]</span></div>
 
-</span><span data-line="98">
-</span><span data-line="99">
-</span><span data-line="100"><span class="k">def</span><span class="w"> </span><span class="nf">_has_prompt</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="101">    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">parse_session</span><span class="p">(</span><span class="n">records</span><span class="p">)</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">)</span>
-</span><span data-line="102">
-</span><span data-line="103">
+</span><span data-line="104">
+</span><span data-line="105">
+</span><span data-line="106"><span class="k">def</span><span class="w"> </span><span class="nf">_has_prompt</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="107">    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">parse_session</span><span class="p">(</span><span class="n">records</span><span class="p">)</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">)</span>
+</span><span data-line="108">
+</span><span data-line="109">
 <div class="viewcode-block" id="tail_records">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.activity.html#crowsnest.tail_records">[docs]</a>
-</span><span data-line="104"><span class="k">def</span><span class="w"> </span><span class="nf">tail_records</span><span class="p">(</span>
-</span><span data-line="105">    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
-</span><span data-line="106">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="107">    <span class="n">tail_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">TAIL_BYTES</span><span class="p">,</span>
-</span><span data-line="108">    <span class="n">enough</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">_has_prompt</span><span class="p">,</span>
-</span><span data-line="109"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
-</span><span data-line="110"><span class="w">    </span><span class="sd">"""The records in the last ``tail_bytes`` of a transcript, widening until ``enough``.</span>
-</span><span data-line="111">
-</span><span data-line="112"><span class="sd">    Returns the records and whether the window reached the start of the file. The first</span>
-</span><span data-line="113"><span class="sd">    line of a window that starts mid-file is a fragment and is dropped.</span>
-</span><span data-line="114">
-</span><span data-line="115"><span class="sd">    &gt;&gt;&gt; tail_records('/nonexistent-file-for-doctest')</span>
-</span><span data-line="116"><span class="sd">    ([], True)</span>
-</span><span data-line="117"><span class="sd">    """</span>
-</span><span data-line="118">    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="119">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="120">        <span class="n">size</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
-</span><span data-line="121">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-</span><span data-line="122">        <span class="k">return</span> <span class="p">[],</span> <span class="kc">True</span>
-</span><span data-line="123">    <span class="n">window</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tail_bytes</span><span class="p">)</span>
-</span><span data-line="124">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-</span><span data-line="125">        <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span> <span class="o">-</span> <span class="n">window</span><span class="p">)</span>
-</span><span data-line="126">        <span class="k">try</span><span class="p">:</span>
-</span><span data-line="127">            <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span data-line="128">                <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
-</span><span data-line="129">                <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-</span><span data-line="130">        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-</span><span data-line="131">            <span class="k">return</span> <span class="p">[],</span> <span class="kc">True</span>
-</span><span data-line="132">        <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="133">            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="sa">b</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
-</span><span data-line="134">        <span class="n">records</span> <span class="o">=</span> <span class="n">_parse_lines</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span data-line="135">        <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">enough</span><span class="p">(</span><span class="n">records</span><span class="p">):</span>
-</span><span data-line="136">            <span class="k">return</span> <span class="n">records</span><span class="p">,</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span>
-</span><span data-line="137">        <span class="n">window</span> <span class="o">*=</span> <span class="mi">2</span></div>
+</span><span data-line="110"><span class="k">def</span><span class="w"> </span><span class="nf">tail_records</span><span class="p">(</span>
+</span><span data-line="111">    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+</span><span data-line="112">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="113">    <span class="n">tail_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">TAIL_BYTES</span><span class="p">,</span>
+</span><span data-line="114">    <span class="n">enough</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">_has_prompt</span><span class="p">,</span>
+</span><span data-line="115">    <span class="n">loads</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_loads</span><span class="p">,</span>
+</span><span data-line="116"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
+</span><span data-line="117"><span class="w">    </span><span class="sd">"""The records in the last ``tail_bytes`` of a transcript, widening until ``enough``.</span>
+</span><span data-line="118">
+</span><span data-line="119"><span class="sd">    Returns the records and whether the window reached the start of the file. The first</span>
+</span><span data-line="120"><span class="sd">    line of a window that starts mid-file is a fragment and is dropped.</span>
+</span><span data-line="121">
+</span><span data-line="122"><span class="sd">    &gt;&gt;&gt; tail_records('/nonexistent-file-for-doctest')</span>
+</span><span data-line="123"><span class="sd">    ([], True)</span>
+</span><span data-line="124"><span class="sd">    """</span>
+</span><span data-line="125">    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="126">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="127">        <span class="n">size</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
+</span><span data-line="128">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="129">        <span class="k">return</span> <span class="p">[],</span> <span class="kc">True</span>
+</span><span data-line="130">    <span class="n">window</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tail_bytes</span><span class="p">)</span>
+</span><span data-line="131">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span><span data-line="132">        <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span> <span class="o">-</span> <span class="n">window</span><span class="p">)</span>
+</span><span data-line="133">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="134">            <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span data-line="135">                <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+</span><span data-line="136">                <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span data-line="137">        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="138">            <span class="k">return</span> <span class="p">[],</span> <span class="kc">True</span>
+</span><span data-line="139">        <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="140">            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="sa">b</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+</span><span data-line="141">        <span class="n">records</span> <span class="o">=</span> <span class="n">_parse_lines</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">loads</span><span class="o">=</span><span class="n">loads</span><span class="p">)</span>
+</span><span data-line="142">        <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">enough</span><span class="p">(</span><span class="n">records</span><span class="p">):</span>
+</span><span data-line="143">            <span class="k">return</span> <span class="n">records</span><span class="p">,</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span>
+</span><span data-line="144">        <span class="n">window</span> <span class="o">*=</span> <span class="mi">2</span></div>
 
-</span><span data-line="138">
-</span><span data-line="139">
-</span><span data-line="140"><span class="k">def</span><span class="w"> </span><span class="nf">_blocks</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-</span><span data-line="141">    <span class="n">content</span> <span class="o">=</span> <span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"message"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content"</span><span class="p">)</span>
-</span><span data-line="142">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-</span><span data-line="143">        <span class="k">return</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">content</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)]</span>
-</span><span data-line="144">    <span class="k">return</span> <span class="p">[]</span>
 </span><span data-line="145">
 </span><span data-line="146">
-</span><span data-line="147"><span class="k">def</span><span class="w"> </span><span class="nf">_stamp</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="148">    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="149">
-</span><span data-line="150">
-</span><span data-line="151"><span class="k">def</span><span class="w"> </span><span class="nf">_main_thread</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-</span><span data-line="152">    <span class="k">return</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isSidechain"</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">_stamp</span><span class="p">)</span>
+</span><span data-line="147"><span class="k">def</span><span class="w"> </span><span class="nf">_blocks</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="148">    <span class="n">content</span> <span class="o">=</span> <span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"message"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content"</span><span class="p">)</span>
+</span><span data-line="149">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+</span><span data-line="150">        <span class="k">return</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">content</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)]</span>
+</span><span data-line="151">    <span class="k">return</span> <span class="p">[]</span>
+</span><span data-line="152">
 </span><span data-line="153">
-</span><span data-line="154">
+</span><span data-line="154"><span class="k">def</span><span class="w"> </span><span class="nf">_stamp</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="155">    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="156">
+</span><span data-line="157">
+</span><span data-line="158"><span class="k">def</span><span class="w"> </span><span class="nf">_main_thread</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+</span><span data-line="159">    <span class="k">return</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isSidechain"</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">_stamp</span><span class="p">)</span>
+</span><span data-line="160">
+</span><span data-line="161">
 <div class="viewcode-block" id="describe_tool">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.activity.html#crowsnest.describe_tool">[docs]</a>
-</span><span data-line="155"><span class="k">def</span><span class="w"> </span><span class="nf">describe_tool</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_ARG_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="156"><span class="w">    </span><span class="sd">"""One line naming a tool call: the tool, and the argument that says what it did.</span>
-</span><span data-line="157">
-</span><span data-line="158"><span class="sd">    &gt;&gt;&gt; describe_tool('Bash', {'command': 'ls -la', 'description': 'List files'})</span>
-</span><span data-line="159"><span class="sd">    'Bash: List files'</span>
-</span><span data-line="160"><span class="sd">    &gt;&gt;&gt; describe_tool('Read', {'file_path': '/a/b/c.py'})</span>
-</span><span data-line="161"><span class="sd">    'Read: c.py'</span>
-</span><span data-line="162"><span class="sd">    &gt;&gt;&gt; describe_tool('AskUserQuestion', {'questions': [{'question': 'Ship it?'}]})</span>
-</span><span data-line="163"><span class="sd">    'AskUserQuestion: Ship it?'</span>
-</span><span data-line="164"><span class="sd">    &gt;&gt;&gt; describe_tool('ListAgents', {})</span>
-</span><span data-line="165"><span class="sd">    'ListAgents'</span>
-</span><span data-line="166"><span class="sd">    """</span>
-</span><span data-line="167">    <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
-</span><span data-line="168">    <span class="n">arg</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="169">    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">QUESTION_TOOL</span><span class="p">:</span>
-</span><span data-line="170">        <span class="n">questions</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
-</span><span data-line="171">        <span class="n">first</span> <span class="o">=</span> <span class="n">questions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">questions</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">questions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
-</span><span data-line="172">        <span class="n">arg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"question"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="173">    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="174">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_ARG_KEYS</span><span class="p">:</span>
-</span><span data-line="175">            <span class="n">value</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-</span><span data-line="176">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-</span><span data-line="177">                <span class="n">arg</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_PATH_KEYS</span> <span class="k">else</span> <span class="n">value</span>
-</span><span data-line="178">                <span class="k">break</span>
-</span><span data-line="179">    <span class="n">arg</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-</span><span data-line="180">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">:</span>
-</span><span data-line="181">        <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
-</span><span data-line="182">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">arg</span> <span class="k">else</span> <span class="n">name</span></div>
+</span><span data-line="162"><span class="k">def</span><span class="w"> </span><span class="nf">describe_tool</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_ARG_LIMIT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="163"><span class="w">    </span><span class="sd">"""One line naming a tool call: the tool, and the argument that says what it did.</span>
+</span><span data-line="164">
+</span><span data-line="165"><span class="sd">    &gt;&gt;&gt; describe_tool('Bash', {'command': 'ls -la', 'description': 'List files'})</span>
+</span><span data-line="166"><span class="sd">    'Bash: List files'</span>
+</span><span data-line="167"><span class="sd">    &gt;&gt;&gt; describe_tool('Read', {'file_path': '/a/b/c.py'})</span>
+</span><span data-line="168"><span class="sd">    'Read: c.py'</span>
+</span><span data-line="169"><span class="sd">    &gt;&gt;&gt; describe_tool('AskUserQuestion', {'questions': [{'question': 'Ship it?'}]})</span>
+</span><span data-line="170"><span class="sd">    'AskUserQuestion: Ship it?'</span>
+</span><span data-line="171"><span class="sd">    &gt;&gt;&gt; describe_tool('ListAgents', {})</span>
+</span><span data-line="172"><span class="sd">    'ListAgents'</span>
+</span><span data-line="173"><span class="sd">    """</span>
+</span><span data-line="174">    <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+</span><span data-line="175">    <span class="n">arg</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="176">    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">QUESTION_TOOL</span><span class="p">:</span>
+</span><span data-line="177">        <span class="n">questions</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+</span><span data-line="178">        <span class="n">first</span> <span class="o">=</span> <span class="n">questions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">questions</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">questions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+</span><span data-line="179">        <span class="n">arg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"question"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="180">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="181">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_ARG_KEYS</span><span class="p">:</span>
+</span><span data-line="182">            <span class="n">value</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span><span data-line="183">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+</span><span data-line="184">                <span class="n">arg</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_PATH_KEYS</span> <span class="k">else</span> <span class="n">value</span>
+</span><span data-line="185">                <span class="k">break</span>
+</span><span data-line="186">    <span class="n">arg</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</span><span data-line="187">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">:</span>
+</span><span data-line="188">        <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"…"</span>
+</span><span data-line="189">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">arg</span> <span class="k">else</span> <span class="n">name</span></div>
 
-</span><span data-line="183">
-</span><span data-line="184">
-</span><span data-line="185"><span class="k">def</span><span class="w"> </span><span class="nf">_tool_calls</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]],</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-</span><span data-line="186"><span class="w">    </span><span class="sd">"""Every tool call on the main thread in order, and the ids that got a result."""</span>
-</span><span data-line="187">    <span class="n">calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="188">    <span class="n">answered</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-</span><span data-line="189">    <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
-</span><span data-line="190">        <span class="k">if</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"assistant"</span><span class="p">:</span>
-</span><span data-line="191">            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">_blocks</span><span class="p">(</span><span class="n">rec</span><span class="p">):</span>
-</span><span data-line="192">                <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"tool_use"</span><span class="p">:</span>
-</span><span data-line="193">                    <span class="n">calls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="194">                        <span class="p">(</span>
-</span><span data-line="195">                            <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="196">                            <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="197">                            <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"input"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span>
-</span><span data-line="198">                        <span class="p">)</span>
-</span><span data-line="199">                    <span class="p">)</span>
-</span><span data-line="200">        <span class="k">elif</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"user"</span><span class="p">:</span>
-</span><span data-line="201">            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">_blocks</span><span class="p">(</span><span class="n">rec</span><span class="p">):</span>
-</span><span data-line="202">                <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"tool_result"</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool_use_id"</span><span class="p">):</span>
-</span><span data-line="203">                    <span class="n">answered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="s2">"tool_use_id"</span><span class="p">]))</span>
-</span><span data-line="204">    <span class="k">return</span> <span class="n">calls</span><span class="p">,</span> <span class="n">answered</span>
-</span><span data-line="205">
-</span><span data-line="206">
+</span><span data-line="190">
+</span><span data-line="191">
+</span><span data-line="192"><span class="k">def</span><span class="w"> </span><span class="nf">_tool_calls</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]],</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+</span><span data-line="193"><span class="w">    </span><span class="sd">"""Every tool call on the main thread in order, and the ids that got a result."""</span>
+</span><span data-line="194">    <span class="n">calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="195">    <span class="n">answered</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span><span data-line="196">    <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+</span><span data-line="197">        <span class="k">if</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"assistant"</span><span class="p">:</span>
+</span><span data-line="198">            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">_blocks</span><span class="p">(</span><span class="n">rec</span><span class="p">):</span>
+</span><span data-line="199">                <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"tool_use"</span><span class="p">:</span>
+</span><span data-line="200">                    <span class="n">calls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="201">                        <span class="p">(</span>
+</span><span data-line="202">                            <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="203">                            <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="204">                            <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"input"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span>
+</span><span data-line="205">                        <span class="p">)</span>
+</span><span data-line="206">                    <span class="p">)</span>
+</span><span data-line="207">        <span class="k">elif</span> <span class="n">rec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"user"</span><span class="p">:</span>
+</span><span data-line="208">            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">_blocks</span><span class="p">(</span><span class="n">rec</span><span class="p">):</span>
+</span><span data-line="209">                <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"tool_result"</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool_use_id"</span><span class="p">):</span>
+</span><span data-line="210">                    <span class="n">answered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="s2">"tool_use_id"</span><span class="p">]))</span>
+</span><span data-line="211">    <span class="k">return</span> <span class="n">calls</span><span class="p">,</span> <span class="n">answered</span>
+</span><span data-line="212">
+</span><span data-line="213">
 <div class="viewcode-block" id="Activity">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.activity.html#crowsnest.Activity">[docs]</a>
-</span><span data-line="207"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="208"><span class="k">class</span><span class="w"> </span><span class="nc">Activity</span><span class="p">:</span>
-</span><span data-line="209"><span class="w">    </span><span class="sd">"""What one session is doing, as its transcript tail reads. Flat and JSON-shaped.</span>
-</span><span data-line="210">
-</span><span data-line="211"><span class="sd">    ``in_flight`` lists tool calls with no result yet, oldest first: normally one, several</span>
-</span><span data-line="212"><span class="sd">    when calls were issued in parallel. ``pending_question`` is the first question of an</span>
-</span><span data-line="213"><span class="sd">    in-flight :data:`QUESTION_TOOL` call -- a session waiting on a person.</span>
-</span><span data-line="214"><span class="sd">    ``tail_complete`` says whether the window reached the start of the file, which is what</span>
-</span><span data-line="215"><span class="sd">    makes the difference between "no prompt in the tail" and "no prompt at all".</span>
-</span><span data-line="216"><span class="sd">    ``tail_turns`` is how many human prompts the window held: the session's turn count</span>
-</span><span data-line="217"><span class="sd">    when ``tail_complete`` is true, and a floor otherwise. ``locators`` are the typed</span>
-</span><span data-line="218"><span class="sd">    references openloops found in the window -- issues, pull requests -- each a dict with</span>
-</span><span data-line="219"><span class="sd">    ``type``, ``url`` and ``text``, oldest first.</span>
-</span><span data-line="220"><span class="sd">    """</span>
-</span><span data-line="221">
-</span><span data-line="222">    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="223">    <span class="n">last_event_at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="224">    <span class="n">last_user_prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="225">    <span class="n">last_prompt_at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="226">    <span class="n">last_assistant_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="227">    <span class="n">last_text_at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="228">    <span class="n">recent_tools</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="229">    <span class="n">in_flight</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="230">    <span class="n">pending_question</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="231">    <span class="n">turn_open</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span data-line="232">    <span class="n">errored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span data-line="233">    <span class="n">git_branch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="234">    <span class="n">tail_complete</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="235">    <span class="n">tail_turns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span data-line="236">    <span class="n">locators</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="237">
-</span><span data-line="238">    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="239">        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</span><span data-line="214"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="215"><span class="k">class</span><span class="w"> </span><span class="nc">Activity</span><span class="p">:</span>
+</span><span data-line="216"><span class="w">    </span><span class="sd">"""What one session is doing, as its transcript tail reads. Flat and JSON-shaped.</span>
+</span><span data-line="217">
+</span><span data-line="218"><span class="sd">    ``in_flight`` lists tool calls with no result yet, oldest first: normally one, several</span>
+</span><span data-line="219"><span class="sd">    when calls were issued in parallel. ``pending_question`` is the first question of an</span>
+</span><span data-line="220"><span class="sd">    in-flight :data:`QUESTION_TOOL` call -- a session waiting on a person.</span>
+</span><span data-line="221"><span class="sd">    ``tail_complete`` says whether the window reached the start of the file, which is what</span>
+</span><span data-line="222"><span class="sd">    makes the difference between "no prompt in the tail" and "no prompt at all".</span>
+</span><span data-line="223"><span class="sd">    ``tail_turns`` is how many human prompts the window held: the session's turn count</span>
+</span><span data-line="224"><span class="sd">    when ``tail_complete`` is true, and a floor otherwise. ``locators`` are the typed</span>
+</span><span data-line="225"><span class="sd">    references openloops found in the window -- issues, pull requests -- each a dict with</span>
+</span><span data-line="226"><span class="sd">    ``type``, ``url`` and ``text``, oldest first.</span>
+</span><span data-line="227"><span class="sd">    """</span>
+</span><span data-line="228">
+</span><span data-line="229">    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="230">    <span class="n">last_event_at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="231">    <span class="n">last_user_prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="232">    <span class="n">last_prompt_at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="233">    <span class="n">last_assistant_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="234">    <span class="n">last_text_at</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="235">    <span class="n">recent_tools</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="236">    <span class="n">in_flight</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="237">    <span class="n">pending_question</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="238">    <span class="n">turn_open</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="239">    <span class="n">errored</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="240">    <span class="n">git_branch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="241">    <span class="n">tail_complete</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="242">    <span class="n">tail_turns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="243">    <span class="n">locators</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="244">
+</span><span data-line="245">    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="246">        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-</span><span data-line="240">
-</span><span data-line="241">
+</span><span data-line="247">
+</span><span data-line="248">
 <div class="viewcode-block" id="read_activity">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.activity.html#crowsnest.read_activity">[docs]</a>
-</span><span data-line="242"><span class="k">def</span><span class="w"> </span><span class="nf">read_activity</span><span class="p">(</span>
-</span><span data-line="243">    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
-</span><span data-line="244">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="245">    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="246">    <span class="n">tail_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">TAIL_BYTES</span><span class="p">,</span>
-</span><span data-line="247">    <span class="n">recent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">RECENT_TOOLS</span><span class="p">,</span>
-</span><span data-line="248"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Activity</span><span class="p">:</span>
-</span><span data-line="249"><span class="w">    </span><span class="sd">"""Read the tail of a transcript into an :class:`Activity`.</span>
-</span><span data-line="250">
-</span><span data-line="251"><span class="sd">    Costs the watched session nothing: the file is opened read-only and the session is</span>
-</span><span data-line="252"><span class="sd">    never signalled, messaged or otherwise made aware.</span>
-</span><span data-line="253"><span class="sd">    """</span>
-</span><span data-line="254">    <span class="n">records</span><span class="p">,</span> <span class="n">complete</span> <span class="o">=</span> <span class="n">tail_records</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tail_bytes</span><span class="o">=</span><span class="n">tail_bytes</span><span class="p">)</span>
-</span><span data-line="255">    <span class="n">main</span> <span class="o">=</span> <span class="n">_main_thread</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
-</span><span data-line="256">    <span class="n">session</span> <span class="o">=</span> <span class="n">parse_session</span><span class="p">(</span><span class="n">main</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">session_id</span><span class="p">)</span>
-</span><span data-line="257">    <span class="n">calls</span><span class="p">,</span> <span class="n">answered</span> <span class="o">=</span> <span class="n">_tool_calls</span><span class="p">(</span><span class="n">main</span><span class="p">)</span>
-</span><span data-line="258">    <span class="n">in_flight</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="259">        <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="k">for</span> <span class="n">call_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">calls</span> <span class="k">if</span> <span class="n">call_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">answered</span>
-</span><span data-line="260">    <span class="p">]</span>
-</span><span data-line="261">    <span class="n">question</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">describe_tool</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">in_flight</span> <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">QUESTION_TOOL</span><span class="p">),</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="262">    <span class="n">stamps</span> <span class="o">=</span> <span class="p">[</span><span class="n">_stamp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">main</span> <span class="k">if</span> <span class="n">_stamp</span><span class="p">(</span><span class="n">r</span><span class="p">)]</span>
-</span><span data-line="263">    <span class="k">return</span> <span class="n">Activity</span><span class="p">(</span>
-</span><span data-line="264">        <span class="n">session_id</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">key</span> <span class="ow">or</span> <span class="n">session_id</span><span class="p">,</span>
-</span><span data-line="265">        <span class="n">last_event_at</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">stamps</span><span class="p">)</span> <span class="k">if</span> <span class="n">stamps</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="266">        <span class="n">last_user_prompt</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">,</span>
-</span><span data-line="267">        <span class="n">last_prompt_at</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_prompt_at</span><span class="p">,</span>
-</span><span data-line="268">        <span class="n">last_assistant_text</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_assistant_text</span><span class="p">,</span>
-</span><span data-line="269">        <span class="n">last_text_at</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_turn_at</span><span class="p">,</span>
-</span><span data-line="270">        <span class="n">recent_tools</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">describe_tool</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">calls</span><span class="p">[</span><span class="o">-</span><span class="n">recent</span><span class="p">:])</span>
-</span><span data-line="271">        <span class="k">if</span> <span class="n">recent</span>
-</span><span data-line="272">        <span class="k">else</span> <span class="p">(),</span>
-</span><span data-line="273">        <span class="n">in_flight</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">describe_tool</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">in_flight</span><span class="p">),</span>
-</span><span data-line="274">        <span class="n">pending_question</span><span class="o">=</span><span class="n">question</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">": "</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">question</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="275">        <span class="n">turn_open</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">ended_mid_turn</span><span class="p">,</span>
-</span><span data-line="276">        <span class="n">errored</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">ended_with_error</span><span class="p">,</span>
-</span><span data-line="277">        <span class="n">git_branch</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">git_branch</span><span class="p">,</span>
-</span><span data-line="278">        <span class="n">tail_complete</span><span class="o">=</span><span class="n">complete</span><span class="p">,</span>
-</span><span data-line="279">        <span class="n">tail_turns</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">turn_count</span><span class="p">,</span>
-</span><span data-line="280">        <span class="n">locators</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">loc</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">locators</span><span class="p">),</span>
-</span><span data-line="281">    <span class="p">)</span></div>
+</span><span data-line="249"><span class="k">def</span><span class="w"> </span><span class="nf">read_activity</span><span class="p">(</span>
+</span><span data-line="250">    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+</span><span data-line="251">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="252">    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="253">    <span class="n">tail_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">TAIL_BYTES</span><span class="p">,</span>
+</span><span data-line="254">    <span class="n">recent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">RECENT_TOOLS</span><span class="p">,</span>
+</span><span data-line="255"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Activity</span><span class="p">:</span>
+</span><span data-line="256"><span class="w">    </span><span class="sd">"""Read the tail of a transcript into an :class:`Activity`.</span>
+</span><span data-line="257">
+</span><span data-line="258"><span class="sd">    Costs the watched session nothing: the file is opened read-only and the session is</span>
+</span><span data-line="259"><span class="sd">    never signalled, messaged or otherwise made aware.</span>
+</span><span data-line="260"><span class="sd">    """</span>
+</span><span data-line="261">    <span class="n">records</span><span class="p">,</span> <span class="n">complete</span> <span class="o">=</span> <span class="n">tail_records</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tail_bytes</span><span class="o">=</span><span class="n">tail_bytes</span><span class="p">)</span>
+</span><span data-line="262">    <span class="n">main</span> <span class="o">=</span> <span class="n">_main_thread</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+</span><span data-line="263">    <span class="n">session</span> <span class="o">=</span> <span class="n">parse_session</span><span class="p">(</span><span class="n">main</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">session_id</span><span class="p">)</span>
+</span><span data-line="264">    <span class="n">calls</span><span class="p">,</span> <span class="n">answered</span> <span class="o">=</span> <span class="n">_tool_calls</span><span class="p">(</span><span class="n">main</span><span class="p">)</span>
+</span><span data-line="265">    <span class="n">in_flight</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="266">        <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="k">for</span> <span class="n">call_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">calls</span> <span class="k">if</span> <span class="n">call_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">answered</span>
+</span><span data-line="267">    <span class="p">]</span>
+</span><span data-line="268">    <span class="n">question</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">describe_tool</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">in_flight</span> <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">QUESTION_TOOL</span><span class="p">),</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="269">    <span class="n">stamps</span> <span class="o">=</span> <span class="p">[</span><span class="n">_stamp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">main</span> <span class="k">if</span> <span class="n">_stamp</span><span class="p">(</span><span class="n">r</span><span class="p">)]</span>
+</span><span data-line="270">    <span class="k">return</span> <span class="n">Activity</span><span class="p">(</span>
+</span><span data-line="271">        <span class="n">session_id</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">key</span> <span class="ow">or</span> <span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="272">        <span class="n">last_event_at</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">stamps</span><span class="p">)</span> <span class="k">if</span> <span class="n">stamps</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="273">        <span class="n">last_user_prompt</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">,</span>
+</span><span data-line="274">        <span class="n">last_prompt_at</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_prompt_at</span><span class="p">,</span>
+</span><span data-line="275">        <span class="n">last_assistant_text</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_assistant_text</span><span class="p">,</span>
+</span><span data-line="276">        <span class="n">last_text_at</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_turn_at</span><span class="p">,</span>
+</span><span data-line="277">        <span class="n">recent_tools</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">describe_tool</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">calls</span><span class="p">[</span><span class="o">-</span><span class="n">recent</span><span class="p">:])</span>
+</span><span data-line="278">        <span class="k">if</span> <span class="n">recent</span>
+</span><span data-line="279">        <span class="k">else</span> <span class="p">(),</span>
+</span><span data-line="280">        <span class="n">in_flight</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">describe_tool</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">in_flight</span><span class="p">),</span>
+</span><span data-line="281">        <span class="n">pending_question</span><span class="o">=</span><span class="n">question</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">": "</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">question</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="282">        <span class="n">turn_open</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">ended_mid_turn</span><span class="p">,</span>
+</span><span data-line="283">        <span class="n">errored</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">ended_with_error</span><span class="p">,</span>
+</span><span data-line="284">        <span class="n">git_branch</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">git_branch</span><span class="p">,</span>
+</span><span data-line="285">        <span class="n">tail_complete</span><span class="o">=</span><span class="n">complete</span><span class="p">,</span>
+</span><span data-line="286">        <span class="n">tail_turns</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">turn_count</span><span class="p">,</span>
+</span><span data-line="287">        <span class="n">locators</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">loc</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">locators</span><span class="p">),</span>
+</span><span data-line="288">    <span class="p">)</span></div>
 
-</span><span data-line="282">
-</span><span data-line="283">
+</span><span data-line="289">
+</span><span data-line="290">
 <div class="viewcode-block" id="Turn">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.activity.html#crowsnest.Turn">[docs]</a>
-</span><span data-line="284"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="285"><span class="k">class</span><span class="w"> </span><span class="nc">Turn</span><span class="p">:</span>
-</span><span data-line="286"><span class="w">    </span><span class="sd">"""One exchange: a human prompt, what the assistant did, and its last words."""</span>
-</span><span data-line="287">
-</span><span data-line="288">    <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
-</span><span data-line="289">    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="290">    <span class="n">prompt_at</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="291">    <span class="n">reply</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="292">    <span class="n">reply_at</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="293">    <span class="n">tools</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</span><span data-line="291"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="292"><span class="k">class</span><span class="w"> </span><span class="nc">Turn</span><span class="p">:</span>
+</span><span data-line="293"><span class="w">    </span><span class="sd">"""One exchange: a human prompt, what the assistant did, and its last words."""</span>
 </span><span data-line="294">
-</span><span data-line="295">    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="296">        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+</span><span data-line="295">    <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
+</span><span data-line="296">    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="297">    <span class="n">prompt_at</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="298">    <span class="n">reply</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="299">    <span class="n">reply_at</span><span class="p">:</span> <span class="nb">str</span>
+</span><span data-line="300">    <span class="n">tools</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</span><span data-line="301">
+</span><span data-line="302">    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="303">        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-</span><span data-line="297">
-</span><span data-line="298">
-</span><span data-line="299"><span class="k">def</span><span class="w"> </span><span class="nf">_opens_a_turn</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="300"><span class="w">    </span><span class="sd">"""A ``user`` record that could be a human prompt: not a tool result, not injected."""</span>
-</span><span data-line="301">    <span class="k">if</span> <span class="p">(</span>
-</span><span data-line="302">        <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"user"</span>
-</span><span data-line="303">        <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isMeta"</span><span class="p">)</span>
-</span><span data-line="304">        <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isCompactSummary"</span><span class="p">)</span>
-</span><span data-line="305">    <span class="p">):</span>
-</span><span data-line="306">        <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="307">    <span class="k">return</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"tool_result"</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">_blocks</span><span class="p">(</span><span class="n">record</span><span class="p">))</span>
-</span><span data-line="308">
-</span><span data-line="309">
-</span><span data-line="310"><span class="k">def</span><span class="w"> </span><span class="nf">_turn_chunks</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
-</span><span data-line="311"><span class="w">    </span><span class="sd">"""Split main-thread records at each human prompt.</span>
-</span><span data-line="312">
-</span><span data-line="313"><span class="sd">    A ``user`` record that opens a chunk but carries no human text once its tooling</span>
-</span><span data-line="314"><span class="sd">    wrappers are stripped -- a system reminder, a task notification -- was not a turn, and</span>
-</span><span data-line="315"><span class="sd">    its chunk is folded into the turn before it. That judgement is</span>
-</span><span data-line="316"><span class="sd">    :func:`openloops.transcripts.parse_session`'s, made on the chunk, not repeated here.</span>
-</span><span data-line="317"><span class="sd">    """</span>
-</span><span data-line="318">    <span class="n">chunks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]]</span>
-</span><span data-line="319">    <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
-</span><span data-line="320">        <span class="k">if</span> <span class="n">_opens_a_turn</span><span class="p">(</span><span class="n">rec</span><span class="p">):</span>
-</span><span data-line="321">            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">rec</span><span class="p">])</span>
-</span><span data-line="322">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="323">            <span class="n">chunks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
-</span><span data-line="324">    <span class="n">turns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="325">    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
-</span><span data-line="326">        <span class="k">if</span> <span class="n">chunk</span> <span class="ow">and</span> <span class="n">parse_session</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">:</span>
-</span><span data-line="327">            <span class="n">turns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
-</span><span data-line="328">        <span class="k">elif</span> <span class="n">turns</span><span class="p">:</span>
-</span><span data-line="329">            <span class="n">turns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
-</span><span data-line="330">    <span class="k">return</span> <span class="n">turns</span>
-</span><span data-line="331">
-</span><span data-line="332">
+</span><span data-line="304">
+</span><span data-line="305">
+</span><span data-line="306"><span class="k">def</span><span class="w"> </span><span class="nf">_opens_a_turn</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="307"><span class="w">    </span><span class="sd">"""A ``user`` record that could be a human prompt: not a tool result, not injected."""</span>
+</span><span data-line="308">    <span class="k">if</span> <span class="p">(</span>
+</span><span data-line="309">        <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"user"</span>
+</span><span data-line="310">        <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isMeta"</span><span class="p">)</span>
+</span><span data-line="311">        <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"isCompactSummary"</span><span class="p">)</span>
+</span><span data-line="312">    <span class="p">):</span>
+</span><span data-line="313">        <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="314">    <span class="k">return</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"tool_result"</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">_blocks</span><span class="p">(</span><span class="n">record</span><span class="p">))</span>
+</span><span data-line="315">
+</span><span data-line="316">
+</span><span data-line="317"><span class="k">def</span><span class="w"> </span><span class="nf">_turn_chunks</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
+</span><span data-line="318"><span class="w">    </span><span class="sd">"""Split main-thread records at each human prompt.</span>
+</span><span data-line="319">
+</span><span data-line="320"><span class="sd">    A ``user`` record that opens a chunk but carries no human text once its tooling</span>
+</span><span data-line="321"><span class="sd">    wrappers are stripped -- a system reminder, a task notification -- was not a turn, and</span>
+</span><span data-line="322"><span class="sd">    its chunk is folded into the turn before it. That judgement is</span>
+</span><span data-line="323"><span class="sd">    :func:`openloops.transcripts.parse_session`'s, made on the chunk, not repeated here.</span>
+</span><span data-line="324"><span class="sd">    """</span>
+</span><span data-line="325">    <span class="n">chunks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]]</span>
+</span><span data-line="326">    <span class="k">for</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+</span><span data-line="327">        <span class="k">if</span> <span class="n">_opens_a_turn</span><span class="p">(</span><span class="n">rec</span><span class="p">):</span>
+</span><span data-line="328">            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">rec</span><span class="p">])</span>
+</span><span data-line="329">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="330">            <span class="n">chunks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+</span><span data-line="331">    <span class="n">turns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="332">    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+</span><span data-line="333">        <span class="k">if</span> <span class="n">chunk</span> <span class="ow">and</span> <span class="n">parse_session</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">:</span>
+</span><span data-line="334">            <span class="n">turns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span data-line="335">        <span class="k">elif</span> <span class="n">turns</span><span class="p">:</span>
+</span><span data-line="336">            <span class="n">turns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span data-line="337">    <span class="k">return</span> <span class="n">turns</span>
+</span><span data-line="338">
+</span><span data-line="339">
 <div class="viewcode-block" id="read_turns">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.activity.html#crowsnest.read_turns">[docs]</a>
-</span><span data-line="333"><span class="k">def</span><span class="w"> </span><span class="nf">read_turns</span><span class="p">(</span>
-</span><span data-line="334">    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
-</span><span data-line="335">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="336">    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-</span><span data-line="337">    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="338"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Turn</span><span class="p">]:</span>
-</span><span data-line="339"><span class="w">    </span><span class="sd">"""The last ``last`` turns of a transcript, oldest first; ``before=N`` pages back.</span>
-</span><span data-line="340">
-</span><span data-line="341"><span class="sd">    Reads the whole file. This is the deep path, taken on request when the tail did not</span>
-</span><span data-line="342"><span class="sd">    carry enough context -- still cheaper than a turn of the watched session's own.</span>
-</span><span data-line="343"><span class="sd">    """</span>
-</span><span data-line="344">    <span class="n">chunks</span> <span class="o">=</span> <span class="n">_turn_chunks</span><span class="p">(</span><span class="n">_main_thread</span><span class="p">(</span><span class="n">load_records</span><span class="p">(</span><span class="n">path</span><span class="p">)))</span>
-</span><span data-line="345">    <span class="n">turns</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="346">    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-</span><span data-line="347">        <span class="n">session</span> <span class="o">=</span> <span class="n">parse_session</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
-</span><span data-line="348">        <span class="n">calls</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_tool_calls</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
-</span><span data-line="349">        <span class="n">turns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="350">            <span class="n">Turn</span><span class="p">(</span>
-</span><span data-line="351">                <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-</span><span data-line="352">                <span class="n">prompt</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">,</span>
-</span><span data-line="353">                <span class="n">prompt_at</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_prompt_at</span><span class="p">,</span>
-</span><span data-line="354">                <span class="n">reply</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_assistant_text</span><span class="p">,</span>
-</span><span data-line="355">                <span class="n">reply_at</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_turn_at</span><span class="p">,</span>
-</span><span data-line="356">                <span class="n">tools</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">describe_tool</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">calls</span><span class="p">),</span>
-</span><span data-line="357">            <span class="p">)</span>
-</span><span data-line="358">        <span class="p">)</span>
-</span><span data-line="359">    <span class="k">if</span> <span class="n">before</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="360">        <span class="n">turns</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">turns</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">before</span><span class="p">]</span>
-</span><span data-line="361">    <span class="k">return</span> <span class="n">turns</span><span class="p">[</span><span class="o">-</span><span class="n">last</span><span class="p">:]</span> <span class="k">if</span> <span class="n">last</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">turns</span></div>
+</span><span data-line="340"><span class="k">def</span><span class="w"> </span><span class="nf">read_turns</span><span class="p">(</span>
+</span><span data-line="341">    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+</span><span data-line="342">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="343">    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span data-line="344">    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="345"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Turn</span><span class="p">]:</span>
+</span><span data-line="346"><span class="w">    </span><span class="sd">"""The last ``last`` turns of a transcript, oldest first; ``before=N`` pages back.</span>
+</span><span data-line="347">
+</span><span data-line="348"><span class="sd">    Reads the whole file. This is the deep path, taken on request when the tail did not</span>
+</span><span data-line="349"><span class="sd">    carry enough context -- still cheaper than a turn of the watched session's own.</span>
+</span><span data-line="350"><span class="sd">    """</span>
+</span><span data-line="351">    <span class="n">chunks</span> <span class="o">=</span> <span class="n">_turn_chunks</span><span class="p">(</span><span class="n">_main_thread</span><span class="p">(</span><span class="n">load_records</span><span class="p">(</span><span class="n">path</span><span class="p">)))</span>
+</span><span data-line="352">    <span class="n">turns</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="353">    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span><span data-line="354">        <span class="n">session</span> <span class="o">=</span> <span class="n">parse_session</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span data-line="355">        <span class="n">calls</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_tool_calls</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span data-line="356">        <span class="n">turns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="357">            <span class="n">Turn</span><span class="p">(</span>
+</span><span data-line="358">                <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+</span><span data-line="359">                <span class="n">prompt</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_user_prompt</span><span class="p">,</span>
+</span><span data-line="360">                <span class="n">prompt_at</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_prompt_at</span><span class="p">,</span>
+</span><span data-line="361">                <span class="n">reply</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_assistant_text</span><span class="p">,</span>
+</span><span data-line="362">                <span class="n">reply_at</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">last_turn_at</span><span class="p">,</span>
+</span><span data-line="363">                <span class="n">tools</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">describe_tool</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">calls</span><span class="p">),</span>
+</span><span data-line="364">            <span class="p">)</span>
+</span><span data-line="365">        <span class="p">)</span>
+</span><span data-line="366">    <span class="k">if</span> <span class="n">before</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="367">        <span class="n">turns</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">turns</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">before</span><span class="p">]</span>
+</span><span data-line="368">    <span class="k">return</span> <span class="n">turns</span><span class="p">[</span><span class="o">-</span><span class="n">last</span><span class="p">:]</span> <span class="k">if</span> <span class="n">last</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">turns</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -556,7 +564,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=83be8e66"></script>
+      <script src="../../_static/documentation_options.js?v=27c60a7f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

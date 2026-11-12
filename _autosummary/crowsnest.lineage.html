@@ -79,6 +79,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.jsonl.html">crowsnest.jsonl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.lineage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
@@ -277,7 +278,7 @@ long-lived dispatcher ever started would sit on the graph forever.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.lineage.from_records" title="crowsnest.lineage.from_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_records</span></code></a>(*[, lineage_path])</p></td>
 <td><p>Every edge crowsnest recorded for itself, oldest first.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.lineage.from_transcripts" title="crowsnest.lineage.from_transcripts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_transcripts</span></code></a>(*[, home, known])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.lineage.from_transcripts" title="crowsnest.lineage.from_transcripts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_transcripts</span></code></a>(*[, home, known, loads])</p></td>
 <td><p>The backfill: every <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span> <span class="pre">&lt;name&gt;</span></code> still recorded in a transcript.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.lineage.graph" title="crowsnest.lineage.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a>(*[, sessions, sources, home, ...])</p></td>
@@ -508,7 +509,7 @@ dies on one bad byte would take the whole report with it.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.lineage.from_transcripts">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">from_transcripts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/lineage.html#from_transcripts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.from_transcripts" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.lineage.</span></span><span class="sig-name descname"><span class="pre">from_transcripts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">loads&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/lineage.html#from_transcripts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.lineage.from_transcripts" title="Link to this definition">#</a></dt>
 <dd><p>The backfill: every <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span> <span class="pre">&lt;name&gt;</span></code> still recorded in a transcript.</p>
 <p>A session that spawned another typed the command, and the command is in that
 session’s own transcript along with the session id that owns it. That is enough to
@@ -755,7 +756,7 @@ it, under <code class="docutils literal notranslate"><span class="pre">brief</sp
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=83be8e66"></script>
+      <script src="../_static/documentation_options.js?v=27c60a7f"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
