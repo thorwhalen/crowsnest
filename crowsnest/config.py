@@ -165,7 +165,9 @@ class Home:
         if self.liveness != "pid" and not self.remote:
             object.__setattr__(self, "remote", True)
         if self.liveness not in LIVENESS:
-            raise ValueError(f"home {self.name!r}: liveness is one of {LIVENESS}, not {self.liveness!r}")
+            raise ValueError(
+                f"home {self.name!r}: liveness is one of {LIVENESS}, not {self.liveness!r}"
+            )
 
 
 #: How a home's sessions are judged live: by pid (this machine), by how recently each

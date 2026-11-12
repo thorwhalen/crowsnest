@@ -90,7 +90,8 @@ def test_mirror_home_is_live_while_its_stamp_is_fresh(tmp_path):
                     "updatedAt": old * 1000, "statusUpdatedAt": old * 1000})
     )
     cfg = tmp_path / "c.toml"
-    cfg.write_text(f'[[homes]]\nname = "mac"\npath = "{mirror}"\nliveness = "mirror"\nfresh_seconds = 300\n')
+    # A TOML literal string (single quotes), so a Windows path's backslashes stay as written.
+    cfg.write_text(f"[[homes]]\nname = \"mac\"\npath = '{mirror}'\nliveness = \"mirror\"\nfresh_seconds = 300\n")
     (home,) = homes(path=cfg)
     assert home.remote and home.liveness == "mirror"
     rule = liveness_rule(home)

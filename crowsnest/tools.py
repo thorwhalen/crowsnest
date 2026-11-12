@@ -22,7 +22,13 @@ from pathlib import Path
 from openloops.tools import show as _openloops_digest
 
 from crowsnest.activity import RECENT_TOOLS, read_activity, read_turns
-from crowsnest.config import attention_settings, configured_homes, homes, liveness_rule, theme_table
+from crowsnest.config import (
+    attention_settings,
+    configured_homes,
+    homes,
+    liveness_rule,
+    theme_table,
+)
 from crowsnest.lineage import from_records as _from_records
 from crowsnest.lineage import open_command as _open_command
 from crowsnest.links import github_ref
