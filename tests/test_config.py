@@ -86,12 +86,23 @@ def test_mirror_home_is_live_while_its_stamp_is_fresh(tmp_path):
     (mirror / "sessions").mkdir(parents=True)
     old = time.time() - 6 * 3600  # idle for hours: a freshness rule would drop it
     (mirror / "sessions" / "4242.json").write_text(
-        json.dumps({"pid": 4242, "sessionId": "abc", "cwd": "/w", "name": "w", "status": "idle",
-                    "updatedAt": old * 1000, "statusUpdatedAt": old * 1000})
+        json.dumps(
+            {
+                "pid": 4242,
+                "sessionId": "abc",
+                "cwd": "/w",
+                "name": "w",
+                "status": "idle",
+                "updatedAt": old * 1000,
+                "statusUpdatedAt": old * 1000,
+            }
+        )
     )
     cfg = tmp_path / "c.toml"
     # A TOML literal string (single quotes), so a Windows path's backslashes stay as written.
-    cfg.write_text(f"[[homes]]\nname = \"mac\"\npath = '{mirror}'\nliveness = \"mirror\"\nfresh_seconds = 300\n")
+    cfg.write_text(
+        f'[[homes]]\nname = "mac"\npath = \'{mirror}\'\nliveness = "mirror"\nfresh_seconds = 300\n'
+    )
     (home,) = homes(path=cfg)
     assert home.remote and home.liveness == "mirror"
     rule = liveness_rule(home)
