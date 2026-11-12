@@ -125,7 +125,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.config.DFLT_FRESH_SECONDS"><code class="docutils literal notranslate"><span class="pre">DFLT_FRESH_SECONDS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.GUARD_KEY"><code class="docutils literal notranslate"><span class="pre">GUARD_KEY</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.GuardSettings"><code class="docutils literal notranslate"><span class="pre">GuardSettings</span></code></a></li>
-<li><a class="reference internal" href="#crowsnest.config.Home"><code class="docutils literal notranslate"><span class="pre">Home</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.config.Home"><code class="docutils literal notranslate"><span class="pre">Home</span></code></a><ul>
+<li><a class="reference internal" href="#crowsnest.config.Home.liveness"><code class="docutils literal notranslate"><span class="pre">Home.liveness</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#crowsnest.config.PUBLISH_KEY"><code class="docutils literal notranslate"><span class="pre">PUBLISH_KEY</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.PublishSettings"><code class="docutils literal notranslate"><span class="pre">PublishSettings</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.config.REPORT_KEY"><code class="docutils literal notranslate"><span class="pre">REPORT_KEY</span></code></a></li>
@@ -206,6 +209,11 @@ into a list of <a class="reference internal" href="#crowsnest.config.Home" title
 </span><span data-line="13"><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"server"</span>
 </span><span data-line="14"><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/.cache/xa/remotes/server"</span><span class="w">   </span><span class="c1"># a synced copy</span>
 </span><span data-line="15"><span class="n">remote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                         </span><span class="c1"># liveness by freshness, no pid check</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="k">[[homes]]</span>
+</span><span data-line="18"><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mac"</span>
+</span><span data-line="19"><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"~/.cache/xa/remotes/mac"</span><span class="w">      </span><span class="c1"># a mirror the Mac pushes (`xa push`)</span>
+</span><span data-line="20"><span class="n">liveness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mirror"</span><span class="w">                   </span><span class="c1"># alive while the mirror's stamp is fresh</span>
 </span></pre></div>
 </div>
 <p>The one other top-level setting is <code class="docutils literal notranslate"><span class="pre">claude_bin</span></code> (<a class="reference internal" href="#crowsnest.config.claude_bin_setting" title="crowsnest.config.claude_bin_setting"><code class="xref py py-func docutils literal notranslate"><span class="pre">claude_bin_setting()</span></code></a>), for a
@@ -237,7 +245,10 @@ the page: <code class="docutils literal notranslate"><span class="pre">to</span>
 double-quoted string treats a backslash as an escape.</p>
 <p><code class="docutils literal notranslate"><span class="pre">remote</span> <span class="pre">=</span> <span class="pre">true</span></code> is the one thing a home needs to say about itself: its pids cannot be
 checked here, so a record counts as live while its status is fresh (<code class="docutils literal notranslate"><span class="pre">fresh_seconds</span></code>,
-default one hour). Reading crosses accounts and machines; messaging and spawning do not,
+default one hour). A <em>mirror</em> (<code class="docutils literal notranslate"><span class="pre">liveness</span> <span class="pre">=</span> <span class="pre">&quot;mirror&quot;</span></code>, which implies <code class="docutils literal notranslate"><span class="pre">remote</span></code>) is a copy
+the other machine pushes holding only its live sessions, with a stamp file saying when
+(<a class="reference internal" href="crowsnest.registry.html#crowsnest.registry.MIRROR_STAMP" title="crowsnest.registry.MIRROR_STAMP"><code class="xref py py-data docutils literal notranslate"><span class="pre">crowsnest.registry.MIRROR_STAMP</span></code></a>): every record in it is live while the stamp is
+fresh, however long a session has been idle. Reading crosses accounts and machines; messaging and spawning do not,
 and nothing in this module pretends otherwise.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">'/nonexistent-config-for-doctest'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
 </span><span data-line="2"><span class="go">'local'</span>
@@ -330,7 +341,7 @@ and nothing in this module pretends otherwise.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.GuardSettings" title="crowsnest.config.GuardSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GuardSettings</span></code></a>([protect, max_sessions, ...])</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">[guard]</span></code> table, validated: the spawn gate, the reaper and the OOM tiers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.Home" title="crowsnest.config.Home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Home</span></code></a>(name, path[, remote, fresh_seconds])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.config.Home" title="crowsnest.config.Home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Home</span></code></a>(name, path[, remote, fresh_seconds, ...])</p></td>
 <td><p>One Claude Code config directory to read, and how to judge liveness in it.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.config.PublishSettings" title="crowsnest.config.PublishSettings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PublishSettings</span></code></a>([to, command, console, ...])</p></td>
@@ -415,11 +426,22 @@ memory (<a class="reference internal" href="crowsnest.guard.html#crowsnest.guard
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.config.Home">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">Home</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fresh_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3600.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#Home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.Home" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.config.</span></span><span class="sig-name descname"><span class="pre">Home</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fresh_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3600.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">liveness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/config.html#Home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.config.Home" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One Claude Code config directory to read, and how to judge liveness in it.</p>
 <dl class="field-list simple">
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crowsnest.config.Home.liveness">
+<span class="sig-name descname"><span class="pre">liveness</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#crowsnest.config.Home.liveness" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;fresh&quot;</span></code> for a remote home, else <code class="docutils literal notranslate"><span class="pre">&quot;pid&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> derives it</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py data">
@@ -749,7 +771,7 @@ a key the table does not know, is an error, as in <code class="docutils literal 
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=27c60a7f"></script>
+      <script src="../_static/documentation_options.js?v=609ae934"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

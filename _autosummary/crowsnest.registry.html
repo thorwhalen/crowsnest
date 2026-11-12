@@ -126,10 +126,12 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.registry.LiveSession.session_url"><code class="docutils literal notranslate"><span class="pre">LiveSession.session_url</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#crowsnest.registry.MIRROR_STAMP"><code class="docutils literal notranslate"><span class="pre">MIRROR_STAMP</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.registry.STATUSES"><code class="docutils literal notranslate"><span class="pre">STATUSES</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.registry.claude_home"><code class="docutils literal notranslate"><span class="pre">claude_home()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.registry.fresh_within"><code class="docutils literal notranslate"><span class="pre">fresh_within()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.registry.live_sessions"><code class="docutils literal notranslate"><span class="pre">live_sessions()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.registry.mirror_fresh"><code class="docutils literal notranslate"><span class="pre">mirror_fresh()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.registry.pid_alive"><code class="docutils literal notranslate"><span class="pre">pid_alive()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.registry.project_slug"><code class="docutils literal notranslate"><span class="pre">project_slug()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.registry.transcript_path"><code class="docutils literal notranslate"><span class="pre">transcript_path()</span></code></a></li>
@@ -204,6 +206,9 @@ process before it is reported, through the <code class="docutils literal notrans
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.STATUSES" title="crowsnest.registry.STATUSES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STATUSES</span></code></a></p></td>
 <td><p>what needs a human first, then what is working (<code class="docutils literal notranslate"><span class="pre">shell</span></code> is a session running a shell command, which is a kind of busy), then what is resting.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.MIRROR_STAMP" title="crowsnest.registry.MIRROR_STAMP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MIRROR_STAMP</span></code></a></p></td>
+<td><p>its mtime is when the other machine last pushed.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -220,13 +225,16 @@ process before it is reported, through the <code class="docutils literal notrans
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.live_sessions" title="crowsnest.registry.live_sessions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live_sessions</span></code></a>(*[, home, is_alive, is_live, ...])</p></td>
 <td><p>Every registered session whose process is running, most urgent first.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.pid_alive" title="crowsnest.registry.pid_alive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pid_alive</span></code></a>(pid)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.mirror_fresh" title="crowsnest.registry.mirror_fresh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mirror_fresh</span></code></a>(home, seconds, *[, now])</p></td>
+<td><p>A liveness rule for a pushed mirror: every record is live while the mirror is fresh.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.pid_alive" title="crowsnest.registry.pid_alive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pid_alive</span></code></a>(pid)</p></td>
 <td><p>Is there a process with this pid? Signal 0, the portable minimum.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.project_slug" title="crowsnest.registry.project_slug"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_slug</span></code></a>(cwd)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.project_slug" title="crowsnest.registry.project_slug"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project_slug</span></code></a>(cwd)</p></td>
 <td><p>The directory name Claude Code files a working directory's transcripts under.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.registry.transcript_path" title="crowsnest.registry.transcript_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transcript_path</span></code></a>(cwd, session_id, *[, home])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.registry.transcript_path" title="crowsnest.registry.transcript_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transcript_path</span></code></a>(cwd, session_id, *[, home])</p></td>
 <td><p>Where the transcript for <code class="docutils literal notranslate"><span class="pre">(cwd,</span> <span class="pre">session_id)</span></code> is, or should be.</p></td>
 </tr>
 </tbody>
@@ -285,6 +293,18 @@ reinvented: the registry and the transcripts move with it.</p>
 <dd><p>The session on claude.ai, when it runs with Remote Control; else <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.registry.MIRROR_STAMP">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">MIRROR_STAMP</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'.mirrored-at'</span></span><a class="headerlink" href="#crowsnest.registry.MIRROR_STAMP" title="Link to this definition">#</a></dt>
+<dd><p>its mtime is
+when the other machine last pushed. <code class="docutils literal notranslate"><span class="pre">xa</span> <span class="pre">push</span></code> writes it (same name, by contract).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The file a pushed mirror of another machine’s home carries at its root</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py data">
@@ -351,6 +371,20 @@ several homes can say where each row came from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveSession</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.registry.mirror_fresh">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.registry.</span></span><span class="sig-name descname"><span class="pre">mirror_fresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">home</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;built-in</span> <span class="pre">function</span> <span class="pre">time&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#mirror_fresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.registry.mirror_fresh" title="Link to this definition">#</a></dt>
+<dd><p>A liveness rule for a pushed mirror: every record is live while the mirror is fresh.</p>
+<p>A mirror holds only the sessions that were live when it was pushed, so the age of a
+record says nothing (an idle session’s record does not change for hours); the age of
+the push does. A mirror with no stamp, or an old one, has nobody live in it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#crowsnest.registry.LiveSession" title="crowsnest.registry.LiveSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveSession</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -439,7 +473,7 @@ caller can say <em>which</em> file is missing.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=27c60a7f"></script>
+      <script src="../_static/documentation_options.js?v=609ae934"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

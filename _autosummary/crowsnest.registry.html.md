@@ -28,6 +28,7 @@ process before it is reported, through the `is_alive` seam.
 |---------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | [`CLAUDE_AI_SESSIONS`](#crowsnest.registry.CLAUDE_AI_SESSIONS) | this prefix plus its bridge id.                                                                                                               |
 | [`STATUSES`](#crowsnest.registry.STATUSES)           | what needs a human first, then what is working (`shell` is a session running a shell command, which is a kind of busy), then what is resting. |
+| [`MIRROR_STAMP`](#crowsnest.registry.MIRROR_STAMP)       | its mtime is when the other machine last pushed.                                                                                              |
 
 ### Functions
 
@@ -35,6 +36,7 @@ process before it is reported, through the `is_alive` seam.
 |----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
 | [`fresh_within`](#crowsnest.registry.fresh_within)(seconds, \*[, now])                  | A liveness rule for a synced copy of another machine's home: alive while fresh.          |
 | [`live_sessions`](#crowsnest.registry.live_sessions)(\*[, home, is_alive, is_live, ...]) | Every registered session whose process is running, most urgent first.                    |
+| [`mirror_fresh`](#crowsnest.registry.mirror_fresh)(home, seconds, \*[, now])            | A liveness rule for a pushed mirror: every record is live while the mirror is fresh.     |
 | [`pid_alive`](#crowsnest.registry.pid_alive)(pid)                                    | Is there a process with this pid? Signal 0, the portable minimum.                        |
 | [`project_slug`](#crowsnest.registry.project_slug)(cwd)                                 | The directory name Claude Code files a working directory's transcripts under.            |
 | [`transcript_path`](#crowsnest.registry.transcript_path)(cwd, session_id, \*[, home])      | Where the transcript for `(cwd, session_id)` is, or should be.                           |
@@ -73,6 +75,14 @@ The working directory’s last component – the name a human uses for it.
 #### *property* session_url *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The session on claude.ai, when it runs with Remote Control; else `''`.
+
+### crowsnest.registry.MIRROR_STAMP *= '.mirrored-at'*
+
+its mtime is
+when the other machine last pushed. `xa push` writes it (same name, by contract).
+
+* **Type:**
+  The file a pushed mirror of another machine’s home carries at its root
 
 ### crowsnest.registry.STATUSES *= ('waiting', 'busy', 'shell', 'idle')*
 
@@ -130,6 +140,17 @@ several homes can say where each row came from.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`LiveSession`](#crowsnest.registry.LiveSession)]
+
+### crowsnest.registry.mirror_fresh(home, seconds, \*, now=<built-in function time>)
+
+A liveness rule for a pushed mirror: every record is live while the mirror is fresh.
+
+A mirror holds only the sessions that were live when it was pushed, so the age of a
+record says nothing (an idle session’s record does not change for hours); the age of
+the push does. A mirror with no stamp, or an old one, has nobody live in it.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`LiveSession`](#crowsnest.registry.LiveSession)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
 
 ### crowsnest.registry.pid_alive(pid)
 

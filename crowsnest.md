@@ -1,4 +1,4 @@
-> built 2026-11-12 09:25 UTC from f048d0b (main) · crowsnest 0.0.109. Details: build_info.json
+> built 2026-11-12 12:41 UTC from aec868f (main) · crowsnest 0.0.111. Details: build_info.json
 
 # index.html.md
 
@@ -1652,6 +1652,11 @@ path = "~/.claude-iq"
 name = "server"
 path = "~/.cache/xa/remotes/server"   # a synced copy
 remote = true                         # liveness by freshness, no pid check
+
+[[homes]]
+name = "mac"
+path = "~/.cache/xa/remotes/mac"      # a mirror the Mac pushes (`xa push`)
+liveness = "mirror"                   # alive while the mirror's stamp is fresh
 ```
 
 The one other top-level setting is `claude_bin` ([`claude_bin_setting()`](_autosummary/crowsnest.config.html.md#crowsnest.config.claude_bin_setting)), for a
@@ -1690,7 +1695,10 @@ double-quoted string treats a backslash as an escape.
 
 `remote = true` is the one thing a home needs to say about itself: its pids cannot be
 checked here, so a record counts as live while its status is fresh (`fresh_seconds`,
-default one hour). Reading crosses accounts and machines; messaging and spawning do not,
+default one hour). A *mirror* (`liveness = "mirror"`, which implies `remote`) is a copy
+the other machine pushes holding only its live sessions, with a stamp file saying when
+([`crowsnest.registry.MIRROR_STAMP`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.MIRROR_STAMP)): every record in it is live while the stamp is
+fresh, however long a session has been idle. Reading crosses accounts and machines; messaging and spawning do not,
 and nothing in this module pretends otherwise.
 
 ```pycon
@@ -1729,13 +1737,13 @@ and nothing in this module pretends otherwise.
 
 ### Classes
 
-| [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])       | The `[attention]` table, validated.                                                                                                                                                                                                        |
-|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`GuardSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.GuardSettings)([protect, max_sessions, ...])  | The `[guard]` table, validated: the spawn gate, the reaper and the OOM tiers.                                                                                                                                                              |
-| [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds])    | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
-| [`PublishSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.PublishSettings)([to, command, console, ...]) | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
-| [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)([ledger_dir])                 | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
-| [`WatchSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.WatchSettings)([kinds, mute])                 | The `[watch]` table, validated: which kinds `crowsnest watch` prints (`None`: all) and which sessions it never mentions.                                                                                                                   |
+| [`AttentionSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.AttentionSettings)([evening_hour, ...])         | The `[attention]` table, validated.                                                                                                                                                                                                        |
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`GuardSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.GuardSettings)([protect, max_sessions, ...])    | The `[guard]` table, validated: the spawn gate, the reaper and the OOM tiers.                                                                                                                                                              |
+| [`Home`](_autosummary/crowsnest.config.html.md#crowsnest.config.Home)(name, path[, remote, fresh_seconds, ...]) | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
+| [`PublishSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.PublishSettings)([to, command, console, ...])   | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
+| [`ReportSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.ReportSettings)([ledger_dir])                   | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](_autosummary/crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
+| [`WatchSettings`](_autosummary/crowsnest.config.html.md#crowsnest.config.WatchSettings)([kinds, mute])                   | The `[watch]` table, validated: which kinds `crowsnest watch` prints (`None`: all) and which sessions it never mentions.                                                                                                                   |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
 
@@ -1792,11 +1800,18 @@ Traceback (most recent call last):
 ValueError: reap must be one of off, report, apply, not 'kill'
 ```
 
-### *class* crowsnest.config.Home(name, path, remote=False, fresh_seconds=3600.0)
+### *class* crowsnest.config.Home(name, path, remote=False, fresh_seconds=3600.0, liveness='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One Claude Code config directory to read, and how to judge liveness in it.
+
+#### liveness *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+`"fresh"` for a remote home, else `"pid"`.
+
+* **Type:**
+  `""` derives it
 
 ### crowsnest.config.PUBLISH_KEY *= 'publish'*
 
@@ -5433,6 +5448,7 @@ process before it is reported, through the `is_alive` seam.
 |---------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | [`CLAUDE_AI_SESSIONS`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.CLAUDE_AI_SESSIONS) | this prefix plus its bridge id.                                                                                                               |
 | [`STATUSES`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.STATUSES)           | what needs a human first, then what is working (`shell` is a session running a shell command, which is a kind of busy), then what is resting. |
+| [`MIRROR_STAMP`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.MIRROR_STAMP)       | its mtime is when the other machine last pushed.                                                                                              |
 
 ### Functions
 
@@ -5440,6 +5456,7 @@ process before it is reported, through the `is_alive` seam.
 |----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
 | [`fresh_within`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.fresh_within)(seconds, \*[, now])                  | A liveness rule for a synced copy of another machine's home: alive while fresh.          |
 | [`live_sessions`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.live_sessions)(\*[, home, is_alive, is_live, ...]) | Every registered session whose process is running, most urgent first.                    |
+| [`mirror_fresh`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.mirror_fresh)(home, seconds, \*[, now])            | A liveness rule for a pushed mirror: every record is live while the mirror is fresh.     |
 | [`pid_alive`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.pid_alive)(pid)                                    | Is there a process with this pid? Signal 0, the portable minimum.                        |
 | [`project_slug`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.project_slug)(cwd)                                 | The directory name Claude Code files a working directory's transcripts under.            |
 | [`transcript_path`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.transcript_path)(cwd, session_id, \*[, home])      | Where the transcript for `(cwd, session_id)` is, or should be.                           |
@@ -5478,6 +5495,14 @@ The working directory’s last component – the name a human uses for it.
 #### *property* session_url *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The session on claude.ai, when it runs with Remote Control; else `''`.
+
+### crowsnest.registry.MIRROR_STAMP *= '.mirrored-at'*
+
+its mtime is
+when the other machine last pushed. `xa push` writes it (same name, by contract).
+
+* **Type:**
+  The file a pushed mirror of another machine’s home carries at its root
 
 ### crowsnest.registry.STATUSES *= ('waiting', 'busy', 'shell', 'idle')*
 
@@ -5535,6 +5560,17 @@ several homes can say where each row came from.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`LiveSession`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession)]
+
+### crowsnest.registry.mirror_fresh(home, seconds, \*, now=<built-in function time>)
+
+A liveness rule for a pushed mirror: every record is live while the mirror is fresh.
+
+A mirror holds only the sessions that were live when it was pushed, so the age of a
+record says nothing (an idle session’s record does not change for hours); the age of
+the push does. A mirror with no stamp, or an old one, has nobody live in it.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`LiveSession`](_autosummary/crowsnest.registry.html.md#crowsnest.registry.LiveSession)], [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
 
 ### crowsnest.registry.pid_alive(pid)
 
@@ -7817,18 +7853,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-12 09:25 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/f048d0bbee3778c5b075ffb7bee30497a05b813c"><code>f048d0b</code></a> on branch <code>main</code>, for **crowsnest 0.0.109** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-12 12:41 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/aec868f693b2197ac779231ef0ba12857f6a6da1"><code>aec868f</code></a> on branch <code>main</code>, for **crowsnest 0.0.111** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.109) is behind the latest release on PyPI (0.0.111): `pip install crowsnest` gives newer code than these docs describe.
+- The documented version (0.0.111) is behind the latest release on PyPI (0.0.112): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/f048d0bbee3778c5b075ffb7bee30497a05b813c"><code>f048d0bbee3778c5b075ffb7bee30497a05b813c</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/aec868f693b2197ac779231ef0ba12857f6a6da1"><code>aec868f693b2197ac779231ef0ba12857f6a6da1</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7839,9 +7875,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/43191055666">43191055666</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/43219912528">43219912528</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>f048d0bbee3778c5b075ffb7bee30497a05b813c</code> (in the history of the built commit) |
+| Event commit | <code>aec868f693b2197ac779231ef0ba12857f6a6da1</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7866,13 +7902,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.111/">0.0.111</a>, newer than the documented version (0.0.109).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.112/">0.0.112</a>, newer than the documented version (0.0.111).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout f048d0bbee3778c5b075ffb7bee30497a05b813c
+git checkout aec868f693b2197ac779231ef0ba12857f6a6da1
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

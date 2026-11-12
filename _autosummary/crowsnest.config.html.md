@@ -24,6 +24,11 @@ path = "~/.claude-iq"
 name = "server"
 path = "~/.cache/xa/remotes/server"   # a synced copy
 remote = true                         # liveness by freshness, no pid check
+
+[[homes]]
+name = "mac"
+path = "~/.cache/xa/remotes/mac"      # a mirror the Mac pushes (`xa push`)
+liveness = "mirror"                   # alive while the mirror's stamp is fresh
 ```
 
 The one other top-level setting is `claude_bin` ([`claude_bin_setting()`](#crowsnest.config.claude_bin_setting)), for a
@@ -62,7 +67,10 @@ double-quoted string treats a backslash as an escape.
 
 `remote = true` is the one thing a home needs to say about itself: its pids cannot be
 checked here, so a record counts as live while its status is fresh (`fresh_seconds`,
-default one hour). Reading crosses accounts and machines; messaging and spawning do not,
+default one hour). A *mirror* (`liveness = "mirror"`, which implies `remote`) is a copy
+the other machine pushes holding only its live sessions, with a stamp file saying when
+([`crowsnest.registry.MIRROR_STAMP`](crowsnest.registry.html.md#crowsnest.registry.MIRROR_STAMP)): every record in it is live while the stamp is
+fresh, however long a session has been idle. Reading crosses accounts and machines; messaging and spawning do not,
 and nothing in this module pretends otherwise.
 
 ```pycon
@@ -101,13 +109,13 @@ and nothing in this module pretends otherwise.
 
 ### Classes
 
-| [`AttentionSettings`](#crowsnest.config.AttentionSettings)([evening_hour, ...])       | The `[attention]` table, validated.                                                                                                                                                                                                        |
-|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`GuardSettings`](#crowsnest.config.GuardSettings)([protect, max_sessions, ...])  | The `[guard]` table, validated: the spawn gate, the reaper and the OOM tiers.                                                                                                                                                              |
-| [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds])    | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
-| [`PublishSettings`](#crowsnest.config.PublishSettings)([to, command, console, ...]) | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
-| [`ReportSettings`](#crowsnest.config.ReportSettings)([ledger_dir])                 | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
-| [`WatchSettings`](#crowsnest.config.WatchSettings)([kinds, mute])                 | The `[watch]` table, validated: which kinds `crowsnest watch` prints (`None`: all) and which sessions it never mentions.                                                                                                                   |
+| [`AttentionSettings`](#crowsnest.config.AttentionSettings)([evening_hour, ...])         | The `[attention]` table, validated.                                                                                                                                                                                                        |
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`GuardSettings`](#crowsnest.config.GuardSettings)([protect, max_sessions, ...])    | The `[guard]` table, validated: the spawn gate, the reaper and the OOM tiers.                                                                                                                                                              |
+| [`Home`](#crowsnest.config.Home)(name, path[, remote, fresh_seconds, ...]) | One Claude Code config directory to read, and how to judge liveness in it.                                                                                                                                                                 |
+| [`PublishSettings`](#crowsnest.config.PublishSettings)([to, command, console, ...])   | The `[publish]` table, validated: where the page goes ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).                                                                                       |
+| [`ReportSettings`](#crowsnest.config.ReportSettings)([ledger_dir])                   | The `[report]` table, validated: how the report builds its rows, which the attention verbs and the watcher must build the same way ([`crowsnest.rows.RowContext`](crowsnest.rows.html.md#crowsnest.rows.RowContext)). |
+| [`WatchSettings`](#crowsnest.config.WatchSettings)([kinds, mute])                   | The `[watch]` table, validated: which kinds `crowsnest watch` prints (`None`: all) and which sessions it never mentions.                                                                                                                   |
 
 ### crowsnest.config.ATTENTION_KEY *= 'attention'*
 
@@ -164,11 +172,18 @@ Traceback (most recent call last):
 ValueError: reap must be one of off, report, apply, not 'kill'
 ```
 
-### *class* crowsnest.config.Home(name, path, remote=False, fresh_seconds=3600.0)
+### *class* crowsnest.config.Home(name, path, remote=False, fresh_seconds=3600.0, liveness='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One Claude Code config directory to read, and how to judge liveness in it.
+
+#### liveness *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+`"fresh"` for a remote home, else `"pid"`.
+
+* **Type:**
+  `""` derives it
 
 ### crowsnest.config.PUBLISH_KEY *= 'publish'*
 

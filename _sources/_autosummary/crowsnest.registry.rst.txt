@@ -11,6 +11,7 @@ crowsnest.registry
       HOME_ENV_VAR
       CLAUDE_AI_SESSIONS
       STATUSES
+      MIRROR_STAMP
    
    .. rubric:: Functions
 
@@ -19,6 +20,7 @@ crowsnest.registry
       claude_home
       fresh_within
       live_sessions
+      mirror_fresh
       pid_alive
       project_slug
       transcript_path
