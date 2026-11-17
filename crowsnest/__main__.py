@@ -174,7 +174,36 @@ def roster(
     counts = result["counts"]
     summary = ", ".join(f"{n} {k}" for k, n in counts.items() if n)
     lines.append(f"-- {len(result['sessions'])} live: {summary or 'none'}")
+    alarm = _ledger_alarm()
+    if alarm:
+        lines.append(alarm)
     return "\n".join(lines)
+
+
+def _ledger_alarm(*, config: str | None = None, ledger_dir: str | None = None) -> str:
+    """One line when ledgers are not reaching their page, else ``""``.
+
+    Silent until a ``[ledgers]`` mirror is configured; then it names how many ledgers
+    changed since the last push that worked, and why the last one failed.
+    """
+    from crowsnest import ledger_mirror
+    from crowsnest.config import ledger_settings
+
+    try:
+        if not ledger_settings(path=config).mirror:
+            return ""
+        late = ledger_mirror.stale(ledger_dir=ledger_dir)
+    except (OSError, ValueError):
+        return ""
+    if not late["names"]:
+        return ""
+    since = "never pushed" if late["never"] else f"last push {_age_of(late['last_ok'])} ago"
+    why = f": {_one_line(late['error'], 80)}" if late["error"] else ""
+    shown = ", ".join(late["names"][:4]) + (" …" if len(late["names"]) > 4 else "")
+    return (
+        f"!! {len(late['names'])} ledgers not on their page ({since}{why}): {shown}"
+        " -- `crowsnest ledger --push`"
+    )
 
 
 def _model_cell(row: dict) -> str:
@@ -754,7 +783,16 @@ def publish(
     another, `ready` once every blocker is closed (`ol blocked`). Either reaches GitHub.
     `--questions` (or `questions = true` in `[publish]`) adds *Your questions*: what you
     asked your sessions in the last two weeks, each with its answer, read or unread.
+
+    When the config file has a `[ledgers]` table with a `mirror`, every run first pushes
+    this machine's ledger folder there (newer wins, nothing deleted), so the ledgers' page
+    stays as fresh as this schedule without any session publishing its own.
     """
+    pushed = tools.push_ledgers(ledger_dir=ledger_dir)
+    if pushed and not pushed["ok"]:
+        import sys
+
+        print(f"crowsnest: {pushed['error']}", file=sys.stderr)
     result = tools.publish(
         to=to,
         home=home,
@@ -1104,8 +1142,20 @@ def _live_ids() -> set[str]:
 _MIN_ID_PREFIX = 6
 
 
-def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
+def ledger(
+    *name: str,
+    ledger_dir: str | None = None,
+    json: bool = False,
+    push: bool = False,
+    stale: bool = False,
+    link: bool = False,
+):
     """One session's ledger, or -- with no name -- every ledger with its age.
+
+    `--link` prints a ledger's page instead (the config file's `[ledgers] url`): the link a
+    reply names beside the ledger's path. `--push` copies every ledger to the `[ledgers]
+    mirror` now (`crowsnest publish` does it on its schedule); `--stale` lists the ledgers
+    changed since the last push that worked, and exits non-zero when there are any.
 
     A ledger is the durable page a session leaves behind: what it was last asked and
     said, what it decided, what it is still waiting on you for. Printed verbatim,
@@ -1113,6 +1163,10 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
     one) finds the ledger(s) that session wrote. Ledgers written by two live sessions
     at once, or by two names that share one file, are flagged ``!!`` (crowsnest#42).
     """
+    if push or stale or link:
+        return _ledger_mirror_verb(
+            name, ledger_dir=ledger_dir, json=json, push=push, stale=stale, link=link
+        )
     if not name:
         rows = _ledger.list_ledgers(ledger_dir=ledger_dir)
         live = _live_ids()
@@ -1132,6 +1186,9 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
             f"!! {row['name']}: {problem}" for row in rows for problem in row["conflicts"]
         ]
         lines.append(f"-- {len(rows)} in {_ledger.ledger_dir(ledger_dir)}")
+        alarm = _ledger_alarm(ledger_dir=ledger_dir)
+        if alarm:
+            lines.append(alarm)
         return "\n".join(lines)
     pages = []
     for one in name:
@@ -1155,6 +1212,49 @@ def ledger(*name: str, ledger_dir: str | None = None, json: bool = False):
         return "\n".join([page["text"].rstrip(), *flags])
 
     return "\n\n".join(shown(page) for page in pages)
+
+
+def _ledger_mirror_verb(
+    names: tuple[str, ...],
+    *,
+    ledger_dir: str | None,
+    json: bool,
+    push: bool,
+    stale: bool,
+    link: bool,
+):
+    """`crowsnest ledger --push / --stale / --link`: the ledgers' page, from the config file."""
+    from crowsnest import ledger_mirror
+    from crowsnest.config import ledger_settings
+
+    settings = ledger_settings()
+    if link:
+        if not settings.url:
+            raise SystemExit(
+                "no ledger page: add url = \"https://.../{name}.md\" to [ledgers] in the "
+                "config file"
+            )
+        if not names:
+            return settings.page or settings.url
+        return "\n".join(ledger_mirror.link(n, settings.url) for n in names)
+    if push:
+        result = tools.push_ledgers(ledger_dir=ledger_dir)
+        if result is None:
+            raise SystemExit("nowhere to push: add mirror = \"...\" to [ledgers] in the config file")
+        if json:
+            return _json.dumps(result, indent=2)
+        if not result["ok"]:
+            raise SystemExit(f"crowsnest: {result['error']}")
+        return f"pushed {result['files']} ledgers to {result['to']}"
+    late = ledger_mirror.stale(ledger_dir=ledger_dir)
+    if json:
+        return _json.dumps(late, indent=2)
+    if not settings.mirror:
+        raise SystemExit("no [ledgers] mirror configured: ledgers reach no page")
+    if late["names"]:
+        print(_ledger_alarm(ledger_dir=ledger_dir))
+        raise SystemExit(1)
+    return f"every ledger is on its page (last push {_age_of(late['last_ok'])} ago)"
 
 
 def brief(

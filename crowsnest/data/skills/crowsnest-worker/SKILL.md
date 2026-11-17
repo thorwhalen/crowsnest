@@ -30,7 +30,7 @@ Then stop. Do not attach a diff, a test log, or a summary of your reasoning. Do 
 a single file to answer a status request — answering is free, and it should stay free.
 
 If the honest answer does not fit in five lines, put the long version in your ledger and
-make line 5 the path.
+make line 5 the path and its link (`crowsnest ledger <your name> --link`).
 
 ## While you wait (CI, an agent, a merge)
 
@@ -50,6 +50,11 @@ how you are remembered after you exit. Write to it when you finish a unit of wor
 decision someone else would need to know, or hit something the user has to resolve —
 before the turn ends, not at the end of the day.
 
+- **It reaches its reader on its own.** Where the config file has a `[ledgers]` table,
+  `crowsnest publish` pushes every ledger to the owner's ledgers page each run, so you
+  never publish it yourself. A reply that points at your ledger names the path *and* its
+  link, which `crowsnest ledger <your name> --link` prints: a bare path is not something
+  the owner can open from a phone.
 - **You own the content.** The watching session reads it and never writes it. The
   `crowsnest hook` lines keep "last asked" and "last said" current on their own; the rest
   is yours.

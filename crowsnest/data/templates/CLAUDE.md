@@ -34,7 +34,8 @@ scout.
 Every request you send a session states the reply contract, verbatim:
 
 > Reply in at most five lines. Anything longer goes in your ledger
-> (`~/.local/share/crowsnest/ledger/<your name>.md`) and your reply names the path.
+> (`~/.local/share/crowsnest/ledger/<your name>.md`), and your reply names the path and
+> the ledger's page link (`crowsnest ledger <your name> --link`).
 
 Then read the ledger *just in time* — when that corpus actually comes up — not when the
 reply arrives. Summarising a session's work yourself, from its transcript, is doing the

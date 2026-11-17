@@ -1015,6 +1015,31 @@ def publish(
     }
 
 
+def push_ledgers(
+    *,
+    mirror: str | None = None,
+    ledger_dir: str | Path | None = None,
+    config: str | Path | None = None,
+    copy=None,
+    stamp_path: str | Path | None = None,
+) -> dict | None:
+    """Push this machine's ledger folder to its mirror (:func:`crowsnest.ledger_mirror.push`).
+
+    ``mirror`` defaults to the config file's ``[ledgers] mirror``; with neither, nothing is
+    pushed and the result is ``None``. A failed push is a result with ``ok`` false, never
+    an exception, so the scheduled page publish that runs it carries on.
+    """
+    from crowsnest import ledger_mirror
+    from crowsnest.config import ledger_settings
+
+    mirror = mirror or ledger_settings(path=config).mirror
+    if not mirror:
+        return None
+    return ledger_mirror.push(
+        mirror, ledger_dir=ledger_dir, copy=copy, stamp_path=stamp_path
+    )
+
+
 def courier(
     *,
     remote: str | None = None,
