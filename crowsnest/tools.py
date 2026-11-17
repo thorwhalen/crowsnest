@@ -1036,7 +1036,10 @@ def push_ledgers(
     if not mirror:
         return None
     return ledger_mirror.push(
-        mirror, ledger_dir=ledger_dir, copy=copy, stamp_path=stamp_path
+        mirror,
+        ledger_dir=_configured_ledgers(ledger_dir, config=config),
+        copy=copy,
+        stamp_path=stamp_path,
     )
 
 

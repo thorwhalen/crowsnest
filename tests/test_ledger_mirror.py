@@ -128,3 +128,64 @@ def test_the_roster_alarm_speaks_only_when_ledgers_are_late(tmp_path, monkeypatc
     )
     tools.push_ledgers(ledger_dir=ledgers)
     assert cli._ledger_alarm(ledger_dir=str(ledgers)) == ""
+
+
+def test_temp_files_symlinks_and_caches_never_reach_the_mirror(folders, tmp_path):
+    ledgers, mirror, stamp = folders
+    _ledger(ledgers, "alpha", "x", NOW - 100)
+    (ledgers / "alpha.md.tmp").write_text("half written")
+    (ledgers / ".beta.md.tmp").write_text("half written")
+    (ledgers / "__pycache__").mkdir()
+    (ledgers / "__pycache__" / "x.pyc").write_text("")
+    outside = tmp_path / "secret.md"
+    outside.write_text("not a ledger")
+    (ledgers / "link.md").symlink_to(outside)
+    assert ledger_mirror.push(str(mirror), ledger_dir=ledgers, stamp_path=stamp)["ok"]
+    assert sorted(p.name for p in mirror.rglob("*")) == ["alpha.md"]
+    argv = ledger_mirror.rsync_tree_argv(str(ledgers), "box:/m")
+    assert {"--exclude=*.tmp", "--exclude=.*", "--exclude=__pycache__"} <= set(argv)
+
+
+def test_a_ledger_that_vanishes_mid_copy_is_left_for_the_next_run(folders, monkeypatch):
+    ledgers, mirror, stamp = folders
+    _ledger(ledgers, "stays", "x", NOW - 100)
+    _ledger(ledgers, "goes", "x", NOW - 100)
+    real = ledger_mirror.shutil.copy2
+
+    def copy2(src, dst, **kw):
+        if str(src).endswith("goes.md"):
+            raise FileNotFoundError(src)
+        return real(src, dst, **kw)
+
+    monkeypatch.setattr(ledger_mirror.shutil, "copy2", copy2)
+    assert ledger_mirror.push(str(mirror), ledger_dir=ledgers, stamp_path=stamp)["ok"]
+    assert (mirror / "stays.md").is_file()
+
+
+def test_a_repointed_mirror_starts_with_every_ledger_stale(folders):
+    ledgers, mirror, stamp = folders
+    _ledger(ledgers, "a", "x", NOW - 7200)
+    ledger_mirror.push(
+        str(mirror), ledger_dir=ledgers, stamp_path=stamp, clock=lambda: NOW
+    )
+    same = ledger_mirror.stale(
+        mirror=str(mirror), ledger_dir=ledgers, stamp_path=stamp, clock=lambda: NOW
+    )
+    moved = ledger_mirror.stale(
+        mirror="elsewhere", ledger_dir=ledgers, stamp_path=stamp, clock=lambda: NOW
+    )
+    assert same["names"] == [] and moved["names"] == ["a"] and moved["never"]
+
+
+def test_publish_still_sends_the_page_when_the_ledgers_cannot_go(
+    tmp_path, monkeypatch, capsys
+):
+    monkeypatch.setenv("CROWSNEST_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setattr(tools, "live_sessions", lambda *a, **k: [])
+    cfg = tmp_path / "config.toml"
+    page = tmp_path / "out" / "index.html"
+    monkeypatch.setenv("CROWSNEST_CONFIG", str(cfg))
+    cfg.write_text(f"[publish]\nto = '{page}'\n[ledgers]\nmirorr = 'typo'\n")
+    cli.publish(home=str(tmp_path / "home"))
+    assert page.is_file() and "mirorr" in capsys.readouterr().err
+    assert "!! ledgers:" in cli._ledger_alarm()

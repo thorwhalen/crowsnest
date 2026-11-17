@@ -190,14 +190,20 @@ def _ledger_alarm(*, config: str | None = None, ledger_dir: str | None = None) -
     from crowsnest.config import ledger_settings
 
     try:
-        if not ledger_settings(path=config).mirror:
+        mirror = ledger_settings(path=config).mirror
+        if not mirror:
             return ""
-        late = ledger_mirror.stale(ledger_dir=ledger_dir)
-    except (OSError, ValueError):
-        return ""
+        late = ledger_mirror.stale(
+            mirror=mirror,
+            ledger_dir=tools._configured_ledgers(ledger_dir, config=config),
+        )
+    except (OSError, ValueError) as e:
+        return f"!! ledgers: {_one_line(str(e), 120)}"
     if not late["names"]:
         return ""
-    since = "never pushed" if late["never"] else f"last push {_age_of(late['last_ok'])} ago"
+    since = (
+        "never pushed" if late["never"] else f"last push {_age_of(late['last_ok'])} ago"
+    )
     why = f": {_one_line(late['error'], 80)}" if late["error"] else ""
     shown = ", ".join(late["names"][:4]) + (" …" if len(late["names"]) > 4 else "")
     return (
@@ -788,10 +794,11 @@ def publish(
     this machine's ledger folder there (newer wins, nothing deleted), so the ledgers' page
     stays as fresh as this schedule without any session publishing its own.
     """
-    pushed = tools.push_ledgers(ledger_dir=ledger_dir)
+    try:  # the ledgers never stop the page: a failure is said, and the roster flags it
+        pushed = tools.push_ledgers(ledger_dir=ledger_dir)
+    except (OSError, ValueError) as e:
+        pushed = {"ok": False, "error": f"ledger push: {e}"}
     if pushed and not pushed["ok"]:
-        import sys
-
         print(f"crowsnest: {pushed['error']}", file=sys.stderr)
     result = tools.publish(
         to=to,
@@ -813,8 +820,6 @@ def publish(
         k: v.get("failed") for k, v in result["generated"].items() if v.get("failed")
     }
     if failed:
-        import sys
-
         said = ", ".join(f"{n} {kind}" for kind, n in failed.items())
         print(
             f"crowsnest: generating failed ({said}); is `claude` on this PATH? "
@@ -1231,7 +1236,7 @@ def _ledger_mirror_verb(
     if link:
         if not settings.url:
             raise SystemExit(
-                "no ledger page: add url = \"https://.../{name}.md\" to [ledgers] in the "
+                'no ledger page: add url = "https://.../{name}.md" to [ledgers] in the '
                 "config file"
             )
         if not names:
@@ -1240,13 +1245,17 @@ def _ledger_mirror_verb(
     if push:
         result = tools.push_ledgers(ledger_dir=ledger_dir)
         if result is None:
-            raise SystemExit("nowhere to push: add mirror = \"...\" to [ledgers] in the config file")
+            raise SystemExit(
+                'nowhere to push: add mirror = "..." to [ledgers] in the config file'
+            )
         if json:
             return _json.dumps(result, indent=2)
         if not result["ok"]:
             raise SystemExit(f"crowsnest: {result['error']}")
         return f"pushed {result['files']} ledgers to {result['to']}"
-    late = ledger_mirror.stale(ledger_dir=ledger_dir)
+    late = ledger_mirror.stale(
+        mirror=settings.mirror, ledger_dir=tools._configured_ledgers(ledger_dir)
+    )
     if json:
         return _json.dumps(late, indent=2)
     if not settings.mirror:

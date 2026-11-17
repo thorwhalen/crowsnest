@@ -28,10 +28,12 @@ newer-wins copy for a directory.
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import os
 import shlex
 import shutil
+import tempfile
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
@@ -69,8 +71,16 @@ DFLT_TIMEOUT = 60
 NAME_PLACEHOLDER = "{name}"
 
 
+#: Names never carried: hidden files, caches, and a writer's temp file (``x.md.tmp``).
+SKIPPED = (".*", "__pycache__", "*.tmp")
+
+#: rsync's exit for "some files vanished before they could be transferred": a ledger
+#: rewritten during the push. The next push carries it, so that is not a failure.
+RSYNC_VANISHED = 24
+
+
 def _skip(name: str) -> bool:
-    return name.startswith(".") or name == "__pycache__"
+    return any(fnmatch.fnmatch(name, pat) for pat in SKIPPED)
 
 
 def _iso(t: float) -> str:
@@ -91,9 +101,14 @@ def _read_stamp(stamp_path: str | Path | None) -> dict:
 def _write_stamp(record: dict, stamp_path: str | Path | None) -> None:
     path = _stamp_path(stamp_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(record, indent=2), encoding="utf-8")
-    tmp.replace(path)
+    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(record, indent=2))
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 # --------------------------------------------------------------------------------------
@@ -103,7 +118,9 @@ def _write_stamp(record: dict, stamp_path: str | Path | None) -> None:
 def local_tree_copy(src: str, dst: str) -> None:
     """Copy every file under ``src`` into ``dst``, each only when newer; never delete.
 
-    Times are kept, so a copy is never newer than what it copied. Hidden files are skipped.
+    Times are kept, so a copy is never newer than what it copied. Hidden files, caches,
+    temp files and symlinks are skipped (a link could point outside the folder), and a file
+    that vanishes mid-copy is left for the next run.
 
     >>> import tempfile, pathlib
     >>> a, b = pathlib.Path(tempfile.mkdtemp()), pathlib.Path(tempfile.mkdtemp()) / 'm'
@@ -120,12 +137,17 @@ def local_tree_copy(src: str, dst: str) -> None:
             if _skip(name):
                 continue
             source, target = Path(dirpath) / name, there / rel / name
-            if target.exists() and target.stat().st_mtime >= source.stat().st_mtime:
+            try:
+                if source.is_symlink():
+                    continue
+                if target.exists() and target.stat().st_mtime >= source.stat().st_mtime:
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                tmp = target.with_name(f".{name}.tmp")
+                shutil.copy2(source, tmp)
+                tmp.replace(target)
+            except FileNotFoundError:
                 continue
-            target.parent.mkdir(parents=True, exist_ok=True)
-            tmp = target.with_name(f".{name}.tmp")
-            shutil.copy2(source, tmp)
-            tmp.replace(target)
 
 
 def rsync_tree_argv(src: str, dst: str, *, timeout: int = DFLT_TIMEOUT) -> list[str]:
@@ -146,7 +168,9 @@ def rsync_tree_argv(src: str, dst: str, *, timeout: int = DFLT_TIMEOUT) -> list[
         "-a",
         "-q",
         "--update",
-        "--exclude=.*",
+        "--no-owner",
+        "--no-group",
+        *(f"--exclude={pat}" for pat in SKIPPED),
         f"--timeout={timeout}",
         "-e",
         ssh_command(),
@@ -165,7 +189,7 @@ def rsync_tree_copy(src: str, dst: str) -> None:
             "pushing ledgers to a host:path needs rsync, which is not on PATH"
         )
     done = attempt(rsync_tree_argv(src, dst))
-    if done.returncode:
+    if done.returncode not in (0, RSYNC_VANISHED):
         said = (done.stderr or done.stdout).strip().splitlines()
         tail = said[-1] if said else "no output"
         raise ValueError(f"ledger push: rsync to {dst} exited {done.returncode}: {tail}")
@@ -231,6 +255,7 @@ def push(
 
 def stale(
     *,
+    mirror: str | None = None,
     ledger_dir: str | Path | None = None,
     stamp_path: str | Path | None = None,
     grace: float = DFLT_GRACE,
@@ -240,9 +265,12 @@ def stale(
 
     Returns ``{"names", "last_ok", "error", "never"}``: ``names`` sorted newest first,
     ``never`` true when no push has ever worked here (every ledger past its grace counts).
+    A stamp recorded for another ``mirror`` counts as none: a repointed mirror starts empty.
     """
     src = _ledger_dir(ledger_dir)
     stamp = _read_stamp(stamp_path)
+    if mirror is not None and stamp.get("to") != mirror:
+        stamp = {}
     last_ok = float(stamp.get("last_ok_ts") or 0.0)
     cutoff = clock() - grace
     found = []
