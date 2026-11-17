@@ -161,7 +161,9 @@ def rsync_tree_copy(src: str, dst: str) -> None:
     from crowsnest.publish import attempt
 
     if not shutil.which("rsync"):
-        raise ValueError("pushing ledgers to a host:path needs rsync, which is not on PATH")
+        raise ValueError(
+            "pushing ledgers to a host:path needs rsync, which is not on PATH"
+        )
     done = attempt(rsync_tree_argv(src, dst))
     if done.returncode:
         said = (done.stderr or done.stdout).strip().splitlines()
@@ -195,7 +197,9 @@ def push(
     still publishes it; :func:`stale` is what makes a failure that persists visible.
     """
     if not mirror:
-        raise ValueError("a ledger push needs a mirror: [ledgers] mirror in the config file")
+        raise ValueError(
+            "a ledger push needs a mirror: [ledgers] mirror in the config file"
+        )
     src = _ledger_dir(ledger_dir)
     copy = copy or dflt_tree_copy(mirror)
     before = _read_stamp(stamp_path)

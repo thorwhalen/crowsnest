@@ -39,7 +39,9 @@ def test_push_copies_every_ledger_and_never_deletes(folders):
     (ledgers / "alpha" / "notes.md").write_text("attached")
     mirror.mkdir(parents=True)
     (mirror / "gone.md").write_text("left this machine")
-    out = ledger_mirror.push(str(mirror), ledger_dir=ledgers, stamp_path=stamp, clock=lambda: NOW)
+    out = ledger_mirror.push(
+        str(mirror), ledger_dir=ledgers, stamp_path=stamp, clock=lambda: NOW
+    )
     assert out["ok"] and out["files"] == 1
     assert (mirror / "alpha.md").read_text() == "# alpha\n"
     assert (mirror / "alpha" / "notes.md").is_file()
@@ -58,7 +60,9 @@ def test_an_older_copy_never_replaces_a_newer_one(folders):
 def test_stale_names_what_changed_after_the_last_push_that_worked(folders):
     ledgers, mirror, stamp = folders
     _ledger(ledgers, "early", "x", NOW - 7200)
-    ledger_mirror.push(str(mirror), ledger_dir=ledgers, stamp_path=stamp, clock=lambda: NOW - 3600)
+    ledger_mirror.push(
+        str(mirror), ledger_dir=ledgers, stamp_path=stamp, clock=lambda: NOW - 3600
+    )
 
     def broken(src, dst):
         raise ValueError("ssh: connect to host box port 22: Connection refused")
