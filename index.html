@@ -81,6 +81,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.init.html">crowsnest.init</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.jsonl.html">crowsnest.jsonl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.ledger_mirror.html">crowsnest.ledger_mirror</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.links.html">crowsnest.links</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.live.html">crowsnest.live</a></li>
@@ -132,7 +133,10 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#keeping-a-machine-inside-its-memory">Keeping a machine inside its memory</a></li>
-<li><a class="reference internal" href="#the-ledger-what-a-session-leaves-behind">The ledger: what a session leaves behind</a></li>
+<li><a class="reference internal" href="#the-ledger-what-a-session-leaves-behind">The ledger: what a session leaves behind</a><ul>
+<li><a class="reference internal" href="#reading-ledgers-from-elsewhere">Reading ledgers from elsewhere</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#a-page-that-stays-fresh-without-a-session">A page that stays fresh without a session</a></li>
 <li><a class="reference internal" href="#being-told-instead-of-polling">Being told instead of polling</a></li>
 <li><a class="reference internal" href="#one-walk-end-to-end">One walk, end to end</a></li>
@@ -260,13 +264,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="23">crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 </span><span data-line="24">crowsnest watch --kinds loud       only what needs you; --mute a,b drops sessions; [watch] in the config sets both
 </span><span data-line="25">crowsnest ledger [&lt;session&gt;]       one session's durable page, or all of them with ages
-</span><span data-line="26">crowsnest handoff --out FILE       the page a fresh watcher starts from: asks, sessions and their briefs, the watch filter
-</span><span data-line="27">crowsnest hook &lt;event&gt;             called by your Stop and Notification hooks; reads their JSON on stdin
-</span><span data-line="28">crowsnest spawn &lt;name&gt; --cwd &lt;dir&gt; start a named session in &lt;dir&gt;, and wait for it to show up
-</span><span data-line="29">                                   (--profile NAME: on another account; --binary PATH: another claude)
-</span><span data-line="30">crowsnest open &lt;session&gt;           raise its terminal on the desktop, or say where it runs
-</span><span data-line="31">crowsnest init                     this session's CLAUDE.md, the data directory, the hook lines
-</span><span data-line="32">crowsnest install-skills           link the skills and the scout subagent into ~/.claude
+</span><span data-line="26">crowsnest ledger &lt;s&gt; --link         its page on the [ledgers] mirror; --push sends them now, --stale lists the late
+</span><span data-line="27">crowsnest handoff --out FILE       the page a fresh watcher starts from: asks, sessions and their briefs, the watch filter
+</span><span data-line="28">crowsnest hook &lt;event&gt;             called by your Stop and Notification hooks; reads their JSON on stdin
+</span><span data-line="29">crowsnest spawn &lt;name&gt; --cwd &lt;dir&gt; start a named session in &lt;dir&gt;, and wait for it to show up
+</span><span data-line="30">                                   (--profile NAME: on another account; --binary PATH: another claude)
+</span><span data-line="31">crowsnest open &lt;session&gt;           raise its terminal on the desktop, or say where it runs
+</span><span data-line="32">crowsnest init                     this session's CLAUDE.md, the data directory, the hook lines
+</span><span data-line="33">crowsnest install-skills           link the skills and the scout subagent into ~/.claude
 </span></pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">open</span></code> is a desktop command – it looks for an iTerm tab or a tmux session and has nothing to raise from a web page. So wherever <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code> cannot link a session (no Remote Control, so no claude.ai URL), the page shows the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">open</span></code> command that reaches it. You paste that into a terminal; the page never brings the terminal to the front for you.</p>
@@ -461,6 +466,17 @@ data-aria-dark="Switch to auto color mode">
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">asked</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span> <span class="pre">said</span></code> are mechanical — the <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook below writes them from the transcript tail, so they are true without anyone deciding anything. <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">open</span> <span class="pre">questions</span></code> and <code class="docutils literal notranslate"><span class="pre">decisions</span></code> are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.</p>
 <p>The file is keyed by the session’s <em>name</em>, because it is a corpus’s memory: a <code class="docutils literal notranslate"><span class="pre">/clear</span></code>, a restart or <code class="docutils literal notranslate"><span class="pre">claude</span> <span class="pre">-n</span> <span class="pre">&lt;same</span> <span class="pre">name&gt;</span></code> tomorrow brings a new session id and must land in the same file. <em>Who</em> wrote it lives inside: the <code class="docutils literal notranslate"><span class="pre">Stop</span></code> hook appends every new session id to <code class="docutils literal notranslate"><span class="pre">sessions</span></code> (with its home and name), once. That makes three things visible that used to be silent: two live sessions sharing a name (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span></code> flags it <code class="docutils literal notranslate"><span class="pre">!!</span></code>), two names that map to one file (<code class="docutils literal notranslate"><span class="pre">cn/xa</span></code> and <code class="docutils literal notranslate"><span class="pre">cn:xa</span></code> both become <code class="docutils literal notranslate"><span class="pre">cn-xa.md</span></code>; flagged, and <code class="docutils literal notranslate"><span class="pre">spawn</span></code> refuses the second), and a rename (the old and new ledgers get <code class="docutils literal notranslate"><span class="pre">renamed</span> <span class="pre">to:</span></code> / <code class="docutils literal notranslate"><span class="pre">renamed</span> <span class="pre">from:</span></code>). <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span> <span class="pre">&lt;session</span> <span class="pre">id</span> <span class="pre">or</span> <span class="pre">prefix&gt;</span></code> finds the ledger a session wrote.</p>
+<section id="reading-ledgers-from-elsewhere">
+<h3>Reading ledgers from elsewhere<a class="headerlink" href="#reading-ledgers-from-elsewhere" title="Link to this heading">#</a></h3>
+<p>A ledger is written on the machine its session runs on; you may read it on another. Give each machine a <code class="docutils literal notranslate"><span class="pre">[ledgers]</span></code> table and the scheduled <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">publish</span></code> pushes its whole ledger folder there each run, newer copy wins, nothing deleted, so no session has to remember to publish its own:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[ledgers]</span>
+</span><span data-line="2"><span class="n">mirror</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"me@myserver:/srv/ledger-hosts/laptop"</span><span class="w">     </span><span class="c1"># one folder per machine: equal names never collide</span>
+</span><span data-line="3"><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://example.com/ledgers/laptop/{name}.md"</span><span class="w"> </span><span class="c1"># one ledger's page; {name} is the file stem</span>
+</span><span data-line="4"><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://example.com/ledgers"</span><span class="w">                 </span><span class="c1"># all of them</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span> <span class="pre">&lt;name&gt;</span> <span class="pre">--link</span></code> prints a ledger’s page (the link a worker’s reply names beside the path), <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span> <span class="pre">--push</span></code> pushes now, and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span> <span class="pre">--stale</span></code> lists the ledgers changed since the last push that worked. The roster and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">ledger</span></code> add one <code class="docutils literal notranslate"><span class="pre">!!</span></code> line when any ledger is more than fifteen minutes late, with the last push’s error.</p>
+</section>
 </section>
 <section id="a-page-that-stays-fresh-without-a-session">
 <h2>A page that stays fresh without a session<a class="headerlink" href="#a-page-that-stays-fresh-without-a-session" title="Link to this heading">#</a></h2>
@@ -600,7 +616,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-12 12:41 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/aec868f693b2197ac779231ef0ba12857f6a6da1">aec868f</a> (main) · crowsnest 0.0.111 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-17 16:59 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/e932c09b4939939edbef7d2f1a90439ecfe1804f">e932c09</a> (main) · crowsnest 0.0.112 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -635,7 +651,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=609ae934"></script>
+      <script src="_static/documentation_options.js?v=5762635e"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

@@ -52,6 +52,7 @@
    init
    jsonl
    ledger
+   ledger_mirror
    lineage
    links
    live

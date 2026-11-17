@@ -81,6 +81,7 @@ crowsnest attention export|import  your attention records as JSON, last write wi
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest watch --kinds loud       only what needs you; --mute a,b drops sessions; [watch] in the config sets both
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
+crowsnest ledger <s> --link         its page on the [ledgers] mirror; --push sends them now, --stale lists the late
 crowsnest handoff --out FILE       the page a fresh watcher starts from: asks, sessions and their briefs, the watch filter
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
 crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
@@ -319,6 +320,19 @@ Anything at all. Nothing in crowsnest ever rewrites this part.
 `last asked` and `last said` are mechanical — the `Stop` hook below writes them from the transcript tail, so they are true without anyone deciding anything. `state`, `open questions` and `decisions` are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.
 
 The file is keyed by the session’s *name*, because it is a corpus’s memory: a `/clear`, a restart or `claude -n <same name>` tomorrow brings a new session id and must land in the same file. *Who* wrote it lives inside: the `Stop` hook appends every new session id to `sessions` (with its home and name), once. That makes three things visible that used to be silent: two live sessions sharing a name (`crowsnest ledger` flags it `!!`), two names that map to one file (`cn/xa` and `cn:xa` both become `cn-xa.md`; flagged, and `spawn` refuses the second), and a rename (the old and new ledgers get `renamed to:` / `renamed from:`). `crowsnest ledger <session id or prefix>` finds the ledger a session wrote.
+
+### Reading ledgers from elsewhere
+
+A ledger is written on the machine its session runs on; you may read it on another. Give each machine a `[ledgers]` table and the scheduled `crowsnest publish` pushes its whole ledger folder there each run, newer copy wins, nothing deleted, so no session has to remember to publish its own:
+
+```toml
+[ledgers]
+mirror = "me@myserver:/srv/ledger-hosts/laptop"     # one folder per machine: equal names never collide
+url = "https://example.com/ledgers/laptop/{name}.md" # one ledger's page; {name} is the file stem
+page = "https://example.com/ledgers"                 # all of them
+```
+
+`crowsnest ledger <name> --link` prints a ledger’s page (the link a worker’s reply names beside the path), `crowsnest ledger --push` pushes now, and `crowsnest ledger --stale` lists the ledgers changed since the last push that worked. The roster and `crowsnest ledger` add one `!!` line when any ledger is more than fifteen minutes late, with the last push’s error.
 
 ## A page that stays fresh without a session
 

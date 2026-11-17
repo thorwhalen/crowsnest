@@ -440,6 +440,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`init`](crowsnest.init.html.md#module-crowsnest.init)                     | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
 | [`jsonl`](crowsnest.jsonl.html.md#module-crowsnest.jsonl)                   | Decode one line of a JSONL file: orjson where it provably agrees with `json.loads`.                                                  |
 | [`ledger`](crowsnest.ledger.html.md#module-crowsnest.ledger)                 | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
+| [`ledger_mirror`](crowsnest.ledger_mirror.html.md#module-crowsnest.ledger_mirror)   | Carry this machine's ledgers to the page that shows them, with no session remembering to.                                            |
 | [`lineage`](crowsnest.lineage.html.md#module-crowsnest.lineage)               | Who started whom: the spawn graph, as data.                                                                                          |
 | [`links`](crowsnest.links.html.md#module-crowsnest.links)                   | References in a session's own words, turned into links you can click.                                                                |
 | [`live`](crowsnest.live.html.md#module-crowsnest.live)                     | What a published page may know about the sessions *now*: one small document, and a recap.                                            |

@@ -62,6 +62,10 @@ ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
 The `[publish]` table ([`publish_settings()`](#crowsnest.config.publish_settings)) says where `crowsnest publish` sends
 the page: `to` (a local path or a `host:path`) or `command` ([`crowsnest.publish`](crowsnest.publish.html.md#module-crowsnest.publish)).
 
+The `[ledgers]` table (`ledger_settings()`) says where `crowsnest publish` also
+pushes this machine’s ledger folder, and the page each ledger can then be read at
+([`crowsnest.ledger_mirror`](crowsnest.ledger_mirror.html.md#module-crowsnest.ledger_mirror)).
+
 On Windows write paths in single quotes (`path = 'C:\Users\me\.claude'`): a TOML
 double-quoted string treats a backslash as an escape.
 

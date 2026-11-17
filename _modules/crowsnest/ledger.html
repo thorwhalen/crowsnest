@@ -78,6 +78,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.init.html">crowsnest.init</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.jsonl.html">crowsnest.jsonl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger_mirror.html">crowsnest.ledger_mirror</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.lineage.html">crowsnest.lineage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.links.html">crowsnest.links</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.live.html">crowsnest.live</a></li>
@@ -429,7 +430,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="264"><span class="k">def</span><span class="w"> </span><span class="nf">_write</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="265"><span class="w">    </span><span class="sd">"""Replace the file in one step, so a hook killed mid-write leaves the old one intact."""</span>
 </span><span data-line="266">    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="267">    <span class="n">tmp</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">".tmp"</span><span class="p">)</span>
+</span><span data-line="267">    <span class="n">tmp</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.tmp"</span><span class="p">)</span>  <span class="c1"># hidden: readers and mirrors skip it</span>
 </span><span data-line="268">    <span class="n">tmp</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
 </span><span data-line="269">    <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 </span><span data-line="270">
@@ -726,7 +727,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=609ae934"></script>
+      <script src="../../_static/documentation_options.js?v=5762635e"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

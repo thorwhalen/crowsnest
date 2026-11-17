@@ -21,6 +21,7 @@
 - [crowsnest.init](crowsnest.init.html.md): Everything a crowsnest session needs before it can be one, set up in one command.
 - [crowsnest.jsonl](crowsnest.jsonl.html.md): Decode one line of a JSONL file: orjson where it provably agrees with &#96;json.loads&#96;.
 - [crowsnest.ledger](crowsnest.ledger.html.md): The ledger: the durable page a session leaves for the watcher, one file per session.
+- [crowsnest.ledger_mirror](crowsnest.ledger_mirror.html.md): Carry this machine’s ledgers to the page that shows them, with no session remembering to.
 - [crowsnest.lineage](crowsnest.lineage.html.md): Who started whom: the spawn graph, as data.
 - [crowsnest.links](crowsnest.links.html.md): References in a session’s own words, turned into links you can click.
 - [crowsnest.live](crowsnest.live.html.md): What a published page may know about the sessions &#42;now&#42;: one small document, and a recap.

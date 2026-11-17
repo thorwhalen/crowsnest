@@ -1,0 +1,24 @@
+crowsnest.ledger\_mirror
+========================
+
+.. automodule:: crowsnest.ledger_mirror
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      STAMP_NAME
+      DFLT_GRACE
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      dflt_tree_copy
+      link
+      local_tree_copy
+      push
+      rsync_tree_copy
+      stale
+   

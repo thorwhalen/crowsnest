@@ -1,4 +1,4 @@
-> built 2026-11-12 12:41 UTC from aec868f (main) · crowsnest 0.0.111. Details: build_info.json
+> built 2026-11-17 16:59 UTC from e932c09 (main) · crowsnest 0.0.112. Details: build_info.json
 
 # index.html.md
 
@@ -85,6 +85,7 @@ crowsnest attention export|import  your attention records as JSON, last write wi
 crowsnest watch                    one line per change, forever (started, exited, idle, busy, waiting, error)
 crowsnest watch --kinds loud       only what needs you; --mute a,b drops sessions; [watch] in the config sets both
 crowsnest ledger [<session>]       one session's durable page, or all of them with ages
+crowsnest ledger <s> --link         its page on the [ledgers] mirror; --push sends them now, --stale lists the late
 crowsnest handoff --out FILE       the page a fresh watcher starts from: asks, sessions and their briefs, the watch filter
 crowsnest hook <event>             called by your Stop and Notification hooks; reads their JSON on stdin
 crowsnest spawn <name> --cwd <dir> start a named session in <dir>, and wait for it to show up
@@ -323,6 +324,19 @@ Anything at all. Nothing in crowsnest ever rewrites this part.
 `last asked` and `last said` are mechanical — the `Stop` hook below writes them from the transcript tail, so they are true without anyone deciding anything. `state`, `open questions` and `decisions` are judgements, and only the session whose ledger it is writes those. A write rewrites the named fields and leaves every other byte alone, so a hook and a human can edit the same file minutes apart.
 
 The file is keyed by the session’s *name*, because it is a corpus’s memory: a `/clear`, a restart or `claude -n <same name>` tomorrow brings a new session id and must land in the same file. *Who* wrote it lives inside: the `Stop` hook appends every new session id to `sessions` (with its home and name), once. That makes three things visible that used to be silent: two live sessions sharing a name (`crowsnest ledger` flags it `!!`), two names that map to one file (`cn/xa` and `cn:xa` both become `cn-xa.md`; flagged, and `spawn` refuses the second), and a rename (the old and new ledgers get `renamed to:` / `renamed from:`). `crowsnest ledger <session id or prefix>` finds the ledger a session wrote.
+
+### Reading ledgers from elsewhere
+
+A ledger is written on the machine its session runs on; you may read it on another. Give each machine a `[ledgers]` table and the scheduled `crowsnest publish` pushes its whole ledger folder there each run, newer copy wins, nothing deleted, so no session has to remember to publish its own:
+
+```toml
+[ledgers]
+mirror = "me@myserver:/srv/ledger-hosts/laptop"     # one folder per machine: equal names never collide
+url = "https://example.com/ledgers/laptop/{name}.md" # one ledger's page; {name} is the file stem
+page = "https://example.com/ledgers"                 # all of them
+```
+
+`crowsnest ledger <name> --link` prints a ledger’s page (the link a worker’s reply names beside the path), `crowsnest ledger --push` pushes now, and `crowsnest ledger --stale` lists the ledgers changed since the last push that worked. The roster and `crowsnest ledger` add one `!!` line when any ledger is more than fifteen minutes late, with the last push’s error.
 
 ## A page that stays fresh without a session
 
@@ -1689,6 +1703,10 @@ ledger_dir = "~/sync/crowsnest/ledger"   # absolute, or starting with ~
 
 The `[publish]` table ([`publish_settings()`](_autosummary/crowsnest.config.html.md#crowsnest.config.publish_settings)) says where `crowsnest publish` sends
 the page: `to` (a local path or a `host:path`) or `command` ([`crowsnest.publish`](_autosummary/crowsnest.publish.html.md#module-crowsnest.publish)).
+
+The `[ledgers]` table (`ledger_settings()`) says where `crowsnest publish` also
+pushes this machine’s ledger folder, and the page each ledger can then be read at
+([`crowsnest.ledger_mirror`](_autosummary/crowsnest.ledger_mirror.html.md#module-crowsnest.ledger_mirror)).
 
 On Windows write paths in single quotes (`path = 'C:\Users\me\.claude'`): a TOML
 double-quoted string treats a backslash as an escape.
@@ -3322,6 +3340,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`init`](_autosummary/crowsnest.init.html.md#module-crowsnest.init)                     | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
 | [`jsonl`](_autosummary/crowsnest.jsonl.html.md#module-crowsnest.jsonl)                   | Decode one line of a JSONL file: orjson where it provably agrees with `json.loads`.                                                  |
 | [`ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)                 | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
+| [`ledger_mirror`](_autosummary/crowsnest.ledger_mirror.html.md#module-crowsnest.ledger_mirror)   | Carry this machine's ledgers to the page that shows them, with no session remembering to.                                            |
 | [`lineage`](_autosummary/crowsnest.lineage.html.md#module-crowsnest.lineage)               | Who started whom: the spawn graph, as data.                                                                                          |
 | [`links`](_autosummary/crowsnest.links.html.md#module-crowsnest.links)                   | References in a session's own words, turned into links you can click.                                                                |
 | [`live`](_autosummary/crowsnest.live.html.md#module-crowsnest.live)                     | What a published page may know about the sessions *now*: one small document, and a recap.                                            |
@@ -3840,6 +3859,131 @@ part. The file is created from a template when it is missing.
 
 Raises `ValueError` on a name that is not one of [`FIELDS`](_autosummary/crowsnest.ledger.html.md#crowsnest.ledger.FIELDS) – a typo that
 silently wrote nothing would be worse than a stack trace.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+
+# _autosummary/crowsnest.ledger_mirror.html.md
+
+# crowsnest.ledger_mirror
+
+Carry this machine’s ledgers to the page that shows them, with no session remembering to.
+
+A ledger is written where its session runs ([`crowsnest.ledger`](_autosummary/crowsnest.ledger.html.md#module-crowsnest.ledger)). Its reader is
+elsewhere: a page on a server, read from a phone. Asking each session to publish its own
+ledger fails the way any reminder fails (a brief’s wording wins over a rule it does not
+repeat), so the copy is mechanical: [`push()`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.push) sends the whole ledger folder to a
+*mirror* on every scheduled `crowsnest publish`, newer copy wins, nothing is deleted.
+Each machine pushes into its own mirror (`.../ledger-hosts/<machine>/`), so two machines
+that happen to use one session name never overwrite each other.
+
+```toml
+# ~/.config/crowsnest/config.toml
+[ledgers]
+mirror = "me@myserver:/srv/ledger-hosts/laptop"     # or a local directory
+url = "https://example.com/ledgers/laptop/{name}.md"  # one ledger's page; {name} is its stem
+page = "https://example.com/ledgers"                  # every ledger, newest first
+```
+
+Each push records how it went in `<data dir>/ledger-push.json`. [`stale()`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.stale) reads that
+record and the folder’s times, and lists the ledgers changed since the last push that
+worked, once they have had `grace` seconds to go: that is the check that would have said,
+on the first day, that ledgers had stopped reaching their page.
+
+The transport is a seam: `copy=(src_dir, dst) -> None`. The default is rsync over ssh
+(`-a --update`, never prompting, never deleting) for a `[user@]host:path`, and a local
+newer-wins copy for a directory.
+
+### Module Attributes
+
+| [`STAMP_NAME`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.STAMP_NAME)   | Where [`push()`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.push) records its last run, under the data directory.                                                                                      |
+|---------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DFLT_GRACE`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.DFLT_GRACE)   | Seconds a changed ledger is given to reach its mirror before [`stale()`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.stale) names it: several scheduled runs, so one dropped connection is not an alarm. |
+
+### Functions
+
+| [`dflt_tree_copy`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.dflt_tree_copy)(dst)                              | rsync over ssh for a `[user@]host:path`, a local newer-wins copy for a directory.   |
+|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`link`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.link)(name, url)                                  | One ledger's page: `url` with `{name}` replaced by the ledger's file stem.          |
+| [`local_tree_copy`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.local_tree_copy)(src, dst)                        | Copy every file under `src` into `dst`, each only when newer; never delete.         |
+| [`push`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.push)(mirror, \*[, ledger_dir, copy, ...])        | Copy the whole ledger folder to `mirror` and record how it went.                    |
+| [`rsync_tree_copy`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.rsync_tree_copy)(src, dst)                        | Push `src` to the remote `dst` with rsync over ssh; a failure raises `ValueError`.  |
+| [`stale`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.stale)(\*[, mirror, ledger_dir, stamp_path, ...]) | The ledgers changed since the last push that worked, older than `grace` seconds.    |
+
+### crowsnest.ledger_mirror.DFLT_GRACE *= 900*
+
+Seconds a changed ledger is given to reach its mirror before [`stale()`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.stale) names it:
+several scheduled runs, so one dropped connection is not an alarm.
+
+### crowsnest.ledger_mirror.STAMP_NAME *= 'ledger-push.json'*
+
+Where [`push()`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.push) records its last run, under the data directory.
+
+### crowsnest.ledger_mirror.dflt_tree_copy(dst)
+
+rsync over ssh for a `[user@]host:path`, a local newer-wins copy for a directory.
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`None`](https://docs.python.org/3/builtins/constants.html#None)]
+
+### crowsnest.ledger_mirror.link(name, url)
+
+One ledger’s page: `url` with `{name}` replaced by the ledger’s file stem.
+
+```pycon
+>>> link('soma accomp', 'https://example.com/ledgers/mac/{name}.md')
+'https://example.com/ledgers/mac/soma-accomp.md'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.ledger_mirror.local_tree_copy(src, dst)
+
+Copy every file under `src` into `dst`, each only when newer; never delete.
+
+Times are kept, so a copy is never newer than what it copied. Hidden files, caches,
+temp files and symlinks are skipped (a link could point outside the folder), and a file
+that vanishes mid-copy is left for the next run.
+
+```pycon
+>>> import tempfile, pathlib
+>>> a, b = pathlib.Path(tempfile.mkdtemp()), pathlib.Path(tempfile.mkdtemp()) / 'm'
+>>> _ = (a / 'x.md').write_text('x'); (a / 'sub').mkdir(); _ = (a / 'sub' / 'y.md').write_text('y')
+>>> local_tree_copy(str(a), str(b))
+>>> sorted(p.relative_to(b).as_posix() for p in b.rglob('*.md'))
+['sub/y.md', 'x.md']
+```
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.ledger_mirror.push(mirror, \*, ledger_dir=None, copy=None, stamp_path=None, clock=<built-in function time>)
+
+Copy the whole ledger folder to `mirror` and record how it went.
+
+Returns `{"ok", "to", "files", "started", "last_ok", "error"}`. A failure is
+recorded and returned, not raised, so a scheduled run that also publishes a page
+still publishes it; [`stale()`](_autosummary/crowsnest.ledger_mirror.html.md#crowsnest.ledger_mirror.stale) is what makes a failure that persists visible.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.ledger_mirror.rsync_tree_copy(src, dst)
+
+Push `src` to the remote `dst` with rsync over ssh; a failure raises `ValueError`.
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.ledger_mirror.stale(\*, mirror=None, ledger_dir=None, stamp_path=None, grace=900, clock=<built-in function time>)
+
+The ledgers changed since the last push that worked, older than `grace` seconds.
+
+Returns `{"names", "last_ok", "error", "never"}`: `names` sorted newest first,
+`never` true when no push has ever worked here (every ledger past its grace counts).
+A stamp recorded for another `mirror` counts as none: a repointed mirror starts empty.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -7853,18 +7997,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-12 12:41 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/aec868f693b2197ac779231ef0ba12857f6a6da1"><code>aec868f</code></a> on branch <code>main</code>, for **crowsnest 0.0.111** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-17 16:59 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/e932c09b4939939edbef7d2f1a90439ecfe1804f"><code>e932c09</code></a> on branch <code>main</code>, for **crowsnest 0.0.112** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.111) is behind the latest release on PyPI (0.0.112): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/aec868f693b2197ac779231ef0ba12857f6a6da1"><code>aec868f693b2197ac779231ef0ba12857f6a6da1</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/e932c09b4939939edbef7d2f1a90439ecfe1804f"><code>e932c09b4939939edbef7d2f1a90439ecfe1804f</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -7875,9 +8017,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/43219912528">43219912528</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44131614104">44131614104</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>aec868f693b2197ac779231ef0ba12857f6a6da1</code> (in the history of the built commit) |
+| Event commit | <code>e932c09b4939939edbef7d2f1a90439ecfe1804f</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -7902,13 +8044,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.112/">0.0.112</a>, newer than the documented version (0.0.111).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.112/">0.0.112</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout aec868f693b2197ac779231ef0ba12857f6a6da1
+git checkout e932c09b4939939edbef7d2f1a90439ecfe1804f
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
