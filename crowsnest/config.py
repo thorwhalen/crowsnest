@@ -60,6 +60,10 @@ all three build a row the same way without a flag each (:mod:`crowsnest.rows`).
 The ``[publish]`` table (:func:`publish_settings`) says where ``crowsnest publish`` sends
 the page: ``to`` (a local path or a ``host:path``) or ``command`` (:mod:`crowsnest.publish`).
 
+The ``[ledgers]`` table (:func:`ledger_settings`) says where ``crowsnest publish`` also
+pushes this machine's ledger folder, and the page each ledger can then be read at
+(:mod:`crowsnest.ledger_mirror`).
+
 On Windows write paths in single quotes (``path = 'C:\\Users\\me\\.claude'``): a TOML
 double-quoted string treats a backslash as an escape.
 
@@ -768,6 +772,65 @@ def courier_settings(*, path: str | Path | None = None) -> CourierSettings:
             f"{file}: [{COURIER_KEY}] remote must be a string, not {remote!r}"
         )
     return CourierSettings(remote=remote.strip())
+
+
+#: The config file's table for carrying ledgers to their page (:mod:`crowsnest.ledger_mirror`).
+LEDGERS_KEY = "ledgers"
+
+
+@dataclass(frozen=True)
+class LedgerSettings:
+    """The ``[ledgers]`` table: where this machine's ledgers are mirrored, and their page.
+
+    ``mirror`` is a directory or ``[user@]host:path`` that ``crowsnest publish`` pushes the
+    ledger folder into; ``url`` is one ledger's page with ``{name}`` for its stem; ``page``
+    lists them all.
+
+    >>> LedgerSettings().mirror, LedgerSettings().url
+    ('', '')
+    """
+
+    mirror: str = ""
+    url: str = ""
+    page: str = ""
+
+
+def ledger_settings(*, path: str | Path | None = None) -> LedgerSettings:
+    """The config file's ``[ledgers]`` table, or the defaults (no mirror) when it has none.
+
+    .. code-block:: toml
+
+        [ledgers]
+        mirror = "me@myserver:/srv/ledger-hosts/laptop"
+        url = "https://example.com/ledgers/laptop/{name}.md"
+        page = "https://example.com/ledgers"
+    """
+    file = config_path(path)
+    table = _loaded(path).get(LEDGERS_KEY)
+    if table is None:
+        return LedgerSettings()
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{LEDGERS_KEY}] must be a table")  # noqa: TRY004
+    known = {f.name for f in fields(LedgerSettings)}
+    unknown = sorted(set(table) - known)
+    if unknown:
+        raise ValueError(
+            f"{file}: [{LEDGERS_KEY}] has no {', '.join(unknown)}; "
+            f"it knows {', '.join(sorted(known))}"
+        )
+    values = {}
+    for key in known:
+        value = table.get(key, "")
+        if not isinstance(value, str):
+            raise ValueError(  # noqa: TRY004
+                f"{file}: [{LEDGERS_KEY}] {key} must be a string, not {value!r}"
+            )
+        values[key] = value.strip()
+    if values["url"] and "{name}" not in values["url"]:
+        raise ValueError(
+            f"{file}: [{LEDGERS_KEY}] url must hold {{name}} where the ledger's name goes"
+        )
+    return LedgerSettings(**values)
 
 
 def _default_home() -> Home:

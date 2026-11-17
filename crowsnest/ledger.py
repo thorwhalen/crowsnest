@@ -264,7 +264,7 @@ def _template(name: str) -> str:
 def _write(path: Path, text: str) -> None:
     """Replace the file in one step, so a hook killed mid-write leaves the old one intact."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
+    tmp = path.with_name(f".{path.name}.tmp")  # hidden: readers and mirrors skip it
     tmp.write_text(text, encoding="utf-8")
     os.replace(tmp, path)
 

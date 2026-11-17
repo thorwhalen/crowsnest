@@ -123,7 +123,8 @@ Six parts, in this order, and nothing else:
 5. **The reply contract**, verbatim:
 
    > Reply in at most five lines. Anything longer goes in your ledger
-   > (`~/.local/share/crowsnest/ledger/<name>.md`) and your reply names the path.
+   > (`~/.local/share/crowsnest/ledger/<name>.md`), and your reply names the path and
+   > the ledger's page link (`crowsnest ledger <name> --link`).
 6. **Who to report to** — your session name, and that a request from you is a request for
    a status line, not permission for anything.
 
