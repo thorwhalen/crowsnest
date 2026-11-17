@@ -126,7 +126,7 @@ def local_tree_copy(src: str, dst: str) -> None:
     >>> a, b = pathlib.Path(tempfile.mkdtemp()), pathlib.Path(tempfile.mkdtemp()) / 'm'
     >>> _ = (a / 'x.md').write_text('x'); (a / 'sub').mkdir(); _ = (a / 'sub' / 'y.md').write_text('y')
     >>> local_tree_copy(str(a), str(b))
-    >>> sorted(str(p.relative_to(b)) for p in b.rglob('*.md'))
+    >>> sorted(p.relative_to(b).as_posix() for p in b.rglob('*.md'))
     ['sub/y.md', 'x.md']
     """
     root, there = Path(src).expanduser(), Path(dst).expanduser()
