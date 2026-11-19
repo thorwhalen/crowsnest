@@ -526,3 +526,91 @@ def test_a_table_row_naming_a_person_asks_nothing():
         "## Status\n\n| column | meaning |\n|---|---|\n| needs you | blocked on Thor |\n"
     )
     assert classify_row(_row(), ledger=_ledger(free))["group"] == "unclassified"
+
+
+# --------------------------------------------------------------------------------------
+# The `state` field's status token (the vocabulary crowsnest-worker teaches)
+
+
+def _skill_state_example() -> str:
+    """The ``state:`` line of the example block in the shipped crowsnest-worker skill."""
+    from pathlib import Path
+
+    import crowsnest
+
+    skill = Path(crowsnest.__file__).parent / "data/skills/crowsnest-worker/SKILL.md"
+    lines = skill.read_text(encoding="utf-8").splitlines()
+    return next(l for l in lines if l.startswith("state: ")).split(": ", 1)[1]
+
+
+def test_the_skills_own_state_example_is_safe_to_close():
+    """Skill and code agree: what the worker skill teaches is what triage reads."""
+    found = classify_row(_row(), ledger=_ledger(state=_skill_state_example()))
+    assert found["group"] == "safe_to_close"
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        "done",
+        "safe_to_close",
+        "safe to close",
+        "DONE.",
+        "safe_to_close: PR #52 merged, nothing waits on the user",
+        "**done** — landed and released",
+        "safe_to_close\n- PR #279 merged (closes #259)",
+        "- done — merged",
+        "safe-to-close",
+        "done — PR merged, no open PRs, nothing pending, nothing left for the user",
+    ],
+)
+def test_a_status_token_in_the_state_field_is_safe_to_close(state):
+    found = classify_row(_row(), ledger=_ledger(state=state))
+    assert found["group"] == "safe_to_close", state
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        "done — not merged yet",
+        "done — 2 PRs open awaiting review",
+        "done with phase 1, phase 2 next",
+        "safe_to_close except the docs PR",
+        "done — main CI being confirmed",
+        "safe_to_close\n- #279 merged\n- #280 still open",
+        "not done",
+        "undone",
+        # from the adversarial review: open, running, to come, partial, failed, for a person
+        "done — PR open",
+        "done — PR #12 opened; CI running",
+        "done — will merge after CI",
+        "done — no PR yet",
+        "done — unlanded",
+        "done — uncommitted changes in src/",
+        "done — dirty worktree",
+        "done, partially",
+        "done — mostly; tests flaky",
+        "done (1 of 3 PRs merged)",
+        "done — phase 1 of 3",
+        "done — only the docs left",
+        "done. Next: phase 2",
+        "done (for now)",
+        "done — needs a deploy",
+        "done — failed; gave up",
+        "done — reverted",
+        "done — CI red (flaky)",
+        "done\n- merged\n- deploy needed by the user",
+        "safe_to_close\n- PR #3 open, CI green",
+        "done — #8 checkpointed on a wip branch",
+        "done — one manual task left for the user",
+    ],
+)
+def test_evidence_that_takes_the_status_back_is_not_safe_to_close(state):
+    found = classify_row(_row(), ledger=_ledger(state=state))
+    assert found["group"] != "safe_to_close", state
+
+
+def test_a_status_token_in_the_free_part_is_still_not_an_all_clear():
+    """Only the structured field has a vocabulary; prose keeps the stricter rules."""
+    found = classify_row(_row(), ledger=_ledger("## 2026-11-19 — wrap\n\ndone\n"))
+    assert found["group"] == "unclassified"

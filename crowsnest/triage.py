@@ -428,6 +428,77 @@ def _is_a_real_all_clear(text: str) -> re.Match | None:
     return None
 
 
+#: The ``state`` field's own vocabulary: a status token, alone or followed by a separator
+#: and the evidence (``done — PR #19 merged, CI green``). Only the structured field is
+#: read this way; prose in the free part keeps :func:`_is_a_real_all_clear`'s rules.
+#: The token has to end where a separator starts: "done with phase 1" is a claim about
+#: phase 1, not about the session. A leading bullet and markdown emphasis are allowed.
+_STATE_TOKEN = re.compile(
+    r"(?i)^[\s*_`>-]*(?P<token>done|safe[ _-]to[ _-]close)[*_`]*"
+    r"(?:[ \t]*(?:\n|$)|[ \t]*[—–:;,.(!]|[ \t]+-+[ \t])"
+)
+
+#: Evidence after a status token that takes the status back. A wrong ``safe_to_close``
+#: is the expensive error (the reaper acts on it), so this list is wide and errs towards
+#: ``unclassified``: a negation; a wait; something open, running or still to come; a
+#: remainder or a part ("phase 1 of 3", "mostly", "only"); a failure; work left for a
+#: person. Each was found in a real ledger or by the adversarial review of this rule.
+_UNSAID = re.compile(
+    r"(?i)\b(?:not|never|cannot|can't|isn't|aren't|wasn't|won't|don't|doesn't|haven't"
+    r"|hasn't|didn't|pending|blocked|blocking|waiting|awaiting|until|still|once|being"
+    r"|un(?:merged|landed|committed|pushed|reviewed|tested|finished|resolved)|draft|dirty"
+    r"|wip|checkpoint(?:ed)?|in (?:progress|review|flight)|to ?do|todo|left|remains?"
+    r"|remaining|yet|but|except|open(?:ed)?|running|will|to be|after|partial(?:ly)?"
+    r"|partly|mostly|only|phase \d+|\d+ of \d+|\d+/\d+|next|needs?|needed|for now|later"
+    r"|tbd|follow-?up|fail(?:s|ed|ing|ure)?|red|abandon(?:ed)?|revert(?:ed)?|gave up"
+    r"|manual|sign-?here|the (?:user|owner)|for (?:you|thor))\b"
+)
+
+#: "No" or "nothing" in front of a word answers it: "no open PRs", "nothing pending",
+#: "nothing left". Removed before :data:`_UNSAID` reads the evidence. A bare ``not`` is
+#: never removed: "not blocking this session" still names something.
+_ANSWERED = re.compile(
+    r"(?i)\b(?:no|nothing|none|zero)\s+(?:(?:is|are|else|further)\s+)?"
+    r"(?:open|pending|left|remaining|blocking|blocked|waits?|waiting|failing|red|unmerged"
+    r"|unlanded|uncommitted|unpushed|draft|wip|manual|follow-?ups?|needs?|todo)\b"
+    r"(?:\s+(?:for|on)\s+(?:the (?:user|owner)|you))?"
+)
+
+
+def _stated_status(text: str) -> re.Match | None:
+    """The status token the ``state`` field opens with, unless its evidence takes it back.
+
+    >>> _stated_status('done — PR #19 merged, CI green').group('token')
+    'done'
+    >>> _stated_status('safe_to_close').group('token')
+    'safe_to_close'
+    >>> bool(_stated_status('safe_to_close — PR #282 merged, no open PRs, nothing pending'))
+    True
+    >>> bool(_stated_status('done — not merged yet'))
+    False
+    >>> bool(_stated_status('done with phase 1, phase 2 next'))
+    False
+    >>> bool(_stated_status('done — merged, except the docs PR'))
+    False
+    >>> bool(_stated_status('done — PR #12 opened; CI running'))
+    False
+
+    The evidence may run onto the lines below, and every line of it is read:
+
+    >>> bool(_stated_status('safe_to_close\\n- PR #279 merged (closes #259)'))
+    True
+    >>> bool(_stated_status('safe_to_close\\n- PR #279 merged\\n- #280 still open'))
+    False
+    """
+    found = _STATE_TOKEN.match(text or "")
+    if not found:
+        return None
+    evidence = _ANSWERED.sub(" ", text[found.end() :])
+    if _UNSAID.search(evidence) or _ONLY_PARTLY.search(evidence):
+        return None
+    return found
+
+
 #: Words that make a request a *decision* rather than an errand -- a choice between named
 #: alternatives, or a question put to a person.
 #: A choice only a person can make. Deliberately *without* a bare ``?``: a ledger is full
@@ -922,12 +993,17 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     # Being finished is read only from what the session said LAST. See the module
     # docstring: an all-clear in the middle of an append-only file is a report about
     # Monday, and today is not Monday.
-    stated = _is_a_real_all_clear(str(fields.get("state") or ""))
+    state = str(fields.get("state") or "")
+    # The old rule first, so a verdict it already made keeps its reason, and with it the
+    # attention revision (a changed reason would resurface the item). A status token's
+    # reason is the whole field: the evidence is the point.
+    prose = _is_a_real_all_clear(state)
+    stated = prose or _stated_status(state)
     if stated:
         said_at, basis = _written(ledger)
         return Verdict(
             "safe_to_close",
-            reason=_one_line(stated.group(0)),
+            reason=_one_line(stated.group(0) if prose else state),
             source="ledger:state",
             said_at=said_at,
             said_at_basis=basis,
