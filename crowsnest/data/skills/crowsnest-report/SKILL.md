@@ -190,6 +190,13 @@ to 4 above and answers Recap and Refresh from disk, all without a session. Ask, 
 Start arrive as an `intent` line in `crowsnest watch`: act on it and answer with
 `crowsnest intent answer <id> "<one line>"`. No `/loop` is needed for such a page.
 
+**Queueing an intent without the page** (#192), on the machine that holds the store:
+`echo "<text>" | crowsnest intent put KIND SESSION` writes exactly what a button writes
+and prints its id (text on stdin only; `--idempotency-key K` makes a retry return the
+first id), and `crowsnest intent status <id>` prints one fixed line, `STATUS: ANSWER`
+(`--json` for `{id, status, answer}`). `put` wakes a session, so a confined surface offers
+`status` freely and `put` only behind its own confirmation.
+
 **Sharing across crow's nests.** Nothing extra to do: every watcher on this machine
 couriers its own artifact into the same store (the data dir is per OS user), so an item
 seen on one page is seen on the other after each side's next tick.
