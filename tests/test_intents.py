@@ -173,7 +173,7 @@ def test_the_cli_takes_the_store_from_the_courier_table(
     store, tmp_path, monkeypatch, capsys
 ):
     config = tmp_path / "config.toml"
-    config.write_text(f'[courier]\nremote = "{store}"\n')
+    config.write_text(f"[courier]\nremote = '{store}'\n")
     monkeypatch.setenv("CROWSNEST_CONFIG", str(config))
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
     main(["intent", "put", "recap", "fixer"])
