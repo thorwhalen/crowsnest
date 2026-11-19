@@ -104,9 +104,12 @@ def test_reap_defaults_to_report_only():
 def _homes(tmp_path, statuses):
     home = tmp_path / "home"
     for i, status in enumerate(statuses):
-        write_registry(
-            home, registry_record(200 + i, f"s{i}", name=f"w{i}", status=status)
+        # Distinct status times, w0 the oldest: equal ones left "idle longest" to the
+        # order the registry happened to list them in, and CI listed them either way.
+        record = registry_record(
+            200 + i, f"s{i}", name=f"w{i}", status=status, status_at_ms=1_000_000 + i
         )
+        write_registry(home, record)
     return home
 
 
