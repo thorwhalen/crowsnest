@@ -438,6 +438,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`guard`](crowsnest.guard.html.md#module-crowsnest.guard)                   | Keep a machine's sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).                                           |
 | [`hook`](crowsnest.hook.html.md#module-crowsnest.hook)                     | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
 | [`init`](crowsnest.init.html.md#module-crowsnest.init)                     | Everything a crowsnest session needs before it can be one, set up in one command.                                                    |
+| [`intents`](crowsnest.intents.html.md#module-crowsnest.intents)               | Queue a console intent from the command line, and read back what became of it (#192).                                                |
 | [`jsonl`](crowsnest.jsonl.html.md#module-crowsnest.jsonl)                   | Decode one line of a JSONL file: orjson where it provably agrees with `json.loads`.                                                  |
 | [`ledger`](crowsnest.ledger.html.md#module-crowsnest.ledger)                 | The ledger: the durable page a session leaves for the watcher, one file per session.                                                 |
 | [`ledger_mirror`](crowsnest.ledger_mirror.html.md#module-crowsnest.ledger_mirror)   | Carry this machine's ledgers to the page that shows them, with no session remembering to.                                            |

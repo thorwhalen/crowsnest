@@ -19,6 +19,7 @@
 - [crowsnest.guard](crowsnest.guard.html.md): Keep a machine’s sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).
 - [crowsnest.hook](crowsnest.hook.html.md): The push half of the stream: what Claude Code’s own hooks tell crowsnest.
 - [crowsnest.init](crowsnest.init.html.md): Everything a crowsnest session needs before it can be one, set up in one command.
+- [crowsnest.intents](crowsnest.intents.html.md): Queue a console intent from the command line, and read back what became of it (#192).
 - [crowsnest.jsonl](crowsnest.jsonl.html.md): Decode one line of a JSONL file: orjson where it provably agrees with &#96;json.loads&#96;.
 - [crowsnest.ledger](crowsnest.ledger.html.md): The ledger: the durable page a session leaves for the watcher, one file per session.
 - [crowsnest.ledger_mirror](crowsnest.ledger_mirror.html.md): Carry this machine’s ledgers to the page that shows them, with no session remembering to.

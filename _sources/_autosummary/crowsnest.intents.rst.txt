@@ -1,0 +1,21 @@
+crowsnest.intents
+=================
+
+.. automodule:: crowsnest.intents
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      KINDS
+      STATUSES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      keyed_id
+      put
+      status
+   

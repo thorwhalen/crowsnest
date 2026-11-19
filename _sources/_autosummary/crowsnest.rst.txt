@@ -50,6 +50,7 @@
    guard
    hook
    init
+   intents
    jsonl
    ledger
    ledger_mirror

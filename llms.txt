@@ -21,6 +21,7 @@
 - [crowsnest.guard](_autosummary/crowsnest.guard.html.md): Keep a machine’s sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).
 - [crowsnest.hook](_autosummary/crowsnest.hook.html.md): The push half of the stream: what Claude Code’s own hooks tell crowsnest.
 - [crowsnest.init](_autosummary/crowsnest.init.html.md): Everything a crowsnest session needs before it can be one, set up in one command.
+- [crowsnest.intents](_autosummary/crowsnest.intents.html.md): Queue a console intent from the command line, and read back what became of it (#192).
 - [crowsnest.jsonl](_autosummary/crowsnest.jsonl.html.md): Decode one line of a JSONL file: orjson where it provably agrees with &#96;json.loads&#96;.
 - [crowsnest.ledger](_autosummary/crowsnest.ledger.html.md): The ledger: the durable page a session leaves for the watcher, one file per session.
 - [crowsnest.ledger_mirror](_autosummary/crowsnest.ledger_mirror.html.md): Carry this machine’s ledgers to the page that shows them, with no session remembering to.
@@ -45,7 +46,7 @@
 - [crowsnest.triage](_autosummary/crowsnest.triage.html.md): Which sessions need you, which are safe to close, and which are still going.
 - [crowsnest.watch](_autosummary/crowsnest.watch.html.md): A stream of what changed, so a monitor is told instead of made to poll.
 - [For AI agents](ai-agents.html.md): &#96;crowsnest&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-11-17 16:59 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-11-19 08:49 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 
