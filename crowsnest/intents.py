@@ -20,23 +20,30 @@ clipped to one line of :data:`crowsnest.courier.ANSWER_LIMIT` characters. The in
 text is never echoed back.
 
 An idempotency key (#180) makes a retried :func:`put` return the intent the first call
-queued instead of queueing a second. Two calls racing with one key can both queue; a
-retry after an answer, which is the case a key exists for, cannot.
+queued instead of queueing a second: a keyed intent's id is derived from its key
+(:func:`keyed_id`), and the file is created only if absent, so two calls racing with one
+key queue one intent. A retry must say the same thing: the same key with another kind,
+session or text is refused, never silently mapped to the first.
+
+A session's answer can quote that session's work, so :func:`status` also drops every
+control, format and private-use character (Unicode Cc, Cf, Co) before clipping.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
 import secrets
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
 from crowsnest.courier import ANSWER_LIMIT, DOC_ID, HANDED
 from crowsnest.live import publishable
 
-__all__ = ["KINDS", "STATUSES", "put", "status"]
+__all__ = ["KINDS", "STATUSES", "keyed_id", "put", "status"]
 
 #: The page's kinds: the ones handed to a session, then the two the courier answers itself.
 KINDS = (*HANDED, "recap", "refresh")
@@ -70,6 +77,21 @@ WAITING = {
 }
 
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
+
+#: The fields a retry with the same idempotency key must repeat.
+SAME_REQUEST = ("kind", "session", "home", "text")
+
+#: The prefix of a keyed intent's id.
+KEYED_PREFIX = "key-"
+
+
+def keyed_id(key: str) -> str:
+    """The id of the intent queued with idempotency key ``key``: the same on every retry.
+
+    >>> keyed_id('k-1') == keyed_id('k-1') != keyed_id('k-2')
+    True
+    """
+    return KEYED_PREFIX + hashlib.sha256(key.encode("utf-8")).hexdigest()[:32]
 
 
 def put(
@@ -113,19 +135,14 @@ def put(
     }
     if idempotency_key is not None:
         doc["idempotency_key"] = idempotency_key
-        earlier = _keyed(folder, idempotency_key)
-        if earlier is not None:
-            intent, was = earlier
-            if (was.get("kind"), was.get("session"), was.get("home", "")) != (
-                kind,
-                session,
-                home,
-            ):
-                raise ValueError(
-                    f"idempotency key {idempotency_key!r} already queued intent {intent} "
-                    "for another kind or session"
-                )
-            return {"id": intent, "doc": was, "reused": True}
+        intent = keyed_id(idempotency_key)
+        was = _read(folder / f"{intent}.json")
+        if was is not None:
+            return _reused(intent, was, doc)
+    else:
+        intent = (
+            f"{moment.astimezone(timezone.utc):%Y%m%dT%H%M%SZ}-{secrets.token_hex(4)}"
+        )
     body = json.dumps(doc, ensure_ascii=False)
     if len(body.encode("utf-8")) > MAX_DOC_BYTES:
         raise ValueError(
@@ -133,9 +150,27 @@ def put(
         )
     if sum(1 for _ in folder.glob("*.json")) >= MAX_DOCS:
         raise ValueError(f"the store's intents are full ({MAX_DOCS}); nothing was queued")
-    intent = f"{moment.astimezone(timezone.utc):%Y%m%dT%H%M%SZ}-{secrets.token_hex(4)}"
-    _create(folder / f"{intent}.json", body)
+    try:
+        _create(folder / f"{intent}.json", body)
+    except FileExistsError:
+        # A racing call with the same key got there first.
+        was = _read(folder / f"{intent}.json")
+        if was is None:
+            raise ValueError("could not queue the intent: try again") from None
+        return _reused(intent, was, doc)
+    except OSError as exc:
+        raise ValueError(f"could not queue the intent ({exc.strerror})") from None
     return {"id": intent, "doc": doc, "reused": False}
+
+
+def _reused(intent: str, was: dict, doc: dict) -> dict:
+    """The earlier keyed intent, if it asked for what ``doc`` asks for; else refuse."""
+    if any(was.get(f, "") != doc[f] for f in SAME_REQUEST):
+        raise ValueError(
+            f"that idempotency key already queued intent {intent}, "
+            "with another kind, session or text"
+        )
+    return {"id": intent, "doc": was, "reused": True}
 
 
 def status(intent: str, *, store: str | Path) -> dict:
@@ -147,18 +182,34 @@ def status(intent: str, *, store: str | Path) -> dict:
     """
     if not DOC_ID.match(intent):
         raise ValueError(f"{intent!r} is not an intent id")
-    path = _intents(store) / f"{intent}.json"
-    try:
-        doc = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        doc = None
-    if not isinstance(doc, dict):
+    doc = _read(_intents(store) / f"{intent}.json")
+    if doc is None:
         return {"id": intent, "status": MISSING, "answer": WAITING[MISSING]}
     state = doc.get("status", "queued")
     state = state if state in STATUSES else UNKNOWN
     said = doc.get("answer")
-    line = publishable(said, limit=ANSWER_LIMIT) if isinstance(said, str) else ""
+    line = (
+        publishable(_printable(said), limit=ANSWER_LIMIT) if isinstance(said, str) else ""
+    )
     return {"id": intent, "status": state, "answer": line or WAITING[state]}
+
+
+def _printable(text: str) -> str:
+    """``text`` without control, format or private-use characters; a control becomes a space."""
+    return "".join(
+        " " if c in "\t\n\r" else c
+        for c in text
+        if c in "\t\n\r" or unicodedata.category(c) not in ("Cc", "Cf", "Co")
+    )
+
+
+def _read(path: Path) -> dict | None:
+    """The document at ``path``, or ``None`` when it is absent, unreadable or not an object."""
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return doc if isinstance(doc, dict) else None
 
 
 def _address(session: str, kind: str) -> tuple[str, str]:
@@ -195,25 +246,16 @@ def _intents(store: str | Path, *, create: bool = False) -> Path:
         )
     root = Path(store).expanduser()
     if not root.is_dir():
-        raise ValueError(f"no console store at {root}")
+        raise ValueError("no console store there: pass --store DIR")
     folder = root / "intents"
     if create:
-        folder.mkdir(exist_ok=True)
-    return folder
-
-
-def _keyed(folder: Path, key: str) -> tuple[str, dict] | None:
-    """The intent already queued with idempotency key ``key``, as ``(id, doc)``."""
-    for path in sorted(folder.glob("*.json")):
-        if not DOC_ID.match(path.stem):
-            continue
         try:
-            doc = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        if isinstance(doc, dict) and doc.get("idempotency_key") == key:
-            return path.stem, doc
-    return None
+            folder.mkdir(exist_ok=True)
+        except OSError as exc:
+            raise ValueError(
+                f"cannot write the store's intents ({exc.strerror})"
+            ) from None
+    return folder
 
 
 def _create(path: Path, body: str) -> None:

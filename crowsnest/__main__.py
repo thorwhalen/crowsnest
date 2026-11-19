@@ -1067,10 +1067,32 @@ def intent_put(
     else `remote` in the config file's `[courier]` table. The next `crowsnest courier`
     tick carries it. `--idempotency-key K` makes a retry print the first call's id.
     """
-    text = "" if sys.stdin is None or sys.stdin.isatty() else sys.stdin.read()
+    from crowsnest.intents import MAX_DOC_BYTES
+
+    text = ""
+    if sys.stdin is not None and not sys.stdin.isatty():
+        source = getattr(sys.stdin, "buffer", None)
+        raw = (
+            source.read(MAX_DOC_BYTES + 1)
+            if source
+            else sys.stdin.read(MAX_DOC_BYTES + 1)
+        )
+        if len(raw) > MAX_DOC_BYTES:
+            raise ValueError(f"an intent's text is at most {MAX_DOC_BYTES} bytes")
+        if isinstance(raw, bytes):
+            try:
+                raw = raw.decode("utf-8")
+            except UnicodeDecodeError:
+                raise ValueError("an intent's text must be UTF-8") from None
+        text = raw
     put = tools.intent_put(
         kind, session, text, store=store, idempotency_key=idempotency_key
     )
+    if put["reused"]:
+        print(
+            f"crowsnest: that idempotency key already queued {put['id']}; nothing new",
+            file=sys.stderr,
+        )
     return put["id"]
 
 

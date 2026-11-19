@@ -194,7 +194,7 @@ Start arrive as an `intent` line in `crowsnest watch`: act on it and answer with
 `echo "<text>" | crowsnest intent put KIND SESSION` writes exactly what a button writes
 and prints its id (text on stdin only; `--idempotency-key K` makes a retry return the
 first id), and `crowsnest intent status <id>` prints one fixed line, `STATUS: ANSWER`
-(`--json` for `{id, status, answer}`). `put` wakes a session, so a confined surface offers
+(`--json` for `{id, status, answer}`). `put` wakes a session, so a confined surface pins `--store` (or leaves it to `[courier]`) and offers
 `status` freely and `put` only behind its own confirmation.
 
 **Sharing across crow's nests.** Nothing extra to do: every watcher on this machine

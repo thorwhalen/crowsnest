@@ -92,6 +92,12 @@ def test_status_is_a_fixed_shape_whatever_the_document_says(store):
     assert set(got) == {"id", "status", "answer"} and got["status"] == "unknown"
     assert "\n" not in got["answer"] and len(got["answer"]) <= courier.ANSWER_LIMIT
     assert "ghp_" not in got["answer"] and "secret plan" not in got["answer"]
+    (folder / "esc.json").write_text(
+        json.dumps(
+            {"status": "done", "answer": "ok\x1b[2K\x00\x07 \u202eevil\u200b\ue000."}
+        )
+    )
+    assert intents.status("esc", store=store)["answer"] == "ok[2K evil."
     assert intents.status("bad", store=store)["status"] == "missing"
     assert intents.status("nope", store=store)["status"] == "missing"
     with pytest.raises(ValueError):
@@ -105,8 +111,10 @@ def test_an_idempotency_key_returns_the_first_intent(store, tmp_path):
     assert again["reused"] and again["id"] == first["id"]
     assert again["doc"]["status"] == "handed"
     assert len(list((store / "intents").glob("*.json"))) == 1
-    with pytest.raises(ValueError, match="another kind or session"):
-        intents.put("tell", "other", "go", store=store, idempotency_key="k-1")
+    assert first["id"] == intents.keyed_id("k-1")
+    for kind, session, text in [("tell", "other", "go"), ("tell", "fixer", "stop")]:
+        with pytest.raises(ValueError, match="another kind, session or text"):
+            intents.put(kind, session, text, store=store, idempotency_key="k-1")
     with pytest.raises(ValueError, match="idempotency key"):
         intents.put("tell", "fixer", "go", store=store, idempotency_key="no/slash")
 
@@ -171,3 +179,28 @@ def test_the_cli_takes_the_store_from_the_courier_table(
     main(["intent", "put", "recap", "fixer"])
     intent = capsys.readouterr().out.strip()
     assert (store / "intents" / f"{intent}.json").exists()
+
+
+def test_the_cli_bounds_stdin_and_says_when_a_key_was_reused(store, monkeypatch, capsys):
+    big = io.TextIOWrapper(io.BytesIO(b"x" * (intents.MAX_DOC_BYTES + 1)))
+    monkeypatch.setattr("sys.stdin", big)
+    with pytest.raises(SystemExit):
+        main(["intent", "put", "tell", "fixer", "--store", str(store)])
+    assert "at most" in capsys.readouterr().err
+    for _ in range(2):
+        monkeypatch.setattr("sys.stdin", io.TextIOWrapper(io.BytesIO(b"go")))
+        main(
+            [
+                "intent",
+                "put",
+                "tell",
+                "fixer",
+                "--store",
+                str(store),
+                "--idempotency-key",
+                "k",
+            ]
+        )
+    out = capsys.readouterr()
+    assert out.out.split() == [intents.keyed_id("k")] * 2
+    assert "already queued" in out.err
