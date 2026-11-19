@@ -1052,6 +1052,62 @@ def intent_answer(intent: str, text: str, *, failed: bool = False):
     return f"answered {intent}: {doc['status']}"
 
 
+def intent_put(
+    kind: str,
+    session: str,
+    *,
+    store: str | None = None,
+    idempotency_key: str | None = None,
+):
+    """Queue an intent in the console store, as a page button does; prints its id.
+
+    KIND is ask, tell, start, recap or refresh; SESSION is the session's name (or
+    `name@home`), `''` for refresh. The text is read from stdin, never from the command
+    line (tell and start need some). `--store DIR` is the store's root on this machine,
+    else `remote` in the config file's `[courier]` table. The next `crowsnest courier`
+    tick carries it. `--idempotency-key K` makes a retry print the first call's id.
+    """
+    from crowsnest.intents import MAX_DOC_BYTES
+
+    text = ""
+    if sys.stdin is not None and not sys.stdin.isatty():
+        source = getattr(sys.stdin, "buffer", None)
+        raw = (
+            source.read(MAX_DOC_BYTES + 1)
+            if source
+            else sys.stdin.read(MAX_DOC_BYTES + 1)
+        )
+        if len(raw) > MAX_DOC_BYTES:
+            raise ValueError(f"an intent's text is at most {MAX_DOC_BYTES} bytes")
+        if isinstance(raw, bytes):
+            try:
+                raw = raw.decode("utf-8")
+            except UnicodeDecodeError:
+                raise ValueError("an intent's text must be UTF-8") from None
+        text = raw
+    put = tools.intent_put(
+        kind, session, text, store=store, idempotency_key=idempotency_key
+    )
+    if put["reused"]:
+        print(
+            f"crowsnest: that idempotency key already queued {put['id']}; nothing new",
+            file=sys.stderr,
+        )
+    return put["id"]
+
+
+def intent_status(intent: str, *, store: str | None = None, json: bool = False):
+    """One line: what became of an intent, as `STATUS: ANSWER`.
+
+    STATUS is one of queued, handed, done, failed, unknown, missing; ANSWER is one
+    sanitised line. `--json` prints `{"id", "status", "answer"}` instead.
+    """
+    got = tools.intent_status(intent, store=store)
+    if json:
+        return _json.dumps(got, ensure_ascii=False)
+    return f"{got['status']}: {got['answer']}"
+
+
 def watch(
     *,
     interval: float = _watch.DFLT_INTERVAL,
@@ -1710,7 +1766,7 @@ _commands = [
 #: machine side of the store (what a courier runs) sits under `crowsnest attention`.
 _groups = {
     "attention": {"export": attention_export, "import": attention_import},
-    "intent": {"answer": intent_answer},
+    "intent": {"answer": intent_answer, "put": intent_put, "status": intent_status},
     "guard": {"tick": guard_tick, "units": guard_units},
 }
 

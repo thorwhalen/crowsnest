@@ -1096,6 +1096,50 @@ def intent_answer(
     return _courier.answer(intent, text, status=status, mirror=mirror)
 
 
+def _console_root(store: str | Path | None, config: str | Path | None) -> str:
+    """The console store's root: ``store``, else the config file's ``[courier] remote``."""
+    from crowsnest.config import courier_settings
+
+    return str(store or courier_settings(path=config).remote)
+
+
+def intent_put(
+    kind: str,
+    session: str,
+    text: str = "",
+    *,
+    store: str | Path | None = None,
+    idempotency_key: str | None = None,
+    config: str | Path | None = None,
+) -> dict:
+    """Queue an intent in this machine's console store, as the page's buttons do (#192).
+
+    ``store`` defaults to the config file's ``[courier] remote``, which must be a directory
+    here. The courier carries it on its next tick (:func:`crowsnest.intents.put`).
+    """
+    from crowsnest import intents
+
+    return intents.put(
+        kind,
+        session,
+        text,
+        store=_console_root(store, config),
+        idempotency_key=idempotency_key,
+    )
+
+
+def intent_status(
+    intent: str,
+    *,
+    store: str | Path | None = None,
+    config: str | Path | None = None,
+) -> dict:
+    """``{"id", "status", "answer"}`` for one intent, a fixed shape (:func:`crowsnest.intents.status`)."""
+    from crowsnest import intents
+
+    return intents.status(intent, store=_console_root(store, config))
+
+
 def questions_rows(
     sessions: Iterable[Mapping] = (),
     *,
