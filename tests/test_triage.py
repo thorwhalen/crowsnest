@@ -526,3 +526,65 @@ def test_a_table_row_naming_a_person_asks_nothing():
         "## Status\n\n| column | meaning |\n|---|---|\n| needs you | blocked on Thor |\n"
     )
     assert classify_row(_row(), ledger=_ledger(free))["group"] == "unclassified"
+
+
+# --------------------------------------------------------------------------------------
+# The `state` field's status token (the vocabulary crowsnest-worker teaches)
+
+
+def _skill_state_example() -> str:
+    """The ``state:`` line of the example block in the shipped crowsnest-worker skill."""
+    from pathlib import Path
+
+    import crowsnest
+
+    skill = Path(crowsnest.__file__).parent / "data/skills/crowsnest-worker/SKILL.md"
+    lines = skill.read_text(encoding="utf-8").splitlines()
+    return next(l for l in lines if l.startswith("state: ")).split(": ", 1)[1]
+
+
+def test_the_skills_own_state_example_is_safe_to_close():
+    """Skill and code agree: what the worker skill teaches is what triage reads."""
+    found = classify_row(_row(), ledger=_ledger(state=_skill_state_example()))
+    assert found["group"] == "safe_to_close"
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        "done",
+        "safe_to_close",
+        "safe to close",
+        "DONE.",
+        "safe_to_close: PR #52 merged, nothing waits on the user",
+        "**done** — landed and released",
+        "safe_to_close\n- PR #279 merged (closes #259)",
+    ],
+)
+def test_a_status_token_in_the_state_field_is_safe_to_close(state):
+    found = classify_row(_row(), ledger=_ledger(state=state))
+    assert found["group"] == "safe_to_close", state
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        "done — not merged yet",
+        "done — 2 PRs open awaiting review",
+        "done with phase 1, phase 2 next",
+        "safe_to_close except the docs PR",
+        "done — main CI being confirmed",
+        "safe_to_close\n- #279 merged\n- #280 still open",
+        "not done",
+        "undone",
+    ],
+)
+def test_evidence_that_takes_the_status_back_is_not_safe_to_close(state):
+    found = classify_row(_row(), ledger=_ledger(state=state))
+    assert found["group"] != "safe_to_close", state
+
+
+def test_a_status_token_in_the_free_part_is_still_not_an_all_clear():
+    """Only the structured field has a vocabulary; prose keeps the stricter rules."""
+    found = classify_row(_row(), ledger=_ledger("## 2026-11-19 — wrap\n\ndone\n"))
+    assert found["group"] == "unclassified"

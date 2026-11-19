@@ -82,9 +82,13 @@ open questions:
 - squash or rebase for the release?
 ```
 
-- **`state`** is where you stand *now*. Write `done`, `nothing outstanding`, or
-  `blocked on <what>`. This is the only thing that puts you in "safe to close", and
-  overwriting it is how you take it back.
+- **`state`** is where you stand *now*. Open it with a status word: `done` or
+  `safe_to_close` when nothing is left, optionally followed by ` — ` and the evidence
+  (`done — PR #19 merged, CI green`); or `working — <what>`, or `blocked on <what>`.
+  `done`/`safe_to_close` is the only thing that puts you in "safe to close", and
+  overwriting it is how you take it back. Evidence that takes it back keeps you out: a
+  `not`, `still`, `pending`, `waiting`, `but`, `except` after the word reads as unfinished,
+  so write `done` only when it is, and say what remains with `working`.
 - **`open questions`** is what is genuinely blocked on the user. Empty it the moment it is
   answered — the fields are rewritten, not appended, so this is not rewriting history.
   A stale open question puts you in front of the user every time they look, which teaches
