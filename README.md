@@ -380,6 +380,42 @@ A session that no value matches is placed by its repository's owner. Failing tha
 
 With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session's last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. A turn that ends by asking you for something ("For the user: ...", read the way a ledger's requests are) also becomes an `ask` line, which `--kinds loud` keeps, and a wait is announced once, by whichever of `waiting` and `needs-you` comes first. `crowsnest hook` prints nothing and exits 0 whatever happens; `async` means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, `crowsnest watch` is exactly the registry diff it always was. `crowsnest init --hooks` writes all of this for you.
 
+## The event log, and messaging from anywhere
+
+Everything crowsnest learns lands in one append-only plain file, `~/.local/share/crowsnest/events.jsonl`: one JSON object per line, never rewritten, rotated to `events-<time>.jsonl` beside it past 4 MiB and never pruned. It is the source of truth the other views are built from. `crowsnest watch` streams it, the page is a view of it, and you can always open it in an editor. Every line has `event` and `at`, and usually `name`, `session_id`, `project` and a one-line `detail`:
+
+| event | written by | when |
+|---|---|---|
+| `stop`, `notification`, `ask` | `crowsnest hook` | a turn ended; a session wants its person; a turn ended asking for something |
+| `intent` | the courier | a request from the page's console, handed to the watching session |
+| `started`, `exited`, `busy`, `idle`, `waiting`, `error` | the courier, with `[events] registry = true` | the registry changed (`source: "registry"`, plus `home` and `status`) |
+| `message` | `crowsnest tell`, the courier | a message was posted to a session (`from` says who sent it) |
+
+A reader ignores an event it does not know: new ones are added, never renamed. `crowsnest log` is the quick view, for you or for an agent about to message a session:
+
+```bash
+crowsnest log                            # the last hour, one line each
+crowsnest log --since 3h --session parser-tests
+crowsnest log --events message,ask --json
+crowsnest log --path                     # where the file is
+```
+
+**Messaging from anywhere.** `crowsnest tell <session> --text "..."` (or the text on stdin) posts a message straight into a live session's inbox socket, the one Claude Code's own cross-session messaging uses, from any session, script or scheduler, at no model cost. It refuses a session that is waiting on its person, a busy one unless `--busy-ok`, and one on another machine, and it writes a `message` line to the log. Whether the session accepts the message is its own `crossSessionInbound` setting. Inside a session, Claude's `SendMessage` tool does the same and keeps a reply address; `crowsnest tell` is for everything else, and for messages that should be on the record.
+
+**Two switches, both off by default**, so a machine whose config says nothing behaves as it always did:
+
+```toml
+# ~/.config/crowsnest/config.toml
+[events]
+registry = true          # the courier's minute tick writes the registry's changes to the log
+
+[switchboard]
+deliver_intents = true   # the courier posts an ask/tell intent to the session it names,
+hold_minutes = 60        # holding it while that session is busy or waiting, at most this long
+```
+
+With `deliver_intents`, an intent reaches its session without a watching session in between. A `start`, an intent for a session that is gone or has no inbox here, and one held past `hold_minutes` still go to the watching session, as before.
+
 ## One walk, end to end
 
 A morning with a fleet, from the lookout session. Everything in italics is something you say; everything else it does.
@@ -419,16 +455,17 @@ What a transcript's content *means* is [openloops](https://github.com/thorwhalen
 
 ## What it writes
 
-Nothing into another session, and nothing into a repository. Everything crowsnest writes is its own and lives under `~/.local/share/crowsnest` (`$CROWSNEST_DATA_DIR` or `$XDG_DATA_HOME` if you set either):
+Nothing into a repository, and nothing into another session except the messages below. Everything crowsnest writes is its own and lives under `~/.local/share/crowsnest` (`$CROWSNEST_DATA_DIR` or `$XDG_DATA_HOME` if you set either):
 
 - `ledger/<name>.md`: one per session, as above.
-- `events.jsonl`: one line per hook event, append-only, rotated by size. `crowsnest watch` tails it.
+- `events.jsonl`: the event log, one line per event, append-only, rotated by size (see [The event log](#the-event-log-and-messaging-from-anywhere)). `crowsnest watch` tails it; `crowsnest log` reads it.
+- `eventlog-registry.json`: the registry as the courier's last tick saw it, when `[events] registry` is on.
 - `hook.log`: one line for anything `crowsnest hook` swallowed, so "the hook did nothing" is a question with an answer.
 - `attention/<item-id>.json`: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.
 
 - `guard/`: the guard's last tick (`last.json`), every close it made (`reaped.jsonl`, with the line that resumes each), and a cache of which folders each transcript names.
 
-The only other writes in the package are `crowsnest spawn`, which starts a session, `install-skills`, which writes symlinks, and the guard: `oom_score_adj` on Linux, and the SIGTERM of `crowsnest reap --apply`.
+The only other writes in the package are `crowsnest tell` (and the courier with `[switchboard] deliver_intents`), which posts a message to a session's inbox socket, `crowsnest spawn`, which starts a session, `install-skills`, which writes symlinks, and the guard: `oom_score_adj` on Linux, and the SIGTERM of `crowsnest reap --apply`.
 
 ## From Python
 

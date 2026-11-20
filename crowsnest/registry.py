@@ -154,6 +154,10 @@ class LiveSession:
     transcript: str
     home: str = ""
     bridge_session_id: str = ""
+    #: The session's inbox socket (``messagingSocketPath``), where a message to it is
+    #: posted (:mod:`crowsnest.switchboard`); ``''`` when it has none (bare mode, an older
+    #: Claude Code) or the record comes from another machine, whose socket is not here.
+    socket: str = ""
 
     @property
     def session_url(self) -> str:
@@ -216,6 +220,7 @@ def _session(rec: dict, *, home: Path, home_name: str = "") -> LiveSession | Non
         transcript=str(transcript_path(str(cwd), str(session_id), home=home)),
         home=home_name,
         bridge_session_id=str(rec.get("bridgeSessionId") or ""),
+        socket=str(rec.get("messagingSocketPath") or ""),
     )
 
 

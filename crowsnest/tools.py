@@ -52,6 +52,7 @@ __all__ = [
     "later",
     "lineage",
     "live",
+    "log",
     "note",
     "publish",
     "reap",
@@ -64,6 +65,7 @@ __all__ = [
     "seen",
     "sessions",
     "show",
+    "tell",
     "triage",
     "turns",
     "undo",
@@ -151,7 +153,10 @@ def sessions(
     found: list[LiveSession] = []
     for h in homes(path=config):
         rule = liveness_rule(h)
-        found.extend(live_sessions(home=h.path, home_name=h.name, is_live=rule))
+        listed = live_sessions(home=h.path, home_name=h.name, is_live=rule)
+        # Another machine's record names a socket on that machine: never one to post to
+        # here, where the same path can belong to a different local session.
+        found.extend(replace(s, socket="") if h.remote else s for s in listed)
     return found
 
 
@@ -1061,8 +1066,14 @@ def courier(
     disk, and wakes a session (through ``crowsnest watch``) only for an ask, a tell or a
     start. ``copy`` is the transport seam, ``(src, dst, collection) -> None``.
     """
+    from datetime import timedelta
+
     from crowsnest import courier as _courier
-    from crowsnest.config import courier_settings
+    from crowsnest.config import (
+        courier_settings,
+        events_settings,
+        switchboard_settings,
+    )
 
     remote = remote or courier_settings(path=config).remote
     if not remote:
@@ -1070,6 +1081,7 @@ def courier(
             "the courier needs the console store's root: --remote HOST:PATH or a "
             "[courier] table in the config file with `remote`"
         )
+    board = switchboard_settings(path=config)
     return _courier.tick(
         remote,
         mirror=mirror,
@@ -1079,6 +1091,9 @@ def courier(
         config=config,
         store=store,
         events_path=events_path,
+        deliver_intents=board.deliver_intents,
+        hold=timedelta(minutes=board.hold_minutes),
+        record_registry=events_settings(path=config).registry,
     )
 
 
@@ -1094,6 +1109,72 @@ def intent_answer(
     from crowsnest import courier as _courier
 
     return _courier.answer(intent, text, status=status, mirror=mirror)
+
+
+def tell(
+    session: str,
+    text: str,
+    *,
+    busy_ok: bool = False,
+    sender: str | None = None,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    deliver=None,
+    events_path: str | Path | None = None,
+) -> dict:
+    """Message a live session through its inbox socket, from any session or process.
+
+    ``session`` is resolved as :func:`resolve` does. A ``waiting`` session is refused, a
+    busy one unless ``busy_ok``, and one on another machine always
+    (:func:`crowsnest.switchboard.tell`, which also writes the ``message`` event line).
+    ``deliver`` is the transport seam, ``(socket_path, text) -> None``.
+    """
+    from crowsnest import switchboard
+
+    target = resolve(session, home=home, all_homes=all_homes, config=config)
+    return switchboard.tell(
+        target,
+        text,
+        sender=sender,
+        busy_ok=busy_ok,
+        deliver=deliver,
+        events_path=events_path,
+    )
+
+
+def log(
+    *,
+    since: str | None = "1h",
+    sessions: list[str] | None = None,
+    events: list[str] | None = None,
+    limit: int | None = None,
+    events_path: str | Path | None = None,
+) -> dict:
+    """The event log's records, oldest first: ``{"path", "files", "records"}``.
+
+    ``since`` is a span back from now (``90m``, ``2h``, ``3d``) or an ISO time, ``""`` or
+    ``None`` for the whole log; ``sessions`` and ``events`` narrow it
+    (:func:`crowsnest.eventlog.read`); ``limit`` keeps the newest that many.
+    """
+    from crowsnest import eventlog
+    from crowsnest.hook import events_path as _path
+
+    records = list(
+        eventlog.read(
+            since=since or None,
+            sessions=sessions or None,
+            events=events or None,
+            events_path=events_path,
+        )
+    )
+    if limit is not None and limit >= 0:
+        records = records[-limit:] if limit else []
+    return {
+        "path": str(_path(events_path)),
+        "files": [str(p) for p in eventlog.files(events_path)],
+        "records": records,
+    }
 
 
 def _console_root(store: str | Path | None, config: str | Path | None) -> str:

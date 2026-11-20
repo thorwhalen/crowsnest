@@ -262,3 +262,239 @@ def test_hand_refuses_a_kind_no_session_takes(tmp_path):
 
     with pytest.raises(ValueError, match="one of"):
         _c.hand("delete", "x", "y", mirror=tmp_path / "m", events_path=tmp_path / "e")
+
+
+# --------------------------------------------------------------------------------------
+# The lean lookout's switches (#141, #174, #200): both off unless the config says so
+
+
+def _session(name, status="idle", socket_path="/tmp/cc-socks/1.sock"):
+    from crowsnest.registry import LiveSession
+
+    return LiveSession(
+        1,
+        f"id-{name}",
+        name,
+        "/w",
+        "interactive",
+        status,
+        "",
+        0,
+        0,
+        False,
+        "",
+        "",
+        socket=socket_path,
+    )
+
+
+def _board(sessions):
+    """A ``find`` over named sessions, and the list ``deliver`` appends what it posts to."""
+    sent = []
+
+    def find(name):
+        if name not in sessions:
+            raise KeyError(f"no live session matches {name!r}")
+        return sessions[name]
+
+    return find, sent, lambda path, text: sent.append((path, text))
+
+
+def test_with_the_switch_off_an_intent_is_handed_exactly_as_before(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "go", "status": "queued"},
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    moved = run(remote, tmp_path, find=find, deliver=deliver)
+    assert sent == [] and moved["handed"] == 1 and moved["delivered"] == 0
+    got = read(remote, "intents", "n1")
+    assert "delivery" not in got and got["answer"].startswith("handed to the crowsnest")
+    assert [e["event"] for e in events(tmp_path)] == ["intent"]
+
+
+def test_an_idle_session_is_delivered_its_intent_and_the_watcher_is_not_woken(
+    remote, tmp_path
+):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "rebase first", "status": "queued"},
+    )
+    put(
+        remote,
+        "intents",
+        "n2",
+        {"kind": "ask", "session": "fixer", "text": "green?", "status": "queued"},
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert moved["delivered"] == 2 and moved["handed"] == 0
+    got = read(remote, "intents", "n1")
+    assert got["status"] == "handed" and got["delivery"] == "delivered"
+    assert got["answer"] == "delivered to fixer at 12:00 UTC; no answer yet"
+    assert "rebase first" in sent[0][1] and "crowsnest intent answer n1" in sent[0][1]
+    assert sent[1][1].startswith(
+        "From the crowsnest console, through crowsnest's switchboard:\n"
+        "A question from the crowsnest console: green?"
+    )
+    logged = events(tmp_path)
+    assert [e["event"] for e in logged] == ["message", "message"]
+    assert logged[0]["intent"] == "n1" and all(hook_event(e) is None for e in logged)
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert len(sent) == 2  # delivered once
+
+
+def test_a_busy_session_is_held_then_delivered_when_it_goes_idle(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "go", "status": "queued"},
+    )
+    sessions = {"fixer": _session("fixer", status="busy")}
+    find, sent, deliver = _board(sessions)
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    got = read(remote, "intents", "n1")
+    assert moved["held"] == 1 and sent == []
+    assert got["delivery"] == "pending" and got["held_since"] == "2026-02-01T12:00:00Z"
+    assert got["answer"].startswith("held for fixer, which is busy")
+    sessions["fixer"] = _session("fixer")
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert moved["delivered"] == 1 and len(sent) == 1
+    assert read(remote, "intents", "n1")["delivery"] == "delivered"
+
+
+def test_a_held_intent_goes_to_the_watcher_after_the_hold_or_when_the_switch_goes_off(
+    remote, tmp_path
+):
+    from datetime import timedelta
+
+    put(
+        remote,
+        "intents",
+        "n1",
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "go",
+            "status": "handed",
+            "delivery": "pending",
+            "held_since": "2026-02-01T10:00:00Z",
+        },
+    )
+    put(
+        remote,
+        "intents",
+        "n2",
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "go",
+            "status": "handed",
+            "delivery": "pending",
+            "held_since": "2026-02-01T11:59:00Z",
+        },
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer", status="waiting")})
+    run(
+        remote,
+        tmp_path,
+        deliver_intents=True,
+        hold=timedelta(minutes=60),
+        find=find,
+        deliver=deliver,
+    )
+    assert read(remote, "intents", "n1")["delivery"] == "watcher"
+    assert "stayed waiting" in read(remote, "intents", "n1")["answer"]
+    assert read(remote, "intents", "n2")["delivery"] == "pending"
+    run(
+        remote, tmp_path, find=find, deliver=deliver
+    )  # switch off: hand it on, not strand it
+    assert read(remote, "intents", "n2")["delivery"] == "watcher"
+    assert [e["event"] for e in events(tmp_path)] == ["intent", "intent"] and sent == []
+
+
+def test_start_a_gone_session_and_one_with_no_inbox_go_to_the_watcher(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "start", "session": "new", "text": "x", "status": "queued"},
+    )
+    put(
+        remote,
+        "intents",
+        "n2",
+        {"kind": "tell", "session": "gone", "text": "x", "status": "queued"},
+    )
+    put(
+        remote,
+        "intents",
+        "n3",
+        {"kind": "tell", "session": "far", "text": "x", "status": "queued"},
+    )
+    find, sent, deliver = _board({"far": _session("far", socket_path="")})
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert moved["handed"] == 3 and sent == []
+    assert "delivery" not in read(remote, "intents", "n1")  # start never took that path
+    assert "no such live session" in read(remote, "intents", "n2")["answer"]
+    assert "no inbox" in read(remote, "intents", "n3")["answer"]
+
+
+def test_a_post_that_fails_is_held_not_lost(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+    )
+    find, _, _ = _board({"fixer": _session("fixer")})
+
+    def broken(path, text):
+        raise ConnectionRefusedError(61, "refused")
+
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=broken)
+    assert moved["held"] == 1 and read(remote, "intents", "n1")["delivery"] == "pending"
+
+
+def test_the_registry_is_recorded_only_with_its_switch(remote, tmp_path):
+    calls = []
+
+    def record(**kw):
+        calls.append(kw)
+        return 3
+
+    assert "recorded" not in run(remote, tmp_path, record=record)
+    assert calls == []
+    assert run(remote, tmp_path, record_registry=True, record=record)["recorded"] == 3
+    assert calls[0]["events_path"] == tmp_path / "events.jsonl"
+
+
+def test_the_switches_are_read_from_the_config_file(tmp_path):
+    from crowsnest.config import events_settings, switchboard_settings
+
+    config = tmp_path / "config.toml"
+    assert not events_settings(path=config).registry
+    assert not switchboard_settings(path=config).deliver_intents
+    config.write_text(
+        "[events]\nregistry = true\n[switchboard]\ndeliver_intents = true\n"
+        "hold_minutes = 15\n"
+    )
+    assert events_settings(path=config).registry
+    board = switchboard_settings(path=config)
+    assert board.deliver_intents and board.hold_minutes == 15.0
+    for bad in (
+        '[switchboard]\ndeliver_intents = "yes"\n',
+        "[switchboard]\nhold = 1\n",
+        "[switchboard]\nhold_minutes = 0\n",
+        "[events]\nregistry = 1\n",
+        "events = 1\n",
+    ):
+        config.write_text(bad)
+        with pytest.raises(ValueError):
+            switchboard_settings(path=config)
+            events_settings(path=config)

@@ -80,6 +80,20 @@ ANSWER_LIMIT = 500
 #: The kinds a tick hands to a session, because they take judgment or reach another one.
 HANDED = ("ask", "tell", "start")
 
+#: The handed kinds the switchboard can deliver to the session they name. ``start`` is not
+#: one: it names a session that does not exist yet, which the watching session creates.
+DELIVERED = ("ask", "tell")
+
+#: An intent's ``delivery`` field, when ``[switchboard] deliver_intents`` is on: held for a
+#: busy or waiting session, posted to it, or handed to the watching session after all.
+PENDING, POSTED, WATCHER = "pending", "delivered", "watcher"
+
+#: How long an intent waits for its busy or waiting session before the watcher gets it.
+DFLT_HOLD = timedelta(minutes=60)
+
+#: Who a delivered intent is signed by, as the receiving session reads it.
+CONSOLE_SENDER = "the crowsnest console"
+
 #: Fixed answers, in the terms the page already uses.
 NO_SUCH_SESSION = "no recap: that session is not on the roster"
 AMBIGUOUS_SESSION = "no recap: that name belongs to more than one session"
@@ -248,6 +262,12 @@ def tick(
     now: datetime | None = None,
     recap: Callable[..., dict] | None = None,
     live: Callable[..., dict] | None = None,
+    deliver_intents: bool = False,
+    hold: timedelta = DFLT_HOLD,
+    record_registry: bool = False,
+    find: Callable[[str], object] | None = None,
+    deliver: Callable[[str, str], None] | None = None,
+    record: Callable[..., int] | None = None,
 ) -> dict:
     """Carry the console store at ``remote`` both ways once; the summary of what moved.
 
@@ -256,6 +276,20 @@ def tick(
     same sessions the page does. ``store`` is the attention store (its default when
     ``None``). ``recap`` and ``live`` default to :func:`crowsnest.tools.recap` and
     :func:`crowsnest.tools.live`, and exist so a test need not read real sessions.
+
+    Two switches, both off by default, so a tick does what it always did unless the
+    config file turns them on (``[switchboard]`` and ``[events]``, read by
+    :func:`crowsnest.tools.courier`):
+
+    - ``deliver_intents`` posts an ``ask`` or ``tell`` intent straight to the live
+      session it names (:func:`_route`), holding it while that session is busy or
+      waiting, for at most ``hold``. A ``start``, an intent for a session that is gone
+      or has no inbox here, and one held past ``hold`` go to the watching session as
+      before. ``find`` resolves a name to a live session (default
+      :func:`crowsnest.tools.resolve` over this tick's homes) and ``deliver`` is the
+      switchboard's transport.
+    - ``record_registry`` appends the registry's changes to the event log
+      (:func:`crowsnest.eventlog.record_changes`, or ``record``).
     """
     from crowsnest import tools
     from crowsnest.hook import append_event
@@ -268,7 +302,15 @@ def tick(
     now = datetime.now(timezone.utc) if now is None else now
     stamp = _iso(now)
     state = _state(mirror)
-    summary = {"imported": 0, "exported": 0, "answered": 0, "handed": 0, "skipped": 0}
+    summary = {
+        "imported": 0,
+        "exported": 0,
+        "answered": 0,
+        "handed": 0,
+        "skipped": 0,
+        "delivered": 0,
+        "held": 0,
+    }
 
     for collection in PULLED:
         copy(remote, str(mirror), collection)
@@ -294,8 +336,27 @@ def tick(
         if DOC_ID.match(item) and _write(mirror / "attention" / f"{item}.json", doc):
             summary["exported"] += 1
 
+    if find is None:
+
+        def find(name: str):
+            return tools.resolve(name, home=home, all_homes=all_homes, config=config)
+
     # Intents: answer what disk can answer, hand the rest to a session.
     for intent, doc, path in _docs(mirror, "intents"):
+        if doc.get("status", "queued") == "handed" and doc.get("delivery") == PENDING:
+            routed = _route(
+                intent,
+                doc,
+                deliver_intents=deliver_intents,
+                hold=hold,
+                now=now,
+                find=find,
+                deliver=deliver,
+                events_path=events_path,
+            )
+            summary[routed["counted"]] += 1
+            _write(path, routed["doc"])
+            continue
         if doc.get("status", "queued") != "queued":
             continue
         kind = str(doc.get("kind") or "")
@@ -314,6 +375,20 @@ def tick(
         elif kind == "refresh":
             reply, status = REFRESHED, "done"
             summary["answered"] += 1
+        elif kind in DELIVERED and deliver_intents:
+            routed = _route(
+                intent,
+                doc,
+                deliver_intents=deliver_intents,
+                hold=hold,
+                now=now,
+                find=find,
+                deliver=deliver,
+                events_path=events_path,
+            )
+            summary[routed["counted"]] += 1
+            _write(path, routed["doc"])
+            continue
         elif kind in HANDED:
             reply = f"handed to the crowsnest session at {stamp[11:16]} UTC"
             status = "handed"
@@ -333,6 +408,13 @@ def tick(
             summary["answered"] += 1
         _write(path, {**doc, "status": status, "answer": reply, "answered_at": stamp})
 
+    if record_registry:
+        if record is None:
+            from crowsnest.eventlog import record_changes as record
+        summary["recorded"] = record(
+            home=home, all_homes=all_homes, config=config, events_path=events_path
+        )
+
     # What the page paints between publishes.
     _write(
         mirror / "live" / "roster.json",
@@ -344,6 +426,111 @@ def tick(
         copy(str(mirror), remote, collection)
     _write(mirror / STATE_FILE, {**state, "exported": stamp, "ticked": stamp})
     return summary
+
+
+def _brief(intent: str, kind: str, text: str) -> str:
+    """What a delivered intent says to its session: the request, and how to answer it.
+
+    >>> print(_brief('20260201T120000Z-1a2b', 'ask', 'Is the build green?'))
+    A question from the crowsnest console: Is the build green?
+    Answer it in one line the console shows: crowsnest intent answer 20260201T120000Z-1a2b "<your answer>"
+    """
+    head = "A question from the crowsnest console: " if kind == "ask" else ""
+    return (
+        f"{head}{text.strip()}\n"
+        f"Answer it in one line the console shows: "
+        f'crowsnest intent answer {intent} "<your answer>"'
+    )
+
+
+def _route(
+    intent: str,
+    doc: Mapping,
+    *,
+    deliver_intents: bool,
+    hold: timedelta,
+    now: datetime,
+    find: Callable[[str], object],
+    deliver: Callable[[str, str], None] | None,
+    events_path: str | Path | None,
+) -> dict:
+    """Where an ``ask`` or ``tell`` intent goes this tick: ``{"doc", "counted"}``.
+
+    Posted to its session when that session is live, has an inbox here and is idle;
+    held (``delivery: pending``) while it is busy or waiting, for at most ``hold`` from
+    when it was first held; handed to the watching session otherwise, which is also what
+    a held intent gets once the switch is turned off. ``counted`` names the summary's
+    counter: ``delivered``, ``held`` or ``handed``.
+    """
+    from crowsnest import switchboard
+    from crowsnest.hook import append_event
+
+    stamp = _iso(now)
+    kind = str(doc.get("kind") or "")
+    name = str(doc.get("session") or "")
+    where = str(doc.get("home") or "")
+    text = str(doc.get("text") or "")
+    held_since = doc.get("held_since") or stamp
+
+    def to_watcher(why: str = "") -> dict:
+        append_event(
+            {
+                "event": "intent",
+                "at": stamp,
+                "name": name,
+                "intent": intent,
+                "detail": _one_line(f"{kind} {intent}: {text}"),
+            },
+            events_path=events_path,
+        )
+        reply = f"handed to the crowsnest session at {stamp[11:16]} UTC"
+        out = {**doc, "status": "handed", "answer": reply, "answered_at": stamp}
+        if deliver_intents or doc.get("delivery"):
+            out["delivery"] = WATCHER
+            if why:
+                out["answer"] = _one_line(f"{reply} ({why})")
+        return {"doc": out, "counted": "handed"}
+
+    if not deliver_intents:
+        return to_watcher()
+    try:
+        target = find(f"{name}@{where}" if where else name)
+    except KeyError:
+        return to_watcher("no such live session to deliver to")
+    if not getattr(target, "socket", ""):
+        return to_watcher(f"{name} has no inbox on this machine")
+    why = switchboard.deliverable(target)
+    if not why:
+        try:
+            switchboard.tell(
+                target,
+                _brief(intent, kind, text),
+                sender=CONSOLE_SENDER,
+                deliver=deliver,
+                events_path=events_path,
+                extra={"intent": intent},
+            )
+        except switchboard.Refused as exc:
+            why = str(exc)
+        else:
+            reply = f"delivered to {target.label} at {stamp[11:16]} UTC; no answer yet"
+            out = {**doc, "status": "handed", "delivery": POSTED, "answer": reply}
+            return {"doc": {**out, "answered_at": stamp}, "counted": "delivered"}
+    started = datetime.fromisoformat(str(held_since).replace("Z", "+00:00"))
+    if now - started >= hold:
+        return to_watcher(f"{target.label} stayed {target.status}")
+    reply = _one_line(
+        f"held for {target.label}, which is {target.status}; tried at {stamp[11:16]} UTC"
+    )
+    out = {
+        **doc,
+        "status": "handed",
+        "delivery": PENDING,
+        "held_since": held_since,
+        "answer": reply,
+        "answered_at": stamp,
+    }
+    return {"doc": out, "counted": "held"}
 
 
 def hand(

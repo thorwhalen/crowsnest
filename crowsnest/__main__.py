@@ -1037,6 +1037,9 @@ def courier(
     return (
         f"courier: {moved['imported']} in, {moved['exported']} out, "
         f"{moved['answered']} answered, {moved['handed']} handed to a session"
+        + (f", {moved['delivered']} delivered" if moved.get("delivered") else "")
+        + (f", {moved['held']} held for a busy session" if moved.get("held") else "")
+        + (f", {moved['recorded']} registry events" if moved.get("recorded") else "")
         + (f", {moved['skipped']} unreadable skipped" if moved["skipped"] else "")
     )
 
@@ -1168,6 +1171,89 @@ def watch(
             print(line, flush=True)
     except KeyboardInterrupt:
         pass
+
+
+def tell(
+    session: str,
+    text: str = "",
+    *,
+    busy_ok: bool = False,
+    sender: str | None = None,
+    home: str | None = None,
+    all_homes: bool = False,
+):
+    """Message a live session through its inbox socket, from any session or script.
+
+    SESSION is a name, `name@home` (with `--all-homes`), or an id. `--text` is the message;
+    without it, stdin is read. The session reads it as from `--sender` (default: the
+    session running this command, else "a crowsnest script"). Costs no model turn here.
+
+    Refused, with the reason and exit 2: a session waiting on its person; a busy one
+    unless `--busy-ok` (it then reads the message between two tool calls); one on another
+    machine. Each message sent is a `message` line in the event log (`crowsnest log`).
+    Whether the session accepts it is its own `crossSessionInbound` setting.
+    """
+    from crowsnest.switchboard import MAX_TEXT
+
+    if not text and sys.stdin is not None and not sys.stdin.isatty():
+        text = sys.stdin.read(MAX_TEXT * 4 + 1)
+    sent = tools.tell(
+        session,
+        text,
+        busy_ok=busy_ok,
+        sender=sender,
+        home=home,
+        all_homes=all_homes,
+    )
+    return f"told {sent['to']} ({sent['status']}), as {sent['sender']}"
+
+
+def log(
+    *,
+    since: str = "1h",
+    session: str | None = None,
+    events: str | None = None,
+    limit: int = 0,
+    json: bool = False,
+    path: bool = False,
+):
+    """The event log: what happened across the fleet, one line per event, oldest first.
+
+    One plain JSON-lines file, `events.jsonl` in crowsnest's data directory (`--path`
+    prints where), rotated to `events-<time>.jsonl` beside it and never pruned: open it in
+    any editor. Read it before messaging a session, to see what it and the others did.
+
+    `--since` is a span back from now (`90m`, `2h`, `3d`) or an ISO time, `all` for the
+    whole log (default `1h`). `--session a,b` keeps those sessions (name, `name@home`,
+    or id; a message counts for its sender too). `--events stop,message` keeps those
+    events. `--limit N` keeps the newest N (0: all). `--json` prints the records themselves.
+    """
+    from crowsnest.eventlog import line
+
+    if path:
+        return tools.log(since=None, limit=0)["path"]
+    got = tools.log(
+        since=None if since in ("all", "") else since,
+        sessions=_split(session),
+        events=_split(events),
+        limit=int(limit) or None,
+    )
+    if json:
+        return "\n".join(_json.dumps(r, ensure_ascii=False) for r in got["records"])
+    if not got["records"]:
+        return f"(nothing in the event log since {since}: {got['path']})"
+    return "\n".join(line(r) for r in got["records"])
+
+
+def _split(spec: str | None) -> list[str] | None:
+    """A comma-separated option as a list, ``None`` when not given.
+
+    >>> _split('a, b,'), _split(None)
+    (['a', 'b'], None)
+    """
+    if spec is None:
+        return None
+    return [part.strip() for part in spec.split(",") if part.strip()]
 
 
 def hook(event: str, *, home: str | None = None):
@@ -1747,6 +1833,8 @@ _commands = [
     synopsis,
     handoff,
     questions,
+    log,
+    tell,
     report,
     publish,
     courier,
