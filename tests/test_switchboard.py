@@ -19,6 +19,11 @@ from fixtures import alive, demo_home, registry_record, write_registry
 from crowsnest import switchboard, tools
 from crowsnest.registry import LiveSession
 
+POSIX = pytest.mark.skipif(
+    sys.platform == "win32", reason="Unix sockets, fcntl and file modes are POSIX"
+)
+
+
 IDLE = LiveSession(
     101,
     "s1",
@@ -159,6 +164,7 @@ def _listening(tmp_path):
     return path, server, thread, got
 
 
+@POSIX
 def test_socket_post_writes_one_user_line_to_the_process_that_holds_it(tmp_path):
     path, server, thread, got = _listening(tmp_path)
     me = replace(IDLE, pid=os.getpid(), socket=path)
@@ -174,6 +180,7 @@ def test_socket_post_writes_one_user_line_to_the_process_that_holds_it(tmp_path)
     }
 
 
+@POSIX
 def test_socket_post_refuses_a_stranger_at_the_socket_or_a_reused_pid(tmp_path):
     path, server, _thread, got = _listening(tmp_path)
     try:
