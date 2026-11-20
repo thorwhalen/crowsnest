@@ -614,3 +614,84 @@ def test_a_status_token_in_the_free_part_is_still_not_an_all_clear():
     """Only the structured field has a vocabulary; prose keeps the stricter rules."""
     found = classify_row(_row(), ledger=_ledger("## 2026-11-19 — wrap\n\ndone\n"))
     assert found["group"] == "unclassified"
+
+
+# --------------------------------------------------------------------------------------
+# The structured fields are the session's latest word, but not newer than its last section
+
+
+_OLD_ASK = (
+    "## 2026-11-19\n\n- Next: one manual-task issue; then stop and discuss with the user "
+    "before building.\n"
+)
+_LATER = "\n## 2026-11-20\n\n- Built and merged the reminders; CI green.\n"
+_DONE = "done — PR #12 merged, CI green"
+
+
+def test_a_none_and_a_borne_out_done_state_withdraw_an_ask_in_an_older_section():
+    found = classify_row(
+        _row(), ledger=_ledger(_OLD_ASK + _LATER, open_questions="- none", state=_DONE)
+    )
+    assert found["group"] == "safe_to_close"
+
+
+def test_an_ask_in_the_latest_section_is_never_withdrawn():
+    """The fields carry no date: a "none" written at the start cannot outrank a new ask."""
+    found = classify_row(
+        _row(), ledger=_ledger(_LATER + _OLD_ASK, open_questions="- none", state=_DONE)
+    )
+    assert found["group"] == "needs_you"
+
+
+def test_a_done_token_whose_evidence_takes_it_back_withdraws_nothing():
+    free = "## Earlier\n\nFor Thor: rotate the JEV key.\n\n## Later\n\nNothing outstanding.\n"
+    found = classify_row(
+        _row(),
+        ledger=_ledger(free, open_questions="- none", state="done — not merged yet"),
+    )
+    assert found["group"] == "needs_you"
+
+
+def test_an_empty_open_questions_field_withdraws_nothing():
+    found = classify_row(_row(), ledger=_ledger(_OLD_ASK + _LATER, state=_DONE))
+    assert found["group"] == "needs_you"
+
+
+def test_prose_after_none_is_not_one_long_question():
+    """`- none`, a blank line, then a `Brief:` line read as "- none Brief: ..." before."""
+    found = classify_row(
+        _row(),
+        ledger=_ledger(open_questions="- none\n\nBrief: see the plan", state=_DONE),
+    )
+    assert found["group"] == "safe_to_close"
+
+
+def test_a_request_after_none_in_the_same_field_is_still_read():
+    found = classify_row(
+        _row(),
+        ledger=_ledger(
+            open_questions="- none\n\nFor Thor: please approve the purchase of the domain."
+        ),
+    )
+    assert found["group"] == "needs_you"
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "- none yet\n\n- decide whether to squash or rebase the release?",
+        "- none\n\nThor, please approve the purchase of the domain.",
+    ],
+)
+def test_a_real_question_below_none_still_asks(field):
+    assert (
+        classify_row(_row(), ledger=_ledger(open_questions=field))["group"] == "needs_you"
+    )
+
+
+def test_an_empty_trailing_stub_is_not_the_latest_section():
+    free = "## For Thor\n\n- rotate the key\n\n## Notes\n"
+    found = classify_row(
+        _row(), ledger=_ledger(free, open_questions="- none", state=_DONE)
+    )
+    assert found["group"] == "needs_you"

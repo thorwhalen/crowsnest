@@ -343,3 +343,15 @@ def test_the_cli_prints_the_five_lines(tmp_path, alive, capsys, monkeypatch):
     printed = capsys.readouterr().out.strip().splitlines()
     assert len(printed) == RECAP_LINES and printed[0].startswith("parser: busy since")
     assert printed[3] == "running since 2026-01-01 10:03 UTC: Bash: Run the suite"
+
+
+def test_a_recap_line_ends_on_a_whole_sentence_and_its_limit_is_a_parameter(tmp_path):
+    from crowsnest.live import recap_lines
+
+    said = "Merged the fix and the release is out. " + "Then a long tail of detail. " * 20
+    activity = {"last_assistant_text": said, "last_text_at": "2026-01-01T09:30:00Z"}
+    session = {"label": "fixer", "status": "idle", "status_since": 0}
+    short = recap_lines(session, activity, None)[2]
+    assert short.endswith(". …") and len(short) <= RECAP_TEXT_LIMIT
+    full = recap_lines(session, activity, None, text_limit=2000)[2]
+    assert full.endswith("detail.") and "…" not in full

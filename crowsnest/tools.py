@@ -1786,6 +1786,7 @@ def recap(
     all_homes: bool = False,
     config: str | Path | None = None,
     digests_store=None,
+    text_limit: int | None = None,
 ) -> dict:
     """Five lines about one live session, read from disk: the answer to a ``recap`` intent.
 
@@ -1795,10 +1796,20 @@ def recap(
     already through the page's sanitiser, because the watcher writes them into the page's
     ``db``. Raises ``KeyError`` when no live session matches, as :func:`resolve` does.
 
+    ``text_limit`` is how long one line may be: the page's
+    :data:`crowsnest.live.RECAP_TEXT_LIMIT` by default (the ``db`` anyone with the page
+    can read); a reader the owner alone sees, such as the claude.ai connector, may ask for
+    more, and a clipped line still ends on a whole sentence.
+
     Returns ``{"session", "lines", "made_at"}``, ``session`` being its sanitised address.
     """
     from crowsnest.lineage import address
-    from crowsnest.live import publishable, recap_lines
+    from crowsnest.live import RECAP_TEXT_LIMIT, publishable, recap_lines
+
+    if text_limit is not None and text_limit < 1:
+        raise ValueError(
+            f"text_limit is a positive number of characters, not {text_limit}"
+        )
 
     made_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     s = resolve(session, home=home, all_homes=all_homes, config=config)
@@ -1810,7 +1821,9 @@ def recap(
     record = s.as_dict()
     return {
         "session": publishable(address(record)),
-        "lines": recap_lines(record, act.as_dict(), digest),
+        "lines": recap_lines(
+            record, act.as_dict(), digest, text_limit=text_limit or RECAP_TEXT_LIMIT
+        ),
         "made_at": made_at,
     }
 

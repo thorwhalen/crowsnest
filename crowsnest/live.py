@@ -116,9 +116,50 @@ def publishable(value, *, limit: int | None = None) -> str:
     return clipped if clipped == clean else _html.unescape(_Sanitizer().text(clipped))
 
 
+#: A sentence's end inside a clip window: where a clip would rather stop.
+_SENTENCE_END = re.compile(r"[.!?](?=\s+[A-Z0-9\[(\"'`*_#-])")
+
+
 def _clip(text: str, limit: int) -> str:
+    """``text`` on one line, at most ``limit`` characters, ending on a whole sentence.
+
+    A clip that stops mid-sentence is read aloud as if the sentence ended there (a recap
+    is often spoken). So it stops after the last full sentence in the window, when that
+    keeps at least half of it, and otherwise after the last whole word. The ellipsis says
+    something was left out either way.
+
+    >>> _clip('Merged the fix. Then the release went out to everyone.', 30)
+    'Merged the fix. …'
+    >>> _clip('one two three four', 12)
+    'one two…'
+    >>> _clip('short', 10)
+    'short'
+
+    "e.g. the" is not a sentence's end, and a long last word (a URL) is cut hard rather
+    than dropped when dropping it would lose more than half the window:
+
+    >>> _clip('Use e.g. the long form of everything here please', 20)
+    'Use e.g. the long…'
+    >>> _clip('see https://example.com/a/very/long/path/indeed', 20)
+    'see https://example…'
+    """
+    if limit < 1:
+        raise ValueError(
+            f"a clip's limit is a positive number of characters, not {limit}"
+        )
     text = " ".join(text.split())
-    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+    if len(text) <= limit:
+        return text
+    window = text[: limit - 1]
+    half = (limit - 1) // 2
+    ends = [m.end() for m in _SENTENCE_END.finditer(window)]
+    if ends and ends[-1] >= half:
+        return window[: ends[-1]] + (" …" if limit - ends[-1] >= 2 else "…")
+    whole = text[limit - 1] == " " or " " not in window  # the window ends on a word
+    cut = window if whole else window.rsplit(" ", 1)[0]
+    if len(cut) < half:  # one long word (a URL, a path) would take the line with it
+        cut = window
+    return cut.rstrip() + "…"
 
 
 #: What an earlier clip leaves at the end of a text: the word it cut, then its ellipsis.
