@@ -1,4 +1,4 @@
-> built 2026-11-20 17:55 UTC from 6eb8d41 (main) · crowsnest 0.0.118. Details: build_info.json
+> built 2026-11-20 18:51 UTC from 7aa8642 (main) · crowsnest 0.0.119. Details: build_info.json
 
 # index.html.md
 
@@ -8588,16 +8588,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-20 17:55 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/6eb8d41261a55b1979067b1efe84c1e4c425c8f7"><code>6eb8d41</code></a> on branch <code>main</code>, for **crowsnest 0.0.118** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-20 18:51 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/7aa8642b393b177b62b5634a1f189416903e7168"><code>7aa8642</code></a> on branch <code>main</code>, for **crowsnest 0.0.119** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.119) is behind the latest release on PyPI (0.0.120): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/6eb8d41261a55b1979067b1efe84c1e4c425c8f7"><code>6eb8d41261a55b1979067b1efe84c1e4c425c8f7</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/7aa8642b393b177b62b5634a1f189416903e7168"><code>7aa8642b393b177b62b5634a1f189416903e7168</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -8608,9 +8610,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44787542046">44787542046</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44796384183">44796384183</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>6eb8d41261a55b1979067b1efe84c1e4c425c8f7</code> (in the history of the built commit) |
+| Event commit | <code>7aa8642b393b177b62b5634a1f189416903e7168</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8635,13 +8637,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.118/">0.0.118</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.120/">0.0.120</a>, newer than the documented version (0.0.119).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 6eb8d41261a55b1979067b1efe84c1e4c425c8f7
+git checkout 7aa8642b393b177b62b5634a1f189416903e7168
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
