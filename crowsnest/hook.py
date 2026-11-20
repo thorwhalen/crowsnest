@@ -90,6 +90,7 @@ __all__ = [
     "append_event",
     "events_path",
     "handle",
+    "log_failure",
     "log_path",
     "rotate",
 ]
@@ -195,6 +196,11 @@ def _log(message: str, *, path: str | Path | None = None) -> None:
             stream.write(f"{_now()} {message}\n")
     except Exception:  # noqa: BLE001, S110 -- the logger is the last thing that may fail
         pass
+
+
+#: The public name of :func:`_log`, for the other modules that swallow an error the same
+#: way (the switchboard, the courier): one line in ``hook.log``, never a raise.
+log_failure = _log
 
 
 # --------------------------------------------------------------------------------------

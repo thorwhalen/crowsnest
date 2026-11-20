@@ -85,7 +85,7 @@ import math
 import os
 import re
 import sys
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field, fields, replace
 from datetime import timedelta
 from pathlib import Path
 
@@ -691,6 +691,15 @@ class CourierSettings:
     """
 
     remote: str = ""
+    #: Post an ``ask``/``tell`` intent straight to the live session it names, through
+    #: the switchboard, instead of handing every intent to the watching session (#200).
+    deliver_intents: bool = False
+    #: How long such an intent waits for a busy or waiting session before the watcher
+    #: gets it after all.
+    hold_minutes: float = 60.0
+    #: Append the registry's changes (started, exited, busy, idle, waiting, error) to
+    #: the event log each tick (:func:`crowsnest.eventlog.record_changes`, #141).
+    record_registry: bool = False
 
 
 #: The config table holding ``crowsnest watch``'s selection (#141).
@@ -754,24 +763,46 @@ def courier_settings(*, path: str | Path | None = None) -> CourierSettings:
 
         [courier]
         remote = "me@myserver:/srv/crowsnest/db"   # or a local directory
+        deliver_intents = true   # ask/tell intents go to their session, not the watcher
+        hold_minutes = 60        # how long one waits for a busy session first
+        record_registry = true   # write the registry's changes to the event log
+
+    The last three are off by default, so a table that says only ``remote`` behaves as
+    it did before they existed.
     """
+    got = _typed_table(path, COURIER_KEY, CourierSettings)
+    return replace(got, remote=got.remote.strip())
+
+
+def _typed_table(path, key: str, cls):
+    """The ``[key]`` table read into ``cls``, every value checked against its default's type
+    (a float must also be positive); an unknown key is an error."""
     file = config_path(path)
-    table = _loaded(path).get(COURIER_KEY)
+    table = _loaded(path).get(key)
     if table is None:
-        return CourierSettings()
+        return cls()
     if not isinstance(table, dict):
-        raise ValueError(f"{file}: [{COURIER_KEY}] must be a table")  # noqa: TRY004
-    unknown = sorted(set(table) - {"remote"})
+        raise ValueError(f"{file}: [{key}] must be a table")  # noqa: TRY004
+    known = {f.name: f for f in fields(cls)}
+    unknown = sorted(set(table) - set(known))
     if unknown:
         raise ValueError(
-            f"{file}: [{COURIER_KEY}] has no {', '.join(unknown)}; it knows remote"
+            f"{file}: [{key}] has no {', '.join(unknown)}; "
+            f"it knows {', '.join(sorted(known))}"
         )
-    remote = table.get("remote", "")
-    if not isinstance(remote, str):
-        raise ValueError(  # noqa: TRY004
-            f"{file}: [{COURIER_KEY}] remote must be a string, not {remote!r}"
-        )
-    return CourierSettings(remote=remote.strip())
+    values = {}
+    for name, value in table.items():
+        wanted = type(getattr(cls(), name))
+        if wanted is float and _is_int(value):
+            value = float(value)
+        if type(value) is not wanted:
+            raise ValueError(
+                f"{file}: [{key}] {name} must be a {wanted.__name__}, not {value!r}"
+            )
+        if wanted is float and value <= 0:
+            raise ValueError(f"{file}: [{key}] {name} must be positive, not {value!r}")
+        values[name] = value
+    return cls(**values)
 
 
 #: The config file's table for carrying ledgers to their page (:mod:`crowsnest.ledger_mirror`).

@@ -163,7 +163,16 @@ hand the work to a session that already exists. Never run `crowsnest reap --appl
 yourself: closing sessions belongs to the user or to the guard's timer.
 
 For a session that already exists, `SendMessage` to its name from `ListAgents`, with the
-same six parts. Idle only — never a `busy` or `waiting` one.
+same six parts. Idle only — never a `busy` or `waiting` one. First read what it did
+lately: `crowsnest log --since 2h --session <name>` (the fleet's event log, one line per
+event, no transcript read).
+
+From a script, a scheduler, or anything that has no `SendMessage` tool, use the
+switchboard instead: `crowsnest tell <name> --text "..."` (or the text on stdin). It
+posts into the session's inbox socket with no model turn, refuses a `busy` or `waiting`
+session for you, and records a `message` line in the event log. A session may use it too
+when the message should be on the record; it carries no reply address, so say in the
+text how to answer.
 
 ## 7. Subscribe once, then stop looking
 

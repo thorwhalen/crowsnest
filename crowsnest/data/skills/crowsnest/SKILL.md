@@ -71,6 +71,7 @@ crowsnest show <session>      # one session: last asked, last said, running now,
 crowsnest brief <session>     # openloops' dated digest of that session, no transcript read
 crowsnest turns <session> -l 5          # the last five turns, oldest first
 crowsnest turns <session> -l 5 --before 12   # page further back
+crowsnest log --since 2h      # the event log: every stop, ask, message (and registry change), one line each
 ```
 
 `<session>` is the name the user gave the session (`-n name`), a unique prefix of one,

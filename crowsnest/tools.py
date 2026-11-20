@@ -52,6 +52,7 @@ __all__ = [
     "later",
     "lineage",
     "live",
+    "log",
     "note",
     "publish",
     "reap",
@@ -64,6 +65,7 @@ __all__ = [
     "seen",
     "sessions",
     "show",
+    "tell",
     "triage",
     "turns",
     "undo",
@@ -199,8 +201,14 @@ def resolve(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
+    exact: bool = False,
 ) -> LiveSession:
     """The live session a human means by ``session``.
+
+    ``exact`` takes only a whole label (the name, or an unnamed session's id head) or a
+    whole id, for a caller with nobody to catch a wrong pick: an intent delivered by the
+    courier names a row of a page published a minute ago, whose session may have exited
+    while another, whose name it begins, lives on.
 
     Tried in order: the exact session id, the exact registry name, a unique name prefix, a
     unique session-id prefix, the pid. ``name@home`` names a session in one home when
@@ -216,6 +224,12 @@ def resolve(
     if "@" in wanted and all_homes:
         wanted, _, in_home = wanted.rpartition("@")
         candidates = [s for s in candidates if s.home == in_home]
+    if exact:
+        found = [s for s in candidates if wanted and wanted in (s.label, s.session_id)]
+        if len(found) == 1:
+            return found[0]
+        many = "more than one live session" if found else "no live session"
+        raise KeyError(f"{session!r} is the whole name or id of {many}")
     sessions_ = candidates
     by_whole_id = [s for s in sessions_ if s.session_id == wanted]
     if len(by_whole_id) == 1:
@@ -1053,18 +1067,28 @@ def courier(
     copy=None,
     store=None,
     events_path: str | Path | None = None,
+    find=None,
+    deliver=None,
 ) -> dict:
     """One courier tick for the page's own console store (:func:`crowsnest.courier.tick`).
 
     ``remote`` defaults to the config file's ``[courier]`` table. Run it on the schedule
     that publishes the page: it carries the buttons' writes both ways, answers a recap from
     disk, and wakes a session (through ``crowsnest watch``) only for an ask, a tell or a
-    start. ``copy`` is the transport seam, ``(src, dst, collection) -> None``.
+    start. ``copy`` is the transport seam, ``(src, dst, collection) -> None``. The
+    ``[courier]`` table's ``deliver_intents``, ``hold_minutes`` and ``record_registry``
+    turn on delivering intents to their session and recording the registry; ``find``
+    (a name to one live session) and ``deliver`` (the switchboard's transport,
+    ``(session, text) -> None``) are the delivery's seams.
     """
+    from datetime import timedelta
+
     from crowsnest import courier as _courier
     from crowsnest.config import courier_settings
+    from crowsnest.eventlog import record_changes
 
-    remote = remote or courier_settings(path=config).remote
+    settings = courier_settings(path=config)
+    remote = remote or settings.remote
     if not remote:
         raise ValueError(
             "the courier needs the console store's root: --remote HOST:PATH or a "
@@ -1079,6 +1103,11 @@ def courier(
         config=config,
         store=store,
         events_path=events_path,
+        deliver_intents=settings.deliver_intents,
+        hold=timedelta(minutes=settings.hold_minutes),
+        record=record_changes if settings.record_registry else None,
+        find=find,
+        deliver=deliver,
     )
 
 
@@ -1094,6 +1123,74 @@ def intent_answer(
     from crowsnest import courier as _courier
 
     return _courier.answer(intent, text, status=status, mirror=mirror)
+
+
+def tell(
+    session: str,
+    text: str,
+    *,
+    busy_ok: bool = False,
+    sender: str | None = None,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    deliver=None,
+    events_path: str | Path | None = None,
+) -> dict:
+    """Message a live session through its inbox socket, from any session or process.
+
+    ``session`` is resolved as :func:`resolve` does. A ``waiting`` session is refused, a
+    busy one unless ``busy_ok``, and one with no inbox here always
+    (:func:`crowsnest.switchboard.tell`, which also writes the ``message`` event line).
+    ``deliver`` is the transport seam, ``(session, text) -> None``.
+    """
+    from crowsnest import switchboard
+
+    if not session.strip():
+        raise switchboard.Refused("name the session to tell")
+    target = resolve(session, home=home, all_homes=all_homes, config=config)
+    return switchboard.tell(
+        target,
+        text,
+        sender=sender,
+        busy_ok=busy_ok,
+        deliver=deliver,
+        events_path=events_path,
+    )
+
+
+def log(
+    *,
+    since: str | None = "1h",
+    sessions: list[str] | None = None,
+    events: list[str] | None = None,
+    limit: int | None = None,
+    events_path: str | Path | None = None,
+) -> dict:
+    """The event log's records, oldest first: ``{"path", "files", "records"}``.
+
+    ``since`` is a span back from now (``90m``, ``2h``, ``3d``) or an ISO time, ``""`` or
+    ``None`` for the whole log; ``sessions`` and ``events`` narrow it
+    (:func:`crowsnest.eventlog.read`); ``limit`` keeps the newest that many.
+    """
+    from crowsnest import eventlog
+    from crowsnest.hook import events_path as _path
+
+    records = list(
+        eventlog.read(
+            since=since or None,
+            sessions=sessions or None,
+            events=events or None,
+            events_path=events_path,
+        )
+    )
+    if limit is not None and limit >= 0:
+        records = records[-limit:] if limit else []
+    return {
+        "path": str(_path(events_path)),
+        "files": [str(p) for p in eventlog.files(events_path)],
+        "records": records,
+    }
 
 
 def _console_root(store: str | Path | None, config: str | Path | None) -> str:

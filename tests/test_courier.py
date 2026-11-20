@@ -262,3 +262,451 @@ def test_hand_refuses_a_kind_no_session_takes(tmp_path):
 
     with pytest.raises(ValueError, match="one of"):
         _c.hand("delete", "x", "y", mirror=tmp_path / "m", events_path=tmp_path / "e")
+
+
+# --------------------------------------------------------------------------------------
+# The lean lookout's switches (#141, #174, #200): both off unless the config says so
+
+
+@pytest.fixture(autouse=True)
+def _accepting_home(tmp_path):
+    """A home whose settings accept messages, for the sessions :func:`_session` makes."""
+    home = tmp_path / "claude-home"
+    home.mkdir()
+    (home / "settings.json").write_text('{"crossSessionInbound": "accept"}')
+    _HOME[0] = home
+
+
+_HOME = [None]
+
+
+def _session(name, status="idle", socket_path="/tmp/cc-socks/1.sock", inbound=True):
+    from crowsnest.registry import LiveSession
+
+    home = _HOME[0] if inbound else _HOME[0].parent / "elsewhere"
+    return LiveSession(
+        1,
+        f"id-{name}",
+        name,
+        "/w",
+        "interactive",
+        status,
+        "",
+        0,
+        0,
+        False,
+        "",
+        str(home / "projects" / "-w" / f"id-{name}.jsonl"),
+        socket=socket_path,
+    )
+
+
+def _board(sessions):
+    """A ``find`` over named sessions, and the list ``deliver`` appends what it posts to."""
+    sent = []
+
+    def find(name):
+        if name not in sessions:
+            raise KeyError(f"no live session matches {name!r}")
+        return sessions[name]
+
+    return find, sent, lambda session, text: sent.append((session.socket, text))
+
+
+def test_with_the_switch_off_an_intent_is_handed_exactly_as_before(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "go", "status": "queued"},
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    moved = run(remote, tmp_path, find=find, deliver=deliver)
+    assert sent == [] and moved["handed"] == 1 and moved["delivered"] == 0
+    got = read(remote, "intents", "n1")
+    assert "delivery" not in got and got["answer"].startswith("handed to the crowsnest")
+    assert [e["event"] for e in events(tmp_path)] == ["intent"]
+
+
+def test_an_idle_session_is_delivered_its_intent_and_the_watcher_is_not_woken(
+    remote, tmp_path
+):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "rebase first", "status": "queued"},
+    )
+    put(
+        remote,
+        "intents",
+        "n2",
+        {"kind": "ask", "session": "fixer", "text": "green?", "status": "queued"},
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert moved["delivered"] == 2 and moved["handed"] == 0
+    got = read(remote, "intents", "n1")
+    assert got["status"] == "handed" and got["delivery"] == "delivered"
+    assert got["answer"] == "delivered to fixer at 12:00 UTC; no answer yet"
+    assert "rebase first" in sent[0][1] and "crowsnest intent answer n1" in sent[0][1]
+    assert sent[1][1].startswith(
+        "From the crowsnest console, through crowsnest's switchboard:\n"
+        f"{courier.CONSOLE_NOTE}\n"
+        "A question from the crowsnest console: green?"
+    )
+    logged = events(tmp_path)
+    assert [e["event"] for e in logged] == ["message", "message"]
+    assert logged[0]["intent"] == "n1" and all(hook_event(e) is None for e in logged)
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert len(sent) == 2  # delivered once
+
+
+def test_a_busy_session_is_held_then_delivered_when_it_goes_idle(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "go", "status": "queued"},
+    )
+    sessions = {"fixer": _session("fixer", status="busy")}
+    find, sent, deliver = _board(sessions)
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    got = read(remote, "intents", "n1")
+    assert moved["held"] == 1 and sent == []
+    assert got["delivery"] == "pending" and got["held_since"] == "2026-02-01T12:00:00Z"
+    assert got["answer"].startswith("held for fixer, which is busy")
+    sessions["fixer"] = _session("fixer")
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert moved["delivered"] == 1 and len(sent) == 1
+    assert read(remote, "intents", "n1")["delivery"] == "delivered"
+
+
+def test_a_held_intent_goes_to_the_watcher_after_the_hold_or_when_the_switch_goes_off(
+    remote, tmp_path
+):
+    from datetime import timedelta
+
+    put(
+        remote,
+        "intents",
+        "n1",
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "go",
+            "status": "handed",
+            "delivery": "pending",
+            "held_since": "2026-02-01T10:00:00Z",
+        },
+    )
+    put(
+        remote,
+        "intents",
+        "n2",
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "go",
+            "status": "handed",
+            "delivery": "pending",
+            "held_since": "2026-02-01T11:59:00Z",
+        },
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer", status="waiting")})
+    run(
+        remote,
+        tmp_path,
+        deliver_intents=True,
+        hold=timedelta(minutes=60),
+        find=find,
+        deliver=deliver,
+    )
+    assert read(remote, "intents", "n1")["delivery"] == "watcher"
+    assert "stayed waiting" in read(remote, "intents", "n1")["answer"]
+    assert read(remote, "intents", "n2")["delivery"] == "pending"
+    run(
+        remote, tmp_path, find=find, deliver=deliver
+    )  # switch off: hand it on, not strand it
+    assert read(remote, "intents", "n2")["delivery"] == "watcher"
+    assert [e["event"] for e in events(tmp_path)] == ["intent", "intent"] and sent == []
+
+
+def test_start_a_gone_session_and_one_with_no_inbox_go_to_the_watcher(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "start", "session": "new", "text": "x", "status": "queued"},
+    )
+    put(
+        remote,
+        "intents",
+        "n2",
+        {"kind": "tell", "session": "gone", "text": "x", "status": "queued"},
+    )
+    put(
+        remote,
+        "intents",
+        "n3",
+        {"kind": "tell", "session": "far", "text": "x", "status": "queued"},
+    )
+    put(
+        remote,
+        "intents",
+        "n4",
+        {"kind": "tell", "session": "shy", "text": "x", "status": "queued"},
+    )
+    find, sent, _ = _board(
+        {"far": _session("far", socket_path=""), "shy": _session("shy", inbound=False)}
+    )
+    moved = run(remote, tmp_path, deliver_intents=True, find=find)  # the real transport
+    assert moved["handed"] == 4 and sent == []
+    assert "delivery" not in read(remote, "intents", "n1")  # start never took that path
+    assert "no live session" in read(remote, "intents", "n2")["answer"]
+    assert "inbox did not take it" in read(remote, "intents", "n3")["answer"]
+    assert "hold a message for approval" in read(remote, "intents", "n4")["answer"]
+
+
+def test_a_post_that_fails_goes_to_the_watcher_at_once(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+    )
+    find, _, _ = _board({"fixer": _session("fixer")})
+
+    def broken(session, text):
+        raise ConnectionRefusedError(61, "refused")
+
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=broken)
+    got = read(remote, "intents", "n1")
+    assert moved["handed"] == 1 and got["delivery"] == "watcher"
+    assert "inbox did not take it" in got["answer"]
+
+
+def test_the_registry_is_recorded_only_when_a_recorder_is_given(remote, tmp_path):
+    calls = []
+
+    def record(**kw):
+        calls.append(kw)
+        return 3
+
+    assert "recorded" not in run(remote, tmp_path)
+    assert run(remote, tmp_path, record=record)["recorded"] == 3
+    assert calls[0]["events_path"] == tmp_path / "events.jsonl"
+
+
+def test_the_switches_are_read_from_the_courier_table(tmp_path, monkeypatch):
+    config = tmp_path / "config.toml"
+    got = courier_settings(path=config)
+    assert not got.deliver_intents and not got.record_registry and got.hold_minutes == 60
+    config.write_text(
+        "[courier]\nremote = ' /db '\ndeliver_intents = true\nhold_minutes = 15\n"
+        "record_registry = true\n"
+    )
+    got = courier_settings(path=config)
+    assert got.remote == "/db" and got.deliver_intents and got.record_registry
+    assert got.hold_minutes == 15.0
+    seen = {}
+    monkeypatch.setattr(courier, "tick", lambda remote, **kw: seen.update(kw) or {})
+    tools.courier(config=config)
+    from datetime import timedelta
+
+    from crowsnest.eventlog import record_changes
+
+    assert seen["deliver_intents"] and seen["hold"] == timedelta(minutes=15)
+    assert seen["record"] is record_changes
+    config.write_text("[courier]\nremote = '/db'\n")
+    tools.courier(config=config)
+    assert not seen["deliver_intents"] and seen["record"] is None
+    for bad in (
+        '[courier]\ndeliver_intents = "yes"\n',
+        "[courier]\nhold_minutes = 0\n",
+        "[courier]\nrecord_registry = 1\n",
+        "[courier]\nremote = 3\n",
+    ):
+        config.write_text(bad)
+        with pytest.raises(ValueError, match=r"\[courier\]"):
+            courier_settings(path=config)
+
+
+def test_an_ask_with_no_text_is_the_status_request(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "ask", "session": "fixer", "text": "", "status": "queued"},
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert courier.STATUS_REQUEST in sent[0][1]
+
+
+def test_a_bad_held_since_fails_nothing_else(remote, tmp_path):
+    for n, held in (("n1", "garbage"), ("n2", "2026-02-01T11:00:00")):
+        put(
+            remote,
+            "intents",
+            n,
+            {
+                "kind": "tell",
+                "session": "fixer",
+                "text": "x",
+                "status": "handed",
+                "delivery": "pending",
+                "held_since": held,
+            },
+        )
+    find, _sent, deliver = _board({"fixer": _session("fixer", status="busy")})
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert moved["held"] == 2
+    assert read(remote, "intents", "n1")["held_since"] == "2026-02-01T12:00:00Z"
+    assert (remote / "console" / "heartbeat.json").exists()
+
+
+def test_a_routing_crash_fails_that_intent_only(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+    )
+    put(
+        remote, "intents", "n2", {"kind": "recap", "session": "fixer", "status": "queued"}
+    )
+
+    def explode(name):
+        raise RuntimeError("boom")
+
+    def explode_late(session, text):
+        raise RuntimeError("boom")  # the transport itself: nobody knows if it was sent
+
+    find, _, _ = _board({"fixer": _session("fixer")})
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=explode_late)
+    assert read(remote, "intents", "n1")["status"] == "failed"
+    assert read(remote, "intents", "n2")["status"] == "done"
+    assert (remote / "console" / "heartbeat.json").exists()
+
+
+def test_exact_session_never_takes_a_prefix_or_an_empty_name(tmp_path, monkeypatch):
+    from crowsnest.registry import LiveSession
+
+    live = [
+        LiveSession(1, "id-foobar", "foobar", "/w", "", "idle", "", 0, 0, False, "", ""),
+        LiveSession(2, "id-x", "x", "/w", "", "idle", "", 0, 0, False, "", "", home="iq"),
+    ]
+    monkeypatch.setattr(tools, "sessions", lambda **_: live)
+    assert courier.exact_session("foobar").pid == 1
+    assert courier.exact_session("id-foobar").pid == 1
+    for name in ("foo", "", "1", "id-foo"):
+        with pytest.raises(KeyError):
+            courier.exact_session(name)
+    assert courier.exact_session("x@iq", all_homes=True).pid == 2
+    with pytest.raises(KeyError):
+        courier.exact_session("x@main", all_homes=True)
+
+
+def test_two_ticks_never_carry_one_store_at_once(remote, tmp_path):
+    import fcntl
+
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+    )
+    mirror = tmp_path / "mirror"
+    mirror.mkdir()
+    with (mirror / courier.LOCK_FILE).open("a") as held:
+        fcntl.flock(held, fcntl.LOCK_EX)
+        moved = run(remote, tmp_path)
+    assert moved["locked"] == 1 and moved["handed"] == 0
+    assert read(remote, "intents", "n1")["status"] == "queued"
+    assert "locked" not in run(remote, tmp_path)
+
+
+def test_a_failing_registry_record_does_not_stop_the_tick(remote, tmp_path):
+    def broken(**_):
+        raise OSError("disk full")
+
+    moved = run(remote, tmp_path, record=broken)
+    assert moved["record_failed"] == 1
+    assert (remote / "console" / "heartbeat.json").exists()
+
+
+def test_a_roster_that_cannot_be_read_hands_the_intent_on(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+    )
+
+    def broken(name):
+        raise ValueError("bad [[homes]] table")
+
+    moved = run(remote, tmp_path, deliver_intents=True, find=broken)
+    got = read(remote, "intents", "n1")
+    assert moved["handed"] == 1 and got["delivery"] == "watcher"
+    assert "roster could not be read" in got["answer"]
+
+
+def test_an_unnamed_session_is_found_by_its_label(monkeypatch):
+    from crowsnest.registry import LiveSession
+
+    live = [
+        LiveSession(1, "abcdef0123456789", "", "/w", "", "idle", "", 0, 0, False, "", "")
+    ]
+    monkeypatch.setattr(tools, "sessions", lambda **_: live)
+    assert courier.exact_session("abcdef01").pid == 1
+    with pytest.raises(KeyError):
+        courier.exact_session("abcdef0")
+
+
+def test_an_intent_is_posted_once_even_if_its_document_is_reset(remote, tmp_path):
+    doc = {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"}
+    put(remote, "intents", "n1", doc)
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    for reset in (doc, {**doc, "status": "handed", "delivery": "pending"}):
+        put(remote, "intents", "n1", reset)
+        mtime = (remote / "intents" / "n1.json").stat().st_mtime + 10
+        os.utime(remote / "intents" / "n1.json", (mtime, mtime))  # newer: it is pulled
+        run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert len(sent) == 1
+
+
+def test_a_held_document_of_another_kind_or_a_future_hold_is_not_trusted(
+    remote, tmp_path
+):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {
+            "kind": "start",
+            "session": "fixer",
+            "text": "x",
+            "status": "handed",
+            "delivery": "pending",
+        },
+    )
+    put(
+        remote,
+        "intents",
+        "n2",
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "x",
+            "status": "handed",
+            "delivery": "pending",
+            "held_since": "2999-01-01T00:00:00Z",
+        },
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer", status="busy")})
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert read(remote, "intents", "n1")["delivery"] == "pending" and sent == []
+    assert read(remote, "intents", "n2")["held_since"] == "2026-02-01T12:00:00Z"
