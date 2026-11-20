@@ -82,6 +82,11 @@ open questions:
 - squash or rebase for the release?
 ```
 
+Both lines belong in the field block at the top of the file, **above the first `##`
+heading**, one paragraph each (no blank line inside a field). A `state:` line under a
+heading is in your notes; triage reads it there only from your latest section, as a
+fallback, and the report does not show it as your state.
+
 - **`state`** is where you stand *now*. Open it with a status word: `done` or
   `safe_to_close` when nothing is left, optionally followed by ` — ` and the evidence
   (`done — PR #19 merged, CI green`); or `working — <what>`, or `blocked on <what>`.
