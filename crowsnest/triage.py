@@ -487,6 +487,34 @@ _ANSWERED = re.compile(
 )
 
 
+#: One item of a negated list: a word or two, never a word that brings a remainder back.
+_ITEM = r"(?!(?:yet|still|until|only|but|except|though)\b)[\w'#/-]+"
+
+#: "No" in front of a *list* answers every item in it: "no branch, worktree or open PR of
+#: mine left", "no branches, PRs or uncommitted changes". The list must be a list -- items
+#: joined by commas and closed by ``or``/``and``/``nor``, or two items joined by ``or`` --
+#: so "no PRs, CI running" answers only "PRs". The last item is at most five words and
+#: ends at punctuation, at ``and``/``with``/``while``, or at a word that brings a
+#: remainder back: "no tests yet, but PR open" answers only "tests".
+_ANSWERED_LIST = re.compile(
+    rf"(?i)\b(?:no|nothing|none)\s+{_ITEM}(?:\s+{_ITEM})?"
+    rf"(?:(?:,\s*{_ITEM}(?:\s+{_ITEM})?)+,?\s+(?:or|and|nor)|\s+(?:or|nor))\s+"
+    rf"{_ITEM}(?:\s+(?!(?:and|with|while)\b){_ITEM}){{0,4}}"
+)
+
+
+def _paragraph(text: str) -> str:
+    """``text`` up to its first blank line.
+
+    A field as `crowsnest ledger` writes it has no blank line inside it, so what follows
+    one is prose that was never the field's.
+
+    >>> _paragraph('done\\n- merged\\n\\nsummary: later notes')
+    'done\\n- merged'
+    """
+    return re.split(r"(?:\A|\n)[ \t]*\n", text or "", maxsplit=1)[0]
+
+
 def _stated_status(text: str) -> re.Match | None:
     """The status token the ``state`` field opens with, unless its evidence takes it back.
 
@@ -511,11 +539,23 @@ def _stated_status(text: str) -> re.Match | None:
     True
     >>> bool(_stated_status('safe_to_close\\n- PR #279 merged\\n- #280 still open'))
     False
+
+    A blank line ends it; a "no" in front of a list answers the whole list:
+
+    >>> bool(_stated_status('safe_to_close\\n\\nsummary: Open questions were answered'))
+    True
+    >>> bool(_stated_status('safe_to_close — merged; no branch, worktree or open PR left'))
+    True
+    >>> bool(_stated_status('done — no PRs, CI running'))
+    False
+    >>> bool(_stated_status('done — no tests yet, but PR open'))
+    False
     """
     found = _STATE_TOKEN.match(text or "")
     if not found:
         return None
-    evidence = _ANSWERED.sub(" ", text[found.end() :])
+    evidence = _paragraph(text[found.end() :])
+    evidence = _ANSWERED.sub(" ", _ANSWERED_LIST.sub(" ", evidence))
     if _UNSAID.search(evidence) or _ONLY_PARTLY.search(evidence):
         return None
     return found
@@ -961,6 +1001,10 @@ def from_registry(row: Mapping, ledger: Mapping) -> Verdict | None:
     return None
 
 
+#: A ``state:`` line written into the free part, with the lines of its paragraph.
+_STATE_LINE = re.compile(r"(?mi)^[ \t]*state:[ \t]*((?:.+)(?:\n(?![ \t]*\n).+)*)")
+
+
 def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | None:
     """What the session wrote down for a person to read.
 
@@ -1028,7 +1072,7 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
         said_at, basis = _written(ledger)
         return Verdict(
             "safe_to_close",
-            reason=_one_line(stated.group(0) if prose else state),
+            reason=_one_line(stated.group(0) if prose else _paragraph(state)),
             source="ledger:state",
             said_at=said_at,
             said_at_basis=basis,
@@ -1074,6 +1118,22 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     if stated:
         return closed_by_state()
     latest = latest_section(free)
+    if not state.strip():
+        # A session that wrote its `state:` line below a heading put the field in its
+        # notes. Read it there only from the latest section (what is true now, as for
+        # prose), only when the field itself is empty, and only by the token rule.
+        lines = list(_STATE_LINE.finditer(latest))
+        token = lines and _stated_status(lines[-1].group(1))
+        if token:
+            at = len(free) - len(latest) + lines[-1].start()
+            said_at, basis = _said_in(ledger, free, at)
+            return Verdict(
+                "safe_to_close",
+                reason=_one_line(_paragraph(lines[-1].group(1))),
+                source="ledger:state in last section",
+                said_at=said_at,
+                said_at_basis=basis,
+            )
     ending = _is_a_real_all_clear(latest)
     if ending:
         said_at, basis = _said_in(ledger, free, len(free) - len(latest))

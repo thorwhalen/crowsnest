@@ -695,3 +695,52 @@ def test_an_empty_trailing_stub_is_not_the_latest_section():
         _row(), ledger=_ledger(free, open_questions="- none", state=_DONE)
     )
     assert found["group"] == "needs_you"
+
+
+# --------------------------------------------------------------------------------------
+# Where the `state:` line was written, and what a "no" answers
+
+
+def test_a_state_line_below_a_heading_counts_from_the_latest_section():
+    """A session that put its `state:` line in its notes (seen on a real ledger)."""
+    free = "## Work\n\nbuilt it\n\n## Status\nstate: safe_to_close\nPR #290 merged.\n"
+    found = classify_row(_row(), ledger=_ledger(free))
+    assert found["group"] == "safe_to_close"
+
+
+def test_a_state_line_in_an_older_section_is_history_not_now():
+    free = "## Mon\nstate: done\n\n## Wed\n\nhit a blocker on the key\n"
+    assert classify_row(_row(), ledger=_ledger(free))["group"] == "unclassified"
+
+
+def test_the_field_wins_over_a_state_line_in_the_notes():
+    free = "## Status\nstate: done\n"
+    found = classify_row(_row(), ledger=_ledger(free, state="working — on #12"))
+    assert found["group"] != "safe_to_close"
+
+
+def test_a_state_line_in_the_notes_still_has_its_evidence_read():
+    free = "## Status\nstate: done\n- #280 still open\n"
+    assert classify_row(_row(), ledger=_ledger(free))["group"] == "unclassified"
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        "safe_to_close — merged; no branch, worktree or open PR of mine left",
+        "safe_to_close — videos published; no branches, PRs or uncommitted changes of mine",
+        "safe_to_close\n\nsummary: done. Open questions were all answered.",
+    ],
+)
+def test_a_no_over_a_list_and_prose_after_a_blank_line(state):
+    assert classify_row(_row(), ledger=_ledger(state=state))["group"] == "safe_to_close"
+
+
+@pytest.mark.parametrize(
+    "state",
+    ["done — no PRs, CI running", "done — no tests yet, but PR open", "done — no docs or tests yet",
+     "done — no blockers or questions and PR open",
+     "done — no blockers or questions, PR open"],
+)
+def test_a_no_answers_only_its_own_list(state):
+    assert classify_row(_row(), ledger=_ledger(state=state))["group"] != "safe_to_close"
