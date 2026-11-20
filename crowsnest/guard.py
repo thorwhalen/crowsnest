@@ -441,23 +441,29 @@ def on_default_branch(
     return not _git(["rev-list", "-n1", rev, "--not", *targets], cwd=repo).strip()
 
 
-def _worktrees(repo: Path) -> list[str]:
-    """The repository's worktrees, less the ones git calls *prunable*.
+def _worktree_entries(repo: Path) -> list[tuple[str, str, bool]]:
+    """``(path, HEAD, prunable)`` for each of the repository's worktrees.
 
-    A prunable worktree's checkout is gone (a temp-dir cleaner can leave its folders and
-    take its ``.git`` file), so it holds no work to lose and git cannot open it; asking
-    would raise and keep every session that touched the repository. Its branch, if it
-    had one, is still read by :func:`unlanded`'s branch pass.
+    A *prunable* worktree's checkout is gone (a temp-dir cleaner can leave its folders and
+    take its ``.git`` file): git cannot open it, so :func:`unlanded` checks only its
+    ``HEAD``, which git still records, instead of raising on it.
     """
-    out: list[str] = []
+    out: list[tuple[str, str, bool]] = []
     for block in _git(["worktree", "list", "--porcelain"], cwd=repo).split("\n\n"):
         lines = block.splitlines()
         if not lines or not lines[0].startswith("worktree "):
             continue
-        if any(line == "prunable" or line.startswith("prunable ") for line in lines):
-            continue
-        out.append(lines[0].removeprefix("worktree "))
+        head = next(
+            (ln.removeprefix("HEAD ") for ln in lines if ln.startswith("HEAD ")), ""
+        )
+        prunable = any(ln == "prunable" or ln.startswith("prunable ") for ln in lines)
+        out.append((lines[0].removeprefix("worktree "), head, prunable))
     return out
+
+
+def _worktrees(repo: Path) -> list[str]:
+    """The worktrees git can open: every one but the prunable."""
+    return [path for path, _, prunable in _worktree_entries(repo) if not prunable]
 
 
 def _active_since(worktree: str, since: float) -> bool:
@@ -521,6 +527,9 @@ def unlanded(
             head = _git(["rev-parse", "HEAD"], cwd=wt).strip()
             if head and not is_landed(repo, head):
                 reasons.append(f"{wt}'s HEAD is not merged into the default branch")
+        for path, head, prunable in _worktree_entries(repo):
+            if prunable and head and not is_landed(repo, head):
+                reasons.append(f"{path} is gone, and its HEAD is not merged")
         refs = _git(
             ["for-each-ref", "--format=%(refname)%09%(committerdate:unix)", "refs/heads"],
             cwd=repo,
