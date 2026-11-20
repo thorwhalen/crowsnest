@@ -1,4 +1,4 @@
-> built 2026-11-20 16:32 UTC from 8fc2f6b (main) · crowsnest 0.0.116. Details: build_info.json
+> built 2026-11-20 17:44 UTC from c9bf36a (main) · crowsnest 0.0.117. Details: build_info.json
 
 # index.html.md
 
@@ -385,6 +385,41 @@ A session that no value matches is placed by its repository’s owner. Failing t
 
 With those two lines, a turn ending becomes a `stopped` line in `crowsnest watch` carrying the session’s last words, and a permission prompt or a question becomes a `needs-you` line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. A turn that ends by asking you for something (“For the user: …”, read the way a ledger’s requests are) also becomes an `ask` line, which `--kinds loud` keeps, and a wait is announced once, by whichever of `waiting` and `needs-you` comes first. `crowsnest hook` prints nothing and exits 0 whatever happens; `async` means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, `crowsnest watch` is exactly the registry diff it always was. `crowsnest init --hooks` writes all of this for you.
 
+## The event log, and messaging from anywhere
+
+Everything crowsnest learns lands in one append-only plain file, `~/.local/share/crowsnest/events.jsonl`: one JSON object per line, never rewritten, rotated to `events-<time>.jsonl` beside it past 4 MiB and never pruned. It is the source of truth the other views are built from. `crowsnest watch` streams it, the page is a view of it, and you can always open it in an editor. Every line has `event` and `at`, and usually `name`, `session_id`, `project` and a one-line `detail`:
+
+| event                                                   | written by                                           | when                                                                                                               |
+|---------------------------------------------------------|------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `stop`, `notification`, `ask`                           | `crowsnest hook`                                     | a turn ended; a session wants its person; a turn ended asking for something                                        |
+| `intent`                                                | the courier                                          | a request from the page’s console, handed to the watching session                                                  |
+| `started`, `exited`, `busy`, `idle`, `waiting`, `error` | the courier, with `[courier] record_registry = true` | the registry changed (`source: "registry"`, plus `home`, `status` and `status_at`, the registry’s own time for it) |
+| `message`                                               | `crowsnest tell`, the courier                        | a message was posted to a session (`from` says who sent it)                                                        |
+
+`at` is always when the line was written, so the file is in time order. Lines carry no id field: the log is never rewritten, so a line’s own bytes identify it, and `crowsnest log --json` gives each record that hash as `id`. A reader ignores an event it does not know: new ones are added, never renamed. `crowsnest log` is the quick view, for you or for an agent about to message a session:
+
+```bash
+crowsnest log                            # the last hour, one line each
+crowsnest log --since 3h --session parser-tests
+crowsnest log --events message,ask --json
+crowsnest log --path                     # where the file is
+```
+
+**Messaging from anywhere.** `crowsnest tell <session> --text "..."` (or the text on stdin) posts a message straight into a live session’s inbox socket, the one Claude Code’s own cross-session messaging uses, from any session, script or scheduler, at no model cost. It delivers to an idle session (a busy one with `--busy-ok`; never one waiting on its person), only after checking that the socket is held by the very process the registry names, so a reused pid never receives someone else’s message, and it writes a `message` line to the log. A session on another machine has no socket here and is refused. Whether the session accepts the message is its own `crossSessionInbound` setting. Inside a session, Claude’s `SendMessage` tool does the same and keeps a reply address; `crowsnest tell` is for everything else, and for messages that should be on the record.
+
+**Two switches in the courier’s table, both off by default**, so a machine whose config says nothing behaves as it always did:
+
+```toml
+# ~/.config/crowsnest/config.toml
+[courier]
+remote = "me@myserver:/srv/crowsnest/db"
+record_registry = true   # each minute tick writes the registry's changes to the event log
+deliver_intents = true   # the page's Ask/Tell go straight to the session they name,
+hold_minutes = 60        # held while that session is busy or waiting, at most this long
+```
+
+With `deliver_intents`, an intent reaches its session without a watching session in between: the session named exactly (never a prefix), and only when its home’s `crossSessionInbound` is `accept`, since otherwise it would sit unapproved. An Ask with no text becomes a status request. The session reads the text marked as typed on the console page, with no more authority than a message from another session; that is also the trust it changes: page text reaches a session without the watching session reading it first. A `start`, an intent for a session that is gone or has no inbox here, and one held past `hold_minutes` still go to the watching session, as before.
+
 ## One walk, end to end
 
 A morning with a fleet, from the lookout session. Everything in italics is something you say; everything else it does.
@@ -424,15 +459,16 @@ What a transcript’s content *means* is [openloops](https://github.com/thorwhal
 
 ## What it writes
 
-Nothing into another session, and nothing into a repository. Everything crowsnest writes is its own and lives under `~/.local/share/crowsnest` (`$CROWSNEST_DATA_DIR` or `$XDG_DATA_HOME` if you set either):
+Nothing into a repository, and nothing into another session except the messages below. Everything crowsnest writes is its own and lives under `~/.local/share/crowsnest` (`$CROWSNEST_DATA_DIR` or `$XDG_DATA_HOME` if you set either):
 
 - `ledger/<name>.md`: one per session, as above.
-- `events.jsonl`: one line per hook event, append-only, rotated by size. `crowsnest watch` tails it.
+- `events.jsonl`: the event log, one line per event, append-only, rotated by size (see [The event log]()). `crowsnest watch` tails it; `crowsnest log` reads it.
+- `eventlog-registry.json`: the registry as the courier’s last tick saw it (status, name and times only; private to you), when `[courier] record_registry` is on.
 - `hook.log`: one line for anything `crowsnest hook` swallowed, so “the hook did nothing” is a question with an answer.
 - `attention/<item-id>.json`: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.
 - `guard/`: the guard’s last tick (`last.json`), every close it made (`reaped.jsonl`, with the line that resumes each), and a cache of which folders each transcript names.
 
-The only other writes in the package are `crowsnest spawn`, which starts a session, `install-skills`, which writes symlinks, and the guard: `oom_score_adj` on Linux, and the SIGTERM of `crowsnest reap --apply`.
+The only other writes in the package are `crowsnest tell` (and the courier with `[courier] deliver_intents`), which posts a message to a session’s inbox socket, `crowsnest spawn`, which starts a session, `install-skills`, which writes symlinks, and the guard: `oom_score_adj` on Linux, and the SIGTERM of `crowsnest reap --apply`.
 
 ## From Python
 
@@ -2180,7 +2216,7 @@ pull, and a push makes it, with every directory above it.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None)
+### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None, deliver_intents=False, hold=datetime.timedelta(seconds=3600), find=None, deliver=None, record=None)
 
 Carry the console store at `remote` both ways once; the summary of what moved.
 
@@ -2189,6 +2225,20 @@ Carry the console store at `remote` both ways once; the summary of what moved.
 same sessions the page does. `store` is the attention store (its default when
 `None`). `recap` and `live` default to [`crowsnest.tools.recap()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.recap) and
 [`crowsnest.tools.live()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.live), and exist so a test need not read real sessions.
+
+Two jobs beyond carrying, both off by default, so a tick does what it always did
+unless the config file’s `[courier]` table turns them on (read by
+`crowsnest.tools.courier()`):
+
+- `deliver_intents` posts an `ask` or `tell` intent straight to the live
+  session it names (`_route()`), holding it while that session is busy or
+  waiting, for at most `hold`. A `start`, an intent for a session that is gone
+  or has no inbox here, and one held past `hold` go to the watching session as
+  before. `find` resolves a name to a live session (default
+  `exact_session()` over this tick’s homes: a whole name or id, never a
+  > prefix) and `deliver` is the switchboard’s transport, `(session, text)`.
+- `record`, when given, appends the registry’s changes to the event log
+  ([`crowsnest.eventlog.record_changes()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.record_changes) is the one to give).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -2329,6 +2379,169 @@ goes wrong reaching openloops is the register’s reason, not the page’s failu
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+
+# _autosummary/crowsnest.eventlog.html.md
+
+# crowsnest.eventlog
+
+The event log: one append-only plain file that says what happened across the fleet.
+
+Every part of crowsnest that learns something writes it here as one JSON object per line,
+and nothing ever rewrites a line. It is the source of truth the other views are built
+from (event sourcing): `crowsnest watch` streams it, the page and the phone view are
+materialised views of it, and a person can always open it in an editor.
+
+**Where it is.** `<data dir>/events.jsonl`, by default
+`~/.local/share/crowsnest/events.jsonl` (`$CROWSNEST_DATA_DIR` moves it). Past
+[`crowsnest.hook.MAX_EVENT_BYTES`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.MAX_EVENT_BYTES) it is renamed `events-<YYYYmmddTHHMMSS>.jsonl`
+beside it and a new one starts; nothing prunes the retired files. [`files()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.files) lists
+them oldest first, and [`read()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.read) reads across them.
+
+**What a line holds.** Always `event` (what happened) and `at` (when, ISO 8601 UTC),
+usually `session_id`, `name` and `project`, and a one-line `detail`. The events,
+by who writes them ([`EVENTS`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.EVENTS)):
+
+- the hooks Claude Code runs at the end of a turn ([`crowsnest.hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)): `stop`,
+  `notification`, and `ask` when a final message asks its person for something;
+- the courier’s minute tick ([`crowsnest.courier`](_autosummary/crowsnest.courier.html.md#module-crowsnest.courier)): `intent`, a console request
+  handed to the watching session; and, when `[courier] record_registry = true`, the registry’s
+  changes, written by [`record_changes()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.record_changes): `started`, `exited`, `busy`,
+  `idle`, `waiting`, `error` (these also carry `home`, `status`,
+  `status_at`, the registry’s own time for the change, and `source: "registry"`);
+- the switchboard ([`crowsnest.switchboard`](_autosummary/crowsnest.switchboard.html.md#module-crowsnest.switchboard)): `message`, one per message
+  delivered, with `from` and the target in `name`.
+
+A reader must ignore an event it does not know: new ones are added, never renamed.
+`at` is always when the line was written, so the file is in time order. Writers put no
+id on a line: it is never rewritten, so its own bytes identify it, and [`read()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.read)
+gives each record that hash as `id` ([`line_id()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.line_id)).
+
+```pycon
+>>> import os, tempfile
+>>> where = tempfile.mkdtemp()
+>>> path = os.path.join(where, 'events.jsonl')
+>>> _ = open(path, 'w').write(
+...     '{"event": "stop", "at": "2026-11-20T10:00:00+00:00", "name": "a", "detail": "done"}\n'
+...     'not json\n'
+...     '{"event": "message", "at": "2026-11-20T10:05:00+00:00", "name": "b", "from": "a"}\n')
+>>> [e['event'] for e in read(events_path=path)]
+['stop', 'message']
+>>> [e['name'] for e in read(events_path=path, sessions=['b'])]
+['b']
+```
+
+### Module Attributes
+
+| [`EVENTS`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.EVENTS)          | [`read()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.read) passes any event through, so a writer added later is read without a change here.                                                       |
+|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`REGISTRY_EVENTS`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.REGISTRY_EVENTS) | The registry's changes, as [`crowsnest.watch.diff()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.diff) names them (`shell` is folded into `busy` there, so it never appears). |
+
+### Functions
+
+| [`files`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.files)([events_path])                               | The log's files, oldest first: the retired ones by their time, then the current one.                                       |
+|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| [`line`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.line)(record, \*[, width])                          | One record as one plain line: local time, event, session, then the detail, cut to `width` characters.                      |
+| [`line_id`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.line_id)(raw)                                       | A line's identity: a hash of its bytes, without the newline.                                                               |
+| [`read`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.read)(\*[, since, sessions, events, events_path])   | The log's records, oldest first, across its retired files.                                                                 |
+| [`record_changes`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.record_changes)(\*[, home, all_homes, config, ...]) | Append the registry's changes since the last call to the log; how many were written.                                       |
+| [`since_of`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.since_of)(spec, \*[, now])                          | A lower time bound from `spec`: a span back from now (`90m`, `2h`, `3d`), an ISO time, a datetime, or `None` for no bound. |
+
+### crowsnest.eventlog.EVENTS *= {'courier': ('intent',), 'hook': ('stop', 'notification', 'ask'), 'registry': ('started', 'exited', 'busy', 'idle', 'waiting', 'error'), 'switchboard': ('message',)}*
+
+[`read()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.read)
+passes any event through, so a writer added later is read without a change here.
+
+* **Type:**
+  Every event the log holds today, by writer. Documentation, not a filter
+
+### crowsnest.eventlog.REGISTRY_EVENTS *= ('started', 'exited', 'busy', 'idle', 'waiting', 'error')*
+
+The registry’s changes, as [`crowsnest.watch.diff()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.diff) names them (`shell` is
+folded into `busy` there, so it never appears).
+
+### crowsnest.eventlog.files(events_path=None)
+
+The log’s files, oldest first: the retired ones by their time, then the current one.
+
+```pycon
+>>> files('/nonexistent-dir-for-doctest/events.jsonl')
+[]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
+
+### crowsnest.eventlog.line(record, , width=160)
+
+One record as one plain line: local time, event, session, then the detail, cut to
+`width` characters.
+
+```pycon
+>>> line({'event': 'message', 'at': 'x', 'name': 'b', 'from': 'a', 'detail': 'hi'})
+'x  message  b ← a — hi'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.eventlog.line_id(raw)
+
+A line’s identity: a hash of its bytes, without the newline. The log is never
+rewritten, so this never changes; a view keys its marks (seen, done) on it.
+
+```pycon
+>>> line_id(b'{"event": "stop"}\n') == line_id(b'{"event": "stop"}')
+True
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.eventlog.read(, since=None, sessions=None, events=None, events_path=None)
+
+The log’s records, oldest first, across its retired files.
+
+`since` bounds them by time (see [`since_of()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.since_of)); a retired file wholly older than
+it is not opened. `sessions` keeps records whose `name`, `name@home`,
+`session_id` or `from` is one of them. `events` keeps those events only. A line
+that is not a JSON object is skipped.
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)]
+
+### crowsnest.eventlog.record_changes(, home=None, all_homes=False, config=None, snapshot=None, diff=None, state_path=None, events_path=None)
+
+Append the registry’s changes since the last call to the log; how many were written.
+
+The registry diff [`crowsnest.watch.diff()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.diff) computes (started, exited, a status
+change), from the snapshot this function kept last time, so a scheduled tick (the
+courier’s, once a minute) writes the half of the stream `crowsnest watch` used to
+print and lose. The first call only keeps a baseline. `at` is when the line was
+written, so the file stays in time order and a reader’s `since` cursor misses
+nothing; `status_at` is the registry’s own time for the change, up to a tick
+earlier. `snapshot` and `diff` default to
+[`crowsnest.watch.snapshot()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.snapshot) and [`crowsnest.watch.diff()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.diff), and exist so a test
+need not read real sessions.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
+### crowsnest.eventlog.since_of(spec, , now=None)
+
+A lower time bound from `spec`: a span back from now (`90m`, `2h`, `3d`),
+an ISO time, a datetime, or `None` for no bound.
+
+```pycon
+>>> now = datetime(2026, 11, 20, 12, tzinfo=timezone.utc)
+>>> since_of('2h', now=now).isoformat()
+'2026-11-20T10:00:00+00:00'
+>>> since_of('2026-11-20T09:30:00Z').isoformat()
+'2026-11-20T09:30:00+00:00'
+```
+
+* **Return type:**
+  [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 
 # _autosummary/crowsnest.gists.html.md
@@ -2801,22 +3014,24 @@ that is missing one must still produce an event:
 
 ### Module Attributes
 
-| [`EVENTS_FILENAME`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.EVENTS_FILENAME)   | The event log's name under the data directory.                                             |
-|--------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| [`LOG_FILENAME`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.LOG_FILENAME)      | Where a swallowed error goes, so that "the hook did nothing" is a question with an answer. |
-| [`EVENTS`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.EVENTS)            | The hook events crowsnest does something with.                                             |
-| [`DETAIL_LIMIT`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.DETAIL_LIMIT)      | How much of a message or a final text an event line and a ledger field carry.              |
-| [`MAX_EVENT_BYTES`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.MAX_EVENT_BYTES)   | When the event log passes this, it is renamed with the time and a new one is started.      |
-| [`MAX_LOG_BYTES`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.MAX_LOG_BYTES)     | The same, for the error log, which should never come near it.                              |
+| [`EVENTS_FILENAME`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.EVENTS_FILENAME)                  | The event log's name under the data directory.                                                                                                               |
+|-----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`LOG_FILENAME`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.LOG_FILENAME)                     | Where a swallowed error goes, so that "the hook did nothing" is a question with an answer.                                                                   |
+| [`EVENTS`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.EVENTS)                           | The hook events crowsnest does something with.                                                                                                               |
+| [`DETAIL_LIMIT`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.DETAIL_LIMIT)                     | How much of a message or a final text an event line and a ledger field carry.                                                                                |
+| [`MAX_EVENT_BYTES`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.MAX_EVENT_BYTES)                  | When the event log passes this, it is renamed with the time and a new one is started.                                                                        |
+| [`MAX_LOG_BYTES`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.MAX_LOG_BYTES)                    | The same, for the error log, which should never come near it.                                                                                                |
+| [`log_failure`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.log_failure)(message, \*[, path]) | The public name of `_log()`, for the other modules that swallow an error the same way (the switchboard, the courier): one line in `hook.log`, never a raise. |
 
 ### Functions
 
-| [`append_event`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.append_event)(record, \*[, events_path, max_bytes])   | Append one JSON line to the event log, rotating it first if it has outgrown `max_bytes`.   |
-|-------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| [`events_path`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.events_path)([path])                                  | The event log: `path` when given, else `<data dir>/events.jsonl`.                          |
-| [`handle`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.handle)(event, payload, \*[, home, ...])              | Record one hook event: an event line always, a ledger update on `stop`.                    |
-| [`log_path`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.log_path)([path])                                     | The hook's own error log: `path` when given, else `<data dir>/hook.log`.                   |
-| [`rotate`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.rotate)(path, \*[, max_bytes])                        | Rename an oversized log out of the way; return where it went, or `None`.                   |
+| [`append_event`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.append_event)(record, \*[, events_path, max_bytes])   | Append one JSON line to the event log, rotating it first if it has outgrown `max_bytes`.                                                                     |
+|-------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`events_path`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.events_path)([path])                                  | The event log: `path` when given, else `<data dir>/events.jsonl`.                                                                                            |
+| [`handle`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.handle)(event, payload, \*[, home, ...])              | Record one hook event: an event line always, a ledger update on `stop`.                                                                                      |
+| [`log_failure`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.log_failure)(message, \*[, path])                     | The public name of `_log()`, for the other modules that swallow an error the same way (the switchboard, the courier): one line in `hook.log`, never a raise. |
+| [`log_path`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.log_path)([path])                                     | The hook's own error log: `path` when given, else `<data dir>/hook.log`.                                                                                     |
+| [`rotate`](_autosummary/crowsnest.hook.html.md#crowsnest.hook.rotate)(path, \*[, max_bytes])                        | Rename an oversized log out of the way; return where it went, or `None`.                                                                                     |
 
 ### crowsnest.hook.DETAIL_LIMIT *= 400*
 
@@ -2875,6 +3090,14 @@ back as `ok=False` with the reason, and is also one line in the hook log.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.hook.log_failure(message, , path=None)
+
+The public name of `_log()`, for the other modules that swallow an error the same
+way (the switchboard, the courier): one line in `hook.log`, never a raise.
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.hook.log_path(path=None)
 
@@ -2982,7 +3205,7 @@ machine is out of room.
 | [`read_activity`](_autosummary/crowsnest.html.md#crowsnest.read_activity)(path, \*[, session_id, ...])         | Read the tail of a transcript into an [`Activity`](_autosummary/crowsnest.html.md#crowsnest.Activity). |
 | [`read_ledger`](_autosummary/crowsnest.html.md#crowsnest.read_ledger)(name, \*[, ledger_dir])                | One session's ledger as a JSON-able dict; a shaped empty one when there is none.                 |
 | [`read_turns`](_autosummary/crowsnest.html.md#crowsnest.read_turns)(path, \*[, last, before])               | The last `last` turns of a transcript, oldest first; `before=N` pages back.                      |
-| [`resolve`](_autosummary/crowsnest.html.md#crowsnest.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                     |
+| [`resolve`](_autosummary/crowsnest.html.md#crowsnest.resolve)(session, \*[, home, all_homes, ...])       | The live session a human means by `session`.                                                     |
 | [`roster`](_autosummary/crowsnest.html.md#crowsnest.roster)(\*[, home, all_homes, config, ...])         | Every live session, most urgent first, each with a clipped view of its activity.                 |
 | [`show`](_autosummary/crowsnest.html.md#crowsnest.show)(session, \*[, home, all_homes, config, ...])  | One session in full: its registry record, its activity unclipped, and its links.                 |
 | [`spawn`](_autosummary/crowsnest.html.md#crowsnest.spawn)(name, \*, cwd[, prompt, model, effort, ...]) | Start a session named `name` in `cwd`, and wait for the registry to see it.                      |
@@ -3012,7 +3235,7 @@ when `tail_complete` is true, and a floor otherwise. `locators` are the typed
 references openloops found in the window – issues, pull requests – each a dict with
 `type`, `url` and `text`, oldest first.
 
-### *class* crowsnest.LiveSession(pid, session_id, name, cwd, kind, status, waiting_for, status_since, started_at, remote_control, version, transcript, home='', bridge_session_id='')
+### *class* crowsnest.LiveSession(pid, session_id, name, cwd, kind, status, waiting_for, status_since, started_at, remote_control, version, transcript, home='', bridge_session_id='', socket='', proc_start='', pid_domain='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -3022,6 +3245,24 @@ One running session, as the registry describes it. Flat and JSON-shaped.
 
 The name the user gave the session, else the head of its id.
 
+#### pid_domain *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+`darwin`, or on Linux
+`linux:<boot id>:pid:[<namespace>]`), so a transport can tell this host’s
+sessions from a synced copy of another’s.
+
+* **Type:**
+  Where that pid means anything (`pidDomain`
+
+#### proc_start *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+a UTC date
+like `ps -o lstart` prints on macOS, clock ticks since boot on Linux), so a
+reused pid can be told from the session that registered it.
+
+* **Type:**
+  When the process started, as Claude Code recorded it (`procStart`
+
 #### *property* project *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The working directory’s last component – the name a human uses for it.
@@ -3029,6 +3270,12 @@ The working directory’s last component – the name a human uses for it.
 #### *property* session_url *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The session on claude.ai, when it runs with Remote Control; else `''`.
+
+#### socket *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+The session’s inbox socket (`messagingSocketPath`), where a message to it is
+posted ([`crowsnest.switchboard`](_autosummary/crowsnest.switchboard.html.md#module-crowsnest.switchboard)); `''` when it has none (bare mode, an older
+Claude Code) or the record comes from another machine, whose socket is not here.
 
 ### *class* crowsnest.Turn(index, prompt, prompt_at, reply, reply_at, tools)
 
@@ -3152,9 +3399,14 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Turn`](_autosummary/crowsnest.activity.html.md#crowsnest.activity.Turn)]
 
-### crowsnest.resolve(session, , home=None, all_homes=False, config=None)
+### crowsnest.resolve(session, , home=None, all_homes=False, config=None, exact=False)
 
 The live session a human means by `session`.
+
+`exact` takes only a whole label (the name, or an unnamed session’s id head) or a
+whole id, for a caller with nobody to catch a wrong pick: an intent delivered by the
+courier names a row of a page published a minute ago, whose session may have exited
+while another, whose name it begins, lives on.
 
 Tried in order: the exact session id, the exact registry name, a unique name prefix, a
 unique session-id prefix, the pid. `name@home` names a session in one home when
@@ -3334,6 +3586,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`courier`](_autosummary/crowsnest.courier.html.md#module-crowsnest.courier)               | The console's courier with no LLM: carry an owner-served console store both ways.                                                    |
 | [`egress`](_autosummary/crowsnest.egress.html.md#module-crowsnest.egress)                 | The page's sanitiser, made safe against text that an earlier clip has already cut (#83).                                             |
 | [`envelope_cache`](_autosummary/crowsnest.envelope_cache.html.md#module-crowsnest.envelope_cache) | A cached openloops envelope: asked for at most once per `every`, read by the page.                                                   |
+| [`eventlog`](_autosummary/crowsnest.eventlog.html.md#module-crowsnest.eventlog)             | The event log: one append-only plain file that says what happened across the fleet.                                                  |
 | [`gists`](_autosummary/crowsnest.gists.html.md#module-crowsnest.gists)                   | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
 | [`guard`](_autosummary/crowsnest.guard.html.md#module-crowsnest.guard)                   | Keep a machine's sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).                                           |
 | [`hook`](_autosummary/crowsnest.hook.html.md#module-crowsnest.hook)                     | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
@@ -3356,6 +3609,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`rows`](_autosummary/crowsnest.rows.html.md#module-crowsnest.rows)                     | How an item's row is built and hashed: one value, taken whole by every surface that pins it.                                         |
 | [`said`](_autosummary/crowsnest.said.html.md#module-crowsnest.said)                     | When the thing an item quotes was said: its own time, taken from its own source.                                                     |
 | [`skills`](_autosummary/crowsnest.skills.html.md#module-crowsnest.skills)                 | The agent-facing surface: the skills, the subagent, and the command that installs them.                                              |
+| [`switchboard`](_autosummary/crowsnest.switchboard.html.md#module-crowsnest.switchboard)       | The switchboard: any session or plain process messages a live session, with no model turn.                                           |
 | [`synopsis`](_autosummary/crowsnest.synopsis.html.md#module-crowsnest.synopsis)             | A group's synopsis: a few lines on what needs the person, what is working, what finished.                                            |
 | [`themes`](_autosummary/crowsnest.themes.html.md#module-crowsnest.themes)                 | Which theme each session belongs to: the person's `[themes]` table first, then what the row itself says (the action-first pass, C1). |
 | [`tools`](_autosummary/crowsnest.tools.html.md#module-crowsnest.tools)                   | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                                                     |
@@ -5717,7 +5971,7 @@ this prefix plus its bridge id.
 Claude Code’s own variable for relocating its config directory. Honoured, not
 reinvented: the registry and the transcripts move with it.
 
-### *class* crowsnest.registry.LiveSession(pid, session_id, name, cwd, kind, status, waiting_for, status_since, started_at, remote_control, version, transcript, home='', bridge_session_id='')
+### *class* crowsnest.registry.LiveSession(pid, session_id, name, cwd, kind, status, waiting_for, status_since, started_at, remote_control, version, transcript, home='', bridge_session_id='', socket='', proc_start='', pid_domain='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -5727,6 +5981,24 @@ One running session, as the registry describes it. Flat and JSON-shaped.
 
 The name the user gave the session, else the head of its id.
 
+#### pid_domain *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+`darwin`, or on Linux
+`linux:<boot id>:pid:[<namespace>]`), so a transport can tell this host’s
+sessions from a synced copy of another’s.
+
+* **Type:**
+  Where that pid means anything (`pidDomain`
+
+#### proc_start *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+a UTC date
+like `ps -o lstart` prints on macOS, clock ticks since boot on Linux), so a
+reused pid can be told from the session that registered it.
+
+* **Type:**
+  When the process started, as Claude Code recorded it (`procStart`
+
 #### *property* project *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The working directory’s last component – the name a human uses for it.
@@ -5734,6 +6006,12 @@ The working directory’s last component – the name a human uses for it.
 #### *property* session_url *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The session on claude.ai, when it runs with Remote Control; else `''`.
+
+#### socket *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+The session’s inbox socket (`messagingSocketPath`), where a message to it is
+posted ([`crowsnest.switchboard`](_autosummary/crowsnest.switchboard.html.md#module-crowsnest.switchboard)); `''` when it has none (bare mode, an older
+Claude Code) or the record comes from another machine, whose socket is not here.
 
 ### crowsnest.registry.MIRROR_STAMP *= '.mirrored-at'*
 
@@ -6609,6 +6887,189 @@ the plan: one row per asset with its action – `install`, `ok` (already ours) o
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 
+# _autosummary/crowsnest.switchboard.html.md
+
+# crowsnest.switchboard
+
+The switchboard: any session or plain process messages a live session, with no model turn.
+
+Claude Code gives every session an inbox socket (its registry record’s
+`messagingSocketPath`), where other sessions on the machine deliver messages
+([https://code.claude.com/docs/en/cross-session-messaging](https://code.claude.com/docs/en/cross-session-messaging)). A message arriving there is
+read between tool calls during a turn, and starts a new turn when the session is idle.
+Inside a session, Claude’s own `SendMessage` tool reaches it. This module reaches it
+from anywhere else too: a scheduler, the courier, a connector, a script, or a session
+that wants the message on the record. That makes dispatch a shared facility rather than
+the watching session’s privilege: the lookout becomes one caller among many.
+
+[`tell()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.tell) refuses a session that cannot take a message well, hands the text to the
+transport, and appends a `message` line to the event log ([`crowsnest.eventlog`](_autosummary/crowsnest.eventlog.html.md#module-crowsnest.eventlog)).
+[`deliverable()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.deliverable) judges the status only:
+
+- `idle` takes a message;
+- `busy` (or `shell`) only with `busy_ok`: Claude Code hands it over between two
+  tool calls, which never interrupts a tool but does change what the turn was doing;
+- `waiting` never: the session cannot act until its person answers, and a message
+  would sit on top of the question it is asking them; nor any other status.
+
+**The transport** is the `deliver=` seam, `(session, text) -> None`, raising
+[`Refused`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.Refused) (or `OSError`) when it cannot deliver. Its default,
+[`socket_post()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.socket_post), writes one JSON line, `{"type": "user", "message": {"role":
+"user", "content": TEXT}}` (the shape Claude Code’s own debug log prints for injecting
+a message), to the session’s socket on this machine, and only after checking that the
+socket is held by the very process the registry record describes: the record is this
+host’s (`pidDomain`), the peer’s pid is the record’s, and that pid started when the
+record says (`procStart`), so a pid reused after a crash is never mistaken for the
+session. Another machine’s session (a synced home), a spare or a bare-mode one is
+refused by it; a transport for another host takes the same session and reaches it there.
+
+**Whether the session accepts it** is the receiver’s setting, `crossSessionInbound`:
+with `accept` every message is delivered; with none set, a session that bypasses
+permission prompts holds a message from a process that asserts no permission class until
+its person approves it, and a non-interactive one lets it expire. [`inbound_of()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.inbound_of)
+reads the receiving home’s user setting, so a caller with no person at hand (the
+courier) can route elsewhere when it is not `accept`.
+
+### Module Attributes
+
+| [`MAX_TEXT`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.MAX_TEXT)   | The longest text [`tell()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.tell) sends, in characters.   |
+|-------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+
+### Functions
+
+| [`clean`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.clean)(text)                                        | `text` without control or format characters (Unicode Cc and Cf) other than line breaks and tabs: a terminal escape in a message or a log line must never reach a terminal that prints it.                |
+|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`deliverable`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.deliverable)(session, \*[, busy_ok])                | Why `session`'s status keeps a message from it now, or `''` when it can take one.                                                                                                                        |
+| [`envelope`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.envelope)(text, \*, sender[, reply, note])          | The text as the receiving session reads it: who sent it, a `note` on what the text is, the message (a body line shaped like the first line is marked as quoted), then how to answer when there is a way. |
+| [`inbound_of`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.inbound_of)(session)                                | The receiving home's user-level `crossSessionInbound` (`''` when unset or unreadable).                                                                                                                   |
+| [`same_process`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.same_process)(session)                              | Is `session.pid` still the process that registered `session`?                                                                                                                                            |
+| [`socket_post`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.socket_post)(session, text, \*[, timeout, confirm]) | Post `text` as one user message to `session`'s inbox socket on this machine.                                                                                                                             |
+| [`tell`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.tell)(session, text, \*[, sender, reply, ...])      | Post `text` to `session`; `{"to", "status", "sender", "at", "inbound"}`.                                                                                                                                 |
+
+### Exceptions
+
+| [`Refused`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.Refused)   | A message the switchboard would not post, and why.   |
+|------------------------------------------------------------|------------------------------------------------------|
+
+### crowsnest.switchboard.MAX_TEXT *= 64000*
+
+The longest text [`tell()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.tell) sends, in characters. Claude Code refuses past about a
+million; a message to a session is a brief, and a brief this long belongs in a file.
+
+### *exception* crowsnest.switchboard.Refused
+
+Bases: [`ValueError`](https://docs.python.org/3/builtins/exceptions.html#ValueError)
+
+A message the switchboard would not post, and why. A `ValueError`, so the CLI
+prints the reason and exits 2.
+
+### crowsnest.switchboard.clean(text)
+
+`text` without control or format characters (Unicode Cc and Cf) other than line
+breaks and tabs: a terminal escape in a message or a log line must never reach a
+terminal that prints it.
+
+```pycon
+>>> clean('ok\x1b]52;c;aGk=\x07 done\nnext')
+'ok]52;c;aGk= done\nnext'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.switchboard.deliverable(session, , busy_ok=False)
+
+Why `session`’s status keeps a message from it now, or `''` when it can take one.
+
+```pycon
+>>> s = LiveSession(1, 'id', 'w', '/w', 'interactive', 'idle', '', 0, 0, False, '', '')
+>>> deliverable(s)
+''
+>>> from dataclasses import replace
+>>> deliverable(replace(s, status='busy'))
+'w is busy; pass busy_ok to deliver between its tool calls'
+>>> deliverable(replace(s, status='busy'), busy_ok=True)
+''
+>>> deliverable(replace(s, status='unknown'))
+'w is unknown, not idle'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.switchboard.envelope(text, , sender, reply='', note='')
+
+The text as the receiving session reads it: who sent it, a `note` on what the
+text is, the message (a body line shaped like the first line is marked as quoted),
+then how to answer when there is a way.
+
+```pycon
+>>> print(envelope('Rebase on main.', sender='cn'))
+From cn, through crowsnest's switchboard:
+Rebase on main.
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.switchboard.inbound_of(session)
+
+The receiving home’s user-level `crossSessionInbound` (`''` when unset or
+unreadable). The home is where the registry put the session’s transcript,
+`<home>/projects/<slug>/<id>.jsonl`. A project’s own settings can still override it.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.switchboard.same_process(session)
+
+Is `session.pid` still the process that registered `session`?
+
+Compared through the start time Claude Code recorded: `ps`’s on macOS, `/proc`’s
+on Linux (`crowsnest.guard.same_process()`). A record without one, or a platform
+where neither works, cannot be confirmed, and the answer is `False`: delivering
+to a stranger is the error this exists to prevent.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### crowsnest.switchboard.socket_post(session, text, \*, timeout=5.0, confirm=<function same_process>)
+
+Post `text` as one user message to `session`’s inbox socket on this machine.
+
+Refuses a session with no socket, one from another machine (its `pid_domain`,
+`crowsnest.registry.is_local()`), a path that is not a socket we own (`lstat`,
+so a symlink is refused), a connection whose peer is not the record’s pid (or whose
+peer the OS will not name), and a pid that is no longer the process that registered
+it (`confirm`, checked once connected). The connection is opened only once the text
+is ready (Claude Code closes one that sends no complete line within 30 seconds) and
+closed right after.
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.switchboard.tell(session, text, , sender=None, reply='', busy_ok=False, deliver=None, events_path=None, extra=None, note='')
+
+Post `text` to `session`; `{"to", "status", "sender", "at", "inbound"}`.
+
+`sender` signs it (default: the calling session’s label, else `ANONYMOUS`);
+`reply` is a last line telling the receiver how to answer. Raises [`Refused`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.Refused)
+for a status [`deliverable()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.deliverable) refuses, for empty or oversized text, and when the
+transport cannot deliver. `deliver` is the transport, `(session, text) -> None`,
+default [`socket_post()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.socket_post). `extra` adds fields to the event line (an intent id).
+`inbound` is the receiver’s `crossSessionInbound` ([`inbound_of()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.inbound_of)). `note`
+is a line under the sender’s that says what the text is ([`envelope()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.envelope)). The event
+line records the claimed `from` and, in `by`, the session that actually ran this
+(or `ANONYMOUS`), which a caller cannot choose.
+
+Once the transport has delivered, nothing here raises: a log line that cannot be
+written is reported in `hook.log`, never as a failure, because a caller that retries
+a failure would deliver the message again.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+
 # _autosummary/crowsnest.synopsis.html.md
 
 # crowsnest.synopsis
@@ -6810,18 +7271,20 @@ here prints, exits, or knows which surface called it.
 | [`later`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.later)(session, preset, \*[, plan, on_change, ...]) | Put `session`'s item off until a preset time, or until it changes, whichever first.                                                                                                                                                       |
 | [`lineage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
 | [`live`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.live)(\*[, home, all_homes, config, activity, ...]) | What every live session is doing now, as the page's `live/roster` document.                                                                                                                                                               |
+| [`log`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.log)(\*[, since, sessions, events, limit, ...])     | The event log's records, oldest first: `{"path", "files", "records"}`.                                                                                                                                                                    |
 | [`note`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
 | [`publish`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.publish)(\*[, to, command, publisher, home, ...])   | Render the report as a whole page and deliver it where its owner reads it.                                                                                                                                                                |
 | [`reap`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.reap)(\*[, apply, home, config])                    | Which sessions the reaper would close, and why every other one is kept.                                                                                                                                                                   |
 | [`recap`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.recap)(session, \*[, home, all_homes, config, ...]) | Five lines about one live session, read from disk: the answer to a `recap` intent.                                                                                                                                                        |
 | [`repo_url`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](_autosummary/crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) returns. |
-| [`resolve`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                                                                                                                                                              |
+| [`resolve`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.resolve)(session, \*[, home, all_homes, ...])       | The live session a human means by `session`.                                                                                                                                                                                              |
 | [`revive`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.revive)(name, \*, cwd[, prompt, model, ...])        | Make sure a session named `name` runs -- the one it was, when that is possible.                                                                                                                                                           |
 | [`roster`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster)(\*[, home, all_homes, config, ...])         | Every live session, most urgent first, each with a clipped view of its activity.                                                                                                                                                          |
 | [`seen`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.seen)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item seen at its current revision: it dims until it changes.                                                                                                                                                             |
 | [`sessions`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.sessions)(\*[, home, all_homes, config])            | The live sessions of one home, or of every configured home when `all_homes`.                                                                                                                                                              |
 | [`show`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.show)(session, \*[, home, all_homes, config, ...])  | One session in full: its registry record, its activity unclipped, and its links.                                                                                                                                                          |
+| [`tell`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.tell)(session, text, \*[, busy_ok, sender, ...])    | Message a live session through its inbox socket, from any session or process.                                                                                                                                                             |
 | [`triage`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.triage)(\*[, home, all_homes, config, ...])         | Every live session grouped by what it needs: the three-line answer to "where are we".                                                                                                                                                     |
 | [`turns`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.turns)(session, \*[, last, before, home, ...])      | The last `last` turns of a session, oldest first; `before=N` pages back from turn N.                                                                                                                                                      |
 | [`undo`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.undo)(session, \*[, home, all_homes, config, ...])  | Restore `session`'s attention record to before its last change.                                                                                                                                                                           |
@@ -6952,6 +7415,17 @@ Cheaper than [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.r
 flight (waiting, busy, or in a shell). `activity=False` reads no tail at all, and
 every `in_flight` is empty. `as_of` defaults to now, taken before the registry is
 read, so the document never claims to be fresher than what it holds.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.log(, since='1h', sessions=None, events=None, limit=None, events_path=None)
+
+The event log’s records, oldest first: `{"path", "files", "records"}`.
+
+`since` is a span back from now (`90m`, `2h`, `3d`) or an ISO time, `""` or
+`None` for the whole log; `sessions` and `events` narrow it
+([`crowsnest.eventlog.read()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.read)); `limit` keeps the newest that many.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -7114,9 +7588,14 @@ also what lets a test of this function not read the ledgers of whoever runs it.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.resolve(session, , home=None, all_homes=False, config=None)
+### crowsnest.tools.resolve(session, , home=None, all_homes=False, config=None, exact=False)
 
 The live session a human means by `session`.
+
+`exact` takes only a whole label (the name, or an unnamed session’s id head) or a
+whole id, for a caller with nobody to catch a wrong pick: an intent delivered by the
+courier names a row of a page published a minute ago, whose session may have exited
+while another, whose name it begins, lives on.
 
 Tried in order: the exact session id, the exact registry name, a unique name prefix, a
 unique session-id prefix, the pid. `name@home` names a session in one home when
@@ -7214,6 +7693,18 @@ them.
 `session` carries `session_url` (claude.ai, when the session runs with Remote
 Control) and `open_command` (the terminal command that reaches it either way), as
 every [`roster()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.roster) row does – the two things a page naming the session links it by.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.tell(session, text, , busy_ok=False, sender=None, home=None, all_homes=False, config=None, deliver=None, events_path=None)
+
+Message a live session through its inbox socket, from any session or process.
+
+`session` is resolved as [`resolve()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.resolve) does. A `waiting` session is refused, a
+busy one unless `busy_ok`, and one with no inbox here always
+([`crowsnest.switchboard.tell()`](_autosummary/crowsnest.switchboard.html.md#crowsnest.switchboard.tell), which also writes the `message` event line).
+`deliver` is the transport seam, `(session, text) -> None`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -8097,18 +8588,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-20 16:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42"><code>8fc2f6b</code></a> on branch <code>main</code>, for **crowsnest 0.0.116** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-20 17:44 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c9bf36aef6074df4f6fccf59ad1afb9732f17594"><code>c9bf36a</code></a> on branch <code>main</code>, for **crowsnest 0.0.117** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.116) is behind the latest release on PyPI (0.0.117): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42"><code>8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c9bf36aef6074df4f6fccf59ad1afb9732f17594"><code>c9bf36aef6074df4f6fccf59ad1afb9732f17594</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -8119,9 +8608,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44773966052">44773966052</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44785832416">44785832416</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42</code> (in the history of the built commit) |
+| Event commit | <code>c9bf36aef6074df4f6fccf59ad1afb9732f17594</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8146,13 +8635,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.117/">0.0.117</a>, newer than the documented version (0.0.116).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.117/">0.0.117</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42
+git checkout c9bf36aef6074df4f6fccf59ad1afb9732f17594
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

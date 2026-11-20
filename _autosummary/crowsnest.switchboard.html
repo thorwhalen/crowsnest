@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.switchboard - crowsnest</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="crowsnest.synopsis" href="crowsnest.synopsis.html" /><link rel="prev" title="crowsnest.skills" href="crowsnest.skills.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.switchboard"/>
+    <meta name="twitter:card" content="summary"/>
+  
+<link rel="alternate" type="text/markdown" href="crowsnest.switchboard.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="crowsnest.html">crowsnest</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.actions.html">crowsnest.actions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.blocked.html">crowsnest.blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.courier.html">crowsnest.courier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.eventlog.html">crowsnest.eventlog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.guard.html">crowsnest.guard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.intents.html">crowsnest.intents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.jsonl.html">crowsnest.jsonl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.ledger_mirror.html">crowsnest.ledger_mirror</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.live.html">crowsnest.live</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.owed.html">crowsnest.owed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.publish.html">crowsnest.publish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.questions.html">crowsnest.questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.refstate.html">crowsnest.refstate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">crowsnest.switchboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.synopsis.html">crowsnest.synopsis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.themes.html">crowsnest.themes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#crowsnest.switchboard.MAX_TEXT"><code class="docutils literal notranslate"><span class="pre">MAX_TEXT</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.switchboard.Refused"><code class="docutils literal notranslate"><span class="pre">Refused</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.switchboard.clean"><code class="docutils literal notranslate"><span class="pre">clean()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.switchboard.deliverable"><code class="docutils literal notranslate"><span class="pre">deliverable()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.switchboard.envelope"><code class="docutils literal notranslate"><span class="pre">envelope()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.switchboard.inbound_of"><code class="docutils literal notranslate"><span class="pre">inbound_of()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.switchboard.same_process"><code class="docutils literal notranslate"><span class="pre">same_process()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.switchboard.socket_post"><code class="docutils literal notranslate"><span class="pre">socket_post()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.switchboard.tell"><code class="docutils literal notranslate"><span class="pre">tell()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../api.html"><span itemprop="name">API reference</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="crowsnest.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.switchboard</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <section id="module-crowsnest.switchboard">
+<span id="crowsnest-switchboard"></span><h1>crowsnest.switchboard<a class="headerlink" href="#module-crowsnest.switchboard" title="Link to this heading">#</a></h1>
+<p>The switchboard: any session or plain process messages a live session, with no model turn.</p>
+<p>Claude Code gives every session an inbox socket (its registry record’s
+<code class="docutils literal notranslate"><span class="pre">messagingSocketPath</span></code>), where other sessions on the machine deliver messages
+(<a class="reference external" href="https://code.claude.com/docs/en/cross-session-messaging">https://code.claude.com/docs/en/cross-session-messaging</a>). A message arriving there is
+read between tool calls during a turn, and starts a new turn when the session is idle.
+Inside a session, Claude’s own <code class="docutils literal notranslate"><span class="pre">SendMessage</span></code> tool reaches it. This module reaches it
+from anywhere else too: a scheduler, the courier, a connector, a script, or a session
+that wants the message on the record. That makes dispatch a shared facility rather than
+the watching session’s privilege: the lookout becomes one caller among many.</p>
+<p><a class="reference internal" href="#crowsnest.switchboard.tell" title="crowsnest.switchboard.tell"><code class="xref py py-func docutils literal notranslate"><span class="pre">tell()</span></code></a> refuses a session that cannot take a message well, hands the text to the
+transport, and appends a <code class="docutils literal notranslate"><span class="pre">message</span></code> line to the event log (<a class="reference internal" href="crowsnest.eventlog.html#module-crowsnest.eventlog" title="crowsnest.eventlog"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.eventlog</span></code></a>).
+<a class="reference internal" href="#crowsnest.switchboard.deliverable" title="crowsnest.switchboard.deliverable"><code class="xref py py-func docutils literal notranslate"><span class="pre">deliverable()</span></code></a> judges the status only:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">idle</span></code> takes a message;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">busy</span></code> (or <code class="docutils literal notranslate"><span class="pre">shell</span></code>) only with <code class="docutils literal notranslate"><span class="pre">busy_ok</span></code>: Claude Code hands it over between two
+tool calls, which never interrupts a tool but does change what the turn was doing;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">waiting</span></code> never: the session cannot act until its person answers, and a message
+would sit on top of the question it is asking them; nor any other status.</p></li>
+</ul>
+<p><strong>The transport</strong> is the <code class="docutils literal notranslate"><span class="pre">deliver=</span></code> seam, <code class="docutils literal notranslate"><span class="pre">(session,</span> <span class="pre">text)</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code>, raising
+<a class="reference internal" href="#crowsnest.switchboard.Refused" title="crowsnest.switchboard.Refused"><code class="xref py py-class docutils literal notranslate"><span class="pre">Refused</span></code></a> (or <code class="docutils literal notranslate"><span class="pre">OSError</span></code>) when it cannot deliver. Its default,
+<a class="reference internal" href="#crowsnest.switchboard.socket_post" title="crowsnest.switchboard.socket_post"><code class="xref py py-func docutils literal notranslate"><span class="pre">socket_post()</span></code></a>, writes one JSON line, <code class="docutils literal notranslate"><span class="pre">{&quot;type&quot;:</span> <span class="pre">&quot;user&quot;,</span> <span class="pre">&quot;message&quot;:</span> <span class="pre">{&quot;role&quot;:</span>
+<span class="pre">&quot;user&quot;,</span> <span class="pre">&quot;content&quot;:</span> <span class="pre">TEXT}}</span></code> (the shape Claude Code’s own debug log prints for injecting
+a message), to the session’s socket on this machine, and only after checking that the
+socket is held by the very process the registry record describes: the record is this
+host’s (<code class="docutils literal notranslate"><span class="pre">pidDomain</span></code>), the peer’s pid is the record’s, and that pid started when the
+record says (<code class="docutils literal notranslate"><span class="pre">procStart</span></code>), so a pid reused after a crash is never mistaken for the
+session. Another machine’s session (a synced home), a spare or a bare-mode one is
+refused by it; a transport for another host takes the same session and reaches it there.</p>
+<p><strong>Whether the session accepts it</strong> is the receiver’s setting, <code class="docutils literal notranslate"><span class="pre">crossSessionInbound</span></code>:
+with <code class="docutils literal notranslate"><span class="pre">accept</span></code> every message is delivered; with none set, a session that bypasses
+permission prompts holds a message from a process that asserts no permission class until
+its person approves it, and a non-interactive one lets it expire. <a class="reference internal" href="#crowsnest.switchboard.inbound_of" title="crowsnest.switchboard.inbound_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">inbound_of()</span></code></a>
+reads the receiving home’s user setting, so a caller with no person at hand (the
+courier) can route elsewhere when it is not <code class="docutils literal notranslate"><span class="pre">accept</span></code>.</p>
+<p class="rubric">Module Attributes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.switchboard.MAX_TEXT" title="crowsnest.switchboard.MAX_TEXT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_TEXT</span></code></a></p></td>
+<td><p>The longest text <a class="reference internal" href="#crowsnest.switchboard.tell" title="crowsnest.switchboard.tell"><code class="xref py py-func docutils literal notranslate"><span class="pre">tell()</span></code></a> sends, in characters.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.switchboard.clean" title="crowsnest.switchboard.clean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean</span></code></a>(text)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">text</span></code> without control or format characters (Unicode Cc and Cf) other than line breaks and tabs: a terminal escape in a message or a log line must never reach a terminal that prints it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.switchboard.deliverable" title="crowsnest.switchboard.deliverable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deliverable</span></code></a>(session, *[, busy_ok])</p></td>
+<td><p>Why <code class="docutils literal notranslate"><span class="pre">session</span></code>'s status keeps a message from it now, or <code class="docutils literal notranslate"><span class="pre">''</span></code> when it can take one.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.switchboard.envelope" title="crowsnest.switchboard.envelope"><code class="xref py py-obj docutils literal notranslate"><span class="pre">envelope</span></code></a>(text, *, sender[, reply, note])</p></td>
+<td><p>The text as the receiving session reads it: who sent it, a <code class="docutils literal notranslate"><span class="pre">note</span></code> on what the text is, the message (a body line shaped like the first line is marked as quoted), then how to answer when there is a way.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.switchboard.inbound_of" title="crowsnest.switchboard.inbound_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">inbound_of</span></code></a>(session)</p></td>
+<td><p>The receiving home's user-level <code class="docutils literal notranslate"><span class="pre">crossSessionInbound</span></code> (<code class="docutils literal notranslate"><span class="pre">''</span></code> when unset or unreadable).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.switchboard.same_process" title="crowsnest.switchboard.same_process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">same_process</span></code></a>(session)</p></td>
+<td><p>Is <code class="docutils literal notranslate"><span class="pre">session.pid</span></code> still the process that registered <code class="docutils literal notranslate"><span class="pre">session</span></code>?</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.switchboard.socket_post" title="crowsnest.switchboard.socket_post"><code class="xref py py-obj docutils literal notranslate"><span class="pre">socket_post</span></code></a>(session, text, *[, timeout, confirm])</p></td>
+<td><p>Post <code class="docutils literal notranslate"><span class="pre">text</span></code> as one user message to <code class="docutils literal notranslate"><span class="pre">session</span></code>'s inbox socket on this machine.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.switchboard.tell" title="crowsnest.switchboard.tell"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tell</span></code></a>(session, text, *[, sender, reply, ...])</p></td>
+<td><p>Post <code class="docutils literal notranslate"><span class="pre">text</span></code> to <code class="docutils literal notranslate"><span class="pre">session</span></code>; <code class="docutils literal notranslate"><span class="pre">{&quot;to&quot;,</span> <span class="pre">&quot;status&quot;,</span> <span class="pre">&quot;sender&quot;,</span> <span class="pre">&quot;at&quot;,</span> <span class="pre">&quot;inbound&quot;}</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Exceptions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.switchboard.Refused" title="crowsnest.switchboard.Refused"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Refused</span></code></a></p></td>
+<td><p>A message the switchboard would not post, and why.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.switchboard.MAX_TEXT">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">MAX_TEXT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">64000</span></span><a class="headerlink" href="#crowsnest.switchboard.MAX_TEXT" title="Link to this definition">#</a></dt>
+<dd><p>The longest text <a class="reference internal" href="#crowsnest.switchboard.tell" title="crowsnest.switchboard.tell"><code class="xref py py-func docutils literal notranslate"><span class="pre">tell()</span></code></a> sends, in characters. Claude Code refuses past about a
+million; a message to a session is a brief, and a brief this long belongs in a file.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="crowsnest.switchboard.Refused">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">Refused</span></span><a class="reference internal" href="../_modules/crowsnest/switchboard.html#Refused"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.switchboard.Refused" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a></p>
+<p>A message the switchboard would not post, and why. A <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>, so the CLI
+prints the reason and exits 2.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.switchboard.clean">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">clean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/switchboard.html#clean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.switchboard.clean" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">text</span></code> without control or format characters (Unicode Cc and Cf) other than line
+breaks and tabs: a terminal escape in a message or a log line must never reach a
+terminal that prints it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">clean</span><span class="p">(</span><span class="s1">'ok</span><span class="se">\x1b</span><span class="s1">]52;c;aGk=</span><span class="se">\x07</span><span class="s1"> done</span><span class="se">\n</span><span class="s1">next'</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">'ok]52;c;aGk= done\nnext'</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.switchboard.deliverable">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">deliverable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">busy_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/switchboard.html#deliverable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.switchboard.deliverable" title="Link to this definition">#</a></dt>
+<dd><p>Why <code class="docutils literal notranslate"><span class="pre">session</span></code>’s status keeps a message from it now, or <code class="docutils literal notranslate"><span class="pre">''</span></code> when it can take one.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">LiveSession</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'id'</span><span class="p">,</span> <span class="s1">'w'</span><span class="p">,</span> <span class="s1">'/w'</span><span class="p">,</span> <span class="s1">'interactive'</span><span class="p">,</span> <span class="s1">'idle'</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">deliverable</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</span><span data-line="3"><span class="go">''</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">deliverable</span><span class="p">(</span><span class="n">replace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s1">'busy'</span><span class="p">))</span>
+</span><span data-line="6"><span class="go">'w is busy; pass busy_ok to deliver between its tool calls'</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">deliverable</span><span class="p">(</span><span class="n">replace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s1">'busy'</span><span class="p">),</span> <span class="n">busy_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="8"><span class="go">''</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="n">deliverable</span><span class="p">(</span><span class="n">replace</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s1">'unknown'</span><span class="p">))</span>
+</span><span data-line="10"><span class="go">'w is unknown, not idle'</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.switchboard.envelope">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reply</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/switchboard.html#envelope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.switchboard.envelope" title="Link to this definition">#</a></dt>
+<dd><p>The text as the receiving session reads it: who sent it, a <code class="docutils literal notranslate"><span class="pre">note</span></code> on what the
+text is, the message (a body line shaped like the first line is marked as quoted),
+then how to answer when there is a way.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">envelope</span><span class="p">(</span><span class="s1">'Rebase on main.'</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="s1">'cn'</span><span class="p">))</span>
+</span><span data-line="2"><span class="go">From cn, through crowsnest's switchboard:</span>
+</span><span data-line="3"><span class="go">Rebase on main.</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.switchboard.inbound_of">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">inbound_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/switchboard.html#inbound_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.switchboard.inbound_of" title="Link to this definition">#</a></dt>
+<dd><p>The receiving home’s user-level <code class="docutils literal notranslate"><span class="pre">crossSessionInbound</span></code> (<code class="docutils literal notranslate"><span class="pre">''</span></code> when unset or
+unreadable). The home is where the registry put the session’s transcript,
+<code class="docutils literal notranslate"><span class="pre">&lt;home&gt;/projects/&lt;slug&gt;/&lt;id&gt;.jsonl</span></code>. A project’s own settings can still override it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.switchboard.same_process">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">same_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/switchboard.html#same_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.switchboard.same_process" title="Link to this definition">#</a></dt>
+<dd><p>Is <code class="docutils literal notranslate"><span class="pre">session.pid</span></code> still the process that registered <code class="docutils literal notranslate"><span class="pre">session</span></code>?</p>
+<p>Compared through the start time Claude Code recorded: <code class="docutils literal notranslate"><span class="pre">ps</span></code>’s on macOS, <code class="docutils literal notranslate"><span class="pre">/proc</span></code>’s
+on Linux (<code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.guard.same_process()</span></code>). A record without one, or a platform
+where neither works, cannot be confirmed, and the answer is <code class="docutils literal notranslate"><span class="pre">False</span></code>: delivering
+to a stranger is the error this exists to prevent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.switchboard.socket_post">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">socket_post</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confirm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">same_process&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/switchboard.html#socket_post"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.switchboard.socket_post" title="Link to this definition">#</a></dt>
+<dd><p>Post <code class="docutils literal notranslate"><span class="pre">text</span></code> as one user message to <code class="docutils literal notranslate"><span class="pre">session</span></code>’s inbox socket on this machine.</p>
+<p>Refuses a session with no socket, one from another machine (its <code class="docutils literal notranslate"><span class="pre">pid_domain</span></code>,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.registry.is_local()</span></code>), a path that is not a socket we own (<code class="docutils literal notranslate"><span class="pre">lstat</span></code>,
+so a symlink is refused), a connection whose peer is not the record’s pid (or whose
+peer the OS will not name), and a pid that is no longer the process that registered
+it (<code class="docutils literal notranslate"><span class="pre">confirm</span></code>, checked once connected). The connection is opened only once the text
+is ready (Claude Code closes one that sends no complete line within 30 seconds) and
+closed right after.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.switchboard.tell">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.switchboard.</span></span><span class="sig-name descname"><span class="pre">tell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reply</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">busy_ok</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deliver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/switchboard.html#tell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.switchboard.tell" title="Link to this definition">#</a></dt>
+<dd><p>Post <code class="docutils literal notranslate"><span class="pre">text</span></code> to <code class="docutils literal notranslate"><span class="pre">session</span></code>; <code class="docutils literal notranslate"><span class="pre">{&quot;to&quot;,</span> <span class="pre">&quot;status&quot;,</span> <span class="pre">&quot;sender&quot;,</span> <span class="pre">&quot;at&quot;,</span> <span class="pre">&quot;inbound&quot;}</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sender</span></code> signs it (default: the calling session’s label, else <code class="xref py py-data docutils literal notranslate"><span class="pre">ANONYMOUS</span></code>);
+<code class="docutils literal notranslate"><span class="pre">reply</span></code> is a last line telling the receiver how to answer. Raises <a class="reference internal" href="#crowsnest.switchboard.Refused" title="crowsnest.switchboard.Refused"><code class="xref py py-class docutils literal notranslate"><span class="pre">Refused</span></code></a>
+for a status <a class="reference internal" href="#crowsnest.switchboard.deliverable" title="crowsnest.switchboard.deliverable"><code class="xref py py-func docutils literal notranslate"><span class="pre">deliverable()</span></code></a> refuses, for empty or oversized text, and when the
+transport cannot deliver. <code class="docutils literal notranslate"><span class="pre">deliver</span></code> is the transport, <code class="docutils literal notranslate"><span class="pre">(session,</span> <span class="pre">text)</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code>,
+default <a class="reference internal" href="#crowsnest.switchboard.socket_post" title="crowsnest.switchboard.socket_post"><code class="xref py py-func docutils literal notranslate"><span class="pre">socket_post()</span></code></a>. <code class="docutils literal notranslate"><span class="pre">extra</span></code> adds fields to the event line (an intent id).
+<code class="docutils literal notranslate"><span class="pre">inbound</span></code> is the receiver’s <code class="docutils literal notranslate"><span class="pre">crossSessionInbound</span></code> (<a class="reference internal" href="#crowsnest.switchboard.inbound_of" title="crowsnest.switchboard.inbound_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">inbound_of()</span></code></a>). <code class="docutils literal notranslate"><span class="pre">note</span></code>
+is a line under the sender’s that says what the text is (<a class="reference internal" href="#crowsnest.switchboard.envelope" title="crowsnest.switchboard.envelope"><code class="xref py py-func docutils literal notranslate"><span class="pre">envelope()</span></code></a>). The event
+line records the claimed <code class="docutils literal notranslate"><span class="pre">from</span></code> and, in <code class="docutils literal notranslate"><span class="pre">by</span></code>, the session that actually ran this
+(or <code class="xref py py-data docutils literal notranslate"><span class="pre">ANONYMOUS</span></code>), which a caller cannot choose.</p>
+<p>Once the transport has delivered, nothing here raises: a log line that cannot be
+written is reported in <code class="docutils literal notranslate"><span class="pre">hook.log</span></code>, never as a failure, because a caller that retries
+a failure would deliver the message again.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="crowsnest.skills.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">crowsnest.skills</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="crowsnest.synopsis.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">crowsnest.synopsis</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=0f6bfde0"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
+</html>

@@ -58,7 +58,7 @@ this prefix plus its bridge id.
 Claude Code’s own variable for relocating its config directory. Honoured, not
 reinvented: the registry and the transcripts move with it.
 
-### *class* crowsnest.registry.LiveSession(pid, session_id, name, cwd, kind, status, waiting_for, status_since, started_at, remote_control, version, transcript, home='', bridge_session_id='')
+### *class* crowsnest.registry.LiveSession(pid, session_id, name, cwd, kind, status, waiting_for, status_since, started_at, remote_control, version, transcript, home='', bridge_session_id='', socket='', proc_start='', pid_domain='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -68,6 +68,24 @@ One running session, as the registry describes it. Flat and JSON-shaped.
 
 The name the user gave the session, else the head of its id.
 
+#### pid_domain *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+`darwin`, or on Linux
+`linux:<boot id>:pid:[<namespace>]`), so a transport can tell this host’s
+sessions from a synced copy of another’s.
+
+* **Type:**
+  Where that pid means anything (`pidDomain`
+
+#### proc_start *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+a UTC date
+like `ps -o lstart` prints on macOS, clock ticks since boot on Linux), so a
+reused pid can be told from the session that registered it.
+
+* **Type:**
+  When the process started, as Claude Code recorded it (`procStart`
+
 #### *property* project *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The working directory’s last component – the name a human uses for it.
@@ -75,6 +93,12 @@ The working directory’s last component – the name a human uses for it.
 #### *property* session_url *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The session on claude.ai, when it runs with Remote Control; else `''`.
+
+#### socket *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+The session’s inbox socket (`messagingSocketPath`), where a message to it is
+posted ([`crowsnest.switchboard`](crowsnest.switchboard.html.md#module-crowsnest.switchboard)); `''` when it has none (bare mode, an older
+Claude Code) or the record comes from another machine, whose socket is not here.
 
 ### crowsnest.registry.MIRROR_STAMP *= '.mirrored-at'*
 

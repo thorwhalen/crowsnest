@@ -1,0 +1,24 @@
+crowsnest.eventlog
+==================
+
+.. automodule:: crowsnest.eventlog
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      EVENTS
+      REGISTRY_EVENTS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      files
+      line
+      line_id
+      read
+      record_changes
+      since_of
+   

@@ -24,18 +24,20 @@ here prints, exits, or knows which surface called it.
 | [`later`](#crowsnest.tools.later)(session, preset, \*[, plan, on_change, ...]) | Put `session`'s item off until a preset time, or until it changes, whichever first.                                                                                                                                                       |
 | [`lineage`](#crowsnest.tools.lineage)(\*[, home, all_homes, config, ...])        | Who started whom: the live sessions as a forest of `parent -> child` edges.                                                                                                                                                               |
 | [`live`](#crowsnest.tools.live)(\*[, home, all_homes, config, activity, ...]) | What every live session is doing now, as the page's `live/roster` document.                                                                                                                                                               |
+| [`log`](#crowsnest.tools.log)(\*[, since, sessions, events, limit, ...])     | The event log's records, oldest first: `{"path", "files", "records"}`.                                                                                                                                                                    |
 | [`note`](#crowsnest.tools.note)(session, text, \*[, home, all_homes, ...])    | Set the note on `session`'s item; empty text removes it.                                                                                                                                                                                  |
 | [`publish`](#crowsnest.tools.publish)(\*[, to, command, publisher, home, ...])   | Render the report as a whole page and deliver it where its owner reads it.                                                                                                                                                                |
 | [`reap`](#crowsnest.tools.reap)(\*[, apply, home, config])                    | Which sessions the reaper would close, and why every other one is kept.                                                                                                                                                                   |
 | [`recap`](#crowsnest.tools.recap)(session, \*[, home, all_homes, config, ...]) | Five lines about one live session, read from disk: the answer to a `recap` intent.                                                                                                                                                        |
 | [`repo_url`](#crowsnest.tools.repo_url)(cwd)                                      | The browser URL of the repository at `cwd`'s `origin`, or `''`.                                                                                                                                                                           |
 | [`report`](#crowsnest.tools.report)(\*[, home, all_homes, config, ...])         | The roster as one self-contained HTML page: [`crowsnest.report.render_report()`](crowsnest.report.html.md#crowsnest.report.render_report) over what [`roster()`](#crowsnest.tools.roster) returns. |
-| [`resolve`](#crowsnest.tools.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                                                                                                                                                              |
+| [`resolve`](#crowsnest.tools.resolve)(session, \*[, home, all_homes, ...])       | The live session a human means by `session`.                                                                                                                                                                                              |
 | [`revive`](#crowsnest.tools.revive)(name, \*, cwd[, prompt, model, ...])        | Make sure a session named `name` runs -- the one it was, when that is possible.                                                                                                                                                           |
 | [`roster`](#crowsnest.tools.roster)(\*[, home, all_homes, config, ...])         | Every live session, most urgent first, each with a clipped view of its activity.                                                                                                                                                          |
 | [`seen`](#crowsnest.tools.seen)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item seen at its current revision: it dims until it changes.                                                                                                                                                             |
 | [`sessions`](#crowsnest.tools.sessions)(\*[, home, all_homes, config])            | The live sessions of one home, or of every configured home when `all_homes`.                                                                                                                                                              |
 | [`show`](#crowsnest.tools.show)(session, \*[, home, all_homes, config, ...])  | One session in full: its registry record, its activity unclipped, and its links.                                                                                                                                                          |
+| [`tell`](#crowsnest.tools.tell)(session, text, \*[, busy_ok, sender, ...])    | Message a live session through its inbox socket, from any session or process.                                                                                                                                                             |
 | [`triage`](#crowsnest.tools.triage)(\*[, home, all_homes, config, ...])         | Every live session grouped by what it needs: the three-line answer to "where are we".                                                                                                                                                     |
 | [`turns`](#crowsnest.tools.turns)(session, \*[, last, before, home, ...])      | The last `last` turns of a session, oldest first; `before=N` pages back from turn N.                                                                                                                                                      |
 | [`undo`](#crowsnest.tools.undo)(session, \*[, home, all_homes, config, ...])  | Restore `session`'s attention record to before its last change.                                                                                                                                                                           |
@@ -166,6 +168,17 @@ Cheaper than [`roster()`](#crowsnest.tools.roster), because it runs every tick: 
 flight (waiting, busy, or in a shell). `activity=False` reads no tail at all, and
 every `in_flight` is empty. `as_of` defaults to now, taken before the registry is
 read, so the document never claims to be fresher than what it holds.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.log(, since='1h', sessions=None, events=None, limit=None, events_path=None)
+
+The event log’s records, oldest first: `{"path", "files", "records"}`.
+
+`since` is a span back from now (`90m`, `2h`, `3d`) or an ISO time, `""` or
+`None` for the whole log; `sessions` and `events` narrow it
+([`crowsnest.eventlog.read()`](crowsnest.eventlog.html.md#crowsnest.eventlog.read)); `limit` keeps the newest that many.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
@@ -328,9 +341,14 @@ also what lets a test of this function not read the ledgers of whoever runs it.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.resolve(session, , home=None, all_homes=False, config=None)
+### crowsnest.tools.resolve(session, , home=None, all_homes=False, config=None, exact=False)
 
 The live session a human means by `session`.
+
+`exact` takes only a whole label (the name, or an unnamed session’s id head) or a
+whole id, for a caller with nobody to catch a wrong pick: an intent delivered by the
+courier names a row of a page published a minute ago, whose session may have exited
+while another, whose name it begins, lives on.
 
 Tried in order: the exact session id, the exact registry name, a unique name prefix, a
 unique session-id prefix, the pid. `name@home` names a session in one home when
@@ -428,6 +446,18 @@ them.
 `session` carries `session_url` (claude.ai, when the session runs with Remote
 Control) and `open_command` (the terminal command that reaches it either way), as
 every [`roster()`](#crowsnest.tools.roster) row does – the two things a page naming the session links it by.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.tell(session, text, , busy_ok=False, sender=None, home=None, all_homes=False, config=None, deliver=None, events_path=None)
+
+Message a live session through its inbox socket, from any session or process.
+
+`session` is resolved as [`resolve()`](#crowsnest.tools.resolve) does. A `waiting` session is refused, a
+busy one unless `busy_ok`, and one with no inbox here always
+([`crowsnest.switchboard.tell()`](crowsnest.switchboard.html.md#crowsnest.switchboard.tell), which also writes the `message` event line).
+`deliver` is the transport seam, `(session, text) -> None`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

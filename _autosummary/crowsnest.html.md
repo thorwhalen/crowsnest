@@ -82,7 +82,7 @@ machine is out of room.
 | [`read_activity`](#crowsnest.read_activity)(path, \*[, session_id, ...])         | Read the tail of a transcript into an [`Activity`](#crowsnest.Activity). |
 | [`read_ledger`](#crowsnest.read_ledger)(name, \*[, ledger_dir])                | One session's ledger as a JSON-able dict; a shaped empty one when there is none.                 |
 | [`read_turns`](#crowsnest.read_turns)(path, \*[, last, before])               | The last `last` turns of a transcript, oldest first; `before=N` pages back.                      |
-| [`resolve`](#crowsnest.resolve)(session, \*[, home, all_homes, config])    | The live session a human means by `session`.                                                     |
+| [`resolve`](#crowsnest.resolve)(session, \*[, home, all_homes, ...])       | The live session a human means by `session`.                                                     |
 | [`roster`](#crowsnest.roster)(\*[, home, all_homes, config, ...])         | Every live session, most urgent first, each with a clipped view of its activity.                 |
 | [`show`](#crowsnest.show)(session, \*[, home, all_homes, config, ...])  | One session in full: its registry record, its activity unclipped, and its links.                 |
 | [`spawn`](#crowsnest.spawn)(name, \*, cwd[, prompt, model, effort, ...]) | Start a session named `name` in `cwd`, and wait for the registry to see it.                      |
@@ -112,7 +112,7 @@ when `tail_complete` is true, and a floor otherwise. `locators` are the typed
 references openloops found in the window – issues, pull requests – each a dict with
 `type`, `url` and `text`, oldest first.
 
-### *class* crowsnest.LiveSession(pid, session_id, name, cwd, kind, status, waiting_for, status_since, started_at, remote_control, version, transcript, home='', bridge_session_id='')
+### *class* crowsnest.LiveSession(pid, session_id, name, cwd, kind, status, waiting_for, status_since, started_at, remote_control, version, transcript, home='', bridge_session_id='', socket='', proc_start='', pid_domain='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -122,6 +122,24 @@ One running session, as the registry describes it. Flat and JSON-shaped.
 
 The name the user gave the session, else the head of its id.
 
+#### pid_domain *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+`darwin`, or on Linux
+`linux:<boot id>:pid:[<namespace>]`), so a transport can tell this host’s
+sessions from a synced copy of another’s.
+
+* **Type:**
+  Where that pid means anything (`pidDomain`
+
+#### proc_start *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+a UTC date
+like `ps -o lstart` prints on macOS, clock ticks since boot on Linux), so a
+reused pid can be told from the session that registered it.
+
+* **Type:**
+  When the process started, as Claude Code recorded it (`procStart`
+
 #### *property* project *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The working directory’s last component – the name a human uses for it.
@@ -129,6 +147,12 @@ The working directory’s last component – the name a human uses for it.
 #### *property* session_url *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
 The session on claude.ai, when it runs with Remote Control; else `''`.
+
+#### socket *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+The session’s inbox socket (`messagingSocketPath`), where a message to it is
+posted ([`crowsnest.switchboard`](crowsnest.switchboard.html.md#module-crowsnest.switchboard)); `''` when it has none (bare mode, an older
+Claude Code) or the record comes from another machine, whose socket is not here.
 
 ### *class* crowsnest.Turn(index, prompt, prompt_at, reply, reply_at, tools)
 
@@ -252,9 +276,14 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Turn`](crowsnest.activity.html.md#crowsnest.activity.Turn)]
 
-### crowsnest.resolve(session, , home=None, all_homes=False, config=None)
+### crowsnest.resolve(session, , home=None, all_homes=False, config=None, exact=False)
 
 The live session a human means by `session`.
+
+`exact` takes only a whole label (the name, or an unnamed session’s id head) or a
+whole id, for a caller with nobody to catch a wrong pick: an intent delivered by the
+courier names a row of a page published a minute ago, whose session may have exited
+while another, whose name it begins, lives on.
 
 Tried in order: the exact session id, the exact registry name, a unique name prefix, a
 unique session-id prefix, the pid. `name@home` names a session in one home when
@@ -434,6 +463,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`courier`](crowsnest.courier.html.md#module-crowsnest.courier)               | The console's courier with no LLM: carry an owner-served console store both ways.                                                    |
 | [`egress`](crowsnest.egress.html.md#module-crowsnest.egress)                 | The page's sanitiser, made safe against text that an earlier clip has already cut (#83).                                             |
 | [`envelope_cache`](crowsnest.envelope_cache.html.md#module-crowsnest.envelope_cache) | A cached openloops envelope: asked for at most once per `every`, read by the page.                                                   |
+| [`eventlog`](crowsnest.eventlog.html.md#module-crowsnest.eventlog)             | The event log: one append-only plain file that says what happened across the fleet.                                                  |
 | [`gists`](crowsnest.gists.html.md#module-crowsnest.gists)                   | Gists for *Your questions* (#129): each question in a few words, and the answer it got.                                              |
 | [`guard`](crowsnest.guard.html.md#module-crowsnest.guard)                   | Keep a machine's sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).                                           |
 | [`hook`](crowsnest.hook.html.md#module-crowsnest.hook)                     | The push half of the stream: what Claude Code's own hooks tell crowsnest.                                                            |
@@ -456,6 +486,7 @@ silently wrote nothing would be worse than a stack trace.
 | [`rows`](crowsnest.rows.html.md#module-crowsnest.rows)                     | How an item's row is built and hashed: one value, taken whole by every surface that pins it.                                         |
 | [`said`](crowsnest.said.html.md#module-crowsnest.said)                     | When the thing an item quotes was said: its own time, taken from its own source.                                                     |
 | [`skills`](crowsnest.skills.html.md#module-crowsnest.skills)                 | The agent-facing surface: the skills, the subagent, and the command that installs them.                                              |
+| [`switchboard`](crowsnest.switchboard.html.md#module-crowsnest.switchboard)       | The switchboard: any session or plain process messages a live session, with no model turn.                                           |
 | [`synopsis`](crowsnest.synopsis.html.md#module-crowsnest.synopsis)             | A group's synopsis: a few lines on what needs the person, what is working, what finished.                                            |
 | [`themes`](crowsnest.themes.html.md#module-crowsnest.themes)                 | Which theme each session belongs to: the person's `[themes]` table first, then what the row itself says (the action-first pass, C1). |
 | [`tools`](crowsnest.tools.html.md#module-crowsnest.tools)                   | The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.                                                     |

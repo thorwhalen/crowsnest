@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="orange" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>crowsnest.switchboard - crowsnest</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="crowsnest.switchboard"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../index.html">
+      
+      
+      <strong>crowsnest</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../_autosummary/crowsnest.html">crowsnest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.account.html">crowsnest.account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.actions.html">crowsnest.actions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.activity.html">crowsnest.activity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.attention.html">crowsnest.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.blocked.html">crowsnest.blocked</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.config.html">crowsnest.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.courier.html">crowsnest.courier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.egress.html">crowsnest.egress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.eventlog.html">crowsnest.eventlog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.gists.html">crowsnest.gists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.guard.html">crowsnest.guard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.init.html">crowsnest.init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.intents.html">crowsnest.intents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.jsonl.html">crowsnest.jsonl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger.html">crowsnest.ledger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.ledger_mirror.html">crowsnest.ledger_mirror</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.lineage.html">crowsnest.lineage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.links.html">crowsnest.links</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.live.html">crowsnest.live</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.open.html">crowsnest.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.owed.html">crowsnest.owed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.paths.html">crowsnest.paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.publish.html">crowsnest.publish</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.questions.html">crowsnest.questions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.refstate.html">crowsnest.refstate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.report.html">crowsnest.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.rows.html">crowsnest.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.said.html">crowsnest.said</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.switchboard.html">crowsnest.switchboard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.synopsis.html">crowsnest.synopsis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.themes.html">crowsnest.themes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.tools.html">crowsnest.tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.tree.html">crowsnest.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.triage.html">crowsnest.triage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/crowsnest.watch.html">crowsnest.watch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">crowsnest</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">crowsnest.switchboard</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <h1>Source code for crowsnest.switchboard</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="sd">"""The switchboard: any session or plain process messages a live session, with no model turn.</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="sd">Claude Code gives every session an inbox socket (its registry record's</span>
+</span><span data-line="4"><span class="sd">``messagingSocketPath``), where other sessions on the machine deliver messages</span>
+</span><span data-line="5"><span class="sd">(https://code.claude.com/docs/en/cross-session-messaging). A message arriving there is</span>
+</span><span data-line="6"><span class="sd">read between tool calls during a turn, and starts a new turn when the session is idle.</span>
+</span><span data-line="7"><span class="sd">Inside a session, Claude's own ``SendMessage`` tool reaches it. This module reaches it</span>
+</span><span data-line="8"><span class="sd">from anywhere else too: a scheduler, the courier, a connector, a script, or a session</span>
+</span><span data-line="9"><span class="sd">that wants the message on the record. That makes dispatch a shared facility rather than</span>
+</span><span data-line="10"><span class="sd">the watching session's privilege: the lookout becomes one caller among many.</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="sd">:func:`tell` refuses a session that cannot take a message well, hands the text to the</span>
+</span><span data-line="13"><span class="sd">transport, and appends a ``message`` line to the event log (:mod:`crowsnest.eventlog`).</span>
+</span><span data-line="14"><span class="sd">:func:`deliverable` judges the status only:</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="sd">- ``idle`` takes a message;</span>
+</span><span data-line="17"><span class="sd">- ``busy`` (or ``shell``) only with ``busy_ok``: Claude Code hands it over between two</span>
+</span><span data-line="18"><span class="sd">  tool calls, which never interrupts a tool but does change what the turn was doing;</span>
+</span><span data-line="19"><span class="sd">- ``waiting`` never: the session cannot act until its person answers, and a message</span>
+</span><span data-line="20"><span class="sd">  would sit on top of the question it is asking them; nor any other status.</span>
+</span><span data-line="21">
+</span><span data-line="22"><span class="sd">**The transport** is the ``deliver=`` seam, ``(session, text) -&gt; None``, raising</span>
+</span><span data-line="23"><span class="sd">:class:`Refused` (or ``OSError``) when it cannot deliver. Its default,</span>
+</span><span data-line="24"><span class="sd">:func:`socket_post`, writes one JSON line, ``{"type": "user", "message": {"role":</span>
+</span><span data-line="25"><span class="sd">"user", "content": TEXT}}`` (the shape Claude Code's own debug log prints for injecting</span>
+</span><span data-line="26"><span class="sd">a message), to the session's socket on this machine, and only after checking that the</span>
+</span><span data-line="27"><span class="sd">socket is held by the very process the registry record describes: the record is this</span>
+</span><span data-line="28"><span class="sd">host's (``pidDomain``), the peer's pid is the record's, and that pid started when the</span>
+</span><span data-line="29"><span class="sd">record says (``procStart``), so a pid reused after a crash is never mistaken for the</span>
+</span><span data-line="30"><span class="sd">session. Another machine's session (a synced home), a spare or a bare-mode one is</span>
+</span><span data-line="31"><span class="sd">refused by it; a transport for another host takes the same session and reaches it there.</span>
+</span><span data-line="32">
+</span><span data-line="33"><span class="sd">**Whether the session accepts it** is the receiver's setting, ``crossSessionInbound``:</span>
+</span><span data-line="34"><span class="sd">with ``accept`` every message is delivered; with none set, a session that bypasses</span>
+</span><span data-line="35"><span class="sd">permission prompts holds a message from a process that asserts no permission class until</span>
+</span><span data-line="36"><span class="sd">its person approves it, and a non-interactive one lets it expire. :func:`inbound_of`</span>
+</span><span data-line="37"><span class="sd">reads the receiving home's user setting, so a caller with no person at hand (the</span>
+</span><span data-line="38"><span class="sd">courier) can route elsewhere when it is not ``accept``.</span>
+</span><span data-line="39"><span class="sd">"""</span>
+</span><span data-line="40">
+</span><span data-line="41"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="42">
+</span><span data-line="43"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span data-line="44"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span data-line="45"><span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+</span><span data-line="46"><span class="kn">import</span><span class="w"> </span><span class="nn">stat</span>
+</span><span data-line="47"><span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
+</span><span data-line="48"><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+</span><span data-line="49"><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span data-line="50"><span class="kn">import</span><span class="w"> </span><span class="nn">unicodedata</span>
+</span><span data-line="51"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+</span><span data-line="52"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+</span><span data-line="53"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="54">
+</span><span data-line="55"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">append_event</span><span class="p">,</span> <span class="n">log_failure</span>
+</span><span data-line="56"><span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="n">is_local</span>
+</span><span data-line="57">
+</span><span data-line="58"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="59">    <span class="s2">"MAX_TEXT"</span><span class="p">,</span>
+</span><span data-line="60">    <span class="s2">"Refused"</span><span class="p">,</span>
+</span><span data-line="61">    <span class="s2">"clean"</span><span class="p">,</span>
+</span><span data-line="62">    <span class="s2">"deliverable"</span><span class="p">,</span>
+</span><span data-line="63">    <span class="s2">"envelope"</span><span class="p">,</span>
+</span><span data-line="64">    <span class="s2">"inbound_of"</span><span class="p">,</span>
+</span><span data-line="65">    <span class="s2">"same_process"</span><span class="p">,</span>
+</span><span data-line="66">    <span class="s2">"socket_post"</span><span class="p">,</span>
+</span><span data-line="67">    <span class="s2">"tell"</span><span class="p">,</span>
+</span><span data-line="68"><span class="p">]</span>
+</span><span data-line="69">
+</span><span data-line="70"><span class="c1">#: The longest text :func:`tell` sends, in characters. Claude Code refuses past about a</span>
+</span><span data-line="71"><span class="c1">#: million; a message to a session is a brief, and a brief this long belongs in a file.</span>
+</span><span data-line="72"><span class="n">MAX_TEXT</span> <span class="o">=</span> <span class="mi">64_000</span>
+</span><span data-line="73">
+</span><span data-line="74"><span class="c1">#: Seconds to connect and send before giving up: the socket is local, so this is generous.</span>
+</span><span data-line="75"><span class="n">TIMEOUT</span> <span class="o">=</span> <span class="mf">5.0</span>
+</span><span data-line="76">
+</span><span data-line="77"><span class="c1">#: The statuses a message is posted to, and those it is posted to only when asked.</span>
+</span><span data-line="78"><span class="n">TAKES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"idle"</span><span class="p">,)</span>
+</span><span data-line="79"><span class="n">WORKING</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"busy"</span><span class="p">,</span> <span class="s2">"shell"</span><span class="p">)</span>
+</span><span data-line="80">
+</span><span data-line="81"><span class="c1">#: What a message from no session is signed with.</span>
+</span><span data-line="82"><span class="n">ANONYMOUS</span> <span class="o">=</span> <span class="s2">"a crowsnest script"</span>
+</span><span data-line="83">
+</span><span data-line="84"><span class="n">Deliver</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
+</span><span data-line="85">
+</span><span data-line="86">
+<div class="viewcode-block" id="Refused">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.Refused">[docs]</a>
+</span><span data-line="87"><span class="k">class</span><span class="w"> </span><span class="nc">Refused</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="88"><span class="w">    </span><span class="sd">"""A message the switchboard would not post, and why. A ``ValueError``, so the CLI</span>
+</span><span data-line="89"><span class="sd">    prints the reason and exits 2."""</span></div>
+
+</span><span data-line="90">
+</span><span data-line="91">
+</span><span data-line="92"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="93"><span class="c1"># Is the socket's holder the session the record describes?</span>
+</span><span data-line="94">
+</span><span data-line="95">
+</span><span data-line="96"><span class="k">def</span><span class="w"> </span><span class="nf">_peer_pid</span><span class="p">(</span><span class="n">conn</span><span class="p">:</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="97"><span class="w">    </span><span class="sd">"""The pid at the other end of a Unix socket, or ``None`` where the OS will not say."""</span>
+</span><span data-line="98">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="99">        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"darwin"</span><span class="p">:</span>
+</span><span data-line="100">            <span class="k">return</span> <span class="n">conn</span><span class="o">.</span><span class="n">getsockopt</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0x002</span><span class="p">)</span>  <span class="c1"># SOL_LOCAL, LOCAL_PEERPID</span>
+</span><span data-line="101">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="s2">"SO_PEERCRED"</span><span class="p">):</span>
+</span><span data-line="102">            <span class="n">raw</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getsockopt</span><span class="p">(</span>
+</span><span data-line="103">                <span class="n">socket</span><span class="o">.</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SO_PEERCRED</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">calcsize</span><span class="p">(</span><span class="s2">"3i"</span><span class="p">)</span>
+</span><span data-line="104">            <span class="p">)</span>
+</span><span data-line="105">            <span class="k">return</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"3i"</span><span class="p">,</span> <span class="n">raw</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="106">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span data-line="107">        <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="108">    <span class="k">return</span> <span class="kc">None</span>
+</span><span data-line="109">
+</span><span data-line="110">
+</span><span data-line="111"><span class="k">def</span><span class="w"> </span><span class="nf">_started_darwin</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="112"><span class="w">    </span><span class="sd">"""When ``pid`` started, as Claude Code writes ``procStart`` on macOS (UTC)."""</span>
+</span><span data-line="113">    <span class="n">done</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span data-line="114">        <span class="p">[</span><span class="s2">"ps"</span><span class="p">,</span> <span class="s2">"-o"</span><span class="p">,</span> <span class="s2">"lstart="</span><span class="p">,</span> <span class="s2">"-p"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)],</span>
+</span><span data-line="115">        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="116">        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="117">        <span class="n">timeout</span><span class="o">=</span><span class="n">TIMEOUT</span><span class="p">,</span>
+</span><span data-line="118">        <span class="n">env</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span> <span class="s2">"TZ"</span><span class="p">:</span> <span class="s2">"UTC"</span><span class="p">,</span> <span class="s2">"LC_ALL"</span><span class="p">:</span> <span class="s2">"C"</span><span class="p">},</span>  <span class="c1"># procStart's form exactly</span>
+</span><span data-line="119">        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="120">    <span class="p">)</span>
+</span><span data-line="121">    <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">done</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</span><span data-line="122">
+</span><span data-line="123">
+<div class="viewcode-block" id="same_process">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.same_process">[docs]</a>
+</span><span data-line="124"><span class="k">def</span><span class="w"> </span><span class="nf">same_process</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="125"><span class="w">    </span><span class="sd">"""Is ``session.pid`` still the process that registered ``session``?</span>
+</span><span data-line="126">
+</span><span data-line="127"><span class="sd">    Compared through the start time Claude Code recorded: ``ps``'s on macOS, ``/proc``'s</span>
+</span><span data-line="128"><span class="sd">    on Linux (:func:`crowsnest.guard.same_process`). A record without one, or a platform</span>
+</span><span data-line="129"><span class="sd">    where neither works, cannot be confirmed, and the answer is ``False``: delivering</span>
+</span><span data-line="130"><span class="sd">    to a stranger is the error this exists to prevent.</span>
+</span><span data-line="131"><span class="sd">    """</span>
+</span><span data-line="132">    <span class="k">if</span> <span class="ow">not</span> <span class="n">session</span><span class="o">.</span><span class="n">proc_start</span><span class="p">:</span>
+</span><span data-line="133">        <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="134">    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"darwin"</span><span class="p">:</span>
+</span><span data-line="135">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="136">            <span class="k">return</span> <span class="n">_started_darwin</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span> <span class="o">==</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">proc_start</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</span><span data-line="137">        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+</span><span data-line="138">            <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="139">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.guard</span><span class="w"> </span><span class="kn">import</span> <span class="n">PROC</span>
+</span><span data-line="140">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.guard</span><span class="w"> </span><span class="kn">import</span> <span class="n">same_process</span> <span class="k">as</span> <span class="n">_proc_same</span>
+</span><span data-line="141">
+</span><span data-line="142">    <span class="k">if</span> <span class="ow">not</span> <span class="n">PROC</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+</span><span data-line="143">        <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="144">    <span class="k">return</span> <span class="n">_proc_same</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="s2">"procStart"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">proc_start</span><span class="p">})</span></div>
+
+</span><span data-line="145">
+</span><span data-line="146">
+<div class="viewcode-block" id="socket_post">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.socket_post">[docs]</a>
+</span><span data-line="147"><span class="k">def</span><span class="w"> </span><span class="nf">socket_post</span><span class="p">(</span>
+</span><span data-line="148">    <span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span>
+</span><span data-line="149">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="150">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="151">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">TIMEOUT</span><span class="p">,</span>
+</span><span data-line="152">    <span class="n">confirm</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">LiveSession</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">same_process</span><span class="p">,</span>
+</span><span data-line="153"><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="154"><span class="w">    </span><span class="sd">"""Post ``text`` as one user message to ``session``'s inbox socket on this machine.</span>
+</span><span data-line="155">
+</span><span data-line="156"><span class="sd">    Refuses a session with no socket, one from another machine (its ``pid_domain``,</span>
+</span><span data-line="157"><span class="sd">    :func:`crowsnest.registry.is_local`), a path that is not a socket we own (``lstat``,</span>
+</span><span data-line="158"><span class="sd">    so a symlink is refused), a connection whose peer is not the record's pid (or whose</span>
+</span><span data-line="159"><span class="sd">    peer the OS will not name), and a pid that is no longer the process that registered</span>
+</span><span data-line="160"><span class="sd">    it (``confirm``, checked once connected). The connection is opened only once the text</span>
+</span><span data-line="161"><span class="sd">    is ready (Claude Code closes one that sends no complete line within 30 seconds) and</span>
+</span><span data-line="162"><span class="sd">    closed right after.</span>
+</span><span data-line="163"><span class="sd">    """</span>
+</span><span data-line="164">    <span class="n">path</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">socket</span>
+</span><span data-line="165">    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+</span><span data-line="166">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> has no inbox socket"</span><span class="p">)</span>
+</span><span data-line="167">    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_local</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">pid_domain</span><span class="p">):</span>
+</span><span data-line="168">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> runs on another machine; its inbox is not here"</span><span class="p">)</span>
+</span><span data-line="169">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="170">        <span class="n">info</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">lstat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="171">    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="172">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is gone: </span><span class="si">{</span><span class="n">exc</span><span class="o">.</span><span class="n">strerror</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+</span><span data-line="173">    <span class="k">if</span> <span class="ow">not</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_ISSOCK</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">st_mode</span><span class="p">)</span> <span class="ow">or</span> <span class="n">info</span><span class="o">.</span><span class="n">st_uid</span> <span class="o">!=</span> <span class="n">os</span><span class="o">.</span><span class="n">getuid</span><span class="p">():</span>
+</span><span data-line="174">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is not a socket of ours"</span><span class="p">)</span>
+</span><span data-line="175">    <span class="n">line</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+</span><span data-line="176">        <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">text</span><span class="p">}},</span>
+</span><span data-line="177">        <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="178">    <span class="p">)</span>
+</span><span data-line="179">    <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+</span><span data-line="180">        <span class="n">conn</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+</span><span data-line="181">        <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="182">        <span class="c1"># Checked on the open connection, so the answer is about who holds it now.</span>
+</span><span data-line="183">        <span class="n">peer</span> <span class="o">=</span> <span class="n">_peer_pid</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+</span><span data-line="184">        <span class="k">if</span> <span class="n">peer</span> <span class="o">!=</span> <span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="p">:</span>
+</span><span data-line="185">            <span class="n">held</span> <span class="o">=</span> <span class="s2">"an unknown process"</span> <span class="k">if</span> <span class="n">peer</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"pid </span><span class="si">{</span><span class="n">peer</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="186">            <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is held by </span><span class="si">{</span><span class="n">held</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="187">        <span class="k">if</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
+</span><span data-line="188">            <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
+</span><span data-line="189">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s pid </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2"> is not the process that registered it"</span>
+</span><span data-line="190">            <span class="p">)</span>
+</span><span data-line="191">        <span class="n">conn</span><span class="o">.</span><span class="n">sendall</span><span class="p">((</span><span class="n">line</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span></div>
+
+</span><span data-line="192">
+</span><span data-line="193">
+</span><span data-line="194"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="195"><span class="c1"># Who may be told, and how it reads</span>
+</span><span data-line="196">
+</span><span data-line="197">
+<div class="viewcode-block" id="deliverable">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.deliverable">[docs]</a>
+</span><span data-line="198"><span class="k">def</span><span class="w"> </span><span class="nf">deliverable</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">busy_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="199"><span class="w">    </span><span class="sd">"""Why ``session``'s status keeps a message from it now, or ``''`` when it can take one.</span>
+</span><span data-line="200">
+</span><span data-line="201"><span class="sd">    &gt;&gt;&gt; s = LiveSession(1, 'id', 'w', '/w', 'interactive', 'idle', '', 0, 0, False, '', '')</span>
+</span><span data-line="202"><span class="sd">    &gt;&gt;&gt; deliverable(s)</span>
+</span><span data-line="203"><span class="sd">    ''</span>
+</span><span data-line="204"><span class="sd">    &gt;&gt;&gt; from dataclasses import replace</span>
+</span><span data-line="205"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='busy'))</span>
+</span><span data-line="206"><span class="sd">    'w is busy; pass busy_ok to deliver between its tool calls'</span>
+</span><span data-line="207"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='busy'), busy_ok=True)</span>
+</span><span data-line="208"><span class="sd">    ''</span>
+</span><span data-line="209"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='unknown'))</span>
+</span><span data-line="210"><span class="sd">    'w is unknown, not idle'</span>
+</span><span data-line="211"><span class="sd">    """</span>
+</span><span data-line="212">    <span class="n">who</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
+</span><span data-line="213">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">TAKES</span> <span class="ow">or</span> <span class="p">(</span><span class="n">busy_ok</span> <span class="ow">and</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">WORKING</span><span class="p">):</span>
+</span><span data-line="214">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="215">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
+</span><span data-line="216">        <span class="n">what</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="217">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is waiting on its person</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">; a message would wait behind them"</span>
+</span><span data-line="218">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">WORKING</span><span class="p">:</span>
+</span><span data-line="219">        <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="220">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">; pass busy_ok to deliver between its tool calls"</span>
+</span><span data-line="221">        <span class="p">)</span>
+</span><span data-line="222">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'of no known status'</span><span class="si">}</span><span class="s2">, not idle"</span></div>
+
+</span><span data-line="223">
+</span><span data-line="224">
+<div class="viewcode-block" id="inbound_of">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.inbound_of">[docs]</a>
+</span><span data-line="225"><span class="k">def</span><span class="w"> </span><span class="nf">inbound_of</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="226"><span class="w">    </span><span class="sd">"""The receiving home's user-level ``crossSessionInbound`` (``''`` when unset or</span>
+</span><span data-line="227"><span class="sd">    unreadable). The home is where the registry put the session's transcript,</span>
+</span><span data-line="228"><span class="sd">    ``&lt;home&gt;/projects/&lt;slug&gt;/&lt;id&gt;.jsonl``. A project's own settings can still override it.</span>
+</span><span data-line="229"><span class="sd">    """</span>
+</span><span data-line="230">    <span class="k">if</span> <span class="ow">not</span> <span class="n">session</span><span class="o">.</span><span class="n">transcript</span><span class="p">:</span>
+</span><span data-line="231">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="232">    <span class="n">home</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">transcript</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</span><span data-line="233">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="234">        <span class="n">settings</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">((</span><span class="n">home</span> <span class="o">/</span> <span class="s2">"settings.json"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+</span><span data-line="235">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="236">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="237">    <span class="n">value</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"crossSessionInbound"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="238">    <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span></div>
+
+</span><span data-line="239">
+</span><span data-line="240">
+</span><span data-line="241"><span class="c1">#: What a message's first line says, and the mark a body line shaped like it gets, so a</span>
+</span><span data-line="242"><span class="c1">#: body cannot forge a second sender.</span>
+</span><span data-line="243"><span class="n">HEAD</span> <span class="o">=</span> <span class="s2">"through crowsnest's switchboard:"</span>
+</span><span data-line="244"><span class="n">_FORGED</span> <span class="o">=</span> <span class="s2">"(quoted) "</span>
+</span><span data-line="245">
+</span><span data-line="246">
+<div class="viewcode-block" id="clean">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.clean">[docs]</a>
+</span><span data-line="247"><span class="k">def</span><span class="w"> </span><span class="nf">clean</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="248"><span class="w">    </span><span class="sd">"""``text`` without control or format characters (Unicode Cc and Cf) other than line</span>
+</span><span data-line="249"><span class="sd">    breaks and tabs: a terminal escape in a message or a log line must never reach a</span>
+</span><span data-line="250"><span class="sd">    terminal that prints it.</span>
+</span><span data-line="251">
+</span><span data-line="252"><span class="sd">    &gt;&gt;&gt; clean('ok\\x1b]52;c;aGk=\\x07 done\\nnext')</span>
+</span><span data-line="253"><span class="sd">    'ok]52;c;aGk= done\\nnext'</span>
+</span><span data-line="254"><span class="sd">    """</span>
+</span><span data-line="255">    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span data-line="256">        <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="s2">"</span><span class="se">\n\t</span><span class="s2">"</span> <span class="ow">or</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">category</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"Cc"</span><span class="p">,</span> <span class="s2">"Cf"</span><span class="p">)</span>
+</span><span data-line="257">    <span class="p">)</span></div>
+
+</span><span data-line="258">
+</span><span data-line="259">
+<div class="viewcode-block" id="envelope">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.envelope">[docs]</a>
+</span><span data-line="260"><span class="k">def</span><span class="w"> </span><span class="nf">envelope</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">reply</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="261"><span class="w">    </span><span class="sd">"""The text as the receiving session reads it: who sent it, a ``note`` on what the</span>
+</span><span data-line="262"><span class="sd">    text is, the message (a body line shaped like the first line is marked as quoted),</span>
+</span><span data-line="263"><span class="sd">    then how to answer when there is a way.</span>
+</span><span data-line="264">
+</span><span data-line="265"><span class="sd">    &gt;&gt;&gt; print(envelope('Rebase on main.', sender='cn'))</span>
+</span><span data-line="266"><span class="sd">    From cn, through crowsnest's switchboard:</span>
+</span><span data-line="267"><span class="sd">    Rebase on main.</span>
+</span><span data-line="268"><span class="sd">    """</span>
+</span><span data-line="269">    <span class="n">body</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span data-line="270">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_FORGED</span><span class="si">}{</span><span class="n">line</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">HEAD</span> <span class="ow">in</span> <span class="n">line</span> <span class="k">else</span> <span class="n">line</span>
+</span><span data-line="271">        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">clean</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+</span><span data-line="272">    <span class="p">)</span>
+</span><span data-line="273">    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"From </span><span class="si">{</span><span class="n">clean</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">HEAD</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="o">*</span><span class="p">([</span><span class="n">note</span><span class="p">]</span> <span class="k">if</span> <span class="n">note</span> <span class="k">else</span> <span class="p">[]),</span> <span class="n">body</span><span class="p">]</span>
+</span><span data-line="274">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="o">*</span><span class="n">parts</span><span class="p">,</span> <span class="o">*</span><span class="p">([</span><span class="n">reply</span><span class="p">]</span> <span class="k">if</span> <span class="n">reply</span> <span class="k">else</span> <span class="p">[])])</span></div>
+
+</span><span data-line="275">
+</span><span data-line="276">
+</span><span data-line="277"><span class="k">def</span><span class="w"> </span><span class="nf">_caller</span><span class="p">(</span><span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="278"><span class="w">    </span><span class="sd">"""The label of the session running this process, or :data:`ANONYMOUS`."""</span>
+</span><span data-line="279">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">live_sessions</span>
+</span><span data-line="280">
+</span><span data-line="281">    <span class="n">me</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CLAUDE_CODE_SESSION_ID"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="282">    <span class="k">if</span> <span class="ow">not</span> <span class="n">me</span><span class="p">:</span>
+</span><span data-line="283">        <span class="k">return</span> <span class="n">ANONYMOUS</span>
+</span><span data-line="284">    <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+</span><span data-line="285">        <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span> <span class="o">==</span> <span class="n">me</span><span class="p">:</span>
+</span><span data-line="286">            <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
+</span><span data-line="287">    <span class="k">return</span> <span class="n">ANONYMOUS</span>
+</span><span data-line="288">
+</span><span data-line="289">
+</span><span data-line="290"><span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="291">    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+</span><span data-line="292">
+</span><span data-line="293">
+<div class="viewcode-block" id="tell">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.tell">[docs]</a>
+</span><span data-line="294"><span class="k">def</span><span class="w"> </span><span class="nf">tell</span><span class="p">(</span>
+</span><span data-line="295">    <span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span>
+</span><span data-line="296">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="297">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="298">    <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="299">    <span class="n">reply</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="300">    <span class="n">busy_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="301">    <span class="n">deliver</span><span class="p">:</span> <span class="n">Deliver</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="302">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="303">    <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="304">    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="305"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="306"><span class="w">    </span><span class="sd">"""Post ``text`` to ``session``; ``{"to", "status", "sender", "at", "inbound"}``.</span>
+</span><span data-line="307">
+</span><span data-line="308"><span class="sd">    ``sender`` signs it (default: the calling session's label, else :data:`ANONYMOUS`);</span>
+</span><span data-line="309"><span class="sd">    ``reply`` is a last line telling the receiver how to answer. Raises :class:`Refused`</span>
+</span><span data-line="310"><span class="sd">    for a status :func:`deliverable` refuses, for empty or oversized text, and when the</span>
+</span><span data-line="311"><span class="sd">    transport cannot deliver. ``deliver`` is the transport, ``(session, text) -&gt; None``,</span>
+</span><span data-line="312"><span class="sd">    default :func:`socket_post`. ``extra`` adds fields to the event line (an intent id).</span>
+</span><span data-line="313"><span class="sd">    ``inbound`` is the receiver's ``crossSessionInbound`` (:func:`inbound_of`). ``note``</span>
+</span><span data-line="314"><span class="sd">    is a line under the sender's that says what the text is (:func:`envelope`). The event</span>
+</span><span data-line="315"><span class="sd">    line records the claimed ``from`` and, in ``by``, the session that actually ran this</span>
+</span><span data-line="316"><span class="sd">    (or :data:`ANONYMOUS`), which a caller cannot choose.</span>
+</span><span data-line="317">
+</span><span data-line="318"><span class="sd">    Once the transport has delivered, nothing here raises: a log line that cannot be</span>
+</span><span data-line="319"><span class="sd">    written is reported in ``hook.log``, never as a failure, because a caller that retries</span>
+</span><span data-line="320"><span class="sd">    a failure would deliver the message again.</span>
+</span><span data-line="321"><span class="sd">    """</span>
+</span><span data-line="322">    <span class="n">deliver</span> <span class="o">=</span> <span class="n">socket_post</span> <span class="k">if</span> <span class="n">deliver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">deliver</span>
+</span><span data-line="323">    <span class="n">body</span> <span class="o">=</span> <span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="324">    <span class="k">if</span> <span class="ow">not</span> <span class="n">body</span><span class="p">:</span>
+</span><span data-line="325">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="s2">"a message needs some text"</span><span class="p">)</span>
+</span><span data-line="326">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_TEXT</span><span class="p">:</span>
+</span><span data-line="327">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
+</span><span data-line="328">            <span class="sa">f</span><span class="s2">"a message is at most </span><span class="si">{</span><span class="n">MAX_TEXT</span><span class="si">}</span><span class="s2"> characters; put a brief this long in a file "</span>
+</span><span data-line="329">            <span class="s2">"and send its path"</span>
+</span><span data-line="330">        <span class="p">)</span>
+</span><span data-line="331">    <span class="n">why</span> <span class="o">=</span> <span class="n">deliverable</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">busy_ok</span><span class="o">=</span><span class="n">busy_ok</span><span class="p">)</span>
+</span><span data-line="332">    <span class="k">if</span> <span class="n">why</span><span class="p">:</span>
+</span><span data-line="333">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="n">why</span><span class="p">)</span>
+</span><span data-line="334">    <span class="n">caller</span> <span class="o">=</span> <span class="n">_caller</span><span class="p">()</span>
+</span><span data-line="335">    <span class="n">sender</span> <span class="o">=</span> <span class="n">sender</span> <span class="ow">or</span> <span class="n">caller</span>
+</span><span data-line="336">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="337">        <span class="n">deliver</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">envelope</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">reply</span><span class="o">=</span><span class="n">reply</span><span class="p">,</span> <span class="n">note</span><span class="o">=</span><span class="n">note</span><span class="p">))</span>
+</span><span data-line="338">    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="339">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
+</span><span data-line="340">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox did not take the message: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="341">        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+</span><span data-line="342">    <span class="n">at</span> <span class="o">=</span> <span class="n">_now</span><span class="p">()</span>
+</span><span data-line="343">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="344">        <span class="n">append_event</span><span class="p">(</span>
+</span><span data-line="345">            <span class="p">{</span>
+</span><span data-line="346">                <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"message"</span><span class="p">,</span>
+</span><span data-line="347">                <span class="s2">"at"</span><span class="p">:</span> <span class="n">at</span><span class="p">,</span>
+</span><span data-line="348">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="349">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+</span><span data-line="350">                <span class="s2">"project"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
+</span><span data-line="351">                <span class="s2">"home"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="352">                <span class="s2">"from"</span><span class="p">:</span> <span class="n">clean</span><span class="p">(</span><span class="n">sender</span><span class="p">),</span>
+</span><span data-line="353">                <span class="s2">"by"</span><span class="p">:</span> <span class="n">caller</span><span class="p">,</span>
+</span><span data-line="354">                <span class="s2">"detail"</span><span class="p">:</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clean</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())[:</span><span class="mi">200</span><span class="p">],</span>
+</span><span data-line="355">                <span class="o">**</span><span class="p">(</span><span class="n">extra</span> <span class="ow">or</span> <span class="p">{}),</span>
+</span><span data-line="356">            <span class="p">},</span>
+</span><span data-line="357">            <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span>
+</span><span data-line="358">        <span class="p">)</span>
+</span><span data-line="359">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- delivered is delivered; see the docstring</span>
+</span><span data-line="360">        <span class="n">log_failure</span><span class="p">(</span>
+</span><span data-line="361">            <span class="sa">f</span><span class="s2">"switchboard: delivered to </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> but could not log it: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="362">        <span class="p">)</span>
+</span><span data-line="363">    <span class="n">tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span> <span class="k">else</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
+</span><span data-line="364">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="365">        <span class="s2">"to"</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
+</span><span data-line="366">        <span class="s2">"status"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+</span><span data-line="367">        <span class="s2">"sender"</span><span class="p">:</span> <span class="n">sender</span><span class="p">,</span>
+</span><span data-line="368">        <span class="s2">"at"</span><span class="p">:</span> <span class="n">at</span><span class="p">,</span>
+</span><span data-line="369">        <span class="s2">"inbound"</span><span class="p">:</span> <span class="n">inbound_of</span><span class="p">(</span><span class="n">session</span><span class="p">),</span>
+</span><span data-line="370">    <span class="p">}</span></div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/crowsnest" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=0f6bfde0"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+      <script src="../../_static/shibuya.js?v=50760d75"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script></body>
+</html>

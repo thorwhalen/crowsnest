@@ -14,6 +14,7 @@ crowsnest.hook
       DETAIL_LIMIT
       MAX_EVENT_BYTES
       MAX_LOG_BYTES
+      log_failure
    
    .. rubric:: Functions
 
@@ -22,6 +23,7 @@ crowsnest.hook
       append_event
       events_path
       handle
+      log_failure
       log_path
       rotate
    

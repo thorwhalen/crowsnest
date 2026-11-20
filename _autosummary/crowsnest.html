@@ -75,6 +75,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.courier.html">crowsnest.courier</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.eventlog.html">crowsnest.eventlog</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.gists.html">crowsnest.gists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.hook.html">crowsnest.hook</a></li>
@@ -97,6 +98,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.rows.html">crowsnest.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.said.html">crowsnest.said</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="crowsnest.switchboard.html">crowsnest.switchboard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.synopsis.html">crowsnest.synopsis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.themes.html">crowsnest.themes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="crowsnest.tools.html">crowsnest.tools</a></li>
@@ -123,8 +125,11 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.Activity"><code class="docutils literal notranslate"><span class="pre">Activity</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.LiveSession"><code class="docutils literal notranslate"><span class="pre">LiveSession</span></code></a><ul>
 <li><a class="reference internal" href="#crowsnest.LiveSession.label"><code class="docutils literal notranslate"><span class="pre">LiveSession.label</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.LiveSession.pid_domain"><code class="docutils literal notranslate"><span class="pre">LiveSession.pid_domain</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.LiveSession.proc_start"><code class="docutils literal notranslate"><span class="pre">LiveSession.proc_start</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.LiveSession.project"><code class="docutils literal notranslate"><span class="pre">LiveSession.project</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.LiveSession.session_url"><code class="docutils literal notranslate"><span class="pre">LiveSession.session_url</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.LiveSession.socket"><code class="docutils literal notranslate"><span class="pre">LiveSession.socket</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#crowsnest.Turn"><code class="docutils literal notranslate"><span class="pre">Turn</span></code></a></li>
@@ -260,7 +265,7 @@ machine is out of room.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.read_turns" title="crowsnest.read_turns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_turns</span></code></a>(path, *[, last, before])</p></td>
 <td><p>The last <code class="docutils literal notranslate"><span class="pre">last</span></code> turns of a transcript, oldest first; <code class="docutils literal notranslate"><span class="pre">before=N</span></code> pages back.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.resolve" title="crowsnest.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(session, *[, home, all_homes, config])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.resolve" title="crowsnest.resolve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve</span></code></a>(session, *[, home, all_homes, ...])</p></td>
 <td><p>The live session a human means by <code class="docutils literal notranslate"><span class="pre">session</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.roster" title="crowsnest.roster"><code class="xref py py-obj docutils literal notranslate"><span class="pre">roster</span></code></a>(*[, home, all_homes, config, ...])</p></td>
@@ -317,7 +322,7 @@ references openloops found in the window – issues, pull requests – each a di
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crowsnest.LiveSession">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.</span></span><span class="sig-name descname"><span class="pre">LiveSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting_for</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_since</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_control</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transcript</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge_session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#LiveSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.LiveSession" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">crowsnest.</span></span><span class="sig-name descname"><span class="pre">LiveSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting_for</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_since</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_control</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transcript</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bridge_session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">socket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proc_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pid_domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/registry.html#LiveSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.LiveSession" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One running session, as the registry describes it. Flat and JSON-shaped.</p>
 <dl class="field-list simple">
@@ -326,6 +331,32 @@ references openloops found in the window – issues, pull requests – each a di
 <dt class="sig sig-object py" id="crowsnest.LiveSession.label">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">label</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.LiveSession.label" title="Link to this definition">#</a></dt>
 <dd><p>The name the user gave the session, else the head of its id.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crowsnest.LiveSession.pid_domain">
+<span class="sig-name descname"><span class="pre">pid_domain</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#crowsnest.LiveSession.pid_domain" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">darwin</span></code>, or on Linux
+<code class="docutils literal notranslate"><span class="pre">linux:&lt;boot</span> <span class="pre">id&gt;:pid:[&lt;namespace&gt;]</span></code>), so a transport can tell this host’s
+sessions from a synced copy of another’s.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Where that pid means anything (<code class="docutils literal notranslate"><span class="pre">pidDomain</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crowsnest.LiveSession.proc_start">
+<span class="sig-name descname"><span class="pre">proc_start</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#crowsnest.LiveSession.proc_start" title="Link to this definition">#</a></dt>
+<dd><p>a UTC date
+like <code class="docutils literal notranslate"><span class="pre">ps</span> <span class="pre">-o</span> <span class="pre">lstart</span></code> prints on macOS, clock ticks since boot on Linux), so a
+reused pid can be told from the session that registered it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>When the process started, as Claude Code recorded it (<code class="docutils literal notranslate"><span class="pre">procStart</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -338,6 +369,14 @@ references openloops found in the window – issues, pull requests – each a di
 <dt class="sig sig-object py" id="crowsnest.LiveSession.session_url">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">session_url</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#crowsnest.LiveSession.session_url" title="Link to this definition">#</a></dt>
 <dd><p>The session on claude.ai, when it runs with Remote Control; else <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crowsnest.LiveSession.socket">
+<span class="sig-name descname"><span class="pre">socket</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#crowsnest.LiveSession.socket" title="Link to this definition">#</a></dt>
+<dd><p>The session’s inbox socket (<code class="docutils literal notranslate"><span class="pre">messagingSocketPath</span></code>), where a message to it is
+posted (<a class="reference internal" href="crowsnest.switchboard.html#module-crowsnest.switchboard" title="crowsnest.switchboard"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crowsnest.switchboard</span></code></a>); <code class="docutils literal notranslate"><span class="pre">''</span></code> when it has none (bare mode, an older
+Claude Code) or the record comes from another machine, whose socket is not here.</p>
 </dd></dl>
 
 </dd></dl>
@@ -488,8 +527,12 @@ carry enough context – still cheaper than a turn of the watched session’s ow
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.resolve">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tools.html#resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.resolve" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">home</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_homes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/tools.html#resolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.resolve" title="Link to this definition">#</a></dt>
 <dd><p>The live session a human means by <code class="docutils literal notranslate"><span class="pre">session</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">exact</span></code> takes only a whole label (the name, or an unnamed session’s id head) or a
+whole id, for a caller with nobody to catch a wrong pick: an intent delivered by the
+courier names a row of a page published a minute ago, whose session may have exited
+while another, whose name it begins, lives on.</p>
 <p>Tried in order: the exact session id, the exact registry name, a unique name prefix, a
 unique session-id prefix, the pid. <code class="docutils literal notranslate"><span class="pre">name&#64;home</span></code> names a session in one home when
 several homes are read. Raises <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> naming the candidates when nothing or too
@@ -688,71 +731,77 @@ silently wrote nothing would be worse than a stack trace.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.envelope_cache.html#module-crowsnest.envelope_cache" title="crowsnest.envelope_cache"><code class="xref py py-obj docutils literal notranslate"><span class="pre">envelope_cache</span></code></a></p></td>
 <td><p>A cached openloops envelope: asked for at most once per <code class="docutils literal notranslate"><span class="pre">every</span></code>, read by the page.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.gists.html#module-crowsnest.gists" title="crowsnest.gists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gists</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.eventlog.html#module-crowsnest.eventlog" title="crowsnest.eventlog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eventlog</span></code></a></p></td>
+<td><p>The event log: one append-only plain file that says what happened across the fleet.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.gists.html#module-crowsnest.gists" title="crowsnest.gists"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gists</span></code></a></p></td>
 <td><p>Gists for <em>Your questions</em> (#129): each question in a few words, and the answer it got.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.guard.html#module-crowsnest.guard" title="crowsnest.guard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guard</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.guard.html#module-crowsnest.guard" title="crowsnest.guard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guard</span></code></a></p></td>
 <td><p>Keep a machine's sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.hook.html#module-crowsnest.hook" title="crowsnest.hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hook</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.hook.html#module-crowsnest.hook" title="crowsnest.hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hook</span></code></a></p></td>
 <td><p>The push half of the stream: what Claude Code's own hooks tell crowsnest.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.init.html#module-crowsnest.init" title="crowsnest.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.init.html#module-crowsnest.init" title="crowsnest.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a></p></td>
 <td><p>Everything a crowsnest session needs before it can be one, set up in one command.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.intents.html#module-crowsnest.intents" title="crowsnest.intents"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intents</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.intents.html#module-crowsnest.intents" title="crowsnest.intents"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intents</span></code></a></p></td>
 <td><p>Queue a console intent from the command line, and read back what became of it (#192).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.jsonl.html#module-crowsnest.jsonl" title="crowsnest.jsonl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jsonl</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.jsonl.html#module-crowsnest.jsonl" title="crowsnest.jsonl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jsonl</span></code></a></p></td>
 <td><p>Decode one line of a JSONL file: orjson where it provably agrees with <code class="docutils literal notranslate"><span class="pre">json.loads</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.ledger.html#module-crowsnest.ledger" title="crowsnest.ledger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger</span></code></a></p></td>
 <td><p>The ledger: the durable page a session leaves for the watcher, one file per session.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.ledger_mirror.html#module-crowsnest.ledger_mirror" title="crowsnest.ledger_mirror"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger_mirror</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.ledger_mirror.html#module-crowsnest.ledger_mirror" title="crowsnest.ledger_mirror"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ledger_mirror</span></code></a></p></td>
 <td><p>Carry this machine's ledgers to the page that shows them, with no session remembering to.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.lineage.html#module-crowsnest.lineage" title="crowsnest.lineage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lineage</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.lineage.html#module-crowsnest.lineage" title="crowsnest.lineage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lineage</span></code></a></p></td>
 <td><p>Who started whom: the spawn graph, as data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.links.html#module-crowsnest.links" title="crowsnest.links"><code class="xref py py-obj docutils literal notranslate"><span class="pre">links</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.links.html#module-crowsnest.links" title="crowsnest.links"><code class="xref py py-obj docutils literal notranslate"><span class="pre">links</span></code></a></p></td>
 <td><p>References in a session's own words, turned into links you can click.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.live.html#module-crowsnest.live" title="crowsnest.live"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.live.html#module-crowsnest.live" title="crowsnest.live"><code class="xref py py-obj docutils literal notranslate"><span class="pre">live</span></code></a></p></td>
 <td><p>What a published page may know about the sessions <em>now</em>: one small document, and a recap.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.open.html#module-crowsnest.open" title="crowsnest.open"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.open.html#module-crowsnest.open" title="crowsnest.open"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open</span></code></a></p></td>
 <td><p>Bring a live session's terminal to the front, or say where it runs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.owed.html#module-crowsnest.owed" title="crowsnest.owed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owed</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.owed.html#module-crowsnest.owed" title="crowsnest.owed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owed</span></code></a></p></td>
 <td><p>What the person owes their sessions: the open <code class="docutils literal notranslate"><span class="pre">manual-task</span></code> issues openloops lists.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paths</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.paths.html#module-crowsnest.paths" title="crowsnest.paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paths</span></code></a></p></td>
 <td><p>Where crowsnest keeps what is not code: the data directory, and nothing else.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.publish.html#module-crowsnest.publish" title="crowsnest.publish"><code class="xref py py-obj docutils literal notranslate"><span class="pre">publish</span></code></a></p></td>
 <td><p>Deliver the report page to a place its owner can open from anywhere -- by their route, not ours.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.questions.html#module-crowsnest.questions" title="crowsnest.questions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">questions</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.questions.html#module-crowsnest.questions" title="crowsnest.questions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">questions</span></code></a></p></td>
 <td><p>Your questions: what the person asked their sessions, and what each answered (#129).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.refstate.html#module-crowsnest.refstate" title="crowsnest.refstate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refstate</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.refstate.html#module-crowsnest.refstate" title="crowsnest.refstate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refstate</span></code></a></p></td>
 <td><p>What a referenced issue or pull request is now: open or closed, and its title.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.registry.html#module-crowsnest.registry" title="crowsnest.registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.registry.html#module-crowsnest.registry" title="crowsnest.registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span></code></a></p></td>
 <td><p>Who is alive right now, read from the registry Claude Code keeps while a session runs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.report.html#module-crowsnest.report" title="crowsnest.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.report.html#module-crowsnest.report" title="crowsnest.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a></p></td>
 <td><p>The live roster as one self-contained HTML page: no stylesheet, script, font, or request to anywhere.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.rows.html#module-crowsnest.rows" title="crowsnest.rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rows</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.rows.html#module-crowsnest.rows" title="crowsnest.rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rows</span></code></a></p></td>
 <td><p>How an item's row is built and hashed: one value, taken whole by every surface that pins it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.said.html#module-crowsnest.said" title="crowsnest.said"><code class="xref py py-obj docutils literal notranslate"><span class="pre">said</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.said.html#module-crowsnest.said" title="crowsnest.said"><code class="xref py py-obj docutils literal notranslate"><span class="pre">said</span></code></a></p></td>
 <td><p>When the thing an item quotes was said: its own time, taken from its own source.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.skills.html#module-crowsnest.skills" title="crowsnest.skills"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skills</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="crowsnest.skills.html#module-crowsnest.skills" title="crowsnest.skills"><code class="xref py py-obj docutils literal notranslate"><span class="pre">skills</span></code></a></p></td>
 <td><p>The agent-facing surface: the skills, the subagent, and the command that installs them.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="crowsnest.switchboard.html#module-crowsnest.switchboard" title="crowsnest.switchboard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">switchboard</span></code></a></p></td>
+<td><p>The switchboard: any session or plain process messages a live session, with no model turn.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="crowsnest.synopsis.html#module-crowsnest.synopsis" title="crowsnest.synopsis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">synopsis</span></code></a></p></td>
 <td><p>A group's synopsis: a few lines on what needs the person, what is working, what finished.</p></td>
@@ -817,7 +866,7 @@ silently wrote nothing would be worse than a stack trace.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=ab1379f9"></script>
+      <script src="../_static/documentation_options.js?v=0f6bfde0"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -18,6 +18,7 @@ crowsnest.tools
       later
       lineage
       live
+      log
       note
       publish
       reap
@@ -30,6 +31,7 @@ crowsnest.tools
       seen
       sessions
       show
+      tell
       triage
       turns
       undo

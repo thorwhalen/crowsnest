@@ -46,6 +46,7 @@
    courier
    egress
    envelope_cache
+   eventlog
    gists
    guard
    hook
@@ -68,6 +69,7 @@
    rows
    said
    skills
+   switchboard
    synopsis
    themes
    tools

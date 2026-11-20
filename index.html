@@ -75,6 +75,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.courier.html">crowsnest.courier</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.egress.html">crowsnest.egress</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.envelope_cache.html">crowsnest.envelope_cache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.eventlog.html">crowsnest.eventlog</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.gists.html">crowsnest.gists</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.guard.html">crowsnest.guard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.hook.html">crowsnest.hook</a></li>
@@ -97,6 +98,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.rows.html">crowsnest.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.said.html">crowsnest.said</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.skills.html">crowsnest.skills</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.switchboard.html">crowsnest.switchboard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.synopsis.html">crowsnest.synopsis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.themes.html">crowsnest.themes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.tools.html">crowsnest.tools</a></li>
@@ -140,6 +142,7 @@ data-aria-dark="Switch to auto color mode">
 </li>
 <li><a class="reference internal" href="#a-page-that-stays-fresh-without-a-session">A page that stays fresh without a session</a></li>
 <li><a class="reference internal" href="#being-told-instead-of-polling">Being told instead of polling</a></li>
+<li><a class="reference internal" href="#the-event-log-and-messaging-from-anywhere">The event log, and messaging from anywhere</a></li>
 <li><a class="reference internal" href="#one-walk-end-to-end">One walk, end to end</a></li>
 <li><a class="reference internal" href="#what-it-ships-for-agents">What it ships for agents</a></li>
 <li><a class="reference internal" href="#what-the-hooks-add">What the hooks add</a></li>
@@ -514,6 +517,56 @@ data-aria-dark="Switch to auto color mode">
 </div>
 <p>With those two lines, a turn ending becomes a <code class="docutils literal notranslate"><span class="pre">stopped</span></code> line in <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> carrying the session’s last words, and a permission prompt or a question becomes a <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> line carrying the message — both a poll sooner than the registry could notice, and both with the reason rather than a guess at it. A turn that ends by asking you for something (“For the user: …”, read the way a ledger’s requests are) also becomes an <code class="docutils literal notranslate"><span class="pre">ask</span></code> line, which <code class="docutils literal notranslate"><span class="pre">--kinds</span> <span class="pre">loud</span></code> keeps, and a wait is announced once, by whichever of <code class="docutils literal notranslate"><span class="pre">waiting</span></code> and <code class="docutils literal notranslate"><span class="pre">needs-you</span></code> comes first. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code> prints nothing and exits 0 whatever happens; <code class="docutils literal notranslate"><span class="pre">async</span></code> means Claude Code does not wait for it either, so watching costs the watched sessions no wall-clock. Without the hooks installed, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> is exactly the registry diff it always was. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">init</span> <span class="pre">--hooks</span></code> writes all of this for you.</p>
 </section>
+<section id="the-event-log-and-messaging-from-anywhere">
+<h2>The event log, and messaging from anywhere<a class="headerlink" href="#the-event-log-and-messaging-from-anywhere" title="Link to this heading">#</a></h2>
+<p>Everything crowsnest learns lands in one append-only plain file, <code class="docutils literal notranslate"><span class="pre">~/.local/share/crowsnest/events.jsonl</span></code>: one JSON object per line, never rewritten, rotated to <code class="docutils literal notranslate"><span class="pre">events-&lt;time&gt;.jsonl</span></code> beside it past 4 MiB and never pruned. It is the source of truth the other views are built from. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> streams it, the page is a view of it, and you can always open it in an editor. Every line has <code class="docutils literal notranslate"><span class="pre">event</span></code> and <code class="docutils literal notranslate"><span class="pre">at</span></code>, and usually <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">session_id</span></code>, <code class="docutils literal notranslate"><span class="pre">project</span></code> and a one-line <code class="docutils literal notranslate"><span class="pre">detail</span></code>:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>event</p></th>
+<th class="head"><p>written by</p></th>
+<th class="head"><p>when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stop</span></code>, <code class="docutils literal notranslate"><span class="pre">notification</span></code>, <code class="docutils literal notranslate"><span class="pre">ask</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code></p></td>
+<td><p>a turn ended; a session wants its person; a turn ended asking for something</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">intent</span></code></p></td>
+<td><p>the courier</p></td>
+<td><p>a request from the page’s console, handed to the watching session</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">started</span></code>, <code class="docutils literal notranslate"><span class="pre">exited</span></code>, <code class="docutils literal notranslate"><span class="pre">busy</span></code>, <code class="docutils literal notranslate"><span class="pre">idle</span></code>, <code class="docutils literal notranslate"><span class="pre">waiting</span></code>, <code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>the courier, with <code class="docutils literal notranslate"><span class="pre">[courier]</span> <span class="pre">record_registry</span> <span class="pre">=</span> <span class="pre">true</span></code></p></td>
+<td><p>the registry changed (<code class="docutils literal notranslate"><span class="pre">source:</span> <span class="pre">&quot;registry&quot;</span></code>, plus <code class="docutils literal notranslate"><span class="pre">home</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code> and <code class="docutils literal notranslate"><span class="pre">status_at</span></code>, the registry’s own time for it)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">message</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">tell</span></code>, the courier</p></td>
+<td><p>a message was posted to a session (<code class="docutils literal notranslate"><span class="pre">from</span></code> says who sent it)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">at</span></code> is always when the line was written, so the file is in time order. Lines carry no id field: the log is never rewritten, so a line’s own bytes identify it, and <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">log</span> <span class="pre">--json</span></code> gives each record that hash as <code class="docutils literal notranslate"><span class="pre">id</span></code>. A reader ignores an event it does not know: new ones are added, never renamed. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">log</span></code> is the quick view, for you or for an agent about to message a session:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">crowsnest<span class="w"> </span>log<span class="w">                            </span><span class="c1"># the last hour, one line each</span>
+</span><span data-line="2">crowsnest<span class="w"> </span>log<span class="w"> </span>--since<span class="w"> </span>3h<span class="w"> </span>--session<span class="w"> </span>parser-tests
+</span><span data-line="3">crowsnest<span class="w"> </span>log<span class="w"> </span>--events<span class="w"> </span>message,ask<span class="w"> </span>--json
+</span><span data-line="4">crowsnest<span class="w"> </span>log<span class="w"> </span>--path<span class="w">                     </span><span class="c1"># where the file is</span>
+</span></pre></div>
+</div>
+<p><strong>Messaging from anywhere.</strong> <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">tell</span> <span class="pre">&lt;session&gt;</span> <span class="pre">--text</span> <span class="pre">&quot;...&quot;</span></code> (or the text on stdin) posts a message straight into a live session’s inbox socket, the one Claude Code’s own cross-session messaging uses, from any session, script or scheduler, at no model cost. It delivers to an idle session (a busy one with <code class="docutils literal notranslate"><span class="pre">--busy-ok</span></code>; never one waiting on its person), only after checking that the socket is held by the very process the registry names, so a reused pid never receives someone else’s message, and it writes a <code class="docutils literal notranslate"><span class="pre">message</span></code> line to the log. A session on another machine has no socket here and is refused. Whether the session accepts the message is its own <code class="docutils literal notranslate"><span class="pre">crossSessionInbound</span></code> setting. Inside a session, Claude’s <code class="docutils literal notranslate"><span class="pre">SendMessage</span></code> tool does the same and keeps a reply address; <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">tell</span></code> is for everything else, and for messages that should be on the record.</p>
+<p><strong>Two switches in the courier’s table, both off by default</strong>, so a machine whose config says nothing behaves as it always did:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># ~/.config/crowsnest/config.toml</span>
+</span><span data-line="2"><span class="k">[courier]</span>
+</span><span data-line="3"><span class="n">remote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"me@myserver:/srv/crowsnest/db"</span>
+</span><span data-line="4"><span class="n">record_registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">   </span><span class="c1"># each minute tick writes the registry's changes to the event log</span>
+</span><span data-line="5"><span class="n">deliver_intents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">   </span><span class="c1"># the page's Ask/Tell go straight to the session they name,</span>
+</span><span data-line="6"><span class="n">hold_minutes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="w">        </span><span class="c1"># held while that session is busy or waiting, at most this long</span>
+</span></pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">deliver_intents</span></code>, an intent reaches its session without a watching session in between: the session named exactly (never a prefix), and only when its home’s <code class="docutils literal notranslate"><span class="pre">crossSessionInbound</span></code> is <code class="docutils literal notranslate"><span class="pre">accept</span></code>, since otherwise it would sit unapproved. An Ask with no text becomes a status request. The session reads the text marked as typed on the console page, with no more authority than a message from another session; that is also the trust it changes: page text reaches a session without the watching session reading it first. A <code class="docutils literal notranslate"><span class="pre">start</span></code>, an intent for a session that is gone or has no inbox here, and one held past <code class="docutils literal notranslate"><span class="pre">hold_minutes</span></code> still go to the watching session, as before.</p>
+</section>
 <section id="one-walk-end-to-end">
 <h2>One walk, end to end<a class="headerlink" href="#one-walk-end-to-end" title="Link to this heading">#</a></h2>
 <p>A morning with a fleet, from the lookout session. Everything in italics is something you say; everything else it does.</p>
@@ -572,15 +625,16 @@ data-aria-dark="Switch to auto color mode">
 </section>
 <section id="what-it-writes">
 <h2>What it writes<a class="headerlink" href="#what-it-writes" title="Link to this heading">#</a></h2>
-<p>Nothing into another session, and nothing into a repository. Everything crowsnest writes is its own and lives under <code class="docutils literal notranslate"><span class="pre">~/.local/share/crowsnest</span></code> (<code class="docutils literal notranslate"><span class="pre">$CROWSNEST_DATA_DIR</span></code> or <code class="docutils literal notranslate"><span class="pre">$XDG_DATA_HOME</span></code> if you set either):</p>
+<p>Nothing into a repository, and nothing into another session except the messages below. Everything crowsnest writes is its own and lives under <code class="docutils literal notranslate"><span class="pre">~/.local/share/crowsnest</span></code> (<code class="docutils literal notranslate"><span class="pre">$CROWSNEST_DATA_DIR</span></code> or <code class="docutils literal notranslate"><span class="pre">$XDG_DATA_HOME</span></code> if you set either):</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">ledger/&lt;name&gt;.md</span></code>: one per session, as above.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>: one line per hook event, append-only, rotated by size. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> tails it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">events.jsonl</span></code>: the event log, one line per event, append-only, rotated by size (see <a class="reference internal" href="#the-event-log-and-messaging-from-anywhere">The event log</a>). <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">watch</span></code> tails it; <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">log</span></code> reads it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eventlog-registry.json</span></code>: the registry as the courier’s last tick saw it (status, name and times only; private to you), when <code class="docutils literal notranslate"><span class="pre">[courier]</span> <span class="pre">record_registry</span></code> is on.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hook.log</span></code>: one line for anything <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">hook</span></code> swallowed, so “the hook did nothing” is a question with an answer.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">attention/&lt;item-id&gt;.json</span></code>: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">guard/</span></code>: the guard’s last tick (<code class="docutils literal notranslate"><span class="pre">last.json</span></code>), every close it made (<code class="docutils literal notranslate"><span class="pre">reaped.jsonl</span></code>, with the line that resumes each), and a cache of which folders each transcript names.</p></li>
 </ul>
-<p>The only other writes in the package are <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code>, which starts a session, <code class="docutils literal notranslate"><span class="pre">install-skills</span></code>, which writes symlinks, and the guard: <code class="docutils literal notranslate"><span class="pre">oom_score_adj</span></code> on Linux, and the SIGTERM of <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">reap</span> <span class="pre">--apply</span></code>.</p>
+<p>The only other writes in the package are <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">tell</span></code> (and the courier with <code class="docutils literal notranslate"><span class="pre">[courier]</span> <span class="pre">deliver_intents</span></code>), which posts a message to a session’s inbox socket, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code>, which starts a session, <code class="docutils literal notranslate"><span class="pre">install-skills</span></code>, which writes symlinks, and the guard: <code class="docutils literal notranslate"><span class="pre">oom_score_adj</span></code> on Linux, and the SIGTERM of <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">reap</span> <span class="pre">--apply</span></code>.</p>
 </section>
 <section id="from-python">
 <h2>From Python<a class="headerlink" href="#from-python" title="Link to this heading">#</a></h2>
@@ -617,7 +671,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-20 16:32 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42">8fc2f6b</a> (main) · crowsnest 0.0.116 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-20 17:44 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/c9bf36aef6074df4f6fccf59ad1afb9732f17594">c9bf36a</a> (main) · crowsnest 0.0.117 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -652,7 +706,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=ab1379f9"></script>
+      <script src="_static/documentation_options.js?v=0f6bfde0"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

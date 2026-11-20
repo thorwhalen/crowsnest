@@ -100,7 +100,7 @@ pull, and a push makes it, with every directory above it.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None)
+### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None, deliver_intents=False, hold=datetime.timedelta(seconds=3600), find=None, deliver=None, record=None)
 
 Carry the console store at `remote` both ways once; the summary of what moved.
 
@@ -109,6 +109,20 @@ Carry the console store at `remote` both ways once; the summary of what moved.
 same sessions the page does. `store` is the attention store (its default when
 `None`). `recap` and `live` default to [`crowsnest.tools.recap()`](crowsnest.tools.html.md#crowsnest.tools.recap) and
 [`crowsnest.tools.live()`](crowsnest.tools.html.md#crowsnest.tools.live), and exist so a test need not read real sessions.
+
+Two jobs beyond carrying, both off by default, so a tick does what it always did
+unless the config file’s `[courier]` table turns them on (read by
+`crowsnest.tools.courier()`):
+
+- `deliver_intents` posts an `ask` or `tell` intent straight to the live
+  session it names (`_route()`), holding it while that session is busy or
+  waiting, for at most `hold`. A `start`, an intent for a session that is gone
+  or has no inbox here, and one held past `hold` go to the watching session as
+  before. `find` resolves a name to a live session (default
+  `exact_session()` over this tick’s homes: a whole name or id, never a
+  > prefix) and `deliver` is the switchboard’s transport, `(session, text)`.
+- `record`, when given, appends the registry’s changes to the event log
+  ([`crowsnest.eventlog.record_changes()`](crowsnest.eventlog.html.md#crowsnest.eventlog.record_changes) is the one to give).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

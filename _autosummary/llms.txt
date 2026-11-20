@@ -15,6 +15,7 @@
 - [crowsnest.courier](crowsnest.courier.html.md): The console’s courier with no LLM: carry an owner-served console store both ways.
 - [crowsnest.egress](crowsnest.egress.html.md): The page’s sanitiser, made safe against text that an earlier clip has already cut (#83).
 - [crowsnest.envelope_cache](crowsnest.envelope_cache.html.md): A cached openloops envelope: asked for at most once per &#96;every&#96;, read by the page.
+- [crowsnest.eventlog](crowsnest.eventlog.html.md): The event log: one append-only plain file that says what happened across the fleet.
 - [crowsnest.gists](crowsnest.gists.html.md): Gists for &#42;Your questions&#42; (#129): each question in a few words, and the answer it got.
 - [crowsnest.guard](crowsnest.guard.html.md): Keep a machine’s sessions inside its memory: a spawn gate, a reaper, and OOM tiers (#171).
 - [crowsnest.hook](crowsnest.hook.html.md): The push half of the stream: what Claude Code’s own hooks tell crowsnest.
@@ -37,6 +38,7 @@
 - [crowsnest.rows](crowsnest.rows.html.md): How an item’s row is built and hashed: one value, taken whole by every surface that pins it.
 - [crowsnest.said](crowsnest.said.html.md): When the thing an item quotes was said: its own time, taken from its own source.
 - [crowsnest.skills](crowsnest.skills.html.md): The agent-facing surface: the skills, the subagent, and the command that installs them.
+- [crowsnest.switchboard](crowsnest.switchboard.html.md): The switchboard: any session or plain process messages a live session, with no model turn.
 - [crowsnest.synopsis](crowsnest.synopsis.html.md): A group’s synopsis: a few lines on what needs the person, what is working, what finished.
 - [crowsnest.themes](crowsnest.themes.html.md): Which theme each session belongs to: the person’s &#96;&#91;themes&#93;&#96; table first, then what
 - [crowsnest.tools](crowsnest.tools.html.md): The operations, as plain functions: JSON-able arguments in, JSON-able dicts out.

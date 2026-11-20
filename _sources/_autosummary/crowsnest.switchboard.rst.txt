@@ -1,0 +1,30 @@
+crowsnest.switchboard
+=====================
+
+.. automodule:: crowsnest.switchboard
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MAX_TEXT
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      clean
+      deliverable
+      envelope
+      inbound_of
+      same_process
+      socket_post
+      tell
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      Refused
+   

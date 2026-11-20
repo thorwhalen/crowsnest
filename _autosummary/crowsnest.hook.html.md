@@ -74,22 +74,24 @@ that is missing one must still produce an event:
 
 ### Module Attributes
 
-| [`EVENTS_FILENAME`](#crowsnest.hook.EVENTS_FILENAME)   | The event log's name under the data directory.                                             |
-|--------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| [`LOG_FILENAME`](#crowsnest.hook.LOG_FILENAME)      | Where a swallowed error goes, so that "the hook did nothing" is a question with an answer. |
-| [`EVENTS`](#crowsnest.hook.EVENTS)            | The hook events crowsnest does something with.                                             |
-| [`DETAIL_LIMIT`](#crowsnest.hook.DETAIL_LIMIT)      | How much of a message or a final text an event line and a ledger field carry.              |
-| [`MAX_EVENT_BYTES`](#crowsnest.hook.MAX_EVENT_BYTES)   | When the event log passes this, it is renamed with the time and a new one is started.      |
-| [`MAX_LOG_BYTES`](#crowsnest.hook.MAX_LOG_BYTES)     | The same, for the error log, which should never come near it.                              |
+| [`EVENTS_FILENAME`](#crowsnest.hook.EVENTS_FILENAME)                  | The event log's name under the data directory.                                                                                                               |
+|-----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`LOG_FILENAME`](#crowsnest.hook.LOG_FILENAME)                     | Where a swallowed error goes, so that "the hook did nothing" is a question with an answer.                                                                   |
+| [`EVENTS`](#crowsnest.hook.EVENTS)                           | The hook events crowsnest does something with.                                                                                                               |
+| [`DETAIL_LIMIT`](#crowsnest.hook.DETAIL_LIMIT)                     | How much of a message or a final text an event line and a ledger field carry.                                                                                |
+| [`MAX_EVENT_BYTES`](#crowsnest.hook.MAX_EVENT_BYTES)                  | When the event log passes this, it is renamed with the time and a new one is started.                                                                        |
+| [`MAX_LOG_BYTES`](#crowsnest.hook.MAX_LOG_BYTES)                    | The same, for the error log, which should never come near it.                                                                                                |
+| [`log_failure`](#crowsnest.hook.log_failure)(message, \*[, path]) | The public name of `_log()`, for the other modules that swallow an error the same way (the switchboard, the courier): one line in `hook.log`, never a raise. |
 
 ### Functions
 
-| [`append_event`](#crowsnest.hook.append_event)(record, \*[, events_path, max_bytes])   | Append one JSON line to the event log, rotating it first if it has outgrown `max_bytes`.   |
-|-------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| [`events_path`](#crowsnest.hook.events_path)([path])                                  | The event log: `path` when given, else `<data dir>/events.jsonl`.                          |
-| [`handle`](#crowsnest.hook.handle)(event, payload, \*[, home, ...])              | Record one hook event: an event line always, a ledger update on `stop`.                    |
-| [`log_path`](#crowsnest.hook.log_path)([path])                                     | The hook's own error log: `path` when given, else `<data dir>/hook.log`.                   |
-| [`rotate`](#crowsnest.hook.rotate)(path, \*[, max_bytes])                        | Rename an oversized log out of the way; return where it went, or `None`.                   |
+| [`append_event`](#crowsnest.hook.append_event)(record, \*[, events_path, max_bytes])   | Append one JSON line to the event log, rotating it first if it has outgrown `max_bytes`.                                                                     |
+|-------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`events_path`](#crowsnest.hook.events_path)([path])                                  | The event log: `path` when given, else `<data dir>/events.jsonl`.                                                                                            |
+| [`handle`](#crowsnest.hook.handle)(event, payload, \*[, home, ...])              | Record one hook event: an event line always, a ledger update on `stop`.                                                                                      |
+| [`log_failure`](#crowsnest.hook.log_failure)(message, \*[, path])                     | The public name of `_log()`, for the other modules that swallow an error the same way (the switchboard, the courier): one line in `hook.log`, never a raise. |
+| [`log_path`](#crowsnest.hook.log_path)([path])                                     | The hook's own error log: `path` when given, else `<data dir>/hook.log`.                                                                                     |
+| [`rotate`](#crowsnest.hook.rotate)(path, \*[, max_bytes])                        | Rename an oversized log out of the way; return where it went, or `None`.                                                                                     |
 
 ### crowsnest.hook.DETAIL_LIMIT *= 400*
 
@@ -148,6 +150,14 @@ back as `ok=False` with the reason, and is also one line in the hook log.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.hook.log_failure(message, , path=None)
+
+The public name of `_log()`, for the other modules that swallow an error the same
+way (the switchboard, the courier): one line in `hook.log`, never a raise.
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.hook.log_path(path=None)
 
