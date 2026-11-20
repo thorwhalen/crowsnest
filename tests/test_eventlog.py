@@ -5,10 +5,18 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from dataclasses import replace
+
+import pytest
 
 from crowsnest import eventlog, tools
 from crowsnest.registry import LiveSession
+
+POSIX = pytest.mark.skipif(
+    sys.platform == "win32", reason="Unix sockets, fcntl and file modes are POSIX"
+)
+
 
 A = LiveSession(
     1,
@@ -168,6 +176,7 @@ class _NoActivity:
     last_user_prompt = ""
 
 
+@POSIX
 def test_a_kept_snapshot_is_private_and_holds_only_what_the_diff_reads(tmp_path):
     state = tmp_path / "state.json"
     eventlog.record_changes(

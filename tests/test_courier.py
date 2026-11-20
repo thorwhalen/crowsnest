@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 from datetime import datetime, timezone
 
 import pytest
@@ -18,6 +19,11 @@ import crowsnest.attention as att
 from crowsnest import courier, publish, tools
 from crowsnest.config import CourierSettings, courier_settings
 from crowsnest.watch import hook_event
+
+POSIX = pytest.mark.skipif(
+    sys.platform == "win32", reason="Unix sockets, fcntl and file modes are POSIX"
+)
+
 
 NOW = datetime(2026, 2, 1, 12, 0, tzinfo=timezone.utc)
 T0 = datetime(2026, 2, 1, 11, 0, tzinfo=timezone.utc)
@@ -608,6 +614,7 @@ def test_exact_session_never_takes_a_prefix_or_an_empty_name(tmp_path, monkeypat
         courier.exact_session("x@main", all_homes=True)
 
 
+@POSIX
 def test_two_ticks_never_carry_one_store_at_once(remote, tmp_path):
     import fcntl
 
