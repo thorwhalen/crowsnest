@@ -963,7 +963,12 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     page = _page_of(ledger.get("free"), owner)
     free = page.shown
 
-    raw_asked = str(fields.get("open_questions") or "").strip()
+    # The field's answer is its first paragraph. Prose after a blank line (a ``Brief:``
+    # line, a note) is the session's own writing, read below as any free text is, so
+    # ``- none`` followed by a paragraph is not read as one long question.
+    raw_asked, _, stray = (
+        str(fields.get("open_questions") or "").strip().partition("\n\n")
+    )
     asked = _substantive(raw_asked)
     if asked and _opens_with_nothing(asked):
         asked = ""  # "- none for the user yet; ..." answers the field with nothing
@@ -999,15 +1004,29 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
             said_at_basis=basis,
         )
 
-    # A session that answered ``open questions`` with "none" AND put a status token in
-    # ``state`` has withdrawn every ask in its free part: the two fields are its latest
-    # word, and an older "stop and discuss with the user" line is a report about Monday.
-    # Whether it is also safe to close is still the token's evidence's call (below).
-    withdrawn = bool(raw_asked and not asked and _STATE_TOKEN.match(state))
-    if withdrawn and stated:
-        return closed_by_state()
+    stray_requests = _requests(_page_of(stray, owner), owner) if stray else []
+    if stray_requests:
+        first = stray_requests[0]
+        said_at, basis = _written(ledger)
+        return Verdict(
+            "needs_you",
+            _why(first.wanted),
+            _one_line(first.wanted),
+            "ledger:open questions",
+            said_at,
+            basis,
+            asks=(Ask(first.wanted, said_at, basis),),
+        )
 
-    requests = [] if withdrawn else _requests(page, owner)
+    requests = _requests(page, owner)
+    # A session that answered ``open questions`` with "none" and whose ``state`` holds a
+    # status token its evidence bears out has withdrawn the asks in its OLDER free-text
+    # sections: an earlier "stop and discuss with the user" is a report about Monday. The
+    # latest section is never withdrawn (the fields carry no date, so a "none" written at
+    # the start cannot outrank an ask appended since).
+    if requests and raw_asked and not asked and stated:
+        newest = len(free) - len(latest_section(free))
+        requests = [r for r in requests if r.at >= newest]
     if requests:
         first = requests[0]
         return Verdict(

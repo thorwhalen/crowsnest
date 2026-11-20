@@ -117,7 +117,7 @@ def publishable(value, *, limit: int | None = None) -> str:
 
 
 #: A sentence's end inside a clip window: where a clip would rather stop.
-_SENTENCE_END = re.compile(r"[.!?](?=\s)")
+_SENTENCE_END = re.compile(r"[.!?](?=\s+[A-Z0-9\[(\"'`*_#-])")
 
 
 def _clip(text: str, limit: int) -> str:
@@ -134,16 +134,31 @@ def _clip(text: str, limit: int) -> str:
     'one two…'
     >>> _clip('short', 10)
     'short'
+
+    "e.g. the" is not a sentence's end, and a long last word (a URL) is cut hard rather
+    than dropped when dropping it would lose more than half the window:
+
+    >>> _clip('Use e.g. the long form of everything here please', 20)
+    'Use e.g. the long…'
+    >>> _clip('see https://example.com/a/very/long/path/indeed', 20)
+    'see https://example…'
     """
+    if limit < 1:
+        raise ValueError(
+            f"a clip's limit is a positive number of characters, not {limit}"
+        )
     text = " ".join(text.split())
     if len(text) <= limit:
         return text
     window = text[: limit - 1]
+    half = (limit - 1) // 2
     ends = [m.end() for m in _SENTENCE_END.finditer(window)]
-    if ends and ends[-1] >= (limit - 1) // 2:
+    if ends and ends[-1] >= half:
         return window[: ends[-1]] + (" …" if limit - ends[-1] >= 2 else "…")
     whole = text[limit - 1] == " " or " " not in window  # the window ends on a word
     cut = window if whole else window.rsplit(" ", 1)[0]
+    if len(cut) < half:  # one long word (a URL, a path) would take the line with it
+        cut = window
     return cut.rstrip() + "…"
 
 

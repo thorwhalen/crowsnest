@@ -223,27 +223,11 @@ def _split(text: str) -> tuple[list[str], list[tuple[str, list[str]]], list[str]
 
 
 def _value_of(raw: list[str]) -> str:
-    """The value a field's raw lines carry, without its label: up to its first blank line.
-
-    A blank line ends a field's value. What a session writes after one, before any ``##``
-    heading, is prose of its own (a ``Brief:`` line, a note), and reading it as part of the
-    field turned ``open questions: - none`` into a question nobody asked. The raw lines
-    are still kept whole by :func:`_split`, so writing the field back changes nothing.
-
-    >>> _value_of(['open questions:', '- none', '', 'Brief: see the plan'])
-    '- none'
-    >>> _value_of(['decisions:', '- a', '- b'])
-    '- a\\n- b'
-    >>> _value_of(['open questions:', '', '- squash or rebase?'])
-    '- squash or rebase?'
-    """
+    """The value a field's raw lines carry, without its label and without trailing blanks."""
     head = _FIELD_RE.match(raw[0]).group(2).strip()  # raw[0] is how the field was found
-    rest: list[str] = []
-    for line in raw[1:]:
-        if line.strip():
-            rest.append(line.rstrip())
-        elif rest or head:
-            break  # a blank line after the value ends it
+    rest = [line.rstrip() for line in raw[1:]]
+    while rest and not rest[-1].strip():
+        rest.pop()
     if not rest:
         return head
     return "\n".join(([head] if head else []) + rest)

@@ -1806,6 +1806,11 @@ def recap(
     from crowsnest.lineage import address
     from crowsnest.live import RECAP_TEXT_LIMIT, publishable, recap_lines
 
+    if text_limit is not None and text_limit < 1:
+        raise ValueError(
+            f"text_limit is a positive number of characters, not {text_limit}"
+        )
+
     made_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     s = resolve(session, home=home, all_homes=all_homes, config=config)
     act = read_activity(s.transcript, session_id=s.session_id, recent=1)

@@ -131,15 +131,3 @@ def test_a_multi_line_value_is_written_under_its_label_and_read_back_whole(tmp_p
     )
     assert "decisions:\nfirst line\nsecond line" in page["text"]
     assert page["fields"]["decisions"] == "first line\nsecond line"
-
-
-def test_a_blank_line_ends_a_fields_value_and_the_file_is_kept_whole(tmp_path):
-    """A `Brief:` line after a blank line is the session's prose, not its open question."""
-    from crowsnest.ledger import read_ledger, update_ledger
-
-    text = "# s\n\nstate: done\nopen questions:\n- none\n\nBrief: see the plan\n\n## Notes\n\nx\n"
-    (tmp_path / "s.md").write_text(text)
-    page = read_ledger("s", ledger_dir=tmp_path)
-    assert page["fields"]["open_questions"] == "- none"
-    update_ledger("s", state="done", ledger_dir=tmp_path)
-    assert "Brief: see the plan" in (tmp_path / "s.md").read_text()
