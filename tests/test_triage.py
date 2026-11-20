@@ -674,3 +674,24 @@ def test_a_request_after_none_in_the_same_field_is_still_read():
         ),
     )
     assert found["group"] == "needs_you"
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "- none yet\n\n- decide whether to squash or rebase the release?",
+        "- none\n\nThor, please approve the purchase of the domain.",
+    ],
+)
+def test_a_real_question_below_none_still_asks(field):
+    assert (
+        classify_row(_row(), ledger=_ledger(open_questions=field))["group"] == "needs_you"
+    )
+
+
+def test_an_empty_trailing_stub_is_not_the_latest_section():
+    free = "## For Thor\n\n- rotate the key\n\n## Notes\n"
+    found = classify_row(
+        _row(), ledger=_ledger(free, open_questions="- none", state=_DONE)
+    )
+    assert found["group"] == "needs_you"

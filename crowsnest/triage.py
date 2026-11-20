@@ -335,6 +335,28 @@ def latest_section(text: str) -> str:
     return text[found[-1].start() :] if found else (text or "")
 
 
+#: A paragraph that opens with a label and a colon: ``Brief: ...``, ``For Thor: ...``.
+_LABEL_LINE = re.compile(r"[ \t]*[A-Za-z][A-Za-z0-9 ._()-]{0,30}:\s")
+
+
+def _latest_with_content(text: str) -> int:
+    """Where the last section that says anything begins: a trailing empty ``## Notes``
+    stub is not the latest word.
+
+    >>> t = '## Mon\\n\\n- rotate the key\\n\\n## Notes\\n'
+    >>> t[_latest_with_content(t):].strip()
+    '## Mon\\n\\n- rotate the key\\n\\n## Notes'
+    """
+    end = len(text or "")
+    while end:
+        last = latest_section(text[:end])
+        start = end - len(last)
+        if last.partition("\n")[2].strip() or start == 0:
+            return start
+        end = start
+    return 0
+
+
 def _written(ledger: Mapping) -> tuple[str, str]:
     """The ledger's last write, as the time of words that carry none of their own."""
     at = from_epoch(ledger.get("updated_at"))
@@ -963,15 +985,23 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     page = _page_of(ledger.get("free"), owner)
     free = page.shown
 
-    # The field's answer is its first paragraph. Prose after a blank line (a ``Brief:``
-    # line, a note) is the session's own writing, read below as any free text is, so
-    # ``- none`` followed by a paragraph is not read as one long question.
-    raw_asked, _, stray = (
-        str(fields.get("open_questions") or "").strip().partition("\n\n")
-    )
+    # The field's paragraphs. One that opens with a ``Label:`` line (``Brief: ...``,
+    # ``For Thor: ...``) is the session's own prose that landed under the field: it is read
+    # for requests as free text is. Every other paragraph is the field's answer, so
+    # ``- none`` + ``Brief: ...`` is not one long question, and ``- none yet`` + a real
+    # question below it still asks.
+    raw_asked, *rest = [
+        part
+        for part in re.split(r"\n[ \t]*\n", str(fields.get("open_questions") or ""))
+        if part.strip()
+    ] or [""]
+    stray = "\n\n".join(part for part in rest if _LABEL_LINE.match(part))
+    more = "\n\n".join(part for part in rest if not _LABEL_LINE.match(part))
     asked = _substantive(raw_asked)
     if asked and _opens_with_nothing(asked):
         asked = ""  # "- none for the user yet; ..." answers the field with nothing
+    if not asked and more and not _opens_with_nothing(more):
+        asked = _substantive(more)
     if asked:
         said_at, basis = _written(ledger)
         return Verdict(
@@ -1024,8 +1054,11 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     # sections: an earlier "stop and discuss with the user" is a report about Monday. The
     # latest section is never withdrawn (the fields carry no date, so a "none" written at
     # the start cannot outrank an ask appended since).
+    # Trade-off, accepted: an older "For Thor" section the session never answered is
+    # withdrawn too, guarded only by the state's evidence (which refuses "needs", "the
+    # user", "manual" and the like).
     if requests and raw_asked and not asked and stated:
-        newest = len(free) - len(latest_section(free))
+        newest = _latest_with_content(free)
         requests = [r for r in requests if r.at >= newest]
     if requests:
         first = requests[0]
