@@ -1,4 +1,4 @@
-> built 2026-11-20 17:44 UTC from c9bf36a (main) · crowsnest 0.0.117. Details: build_info.json
+> built 2026-11-20 17:55 UTC from 6eb8d41 (main) · crowsnest 0.0.118. Details: build_info.json
 
 # index.html.md
 
@@ -8588,7 +8588,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-20 17:44 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/c9bf36aef6074df4f6fccf59ad1afb9732f17594"><code>c9bf36a</code></a> on branch <code>main</code>, for **crowsnest 0.0.117** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-20 17:55 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/6eb8d41261a55b1979067b1efe84c1e4c425c8f7"><code>6eb8d41</code></a> on branch <code>main</code>, for **crowsnest 0.0.118** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -8597,7 +8597,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/c9bf36aef6074df4f6fccf59ad1afb9732f17594"><code>c9bf36aef6074df4f6fccf59ad1afb9732f17594</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/6eb8d41261a55b1979067b1efe84c1e4c425c8f7"><code>6eb8d41261a55b1979067b1efe84c1e4c425c8f7</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -8608,9 +8608,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44785832416">44785832416</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44787542046">44787542046</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>c9bf36aef6074df4f6fccf59ad1afb9732f17594</code> (in the history of the built commit) |
+| Event commit | <code>6eb8d41261a55b1979067b1efe84c1e4c425c8f7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8635,13 +8635,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.117/">0.0.117</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.118/">0.0.118</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout c9bf36aef6074df4f6fccf59ad1afb9732f17594
+git checkout 6eb8d41261a55b1979067b1efe84c1e4c425c8f7
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -328,223 +328,225 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="166">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> has no inbox socket"</span><span class="p">)</span>
 </span><span data-line="167">    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_local</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">pid_domain</span><span class="p">):</span>
 </span><span data-line="168">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> runs on another machine; its inbox is not here"</span><span class="p">)</span>
-</span><span data-line="169">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="170">        <span class="n">info</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">lstat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="171">    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="172">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is gone: </span><span class="si">{</span><span class="n">exc</span><span class="o">.</span><span class="n">strerror</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-</span><span data-line="173">    <span class="k">if</span> <span class="ow">not</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_ISSOCK</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">st_mode</span><span class="p">)</span> <span class="ow">or</span> <span class="n">info</span><span class="o">.</span><span class="n">st_uid</span> <span class="o">!=</span> <span class="n">os</span><span class="o">.</span><span class="n">getuid</span><span class="p">():</span>
-</span><span data-line="174">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is not a socket of ours"</span><span class="p">)</span>
-</span><span data-line="175">    <span class="n">line</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
-</span><span data-line="176">        <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">text</span><span class="p">}},</span>
-</span><span data-line="177">        <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span data-line="178">    <span class="p">)</span>
-</span><span data-line="179">    <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
-</span><span data-line="180">        <span class="n">conn</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
-</span><span data-line="181">        <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="182">        <span class="c1"># Checked on the open connection, so the answer is about who holds it now.</span>
-</span><span data-line="183">        <span class="n">peer</span> <span class="o">=</span> <span class="n">_peer_pid</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
-</span><span data-line="184">        <span class="k">if</span> <span class="n">peer</span> <span class="o">!=</span> <span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="p">:</span>
-</span><span data-line="185">            <span class="n">held</span> <span class="o">=</span> <span class="s2">"an unknown process"</span> <span class="k">if</span> <span class="n">peer</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"pid </span><span class="si">{</span><span class="n">peer</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="186">            <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is held by </span><span class="si">{</span><span class="n">held</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="187">        <span class="k">if</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
-</span><span data-line="188">            <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
-</span><span data-line="189">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s pid </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2"> is not the process that registered it"</span>
-</span><span data-line="190">            <span class="p">)</span>
-</span><span data-line="191">        <span class="n">conn</span><span class="o">.</span><span class="n">sendall</span><span class="p">((</span><span class="n">line</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span></div>
+</span><span data-line="169">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="s2">"AF_UNIX"</span><span class="p">):</span>
+</span><span data-line="170">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="s2">"this platform has no Unix sockets to post to"</span><span class="p">)</span>
+</span><span data-line="171">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="172">        <span class="n">info</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">lstat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="173">    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="174">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is gone: </span><span class="si">{</span><span class="n">exc</span><span class="o">.</span><span class="n">strerror</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+</span><span data-line="175">    <span class="k">if</span> <span class="ow">not</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_ISSOCK</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">st_mode</span><span class="p">)</span> <span class="ow">or</span> <span class="n">info</span><span class="o">.</span><span class="n">st_uid</span> <span class="o">!=</span> <span class="n">os</span><span class="o">.</span><span class="n">getuid</span><span class="p">():</span>
+</span><span data-line="176">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is not a socket of ours"</span><span class="p">)</span>
+</span><span data-line="177">    <span class="n">line</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+</span><span data-line="178">        <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">text</span><span class="p">}},</span>
+</span><span data-line="179">        <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="180">    <span class="p">)</span>
+</span><span data-line="181">    <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+</span><span data-line="182">        <span class="n">conn</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+</span><span data-line="183">        <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="184">        <span class="c1"># Checked on the open connection, so the answer is about who holds it now.</span>
+</span><span data-line="185">        <span class="n">peer</span> <span class="o">=</span> <span class="n">_peer_pid</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+</span><span data-line="186">        <span class="k">if</span> <span class="n">peer</span> <span class="o">!=</span> <span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="p">:</span>
+</span><span data-line="187">            <span class="n">held</span> <span class="o">=</span> <span class="s2">"an unknown process"</span> <span class="k">if</span> <span class="n">peer</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"pid </span><span class="si">{</span><span class="n">peer</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="188">            <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox is held by </span><span class="si">{</span><span class="n">held</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="189">        <span class="k">if</span> <span class="ow">not</span> <span class="n">confirm</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
+</span><span data-line="190">            <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
+</span><span data-line="191">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s pid </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2"> is not the process that registered it"</span>
+</span><span data-line="192">            <span class="p">)</span>
+</span><span data-line="193">        <span class="n">conn</span><span class="o">.</span><span class="n">sendall</span><span class="p">((</span><span class="n">line</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span></div>
 
-</span><span data-line="192">
-</span><span data-line="193">
-</span><span data-line="194"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="195"><span class="c1"># Who may be told, and how it reads</span>
-</span><span data-line="196">
-</span><span data-line="197">
+</span><span data-line="194">
+</span><span data-line="195">
+</span><span data-line="196"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="197"><span class="c1"># Who may be told, and how it reads</span>
+</span><span data-line="198">
+</span><span data-line="199">
 <div class="viewcode-block" id="deliverable">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.deliverable">[docs]</a>
-</span><span data-line="198"><span class="k">def</span><span class="w"> </span><span class="nf">deliverable</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">busy_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="199"><span class="w">    </span><span class="sd">"""Why ``session``'s status keeps a message from it now, or ``''`` when it can take one.</span>
-</span><span data-line="200">
-</span><span data-line="201"><span class="sd">    &gt;&gt;&gt; s = LiveSession(1, 'id', 'w', '/w', 'interactive', 'idle', '', 0, 0, False, '', '')</span>
-</span><span data-line="202"><span class="sd">    &gt;&gt;&gt; deliverable(s)</span>
-</span><span data-line="203"><span class="sd">    ''</span>
-</span><span data-line="204"><span class="sd">    &gt;&gt;&gt; from dataclasses import replace</span>
-</span><span data-line="205"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='busy'))</span>
-</span><span data-line="206"><span class="sd">    'w is busy; pass busy_ok to deliver between its tool calls'</span>
-</span><span data-line="207"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='busy'), busy_ok=True)</span>
-</span><span data-line="208"><span class="sd">    ''</span>
-</span><span data-line="209"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='unknown'))</span>
-</span><span data-line="210"><span class="sd">    'w is unknown, not idle'</span>
-</span><span data-line="211"><span class="sd">    """</span>
-</span><span data-line="212">    <span class="n">who</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
-</span><span data-line="213">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">TAKES</span> <span class="ow">or</span> <span class="p">(</span><span class="n">busy_ok</span> <span class="ow">and</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">WORKING</span><span class="p">):</span>
-</span><span data-line="214">        <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="215">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
-</span><span data-line="216">        <span class="n">what</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="217">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is waiting on its person</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">; a message would wait behind them"</span>
-</span><span data-line="218">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">WORKING</span><span class="p">:</span>
-</span><span data-line="219">        <span class="k">return</span> <span class="p">(</span>
-</span><span data-line="220">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">; pass busy_ok to deliver between its tool calls"</span>
-</span><span data-line="221">        <span class="p">)</span>
-</span><span data-line="222">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'of no known status'</span><span class="si">}</span><span class="s2">, not idle"</span></div>
+</span><span data-line="200"><span class="k">def</span><span class="w"> </span><span class="nf">deliverable</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">busy_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="201"><span class="w">    </span><span class="sd">"""Why ``session``'s status keeps a message from it now, or ``''`` when it can take one.</span>
+</span><span data-line="202">
+</span><span data-line="203"><span class="sd">    &gt;&gt;&gt; s = LiveSession(1, 'id', 'w', '/w', 'interactive', 'idle', '', 0, 0, False, '', '')</span>
+</span><span data-line="204"><span class="sd">    &gt;&gt;&gt; deliverable(s)</span>
+</span><span data-line="205"><span class="sd">    ''</span>
+</span><span data-line="206"><span class="sd">    &gt;&gt;&gt; from dataclasses import replace</span>
+</span><span data-line="207"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='busy'))</span>
+</span><span data-line="208"><span class="sd">    'w is busy; pass busy_ok to deliver between its tool calls'</span>
+</span><span data-line="209"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='busy'), busy_ok=True)</span>
+</span><span data-line="210"><span class="sd">    ''</span>
+</span><span data-line="211"><span class="sd">    &gt;&gt;&gt; deliverable(replace(s, status='unknown'))</span>
+</span><span data-line="212"><span class="sd">    'w is unknown, not idle'</span>
+</span><span data-line="213"><span class="sd">    """</span>
+</span><span data-line="214">    <span class="n">who</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
+</span><span data-line="215">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">TAKES</span> <span class="ow">or</span> <span class="p">(</span><span class="n">busy_ok</span> <span class="ow">and</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">WORKING</span><span class="p">):</span>
+</span><span data-line="216">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="217">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"waiting"</span><span class="p">:</span>
+</span><span data-line="218">        <span class="n">what</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">waiting_for</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="219">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is waiting on its person</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">; a message would wait behind them"</span>
+</span><span data-line="220">    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="n">WORKING</span><span class="p">:</span>
+</span><span data-line="221">        <span class="k">return</span> <span class="p">(</span>
+</span><span data-line="222">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">; pass busy_ok to deliver between its tool calls"</span>
+</span><span data-line="223">        <span class="p">)</span>
+</span><span data-line="224">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">who</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'of no known status'</span><span class="si">}</span><span class="s2">, not idle"</span></div>
 
-</span><span data-line="223">
-</span><span data-line="224">
+</span><span data-line="225">
+</span><span data-line="226">
 <div class="viewcode-block" id="inbound_of">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.inbound_of">[docs]</a>
-</span><span data-line="225"><span class="k">def</span><span class="w"> </span><span class="nf">inbound_of</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="226"><span class="w">    </span><span class="sd">"""The receiving home's user-level ``crossSessionInbound`` (``''`` when unset or</span>
-</span><span data-line="227"><span class="sd">    unreadable). The home is where the registry put the session's transcript,</span>
-</span><span data-line="228"><span class="sd">    ``&lt;home&gt;/projects/&lt;slug&gt;/&lt;id&gt;.jsonl``. A project's own settings can still override it.</span>
-</span><span data-line="229"><span class="sd">    """</span>
-</span><span data-line="230">    <span class="k">if</span> <span class="ow">not</span> <span class="n">session</span><span class="o">.</span><span class="n">transcript</span><span class="p">:</span>
-</span><span data-line="231">        <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="232">    <span class="n">home</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">transcript</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-</span><span data-line="233">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="234">        <span class="n">settings</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">((</span><span class="n">home</span> <span class="o">/</span> <span class="s2">"settings.json"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span data-line="235">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-</span><span data-line="236">        <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="237">    <span class="n">value</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"crossSessionInbound"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="238">    <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span></div>
+</span><span data-line="227"><span class="k">def</span><span class="w"> </span><span class="nf">inbound_of</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="228"><span class="w">    </span><span class="sd">"""The receiving home's user-level ``crossSessionInbound`` (``''`` when unset or</span>
+</span><span data-line="229"><span class="sd">    unreadable). The home is where the registry put the session's transcript,</span>
+</span><span data-line="230"><span class="sd">    ``&lt;home&gt;/projects/&lt;slug&gt;/&lt;id&gt;.jsonl``. A project's own settings can still override it.</span>
+</span><span data-line="231"><span class="sd">    """</span>
+</span><span data-line="232">    <span class="k">if</span> <span class="ow">not</span> <span class="n">session</span><span class="o">.</span><span class="n">transcript</span><span class="p">:</span>
+</span><span data-line="233">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="234">    <span class="n">home</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">transcript</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</span><span data-line="235">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="236">        <span class="n">settings</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">((</span><span class="n">home</span> <span class="o">/</span> <span class="s2">"settings.json"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+</span><span data-line="237">    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+</span><span data-line="238">        <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="239">    <span class="n">value</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"crossSessionInbound"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="240">    <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span></div>
 
-</span><span data-line="239">
-</span><span data-line="240">
-</span><span data-line="241"><span class="c1">#: What a message's first line says, and the mark a body line shaped like it gets, so a</span>
-</span><span data-line="242"><span class="c1">#: body cannot forge a second sender.</span>
-</span><span data-line="243"><span class="n">HEAD</span> <span class="o">=</span> <span class="s2">"through crowsnest's switchboard:"</span>
-</span><span data-line="244"><span class="n">_FORGED</span> <span class="o">=</span> <span class="s2">"(quoted) "</span>
-</span><span data-line="245">
-</span><span data-line="246">
+</span><span data-line="241">
+</span><span data-line="242">
+</span><span data-line="243"><span class="c1">#: What a message's first line says, and the mark a body line shaped like it gets, so a</span>
+</span><span data-line="244"><span class="c1">#: body cannot forge a second sender.</span>
+</span><span data-line="245"><span class="n">HEAD</span> <span class="o">=</span> <span class="s2">"through crowsnest's switchboard:"</span>
+</span><span data-line="246"><span class="n">_FORGED</span> <span class="o">=</span> <span class="s2">"(quoted) "</span>
+</span><span data-line="247">
+</span><span data-line="248">
 <div class="viewcode-block" id="clean">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.clean">[docs]</a>
-</span><span data-line="247"><span class="k">def</span><span class="w"> </span><span class="nf">clean</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="248"><span class="w">    </span><span class="sd">"""``text`` without control or format characters (Unicode Cc and Cf) other than line</span>
-</span><span data-line="249"><span class="sd">    breaks and tabs: a terminal escape in a message or a log line must never reach a</span>
-</span><span data-line="250"><span class="sd">    terminal that prints it.</span>
-</span><span data-line="251">
-</span><span data-line="252"><span class="sd">    &gt;&gt;&gt; clean('ok\\x1b]52;c;aGk=\\x07 done\\nnext')</span>
-</span><span data-line="253"><span class="sd">    'ok]52;c;aGk= done\\nnext'</span>
-</span><span data-line="254"><span class="sd">    """</span>
-</span><span data-line="255">    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span><span data-line="256">        <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="s2">"</span><span class="se">\n\t</span><span class="s2">"</span> <span class="ow">or</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">category</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"Cc"</span><span class="p">,</span> <span class="s2">"Cf"</span><span class="p">)</span>
-</span><span data-line="257">    <span class="p">)</span></div>
+</span><span data-line="249"><span class="k">def</span><span class="w"> </span><span class="nf">clean</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="250"><span class="w">    </span><span class="sd">"""``text`` without control or format characters (Unicode Cc and Cf) other than line</span>
+</span><span data-line="251"><span class="sd">    breaks and tabs: a terminal escape in a message or a log line must never reach a</span>
+</span><span data-line="252"><span class="sd">    terminal that prints it.</span>
+</span><span data-line="253">
+</span><span data-line="254"><span class="sd">    &gt;&gt;&gt; clean('ok\\x1b]52;c;aGk=\\x07 done\\nnext')</span>
+</span><span data-line="255"><span class="sd">    'ok]52;c;aGk= done\\nnext'</span>
+</span><span data-line="256"><span class="sd">    """</span>
+</span><span data-line="257">    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span data-line="258">        <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="s2">"</span><span class="se">\n\t</span><span class="s2">"</span> <span class="ow">or</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">category</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"Cc"</span><span class="p">,</span> <span class="s2">"Cf"</span><span class="p">)</span>
+</span><span data-line="259">    <span class="p">)</span></div>
 
-</span><span data-line="258">
-</span><span data-line="259">
+</span><span data-line="260">
+</span><span data-line="261">
 <div class="viewcode-block" id="envelope">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.envelope">[docs]</a>
-</span><span data-line="260"><span class="k">def</span><span class="w"> </span><span class="nf">envelope</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">reply</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="261"><span class="w">    </span><span class="sd">"""The text as the receiving session reads it: who sent it, a ``note`` on what the</span>
-</span><span data-line="262"><span class="sd">    text is, the message (a body line shaped like the first line is marked as quoted),</span>
-</span><span data-line="263"><span class="sd">    then how to answer when there is a way.</span>
-</span><span data-line="264">
-</span><span data-line="265"><span class="sd">    &gt;&gt;&gt; print(envelope('Rebase on main.', sender='cn'))</span>
-</span><span data-line="266"><span class="sd">    From cn, through crowsnest's switchboard:</span>
-</span><span data-line="267"><span class="sd">    Rebase on main.</span>
-</span><span data-line="268"><span class="sd">    """</span>
-</span><span data-line="269">    <span class="n">body</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span><span data-line="270">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_FORGED</span><span class="si">}{</span><span class="n">line</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">HEAD</span> <span class="ow">in</span> <span class="n">line</span> <span class="k">else</span> <span class="n">line</span>
-</span><span data-line="271">        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">clean</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-</span><span data-line="272">    <span class="p">)</span>
-</span><span data-line="273">    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"From </span><span class="si">{</span><span class="n">clean</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">HEAD</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="o">*</span><span class="p">([</span><span class="n">note</span><span class="p">]</span> <span class="k">if</span> <span class="n">note</span> <span class="k">else</span> <span class="p">[]),</span> <span class="n">body</span><span class="p">]</span>
-</span><span data-line="274">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="o">*</span><span class="n">parts</span><span class="p">,</span> <span class="o">*</span><span class="p">([</span><span class="n">reply</span><span class="p">]</span> <span class="k">if</span> <span class="n">reply</span> <span class="k">else</span> <span class="p">[])])</span></div>
+</span><span data-line="262"><span class="k">def</span><span class="w"> </span><span class="nf">envelope</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">reply</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="263"><span class="w">    </span><span class="sd">"""The text as the receiving session reads it: who sent it, a ``note`` on what the</span>
+</span><span data-line="264"><span class="sd">    text is, the message (a body line shaped like the first line is marked as quoted),</span>
+</span><span data-line="265"><span class="sd">    then how to answer when there is a way.</span>
+</span><span data-line="266">
+</span><span data-line="267"><span class="sd">    &gt;&gt;&gt; print(envelope('Rebase on main.', sender='cn'))</span>
+</span><span data-line="268"><span class="sd">    From cn, through crowsnest's switchboard:</span>
+</span><span data-line="269"><span class="sd">    Rebase on main.</span>
+</span><span data-line="270"><span class="sd">    """</span>
+</span><span data-line="271">    <span class="n">body</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span data-line="272">        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_FORGED</span><span class="si">}{</span><span class="n">line</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">HEAD</span> <span class="ow">in</span> <span class="n">line</span> <span class="k">else</span> <span class="n">line</span>
+</span><span data-line="273">        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">clean</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+</span><span data-line="274">    <span class="p">)</span>
+</span><span data-line="275">    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"From </span><span class="si">{</span><span class="n">clean</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">HEAD</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="o">*</span><span class="p">([</span><span class="n">note</span><span class="p">]</span> <span class="k">if</span> <span class="n">note</span> <span class="k">else</span> <span class="p">[]),</span> <span class="n">body</span><span class="p">]</span>
+</span><span data-line="276">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="o">*</span><span class="n">parts</span><span class="p">,</span> <span class="o">*</span><span class="p">([</span><span class="n">reply</span><span class="p">]</span> <span class="k">if</span> <span class="n">reply</span> <span class="k">else</span> <span class="p">[])])</span></div>
 
-</span><span data-line="275">
-</span><span data-line="276">
-</span><span data-line="277"><span class="k">def</span><span class="w"> </span><span class="nf">_caller</span><span class="p">(</span><span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="278"><span class="w">    </span><span class="sd">"""The label of the session running this process, or :data:`ANONYMOUS`."""</span>
-</span><span data-line="279">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">live_sessions</span>
-</span><span data-line="280">
-</span><span data-line="281">    <span class="n">me</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CLAUDE_CODE_SESSION_ID"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="282">    <span class="k">if</span> <span class="ow">not</span> <span class="n">me</span><span class="p">:</span>
-</span><span data-line="283">        <span class="k">return</span> <span class="n">ANONYMOUS</span>
-</span><span data-line="284">    <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
-</span><span data-line="285">        <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span> <span class="o">==</span> <span class="n">me</span><span class="p">:</span>
-</span><span data-line="286">            <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
-</span><span data-line="287">    <span class="k">return</span> <span class="n">ANONYMOUS</span>
-</span><span data-line="288">
-</span><span data-line="289">
-</span><span data-line="290"><span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="291">    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
-</span><span data-line="292">
-</span><span data-line="293">
+</span><span data-line="277">
+</span><span data-line="278">
+</span><span data-line="279"><span class="k">def</span><span class="w"> </span><span class="nf">_caller</span><span class="p">(</span><span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="280"><span class="w">    </span><span class="sd">"""The label of the session running this process, or :data:`ANONYMOUS`."""</span>
+</span><span data-line="281">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">live_sessions</span>
+</span><span data-line="282">
+</span><span data-line="283">    <span class="n">me</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CLAUDE_CODE_SESSION_ID"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="284">    <span class="k">if</span> <span class="ow">not</span> <span class="n">me</span><span class="p">:</span>
+</span><span data-line="285">        <span class="k">return</span> <span class="n">ANONYMOUS</span>
+</span><span data-line="286">    <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+</span><span data-line="287">        <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span> <span class="o">==</span> <span class="n">me</span><span class="p">:</span>
+</span><span data-line="288">            <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
+</span><span data-line="289">    <span class="k">return</span> <span class="n">ANONYMOUS</span>
+</span><span data-line="290">
+</span><span data-line="291">
+</span><span data-line="292"><span class="k">def</span><span class="w"> </span><span class="nf">_now</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="293">    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+</span><span data-line="294">
+</span><span data-line="295">
 <div class="viewcode-block" id="tell">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.switchboard.html#crowsnest.switchboard.tell">[docs]</a>
-</span><span data-line="294"><span class="k">def</span><span class="w"> </span><span class="nf">tell</span><span class="p">(</span>
-</span><span data-line="295">    <span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span>
-</span><span data-line="296">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="297">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="298">    <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="299">    <span class="n">reply</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="300">    <span class="n">busy_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="301">    <span class="n">deliver</span><span class="p">:</span> <span class="n">Deliver</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="302">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="303">    <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="304">    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="305"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="306"><span class="w">    </span><span class="sd">"""Post ``text`` to ``session``; ``{"to", "status", "sender", "at", "inbound"}``.</span>
-</span><span data-line="307">
-</span><span data-line="308"><span class="sd">    ``sender`` signs it (default: the calling session's label, else :data:`ANONYMOUS`);</span>
-</span><span data-line="309"><span class="sd">    ``reply`` is a last line telling the receiver how to answer. Raises :class:`Refused`</span>
-</span><span data-line="310"><span class="sd">    for a status :func:`deliverable` refuses, for empty or oversized text, and when the</span>
-</span><span data-line="311"><span class="sd">    transport cannot deliver. ``deliver`` is the transport, ``(session, text) -&gt; None``,</span>
-</span><span data-line="312"><span class="sd">    default :func:`socket_post`. ``extra`` adds fields to the event line (an intent id).</span>
-</span><span data-line="313"><span class="sd">    ``inbound`` is the receiver's ``crossSessionInbound`` (:func:`inbound_of`). ``note``</span>
-</span><span data-line="314"><span class="sd">    is a line under the sender's that says what the text is (:func:`envelope`). The event</span>
-</span><span data-line="315"><span class="sd">    line records the claimed ``from`` and, in ``by``, the session that actually ran this</span>
-</span><span data-line="316"><span class="sd">    (or :data:`ANONYMOUS`), which a caller cannot choose.</span>
-</span><span data-line="317">
-</span><span data-line="318"><span class="sd">    Once the transport has delivered, nothing here raises: a log line that cannot be</span>
-</span><span data-line="319"><span class="sd">    written is reported in ``hook.log``, never as a failure, because a caller that retries</span>
-</span><span data-line="320"><span class="sd">    a failure would deliver the message again.</span>
-</span><span data-line="321"><span class="sd">    """</span>
-</span><span data-line="322">    <span class="n">deliver</span> <span class="o">=</span> <span class="n">socket_post</span> <span class="k">if</span> <span class="n">deliver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">deliver</span>
-</span><span data-line="323">    <span class="n">body</span> <span class="o">=</span> <span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="324">    <span class="k">if</span> <span class="ow">not</span> <span class="n">body</span><span class="p">:</span>
-</span><span data-line="325">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="s2">"a message needs some text"</span><span class="p">)</span>
-</span><span data-line="326">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_TEXT</span><span class="p">:</span>
-</span><span data-line="327">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
-</span><span data-line="328">            <span class="sa">f</span><span class="s2">"a message is at most </span><span class="si">{</span><span class="n">MAX_TEXT</span><span class="si">}</span><span class="s2"> characters; put a brief this long in a file "</span>
-</span><span data-line="329">            <span class="s2">"and send its path"</span>
-</span><span data-line="330">        <span class="p">)</span>
-</span><span data-line="331">    <span class="n">why</span> <span class="o">=</span> <span class="n">deliverable</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">busy_ok</span><span class="o">=</span><span class="n">busy_ok</span><span class="p">)</span>
-</span><span data-line="332">    <span class="k">if</span> <span class="n">why</span><span class="p">:</span>
-</span><span data-line="333">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="n">why</span><span class="p">)</span>
-</span><span data-line="334">    <span class="n">caller</span> <span class="o">=</span> <span class="n">_caller</span><span class="p">()</span>
-</span><span data-line="335">    <span class="n">sender</span> <span class="o">=</span> <span class="n">sender</span> <span class="ow">or</span> <span class="n">caller</span>
-</span><span data-line="336">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="337">        <span class="n">deliver</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">envelope</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">reply</span><span class="o">=</span><span class="n">reply</span><span class="p">,</span> <span class="n">note</span><span class="o">=</span><span class="n">note</span><span class="p">))</span>
-</span><span data-line="338">    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="339">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
-</span><span data-line="340">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox did not take the message: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="341">        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-</span><span data-line="342">    <span class="n">at</span> <span class="o">=</span> <span class="n">_now</span><span class="p">()</span>
-</span><span data-line="343">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="344">        <span class="n">append_event</span><span class="p">(</span>
-</span><span data-line="345">            <span class="p">{</span>
-</span><span data-line="346">                <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"message"</span><span class="p">,</span>
-</span><span data-line="347">                <span class="s2">"at"</span><span class="p">:</span> <span class="n">at</span><span class="p">,</span>
-</span><span data-line="348">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-</span><span data-line="349">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-</span><span data-line="350">                <span class="s2">"project"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
-</span><span data-line="351">                <span class="s2">"home"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="p">,</span>
-</span><span data-line="352">                <span class="s2">"from"</span><span class="p">:</span> <span class="n">clean</span><span class="p">(</span><span class="n">sender</span><span class="p">),</span>
-</span><span data-line="353">                <span class="s2">"by"</span><span class="p">:</span> <span class="n">caller</span><span class="p">,</span>
-</span><span data-line="354">                <span class="s2">"detail"</span><span class="p">:</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clean</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())[:</span><span class="mi">200</span><span class="p">],</span>
-</span><span data-line="355">                <span class="o">**</span><span class="p">(</span><span class="n">extra</span> <span class="ow">or</span> <span class="p">{}),</span>
-</span><span data-line="356">            <span class="p">},</span>
-</span><span data-line="357">            <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span>
-</span><span data-line="358">        <span class="p">)</span>
-</span><span data-line="359">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- delivered is delivered; see the docstring</span>
-</span><span data-line="360">        <span class="n">log_failure</span><span class="p">(</span>
-</span><span data-line="361">            <span class="sa">f</span><span class="s2">"switchboard: delivered to </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> but could not log it: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="362">        <span class="p">)</span>
-</span><span data-line="363">    <span class="n">tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span> <span class="k">else</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
-</span><span data-line="364">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="365">        <span class="s2">"to"</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
-</span><span data-line="366">        <span class="s2">"status"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
-</span><span data-line="367">        <span class="s2">"sender"</span><span class="p">:</span> <span class="n">sender</span><span class="p">,</span>
-</span><span data-line="368">        <span class="s2">"at"</span><span class="p">:</span> <span class="n">at</span><span class="p">,</span>
-</span><span data-line="369">        <span class="s2">"inbound"</span><span class="p">:</span> <span class="n">inbound_of</span><span class="p">(</span><span class="n">session</span><span class="p">),</span>
-</span><span data-line="370">    <span class="p">}</span></div>
+</span><span data-line="296"><span class="k">def</span><span class="w"> </span><span class="nf">tell</span><span class="p">(</span>
+</span><span data-line="297">    <span class="n">session</span><span class="p">:</span> <span class="n">LiveSession</span><span class="p">,</span>
+</span><span data-line="298">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="299">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="300">    <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="301">    <span class="n">reply</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="302">    <span class="n">busy_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="303">    <span class="n">deliver</span><span class="p">:</span> <span class="n">Deliver</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="304">    <span class="n">events_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="305">    <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="306">    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="307"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="308"><span class="w">    </span><span class="sd">"""Post ``text`` to ``session``; ``{"to", "status", "sender", "at", "inbound"}``.</span>
+</span><span data-line="309">
+</span><span data-line="310"><span class="sd">    ``sender`` signs it (default: the calling session's label, else :data:`ANONYMOUS`);</span>
+</span><span data-line="311"><span class="sd">    ``reply`` is a last line telling the receiver how to answer. Raises :class:`Refused`</span>
+</span><span data-line="312"><span class="sd">    for a status :func:`deliverable` refuses, for empty or oversized text, and when the</span>
+</span><span data-line="313"><span class="sd">    transport cannot deliver. ``deliver`` is the transport, ``(session, text) -&gt; None``,</span>
+</span><span data-line="314"><span class="sd">    default :func:`socket_post`. ``extra`` adds fields to the event line (an intent id).</span>
+</span><span data-line="315"><span class="sd">    ``inbound`` is the receiver's ``crossSessionInbound`` (:func:`inbound_of`). ``note``</span>
+</span><span data-line="316"><span class="sd">    is a line under the sender's that says what the text is (:func:`envelope`). The event</span>
+</span><span data-line="317"><span class="sd">    line records the claimed ``from`` and, in ``by``, the session that actually ran this</span>
+</span><span data-line="318"><span class="sd">    (or :data:`ANONYMOUS`), which a caller cannot choose.</span>
+</span><span data-line="319">
+</span><span data-line="320"><span class="sd">    Once the transport has delivered, nothing here raises: a log line that cannot be</span>
+</span><span data-line="321"><span class="sd">    written is reported in ``hook.log``, never as a failure, because a caller that retries</span>
+</span><span data-line="322"><span class="sd">    a failure would deliver the message again.</span>
+</span><span data-line="323"><span class="sd">    """</span>
+</span><span data-line="324">    <span class="n">deliver</span> <span class="o">=</span> <span class="n">socket_post</span> <span class="k">if</span> <span class="n">deliver</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">deliver</span>
+</span><span data-line="325">    <span class="n">body</span> <span class="o">=</span> <span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="326">    <span class="k">if</span> <span class="ow">not</span> <span class="n">body</span><span class="p">:</span>
+</span><span data-line="327">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="s2">"a message needs some text"</span><span class="p">)</span>
+</span><span data-line="328">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_TEXT</span><span class="p">:</span>
+</span><span data-line="329">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
+</span><span data-line="330">            <span class="sa">f</span><span class="s2">"a message is at most </span><span class="si">{</span><span class="n">MAX_TEXT</span><span class="si">}</span><span class="s2"> characters; put a brief this long in a file "</span>
+</span><span data-line="331">            <span class="s2">"and send its path"</span>
+</span><span data-line="332">        <span class="p">)</span>
+</span><span data-line="333">    <span class="n">why</span> <span class="o">=</span> <span class="n">deliverable</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">busy_ok</span><span class="o">=</span><span class="n">busy_ok</span><span class="p">)</span>
+</span><span data-line="334">    <span class="k">if</span> <span class="n">why</span><span class="p">:</span>
+</span><span data-line="335">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span><span class="n">why</span><span class="p">)</span>
+</span><span data-line="336">    <span class="n">caller</span> <span class="o">=</span> <span class="n">_caller</span><span class="p">()</span>
+</span><span data-line="337">    <span class="n">sender</span> <span class="o">=</span> <span class="n">sender</span> <span class="ow">or</span> <span class="n">caller</span>
+</span><span data-line="338">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="339">        <span class="n">deliver</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">envelope</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">reply</span><span class="o">=</span><span class="n">reply</span><span class="p">,</span> <span class="n">note</span><span class="o">=</span><span class="n">note</span><span class="p">))</span>
+</span><span data-line="340">    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="341">        <span class="k">raise</span> <span class="n">Refused</span><span class="p">(</span>
+</span><span data-line="342">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">'s inbox did not take the message: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="343">        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+</span><span data-line="344">    <span class="n">at</span> <span class="o">=</span> <span class="n">_now</span><span class="p">()</span>
+</span><span data-line="345">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="346">        <span class="n">append_event</span><span class="p">(</span>
+</span><span data-line="347">            <span class="p">{</span>
+</span><span data-line="348">                <span class="s2">"event"</span><span class="p">:</span> <span class="s2">"message"</span><span class="p">,</span>
+</span><span data-line="349">                <span class="s2">"at"</span><span class="p">:</span> <span class="n">at</span><span class="p">,</span>
+</span><span data-line="350">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="351">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+</span><span data-line="352">                <span class="s2">"project"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">project</span><span class="p">,</span>
+</span><span data-line="353">                <span class="s2">"home"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="p">,</span>
+</span><span data-line="354">                <span class="s2">"from"</span><span class="p">:</span> <span class="n">clean</span><span class="p">(</span><span class="n">sender</span><span class="p">),</span>
+</span><span data-line="355">                <span class="s2">"by"</span><span class="p">:</span> <span class="n">caller</span><span class="p">,</span>
+</span><span data-line="356">                <span class="s2">"detail"</span><span class="p">:</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clean</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())[:</span><span class="mi">200</span><span class="p">],</span>
+</span><span data-line="357">                <span class="o">**</span><span class="p">(</span><span class="n">extra</span> <span class="ow">or</span> <span class="p">{}),</span>
+</span><span data-line="358">            <span class="p">},</span>
+</span><span data-line="359">            <span class="n">events_path</span><span class="o">=</span><span class="n">events_path</span><span class="p">,</span>
+</span><span data-line="360">        <span class="p">)</span>
+</span><span data-line="361">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 -- delivered is delivered; see the docstring</span>
+</span><span data-line="362">        <span class="n">log_failure</span><span class="p">(</span>
+</span><span data-line="363">            <span class="sa">f</span><span class="s2">"switchboard: delivered to </span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> but could not log it: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="364">        <span class="p">)</span>
+</span><span data-line="365">    <span class="n">tag</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">session</span><span class="o">.</span><span class="n">home</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">home</span> <span class="k">else</span> <span class="n">session</span><span class="o">.</span><span class="n">label</span>
+</span><span data-line="366">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="367">        <span class="s2">"to"</span><span class="p">:</span> <span class="n">tag</span><span class="p">,</span>
+</span><span data-line="368">        <span class="s2">"status"</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+</span><span data-line="369">        <span class="s2">"sender"</span><span class="p">:</span> <span class="n">sender</span><span class="p">,</span>
+</span><span data-line="370">        <span class="s2">"at"</span><span class="p">:</span> <span class="n">at</span><span class="p">,</span>
+</span><span data-line="371">        <span class="s2">"inbound"</span><span class="p">:</span> <span class="n">inbound_of</span><span class="p">(</span><span class="n">session</span><span class="p">),</span>
+</span><span data-line="372">    <span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -573,7 +575,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=0f6bfde0"></script>
+      <script src="../../_static/documentation_options.js?v=e7715e22"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
