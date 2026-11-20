@@ -217,7 +217,7 @@ with SIGTERM; the default only reports. See [`crowsnest.guard`](crowsnest.guard.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.recap(session, , home=None, all_homes=False, config=None, digests_store=None)
+### crowsnest.tools.recap(session, , home=None, all_homes=False, config=None, digests_store=None, text_limit=None)
 
 Five lines about one live session, read from disk: the answer to a `recap` intent.
 
@@ -226,6 +226,11 @@ and openloops’ digest (`digests_store` is [`brief()`](#crowsnest.tools.brief)�
 nothing and costs it no turn, which is the difference from an `ask`. Every line is
 already through the page’s sanitiser, because the watcher writes them into the page’s
 `db`. Raises `KeyError` when no live session matches, as [`resolve()`](#crowsnest.tools.resolve) does.
+
+`text_limit` is how long one line may be: the page’s
+[`crowsnest.live.RECAP_TEXT_LIMIT`](crowsnest.live.html.md#crowsnest.live.RECAP_TEXT_LIMIT) by default (the `db` anyone with the page
+can read); a reader the owner alone sees, such as the claude.ai connector, may ask for
+more, and a clipped line still ends on a whole sentence.
 
 Returns `{"session", "lines", "made_at"}`, `session` being its sanitised address.
 

@@ -1997,294 +1997,307 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="1786">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="1787">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="1788">    <span class="n">digests_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1789"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1790"><span class="w">    </span><span class="sd">"""Five lines about one live session, read from disk: the answer to a ``recap`` intent.</span>
-</span><span data-line="1791">
-</span><span data-line="1792"><span class="sd">    :func:`crowsnest.live.recap_lines` over its registry record, the tail of its transcript</span>
-</span><span data-line="1793"><span class="sd">    and openloops' digest (``digests_store`` is :func:`brief`'s seam). It sends the session</span>
-</span><span data-line="1794"><span class="sd">    nothing and costs it no turn, which is the difference from an ``ask``. Every line is</span>
-</span><span data-line="1795"><span class="sd">    already through the page's sanitiser, because the watcher writes them into the page's</span>
-</span><span data-line="1796"><span class="sd">    ``db``. Raises ``KeyError`` when no live session matches, as :func:`resolve` does.</span>
-</span><span data-line="1797">
-</span><span data-line="1798"><span class="sd">    Returns ``{"session", "lines", "made_at"}``, ``session`` being its sanitised address.</span>
-</span><span data-line="1799"><span class="sd">    """</span>
-</span><span data-line="1800">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">address</span>
-</span><span data-line="1801">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.live</span><span class="w"> </span><span class="kn">import</span> <span class="n">publishable</span><span class="p">,</span> <span class="n">recap_lines</span>
-</span><span data-line="1802">
-</span><span data-line="1803">    <span class="n">made_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
-</span><span data-line="1804">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1805">    <span class="n">act</span> <span class="o">=</span> <span class="n">read_activity</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">recent</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="1806">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="1807">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
-</span><span data-line="1808">    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-</span><span data-line="1809">        <span class="n">digest</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="1810">    <span class="n">record</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
-</span><span data-line="1811">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1812">        <span class="s2">"session"</span><span class="p">:</span> <span class="n">publishable</span><span class="p">(</span><span class="n">address</span><span class="p">(</span><span class="n">record</span><span class="p">)),</span>
-</span><span data-line="1813">        <span class="s2">"lines"</span><span class="p">:</span> <span class="n">recap_lines</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">act</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="n">digest</span><span class="p">),</span>
-</span><span data-line="1814">        <span class="s2">"made_at"</span><span class="p">:</span> <span class="n">made_at</span><span class="p">,</span>
-</span><span data-line="1815">    <span class="p">}</span></div>
+</span><span data-line="1789">    <span class="n">text_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1790"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1791"><span class="w">    </span><span class="sd">"""Five lines about one live session, read from disk: the answer to a ``recap`` intent.</span>
+</span><span data-line="1792">
+</span><span data-line="1793"><span class="sd">    :func:`crowsnest.live.recap_lines` over its registry record, the tail of its transcript</span>
+</span><span data-line="1794"><span class="sd">    and openloops' digest (``digests_store`` is :func:`brief`'s seam). It sends the session</span>
+</span><span data-line="1795"><span class="sd">    nothing and costs it no turn, which is the difference from an ``ask``. Every line is</span>
+</span><span data-line="1796"><span class="sd">    already through the page's sanitiser, because the watcher writes them into the page's</span>
+</span><span data-line="1797"><span class="sd">    ``db``. Raises ``KeyError`` when no live session matches, as :func:`resolve` does.</span>
+</span><span data-line="1798">
+</span><span data-line="1799"><span class="sd">    ``text_limit`` is how long one line may be: the page's</span>
+</span><span data-line="1800"><span class="sd">    :data:`crowsnest.live.RECAP_TEXT_LIMIT` by default (the ``db`` anyone with the page</span>
+</span><span data-line="1801"><span class="sd">    can read); a reader the owner alone sees, such as the claude.ai connector, may ask for</span>
+</span><span data-line="1802"><span class="sd">    more, and a clipped line still ends on a whole sentence.</span>
+</span><span data-line="1803">
+</span><span data-line="1804"><span class="sd">    Returns ``{"session", "lines", "made_at"}``, ``session`` being its sanitised address.</span>
+</span><span data-line="1805"><span class="sd">    """</span>
+</span><span data-line="1806">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.lineage</span><span class="w"> </span><span class="kn">import</span> <span class="n">address</span>
+</span><span data-line="1807">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.live</span><span class="w"> </span><span class="kn">import</span> <span class="n">RECAP_TEXT_LIMIT</span><span class="p">,</span> <span class="n">publishable</span><span class="p">,</span> <span class="n">recap_lines</span>
+</span><span data-line="1808">
+</span><span data-line="1809">    <span class="k">if</span> <span class="n">text_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">text_limit</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="1810">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1811">            <span class="sa">f</span><span class="s2">"text_limit is a positive number of characters, not </span><span class="si">{</span><span class="n">text_limit</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="1812">        <span class="p">)</span>
+</span><span data-line="1813">
+</span><span data-line="1814">    <span class="n">made_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
+</span><span data-line="1815">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1816">    <span class="n">act</span> <span class="o">=</span> <span class="n">read_activity</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">recent</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="1817">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="1818">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
+</span><span data-line="1819">    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+</span><span data-line="1820">        <span class="n">digest</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="1821">    <span class="n">record</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+</span><span data-line="1822">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1823">        <span class="s2">"session"</span><span class="p">:</span> <span class="n">publishable</span><span class="p">(</span><span class="n">address</span><span class="p">(</span><span class="n">record</span><span class="p">)),</span>
+</span><span data-line="1824">        <span class="s2">"lines"</span><span class="p">:</span> <span class="n">recap_lines</span><span class="p">(</span>
+</span><span data-line="1825">            <span class="n">record</span><span class="p">,</span> <span class="n">act</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="n">digest</span><span class="p">,</span> <span class="n">text_limit</span><span class="o">=</span><span class="n">text_limit</span> <span class="ow">or</span> <span class="n">RECAP_TEXT_LIMIT</span>
+</span><span data-line="1826">        <span class="p">),</span>
+</span><span data-line="1827">        <span class="s2">"made_at"</span><span class="p">:</span> <span class="n">made_at</span><span class="p">,</span>
+</span><span data-line="1828">    <span class="p">}</span></div>
 
-</span><span data-line="1816">
-</span><span data-line="1817">
+</span><span data-line="1829">
+</span><span data-line="1830">
 <div class="viewcode-block" id="turns">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.turns">[docs]</a>
-</span><span data-line="1818"><span class="k">def</span><span class="w"> </span><span class="nf">turns</span><span class="p">(</span>
-</span><span data-line="1819">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="1820">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1821">    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-</span><span data-line="1822">    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1823">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1824">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1825">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1826"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1827"><span class="w">    </span><span class="sd">"""The last ``last`` turns of a session, oldest first; ``before=N`` pages back from turn N."""</span>
-</span><span data-line="1828">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1829">    <span class="n">found</span> <span class="o">=</span> <span class="n">read_turns</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
-</span><span data-line="1830">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]}</span></div>
-
-</span><span data-line="1831">
-</span><span data-line="1832">
-<div class="viewcode-block" id="brief">
-<a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.brief">[docs]</a>
-</span><span data-line="1833"><span class="k">def</span><span class="w"> </span><span class="nf">brief</span><span class="p">(</span>
-</span><span data-line="1834">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="1835">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1831"><span class="k">def</span><span class="w"> </span><span class="nf">turns</span><span class="p">(</span>
+</span><span data-line="1832">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1833">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1834">    <span class="n">last</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span data-line="1835">    <span class="n">before</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="1836">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="1837">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="1838">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1839">    <span class="n">digests_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1840"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1841"><span class="w">    </span><span class="sd">"""openloops' digest for one live session: what it has been doing, dated, in its words.</span>
-</span><span data-line="1842">
-</span><span data-line="1843"><span class="sd">    A digest is written by openloops when a session's turn ends, so this answers "what has</span>
-</span><span data-line="1844"><span class="sd">    this session been up to" without reading a transcript at all, and without spending a</span>
-</span><span data-line="1845"><span class="sd">    turn of that session's context. It is a lookup, not a second reader: the digest's</span>
-</span><span data-line="1846"><span class="sd">    content is openloops' business, and ``digests_store`` is the seam it reads from.</span>
-</span><span data-line="1847">
-</span><span data-line="1848"><span class="sd">    ``digest`` is ``None`` when openloops has not digested this session yet -- a normal</span>
-</span><span data-line="1849"><span class="sd">    state for a session started minutes ago -- and ``why`` says so.</span>
-</span><span data-line="1850"><span class="sd">    """</span>
-</span><span data-line="1851">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="1852">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="1853">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
-</span><span data-line="1854">    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="1855">        <span class="n">why</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-</span><span data-line="1856">        <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">why</span><span class="p">}</span>
-</span><span data-line="1857">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="n">digest</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span></div>
+</span><span data-line="1839"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1840"><span class="w">    </span><span class="sd">"""The last ``last`` turns of a session, oldest first; ``before=N`` pages back from turn N."""</span>
+</span><span data-line="1841">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1842">    <span class="n">found</span> <span class="o">=</span> <span class="n">read_turns</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">transcript</span><span class="p">,</span> <span class="n">last</span><span class="o">=</span><span class="n">last</span><span class="p">,</span> <span class="n">before</span><span class="o">=</span><span class="n">before</span><span class="p">)</span>
+</span><span data-line="1843">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]}</span></div>
 
-</span><span data-line="1858">
-</span><span data-line="1859">
-</span><span data-line="1860"><span class="c1"># --------------------------------------------------------------------------------------</span>
-</span><span data-line="1861"><span class="c1"># The guard: memory, the reaper and the lookout's restart (#171)</span>
-</span><span data-line="1862">
-</span><span data-line="1863"><span class="c1">#: What a resumed session is told first: it was restarted, so whatever it was watching</span>
-</span><span data-line="1864"><span class="c1">#: (a Monitor on `crowsnest watch`, a subscription) died with the process.</span>
-</span><span data-line="1865"><span class="n">DFLT_RESUME_PROMPT</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="1866">    <span class="s2">"You were restarted (your process had exited, probably killed). Anything you were "</span>
-</span><span data-line="1867">    <span class="s2">"watching died with it: re-arm your watchers, then carry on."</span>
-</span><span data-line="1868"><span class="p">)</span>
-</span><span data-line="1869">
-</span><span data-line="1870">
+</span><span data-line="1844">
+</span><span data-line="1845">
+<div class="viewcode-block" id="brief">
+<a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.brief">[docs]</a>
+</span><span data-line="1846"><span class="k">def</span><span class="w"> </span><span class="nf">brief</span><span class="p">(</span>
+</span><span data-line="1847">    <span class="n">session</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1848">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1849">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1850">    <span class="n">all_homes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1851">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1852">    <span class="n">digests_store</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1853"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1854"><span class="w">    </span><span class="sd">"""openloops' digest for one live session: what it has been doing, dated, in its words.</span>
+</span><span data-line="1855">
+</span><span data-line="1856"><span class="sd">    A digest is written by openloops when a session's turn ends, so this answers "what has</span>
+</span><span data-line="1857"><span class="sd">    this session been up to" without reading a transcript at all, and without spending a</span>
+</span><span data-line="1858"><span class="sd">    turn of that session's context. It is a lookup, not a second reader: the digest's</span>
+</span><span data-line="1859"><span class="sd">    content is openloops' business, and ``digests_store`` is the seam it reads from.</span>
+</span><span data-line="1860">
+</span><span data-line="1861"><span class="sd">    ``digest`` is ``None`` when openloops has not digested this session yet -- a normal</span>
+</span><span data-line="1862"><span class="sd">    state for a session started minutes ago -- and ``why`` says so.</span>
+</span><span data-line="1863"><span class="sd">    """</span>
+</span><span data-line="1864">    <span class="n">s</span> <span class="o">=</span> <span class="n">resolve</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">all_homes</span><span class="o">=</span><span class="n">all_homes</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="1865">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="1866">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_openloops_digest</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">digests_store</span><span class="o">=</span><span class="n">digests_store</span><span class="p">)</span>
+</span><span data-line="1867">    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="1868">        <span class="n">why</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+</span><span data-line="1869">        <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="n">why</span><span class="p">}</span>
+</span><span data-line="1870">    <span class="k">return</span> <span class="p">{</span><span class="s2">"session"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span> <span class="s2">"digest"</span><span class="p">:</span> <span class="n">digest</span><span class="p">,</span> <span class="s2">"why"</span><span class="p">:</span> <span class="s2">""</span><span class="p">}</span></div>
+
+</span><span data-line="1871">
+</span><span data-line="1872">
+</span><span data-line="1873"><span class="c1"># --------------------------------------------------------------------------------------</span>
+</span><span data-line="1874"><span class="c1"># The guard: memory, the reaper and the lookout's restart (#171)</span>
+</span><span data-line="1875">
+</span><span data-line="1876"><span class="c1">#: What a resumed session is told first: it was restarted, so whatever it was watching</span>
+</span><span data-line="1877"><span class="c1">#: (a Monitor on `crowsnest watch`, a subscription) died with the process.</span>
+</span><span data-line="1878"><span class="n">DFLT_RESUME_PROMPT</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="1879">    <span class="s2">"You were restarted (your process had exited, probably killed). Anything you were "</span>
+</span><span data-line="1880">    <span class="s2">"watching died with it: re-arm your watchers, then carry on."</span>
+</span><span data-line="1881"><span class="p">)</span>
+</span><span data-line="1882">
+</span><span data-line="1883">
 <div class="viewcode-block" id="guard_tick">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.guard_tick">[docs]</a>
-</span><span data-line="1871"><span class="k">def</span><span class="w"> </span><span class="nf">guard_tick</span><span class="p">(</span>
-</span><span data-line="1872">    <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="1873"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1874"><span class="w">    </span><span class="sd">"""The OOM pass, then the reaper in the mode ``[guard] reap`` names (report by default)."""</span>
-</span><span data-line="1875">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
-</span><span data-line="1876">
-</span><span data-line="1877">    <span class="k">return</span> <span class="n">guard</span><span class="o">.</span><span class="n">tick</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span></div>
+</span><span data-line="1884"><span class="k">def</span><span class="w"> </span><span class="nf">guard_tick</span><span class="p">(</span>
+</span><span data-line="1885">    <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="1886"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1887"><span class="w">    </span><span class="sd">"""The OOM pass, then the reaper in the mode ``[guard] reap`` names (report by default)."""</span>
+</span><span data-line="1888">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
+</span><span data-line="1889">
+</span><span data-line="1890">    <span class="k">return</span> <span class="n">guard</span><span class="o">.</span><span class="n">tick</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span></div>
 
-</span><span data-line="1878">
-</span><span data-line="1879">
+</span><span data-line="1891">
+</span><span data-line="1892">
 <div class="viewcode-block" id="reap">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.reap">[docs]</a>
-</span><span data-line="1880"><span class="k">def</span><span class="w"> </span><span class="nf">reap</span><span class="p">(</span>
-</span><span data-line="1881">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1882">    <span class="n">apply</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1883">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1884">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1885"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1886"><span class="w">    </span><span class="sd">"""Which sessions the reaper would close, and why every other one is kept.</span>
-</span><span data-line="1887">
-</span><span data-line="1888"><span class="sd">    ``apply=True`` closes them (at most ``[guard] max_closes``), each re-verified first,</span>
-</span><span data-line="1889"><span class="sd">    with SIGTERM; the default only reports. See :mod:`crowsnest.guard` for the checks.</span>
-</span><span data-line="1890"><span class="sd">    """</span>
-</span><span data-line="1891">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
-</span><span data-line="1892">
-</span><span data-line="1893">    <span class="k">return</span> <span class="n">guard</span><span class="o">.</span><span class="n">reap</span><span class="p">(</span><span class="n">apply</span><span class="o">=</span><span class="n">apply</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span></div>
+</span><span data-line="1893"><span class="k">def</span><span class="w"> </span><span class="nf">reap</span><span class="p">(</span>
+</span><span data-line="1894">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1895">    <span class="n">apply</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1896">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1897">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1898"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1899"><span class="w">    </span><span class="sd">"""Which sessions the reaper would close, and why every other one is kept.</span>
+</span><span data-line="1900">
+</span><span data-line="1901"><span class="sd">    ``apply=True`` closes them (at most ``[guard] max_closes``), each re-verified first,</span>
+</span><span data-line="1902"><span class="sd">    with SIGTERM; the default only reports. See :mod:`crowsnest.guard` for the checks.</span>
+</span><span data-line="1903"><span class="sd">    """</span>
+</span><span data-line="1904">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
+</span><span data-line="1905">
+</span><span data-line="1906">    <span class="k">return</span> <span class="n">guard</span><span class="o">.</span><span class="n">reap</span><span class="p">(</span><span class="n">apply</span><span class="o">=</span><span class="n">apply</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span></div>
 
-</span><span data-line="1894">
-</span><span data-line="1895">
-</span><span data-line="1896"><span class="k">def</span><span class="w"> </span><span class="nf">_url_of</span><span class="p">(</span>
-</span><span data-line="1897">    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-</span><span data-line="1898"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="1899"><span class="w">    </span><span class="sd">"""The Remote Control link of the session running as ``pid``; it can register a</span>
-</span><span data-line="1900"><span class="sd">    moment after the session does, so this waits up to ``wait`` seconds for it."""</span>
-</span><span data-line="1901">    <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-</span><span data-line="1902">
-</span><span data-line="1903">    <span class="n">deadline</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">+</span> <span class="n">wait</span>
-</span><span data-line="1904">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-</span><span data-line="1905">        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
-</span><span data-line="1906">            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">pid</span> <span class="o">==</span> <span class="n">pid</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">session_url</span><span class="p">:</span>
-</span><span data-line="1907">                <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">session_url</span>
-</span><span data-line="1908">        <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">deadline</span><span class="p">:</span>
-</span><span data-line="1909">            <span class="k">return</span> <span class="s2">""</span>
-</span><span data-line="1910">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
-</span><span data-line="1911">
-</span><span data-line="1912">
-</span><span data-line="1913"><span class="k">def</span><span class="w"> </span><span class="nf">_no_gate</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">_</span><span class="p">):</span>
-</span><span data-line="1914"><span class="w">    </span><span class="sd">"""A restart replaces a session that died; it never adds one, so it is never refused."""</span>
+</span><span data-line="1907">
+</span><span data-line="1908">
+</span><span data-line="1909"><span class="k">def</span><span class="w"> </span><span class="nf">_url_of</span><span class="p">(</span>
+</span><span data-line="1910">    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+</span><span data-line="1911"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="1912"><span class="w">    </span><span class="sd">"""The Remote Control link of the session running as ``pid``; it can register a</span>
+</span><span data-line="1913"><span class="sd">    moment after the session does, so this waits up to ``wait`` seconds for it."""</span>
+</span><span data-line="1914">    <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 </span><span data-line="1915">
-</span><span data-line="1916">
-</span><span data-line="1917"><span class="k">def</span><span class="w"> </span><span class="nf">_close_stuck</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1918"><span class="w">    </span><span class="sd">"""End a tmux session left by a start that never registered, so the next can begin."""</span>
-</span><span data-line="1919">    <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
-</span><span data-line="1920">
-</span><span data-line="1921">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.spawn</span><span class="w"> </span><span class="kn">import</span> <span class="n">tmux_exact</span>
-</span><span data-line="1922">
-</span><span data-line="1923">    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"tmux"</span><span class="p">):</span>
-</span><span data-line="1924">        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-</span><span data-line="1925">            <span class="p">[</span><span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"kill-session"</span><span class="p">,</span> <span class="s2">"-t"</span><span class="p">,</span> <span class="n">tmux_exact</span><span class="p">(</span><span class="n">name</span><span class="p">)],</span>
-</span><span data-line="1926">            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="1927">            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span data-line="1928">        <span class="p">)</span>
+</span><span data-line="1916">    <span class="n">deadline</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">+</span> <span class="n">wait</span>
+</span><span data-line="1917">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span><span data-line="1918">        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">):</span>
+</span><span data-line="1919">            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">pid</span> <span class="o">==</span> <span class="n">pid</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">session_url</span><span class="p">:</span>
+</span><span data-line="1920">                <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">session_url</span>
+</span><span data-line="1921">        <span class="k">if</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">deadline</span><span class="p">:</span>
+</span><span data-line="1922">            <span class="k">return</span> <span class="s2">""</span>
+</span><span data-line="1923">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+</span><span data-line="1924">
+</span><span data-line="1925">
+</span><span data-line="1926"><span class="k">def</span><span class="w"> </span><span class="nf">_no_gate</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">_</span><span class="p">):</span>
+</span><span data-line="1927"><span class="w">    </span><span class="sd">"""A restart replaces a session that died; it never adds one, so it is never refused."""</span>
+</span><span data-line="1928">
 </span><span data-line="1929">
-</span><span data-line="1930">
+</span><span data-line="1930"><span class="k">def</span><span class="w"> </span><span class="nf">_close_stuck</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1931"><span class="w">    </span><span class="sd">"""End a tmux session left by a start that never registered, so the next can begin."""</span>
+</span><span data-line="1932">    <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+</span><span data-line="1933">
+</span><span data-line="1934">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.spawn</span><span class="w"> </span><span class="kn">import</span> <span class="n">tmux_exact</span>
+</span><span data-line="1935">
+</span><span data-line="1936">    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"tmux"</span><span class="p">):</span>
+</span><span data-line="1937">        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span><span data-line="1938">            <span class="p">[</span><span class="s2">"tmux"</span><span class="p">,</span> <span class="s2">"kill-session"</span><span class="p">,</span> <span class="s2">"-t"</span><span class="p">,</span> <span class="n">tmux_exact</span><span class="p">(</span><span class="n">name</span><span class="p">)],</span>
+</span><span data-line="1939">            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="1940">            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="1941">        <span class="p">)</span>
+</span><span data-line="1942">
+</span><span data-line="1943">
 <div class="viewcode-block" id="revive">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.revive">[docs]</a>
-</span><span data-line="1931"><span class="k">def</span><span class="w"> </span><span class="nf">revive</span><span class="p">(</span>
-</span><span data-line="1932">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="1933">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="1934">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span data-line="1935">    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1936">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1937">    <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="1938">    <span class="n">resume_within_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">168.0</span><span class="p">,</span>
-</span><span data-line="1939">    <span class="n">resume_prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_RESUME_PROMPT</span><span class="p">,</span>
-</span><span data-line="1940">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1941">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1942">    <span class="n">spawner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span data-line="1943"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="1944"><span class="w">    </span><span class="sd">"""Make sure a session named ``name`` runs -- the one it was, when that is possible.</span>
-</span><span data-line="1945">
-</span><span data-line="1946"><span class="sd">    For a watchdog. Already live: nothing is done. Otherwise the last session that went by</span>
-</span><span data-line="1947"><span class="sd">    the name (:func:`crowsnest.guard.last_session`), and that is not running under any</span>
-</span><span data-line="1948"><span class="sd">    other name, is resumed in its own folder when its transcript changed within</span>
-</span><span data-line="1949"><span class="sd">    ``resume_within_hours``. That keeps its Remote Control link -- a phone still open on</span>
-</span><span data-line="1950"><span class="sd">    it reconnects instead of facing a dead link -- and it is sent ``resume_prompt``. With</span>
-</span><span data-line="1951"><span class="sd">    nothing to resume, or a resume that never registers (its tmux session is then</span>
-</span><span data-line="1952"><span class="sd">    closed), a fresh session starts in ``cwd`` with ``prompt``; its new link is pushed to</span>
-</span><span data-line="1953"><span class="sd">    ``[guard] notify``. A restart is never refused by the memory gate: it replaces a</span>
-</span><span data-line="1954"><span class="sd">    session, it does not add one.</span>
-</span><span data-line="1955">
-</span><span data-line="1956"><span class="sd">    Returns ``{"action": "alive"|"resumed"|"fresh"|"failed", "name", "pid",</span>
-</span><span data-line="1957"><span class="sd">    "session_id", "session_url", "same_link"}``.</span>
-</span><span data-line="1958"><span class="sd">    """</span>
-</span><span data-line="1959">    <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-</span><span data-line="1960">
-</span><span data-line="1961">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
-</span><span data-line="1962">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard_settings</span>
-</span><span data-line="1963">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.spawn</span><span class="w"> </span><span class="kn">import</span> <span class="n">spawn</span> <span class="k">as</span> <span class="n">_spawn_session</span>
-</span><span data-line="1964">
-</span><span data-line="1965">    <span class="n">live</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">_local_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">guard</span><span class="o">.</span><span class="n">claude_alive</span><span class="p">)</span>
-</span><span data-line="1966">    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live</span><span class="p">:</span>
-</span><span data-line="1967">        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
-</span><span data-line="1968">            <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1969">                <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"alive"</span><span class="p">,</span>
-</span><span data-line="1970">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1971">                <span class="s2">"pid"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
-</span><span data-line="1972">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-</span><span data-line="1973">                <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">session_url</span><span class="p">,</span>
-</span><span data-line="1974">                <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="1975">            <span class="p">}</span>
-</span><span data-line="1976">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="1977">        <span class="n">push</span> <span class="o">=</span> <span class="n">guard_settings</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">notify</span>
-</span><span data-line="1978">    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-</span><span data-line="1979">        <span class="n">push</span> <span class="o">=</span> <span class="s2">""</span>  <span class="c1"># a broken [guard] table must not stop the lookout coming back</span>
-</span><span data-line="1980">    <span class="n">common</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="1981">        <span class="s2">"model"</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
-</span><span data-line="1982">        <span class="s2">"effort"</span><span class="p">:</span> <span class="n">effort</span><span class="p">,</span>
-</span><span data-line="1983">        <span class="s2">"home"</span><span class="p">:</span> <span class="n">home</span><span class="p">,</span>
-</span><span data-line="1984">        <span class="s2">"config"</span><span class="p">:</span> <span class="n">config</span><span class="p">,</span>
-</span><span data-line="1985">        <span class="s2">"spawner"</span><span class="p">:</span> <span class="n">spawner</span><span class="p">,</span>
-</span><span data-line="1986">        <span class="s2">"gate"</span><span class="p">:</span> <span class="n">_no_gate</span><span class="p">,</span>
-</span><span data-line="1987">    <span class="p">}</span>
-</span><span data-line="1988">    <span class="n">last</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">last_session</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="1989">    <span class="n">running</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live</span><span class="p">}</span>
-</span><span data-line="1990">    <span class="k">if</span> <span class="n">last</span> <span class="ow">and</span> <span class="n">last</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">running</span><span class="p">:</span>
-</span><span data-line="1991">        <span class="c1"># Alive under another name, or none: starting another would make two lookouts.</span>
-</span><span data-line="1992">        <span class="n">s</span> <span class="o">=</span> <span class="n">running</span><span class="p">[</span><span class="n">last</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">]]</span>
-</span><span data-line="1993">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="1994">            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"alive"</span><span class="p">,</span>
-</span><span data-line="1995">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="1996">            <span class="s2">"pid"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
-</span><span data-line="1997">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-</span><span data-line="1998">            <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">session_url</span><span class="p">,</span>
-</span><span data-line="1999">            <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="2000">        <span class="p">}</span>
-</span><span data-line="2001">    <span class="k">if</span> <span class="n">last</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">last</span><span class="p">[</span><span class="s2">"active_at"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">resume_within_hours</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">:</span>
-</span><span data-line="2002">        <span class="n">where</span> <span class="o">=</span> <span class="n">last</span><span class="p">[</span><span class="s2">"cwd"</span><span class="p">]</span> <span class="k">if</span> <span class="n">last</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">last</span><span class="p">[</span><span class="s2">"cwd"</span><span class="p">])</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="k">else</span> <span class="n">cwd</span>
-</span><span data-line="2003">        <span class="n">started</span> <span class="o">=</span> <span class="n">_spawn_session</span><span class="p">(</span>
-</span><span data-line="2004">            <span class="n">name</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">where</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="n">last</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span> <span class="n">prompt</span><span class="o">=</span><span class="n">resume_prompt</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span>
-</span><span data-line="2005">        <span class="p">)</span>
-</span><span data-line="2006">        <span class="k">if</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">]:</span>
-</span><span data-line="2007">            <span class="n">url</span> <span class="o">=</span> <span class="n">_url_of</span><span class="p">(</span><span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="2008">            <span class="n">same</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">same_link</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">last</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bridge_session_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
-</span><span data-line="2009">            <span class="k">if</span> <span class="n">url</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">same</span><span class="p">:</span>
-</span><span data-line="2010">                <span class="n">guard</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="n">push</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is back on a new link"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
-</span><span data-line="2011">            <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="2012">                <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"resumed"</span><span class="p">,</span>
-</span><span data-line="2013">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="2014">                <span class="s2">"pid"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span>
-</span><span data-line="2015">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
-</span><span data-line="2016">                <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
-</span><span data-line="2017">                <span class="s2">"same_link"</span><span class="p">:</span> <span class="n">same</span><span class="p">,</span>
-</span><span data-line="2018">            <span class="p">}</span>
-</span><span data-line="2019">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="2020">            <span class="n">_close_stuck</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-</span><span data-line="2021">    <span class="n">started</span> <span class="o">=</span> <span class="n">_spawn_session</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span><span class="p">)</span>
-</span><span data-line="2022">    <span class="k">if</span> <span class="ow">not</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">]:</span>
-</span><span data-line="2023">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="2024">            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"failed"</span><span class="p">,</span>
-</span><span data-line="2025">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="2026">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="2027">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="2028">            <span class="s2">"session_url"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="2029">            <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="2030">            <span class="s2">"how"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"how"</span><span class="p">],</span>
-</span><span data-line="2031">        <span class="p">}</span>
-</span><span data-line="2032">    <span class="n">url</span> <span class="o">=</span> <span class="n">_url_of</span><span class="p">(</span><span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
-</span><span data-line="2033">    <span class="n">guard</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span>
-</span><span data-line="2034">        <span class="n">push</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> restarted on a new link"</span><span class="p">,</span> <span class="n">url</span> <span class="ow">or</span> <span class="s2">"(no Remote Control link)"</span>
-</span><span data-line="2035">    <span class="p">)</span>
-</span><span data-line="2036">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="2037">        <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"fresh"</span><span class="p">,</span>
-</span><span data-line="2038">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
-</span><span data-line="2039">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span>
-</span><span data-line="2040">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
-</span><span data-line="2041">        <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
-</span><span data-line="2042">        <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="2043">    <span class="p">}</span></div>
+</span><span data-line="1944"><span class="k">def</span><span class="w"> </span><span class="nf">revive</span><span class="p">(</span>
+</span><span data-line="1945">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1946">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="1947">    <span class="n">cwd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="1948">    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1949">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1950">    <span class="n">effort</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="1951">    <span class="n">resume_within_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">168.0</span><span class="p">,</span>
+</span><span data-line="1952">    <span class="n">resume_prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_RESUME_PROMPT</span><span class="p">,</span>
+</span><span data-line="1953">    <span class="n">home</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1954">    <span class="n">config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1955">    <span class="n">spawner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="1956"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="1957"><span class="w">    </span><span class="sd">"""Make sure a session named ``name`` runs -- the one it was, when that is possible.</span>
+</span><span data-line="1958">
+</span><span data-line="1959"><span class="sd">    For a watchdog. Already live: nothing is done. Otherwise the last session that went by</span>
+</span><span data-line="1960"><span class="sd">    the name (:func:`crowsnest.guard.last_session`), and that is not running under any</span>
+</span><span data-line="1961"><span class="sd">    other name, is resumed in its own folder when its transcript changed within</span>
+</span><span data-line="1962"><span class="sd">    ``resume_within_hours``. That keeps its Remote Control link -- a phone still open on</span>
+</span><span data-line="1963"><span class="sd">    it reconnects instead of facing a dead link -- and it is sent ``resume_prompt``. With</span>
+</span><span data-line="1964"><span class="sd">    nothing to resume, or a resume that never registers (its tmux session is then</span>
+</span><span data-line="1965"><span class="sd">    closed), a fresh session starts in ``cwd`` with ``prompt``; its new link is pushed to</span>
+</span><span data-line="1966"><span class="sd">    ``[guard] notify``. A restart is never refused by the memory gate: it replaces a</span>
+</span><span data-line="1967"><span class="sd">    session, it does not add one.</span>
+</span><span data-line="1968">
+</span><span data-line="1969"><span class="sd">    Returns ``{"action": "alive"|"resumed"|"fresh"|"failed", "name", "pid",</span>
+</span><span data-line="1970"><span class="sd">    "session_id", "session_url", "same_link"}``.</span>
+</span><span data-line="1971"><span class="sd">    """</span>
+</span><span data-line="1972">    <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span data-line="1973">
+</span><span data-line="1974">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
+</span><span data-line="1975">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard_settings</span>
+</span><span data-line="1976">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.spawn</span><span class="w"> </span><span class="kn">import</span> <span class="n">spawn</span> <span class="k">as</span> <span class="n">_spawn_session</span>
+</span><span data-line="1977">
+</span><span data-line="1978">    <span class="n">live</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">_local_sessions</span><span class="p">(</span><span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">is_alive</span><span class="o">=</span><span class="n">guard</span><span class="o">.</span><span class="n">claude_alive</span><span class="p">)</span>
+</span><span data-line="1979">    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live</span><span class="p">:</span>
+</span><span data-line="1980">        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+</span><span data-line="1981">            <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="1982">                <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"alive"</span><span class="p">,</span>
+</span><span data-line="1983">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="1984">                <span class="s2">"pid"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
+</span><span data-line="1985">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="1986">                <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">session_url</span><span class="p">,</span>
+</span><span data-line="1987">                <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="1988">            <span class="p">}</span>
+</span><span data-line="1989">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="1990">        <span class="n">push</span> <span class="o">=</span> <span class="n">guard_settings</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">notify</span>
+</span><span data-line="1991">    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+</span><span data-line="1992">        <span class="n">push</span> <span class="o">=</span> <span class="s2">""</span>  <span class="c1"># a broken [guard] table must not stop the lookout coming back</span>
+</span><span data-line="1993">    <span class="n">common</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="1994">        <span class="s2">"model"</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
+</span><span data-line="1995">        <span class="s2">"effort"</span><span class="p">:</span> <span class="n">effort</span><span class="p">,</span>
+</span><span data-line="1996">        <span class="s2">"home"</span><span class="p">:</span> <span class="n">home</span><span class="p">,</span>
+</span><span data-line="1997">        <span class="s2">"config"</span><span class="p">:</span> <span class="n">config</span><span class="p">,</span>
+</span><span data-line="1998">        <span class="s2">"spawner"</span><span class="p">:</span> <span class="n">spawner</span><span class="p">,</span>
+</span><span data-line="1999">        <span class="s2">"gate"</span><span class="p">:</span> <span class="n">_no_gate</span><span class="p">,</span>
+</span><span data-line="2000">    <span class="p">}</span>
+</span><span data-line="2001">    <span class="n">last</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">last_session</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="2002">    <span class="n">running</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">live</span><span class="p">}</span>
+</span><span data-line="2003">    <span class="k">if</span> <span class="n">last</span> <span class="ow">and</span> <span class="n">last</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">running</span><span class="p">:</span>
+</span><span data-line="2004">        <span class="c1"># Alive under another name, or none: starting another would make two lookouts.</span>
+</span><span data-line="2005">        <span class="n">s</span> <span class="o">=</span> <span class="n">running</span><span class="p">[</span><span class="n">last</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">]]</span>
+</span><span data-line="2006">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="2007">            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"alive"</span><span class="p">,</span>
+</span><span data-line="2008">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="2009">            <span class="s2">"pid"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
+</span><span data-line="2010">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="2011">            <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">session_url</span><span class="p">,</span>
+</span><span data-line="2012">            <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="2013">        <span class="p">}</span>
+</span><span data-line="2014">    <span class="k">if</span> <span class="n">last</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">last</span><span class="p">[</span><span class="s2">"active_at"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">resume_within_hours</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">:</span>
+</span><span data-line="2015">        <span class="n">where</span> <span class="o">=</span> <span class="n">last</span><span class="p">[</span><span class="s2">"cwd"</span><span class="p">]</span> <span class="k">if</span> <span class="n">last</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cwd"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">last</span><span class="p">[</span><span class="s2">"cwd"</span><span class="p">])</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="k">else</span> <span class="n">cwd</span>
+</span><span data-line="2016">        <span class="n">started</span> <span class="o">=</span> <span class="n">_spawn_session</span><span class="p">(</span>
+</span><span data-line="2017">            <span class="n">name</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">where</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="n">last</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span> <span class="n">prompt</span><span class="o">=</span><span class="n">resume_prompt</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span>
+</span><span data-line="2018">        <span class="p">)</span>
+</span><span data-line="2019">        <span class="k">if</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">]:</span>
+</span><span data-line="2020">            <span class="n">url</span> <span class="o">=</span> <span class="n">_url_of</span><span class="p">(</span><span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="2021">            <span class="n">same</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">same_link</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">last</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bridge_session_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+</span><span data-line="2022">            <span class="k">if</span> <span class="n">url</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">same</span><span class="p">:</span>
+</span><span data-line="2023">                <span class="n">guard</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span><span class="n">push</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is back on a new link"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+</span><span data-line="2024">            <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="2025">                <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"resumed"</span><span class="p">,</span>
+</span><span data-line="2026">                <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="2027">                <span class="s2">"pid"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span>
+</span><span data-line="2028">                <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
+</span><span data-line="2029">                <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+</span><span data-line="2030">                <span class="s2">"same_link"</span><span class="p">:</span> <span class="n">same</span><span class="p">,</span>
+</span><span data-line="2031">            <span class="p">}</span>
+</span><span data-line="2032">        <span class="k">if</span> <span class="n">spawner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="2033">            <span class="n">_close_stuck</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span><span data-line="2034">    <span class="n">started</span> <span class="o">=</span> <span class="n">_spawn_session</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="o">**</span><span class="n">common</span><span class="p">)</span>
+</span><span data-line="2035">    <span class="k">if</span> <span class="ow">not</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">]:</span>
+</span><span data-line="2036">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="2037">            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"failed"</span><span class="p">,</span>
+</span><span data-line="2038">            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="2039">            <span class="s2">"pid"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="2040">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="2041">            <span class="s2">"session_url"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="2042">            <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="2043">            <span class="s2">"how"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"how"</span><span class="p">],</span>
+</span><span data-line="2044">        <span class="p">}</span>
+</span><span data-line="2045">    <span class="n">url</span> <span class="o">=</span> <span class="n">_url_of</span><span class="p">(</span><span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span> <span class="n">home</span><span class="o">=</span><span class="n">home</span><span class="p">)</span>
+</span><span data-line="2046">    <span class="n">guard</span><span class="o">.</span><span class="n">notify</span><span class="p">(</span>
+</span><span data-line="2047">        <span class="n">push</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> restarted on a new link"</span><span class="p">,</span> <span class="n">url</span> <span class="ow">or</span> <span class="s2">"(no Remote Control link)"</span>
+</span><span data-line="2048">    <span class="p">)</span>
+</span><span data-line="2049">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="2050">        <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"fresh"</span><span class="p">,</span>
+</span><span data-line="2051">        <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+</span><span data-line="2052">        <span class="s2">"pid"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"pid"</span><span class="p">],</span>
+</span><span data-line="2053">        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">started</span><span class="p">[</span><span class="s2">"session_id"</span><span class="p">],</span>
+</span><span data-line="2054">        <span class="s2">"session_url"</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+</span><span data-line="2055">        <span class="s2">"same_link"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="2056">    <span class="p">}</span></div>
 
-</span><span data-line="2044">
-</span><span data-line="2045">
+</span><span data-line="2057">
+</span><span data-line="2058">
 <div class="viewcode-block" id="guard_units">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.tools.html#crowsnest.guard_units">[docs]</a>
-</span><span data-line="2046"><span class="k">def</span><span class="w"> </span><span class="nf">guard_units</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="2047"><span class="w">    </span><span class="sd">"""The systemd units that run the guard, rendered for this machine; written to ``to``</span>
-</span><span data-line="2048"><span class="sd">    (a directory, e.g. ``/etc/systemd/system``) when given."""</span>
-</span><span data-line="2049">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
-</span><span data-line="2050">
-</span><span data-line="2051">    <span class="n">rendered</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">units</span><span class="p">()</span>
-</span><span data-line="2052">    <span class="n">written</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="2053">    <span class="k">if</span> <span class="n">to</span><span class="p">:</span>
-</span><span data-line="2054">        <span class="k">for</span> <span class="n">unit</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">rendered</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span data-line="2055">            <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">to</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">unit</span>
-</span><span data-line="2056">            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-</span><span data-line="2057">            <span class="n">written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
-</span><span data-line="2058">    <span class="k">return</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="n">rendered</span><span class="p">,</span> <span class="s2">"written"</span><span class="p">:</span> <span class="n">written</span><span class="p">}</span></div>
+</span><span data-line="2059"><span class="k">def</span><span class="w"> </span><span class="nf">guard_units</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="2060"><span class="w">    </span><span class="sd">"""The systemd units that run the guard, rendered for this machine; written to ``to``</span>
+</span><span data-line="2061"><span class="sd">    (a directory, e.g. ``/etc/systemd/system``) when given."""</span>
+</span><span data-line="2062">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest</span><span class="w"> </span><span class="kn">import</span> <span class="n">guard</span>
+</span><span data-line="2063">
+</span><span data-line="2064">    <span class="n">rendered</span> <span class="o">=</span> <span class="n">guard</span><span class="o">.</span><span class="n">units</span><span class="p">()</span>
+</span><span data-line="2065">    <span class="n">written</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="2066">    <span class="k">if</span> <span class="n">to</span><span class="p">:</span>
+</span><span data-line="2067">        <span class="k">for</span> <span class="n">unit</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">rendered</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="2068">            <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">to</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span> <span class="o">/</span> <span class="n">unit</span>
+</span><span data-line="2069">            <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="2070">            <span class="n">written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+</span><span data-line="2071">    <span class="k">return</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="n">rendered</span><span class="p">,</span> <span class="s2">"written"</span><span class="p">:</span> <span class="n">written</span><span class="p">}</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -2313,7 +2326,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=9cebf393"></script>
+      <script src="../../_static/documentation_options.js?v=ab1379f9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

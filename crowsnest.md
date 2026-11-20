@@ -1,4 +1,4 @@
-> built 2026-11-20 12:44 UTC from b90397d (main) · crowsnest 0.0.115. Details: build_info.json
+> built 2026-11-20 16:32 UTC from 8fc2f6b (main) · crowsnest 0.0.116. Details: build_info.json
 
 # index.html.md
 
@@ -7003,7 +7003,7 @@ with SIGTERM; the default only reports. See [`crowsnest.guard`](_autosummary/cro
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
-### crowsnest.tools.recap(session, , home=None, all_homes=False, config=None, digests_store=None)
+### crowsnest.tools.recap(session, , home=None, all_homes=False, config=None, digests_store=None, text_limit=None)
 
 Five lines about one live session, read from disk: the answer to a `recap` intent.
 
@@ -7012,6 +7012,11 @@ and openloops’ digest (`digests_store` is [`brief()`](_autosummary/crowsnest.t
 nothing and costs it no turn, which is the difference from an `ask`. Every line is
 already through the page’s sanitiser, because the watcher writes them into the page’s
 `db`. Raises `KeyError` when no live session matches, as [`resolve()`](_autosummary/crowsnest.tools.html.md#crowsnest.tools.resolve) does.
+
+`text_limit` is how long one line may be: the page’s
+[`crowsnest.live.RECAP_TEXT_LIMIT`](_autosummary/crowsnest.live.html.md#crowsnest.live.RECAP_TEXT_LIMIT) by default (the `db` anyone with the page
+can read); a reader the owner alone sees, such as the claude.ai connector, may ask for
+more, and a clipped line still ends on a whole sentence.
 
 Returns `{"session", "lines", "made_at"}`, `session` being its sanitised address.
 
@@ -8092,16 +8097,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-20 12:44 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/b90397d6709d58a9c9de271fa8426a0c0df0bd5a"><code>b90397d</code></a> on branch <code>main</code>, for **crowsnest 0.0.115** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-20 16:32 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42"><code>8fc2f6b</code></a> on branch <code>main</code>, for **crowsnest 0.0.116** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.116) is behind the latest release on PyPI (0.0.117): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/b90397d6709d58a9c9de271fa8426a0c0df0bd5a"><code>b90397d6709d58a9c9de271fa8426a0c0df0bd5a</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42"><code>8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -8112,9 +8119,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44738085665">44738085665</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44773966052">44773966052</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>b90397d6709d58a9c9de271fa8426a0c0df0bd5a</code> (in the history of the built commit) |
+| Event commit | <code>8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8139,13 +8146,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.115/">0.0.115</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.117/">0.0.117</a>, newer than the documented version (0.0.116).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout b90397d6709d58a9c9de271fa8426a0c0df0bd5a
+git checkout 8fc2f6b197b4b84a42d50ccaf1e6ba67ce53ee42
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
