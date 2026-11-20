@@ -442,10 +442,22 @@ def on_default_branch(
 
 
 def _worktrees(repo: Path) -> list[str]:
-    lines = _git(["worktree", "list", "--porcelain"], cwd=repo).splitlines()
-    return [
-        line.removeprefix("worktree ") for line in lines if line.startswith("worktree ")
-    ]
+    """The repository's worktrees, less the ones git calls *prunable*.
+
+    A prunable worktree's checkout is gone (a temp-dir cleaner can leave its folders and
+    take its ``.git`` file), so it holds no work to lose and git cannot open it; asking
+    would raise and keep every session that touched the repository. Its branch, if it
+    had one, is still read by :func:`unlanded`'s branch pass.
+    """
+    out: list[str] = []
+    for block in _git(["worktree", "list", "--porcelain"], cwd=repo).split("\n\n"):
+        lines = block.splitlines()
+        if not lines or not lines[0].startswith("worktree "):
+            continue
+        if any(line == "prunable" or line.startswith("prunable ") for line in lines):
+            continue
+        out.append(lines[0].removeprefix("worktree "))
+    return out
 
 
 def _active_since(worktree: str, since: float) -> bool:

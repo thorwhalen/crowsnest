@@ -792,6 +792,15 @@ def test_a_dirty_subagent_worktree_nobody_named_is_found(repo):
     assert any("agent-1" in r for r in found)
 
 
+def test_a_prunable_worktree_whose_checkout_is_gone_is_skipped(repo, tmp_path):
+    """A temp cleaner took the worktree's ``.git`` file and left its folders: git calls
+    it prunable and cannot open it, so it must not make the check raise."""
+    gone = tmp_path / "scratch" / "wt"
+    _git("worktree", "add", "-q", "--detach", str(gone), cwd=repo)
+    (gone / ".git").unlink()
+    assert guard.unlanded([str(repo)], since=time.time() - 60) == []
+
+
 def test_an_old_untouched_worktree_is_not_this_sessions_work(repo, tmp_path):
     other = tmp_path / "old-wt"
     _git("worktree", "add", "-q", "--detach", str(other), cwd=repo)
