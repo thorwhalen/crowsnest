@@ -287,7 +287,7 @@ def test_a_record_from_another_os_spare_or_parked_has_no_socket(tmp_path):
 
 
 def test_a_linux_record_from_another_boot_has_no_socket(tmp_path, monkeypatch):
-    import crowsnest.registry as registry
+    from crowsnest import registry
 
     monkeypatch.setattr(registry.sys, "platform", "linux")
     monkeypatch.setattr(registry, "_pid_domain", lambda: "linux:boot1:pid:[1]")
