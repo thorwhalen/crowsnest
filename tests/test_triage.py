@@ -614,3 +614,37 @@ def test_a_status_token_in_the_free_part_is_still_not_an_all_clear():
     """Only the structured field has a vocabulary; prose keeps the stricter rules."""
     found = classify_row(_row(), ledger=_ledger("## 2026-11-19 — wrap\n\ndone\n"))
     assert found["group"] == "unclassified"
+
+
+# --------------------------------------------------------------------------------------
+# The structured fields are the session's latest word
+
+
+_OLD_ASK = "## 2026-11-19\n\n- Next: one manual-task issue; then stop and discuss with the user before building.\n"
+
+
+def test_an_explicit_none_and_a_done_state_withdraw_an_older_free_text_ask():
+    """`open questions: - none` plus `state: done ...` is the session saying it needs nothing."""
+    found = classify_row(
+        _row(),
+        ledger=_ledger(
+            _OLD_ASK,
+            open_questions="- none",
+            state="done — v1 landed; next slices are #62/#63",
+        ),
+    )
+    assert found["group"] != "needs_you"
+
+
+def test_an_explicit_none_without_a_status_token_keeps_the_free_text_ask():
+    found = classify_row(
+        _row(), ledger=_ledger(_OLD_ASK, open_questions="- none", state="working on it")
+    )
+    assert found["group"] == "needs_you"
+
+
+def test_an_empty_open_questions_field_withdraws_nothing():
+    found = classify_row(
+        _row(), ledger=_ledger(_OLD_ASK, state="done — merged, CI green")
+    )
+    assert found["group"] == "needs_you"

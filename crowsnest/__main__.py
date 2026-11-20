@@ -1392,14 +1392,19 @@ def recap(
     home: str | None = None,
     all_homes: bool = False,
     json: bool = False,
+    limit: int = 0,
 ):
     """Five lines about one session, read from disk, without costing it a turn.
 
     Its status, what it was asked last and what it said last (each with its own time),
     what is in flight, and openloops' digest. Every line is sanitised as the report page
     sanitises it: this is what a watcher writes as the answer to the page's Recap.
+    `--limit N` lets a line run to N characters instead of the page's 200 (a long
+    reply, read to its owner alone); a clipped line still ends on a whole sentence.
     """
-    result = tools.recap(session, home=home, all_homes=all_homes)
+    result = tools.recap(
+        session, home=home, all_homes=all_homes, text_limit=limit or None
+    )
     if json:
         return _json.dumps(result, indent=2, ensure_ascii=False)
     return "\n".join(result["lines"])

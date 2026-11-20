@@ -963,7 +963,8 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
     page = _page_of(ledger.get("free"), owner)
     free = page.shown
 
-    asked = _substantive(fields.get("open_questions"))
+    raw_asked = str(fields.get("open_questions") or "").strip()
+    asked = _substantive(raw_asked)
     if asked and _opens_with_nothing(asked):
         asked = ""  # "- none for the user yet; ..." answers the field with nothing
     if asked:
@@ -978,7 +979,35 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
             asks=(Ask(asked, said_at, basis),),
         )
 
-    requests = _requests(page, owner)
+    # Being finished is read only from what the session said LAST. See the module
+    # docstring: an all-clear in the middle of an append-only file is a report about
+    # Monday, and today is not Monday.
+    state = str(fields.get("state") or "")
+    # The old rule first, so a verdict it already made keeps its reason, and with it the
+    # attention revision (a changed reason would resurface the item). A status token's
+    # reason is the whole field: the evidence is the point.
+    prose = _is_a_real_all_clear(state)
+    stated = prose or _stated_status(state)
+
+    def closed_by_state() -> Verdict:
+        said_at, basis = _written(ledger)
+        return Verdict(
+            "safe_to_close",
+            reason=_one_line(stated.group(0) if prose else state),
+            source="ledger:state",
+            said_at=said_at,
+            said_at_basis=basis,
+        )
+
+    # A session that answered ``open questions`` with "none" AND put a status token in
+    # ``state`` has withdrawn every ask in its free part: the two fields are its latest
+    # word, and an older "stop and discuss with the user" line is a report about Monday.
+    # Whether it is also safe to close is still the token's evidence's call (below).
+    withdrawn = bool(raw_asked and not asked and _STATE_TOKEN.match(state))
+    if withdrawn and stated:
+        return closed_by_state()
+
+    requests = [] if withdrawn else _requests(page, owner)
     if requests:
         first = requests[0]
         return Verdict(
@@ -990,24 +1019,8 @@ def from_ledger(row: Mapping, ledger: Mapping, *, owner: str = "") -> Verdict | 
             asks=_asks(page, requests, ledger),
         )
 
-    # Being finished is read only from what the session said LAST. See the module
-    # docstring: an all-clear in the middle of an append-only file is a report about
-    # Monday, and today is not Monday.
-    state = str(fields.get("state") or "")
-    # The old rule first, so a verdict it already made keeps its reason, and with it the
-    # attention revision (a changed reason would resurface the item). A status token's
-    # reason is the whole field: the evidence is the point.
-    prose = _is_a_real_all_clear(state)
-    stated = prose or _stated_status(state)
     if stated:
-        said_at, basis = _written(ledger)
-        return Verdict(
-            "safe_to_close",
-            reason=_one_line(stated.group(0) if prose else state),
-            source="ledger:state",
-            said_at=said_at,
-            said_at_basis=basis,
-        )
+        return closed_by_state()
     latest = latest_section(free)
     ending = _is_a_real_all_clear(latest)
     if ending:
