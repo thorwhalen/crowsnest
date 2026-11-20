@@ -738,9 +738,13 @@ def test_a_no_over_a_list_and_prose_after_a_blank_line(state):
 
 @pytest.mark.parametrize(
     "state",
-    ["done — no PRs, CI running", "done — no tests yet, but PR open", "done — no docs or tests yet",
-     "done — no blockers or questions and PR open",
-     "done — no blockers or questions, PR open"],
+    [
+        "done — no PRs, CI running",
+        "done — no tests yet, but PR open",
+        "done — no docs or tests yet",
+        "done — no blockers or questions and PR open",
+        "done — no blockers or questions, PR open",
+    ],
 )
 def test_a_no_answers_only_its_own_list(state):
     assert classify_row(_row(), ledger=_ledger(state=state))["group"] != "safe_to_close"
