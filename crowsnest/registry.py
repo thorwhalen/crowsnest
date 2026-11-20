@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
@@ -158,6 +159,10 @@ class LiveSession:
     #: posted (:mod:`crowsnest.switchboard`); ``''`` when it has none (bare mode, an older
     #: Claude Code) or the record comes from another machine, whose socket is not here.
     socket: str = ""
+    #: When the process started, as Claude Code recorded it (``procStart``: a UTC date
+    #: like ``ps -o lstart`` prints on macOS, clock ticks since boot on Linux), so a
+    #: reused pid can be told from the session that registered it.
+    proc_start: str = ""
 
     @property
     def session_url(self) -> str:
@@ -220,8 +225,27 @@ def _session(rec: dict, *, home: Path, home_name: str = "") -> LiveSession | Non
         transcript=str(transcript_path(str(cwd), str(session_id), home=home)),
         home=home_name,
         bridge_session_id=str(rec.get("bridgeSessionId") or ""),
-        socket=str(rec.get("messagingSocketPath") or ""),
+        socket=_socket_of(rec),
+        proc_start=str(rec.get("procStart") or ""),
     )
+
+
+def _socket_of(rec: dict) -> str:
+    """The record's inbox socket, or ``''`` when it cannot be this machine's live inbox:
+    a spare or parked session (Claude Code skips those too), or a record whose pid domain
+    names another operating system (a synced copy of another machine's home).
+
+    >>> _socket_of({'messagingSocketPath': '/s', 'pidDomain': 'nowhere:1'})
+    ''
+    >>> _socket_of({'messagingSocketPath': '/s', 'spare': True})
+    ''
+    """
+    if rec.get("spare") or rec.get("parkedJobId"):
+        return ""
+    domain = str(rec.get("pidDomain") or "")
+    if domain and domain.split(":", 1)[0] != sys.platform:
+        return ""
+    return str(rec.get("messagingSocketPath") or "")
 
 
 def _rank(session: LiveSession) -> tuple[int, float]:

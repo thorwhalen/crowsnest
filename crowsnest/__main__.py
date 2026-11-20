@@ -1034,6 +1034,8 @@ def courier(
     on it answers with `crowsnest intent answer`.
     """
     moved = tools.courier(remote=remote, home=home, all_homes=all_homes)
+    if moved.get("locked"):
+        return "courier: another tick is carrying this store; nothing done"
     return (
         f"courier: {moved['imported']} in, {moved['exported']} out, "
         f"{moved['answered']} answered, {moved['handed']} handed to a session"
@@ -1205,7 +1207,13 @@ def tell(
         home=home,
         all_homes=all_homes,
     )
-    return f"told {sent['to']} ({sent['status']}), as {sent['sender']}"
+    said = f"told {sent['to']} ({sent['status']}), as {sent['sender']}"
+    if sent["inbound"] != "accept":
+        said += (
+            f"; its home's crossSessionInbound is {sent['inbound'] or 'unset'}, so it may "
+            "hold the message for its person's approval"
+        )
+    return said
 
 
 def log(

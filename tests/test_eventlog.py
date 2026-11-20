@@ -33,6 +33,19 @@ def write(path, *records):
             f.write((r if isinstance(r, str) else json.dumps(r)) + "\n")
 
 
+def test_retired_files_are_ordered_by_when_they_were_retired(tmp_path):
+    log = tmp_path / "events.jsonl"
+    later, earlier = (
+        tmp_path / "events-20261101T100000-1.jsonl",
+        tmp_path / "events-20261101T100000.jsonl",
+    )
+    write(later, {"event": "stop", "name": "second"})
+    write(earlier, {"event": "stop", "name": "first"})
+    os.utime(earlier, (1_700_000_000, 1_700_000_000))
+    os.utime(later, (1_700_000_100, 1_700_000_100))
+    assert [r["name"] for r in eventlog.read(events_path=log)] == ["first", "second"]
+
+
 def test_it_reads_across_retired_files_oldest_first_and_skips_bad_lines(tmp_path):
     log = tmp_path / "events.jsonl"
     write(
@@ -44,6 +57,8 @@ def test_it_reads_across_retired_files_oldest_first_and_skips_bad_lines(tmp_path
         "{torn",
         {"event": "stop", "at": "2026-11-10T00:00:00Z", "name": "mid"},
     )
+    os.utime(tmp_path / "events-20261101T000000.jsonl", (1_700_000_000, 1_700_000_000))
+    os.utime(tmp_path / "events-20261110T000000.jsonl", (1_700_100_000, 1_700_100_000))
     write(log, [1, 2], {"event": "message", "at": "2026-11-20T00:00:00Z", "name": "new"})
     write(tmp_path / "other-20261101T000000.jsonl", {"event": "x", "name": "foreign"})
     assert [r["name"] for r in eventlog.read(events_path=log)] == ["old", "mid", "new"]
@@ -131,9 +146,8 @@ def test_record_changes_keeps_a_baseline_then_writes_each_change_once(tmp_path):
     lines = [json.loads(x) for x in log.read_text().splitlines()]
     assert [x["event"] for x in lines] == ["idle", "exited"]
     assert lines[0]["source"] == "registry" and lines[0]["name"] == "a"
-    assert lines[0]["at"] == eventlog._iso(
-        A.status_since
-    )  # the registry's time, not the tick's
+    assert lines[0]["status_at"] == eventlog._iso(A.status_since)  # the registry's time
+    assert lines[0]["at"] > lines[0]["status_at"]  # ...while `at` is when it was written
     assert "kind" not in lines[0]
 
 

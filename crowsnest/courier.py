@@ -35,7 +35,9 @@ import shlex
 import shutil
 import uuid
 from collections.abc import Callable, Iterable, Mapping
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 from pathlib import Path
 
 from crowsnest.live import publishable
@@ -99,6 +101,7 @@ NO_SUCH_SESSION = "no recap: that session is not on the roster"
 AMBIGUOUS_SESSION = "no recap: that name belongs to more than one session"
 REFRESHED = "the page is republished every minute: reload it for the newest"
 UNKNOWN_KIND = "not something this page can ask for"
+ROUTE_FAILED = "could not be delivered: the courier's log on that machine says why"
 STATE_FILE = ".courier.json"
 
 Copy = Callable[[str, str, str], None]
@@ -249,6 +252,63 @@ def _one_line(text: str, limit: int = ANSWER_LIMIT) -> str:
 # One tick
 
 
+#: The lock file a tick holds in its mirror, so two ticks never carry one store at once.
+LOCK_FILE = ".tick.lock"
+
+
+@contextmanager
+def _locked(mirror: Path):
+    """Hold ``mirror``'s tick lock while the block runs; yield whether it was taken.
+
+    Without ``fcntl`` (not POSIX) there is no lock to take, and the block runs as before.
+    """
+    try:
+        import fcntl
+    except ImportError:
+        yield True
+        return
+    with (mirror / LOCK_FILE).open("a") as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            yield False
+            return
+        try:
+            yield True
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def _one_at_a_time(func):
+    """Run a tick only when no other tick holds its mirror (launchd or cron, plus a tick
+    run by hand, would otherwise carry one queued intent twice). A tick that finds the
+    lock held does nothing and says so: ``{"locked": 1}`` with every count at zero."""
+
+    @wraps(func)
+    def run(remote: str, *, mirror: str | Path | None = None, **options) -> dict:
+        where = Path(mirror).expanduser() if mirror else dflt_mirror()
+        where.mkdir(parents=True, exist_ok=True)
+        with _locked(where) as taken:
+            if not taken:
+                return {key: 0 for key in SUMMARY_KEYS} | {"locked": 1}
+            return func(remote, mirror=where, **options)
+
+    return run
+
+
+#: The counts every tick's summary carries.
+SUMMARY_KEYS = (
+    "imported",
+    "exported",
+    "answered",
+    "handed",
+    "skipped",
+    "delivered",
+    "held",
+)
+
+
+@_one_at_a_time
 def tick(
     remote: str,
     *,
@@ -266,7 +326,7 @@ def tick(
     hold: timedelta = DFLT_HOLD,
     record_registry: bool = False,
     find: Callable[[str], object] | None = None,
-    deliver: Callable[[str, str], None] | None = None,
+    deliver: Callable | None = None,
     record: Callable[..., int] | None = None,
 ) -> dict:
     """Carry the console store at ``remote`` both ways once; the summary of what moved.
@@ -286,8 +346,8 @@ def tick(
       waiting, for at most ``hold``. A ``start``, an intent for a session that is gone
       or has no inbox here, and one held past ``hold`` go to the watching session as
       before. ``find`` resolves a name to a live session (default
-      :func:`crowsnest.tools.resolve` over this tick's homes) and ``deliver`` is the
-      switchboard's transport.
+      :func:`exact_session` over this tick's homes: a whole name or id, never a
+      prefix) and ``deliver`` is the switchboard's transport, ``(session, text)``.
     - ``record_registry`` appends the registry's changes to the event log
       (:func:`crowsnest.eventlog.record_changes`, or ``record``).
     """
@@ -302,15 +362,7 @@ def tick(
     now = datetime.now(timezone.utc) if now is None else now
     stamp = _iso(now)
     state = _state(mirror)
-    summary = {
-        "imported": 0,
-        "exported": 0,
-        "answered": 0,
-        "handed": 0,
-        "skipped": 0,
-        "delivered": 0,
-        "held": 0,
-    }
+    summary = dict.fromkeys(SUMMARY_KEYS, 0)
 
     for collection in PULLED:
         copy(remote, str(mirror), collection)
@@ -339,11 +391,12 @@ def tick(
     if find is None:
 
         def find(name: str):
-            return tools.resolve(name, home=home, all_homes=all_homes, config=config)
+            return exact_session(name, home=home, all_homes=all_homes, config=config)
 
-    # Intents: answer what disk can answer, hand the rest to a session.
-    for intent, doc, path in _docs(mirror, "intents"):
-        if doc.get("status", "queued") == "handed" and doc.get("delivery") == PENDING:
+    def route(intent: str, doc: dict, path: Path) -> None:
+        # One intent at a time: a document that breaks routing fails alone, and the
+        # tick still writes the heartbeat, the live roster and the push-back.
+        try:
             routed = _route(
                 intent,
                 doc,
@@ -353,9 +406,28 @@ def tick(
                 find=find,
                 deliver=deliver,
                 events_path=events_path,
+                all_homes=all_homes,
             )
-            summary[routed["counted"]] += 1
-            _write(path, routed["doc"])
+        except Exception as exc:  # noqa: BLE001
+            from crowsnest.hook import _log
+
+            _log(f"courier: intent {intent} could not be routed: {exc!r}")
+            routed = {
+                "doc": {
+                    **doc,
+                    "status": "failed",
+                    "answer": ROUTE_FAILED,
+                    "answered_at": stamp,
+                },
+                "counted": "answered",
+            }
+        summary[routed["counted"]] += 1
+        _write(path, routed["doc"])
+
+    # Intents: answer what disk can answer, hand the rest to a session.
+    for intent, doc, path in _docs(mirror, "intents"):
+        if doc.get("status", "queued") == "handed" and doc.get("delivery") == PENDING:
+            route(intent, doc, path)
             continue
         if doc.get("status", "queued") != "queued":
             continue
@@ -376,18 +448,7 @@ def tick(
             reply, status = REFRESHED, "done"
             summary["answered"] += 1
         elif kind in DELIVERED and deliver_intents:
-            routed = _route(
-                intent,
-                doc,
-                deliver_intents=deliver_intents,
-                hold=hold,
-                now=now,
-                find=find,
-                deliver=deliver,
-                events_path=events_path,
-            )
-            summary[routed["counted"]] += 1
-            _write(path, routed["doc"])
+            route(intent, doc, path)
             continue
         elif kind in HANDED:
             reply = f"handed to the crowsnest session at {stamp[11:16]} UTC"
@@ -411,9 +472,16 @@ def tick(
     if record_registry:
         if record is None:
             from crowsnest.eventlog import record_changes as record
-        summary["recorded"] = record(
-            home=home, all_homes=all_homes, config=config, events_path=events_path
-        )
+        try:
+            summary["recorded"] = record(
+                home=home, all_homes=all_homes, config=config, events_path=events_path
+            )
+        except Exception as exc:  # noqa: BLE001 -- the log is a side job of this tick
+            from crowsnest.hook import _log
+
+            _log(f"courier: the registry's changes were not recorded: {exc!r}")
+            summary["recorded"] = 0
+            summary["record_failed"] = 1
 
     # What the page paints between publishes.
     _write(
@@ -428,19 +496,78 @@ def tick(
     return summary
 
 
+#: What an ``ask`` with no text of its own asks: the status request the watcher used to
+#: send for one (the ``crowsnest-report`` skill's console section), so the page's Ask
+#: button, which sends none, still asks something.
+STATUS_REQUEST = (
+    "A status request from the crowsnest console: what are you working on, what are you "
+    "blocked on, and what do you need from your person?"
+)
+
+
 def _brief(intent: str, kind: str, text: str) -> str:
     """What a delivered intent says to its session: the request, and how to answer it.
 
     >>> print(_brief('20260201T120000Z-1a2b', 'ask', 'Is the build green?'))
     A question from the crowsnest console: Is the build green?
-    Answer it in one line the console shows: crowsnest intent answer 20260201T120000Z-1a2b "<your answer>"
+    Answer in at most five lines, as one line the console shows: crowsnest intent answer 20260201T120000Z-1a2b "<your answer>"
+    >>> _brief('x', 'ask', '  ').startswith(STATUS_REQUEST)
+    True
     """
-    head = "A question from the crowsnest console: " if kind == "ask" else ""
+    text = text.strip()
+    if kind == "ask":
+        text = (
+            f"A question from the crowsnest console: {text}" if text else STATUS_REQUEST
+        )
     return (
-        f"{head}{text.strip()}\n"
-        f"Answer it in one line the console shows: "
+        f"{text}\n"
+        f"Answer in at most five lines, as one line the console shows: "
         f'crowsnest intent answer {intent} "<your answer>"'
     )
+
+
+def exact_session(
+    name: str,
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+):
+    """The one live session whose whole name or whole id is ``name`` (``name@home`` with
+    ``all_homes``), else ``KeyError``.
+
+    Stricter than :func:`crowsnest.tools.resolve`, which a person uses and which takes a
+    unique prefix or a pid: an intent is delivered with nobody watching, and a page
+    published a minute ago may name a session that has since exited while another, whose
+    name it begins, lives on.
+    """
+    from crowsnest.tools import sessions
+
+    wanted, where = name.strip(), ""
+    if all_homes and "@" in wanted:
+        wanted, _, where = wanted.rpartition("@")
+    if not wanted:
+        raise KeyError("an intent names no session")
+    found = [
+        s
+        for s in sessions(home=home, all_homes=all_homes, config=config)
+        if (s.name == wanted or s.session_id == wanted) and (not where or s.home == where)
+    ]
+    if len(found) != 1:
+        raise KeyError(
+            f"{name!r} names {'no' if not found else 'more than one'} live session"
+        )
+    return found[0]
+
+
+def _since(value, fallback: datetime) -> datetime:
+    """A stored time, or ``fallback`` when it is missing, unreadable or naive: a page
+    document is written by whoever can open the page, and one bad field holds up no other."""
+    try:
+        moment = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return fallback
+    return moment if moment.tzinfo else fallback
 
 
 def _route(
@@ -451,16 +578,20 @@ def _route(
     hold: timedelta,
     now: datetime,
     find: Callable[[str], object],
-    deliver: Callable[[str, str], None] | None,
+    deliver: Callable | None,
     events_path: str | Path | None,
+    all_homes: bool = False,
 ) -> dict:
     """Where an ``ask`` or ``tell`` intent goes this tick: ``{"doc", "counted"}``.
 
-    Posted to its session when that session is live, has an inbox here and is idle;
-    held (``delivery: pending``) while it is busy or waiting, for at most ``hold`` from
-    when it was first held; handed to the watching session otherwise, which is also what
-    a held intent gets once the switch is turned off. ``counted`` names the summary's
-    counter: ``delivered``, ``held`` or ``handed``.
+    Posted to its session when :func:`exact_session` (``find``) finds it, its status
+    takes a message, and its home accepts messages from other sessions; held
+    (``delivery: pending``) while it is busy or waiting, for at most ``hold`` from when
+    it was first held; handed to the watching session otherwise (gone, no inbox here, a
+    home that would hold the message for approval, a failed post), and also once the
+    switch is turned off, so nothing held is stranded. ``counted`` names the summary's
+    counter: ``delivered``, ``held`` or ``handed``. Every answer the page shows goes
+    through its sanitiser.
     """
     from crowsnest import switchboard
     from crowsnest.hook import append_event
@@ -470,7 +601,11 @@ def _route(
     name = str(doc.get("session") or "")
     where = str(doc.get("home") or "")
     text = str(doc.get("text") or "")
-    held_since = doc.get("held_since") or stamp
+    held_since = _since(doc.get("held_since"), now)
+
+    def answered(reply: str, **fields) -> dict:
+        line = publishable(reply, limit=ANSWER_LIMIT)
+        return {**doc, "status": "handed", **fields, "answer": line, "answered_at": stamp}
 
     def to_watcher(why: str = "") -> dict:
         append_event(
@@ -484,21 +619,18 @@ def _route(
             events_path=events_path,
         )
         reply = f"handed to the crowsnest session at {stamp[11:16]} UTC"
-        out = {**doc, "status": "handed", "answer": reply, "answered_at": stamp}
-        if deliver_intents or doc.get("delivery"):
-            out["delivery"] = WATCHER
-            if why:
-                out["answer"] = _one_line(f"{reply} ({why})")
-        return {"doc": out, "counted": "handed"}
+        if why:
+            reply = f"{reply} ({why})"
+        return {"doc": answered(reply, delivery=WATCHER), "counted": "handed"}
 
     if not deliver_intents:
         return to_watcher()
     try:
-        target = find(f"{name}@{where}" if where else name)
+        target = find(f"{name}@{where}" if where and all_homes else name)
     except KeyError:
-        return to_watcher("no such live session to deliver to")
-    if not getattr(target, "socket", ""):
-        return to_watcher(f"{name} has no inbox on this machine")
+        return to_watcher("no live session of that name to deliver to")
+    if switchboard.inbound_of(target) != "accept":
+        return to_watcher(f"{target.label} would hold a message for approval")
     why = switchboard.deliverable(target)
     if not why:
         try:
@@ -510,27 +642,19 @@ def _route(
                 events_path=events_path,
                 extra={"intent": intent},
             )
-        except switchboard.Refused as exc:
-            why = str(exc)
-        else:
-            reply = f"delivered to {target.label} at {stamp[11:16]} UTC; no answer yet"
-            out = {**doc, "status": "handed", "delivery": POSTED, "answer": reply}
-            return {"doc": {**out, "answered_at": stamp}, "counted": "delivered"}
-    started = datetime.fromisoformat(str(held_since).replace("Z", "+00:00"))
-    if now - started >= hold:
+        except switchboard.Refused:
+            return to_watcher(f"{target.label}'s inbox did not take it")
+        reply = f"delivered to {target.label} at {stamp[11:16]} UTC; no answer yet"
+        return {"doc": answered(reply, delivery=POSTED), "counted": "delivered"}
+    if now - held_since >= hold:
         return to_watcher(f"{target.label} stayed {target.status}")
-    reply = _one_line(
+    reply = (
         f"held for {target.label}, which is {target.status}; tried at {stamp[11:16]} UTC"
     )
-    out = {
-        **doc,
-        "status": "handed",
-        "delivery": PENDING,
-        "held_since": held_since,
-        "answer": reply,
-        "answered_at": stamp,
+    return {
+        "doc": answered(reply, delivery=PENDING, held_since=_iso(held_since)),
+        "counted": "held",
     }
-    return {"doc": out, "counted": "held"}
 
 
 def hand(

@@ -1126,12 +1126,14 @@ def tell(
     """Message a live session through its inbox socket, from any session or process.
 
     ``session`` is resolved as :func:`resolve` does. A ``waiting`` session is refused, a
-    busy one unless ``busy_ok``, and one on another machine always
+    busy one unless ``busy_ok``, and one with no inbox here always
     (:func:`crowsnest.switchboard.tell`, which also writes the ``message`` event line).
-    ``deliver`` is the transport seam, ``(socket_path, text) -> None``.
+    ``deliver`` is the transport seam, ``(session, text) -> None``.
     """
     from crowsnest import switchboard
 
+    if not session.strip():
+        raise switchboard.Refused("name the session to tell")
     target = resolve(session, home=home, all_homes=all_homes, config=config)
     return switchboard.tell(
         target,

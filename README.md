@@ -388,10 +388,10 @@ Everything crowsnest learns lands in one append-only plain file, `~/.local/share
 |---|---|---|
 | `stop`, `notification`, `ask` | `crowsnest hook` | a turn ended; a session wants its person; a turn ended asking for something |
 | `intent` | the courier | a request from the page's console, handed to the watching session |
-| `started`, `exited`, `busy`, `idle`, `waiting`, `error` | the courier, with `[events] registry = true` | the registry changed (`source: "registry"`, plus `home` and `status`) |
+| `started`, `exited`, `busy`, `idle`, `waiting`, `error` | the courier, with `[events] registry = true` | the registry changed (`source: "registry"`, plus `home`, `status` and `status_at`, the registry's own time for it) |
 | `message` | `crowsnest tell`, the courier | a message was posted to a session (`from` says who sent it) |
 
-A reader ignores an event it does not know: new ones are added, never renamed. `crowsnest log` is the quick view, for you or for an agent about to message a session:
+`at` is always when the line was written, so the file is in time order. A reader ignores an event it does not know: new ones are added, never renamed. `crowsnest log` is the quick view, for you or for an agent about to message a session:
 
 ```bash
 crowsnest log                            # the last hour, one line each
@@ -400,7 +400,7 @@ crowsnest log --events message,ask --json
 crowsnest log --path                     # where the file is
 ```
 
-**Messaging from anywhere.** `crowsnest tell <session> --text "..."` (or the text on stdin) posts a message straight into a live session's inbox socket, the one Claude Code's own cross-session messaging uses, from any session, script or scheduler, at no model cost. It refuses a session that is waiting on its person, a busy one unless `--busy-ok`, and one on another machine, and it writes a `message` line to the log. Whether the session accepts the message is its own `crossSessionInbound` setting. Inside a session, Claude's `SendMessage` tool does the same and keeps a reply address; `crowsnest tell` is for everything else, and for messages that should be on the record.
+**Messaging from anywhere.** `crowsnest tell <session> --text "..."` (or the text on stdin) posts a message straight into a live session's inbox socket, the one Claude Code's own cross-session messaging uses, from any session, script or scheduler, at no model cost. It delivers to an idle session (a busy one with `--busy-ok`; never one waiting on its person), only after checking that the socket is held by the very process the registry names, so a reused pid never receives someone else's message, and it writes a `message` line to the log. A session on another machine has no socket here and is refused. Whether the session accepts the message is its own `crossSessionInbound` setting. Inside a session, Claude's `SendMessage` tool does the same and keeps a reply address; `crowsnest tell` is for everything else, and for messages that should be on the record.
 
 **Two switches, both off by default**, so a machine whose config says nothing behaves as it always did:
 
@@ -414,7 +414,7 @@ deliver_intents = true   # the courier posts an ask/tell intent to the session i
 hold_minutes = 60        # holding it while that session is busy or waiting, at most this long
 ```
 
-With `deliver_intents`, an intent reaches its session without a watching session in between. A `start`, an intent for a session that is gone or has no inbox here, and one held past `hold_minutes` still go to the watching session, as before.
+With `deliver_intents`, an intent reaches its session without a watching session in between: the session named exactly (never a prefix), and only when its home's `crossSessionInbound` is `accept`, since otherwise it would sit unapproved. An Ask with no text becomes a five-line status request. A `start`, an intent for a session that is gone or has no inbox here, and one held past `hold_minutes` still go to the watching session, as before.
 
 ## One walk, end to end
 

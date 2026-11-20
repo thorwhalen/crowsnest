@@ -20,12 +20,14 @@ by who writes them (:data:`EVENTS`):
 - the courier's minute tick (:mod:`crowsnest.courier`): ``intent``, a console request
   handed to the watching session; and, when ``[events] registry = true``, the registry's
   changes, written by :func:`record_changes`: ``started``, ``exited``, ``busy``,
-  ``idle``, ``waiting``, ``error`` (these also carry ``home``, ``status`` and
-  ``source: "registry"``);
+  ``idle``, ``waiting``, ``error`` (these also carry ``home``, ``status``,
+  ``status_at``, the registry's own time for the change, and ``source: "registry"``);
 - the switchboard (:mod:`crowsnest.switchboard`): ``message``, one per message
   delivered, with ``from`` and the target in ``name``.
 
 A reader must ignore an event it does not know: new ones are added, never renamed.
+``at`` is always when the line was written, so the file is in time order. A line has no
+id field: it is never rewritten, so its own bytes identify it.
 
 >>> import os, tempfile
 >>> where = tempfile.mkdtemp()
@@ -97,7 +99,16 @@ def files(events_path: str | Path | None = None) -> list[Path]:
     rotated = re.compile(
         rf"^{re.escape(current.stem)}-\d{{8}}T\d{{6}}(?:-\d+)?{re.escape(current.suffix)}$"
     )
-    retired = sorted(p for p in folder.iterdir() if rotated.match(p.name))
+    retired = []
+    for p in folder.iterdir():
+        if rotated.match(p.name):
+            try:
+                retired.append((p.stat().st_mtime, p.name, p))
+            except OSError:
+                continue
+    # By when each was retired (its last write), not by name: rotate's stamp is local
+    # time, and a tie-breaker suffix sorts before the plain name.
+    retired = [p for *_, p in sorted(retired)]
     return [*retired, *([current] if current.is_file() else [])]
 
 
@@ -281,8 +292,10 @@ def record_changes(
     The registry diff :func:`crowsnest.watch.diff` computes (started, exited, a status
     change), from the snapshot this function kept last time, so a scheduled tick (the
     courier's, once a minute) writes the half of the stream ``crowsnest watch`` used to
-    print and lose. The first call only keeps a baseline. A status change is stamped with
-    the registry's own time for it, not the tick's. ``snapshot`` and ``diff`` default to
+    print and lose. The first call only keeps a baseline. ``at`` is when the line was
+    written, so the file stays in time order and a reader's ``since`` cursor misses
+    nothing; ``status_at`` is the registry's own time for the change, up to a tick
+    earlier. ``snapshot`` and ``diff`` default to
     :func:`crowsnest.watch.snapshot` and :func:`crowsnest.watch.diff`, and exist so a test
     need not read real sessions.
     """
@@ -303,7 +316,7 @@ def record_changes(
             }
             current = after.get(event.get("session_id", ""))
             if event["event"] != "exited" and current and current.status_since:
-                event["at"] = _iso(current.status_since)
+                event["status_at"] = _iso(current.status_since)
             append_event(event, events_path=events_path)
             written += 1
     _save_snapshot(state, after)
