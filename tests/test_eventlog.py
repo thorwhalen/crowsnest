@@ -166,3 +166,39 @@ class _NoActivity:
     errored = False
     last_assistant_text = "done"
     last_user_prompt = ""
+
+
+def test_a_kept_snapshot_is_private_and_holds_only_what_the_diff_reads(tmp_path):
+    state = tmp_path / "state.json"
+    eventlog.record_changes(
+        snapshot=lambda **_: {"s1": A}, state_path=state, events_path=tmp_path / "e.jsonl"
+    )
+    kept = json.loads(state.read_text())["sessions"]["s1"]
+    assert set(kept) == set(eventlog.SNAPSHOT_FIELDS)
+    assert state.stat().st_mode & 0o077 == 0
+    assert eventlog._load_snapshot(state)["s1"].status == "busy"
+
+
+def test_records_carry_an_id_from_their_bytes(tmp_path):
+    log = tmp_path / "events.jsonl"
+    write(
+        log,
+        {"event": "stop", "name": "a"},
+        {"event": "stop", "name": "a"},
+        {"event": "x", "id": "mine"},
+    )
+    ids = [r["id"] for r in eventlog.read(events_path=log)]
+    assert ids[0] == ids[1] == eventlog.line_id(b'{"event": "stop", "name": "a"}')
+    assert ids[2] == "mine"
+
+
+def test_a_line_strips_terminal_escapes():
+    got = eventlog.line(
+        {
+            "event": "stop",
+            "at": "x",
+            "name": "a\x1b[31m",
+            "detail": "ok\x1b]52;c;aGk=\x07",
+        }
+    )
+    assert "\x1b" not in got and "\x07" not in got

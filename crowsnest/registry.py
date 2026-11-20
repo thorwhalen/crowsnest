@@ -163,6 +163,10 @@ class LiveSession:
     #: like ``ps -o lstart`` prints on macOS, clock ticks since boot on Linux), so a
     #: reused pid can be told from the session that registered it.
     proc_start: str = ""
+    #: Where that pid means anything (``pidDomain``: ``darwin``, or on Linux
+    #: ``linux:<boot id>:pid:[<namespace>]``), so a transport can tell this host's
+    #: sessions from a synced copy of another's.
+    pid_domain: str = ""
 
     @property
     def session_url(self) -> str:
@@ -227,40 +231,52 @@ def _session(rec: dict, *, home: Path, home_name: str = "") -> LiveSession | Non
         bridge_session_id=str(rec.get("bridgeSessionId") or ""),
         socket=_socket_of(rec),
         proc_start=str(rec.get("procStart") or ""),
+        pid_domain=str(rec.get("pidDomain") or ""),
     )
 
 
 def _socket_of(rec: dict) -> str:
-    """The record's inbox socket, or ``''`` when it cannot be this machine's live inbox:
-    a spare or parked session (Claude Code skips those too), or a record whose pid domain
-    names another operating system (a synced copy of another machine's home).
+    """The record's inbox socket, or ``''`` for a spare or parked session, which Claude
+    Code's own sender skips too. Whether the socket is reachable from here is the
+    transport's question (:func:`crowsnest.switchboard.socket_post`), not the record's.
 
-    >>> _socket_of({'messagingSocketPath': '/s', 'pidDomain': 'nowhere:1'})
-    ''
     >>> _socket_of({'messagingSocketPath': '/s', 'spare': True})
     ''
+    >>> _socket_of({'messagingSocketPath': '/s', 'pidDomain': 'linux:x'})
+    '/s'
     """
     if rec.get("spare") or rec.get("parkedJobId"):
         return ""
-    domain = str(rec.get("pidDomain") or "")
-    if domain and domain.split(":", 1)[0] != sys.platform:
-        return ""
-    here = _pid_domain()
-    if ":" in domain and here and domain != here:
-        return ""  # another boot, or another pid namespace, of this same kind of OS
     return str(rec.get("messagingSocketPath") or "")
 
 
-def _pid_domain() -> str:
-    """This host's pid domain as Claude Code writes it on Linux
-    (``linux:<boot id>:pid:[<namespace>]``), or ``''`` where it cannot be read (macOS
-    writes only ``darwin``, and the platform check above already covers it)."""
+def pid_domain() -> str:
+    """This host's pid domain in Claude Code's form: ``linux:<boot id>:pid:[<ns>]`` on
+    Linux, else the platform name (``darwin``)."""
     try:
         boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
         namespace = os.readlink("/proc/self/ns/pid")
     except OSError:
-        return ""
+        return sys.platform
     return f"{sys.platform}:{boot.replace('-', '')}:{namespace}"
+
+
+def is_local(domain: str, *, here: str | None = None) -> bool:
+    """Is a record with pid domain ``domain`` from this host? A record without one is
+    taken as local (older Claude Code wrote none); a bare platform name (macOS's form)
+    is compared by platform, a full Linux domain whole.
+
+    >>> is_local('darwin', here='darwin'), is_local('linux:b:pid:[1]', here='darwin')
+    (True, False)
+    >>> is_local('linux:b:pid:[1]', here='linux:b:pid:[1]'), is_local('linux:a:pid:[1]', here='linux:b:pid:[1]')
+    (True, False)
+    """
+    if not domain:
+        return True
+    here = pid_domain() if here is None else here
+    if ":" not in domain or ":" not in here:
+        return domain.split(":", 1)[0] == here.split(":", 1)[0]
+    return domain == here
 
 
 def _rank(session: LiveSession) -> tuple[int, float]:

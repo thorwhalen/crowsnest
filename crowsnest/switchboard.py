@@ -24,11 +24,11 @@ transport, and appends a ``message`` line to the event log (:mod:`crowsnest.even
 :func:`socket_post`, writes one JSON line, ``{"type": "user", "message": {"role":
 "user", "content": TEXT}}`` (the shape Claude Code's own debug log prints for injecting
 a message), to the session's socket on this machine, and only after checking that the
-socket is held by the very process the registry record describes: the peer's pid is the
-record's, and that pid started when the record says (``procStart``), so a pid reused
-after a crash is never mistaken for the session. A session with no socket here (another
-machine's, a spare, bare mode) is refused by it; a transport for another host would
-take the same session and reach it there.
+socket is held by the very process the registry record describes: the record is this
+host's (``pidDomain``), the peer's pid is the record's, and that pid started when the
+record says (``procStart``), so a pid reused after a crash is never mistaken for the
+session. Another machine's session (a synced home), a spare or a bare-mode one is
+refused by it; a transport for another host takes the same session and reaches it there.
 
 **Whether the session accepts it** is the receiver's setting, ``crossSessionInbound``:
 with ``accept`` every message is delivered; with none set, a session that bypasses
@@ -43,19 +43,22 @@ from __future__ import annotations
 import json
 import os
 import socket
+import stat
 import struct
 import subprocess
 import sys
+import unicodedata
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
-from crowsnest.hook import _log, append_event
-from crowsnest.registry import LiveSession
+from crowsnest.hook import append_event, log_failure
+from crowsnest.registry import LiveSession, is_local
 
 __all__ = [
     "MAX_TEXT",
     "Refused",
+    "clean",
     "deliverable",
     "envelope",
     "inbound_of",
@@ -150,24 +153,25 @@ def socket_post(
 ) -> None:
     """Post ``text`` as one user message to ``session``'s inbox socket on this machine.
 
-    Refuses a session with no socket here, one whose pid is no longer the process that
-    registered it (``confirm``), and a socket held by another pid or another user. The
-    connection is opened only once the text is ready (Claude Code closes one that sends
-    no complete line within 30 seconds) and closed right after.
+    Refuses a session with no socket, one from another machine (its ``pid_domain``,
+    :func:`crowsnest.registry.is_local`), a path that is not a socket we own (``lstat``,
+    so a symlink is refused), a connection whose peer is not the record's pid (or whose
+    peer the OS will not name), and a pid that is no longer the process that registered
+    it (``confirm``, checked once connected). The connection is opened only once the text
+    is ready (Claude Code closes one that sends no complete line within 30 seconds) and
+    closed right after.
     """
     path = session.socket
     if not path:
-        raise Refused(f"{session.label} has no inbox socket on this machine")
-    if not confirm(session):
-        raise Refused(
-            f"{session.label}'s pid {session.pid} is not the process that registered it"
-        )
+        raise Refused(f"{session.label} has no inbox socket")
+    if not is_local(session.pid_domain):
+        raise Refused(f"{session.label} runs on another machine; its inbox is not here")
     try:
-        owner = os.stat(path).st_uid
+        info = os.lstat(path)
     except OSError as exc:
         raise Refused(f"{session.label}'s inbox is gone: {exc.strerror}") from None
-    if owner != os.getuid():
-        raise Refused(f"{session.label}'s inbox belongs to another user")
+    if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid():
+        raise Refused(f"{session.label}'s inbox is not a socket of ours")
     line = json.dumps(
         {"type": "user", "message": {"role": "user", "content": text}},
         ensure_ascii=False,
@@ -175,10 +179,14 @@ def socket_post(
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as conn:
         conn.settimeout(timeout)
         conn.connect(path)
+        # Checked on the open connection, so the answer is about who holds it now.
         peer = _peer_pid(conn)
-        if peer is not None and peer != session.pid:
+        if peer != session.pid:
+            held = "an unknown process" if peer is None else f"pid {peer}"
+            raise Refused(f"{session.label}'s inbox is held by {held}, not {session.pid}")
+        if not confirm(session):
             raise Refused(
-                f"{session.label}'s inbox is held by pid {peer}, not {session.pid}"
+                f"{session.label}'s pid {session.pid} is not the process that registered it"
             )
         conn.sendall((line + "\n").encode("utf-8"))
 
@@ -230,17 +238,40 @@ def inbound_of(session: LiveSession) -> str:
     return value if isinstance(value, str) else ""
 
 
-def envelope(text: str, *, sender: str, reply: str = "") -> str:
-    """The text as the receiving session reads it: who sent it, then the message, then how
-    to answer when there is a way.
+#: What a message's first line says, and the mark a body line shaped like it gets, so a
+#: body cannot forge a second sender.
+HEAD = "through crowsnest's switchboard:"
+_FORGED = "(quoted) "
+
+
+def clean(text: str) -> str:
+    """``text`` without control or format characters (Unicode Cc and Cf) other than line
+    breaks and tabs: a terminal escape in a message or a log line must never reach a
+    terminal that prints it.
+
+    >>> clean('ok\\x1b]52;c;aGk=\\x07 done\\nnext')
+    'ok]52;c;aGk= done\\nnext'
+    """
+    return "".join(
+        c for c in text if c in "\n\t" or unicodedata.category(c) not in ("Cc", "Cf")
+    )
+
+
+def envelope(text: str, *, sender: str, reply: str = "", note: str = "") -> str:
+    """The text as the receiving session reads it: who sent it, a ``note`` on what the
+    text is, the message (a body line shaped like the first line is marked as quoted),
+    then how to answer when there is a way.
 
     >>> print(envelope('Rebase on main.', sender='cn'))
     From cn, through crowsnest's switchboard:
     Rebase on main.
     """
-    head = f"From {sender}, through crowsnest's switchboard:"
-    tail = f"\n{reply}" if reply else ""
-    return f"{head}\n{text.strip()}{tail}"
+    body = "\n".join(
+        f"{_FORGED}{line}" if HEAD in line else line
+        for line in clean(text.strip()).splitlines()
+    )
+    parts = [f"From {clean(sender)}, {HEAD}", *([note] if note else []), body]
+    return "\n".join([*parts, *([reply] if reply else [])])
 
 
 def _caller(home: str | Path | None = None) -> str:
@@ -270,6 +301,7 @@ def tell(
     deliver: Deliver | None = None,
     events_path: str | Path | None = None,
     extra: dict | None = None,
+    note: str = "",
 ) -> dict:
     """Post ``text`` to ``session``; ``{"to", "status", "sender", "at", "inbound"}``.
 
@@ -278,7 +310,10 @@ def tell(
     for a status :func:`deliverable` refuses, for empty or oversized text, and when the
     transport cannot deliver. ``deliver`` is the transport, ``(session, text) -> None``,
     default :func:`socket_post`. ``extra`` adds fields to the event line (an intent id).
-    ``inbound`` is the receiver's ``crossSessionInbound`` (:func:`inbound_of`).
+    ``inbound`` is the receiver's ``crossSessionInbound`` (:func:`inbound_of`). ``note``
+    is a line under the sender's that says what the text is (:func:`envelope`). The event
+    line records the claimed ``from`` and, in ``by``, the session that actually ran this
+    (or :data:`ANONYMOUS`), which a caller cannot choose.
 
     Once the transport has delivered, nothing here raises: a log line that cannot be
     written is reported in ``hook.log``, never as a failure, because a caller that retries
@@ -296,9 +331,10 @@ def tell(
     why = deliverable(session, busy_ok=busy_ok)
     if why:
         raise Refused(why)
-    sender = sender or _caller()
+    caller = _caller()
+    sender = sender or caller
     try:
-        deliver(session, envelope(body, sender=sender, reply=reply))
+        deliver(session, envelope(body, sender=sender, reply=reply, note=note))
     except OSError as exc:
         raise Refused(
             f"{session.label}'s inbox did not take the message: {exc}"
@@ -313,14 +349,17 @@ def tell(
                 "name": session.label,
                 "project": session.project,
                 "home": session.home,
-                "from": sender,
-                "detail": " ".join(body.split())[:200],
+                "from": clean(sender),
+                "by": caller,
+                "detail": " ".join(clean(body).split())[:200],
                 **(extra or {}),
             },
             events_path=events_path,
         )
     except Exception as exc:  # noqa: BLE001 -- delivered is delivered; see the docstring
-        _log(f"switchboard: delivered to {session.label} but could not log it: {exc}")
+        log_failure(
+            f"switchboard: delivered to {session.label} but could not log it: {exc}"
+        )
     tag = f"{session.label}@{session.home}" if session.home else session.label
     return {
         "to": tag,

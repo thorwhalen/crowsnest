@@ -18,7 +18,7 @@ by who writes them (:data:`EVENTS`):
 - the hooks Claude Code runs at the end of a turn (:mod:`crowsnest.hook`): ``stop``,
   ``notification``, and ``ask`` when a final message asks its person for something;
 - the courier's minute tick (:mod:`crowsnest.courier`): ``intent``, a console request
-  handed to the watching session; and, when ``[events] registry = true``, the registry's
+  handed to the watching session; and, when ``[courier] record_registry = true``, the registry's
   changes, written by :func:`record_changes`: ``started``, ``exited``, ``busy``,
   ``idle``, ``waiting``, ``error`` (these also carry ``home``, ``status``,
   ``status_at``, the registry's own time for the change, and ``source: "registry"``);
@@ -26,8 +26,9 @@ by who writes them (:data:`EVENTS`):
   delivered, with ``from`` and the target in ``name``.
 
 A reader must ignore an event it does not know: new ones are added, never renamed.
-``at`` is always when the line was written, so the file is in time order. A line has no
-id field: it is never rewritten, so its own bytes identify it.
+``at`` is always when the line was written, so the file is in time order. Writers put no
+id on a line: it is never rewritten, so its own bytes identify it, and :func:`read`
+gives each record that hash as ``id`` (:func:`line_id`).
 
 >>> import os, tempfile
 >>> where = tempfile.mkdtemp()
@@ -44,7 +45,9 @@ id field: it is never rewritten, so its own bytes identify it.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import re
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import asdict, fields
@@ -60,6 +63,7 @@ __all__ = [
     "REGISTRY_EVENTS",
     "files",
     "line",
+    "line_id",
     "read",
     "record_changes",
     "since_of",
@@ -151,9 +155,19 @@ def _at(record: Mapping) -> datetime | None:
     return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
 
 
+def line_id(raw: bytes) -> str:
+    """A line's identity: a hash of its bytes, without the newline. The log is never
+    rewritten, so this never changes; a view keys its marks (seen, done) on it.
+
+    >>> line_id(b'{"event": "stop"}\\n') == line_id(b'{"event": "stop"}')
+    True
+    """
+    return hashlib.sha256(raw.rstrip(b"\r\n")).hexdigest()[:16]
+
+
 def _records(path: Path) -> Iterator[dict]:
     try:
-        stream = path.open(encoding="utf-8", errors="replace")
+        stream = path.open("rb")
     except OSError:
         return
     with stream:
@@ -163,6 +177,7 @@ def _records(path: Path) -> Iterator[dict]:
             except ValueError:
                 continue  # a torn or foreign line is skipped, never fatal
             if isinstance(record, dict):
+                record.setdefault("id", line_id(raw))
                 yield record
 
 
@@ -231,7 +246,10 @@ def line(record: Mapping, *, width: int = LINE_DETAIL) -> str:
         who += f"@{record['home']}"
     if record.get("from"):
         who += f" ← {record['from']}"
-    detail = " ".join(str(record.get("detail") or "").split())
+    from crowsnest.switchboard import clean
+
+    detail = " ".join(clean(str(record.get("detail") or "")).split())
+    who = clean(who)
     if len(detail) > width:
         detail = detail[: width - 1].rstrip() + "…"
     out = f"{local_time(str(record.get('at') or ''))}  {record.get('event', '?')}  {who}"
@@ -259,17 +277,44 @@ def _load_snapshot(path: Path) -> dict[str, LiveSession] | None:
         if not isinstance(doc, dict):
             continue
         try:
-            found[sid] = LiveSession(**{k: v for k, v in doc.items() if k in known})
+            kept = {k: v for k, v in doc.items() if k in known}
+            # Fields a kept snapshot leaves out (SNAPSHOT_FIELDS) read as empty.
+            found[sid] = LiveSession(
+                **{"remote_control": False, "version": "", "transcript": "", **kept}
+            )
         except TypeError:
             continue  # a record from an older shape: treated as not seen, so `started`
     return found
 
 
+#: What a kept snapshot holds of each session: what :func:`crowsnest.watch.diff` reads of
+#: the *previous* snapshot, and no more (no transcript path, socket or remote-control id).
+SNAPSHOT_FIELDS = (
+    "pid",
+    "session_id",
+    "name",
+    "cwd",
+    "kind",
+    "status",
+    "waiting_for",
+    "status_since",
+    "started_at",
+    "home",
+)
+
+
 def _save_snapshot(path: Path, snapshot: Mapping[str, LiveSession]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    doc = {"sessions": {sid: asdict(s) for sid, s in snapshot.items()}}
+    doc = {
+        "sessions": {
+            sid: {k: v for k, v in asdict(s).items() if k in SNAPSHOT_FIELDS}
+            for sid, s in snapshot.items()
+        }
+    }
     temp = path.with_name(path.name + ".tmp")
-    temp.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as out:
+        out.write(json.dumps(doc, ensure_ascii=False))
     temp.replace(path)
 
 

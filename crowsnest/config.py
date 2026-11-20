@@ -85,7 +85,7 @@ import math
 import os
 import re
 import sys
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field, fields, replace
 from datetime import timedelta
 from pathlib import Path
 
@@ -691,6 +691,15 @@ class CourierSettings:
     """
 
     remote: str = ""
+    #: Post an ``ask``/``tell`` intent straight to the live session it names, through
+    #: the switchboard, instead of handing every intent to the watching session (#200).
+    deliver_intents: bool = False
+    #: How long such an intent waits for a busy or waiting session before the watcher
+    #: gets it after all.
+    hold_minutes: float = 60.0
+    #: Append the registry's changes (started, exited, busy, idle, waiting, error) to
+    #: the event log each tick (:func:`crowsnest.eventlog.record_changes`, #141).
+    record_registry: bool = False
 
 
 #: The config table holding ``crowsnest watch``'s selection (#141).
@@ -754,67 +763,20 @@ def courier_settings(*, path: str | Path | None = None) -> CourierSettings:
 
         [courier]
         remote = "me@myserver:/srv/crowsnest/db"   # or a local directory
+        deliver_intents = true   # ask/tell intents go to their session, not the watcher
+        hold_minutes = 60        # how long one waits for a busy session first
+        record_registry = true   # write the registry's changes to the event log
+
+    The last three are off by default, so a table that says only ``remote`` behaves as
+    it did before they existed.
     """
-    file = config_path(path)
-    table = _loaded(path).get(COURIER_KEY)
-    if table is None:
-        return CourierSettings()
-    if not isinstance(table, dict):
-        raise ValueError(f"{file}: [{COURIER_KEY}] must be a table")  # noqa: TRY004
-    unknown = sorted(set(table) - {"remote"})
-    if unknown:
-        raise ValueError(
-            f"{file}: [{COURIER_KEY}] has no {', '.join(unknown)}; it knows remote"
-        )
-    remote = table.get("remote", "")
-    if not isinstance(remote, str):
-        raise ValueError(  # noqa: TRY004
-            f"{file}: [{COURIER_KEY}] remote must be a string, not {remote!r}"
-        )
-    return CourierSettings(remote=remote.strip())
+    got = _typed_table(path, COURIER_KEY, CourierSettings)
+    return replace(got, remote=got.remote.strip())
 
 
-#: The tables holding the lean lookout's switches (#141, #174), one per concern. Each is
-#: off by default, so a machine whose config file says nothing behaves as it did before.
-EVENTS_KEY = "events"
-SWITCHBOARD_KEY = "switchboard"
-
-
-@dataclass(frozen=True)
-class EventsSettings:
-    """The ``[events]`` table: what the courier's tick writes into the event log.
-
-    ``registry`` makes it append the registry's changes (started, exited, busy, idle,
-    waiting, error) that only ``crowsnest watch`` printed before
-    (:func:`crowsnest.eventlog.record_changes`).
-
-    >>> EventsSettings().registry
-    False
-    """
-
-    registry: bool = False
-
-
-@dataclass(frozen=True)
-class SwitchboardSettings:
-    """The ``[switchboard]`` table: how the courier hands a console intent on.
-
-    ``deliver_intents`` makes it post an ``ask`` or ``tell`` intent straight to the live
-    session it names (:mod:`crowsnest.switchboard`), waiting for a busy one to finish its
-    turn, instead of handing every intent to the watching session; an intent whose
-    session is gone, or that is never deliverable within ``hold_minutes``, still goes to
-    the watching session as before (#200).
-
-    >>> SwitchboardSettings().deliver_intents, SwitchboardSettings().hold_minutes
-    (False, 60.0)
-    """
-
-    deliver_intents: bool = False
-    hold_minutes: float = 60.0
-
-
-def _switch_table(path, key: str, cls):
-    """The ``[key]`` table read into ``cls``, every value checked against its default's type."""
+def _typed_table(path, key: str, cls):
+    """The ``[key]`` table read into ``cls``, every value checked against its default's type
+    (a float must also be positive); an unknown key is an error."""
     file = config_path(path)
     table = _loaded(path).get(key)
     if table is None:
@@ -841,29 +803,6 @@ def _switch_table(path, key: str, cls):
             raise ValueError(f"{file}: [{key}] {name} must be positive, not {value!r}")
         values[name] = value
     return cls(**values)
-
-
-def events_settings(*, path: str | Path | None = None) -> EventsSettings:
-    """The config file's ``[events]`` table, or the defaults (all off) when it has none.
-
-    .. code-block:: toml
-
-        [events]
-        registry = true   # the courier's tick writes registry changes to the event log
-    """
-    return _switch_table(path, EVENTS_KEY, EventsSettings)
-
-
-def switchboard_settings(*, path: str | Path | None = None) -> SwitchboardSettings:
-    """The config file's ``[switchboard]`` table, or the defaults (all off) when it has none.
-
-    .. code-block:: toml
-
-        [switchboard]
-        deliver_intents = true   # post ask/tell intents to their session, not the watcher
-        hold_minutes = 60        # how long a busy session's intent waits before the watcher
-    """
-    return _switch_table(path, SWITCHBOARD_KEY, SwitchboardSettings)
 
 
 #: The config file's table for carrying ledgers to their page (:mod:`crowsnest.ledger_mirror`).

@@ -153,10 +153,7 @@ def sessions(
     found: list[LiveSession] = []
     for h in homes(path=config):
         rule = liveness_rule(h)
-        listed = live_sessions(home=h.path, home_name=h.name, is_live=rule)
-        # Another machine's record names a socket on that machine: never one to post to
-        # here, where the same path can belong to a different local session.
-        found.extend(replace(s, socket="") if h.remote else s for s in listed)
+        found.extend(live_sessions(home=h.path, home_name=h.name, is_live=rule))
     return found
 
 
@@ -204,8 +201,14 @@ def resolve(
     home: str | Path | None = None,
     all_homes: bool = False,
     config: str | Path | None = None,
+    exact: bool = False,
 ) -> LiveSession:
     """The live session a human means by ``session``.
+
+    ``exact`` takes only a whole label (the name, or an unnamed session's id head) or a
+    whole id, for a caller with nobody to catch a wrong pick: an intent delivered by the
+    courier names a row of a page published a minute ago, whose session may have exited
+    while another, whose name it begins, lives on.
 
     Tried in order: the exact session id, the exact registry name, a unique name prefix, a
     unique session-id prefix, the pid. ``name@home`` names a session in one home when
@@ -221,6 +224,12 @@ def resolve(
     if "@" in wanted and all_homes:
         wanted, _, in_home = wanted.rpartition("@")
         candidates = [s for s in candidates if s.home == in_home]
+    if exact:
+        found = [s for s in candidates if wanted and wanted in (s.label, s.session_id)]
+        if len(found) == 1:
+            return found[0]
+        many = "more than one live session" if found else "no live session"
+        raise KeyError(f"{session!r} is the whole name or id of {many}")
     sessions_ = candidates
     by_whole_id = [s for s in sessions_ if s.session_id == wanted]
     if len(by_whole_id) == 1:
@@ -1058,30 +1067,33 @@ def courier(
     copy=None,
     store=None,
     events_path: str | Path | None = None,
+    find=None,
+    deliver=None,
 ) -> dict:
     """One courier tick for the page's own console store (:func:`crowsnest.courier.tick`).
 
     ``remote`` defaults to the config file's ``[courier]`` table. Run it on the schedule
     that publishes the page: it carries the buttons' writes both ways, answers a recap from
     disk, and wakes a session (through ``crowsnest watch``) only for an ask, a tell or a
-    start. ``copy`` is the transport seam, ``(src, dst, collection) -> None``.
+    start. ``copy`` is the transport seam, ``(src, dst, collection) -> None``. The
+    ``[courier]`` table's ``deliver_intents``, ``hold_minutes`` and ``record_registry``
+    turn on delivering intents to their session and recording the registry; ``find``
+    (a name to one live session) and ``deliver`` (the switchboard's transport,
+    ``(session, text) -> None``) are the delivery's seams.
     """
     from datetime import timedelta
 
     from crowsnest import courier as _courier
-    from crowsnest.config import (
-        courier_settings,
-        events_settings,
-        switchboard_settings,
-    )
+    from crowsnest.config import courier_settings
+    from crowsnest.eventlog import record_changes
 
-    remote = remote or courier_settings(path=config).remote
+    settings = courier_settings(path=config)
+    remote = remote or settings.remote
     if not remote:
         raise ValueError(
             "the courier needs the console store's root: --remote HOST:PATH or a "
             "[courier] table in the config file with `remote`"
         )
-    board = switchboard_settings(path=config)
     return _courier.tick(
         remote,
         mirror=mirror,
@@ -1091,9 +1103,11 @@ def courier(
         config=config,
         store=store,
         events_path=events_path,
-        deliver_intents=board.deliver_intents,
-        hold=timedelta(minutes=board.hold_minutes),
-        record_registry=events_settings(path=config).registry,
+        deliver_intents=settings.deliver_intents,
+        hold=timedelta(minutes=settings.hold_minutes),
+        record=record_changes if settings.record_registry else None,
+        find=find,
+        deliver=deliver,
     )
 
 

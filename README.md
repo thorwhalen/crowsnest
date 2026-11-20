@@ -388,10 +388,10 @@ Everything crowsnest learns lands in one append-only plain file, `~/.local/share
 |---|---|---|
 | `stop`, `notification`, `ask` | `crowsnest hook` | a turn ended; a session wants its person; a turn ended asking for something |
 | `intent` | the courier | a request from the page's console, handed to the watching session |
-| `started`, `exited`, `busy`, `idle`, `waiting`, `error` | the courier, with `[events] registry = true` | the registry changed (`source: "registry"`, plus `home`, `status` and `status_at`, the registry's own time for it) |
+| `started`, `exited`, `busy`, `idle`, `waiting`, `error` | the courier, with `[courier] record_registry = true` | the registry changed (`source: "registry"`, plus `home`, `status` and `status_at`, the registry's own time for it) |
 | `message` | `crowsnest tell`, the courier | a message was posted to a session (`from` says who sent it) |
 
-`at` is always when the line was written, so the file is in time order. A reader ignores an event it does not know: new ones are added, never renamed. `crowsnest log` is the quick view, for you or for an agent about to message a session:
+`at` is always when the line was written, so the file is in time order. Lines carry no id field: the log is never rewritten, so a line's own bytes identify it, and `crowsnest log --json` gives each record that hash as `id`. A reader ignores an event it does not know: new ones are added, never renamed. `crowsnest log` is the quick view, for you or for an agent about to message a session:
 
 ```bash
 crowsnest log                            # the last hour, one line each
@@ -402,19 +402,18 @@ crowsnest log --path                     # where the file is
 
 **Messaging from anywhere.** `crowsnest tell <session> --text "..."` (or the text on stdin) posts a message straight into a live session's inbox socket, the one Claude Code's own cross-session messaging uses, from any session, script or scheduler, at no model cost. It delivers to an idle session (a busy one with `--busy-ok`; never one waiting on its person), only after checking that the socket is held by the very process the registry names, so a reused pid never receives someone else's message, and it writes a `message` line to the log. A session on another machine has no socket here and is refused. Whether the session accepts the message is its own `crossSessionInbound` setting. Inside a session, Claude's `SendMessage` tool does the same and keeps a reply address; `crowsnest tell` is for everything else, and for messages that should be on the record.
 
-**Two switches, both off by default**, so a machine whose config says nothing behaves as it always did:
+**Two switches in the courier's table, both off by default**, so a machine whose config says nothing behaves as it always did:
 
 ```toml
 # ~/.config/crowsnest/config.toml
-[events]
-registry = true          # the courier's minute tick writes the registry's changes to the log
-
-[switchboard]
-deliver_intents = true   # the courier posts an ask/tell intent to the session it names,
-hold_minutes = 60        # holding it while that session is busy or waiting, at most this long
+[courier]
+remote = "me@myserver:/srv/crowsnest/db"
+record_registry = true   # each minute tick writes the registry's changes to the event log
+deliver_intents = true   # the page's Ask/Tell go straight to the session they name,
+hold_minutes = 60        # held while that session is busy or waiting, at most this long
 ```
 
-With `deliver_intents`, an intent reaches its session without a watching session in between: the session named exactly (never a prefix), and only when its home's `crossSessionInbound` is `accept`, since otherwise it would sit unapproved. An Ask with no text becomes a five-line status request. A `start`, an intent for a session that is gone or has no inbox here, and one held past `hold_minutes` still go to the watching session, as before.
+With `deliver_intents`, an intent reaches its session without a watching session in between: the session named exactly (never a prefix), and only when its home's `crossSessionInbound` is `accept`, since otherwise it would sit unapproved. An Ask with no text becomes a status request. The session reads the text marked as typed on the console page, with no more authority than a message from another session; that is also the trust it changes: page text reaches a session without the watching session reading it first. A `start`, an intent for a session that is gone or has no inbox here, and one held past `hold_minutes` still go to the watching session, as before.
 
 ## One walk, end to end
 
@@ -459,13 +458,13 @@ Nothing into a repository, and nothing into another session except the messages 
 
 - `ledger/<name>.md`: one per session, as above.
 - `events.jsonl`: the event log, one line per event, append-only, rotated by size (see [The event log](#the-event-log-and-messaging-from-anywhere)). `crowsnest watch` tails it; `crowsnest log` reads it.
-- `eventlog-registry.json`: the registry as the courier's last tick saw it, when `[events] registry` is on.
+- `eventlog-registry.json`: the registry as the courier's last tick saw it (status, name and times only; private to you), when `[courier] record_registry` is on.
 - `hook.log`: one line for anything `crowsnest hook` swallowed, so "the hook did nothing" is a question with an answer.
 - `attention/<item-id>.json`: one per item you have marked seen, put off, handled or noted. Shared by every account on this machine, because the data directory is per user.
 
 - `guard/`: the guard's last tick (`last.json`), every close it made (`reaped.jsonl`, with the line that resumes each), and a cache of which folders each transcript names.
 
-The only other writes in the package are `crowsnest tell` (and the courier with `[switchboard] deliver_intents`), which posts a message to a session's inbox socket, `crowsnest spawn`, which starts a session, `install-skills`, which writes symlinks, and the guard: `oom_score_adj` on Linux, and the SIGTERM of `crowsnest reap --apply`.
+The only other writes in the package are `crowsnest tell` (and the courier with `[courier] deliver_intents`), which posts a message to a session's inbox socket, `crowsnest spawn`, which starts a session, `install-skills`, which writes symlinks, and the guard: `oom_score_adj` on Linux, and the SIGTERM of `crowsnest reap --apply`.
 
 ## From Python
 

@@ -352,6 +352,7 @@ def test_an_idle_session_is_delivered_its_intent_and_the_watcher_is_not_woken(
     assert "rebase first" in sent[0][1] and "crowsnest intent answer n1" in sent[0][1]
     assert sent[1][1].startswith(
         "From the crowsnest console, through crowsnest's switchboard:\n"
+        f"{courier.CONSOLE_NOTE}\n"
         "A question from the crowsnest console: green?"
     )
     logged = events(tmp_path)
@@ -485,43 +486,50 @@ def test_a_post_that_fails_goes_to_the_watcher_at_once(remote, tmp_path):
     assert "inbox did not take it" in got["answer"]
 
 
-def test_the_registry_is_recorded_only_with_its_switch(remote, tmp_path):
+def test_the_registry_is_recorded_only_when_a_recorder_is_given(remote, tmp_path):
     calls = []
 
     def record(**kw):
         calls.append(kw)
         return 3
 
-    assert "recorded" not in run(remote, tmp_path, record=record)
-    assert calls == []
-    assert run(remote, tmp_path, record_registry=True, record=record)["recorded"] == 3
+    assert "recorded" not in run(remote, tmp_path)
+    assert run(remote, tmp_path, record=record)["recorded"] == 3
     assert calls[0]["events_path"] == tmp_path / "events.jsonl"
 
 
-def test_the_switches_are_read_from_the_config_file(tmp_path):
-    from crowsnest.config import events_settings, switchboard_settings
-
+def test_the_switches_are_read_from_the_courier_table(tmp_path, monkeypatch):
     config = tmp_path / "config.toml"
-    assert not events_settings(path=config).registry
-    assert not switchboard_settings(path=config).deliver_intents
+    got = courier_settings(path=config)
+    assert not got.deliver_intents and not got.record_registry and got.hold_minutes == 60
     config.write_text(
-        "[events]\nregistry = true\n[switchboard]\ndeliver_intents = true\n"
-        "hold_minutes = 15\n"
+        "[courier]\nremote = ' /db '\ndeliver_intents = true\nhold_minutes = 15\n"
+        "record_registry = true\n"
     )
-    assert events_settings(path=config).registry
-    board = switchboard_settings(path=config)
-    assert board.deliver_intents and board.hold_minutes == 15.0
+    got = courier_settings(path=config)
+    assert got.remote == "/db" and got.deliver_intents and got.record_registry
+    assert got.hold_minutes == 15.0
+    seen = {}
+    monkeypatch.setattr(courier, "tick", lambda remote, **kw: seen.update(kw) or {})
+    tools.courier(config=config)
+    from datetime import timedelta
+
+    from crowsnest.eventlog import record_changes
+
+    assert seen["deliver_intents"] and seen["hold"] == timedelta(minutes=15)
+    assert seen["record"] is record_changes
+    config.write_text("[courier]\nremote = '/db'\n")
+    tools.courier(config=config)
+    assert not seen["deliver_intents"] and seen["record"] is None
     for bad in (
-        '[switchboard]\ndeliver_intents = "yes"\n',
-        "[switchboard]\nhold = 1\n",
-        "[switchboard]\nhold_minutes = 0\n",
-        "[events]\nregistry = 1\n",
-        "events = 1\n",
+        '[courier]\ndeliver_intents = "yes"\n',
+        "[courier]\nhold_minutes = 0\n",
+        "[courier]\nrecord_registry = 1\n",
+        "[courier]\nremote = 3\n",
     ):
         config.write_text(bad)
-        with pytest.raises(ValueError):
-            switchboard_settings(path=config)
-            events_settings(path=config)
+        with pytest.raises(ValueError, match=r"\[courier\]"):
+            courier_settings(path=config)
 
 
 def test_an_ask_with_no_text_is_the_status_request(remote, tmp_path):
@@ -623,7 +631,7 @@ def test_a_failing_registry_record_does_not_stop_the_tick(remote, tmp_path):
     def broken(**_):
         raise OSError("disk full")
 
-    moved = run(remote, tmp_path, record_registry=True, record=broken)
+    moved = run(remote, tmp_path, record=broken)
     assert moved["record_failed"] == 1
     assert (remote / "console" / "heartbeat.json").exists()
 
@@ -655,3 +663,50 @@ def test_an_unnamed_session_is_found_by_its_label(monkeypatch):
     assert courier.exact_session("abcdef01").pid == 1
     with pytest.raises(KeyError):
         courier.exact_session("abcdef0")
+
+
+def test_an_intent_is_posted_once_even_if_its_document_is_reset(remote, tmp_path):
+    doc = {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"}
+    put(remote, "intents", "n1", doc)
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    for reset in (doc, {**doc, "status": "handed", "delivery": "pending"}):
+        put(remote, "intents", "n1", reset)
+        mtime = (remote / "intents" / "n1.json").stat().st_mtime + 10
+        os.utime(remote / "intents" / "n1.json", (mtime, mtime))  # newer: it is pulled
+        run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert len(sent) == 1
+
+
+def test_a_held_document_of_another_kind_or_a_future_hold_is_not_trusted(
+    remote, tmp_path
+):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {
+            "kind": "start",
+            "session": "fixer",
+            "text": "x",
+            "status": "handed",
+            "delivery": "pending",
+        },
+    )
+    put(
+        remote,
+        "intents",
+        "n2",
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "x",
+            "status": "handed",
+            "delivery": "pending",
+            "held_since": "2999-01-01T00:00:00Z",
+        },
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer", status="busy")})
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert read(remote, "intents", "n1")["delivery"] == "pending" and sent == []
+    assert read(remote, "intents", "n2")["held_since"] == "2026-02-01T12:00:00Z"
