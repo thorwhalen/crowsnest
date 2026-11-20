@@ -284,3 +284,14 @@ def test_a_record_from_another_os_spare_or_parked_has_no_socket(tmp_path):
         s.pid: s.socket for s in live_sessions(home=tmp_path, is_alive=lambda p: True)
     }
     assert found == {1: "", 2: "", 3: "", 4: "/tmp/cc-socks/4.sock"}
+
+
+def test_a_linux_record_from_another_boot_has_no_socket(tmp_path, monkeypatch):
+    import crowsnest.registry as registry
+
+    monkeypatch.setattr(registry.sys, "platform", "linux")
+    monkeypatch.setattr(registry, "_pid_domain", lambda: "linux:boot1:pid:[1]")
+    same = {"messagingSocketPath": "/s", "pidDomain": "linux:boot1:pid:[1]"}
+    assert registry._socket_of(same) == "/s"
+    assert registry._socket_of({**same, "pidDomain": "linux:boot0:pid:[1]"}) == ""
+    assert registry._socket_of({**same, "pidDomain": "linux:boot1:pid:[2]"}) == ""

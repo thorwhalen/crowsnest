@@ -572,7 +572,11 @@ def test_a_routing_crash_fails_that_intent_only(remote, tmp_path):
     def explode(name):
         raise RuntimeError("boom")
 
-    run(remote, tmp_path, deliver_intents=True, find=explode)
+    def explode_late(session, text):
+        raise RuntimeError("boom")  # the transport itself: nobody knows if it was sent
+
+    find, _, _ = _board({"fixer": _session("fixer")})
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=explode_late)
     assert read(remote, "intents", "n1")["status"] == "failed"
     assert read(remote, "intents", "n2")["status"] == "done"
     assert (remote / "console" / "heartbeat.json").exists()
@@ -622,3 +626,32 @@ def test_a_failing_registry_record_does_not_stop_the_tick(remote, tmp_path):
     moved = run(remote, tmp_path, record_registry=True, record=broken)
     assert moved["record_failed"] == 1
     assert (remote / "console" / "heartbeat.json").exists()
+
+
+def test_a_roster_that_cannot_be_read_hands_the_intent_on(remote, tmp_path):
+    put(
+        remote,
+        "intents",
+        "n1",
+        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+    )
+
+    def broken(name):
+        raise ValueError("bad [[homes]] table")
+
+    moved = run(remote, tmp_path, deliver_intents=True, find=broken)
+    got = read(remote, "intents", "n1")
+    assert moved["handed"] == 1 and got["delivery"] == "watcher"
+    assert "roster could not be read" in got["answer"]
+
+
+def test_an_unnamed_session_is_found_by_its_label(monkeypatch):
+    from crowsnest.registry import LiveSession
+
+    live = [
+        LiveSession(1, "abcdef0123456789", "", "/w", "", "idle", "", 0, 0, False, "", "")
+    ]
+    monkeypatch.setattr(tools, "sessions", lambda **_: live)
+    assert courier.exact_session("abcdef01").pid == 1
+    with pytest.raises(KeyError):
+        courier.exact_session("abcdef0")

@@ -112,7 +112,7 @@ def _started_darwin(pid: int) -> str:
         capture_output=True,
         text=True,
         timeout=TIMEOUT,
-        env={**os.environ, "TZ": "UTC"},
+        env={**os.environ, "TZ": "UTC", "LC_ALL": "C"},  # procStart's form exactly
         check=False,
     )
     return " ".join(done.stdout.split())

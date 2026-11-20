@@ -533,8 +533,9 @@ def exact_session(
     all_homes: bool = False,
     config: str | Path | None = None,
 ):
-    """The one live session whose whole name or whole id is ``name`` (``name@home`` with
-    ``all_homes``), else ``KeyError``.
+    """The one live session whose whole label or whole id is ``name`` (``name@home`` with
+    ``all_homes``), else ``KeyError``. The label is the name, or for an unnamed session the
+    head of its id, which is what the page writes for that row.
 
     Stricter than :func:`crowsnest.tools.resolve`, which a person uses and which takes a
     unique prefix or a pid: an intent is delivered with nobody watching, and a page
@@ -551,7 +552,8 @@ def exact_session(
     found = [
         s
         for s in sessions(home=home, all_homes=all_homes, config=config)
-        if (s.name == wanted or s.session_id == wanted) and (not where or s.home == where)
+        if (s.label == wanted or s.session_id == wanted)
+        and (not where or s.home == where)
     ]
     if len(found) != 1:
         raise KeyError(
@@ -629,6 +631,11 @@ def _route(
         target = find(f"{name}@{where}" if where and all_homes else name)
     except KeyError:
         return to_watcher("no live session of that name to deliver to")
+    except Exception as exc:  # noqa: BLE001 -- nothing was sent: the old path still works
+        from crowsnest.hook import _log
+
+        _log(f"courier: intent {intent}: the roster could not be read: {exc!r}")
+        return to_watcher("the roster could not be read")
     if switchboard.inbound_of(target) != "accept":
         return to_watcher(f"{target.label} would hold a message for approval")
     why = switchboard.deliverable(target)

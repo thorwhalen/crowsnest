@@ -245,7 +245,22 @@ def _socket_of(rec: dict) -> str:
     domain = str(rec.get("pidDomain") or "")
     if domain and domain.split(":", 1)[0] != sys.platform:
         return ""
+    here = _pid_domain()
+    if ":" in domain and here and domain != here:
+        return ""  # another boot, or another pid namespace, of this same kind of OS
     return str(rec.get("messagingSocketPath") or "")
+
+
+def _pid_domain() -> str:
+    """This host's pid domain as Claude Code writes it on Linux
+    (``linux:<boot id>:pid:[<namespace>]``), or ``''`` where it cannot be read (macOS
+    writes only ``darwin``, and the platform check above already covers it)."""
+    try:
+        boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+        namespace = os.readlink("/proc/self/ns/pid")
+    except OSError:
+        return ""
+    return f"{sys.platform}:{boot.replace('-', '')}:{namespace}"
 
 
 def _rank(session: LiveSession) -> tuple[int, float]:
