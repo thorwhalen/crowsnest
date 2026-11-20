@@ -164,10 +164,10 @@ def socket_post(
     path = session.socket
     if not path:
         raise Refused(f"{session.label} has no inbox socket")
-    if not hasattr(socket, "AF_UNIX"):
-        raise Refused("this platform has no Unix sockets to post to")
     if not is_local(session.pid_domain):
         raise Refused(f"{session.label} runs on another machine; its inbox is not here")
+    if not hasattr(socket, "AF_UNIX"):
+        raise Refused("this platform has no Unix sockets to post to")
     try:
         info = os.lstat(path)
     except OSError as exc:
