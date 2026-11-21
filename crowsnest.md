@@ -1,4 +1,4 @@
-> built 2026-11-20 18:51 UTC from 7aa8642 (main) · crowsnest 0.0.119. Details: build_info.json
+> built 2026-11-21 06:45 UTC from 78c0dad (main) · crowsnest 0.0.120. Details: build_info.json
 
 # index.html.md
 
@@ -8588,18 +8588,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-20 18:51 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/7aa8642b393b177b62b5634a1f189416903e7168"><code>7aa8642</code></a> on branch <code>main</code>, for **crowsnest 0.0.119** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-21 06:45 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/78c0dad8766c3f379d026c6fa540409ec0608c6d"><code>78c0dad</code></a> on branch <code>main</code>, for **crowsnest 0.0.120** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.119) is behind the latest release on PyPI (0.0.120): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/7aa8642b393b177b62b5634a1f189416903e7168"><code>7aa8642b393b177b62b5634a1f189416903e7168</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/78c0dad8766c3f379d026c6fa540409ec0608c6d"><code>78c0dad8766c3f379d026c6fa540409ec0608c6d</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -8610,9 +8608,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44796384183">44796384183</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/44876943719">44876943719</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>7aa8642b393b177b62b5634a1f189416903e7168</code> (in the history of the built commit) |
+| Event commit | <code>78c0dad8766c3f379d026c6fa540409ec0608c6d</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -8637,13 +8635,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.120/">0.0.120</a>, newer than the documented version (0.0.119).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.120/">0.0.120</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 7aa8642b393b177b62b5634a1f189416903e7168
+git checkout 78c0dad8766c3f379d026c6fa540409ec0608c6d
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
@@ -8677,7 +8675,7 @@ Source: [`crowsnest/data/skills/crowsnest`](https://github.com/thorwhalen/crowsn
 
 ### `crowsnest-dispatch`
 
-Hand a corpus of work to a Claude Code session instead of doing it yourself. Use when the watching (crowsnest) session is asked to start work somewhere, when a conversation about one project has run on long enough that it belongs in that project’s own session, or when an existing session should be given the next thing to do. Also use in ANY session (not only the watcher) whose task spans several repositories or needs a long implementation: the user’s standing preference is to spawn one session per corpus and keep the current context small, rather than do it all inline. Triggers on: ‘start a session in X to do Y’, ‘get someone working on this’, ‘have X do the next issue’, ‘spin up a session for’, ‘tell the parser session to’, ‘hand this off’, ‘who should do this’, ‘take this over to that repo’. Covers naming, scoping (which cwd and add-dirs, so the session sees the routing documents and skills it needs), the model, the brief, spawning, subscribing to the finish, and recording the dispatch.
+Hand a corpus of work to a Claude Code session instead of doing it yourself. Use when the watching (crowsnest) session is asked to start work somewhere, when a conversation about one project has run on long enough that it belongs in that project’s own session, or when an existing session should be given the next thing to do. Also use in ANY session (not only the watcher) whose task spans several repositories or needs a long implementation: the user’s standing preference is to spawn one session per corpus and keep the current context small, rather than do it all inline. Triggers on: ‘start a session in X to do Y’, ‘get someone working on this’, ‘have X do the next issue’, ‘spin up a session for’, ‘tell the parser session to’, ‘hand this off’, ‘who should do this’, ‘take this over to that repo’. Covers naming, scoping (which cwd and add-dirs, so the session sees the routing documents and skills it needs), the model, the brief, spawning, subscribing to the finish, and recording the dispatch. Also covers the token burn (spend the rest of the weekly allowance before the reset; triggers: ‘token burn’, ‘burn the allowance’, ‘spend the rest of the week’): the procedure is in references/token-burn.md.
 
 ```bash
 gh skill install thorwhalen/crowsnest crowsnest-dispatch --agent claude-code
