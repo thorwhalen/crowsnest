@@ -12,7 +12,9 @@ description: >-
   up a session for', 'tell the parser session to', 'hand this off', 'who should do this',
   'take this over to that repo'. Covers naming, scoping (which cwd and add-dirs, so the
   session sees the routing documents and skills it needs), the model, the brief, spawning,
-  subscribing to the finish, and recording the dispatch.
+  subscribing to the finish, and recording the dispatch. Also covers the token burn (spend
+  the rest of the weekly allowance before the reset; triggers: 'token burn', 'burn the
+  allowance', 'spend the rest of the week'): the procedure is in references/token-burn.md.
 ---
 
 # crowsnest-dispatch — handing a corpus of work to a session
@@ -189,6 +191,10 @@ Write the dispatch into that corpus's ledger so it survives your next `/clear`: 
 the directory, what it was asked for, and where the acceptance line lives. Then drop the
 detail from your own context and tell the user, in one line, what is now running where and
 that they can talk to it directly.
+
+## 9. A token burn is dispatch at scale: use the procedure
+
+When the owner wants the rest of the weekly allowance spent before the reset, do not improvise: read `references/token-burn.md`. In one breath: a planner session plans and publishes, and spawns nothing; the plan has a cap and a clock; **the first step is checking what the other accounts are doing** (the stay-out table: hard, hot, held, unseen) and the census is re-run at each wave; reads come before writes; one session per corpus; a flex lane absorbs the headroom; a script, not a model, keeps pace; the close verifies every PR with `gh` and returns the lanes.
 
 ## What this is not
 
