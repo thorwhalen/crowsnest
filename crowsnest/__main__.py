@@ -373,6 +373,58 @@ def _lineage_lines(found: dict) -> list[str]:
     return out
 
 
+def relations(
+    *,
+    home: str | None = None,
+    all_homes: bool = False,
+    page: str = "",
+    entry: str = "",
+    since: str = "",
+    json: bool = False,
+):
+    """What relates to what: the sessions, the places they work in and what they refer to,
+    as one typed graph, with who waits on you, who started whom and who messaged whom.
+
+    Prints how many nodes and links of each kind there are. `--json` prints the whole
+    document: nodes and links, each link saying how it is known (recorded, observed,
+    inferred) and, when a rule derived it, through which nodes. `--page FILE` writes the
+    relations page instead: one self-contained HTML file with a map, a docket of what
+    waits on you, and a board of places. `--entry map|hybrid|docket|board` chooses what
+    that page opens on, and `--since 3d` how far back messages are read; both default to
+    the config file's `[relations]` table, which can also have `crowsnest publish` send
+    the page beside the report (`to = "..."`) and name links to your other pages
+    (`[relations.nav]`).
+    """
+    read = {"since": since} if since else {}
+    if page:
+        made = tools.relations_page(
+            home=home, all_homes=all_homes, entry=entry or None, **read
+        )
+        path = Path(page).expanduser()
+        path.write_text(made["html"], encoding="utf-8")
+        nodes = sum(made["counts"]["nodes"].values())
+        links = sum(made["counts"]["links"].values())
+        return f"wrote the relations page ({nodes} nodes, {links} links, as of {made['made_at']}) to {path}"
+    doc = tools.relations(home=home, all_homes=all_homes, **read)
+    if json:
+        return _json.dumps(doc, indent=2, ensure_ascii=False)
+    counts, types = doc["graph"]["counts"], doc["graph"]["types"]["link"]
+    lines = [f"as of {doc['graph']['as_of']}", "", "nodes"]
+    lines += [f"  {n:>5}  {kind}" for kind, n in sorted(counts["nodes"].items())]
+    lines += ["", "links"]
+    for kind, n in sorted(
+        counts["links"].items(), key=lambda kv: (types[kv[0]]["how"], kv[0])
+    ):
+        lines.append(
+            f"  {n:>5}  {kind:<16} {types[kind]['how']:<8} {types[kind]['says']}"
+        )
+    for left in doc["graph"]["skipped"]:
+        lines.append(
+            f"  not paired: {left['rule']} through {left['node']} ({left['fanout']} members)"
+        )
+    return "\n".join(lines)
+
+
 def lineage(
     *,
     home: str | None = None,
@@ -1934,6 +1986,7 @@ _commands = [
     recap,
     live,
     lineage,
+    relations,
     triage,
     groups,
     synopsis,

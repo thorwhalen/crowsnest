@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 import subprocess
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -924,6 +924,9 @@ def report(
         "fragment": fragment,
         "interactive": interactive,
         "generated": generated,
+        # The rows the page was drawn from, so a second view of the same moment (the
+        # relations page) is made without reading every session again.
+        "rows": rows,
     }
 
 
@@ -1023,12 +1026,33 @@ def publish(
     page.parent.mkdir(parents=True, exist_ok=True)
     page.write_text(made["html"], encoding="utf-8")
     where = publisher(page, to or "")
-    return {
+    result = {
         "to": where,
         "bytes": page.stat().st_size,
         "made_at": made["made_at"],
         "generated": made.get("generated") or {},
     }
+    from crowsnest.config import relations_settings
+
+    wanted = relations_settings(path=config)
+    if wanted.to:
+        # The same rows, the same moment: the relations page never disagrees with the
+        # page it sits beside, and costs no second reading of the sessions.
+        drawn = relations_page(
+            rows=made["rows"],
+            home=home,
+            all_homes=all_homes,
+            config=config,
+            as_of=made["made_at"],
+        )
+        beside = page.with_name("relations.html")
+        beside.write_text(drawn["html"], encoding="utf-8")
+        result["relations"] = {
+            "to": _publish.dflt_publisher(wanted.to)(beside, wanted.to),
+            "bytes": beside.stat().st_size,
+            "counts": drawn["counts"],
+        }
+    return result
 
 
 def push_ledgers(
@@ -1547,6 +1571,113 @@ def lineage(
     if extra_edges:
         readers = [lambda edges=tuple(extra_edges): list(edges), *readers]
     return _graph(sessions=rows, sources=readers, lineage_path=lineage_path)
+
+
+def relations(
+    *,
+    rows: Sequence[Mapping] | None = None,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    since: str | None = None,
+    lineage_path: str | Path | None = None,
+    events_path: str | Path | None = None,
+    sources=None,
+    rules=None,
+    interest=None,
+    as_of: str | None = None,
+) -> dict:
+    """What relates to what: the sessions and the things they touch, as one typed
+    nodes-and-links document (:func:`crowsnest.relations.relations`).
+
+    Nodes are the owner, the sessions, and each session's machine, folder, repository
+    and references; links say who waits on the owner, who started whom, who messaged
+    whom, and where each session works; rules derive the relations nobody recorded
+    (sessions that share a repository, chains of spawns and messages). Every link says
+    how it is known: ``recorded``, ``observed`` or ``inferred``.
+
+    ``rows`` are roster rows already read and classified (a report's ``rows``); without
+    them the sessions are read as :func:`report` reads them, with their ledgers, verdicts
+    and references. ``since`` bounds the event log read for messages (default: the
+    config file's ``[relations] since``). ``sources``, ``rules`` and ``interest`` are
+    :mod:`crowsnest.relations`'s seams, carried through: a reader for something
+    crowsnest does not own is added by passing it.
+    """
+    from crowsnest import eventlog
+    from crowsnest import relations as _relations
+    from crowsnest.config import relations_settings
+
+    as_of = as_of or datetime.now(timezone.utc).isoformat(timespec="seconds")
+    if rows is None:
+        ctx = dflt_row_context(config=config)
+        found = sessions(home=home, all_homes=all_homes, config=config)
+        rows = ctx.rows(
+            found,
+            home_dir=_home_to_pin(home=home, all_homes=all_homes, config=config),
+            pages=ctx.pages({s.label for s in found}),
+            triage=True,
+        )
+    rows = list(rows)
+    if sources is None:
+        since = since if since is not None else relations_settings(path=config).since
+        forest = lineage(
+            home=home,
+            all_homes=all_homes,
+            config=config,
+            lineage_path=lineage_path,
+            sessions_read=rows,
+        )
+        events = eventlog.read(
+            since=since or None, events=("message", "intent"), events_path=events_path
+        )
+        sources = _relations.dflt_sources(lineage=forest, events=events)
+    return _relations.relations(
+        rows,
+        sources=sources,
+        rules=_relations.DFLT_RULES if rules is None else rules,
+        interest=interest,
+        as_of=as_of,
+    )
+
+
+def relations_page(
+    *,
+    rows: Sequence[Mapping] | None = None,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+    entry: str | None = None,
+    nav=None,
+    title: str | None = None,
+    as_of: str | None = None,
+    **read,
+) -> dict:
+    """The relations document as one self-contained page: ``{"html", "made_at", "counts"}``.
+
+    :func:`relations`, drawn by :func:`crowsnest.relations_page.render_relations_page`:
+    a map of the nodes and links, a docket of what waits on the owner, and a board of
+    places, opening on ``entry``. ``entry``, ``nav`` (links to the owner's other pages)
+    and ``title`` default to the config file's ``[relations]`` table. ``read`` goes to
+    :func:`relations` (``since``, ``sources``, ``rules``, ``interest``).
+    """
+    from crowsnest.config import relations_settings
+    from crowsnest.relations_page import render_relations_page
+
+    settings = relations_settings(path=config)
+    doc = relations(
+        rows=rows, home=home, all_homes=all_homes, config=config, as_of=as_of, **read
+    )
+    html = render_relations_page(
+        doc,
+        title=settings.title if title is None else title,
+        entry=settings.entry if entry is None else entry,
+        nav=settings.nav if nav is None else nav,
+    )
+    return {
+        "html": html,
+        "made_at": doc["graph"]["as_of"],
+        "counts": doc["graph"]["counts"],
+    }
 
 
 def backfill_lineage(
