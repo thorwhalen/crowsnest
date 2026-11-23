@@ -1,0 +1,39 @@
+crowsnest.relations
+===================
+
+.. automodule:: crowsnest.relations
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      NODE_TYPES
+      LINK_TYPES
+      CONFIDENCES
+      OWNER_ID
+      DFLT_RULES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      dflt_interest
+      dflt_sources
+      from_events
+      from_lineage
+      from_references
+      from_sessions
+      from_verdicts
+      infer
+      link
+      neighbourhood
+      node
+      relations
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Rule
+   

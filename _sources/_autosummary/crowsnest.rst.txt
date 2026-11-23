@@ -65,6 +65,8 @@
    questions
    refstate
    registry
+   relations
+   relations_page
    report
    rows
    said

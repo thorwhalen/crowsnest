@@ -36,6 +36,8 @@
 - [crowsnest.questions](_autosummary/crowsnest.questions.html.md): Your questions: what the person asked their sessions, and what each answered (#129).
 - [crowsnest.refstate](_autosummary/crowsnest.refstate.html.md): What a referenced issue or pull request is now: open or closed, and its title.
 - [crowsnest.registry](_autosummary/crowsnest.registry.html.md): Who is alive right now, read from the registry Claude Code keeps while a session runs.
+- [crowsnest.relations](_autosummary/crowsnest.relations.html.md): What relates to what: the sessions and the things they touch, as one typed graph.
+- [crowsnest.relations_page](_autosummary/crowsnest.relations_page.html.md): The relations graph as a page: one self-contained file, three lenses over one document.
 - [crowsnest.report](_autosummary/crowsnest.report.html.md): The live roster as one self-contained HTML page: no stylesheet, script, font, or
 - [crowsnest.rows](_autosummary/crowsnest.rows.html.md): How an item’s row is built and hashed: one value, taken whole by every surface that pins it.
 - [crowsnest.said](_autosummary/crowsnest.said.html.md): When the thing an item quotes was said: its own time, taken from its own source.
@@ -48,7 +50,7 @@
 - [crowsnest.triage](_autosummary/crowsnest.triage.html.md): Which sessions need you, which are safe to close, and which are still going.
 - [crowsnest.watch](_autosummary/crowsnest.watch.html.md): A stream of what changed, so a monitor is told instead of made to poll.
 - [For AI agents](ai-agents.html.md): &#96;crowsnest&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-11-23 17:20 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-11-23 18:56 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

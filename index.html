@@ -94,6 +94,8 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.questions.html">crowsnest.questions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.refstate.html">crowsnest.refstate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.registry.html">crowsnest.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.relations.html">crowsnest.relations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.relations_page.html">crowsnest.relations_page</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.report.html">crowsnest.report</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.rows.html">crowsnest.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/crowsnest.said.html">crowsnest.said</a></li>
@@ -129,6 +131,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#what-you-have-already-dealt-with">What you have already dealt with</a></li>
 <li><a class="reference internal" href="#every-reference-as-a-link">Every reference, as a link</a></li>
 <li><a class="reference internal" href="#who-started-whom">Who started whom</a></li>
+<li><a class="reference internal" href="#what-relates-to-what">What relates to what</a></li>
 <li><a class="reference internal" href="#several-accounts-and-machines-in-one-roster">Several accounts and machines in one roster</a><ul>
 <li><a class="reference internal" href="#which-claude-gets-started">Which <code class="docutils literal notranslate"><span class="pre">claude</span></code> gets started</a></li>
 <li><a class="reference internal" href="#which-model-a-spawned-session-starts-on">Which model a spawned session starts on</a></li>
@@ -362,6 +365,30 @@ data-aria-dark="Switch to auto color mode">
 <p>A parent that has exited stays in the picture (<code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">gone</span></code>) so its children stay a fleet rather than becoming unrelated roots.</p>
 <p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">report</span></code> draws the same forest as <strong>inline SVG</strong>, laid out in Python — no graph library, no script, nothing fetched, which is what lets the page keep its offline promise. Sessions that started nobody and were started by nobody are left out (the roster above is already that list), a parent’s childless children collapse once there are more than a handful — <strong>the ones that need you kept, the rest summarised as “7 more · 7 idle”</strong> — and the figure is drawn at a fixed size so its labels are 12px whatever the screen, scrolling sideways inside its own box rather than shrinking.</p>
 <p>Recording only works forwards. For a machine that has been running sessions since before this shipped, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">lineage</span> <span class="pre">--backfill</span></code> recovers what it can, once, by scanning every transcript for the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">spawn</span></code> commands that created today’s sessions, and writes what it finds into <code class="docutils literal notranslate"><span class="pre">lineage.jsonl</span></code> so the cheap reader has it from then on. That is <em>inference</em> — the command may have failed — so those edges are marked <code class="docutils literal notranslate"><span class="pre">~</span></code> wherever they are shown, and a recorded edge is never overwritten by a guessed one. A <em>mention</em> is not a spawn: the command has to be the head of a shell segment, so grepping for the phrase or writing a commit message about it does not invent a parent. <code class="docutils literal notranslate"><span class="pre">--dry-run</span></code> says what it would add and writes nothing.</p>
+</section>
+<section id="what-relates-to-what">
+<h2>What relates to what<a class="headerlink" href="#what-relates-to-what" title="Link to this heading">#</a></h2>
+<p>A roster is a list and the spawn forest is a tree. The questions a large fleet raises are about relations between things of several kinds: which sessions wait on you and what hangs off them, who messaged whom, which of these forty work on the same repository.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">crowsnest</span> <span class="n">relations</span>                    <span class="c1"># how many nodes and links of each kind</span>
+</span><span data-line="2"><span class="n">crowsnest</span> <span class="n">relations</span> <span class="o">--</span><span class="n">json</span>             <span class="c1"># the whole document</span>
+</span><span data-line="3"><span class="n">crowsnest</span> <span class="n">relations</span> <span class="o">--</span><span class="n">page</span> <span class="nb">map</span><span class="o">.</span><span class="n">html</span>    <span class="c1"># one self-contained page: a map, a docket, a board</span>
+</span></pre></div>
+</div>
+<p>The document is a typed graph in the plain nodes-and-links shape. <strong>Nodes</strong>: you, each session, its machine, its folder, the folder’s repository, and the issues, pull requests and pages its words refer to. <strong>Links</strong> are read from what is already recorded: who waits on you (triage), who started whom (the spawn record), who messaged whom and what you asked of a session (the event log), where each session works, what it mentions. Every link says how it is known: <code class="docutils literal notranslate"><span class="pre">recorded</span></code>, <code class="docutils literal notranslate"><span class="pre">observed</span></code>, or <code class="docutils literal notranslate"><span class="pre">inferred</span></code>.</p>
+<p><strong>Rules derive the relations nobody recorded</strong>, and a rule is data: a path of link types to walk. <em>Works in</em>, then <em>in repository</em>, is <em>works on</em>; <em>works on</em>, then <em>works on</em> backwards, is <em>shares a repository with</em>; <em>started</em> walked more than once is <em>descends from</em>. A derived link lists the nodes it went through, so you can ask why it is there. A node shared by more than a dozen others is reported as a hub rather than expanded into pairs.</p>
+<p>The page opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the docket and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing, as the report is.</p>
+<p>To have it sent beside the report on the same schedule, and to choose what it opens on (the page names your sessions and their folders and quotes what they asked, sanitised as the report is, so send it only where you alone can read it: behind your own login or in a private folder, never a public bucket):</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">[relations]</span>
+</span><span data-line="2"><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"me@myserver:/srv/crowsnest/relations.html"</span><span class="w">   </span><span class="c1"># or a local path; empty: not sent</span>
+</span><span data-line="3"><span class="n">entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"map"</span><span class="w">          </span><span class="c1"># map, hybrid (the first asks, then the map), docket or board</span>
+</span><span data-line="4"><span class="n">since</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"7d"</span><span class="w">           </span><span class="c1"># how far back messages are read</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="k">[relations.nav]</span><span class="w">        </span><span class="c1"># links the page shows to your other pages</span>
+</span><span data-line="7"><span class="s2">"Every session"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/crowsnest/all/"</span>
+</span></pre></div>
+</div>
+<p>The map is drawn by <a class="reference external" href="https://js.cytoscape.org">Cytoscape.js</a> 3.35.0 (MIT, with the MIT-licensed Thenable and bezier-easing it bundles), shipped in the package as <code class="docutils literal notranslate"><span class="pre">crowsnest/data/relations/cytoscape.min.js</span></code> beside its licence and inlined into the page with its notice.</p>
+<p>From Python, <code class="docutils literal notranslate"><span class="pre">crowsnest.tools.relations()</span></code> returns the document and <code class="docutils literal notranslate"><span class="pre">crowsnest.relations.relations(rows,</span> <span class="pre">sources=...,</span> <span class="pre">rules=...,</span> <span class="pre">interest=...)</span></code> builds one from rows you already have. <code class="docutils literal notranslate"><span class="pre">sources</span></code> are the readers (add one for something crowsnest does not own by passing it), <code class="docutils literal notranslate"><span class="pre">rules</span></code> the derivations, and <code class="docutils literal notranslate"><span class="pre">interest</span></code> the score that decides what a view shows first.</p>
 </section>
 <section id="several-accounts-and-machines-in-one-roster">
 <h2>Several accounts and machines in one roster<a class="headerlink" href="#several-accounts-and-machines-in-one-roster" title="Link to this heading">#</a></h2>
@@ -674,7 +701,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-23 17:20 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/b7440dd8aea0fbcf37a731857e555557450df5c6">b7440dd</a> (main) · crowsnest 0.0.122 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-23 18:56 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/dea929ef6119ecd13afb356e7b69dec198db62b1">dea929e</a> (main) · crowsnest 0.0.123 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -709,7 +736,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=fa321392"></script>
+      <script src="_static/documentation_options.js?v=5e4a978b"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>

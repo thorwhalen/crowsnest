@@ -1,0 +1,20 @@
+crowsnest.relations\_page
+=========================
+
+.. automodule:: crowsnest.relations_page
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      ENTRIES
+      LIBRARY
+      DFLT_STALE_MINUTES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      render_relations_page
+   
