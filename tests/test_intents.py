@@ -204,3 +204,107 @@ def test_the_cli_bounds_stdin_and_says_when_a_key_was_reused(store, monkeypatch,
     out = capsys.readouterr()
     assert out.out.split() == [intents.keyed_id("k")] * 2
     assert "already queued" in out.err
+
+
+# --------------------------------------------------------------------------------------
+# The source a confined surface pins, and its hourly cap
+
+
+def test_a_source_is_recorded_and_a_retry_cannot_change_it(store):
+    got = intents.put(
+        "tell",
+        "fixer",
+        "go",
+        store=store,
+        source="claude-ai",
+        idempotency_key="k1",
+        now=NOW,
+    )
+    assert got["doc"]["source"] == "claude-ai"
+    again = intents.put(
+        "tell",
+        "fixer",
+        "go",
+        store=store,
+        source="claude-ai",
+        idempotency_key="k1",
+        now=NOW,
+    )
+    assert again["reused"] and again["id"] == got["id"]
+    with pytest.raises(ValueError, match="another source"):
+        intents.put("tell", "fixer", "go", store=store, idempotency_key="k1", now=NOW)
+    with pytest.raises(ValueError, match="source"):
+        intents.put("tell", "fixer", "go", store=store, source="Claude AI")
+
+
+def test_a_keyed_retry_still_matches_an_intent_queued_before_sources(store):
+    first = intents.put("tell", "fixer", "go", store=store, idempotency_key="k", now=NOW)
+    assert "source" not in first["doc"]
+    assert intents.put("tell", "fixer", "go", store=store, idempotency_key="k", now=NOW)[
+        "reused"
+    ]
+
+
+def test_max_per_hour_counts_one_source_and_never_refuses_a_retry(store):
+    from datetime import timedelta
+
+    def connector(text, key=None, at=NOW):
+        return intents.put(
+            "tell",
+            "fixer",
+            text,
+            store=store,
+            source="claude-ai",
+            max_per_hour=2,
+            idempotency_key=key,
+            now=at,
+        )
+
+    connector("one", key="a")
+    connector("two")
+    intents.put("tell", "fixer", "page", store=store, now=NOW)  # another source
+    with pytest.raises(ValueError, match="at most 2"):
+        connector("three")
+    assert connector("one", key="a")["reused"]  # a retry gets its id, not a refusal
+    assert connector("later", at=NOW + timedelta(hours=1, seconds=1))["id"]
+    # a document dated ahead of now is not counted, so it cannot lock the source out
+    folder = store / "intents"
+    (folder / "ahead.json").write_text(
+        json.dumps(
+            {
+                "kind": "tell",
+                "session": "x",
+                "text": "t",
+                "status": "queued",
+                "source": "claude-ai",
+                "at": "2030-01-01T00:00:00Z",
+            }
+        )
+    )
+    assert connector("after", at=NOW + timedelta(hours=3))["id"]
+    with pytest.raises(ValueError, match="needs a --source"):
+        intents.put("tell", "fixer", "go", store=store, max_per_hour=3)
+
+
+def test_the_cli_takes_a_source_and_a_cap(store, monkeypatch, capsys):
+    argv = [
+        "intent",
+        "put",
+        "tell",
+        "fixer",
+        "--store",
+        str(store),
+        "--source",
+        "claude-ai",
+        "--max-per-hour",
+        "1",
+    ]
+    monkeypatch.setattr("sys.stdin", io.StringIO("go"))
+    main(argv)
+    intent = capsys.readouterr().out.strip()
+    doc = json.loads((store / "intents" / f"{intent}.json").read_text())
+    assert doc["source"] == "claude-ai"
+    monkeypatch.setattr("sys.stdin", io.StringIO("again"))
+    with pytest.raises(SystemExit):
+        main(argv)
+    assert "at most 1" in capsys.readouterr().err

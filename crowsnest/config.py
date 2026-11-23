@@ -679,6 +679,20 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
 COURIER_KEY = "courier"
 
 
+#: Who wrote an intent, from its ``source`` field: a short lowercase name. The page stamps
+#: :data:`CONSOLE_SOURCE`; a confined surface stamps its own (hatchway's claude.ai
+#: connector passes ``--source claude-ai``), and the caller of that surface cannot change it.
+SOURCE = re.compile(r"^[a-z][a-z0-9-]{0,31}$")
+
+#: The source of an intent typed on the console page itself, by its owner.
+CONSOLE_SOURCE = "console"
+
+#: The sources whose intents ``deliver_intents`` posts straight to their session; every
+#: other one, and an intent that names none, goes to the watching session first, which
+#: reads it before any session acts on it.
+DFLT_DELIVER_SOURCES = (CONSOLE_SOURCE,)
+
+
 @dataclass(frozen=True)
 class CourierSettings:
     """The ``[courier]`` table: where the page's console store lives, for ``crowsnest courier``.
@@ -697,6 +711,10 @@ class CourierSettings:
     #: How long such an intent waits for a busy or waiting session before the watcher
     #: gets it after all.
     hold_minutes: float = 60.0
+    #: The sources whose intents ``deliver_intents`` posts straight to their session
+    #: (:data:`crowsnest.courier.DFLT_DELIVER_SOURCES`: the console page only). Any other,
+    #: such as ``claude-ai``, goes to the watching session first.
+    deliver_sources: tuple[str, ...] = DFLT_DELIVER_SOURCES
     #: Append the registry's changes (started, exited, busy, idle, waiting, error) to
     #: the event log each tick (:func:`crowsnest.eventlog.record_changes`, #141).
     record_registry: bool = False
@@ -765,12 +783,20 @@ def courier_settings(*, path: str | Path | None = None) -> CourierSettings:
         remote = "me@myserver:/srv/crowsnest/db"   # or a local directory
         deliver_intents = true   # ask/tell intents go to their session, not the watcher
         hold_minutes = 60        # how long one waits for a busy session first
+        deliver_sources = ["console"]   # whose intents skip the watching session
         record_registry = true   # write the registry's changes to the event log
 
-    The last three are off by default, so a table that says only ``remote`` behaves as
-    it did before they existed.
+    Delivery and recording are off by default, so a table that says only ``remote``
+    behaves as it did before they existed. ``deliver_sources`` names sources as
+    :data:`crowsnest.courier.SOURCE` spells them.
     """
     got = _typed_table(path, COURIER_KEY, CourierSettings)
+    bad = [s for s in got.deliver_sources if not SOURCE.match(s)]
+    if bad:
+        raise ValueError(
+            f"{config_path(path)}: [{COURIER_KEY}] deliver_sources has "
+            f"{', '.join(map(repr, bad))}, not a source name"
+        )
     return replace(got, remote=got.remote.strip())
 
 
@@ -795,6 +821,10 @@ def _typed_table(path, key: str, cls):
         wanted = type(getattr(cls(), name))
         if wanted is float and _is_int(value):
             value = float(value)
+        if wanted is tuple and isinstance(value, list):
+            if not all(isinstance(v, str) for v in value):
+                raise ValueError(f"{file}: [{key}] {name} must be a list of strings")
+            value = tuple(value)
         if type(value) is not wanted:
             raise ValueError(
                 f"{file}: [{key}] {name} must be a {wanted.__name__}, not {value!r}"
