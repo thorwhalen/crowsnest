@@ -18,7 +18,9 @@ here prints, exits, or knows which surface called it.
 | [`attention_import`](#crowsnest.tools.attention_import)(docs, \*[, store])                | Take attention documents into the store, last write winning by `updated_at`.                                                                                                                                                              |
 | [`backfill_lineage`](#crowsnest.tools.backfill_lineage)(\*[, home, all_homes, ...])       | Recover parentage from transcripts, once, and write it into the lineage log.                                                                                                                                                              |
 | [`brief`](#crowsnest.tools.brief)(session, \*[, home, all_homes, config, ...]) | openloops' digest for one live session: what it has been doing, dated, in its words.                                                                                                                                                      |
+| [`close`](#crowsnest.tools.close)(names, \*[, apply, home, config])            | Close the named sessions (whole name or id), each through the reaper's checks.                                                                                                                                                            |
 | [`done`](#crowsnest.tools.done)(session, \*[, home, all_homes, config, ...])  | Mark `session`'s item handled: hidden until what it asks for changes.                                                                                                                                                                     |
+| [`finished`](#crowsnest.tools.finished)(\*[, idle_hours, home, config])           | Which sessions look finished (ledger says done) and which to review (it says nothing), with the `crowsnest close` line for the finished.                                                                                                  |
 | [`guard_tick`](#crowsnest.tools.guard_tick)(\*[, home, config])                     | The OOM pass, then the reaper in the mode `[guard] reap` names (report by default).                                                                                                                                                       |
 | [`guard_units`](#crowsnest.tools.guard_units)(\*[, to])                              | The systemd units that run the guard, rendered for this machine; written to `to` (a directory, e.g. `/etc/systemd/system`) when given.                                                                                                    |
 | [`later`](#crowsnest.tools.later)(session, preset, \*[, plan, on_change, ...]) | Put `session`'s item off until a preset time, or until it changes, whichever first.                                                                                                                                                       |
@@ -99,9 +101,30 @@ state for a session started minutes ago – and `why` says so.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
+### crowsnest.tools.close(names, , apply=True, home=None, config=None)
+
+Close the named sessions (whole name or id), each through the reaper’s checks.
+
+Naming a session stands in for the reaper’s idle-age and ledger checks; a protected
+session, one at work, a parent of a live session or one with unlanded work is kept.
+`apply=False` only plans. See [`crowsnest.guard.close()`](crowsnest.guard.html.md#crowsnest.guard.close).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### crowsnest.tools.done(session, , home=None, all_homes=False, config=None, row_context=None, store=None)
 
 Mark `session`’s item handled: hidden until what it asks for changes.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.tools.finished(, idle_hours=None, home=None, config=None)
+
+Which sessions look finished (ledger says done) and which to review (it says
+nothing), with the `crowsnest close` line for the finished. Closes nothing.
+
+See [`crowsnest.guard.finished()`](crowsnest.guard.html.md#crowsnest.guard.finished).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

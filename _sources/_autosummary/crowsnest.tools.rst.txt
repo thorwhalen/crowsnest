@@ -12,7 +12,9 @@ crowsnest.tools
       attention_import
       backfill_lineage
       brief
+      close
       done
+      finished
       guard_tick
       guard_units
       later

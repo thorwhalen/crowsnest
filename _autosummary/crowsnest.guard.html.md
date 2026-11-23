@@ -20,6 +20,10 @@ Three mechanisms here, each answering one way that happened:
   triage’s swallow-and-decline, because here the expensive error is closing live work.
   Dry run unless told otherwise; each close is re-verified first and is a SIGTERM, never a
   SIGKILL, and is logged with the `claude --resume` line that brings the session back.
+  A person closes by name with [`close()`](#crowsnest.guard.close) (#193), where naming a session stands in for
+  the idle-age and ledger checks and nothing else; [`finished()`](#crowsnest.guard.finished) proposes the names,
+  splitting what passes into finished (the ledger says done) and for review (it says
+  nothing), and closes nothing.
 * **OOM tiers** ([`oom_pass()`](#crowsnest.guard.oom_pass)): every registered session’s process tree gets an
   `oom_score_adj` by what it is doing, so that when memory runs out anyway the kernel
   takes an idle worker first and the lookout last.
@@ -40,20 +44,26 @@ cap applies only when `max_sessions` is configured.
 
 ### Module Attributes
 
-| [`DFLT_CHECKS`](#crowsnest.guard.DFLT_CHECKS)   | The reaper's checks, cheap first.   |
-|----------------------------------------------------------------|-------------------------------------|
+| [`DFLT_CHECKS`](#crowsnest.guard.DFLT_CHECKS)   | The reaper's checks, cheap first.                |
+|----------------------------------------------------------------|--------------------------------------------------|
+| [`NAMED_CHECKS`](#crowsnest.guard.NAMED_CHECKS)  | The checks on a session a person closes by name. |
+| [`SELECT_CHECKS`](#crowsnest.guard.SELECT_CHECKS) | the reaper's, less the ledger gate.              |
 
 ### Functions
 
 | [`claude_alive`](#crowsnest.guard.claude_alive)(pid, \*[, proc])                      | Is `pid` a running `claude`? With `/proc`, its command line must say so.                                               |
 |-----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| [`close`](#crowsnest.guard.close)(names, \*[, apply, home, config, ...])       | Close the sessions a person names, through the reaper's own checks and closer.                                         |
+| [`finished`](#crowsnest.guard.finished)(\*[, idle_hours, home, config, ...])      | Propose what to close: the sessions that pass every check but the ledger's, sorted.                                    |
 | [`gate`](#crowsnest.guard.gate)(name, \*[, home, config, settings, mem, ...]) | Refuse a spawn of `name` when the machine is full; else say what was measured.                                         |
 | [`last_session`](#crowsnest.guard.last_session)(name, \*[, home, names])              | The most recent session that went by `name`: `{session_id, cwd, transcript, active_at, bridge_session_id}`, or `None`. |
+| [`last_words`](#crowsnest.guard.last_words)(session)                                | The opening and the end of the session's last reply, on one line; `""` if none.                                        |
 | [`meminfo`](#crowsnest.guard.meminfo)([path])                                    | `/proc/meminfo` in bytes, `{}` where there is none (macOS, a test's path).                                             |
 | [`notify`](#crowsnest.guard.notify)(url, title, body, \*[, timeout])            | POST `body` to an ntfy-style URL; `False` (never an exception) when it fails.                                          |
 | [`oom_pass`](#crowsnest.guard.oom_pass)(\*[, home, config, settings, ...])        | Write each registered session's tier into its process and every descendant.                                            |
 | [`plan`](#crowsnest.guard.plan)(\*[, home, config, settings, sessions, ...])  | Every live session, each `{"session": row, "close": bool, "keep_because": [...]}`.                                     |
 | [`reap`](#crowsnest.guard.reap)(\*[, apply, home, config, settings, ...])     | The plan, and -- only with `apply=True` -- the closes, at most `max_closes`.                                           |
+| [`resume_line`](#crowsnest.guard.resume_line)(session)                               | The shell line that brings a closed session back, in its own account.                                                  |
 | [`session_cap`](#crowsnest.guard.session_cap)(settings, mem)                         | How many sessions this machine may run: `max_sessions`, else derived from memory.                                      |
 | [`tick`](#crowsnest.guard.tick)(\*[, home, config, settings])                 | What the timer runs: the OOM pass, then the reaper in `[guard] reap`'s mode.                                           |
 | [`tier_of`](#crowsnest.guard.tier_of)(session, settings)                         | The `oom_score_adj` a session's processes get, by what it is doing.                                                    |
@@ -75,6 +85,13 @@ cap applies only when `max_sessions` is configured.
 The reaper’s checks, cheap first. Each returns why the session is kept, or `None`.
 `nothing_unlanded` runs git, so it runs only once every cheaper check has passed.
 
+### crowsnest.guard.NAMED_CHECKS *: [tuple](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[LiveSession](crowsnest.registry.html.md#crowsnest.registry.LiveSession), [ReapContext](#crowsnest.guard.ReapContext)], [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)], ...]* *= (<function check_protected>, <function check_resting>, <function check_nothing_unlanded>)*
+
+The checks on a session a person closes by name. Naming it stands in for two of the
+reaper’s checks – how long it has been idle, and whether its ledger says it is done
+(most ledgers say nothing) – and for nothing else: a protected session, one at work,
+the parent of a live session, or one with unlanded work is still kept.
+
 ### *class* crowsnest.guard.ReapContext(settings, now=time(), verdicts=dict(), parents=frozenset({}), callers=frozenset({}), argv_of=<function ReapContext.<lambda>>, touched_cache=None, is_landed=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -84,6 +101,15 @@ What every check reads, gathered once per run.
 `verdicts` maps a session id to its triage verdict (`group`, `said_at`);
 `parents` holds the names of sessions that spawned a live one; `callers` the
 session ids of whoever runs this; `is_landed` is [`unlanded()`](#crowsnest.guard.unlanded)’s.
+
+### crowsnest.guard.SELECT_CHECKS *: [tuple](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[LiveSession](crowsnest.registry.html.md#crowsnest.registry.LiveSession), [ReapContext](#crowsnest.guard.ReapContext)], [str](https://docs.python.org/3/builtins/stdtypes.html#str) | [None](https://docs.python.org/3/builtins/constants.html#None)], ...]* *= (<function check_protected>, <function check_resting>, <function check_idle_for>, <function check_nothing_unlanded>)*
+
+the reaper’s, less the ledger gate. [`finished()`](#crowsnest.guard.finished) reads the
+ledger itself, to sort what passes into *finished* and *for review*. Both tuples are
+the reaper’s by exclusion, so a check added there reaches them too.
+
+* **Type:**
+  The selector’s checks
 
 ### *exception* crowsnest.guard.SpawnRefused
 
@@ -101,6 +127,45 @@ A registry file outlives a session that was OOM-killed, and its pid is reused; s
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### crowsnest.guard.close(names, \*, apply=True, home=None, config=None, settings=None, sessions=None, ctx=None, checks=(<function check_protected>, <function check_resting>, <function check_nothing_unlanded>), closer=None, log_path=None)
+
+Close the sessions a person names, through the reaper’s own checks and closer.
+
+The person’s naming replaces the idle-age and ledger checks ([`NAMED_CHECKS`](#crowsnest.guard.NAMED_CHECKS));
+every other check still keeps, each close is `sigterm_closer()`’s (re-read, then
+SIGTERM), and each is logged with its resume line like a reap’s. Not capped by
+`max_closes`: the person chose how many. `apply=False` only plans.
+
+Returns `{applied, would_close, closed, plan, unknown}`; `unknown` maps each name
+that matched no single live session to why. Each plan row also carries `ledger`,
+the triage group, for the person to see what they are overriding.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.guard.finished(\*, idle_hours=None, home=None, config=None, settings=None, sessions=None, ctx=None, checks=(<function check_protected>, <function check_resting>, <function check_idle_for>, <function check_nothing_unlanded>), words=<function last_words>)
+
+Propose what to close: the sessions that pass every check but the ledger’s, sorted.
+
+Closes nothing. A session that is resting, idle for `idle_hours` (default
+`[guard] idle_hours`), not protected and with nothing unlanded is
+
+* **finished** when its ledger says done, with an all-clear newer than its last
+  prompt (checked even when `[guard] require_done` is off);
+* **for review** when its ledger says nothing (`unclassified`) or its all-clear is
+  stale. Its last words come with it, for a person to read and decide: triage never
+  guesses, so a quiet ledger is never taken for a finished one;
+* **kept** when its ledger says anything else (it needs the person, or is working).
+
+`finished` and `review` are session ids, and `command` – the `crowsnest
+close` line for the finished ones, what a lookout proposes and the person answers
+yes to – names them by id: an answer can come hours later, and by then a name may
+belong to a new session that [`close()`](#crowsnest.guard.close) would close without the idle and ledger
+checks. A row’s `name` is in `plan`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
 
 ### crowsnest.guard.gate(name, , home=None, config=None, settings=None, mem=None, is_alive=None)
 
@@ -128,6 +193,13 @@ whose transcript changed last wins.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.guard.last_words(session)
+
+The opening and the end of the session’s last reply, on one line; `""` if none.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.guard.meminfo(path=None)
 
@@ -177,6 +249,27 @@ close appends `{name, session_id, cwd, resume, result}` to
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### crowsnest.guard.resume_line(session)
+
+The shell line that brings a closed session back, in its own account.
+
+`claude --resume` looks only in the account home it runs under, and a terminal may
+export any `CLAUDE_CONFIG_DIR`, so the home is always stated (the session’s
+transcript lives under it): left out, the line answers “no conversation found” in a
+terminal opened with another account.
+
+```pycon
+>>> s = LiveSession(pid=1, session_id='abc', name='w', cwd='/r/my repo',
+...     kind='interactive', status='idle', waiting_for='', status_since=0.0,
+...     started_at=0.0, remote_control=True, version='2',
+...     transcript='/h/.claude-iq/projects/p/abc.jsonl')
+>>> resume_line(s)
+"cd '/r/my repo' && CLAUDE_CONFIG_DIR=/h/.claude-iq claude --remote-control -n w --resume abc"
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.guard.session_cap(settings, mem)
 

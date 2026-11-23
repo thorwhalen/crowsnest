@@ -9,19 +9,25 @@ crowsnest.guard
    .. autosummary::
    
       DFLT_CHECKS
+      NAMED_CHECKS
+      SELECT_CHECKS
    
    .. rubric:: Functions
 
    .. autosummary::
    
       claude_alive
+      close
+      finished
       gate
       last_session
+      last_words
       meminfo
       notify
       oom_pass
       plan
       reap
+      resume_line
       session_cap
       tick
       tier_of

@@ -431,6 +431,7 @@ data-aria-dark="Switch to auto color mode">
 <li><p>its ledger’s all-clear is newer than the last thing it was asked.</p></li>
 </ul>
 </li>
+<li><p><strong>Closing by name</strong> (#193). Most ledgers never say “done”, so the reaper alone closes little. <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">close</span> <span class="pre">--finished</span></code> closes nothing: it sorts every session that passes the reaper’s other checks into <em>finished</em> (its ledger says done) and <em>review</em> (its ledger says nothing; shown with the opening and end of its last reply), and prints the <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">close</span> <span class="pre">--</span> <span class="pre">&lt;ids&gt;</span></code> line for the finished ones (by id: by the time someone answers, a name may belong to a new session). <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">close</span> <span class="pre">NAME...</span></code> then closes exactly those sessions (whole names or ids, never a prefix). Naming a session stands in for the idle-age and ledger checks and nothing else: a protected session, the caller, a parent of a live session, one that is busy, waiting or running a shell, and one with unlanded work are still kept. It is not capped by <code class="docutils literal notranslate"><span class="pre">max_closes</span></code>, <code class="docutils literal notranslate"><span class="pre">--dry-run</span></code> only plans, and every close is logged like a reap’s, with a resume line that always states the session’s account home (<code class="docutils literal notranslate"><span class="pre">CLAUDE_CONFIG_DIR</span></code>), so it works whatever account the terminal runs. One close that fails never stops the others.</p></li>
 <li><p><strong>OOM tiers.</strong> On Linux, every session’s process tree gets an <code class="docutils literal notranslate"><span class="pre">oom_score_adj</span></code> matching its state: protected −300, busy 300, waiting 500, idle 800. When memory does run out, the kernel takes an idle worker first and the lookout last.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">guard</span> <span class="pre">tick</span></code> runs the OOM pass and then the reaper, in the mode <code class="docutils literal notranslate"><span class="pre">reap</span></code> names: <code class="docutils literal notranslate"><span class="pre">report</span></code> (the default, which only plans), <code class="docutils literal notranslate"><span class="pre">apply</span></code>, or <code class="docutils literal notranslate"><span class="pre">off</span></code>. A systemd timer runs it every five minutes:</p>
@@ -671,7 +672,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-21 06:45 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/78c0dad8766c3f379d026c6fa540409ec0608c6d">78c0dad</a> (main) · crowsnest 0.0.120 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-23 09:21 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/98124cdb4c3baedc584b404b1363aebe35f00b35">98124cd</a> (main) · crowsnest 0.0.121 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -706,7 +707,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=69b21de1"></script>
+      <script src="_static/documentation_options.js?v=cdca99f8"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
