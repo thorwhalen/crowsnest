@@ -213,7 +213,7 @@ The document is a typed graph in the plain nodes-and-links shape. **Nodes**: you
 
 The page opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the docket and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing, as the report is.
 
-To have it sent beside the report on the same schedule, and to choose what it opens on:
+To have it sent beside the report on the same schedule, and to choose what it opens on (the page names your sessions and their folders and quotes what they asked, sanitised as the report is, so send it only where you alone can read it: behind your own login or in a private folder, never a public bucket):
 
 ```toml
 [relations]
@@ -224,6 +224,8 @@ since = "7d"           # how far back messages are read
 [relations.nav]        # links the page shows to your other pages
 "Every session" = "/crowsnest/all/"
 ```
+
+The map is drawn by [Cytoscape.js](https://js.cytoscape.org) 3.35.0 (MIT, with the MIT-licensed Thenable and bezier-easing it bundles), shipped in the package as `crowsnest/data/relations/cytoscape.min.js` beside its licence and inlined into the page with its notice.
 
 From Python, `crowsnest.tools.relations()` returns the document and `crowsnest.relations.relations(rows, sources=..., rules=..., interest=...)` builds one from rows you already have. `sources` are the readers (add one for something crowsnest does not own by passing it), `rules` the derivations, and `interest` the score that decides what a view shows first.
 

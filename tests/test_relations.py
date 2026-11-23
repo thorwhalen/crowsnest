@@ -221,6 +221,37 @@ def test_every_string_goes_through_the_page_sanitiser():
     assert secret not in json.dumps(R.relations(rows, as_of=AS_OF))
 
 
+def test_no_field_reaches_the_document_unsanitised():
+    secret = "ghp_" + "B" * 36
+    rows = [
+        row(
+            "a1",
+            f"parser {secret}",
+            status=f"idle {secret}",
+            model=f"m {secret}",
+            session_url=f"https://example.org/s?token={secret}",
+            repo_url="https://github.com/i2mint/mergeset",
+            said_at=f"2026-01-01T10:00:00+00:00 {secret}",
+            verdict={**needs("action", "run it"), "why": f"action {secret}"},
+            links=[
+                {
+                    "type": "link",
+                    "url": f"https://example.org/p?key={secret}",
+                    "text": secret,
+                },
+                {"type": "link", "url": "javascript:alert(1)", "text": "x"},
+            ],
+        )
+    ]
+    forest = {"nodes": [{"name": f"boss {secret}", "alive": False}], "edges": []}
+    log = [{"event": "intent", "name": "parser", "at": f"2026-01-01T10:00:00Z {secret}"}]
+    doc = R.relations(
+        rows, sources=R.dflt_sources(lineage=forest, events=log), as_of=AS_OF
+    )
+    text = json.dumps(doc)
+    assert secret not in text and "javascript:" not in text
+
+
 def test_neighbourhood_is_the_part_around_one_node():
     near = R.neighbourhood(graph(), "session:c3", types=["mentions", "works_in"])
     ids = {n["id"] for n in near["nodes"]}
@@ -251,7 +282,8 @@ def test_the_page_is_one_file_that_asks_for_nothing():
     assert page.startswith("<!doctype html>") and "<title>nest</title>" in page
     assert "<script src" not in page and "<link" not in page and "@import" not in page
     assert 'href="/all/" target="_top"' in page
-    assert "Cytoscape Consortium" in page  # the library's notice travels with it
+    # the library's notice travels with it, into every page
+    assert "Cytoscape Consortium" in page and "Permission is hereby granted" in page
 
 
 def test_the_page_carries_the_document_and_no_text_can_close_its_script():

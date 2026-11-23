@@ -249,13 +249,41 @@ def link(
     }
 
 
+def _text(value, *, limit: int | None = None) -> str:
+    """``value`` as text the page may show: through the page's sanitiser, always."""
+    return publishable(str(value or ""), limit=limit) if value not in (None, "") else ""
+
+
+def _web(value) -> str:
+    """``value`` as a web address the page may link to, sanitised; ``''`` for anything
+    that is not ``http(s)``. A reference is text a session wrote, so its address is
+    sanitised like any other string and never trusted to be a link.
+
+    >>> _web('https://github.com/i2mint/mergeset/pull/27')
+    'https://github.com/i2mint/mergeset/pull/27'
+    >>> _web('javascript:alert(1)'), _web(None)
+    ('', '')
+    """
+    text = _text(value)
+    return text if text.lower().startswith(("http://", "https://")) else ""
+
+
 def _is_link(element: Mapping) -> bool:
     return "source" in element and "target" in element
 
 
 def _session_key(session_id: str, name: str) -> str:
-    """A session node's key: its session id, else (for one that has exited) its name."""
-    return str(session_id or "") or f"~{name}"
+    """A session node's key: its session id, else (for one that has exited) its name.
+
+    Both go through the sanitiser: a key is part of the document like any other string.
+    A session id (a UUID) comes back as it went in.
+
+    >>> _session_key('0a1e46eb-126c-4282-8931-fbb9ee3bd632', 'parser')
+    '0a1e46eb-126c-4282-8931-fbb9ee3bd632'
+    >>> _session_key('', 'boss')
+    '~boss'
+    """
+    return _text(session_id) or f"~{_text(name)}"
 
 
 def _session_id_of(row: Mapping) -> str:
@@ -303,41 +331,42 @@ def from_sessions(rows: Sequence[Mapping], *, owner: str = "you") -> Iterator[El
     >>> [e['type'] for e in found if 'source' in e]
     ['runs_on', 'works_in', 'in_repo']
     """
-    yield node("owner", "me", publishable(owner))
+    yield node("owner", "me", _text(owner))
     for row in rows:
         sid = _session_id_of(row)
         home = str(row.get("home") or "")
         yield node(
             "session",
             sid.split(":", 1)[1],
-            publishable(address(row)),
-            status=str(row.get("status") or ""),
+            _text(address(row)),
+            status=_text(row.get("status")),
             since=_iso(row.get("status_since")),
-            waiting_for=publishable(row.get("waiting_for") or "", limit=ASK_LIMIT),
-            model=str(row.get("model") or ""),
-            project=publishable(row.get("project") or ""),
-            url=str(row.get("session_url") or ""),
-            home=publishable(home),
-            said_at=str(row.get("said_at") or ""),
+            waiting_for=_text(row.get("waiting_for"), limit=ASK_LIMIT),
+            model=_text(row.get("model")),
+            project=_text(row.get("project")),
+            url=_web(row.get("session_url")),
+            home=_text(home),
+            said_at=_text(row.get("said_at")),
         )
-        machine = node("machine", home or "local", publishable(home) or "this machine")
+        machine = node("machine", _text(home) or "local", _text(home) or "this machine")
         yield machine
         yield link("runs_on", sid, machine["id"], confidence="recorded", by="sessions")
         cwd = str(row.get("cwd") or "")
         if not cwd:
             continue
-        path = publishable(cwd)
+        path = _text(cwd)
         folder = node(
             "folder",
-            f"{home}:{path}" if home else path,
-            publishable(row.get("project") or "") or path.rstrip("/").rsplit("/", 1)[-1],
+            f"{_text(home)}:{path}" if home else path,
+            _text(row.get("project")) or path.rstrip("/").rsplit("/", 1)[-1],
             path=path,
         )
         yield folder
         yield link("works_in", sid, folder["id"], confidence="recorded", by="sessions")
         kind, org, name, _ = github_ref(str(row.get("repo_url") or ""))
         if kind == "repo":
-            repo = node("repo", f"{org}/{name}", name, url=str(row["repo_url"]), org=org)
+            org, name = _text(org), _text(name)
+            repo = node("repo", f"{org}/{name}", name, url=_web(row["repo_url"]), org=org)
             yield repo
             yield link("in_repo", folder["id"], repo["id"], by="sessions")
 
@@ -365,8 +394,8 @@ def from_verdicts(rows: Sequence[Mapping]) -> Iterator[Element]:
         if not group:
             continue
         sid = _session_id_of(row)
-        why = str(verdict.get("why") or "")
-        ask = publishable(verdict.get("reason") or "", limit=ASK_LIMIT)
+        group, why = _text(group), _text(verdict.get("why"))
+        ask = _text(verdict.get("reason"), limit=ASK_LIMIT)
         needs = group == "needs_you"
         yield node(
             "session",
@@ -386,7 +415,7 @@ def from_verdicts(rows: Sequence[Mapping]) -> Iterator[Element]:
             OWNER_ID,
             confidence="recorded" if known else "observed",
             by="verdicts",
-            at=str(verdict.get("said_at") or ""),
+            at=_text(verdict.get("said_at")),
             why=why,
         )
 
@@ -422,7 +451,7 @@ def from_lineage(graph: Mapping) -> Reader:
             yield node(
                 "session",
                 ids[name].split(":", 1)[1],
-                publishable(name),
+                _text(name),
                 status="exited",
                 alive=False,
             )
@@ -441,7 +470,7 @@ def from_lineage(graph: Mapping) -> Reader:
                 target,
                 confidence=confidence if confidence in CONFIDENCES else "observed",
                 by="lineage",
-                at=str(edge.get("at") or ""),
+                at=_text(edge.get("at")),
             )
 
     return read
@@ -473,10 +502,10 @@ def from_references(rows: Sequence[Mapping]) -> Iterator[Element]:
         sid = _session_id_of(row)
         for ref in row.get("links") or ():
             kind = _REFERENCE_TYPES.get(str(ref.get("type") or ""))
-            url = str(ref.get("url") or "")
+            url = _web(ref.get("url"))
             if not kind or not url:
                 continue
-            _, org, name, number = github_ref(url)
+            _, org, name, number = (_text(part) for part in github_ref(url))
             more: tuple = ()
             if kind in ("issue", "pr"):
                 if not number:
@@ -487,7 +516,7 @@ def from_references(rows: Sequence[Mapping]) -> Iterator[Element]:
                     f"{name}#{number}",
                     url=url,
                     repo=f"{org}/{name}",
-                    state=str(ref.get("state") or ""),
+                    state=_text(ref.get("state")),
                 )
                 home = node(
                     "repo",
@@ -511,12 +540,10 @@ def from_references(rows: Sequence[Mapping]) -> Iterator[Element]:
                     continue
                 found = node("repo", f"{org}/{name}", name, url=url, org=org)
             else:
-                found = node(
-                    "doc", publishable(url), publishable(ref.get("text") or ""), url=url
-                )
+                found = node("doc", url, _text(ref.get("text")), url=url)
             yield found
             yield link(
-                "mentions", sid, found["id"], by="references", at=str(ref.get("at") or "")
+                "mentions", sid, found["id"], by="references", at=_text(ref.get("at"))
             )
             yield from more
 
@@ -560,7 +587,7 @@ def from_events(events: Iterable[Mapping]) -> Reader:
                 continue
             seen = pairs.setdefault((kind, source, target), {"count": 0, "at": ""})
             seen["count"] += 1
-            seen["at"] = max(seen["at"], str(event.get("at") or ""))
+            seen["at"] = max(seen["at"], _text(event.get("at")))
         for (kind, source, target), seen in pairs.items():
             yield link(
                 kind,

@@ -718,7 +718,9 @@ def relations_settings(*, path: str | Path | None = None) -> RelationsSettings:
         "Every session" = "/crowsnest/all/"
         "Notes" = "https://example.org/notes/"
 
-    A key the table does not know is an error, as in ``[publish]``.
+    A key the table does not know is an error, as in ``[publish]``. The page names
+    sessions and folders and quotes what the sessions asked, so ``to`` is a place only
+    its owner can read, as ``[publish] to`` is.
     """
     file = config_path(path)
     table = _loaded(path).get(RELATIONS_KEY)
