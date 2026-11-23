@@ -1016,7 +1016,8 @@ def _worker(repo, tmp_path, pid=101, *, name=None, said="", **kw):
     if said:
         records.append(assistant(said, at="2026-01-01T00:01:00Z"))
     t = _transcript(tmp_path / f"t{pid}", records)
-    return _session(pid, name=name or f"w{pid}", cwd=str(repo), transcript=str(t), **kw)
+    name = f"w{pid}" if name is None else name
+    return _session(pid, name=name, cwd=str(repo), transcript=str(t), **kw)
 
 
 def _closing(tmp_path, closed):
@@ -1152,9 +1153,9 @@ def test_finished_sorts_what_passes_by_what_the_ledger_says(repo, tmp_path):
         settings=GuardSettings(),
         ctx=_ctx(verdicts=verdicts, touched_cache=tmp_path / "c"),
     )
-    assert got["finished"] == ["done"]
-    assert got["review"] == ["quiet", "stale"]
-    assert got["command"] == "crowsnest close done"
+    assert got["finished"] == [done.session_id]
+    assert got["review"] == [quiet.session_id, stale.session_id]
+    assert got["command"] == f"crowsnest close -- {done.session_id}"
     rows = {r["session"]["name"]: r for r in got["plan"]}
     assert rows["quiet"]["last_words"] == "Merged. Nothing needs you."
     assert rows["asks"]["keep_because"] == ["its ledger says needs_you"]
@@ -1170,16 +1171,104 @@ def test_finished_takes_its_idle_window_from_the_caller(repo, tmp_path):
     # the clock two hours after it to test the window, not the fixture's date.
     ctx.now = guard._epoch("2026-01-01T02:00:00Z")
     assert guard.finished(ctx=ctx, **kw)["finished"] == []
-    assert guard.finished(ctx=ctx, idle_hours=1, **kw)["finished"] == ["w101"]
+    assert guard.finished(ctx=ctx, idle_hours=1, **kw)["finished"] == ["sid-101"]
+    for bad in ("nan", -1):
+        with pytest.raises(ValueError, match="idle hours"):
+            guard.finished(ctx=ctx, idle_hours=bad, **kw)
 
 
-def test_the_resume_line_names_no_home_for_the_default_account(tmp_path, monkeypatch):
-    monkeypatch.setattr(guard, "DFLT_HOME", tmp_path / ".claude")
+def test_the_resume_line_always_names_the_sessions_home(tmp_path):
+    # A terminal may export another account's CLAUDE_CONFIG_DIR, so even the default
+    # home is stated.
     s = _session(transcript=str(tmp_path / ".claude" / "projects" / "p" / "sid.jsonl"))
+    home = tmp_path / ".claude"
     assert guard.resume_line(s) == (
-        "cd /nowhere && claude --remote-control -n worker --resume sid-101"
+        f"cd /nowhere && CLAUDE_CONFIG_DIR={home} claude --remote-control -n worker "
+        "--resume sid-101"
     )
-    other = _session(
-        transcript=str(tmp_path / ".claude-iq" / "projects" / "p" / "x.jsonl")
+
+
+def test_a_proposal_names_ids_so_a_reused_name_closes_nothing(repo, tmp_path):
+    old = _worker(repo, tmp_path, 1, name="w")
+    got = guard.finished(
+        sessions=[old],
+        settings=GuardSettings(),
+        ctx=_ctx(verdicts=_done(old), touched_cache=tmp_path / "c"),
     )
-    assert "CLAUDE_CONFIG_DIR=" in guard.resume_line(other)
+    assert got["command"] == "crowsnest close -- sid-1"
+    # The old session exits and a fresh one takes its name before the person answers.
+    new = _worker(repo, tmp_path, 2, name="w", status_since=NOW - 60)
+    closed = []
+    answer = guard.close(
+        got["finished"],
+        sessions=[new],
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        **_closing(tmp_path, closed),
+    )
+    assert closed == [] and set(answer["unknown"]) == {"sid-1"}
+
+
+def test_an_unnamed_sessions_label_is_not_a_name_to_close_it_by(repo, tmp_path):
+    s = _worker(repo, tmp_path, name="", session_id="abcdef0123456789")
+    closed = []
+    got = guard.close(
+        [s.label, "abcdef0123456789"[:12]],
+        sessions=[s],
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        **_closing(tmp_path, closed),
+    )
+    assert closed == [] and len(got["unknown"]) == 2
+
+
+def test_one_close_that_raises_never_stops_the_others(repo, tmp_path):
+    sessions = [_worker(repo, tmp_path, i) for i in (1, 2)]
+    tried = []
+
+    def closer(s):
+        tried.append(s.label)
+        if s.pid == 1:
+            raise ProcessLookupError("gone")
+        return "closed"
+
+    got = guard.close(
+        [s.label for s in sessions],
+        sessions=sessions,
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        settings=GuardSettings(),
+        closer=closer,
+        log_path=tmp_path / "reaped.jsonl",
+    )
+    assert tried == ["w1", "w2"]
+    assert [c["result"] for c in got["closed"]] == [
+        "not closed: ProcessLookupError: gone",
+        "closed",
+    ]
+    assert len((tmp_path / "reaped.jsonl").read_text().splitlines()) == 2
+
+
+def test_a_stale_all_clear_is_for_review_even_when_done_is_not_required(repo, tmp_path):
+    s = _worker(repo, tmp_path)
+    settings = GuardSettings(require_done=False)
+    got = guard.finished(
+        sessions=[s],
+        settings=settings,
+        ctx=_ctx(
+            settings=settings,
+            verdicts=_done(s, said_at="2025-01-01T00:00:00Z"),
+            touched_cache=tmp_path / "c",
+        ),
+        words=lambda s: "",
+    )
+    assert got["finished"] == [] and got["review"] == [s.session_id]
+
+
+def test_the_named_and_selector_checks_are_the_reapers_by_exclusion():
+    assert guard.NAMED_CHECKS == (
+        guard.check_protected,
+        guard.check_resting,
+        guard.check_nothing_unlanded,
+    )
+    assert guard.SELECT_CHECKS == tuple(
+        c for c in guard.DFLT_CHECKS if c is not guard.check_ledger_done
+    )
+    assert guard.DFLT_CHECKS[-1] is guard.NAMED_CHECKS[-1] is guard.SELECT_CHECKS[-1]

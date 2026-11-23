@@ -658,6 +658,11 @@ def check_idle_for(session: LiveSession, ctx: ReapContext) -> str | None:
 def check_ledger_done(session: LiveSession, ctx: ReapContext) -> str | None:
     if not ctx.settings.require_done:
         return None
+    return _not_done(session, ctx)
+
+
+def _not_done(session: LiveSession, ctx: ReapContext) -> str | None:
+    """Why the ledger does not say this session is done now, or ``None`` when it does."""
     verdict = ctx.verdicts.get(session.session_id) or {}
     group = verdict.get("group", "unclassified")
     if group != "safe_to_close":
@@ -858,16 +863,13 @@ def notify(url: str, title: str, body: str, *, timeout: float = 10.0) -> bool:
         return False
 
 
-#: The account home a resume line assumes when it names none.
-DFLT_HOME = Path("~/.claude")
-
-
 def resume_line(session: LiveSession) -> str:
     """The shell line that brings a closed session back, in its own account.
 
-    ``claude --resume`` looks only in the account home it runs under, so a session from
-    another home (``CLAUDE_CONFIG_DIR``) gets that home stated, or the line would answer
-    "no conversation found" in a terminal opened with the default account.
+    ``claude --resume`` looks only in the account home it runs under, and a terminal may
+    export any ``CLAUDE_CONFIG_DIR``, so the home is always stated (the session's
+    transcript lives under it): left out, the line answers "no conversation found" in a
+    terminal opened with another account.
 
     >>> s = LiveSession(pid=1, session_id='abc', name='w', cwd='/r/my repo',
     ...     kind='interactive', status='idle', waiting_for='', status_since=0.0,
@@ -878,12 +880,12 @@ def resume_line(session: LiveSession) -> str:
     """
     import shlex
 
-    env = ""
     parents = Path(session.transcript).parents
-    if len(parents) > 2:
-        home = parents[2]
-        if home.expanduser().resolve() != DFLT_HOME.expanduser().resolve():
-            env = f"CLAUDE_CONFIG_DIR={shlex.quote(str(home))} "
+    env = (
+        f"CLAUDE_CONFIG_DIR={shlex.quote(str(parents[2]))} "
+        if session.transcript and len(parents) > 2
+        else ""
+    )
     return (
         f"cd {shlex.quote(session.cwd)} && {env}claude --remote-control "
         f"-n {shlex.quote(session.label)} --resume {session.session_id}"
@@ -909,7 +911,10 @@ def _close_each(
     log = Path(log_path) if log_path else data_dir() / "guard" / "reaped.jsonl"
     closed: list[dict] = []
     for s in sessions:
-        result = closer(s)
+        try:
+            result = closer(s)
+        except Exception as exc:  # noqa: BLE001 -- one failure never stops the others
+            result = f"not closed: {type(exc).__name__}: {exc}"
         entry = {
             "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "name": s.label,
@@ -927,7 +932,7 @@ def _close_each(
     if done:
         notify(
             settings.notify,
-            f"crowsnest closed {len(done)} idle session(s)",
+            f"crowsnest {by} closed {len(done)} session(s)",
             "\n".join(f"{c['name']}: {c['resume']}" for c in done),
         )
     return closed
@@ -988,19 +993,15 @@ def reap(
 #: reaper's checks -- how long it has been idle, and whether its ledger says it is done
 #: (most ledgers say nothing) -- and for nothing else: a protected session, one at work,
 #: the parent of a live session, or one with unlanded work is still kept.
-NAMED_CHECKS: tuple[Callable[[LiveSession, ReapContext], str | None], ...] = (
-    check_protected,
-    check_resting,
-    check_nothing_unlanded,
+NAMED_CHECKS: tuple[Callable[[LiveSession, ReapContext], str | None], ...] = tuple(
+    c for c in DFLT_CHECKS if c not in (check_idle_for, check_ledger_done)
 )
 
 #: The selector's checks: the reaper's, less the ledger gate. :func:`finished` reads the
-#: ledger itself, to sort what passes into *finished* and *for review*.
-SELECT_CHECKS: tuple[Callable[[LiveSession, ReapContext], str | None], ...] = (
-    check_protected,
-    check_resting,
-    check_idle_for,
-    check_nothing_unlanded,
+#: ledger itself, to sort what passes into *finished* and *for review*. Both tuples are
+#: the reaper's by exclusion, so a check added there reaches them too.
+SELECT_CHECKS: tuple[Callable[[LiveSession, ReapContext], str | None], ...] = tuple(
+    c for c in DFLT_CHECKS if c is not check_ledger_done
 )
 
 #: How much of a session's last reply :func:`finished` shows for review: its opening
@@ -1012,15 +1013,17 @@ LAST_WORDS_TAIL = 320
 def _pick(
     names: Iterable[str], sessions: Sequence[LiveSession]
 ) -> tuple[list[LiveSession], dict[str, str]]:
-    """The sessions ``names`` name exactly (whole label or whole id), and why any was not.
+    """The sessions ``names`` name exactly (whole name or whole id), and why any was not.
 
-    Exact only, never a prefix or a pid: a close is not undone by a second look, and a
-    prefix that matched one session at plan time can match another after it exits.
+    Exact only, never a prefix or a pid (nor an unnamed session's label, which is its id's
+    head): a close is not undone by a second look, and a prefix that matched one session
+    at plan time can match another after it exits. A name can also pass to a new session
+    once the old one exits, which is why :func:`finished` proposes ids.
     """
     picked: dict[int, LiveSession] = {}
     unknown: dict[str, str] = {}
     for name in names:
-        hits = [s for s in sessions if name and name in (s.label, s.session_id)]
+        hits = [s for s in sessions if name and name in (s.name, s.session_id)]
         if len(hits) == 1:
             picked.setdefault(hits[0].pid, hits[0])
         elif not hits:
@@ -1124,27 +1127,34 @@ def finished(
     ``[guard] idle_hours``), not protected and with nothing unlanded is
 
     * **finished** when its ledger says done, with an all-clear newer than its last
-      prompt (:func:`check_ledger_done`);
+      prompt (checked even when ``[guard] require_done`` is off);
     * **for review** when its ledger says nothing (``unclassified``) or its all-clear is
       stale. Its last words come with it, for a person to read and decide: triage never
       guesses, so a quiet ledger is never taken for a finished one;
     * **kept** when its ledger says anything else (it needs the person, or is working).
 
-    ``command`` is the ``crowsnest close`` line for the finished ones -- what a lookout
-    proposes and the person answers yes to.
+    ``finished`` and ``review`` are session ids, and ``command`` -- the ``crowsnest
+    close`` line for the finished ones, what a lookout proposes and the person answers
+    yes to -- names them by id: an answer can come hours later, and by then a name may
+    belong to a new session that :func:`close` would close without the idle and ledger
+    checks. A row's ``name`` is in ``plan``.
     """
+    import math
     import shlex
     from dataclasses import replace
 
     settings = guard_settings(path=config) if settings is None else settings
     if idle_hours is not None:
-        settings = replace(settings, idle_hours=float(idle_hours))
+        hours = float(idle_hours)
+        if not math.isfinite(hours) or hours < 0:
+            raise ValueError(f"idle hours must be a number of hours, not {idle_hours!r}")
+        settings = replace(settings, idle_hours=hours)
     if sessions is None:
         sessions = _local_sessions(home=home, config=config, is_alive=claude_alive)
     if ctx is None:
         ctx = _context(settings=settings, home=home, config=config, sessions=sessions)
     elif idle_hours is not None:
-        ctx = replace(ctx, settings=settings)
+        ctx = replace(ctx, settings=replace(ctx.settings, idle_hours=settings.idle_hours))
     by_pid = {s.pid: s for s in sessions}
     rows = plan(sessions=sessions, settings=settings, ctx=ctx, checks=checks)
     done, review = [], []
@@ -1158,7 +1168,7 @@ def finished(
             row["keep_because"] = [f"its ledger says {group}"]
             continue
         try:
-            stale = check_ledger_done(s, ctx) if group == "safe_to_close" else None
+            stale = _not_done(s, ctx) if group == "safe_to_close" else None
         except Exception as exc:  # noqa: BLE001 -- doubt sends it to review, never to close
             stale = f"ledger_done could not tell: {exc}"
         if group == "safe_to_close" and stale is None:
@@ -1168,14 +1178,12 @@ def finished(
         row["keep_because"] = [stale or "its ledger says nothing (unclassified)"]
         row["last_words"] = words(s)
         review.append(row)
-    names = [r["session"]["name"] for r in done]
+    ids = [r["session"]["session_id"] for r in done]
     return {
-        "idle_hours": settings.idle_hours,
-        "finished": names,
-        "review": [r["session"]["name"] for r in review],
-        "command": "crowsnest close " + " ".join(map(shlex.quote, names))
-        if names
-        else "",
+        "idle_hours": ctx.settings.idle_hours,
+        "finished": ids,
+        "review": [r["session"]["session_id"] for r in review],
+        "command": "crowsnest close -- " + " ".join(map(shlex.quote, ids)) if ids else "",
         "plan": rows,
     }
 

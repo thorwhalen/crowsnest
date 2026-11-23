@@ -1752,7 +1752,8 @@ def close(
 ) -> str:
     """Close the sessions you name; `--finished` lists what to name, and closes nothing.
 
-    NAMES are whole session names or ids, never a prefix. Naming a session stands in for
+    NAMES are whole session names or ids, never a prefix (an id is safer: a name passes to
+    the next session that takes it). Naming a session stands in for
     two of the reaper's checks -- how long it has been idle and whether its ledger says it
     is done -- and nothing else: a protected session, the one running this, a parent of a
     live session, one that is busy, waiting or running a shell, and one with unlanded work
@@ -1763,8 +1764,9 @@ def close(
     `--finished` sorts every session that passes the reaper's other checks, idle for
     `--idle-hours` (default `[guard] idle_hours`): *finished* when its ledger says done,
     *review* when it says nothing (shown with its last words, for you to decide), and
-    prints the `crowsnest close` line for the finished ones. A lookout proposes that line;
-    the person runs it.
+    prints the `crowsnest close` line for the finished ones, by id. A lookout proposes
+    that line; the person runs it. Review sessions are never in it: add one by its id
+    once you have read it.
     """
     if finished and names:
         raise ValueError(
@@ -1789,7 +1791,7 @@ def close(
         )
     for c in result["closed"]:
         lines.append(f"{c['name']}: {c['result']} (resume: {c['resume']})")
-    head = f"{len(result['would_close'])} of {len(names)} named sessions " + (
+    head = f"{len(result['would_close'])} of {len(set(names))} named sessions " + (
         "closed or tried" if result["applied"] else "would close (dry run)"
     )
     return "\n".join([head, *lines])
@@ -1797,11 +1799,11 @@ def close(
 
 def _finished_page(result: dict) -> str:
     """`close --finished` as a person reads it: finished, then review, then the line."""
-    rows = {r["session"]["name"]: r for r in result["plan"]}
+    rows = {r["session"]["session_id"]: r for r in result["plan"]}
 
-    def line(name: str) -> str:
-        s = rows[name]["session"]
-        return f"  {name:<24} {s['idle_hours']:>6.1f}h  {s['cwd']}"
+    def line(sid: str) -> str:
+        s = rows[sid]["session"]
+        return f"  {s['name']:<24} {sid}  {s['idle_hours']:>6.1f}h  {s['cwd']}"
 
     head = (
         f"{len(result['finished'])} finished, {len(result['review'])} to review, of "
@@ -1815,11 +1817,11 @@ def _finished_page(result: dict) -> str:
     if result["review"]:
         out += [
             "",
-            "Review (the ledger says nothing; read, then name the ones to close):",
+            "Review (the ledger says nothing; read, then close the done ones by id):",
         ]
-        for n in result["review"]:
-            out.append(line(n))
-            words = rows[n].get("last_words") or "(no reply in view)"
+        for sid in result["review"]:
+            out.append(line(sid))
+            words = rows[sid].get("last_words") or "(no reply in view)"
             out.append(f"      {words}")
     if result["command"]:
         out += ["", f"To close the finished ones: {result['command']}"]

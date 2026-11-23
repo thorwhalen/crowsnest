@@ -160,9 +160,10 @@ thing that looks like a failure and is not.
 **A refusal (exit 75) means the machine is full** (#171): it already runs its cap of
 sessions, or one more would leave too little memory (the config file's `[guard]`). Do not
 retry in a loop, and never try to get round it. Run `crowsnest close --finished` (it
-closes nothing) to see which sessions are finished and which are for review, and propose
-its `crowsnest close …` line to the user in one line, adding any review session whose last
-words say it is done and asks nothing; or hand the work to a session that already exists.
+closes nothing) and propose its `crowsnest close -- <ids>` line to the user as it is; list
+its *review* sessions separately, by name, as ones the user may want to read, never inside
+that line (their ledgers say nothing, and a guess from their last words is still a
+guess). Or hand the work to a session that already exists.
 Never run `crowsnest close NAME...` or `crowsnest reap --apply` yourself: closing sessions
 belongs to the user or to the guard's timer.
 
