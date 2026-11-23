@@ -1063,6 +1063,8 @@ def intent_put(
     *,
     store: str | None = None,
     idempotency_key: str | None = None,
+    source: str | None = None,
+    max_per_hour: int | None = None,
 ):
     """Queue an intent in the console store, as a page button does; prints its id.
 
@@ -1071,15 +1073,19 @@ def intent_put(
     line (tell and start need some). `--store DIR` is the store's root on this machine,
     else `remote` in the config file's `[courier]` table. The next `crowsnest courier`
     tick carries it. `--idempotency-key K` makes a retry print the first call's id.
+    `--source NAME` says who wrote it (a confined surface pins its own, e.g. `claude-ai`):
+    with `[courier] deliver_intents` on, only the sources in `deliver_sources` reach their
+    session directly, the rest go to the watching session first. `--max-per-hour N`
+    refuses an intent past N from that source in the last hour.
     """
     from crowsnest.intents import MAX_DOC_BYTES
 
     text = ""
     if sys.stdin is not None and not sys.stdin.isatty():
-        source = getattr(sys.stdin, "buffer", None)
+        stream = getattr(sys.stdin, "buffer", None)
         raw = (
-            source.read(MAX_DOC_BYTES + 1)
-            if source
+            stream.read(MAX_DOC_BYTES + 1)
+            if stream
             else sys.stdin.read(MAX_DOC_BYTES + 1)
         )
         if len(raw) > MAX_DOC_BYTES:
@@ -1091,7 +1097,13 @@ def intent_put(
                 raise ValueError("an intent's text must be UTF-8") from None
         text = raw
     put = tools.intent_put(
-        kind, session, text, store=store, idempotency_key=idempotency_key
+        kind,
+        session,
+        text,
+        store=store,
+        idempotency_key=idempotency_key,
+        source=source,
+        max_per_hour=None if max_per_hour is None else int(max_per_hour),
     )
     if put["reused"]:
         print(

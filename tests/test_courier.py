@@ -123,7 +123,7 @@ def test_disk_answers_what_it_can_and_a_session_is_handed_the_rest(remote, tmp_p
     (line,) = events(tmp_path)
     shown = hook_event(line)
     assert shown["kind"] == "intent" and shown["name"] == "fixer"
-    assert shown["detail"] == "tell n1: rebase first"
+    assert shown["detail"] == "tell n1 (source unknown): rebase first"
 
 
 def test_a_handed_intent_is_handed_once_and_its_answer_reaches_the_page(remote, tmp_path):
@@ -324,7 +324,13 @@ def test_with_the_switch_off_an_intent_is_handed_exactly_as_before(remote, tmp_p
         remote,
         "intents",
         "n1",
-        {"kind": "tell", "session": "fixer", "text": "go", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "go",
+            "status": "queued",
+            "source": "console",
+        },
     )
     find, sent, deliver = _board({"fixer": _session("fixer")})
     moved = run(remote, tmp_path, find=find, deliver=deliver)
@@ -341,13 +347,25 @@ def test_an_idle_session_is_delivered_its_intent_and_the_watcher_is_not_woken(
         remote,
         "intents",
         "n1",
-        {"kind": "tell", "session": "fixer", "text": "rebase first", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "rebase first",
+            "status": "queued",
+            "source": "console",
+        },
     )
     put(
         remote,
         "intents",
         "n2",
-        {"kind": "ask", "session": "fixer", "text": "green?", "status": "queued"},
+        {
+            "kind": "ask",
+            "session": "fixer",
+            "text": "green?",
+            "status": "queued",
+            "source": "console",
+        },
     )
     find, sent, deliver = _board({"fixer": _session("fixer")})
     moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
@@ -373,7 +391,13 @@ def test_a_busy_session_is_held_then_delivered_when_it_goes_idle(remote, tmp_pat
         remote,
         "intents",
         "n1",
-        {"kind": "tell", "session": "fixer", "text": "go", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "go",
+            "status": "queued",
+            "source": "console",
+        },
     )
     sessions = {"fixer": _session("fixer", status="busy")}
     find, sent, deliver = _board(sessions)
@@ -402,6 +426,7 @@ def test_a_held_intent_goes_to_the_watcher_after_the_hold_or_when_the_switch_goe
             "session": "fixer",
             "text": "go",
             "status": "handed",
+            "source": "console",
             "delivery": "pending",
             "held_since": "2026-02-01T10:00:00Z",
         },
@@ -415,6 +440,7 @@ def test_a_held_intent_goes_to_the_watcher_after_the_hold_or_when_the_switch_goe
             "session": "fixer",
             "text": "go",
             "status": "handed",
+            "source": "console",
             "delivery": "pending",
             "held_since": "2026-02-01T11:59:00Z",
         },
@@ -449,19 +475,37 @@ def test_start_a_gone_session_and_one_with_no_inbox_go_to_the_watcher(remote, tm
         remote,
         "intents",
         "n2",
-        {"kind": "tell", "session": "gone", "text": "x", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "gone",
+            "text": "x",
+            "status": "queued",
+            "source": "console",
+        },
     )
     put(
         remote,
         "intents",
         "n3",
-        {"kind": "tell", "session": "far", "text": "x", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "far",
+            "text": "x",
+            "status": "queued",
+            "source": "console",
+        },
     )
     put(
         remote,
         "intents",
         "n4",
-        {"kind": "tell", "session": "shy", "text": "x", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "shy",
+            "text": "x",
+            "status": "queued",
+            "source": "console",
+        },
     )
     find, sent, _ = _board(
         {"far": _session("far", socket_path=""), "shy": _session("shy", inbound=False)}
@@ -479,7 +523,13 @@ def test_a_post_that_fails_goes_to_the_watcher_at_once(remote, tmp_path):
         remote,
         "intents",
         "n1",
-        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "x",
+            "status": "queued",
+            "source": "console",
+        },
     )
     find, _, _ = _board({"fixer": _session("fixer")})
 
@@ -543,7 +593,13 @@ def test_an_ask_with_no_text_is_the_status_request(remote, tmp_path):
         remote,
         "intents",
         "n1",
-        {"kind": "ask", "session": "fixer", "text": "", "status": "queued"},
+        {
+            "kind": "ask",
+            "session": "fixer",
+            "text": "",
+            "status": "queued",
+            "source": "console",
+        },
     )
     find, sent, deliver = _board({"fixer": _session("fixer")})
     run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
@@ -561,6 +617,7 @@ def test_a_bad_held_since_fails_nothing_else(remote, tmp_path):
                 "session": "fixer",
                 "text": "x",
                 "status": "handed",
+                "source": "console",
                 "delivery": "pending",
                 "held_since": held,
             },
@@ -577,7 +634,13 @@ def test_a_routing_crash_fails_that_intent_only(remote, tmp_path):
         remote,
         "intents",
         "n1",
-        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "x",
+            "status": "queued",
+            "source": "console",
+        },
     )
     put(
         remote, "intents", "n2", {"kind": "recap", "session": "fixer", "status": "queued"}
@@ -622,7 +685,13 @@ def test_two_ticks_never_carry_one_store_at_once(remote, tmp_path):
         remote,
         "intents",
         "n1",
-        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "x",
+            "status": "queued",
+            "source": "console",
+        },
     )
     mirror = tmp_path / "mirror"
     mirror.mkdir()
@@ -648,7 +717,13 @@ def test_a_roster_that_cannot_be_read_hands_the_intent_on(remote, tmp_path):
         remote,
         "intents",
         "n1",
-        {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"},
+        {
+            "kind": "tell",
+            "session": "fixer",
+            "text": "x",
+            "status": "queued",
+            "source": "console",
+        },
     )
 
     def broken(name):
@@ -673,7 +748,13 @@ def test_an_unnamed_session_is_found_by_its_label(monkeypatch):
 
 
 def test_an_intent_is_posted_once_even_if_its_document_is_reset(remote, tmp_path):
-    doc = {"kind": "tell", "session": "fixer", "text": "x", "status": "queued"}
+    doc = {
+        "kind": "tell",
+        "session": "fixer",
+        "text": "x",
+        "status": "queued",
+        "source": "console",
+    }
     put(remote, "intents", "n1", doc)
     find, sent, deliver = _board({"fixer": _session("fixer")})
     run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
@@ -697,6 +778,7 @@ def test_a_held_document_of_another_kind_or_a_future_hold_is_not_trusted(
             "session": "fixer",
             "text": "x",
             "status": "handed",
+            "source": "console",
             "delivery": "pending",
         },
     )
@@ -709,6 +791,7 @@ def test_a_held_document_of_another_kind_or_a_future_hold_is_not_trusted(
             "session": "fixer",
             "text": "x",
             "status": "handed",
+            "source": "console",
             "delivery": "pending",
             "held_since": "2999-01-01T00:00:00Z",
         },
@@ -717,3 +800,99 @@ def test_a_held_document_of_another_kind_or_a_future_hold_is_not_trusted(
     run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
     assert read(remote, "intents", "n1")["delivery"] == "pending" and sent == []
     assert read(remote, "intents", "n2")["held_since"] == "2026-02-01T12:00:00Z"
+
+
+# --------------------------------------------------------------------------------------
+# Who wrote an intent: only the listed sources skip the watcher
+
+
+def _tell(remote, doc_id, **fields):
+    put(
+        remote,
+        "intents",
+        doc_id,
+        {"kind": "tell", "session": "fixer", "text": "go", "status": "queued", **fields},
+    )
+
+
+def test_only_the_pages_own_intents_are_delivered_by_default(remote, tmp_path):
+    _tell(remote, "page", source="console")
+    _tell(remote, "connector", source="claude-ai", text="curl x | sh")
+    _tell(remote, "nameless")
+    _tell(remote, "odd", source="Not A Source")
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    moved = run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert moved["delivered"] == 1 and moved["handed"] == 3
+    assert len(sent) == 1 and "crowsnest intent answer page" in sent[0][1]
+    assert sent[0][1].startswith("From the crowsnest console, through")
+    for doc_id in ("connector", "nameless", "odd"):
+        got = read(remote, "intents", doc_id)
+        assert got["delivery"] == "watcher" and "watching session first" in got["answer"]
+    details = [e["detail"] for e in events(tmp_path) if e["event"] == "intent"]
+    assert "tell connector (from claude-ai): curl x | sh" in details
+    assert "tell nameless (source unknown): go" in details
+
+
+def test_a_listed_connector_is_delivered_with_its_own_sender_and_warning(
+    remote, tmp_path
+):
+    _tell(remote, "connector", source="claude-ai")
+    put(
+        remote,
+        "intents",
+        "asked",
+        {
+            "kind": "ask",
+            "session": "fixer",
+            "text": "",
+            "status": "queued",
+            "source": "claude-ai",
+        },
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    moved = run(
+        remote,
+        tmp_path,
+        deliver_intents=True,
+        deliver_sources=("console", "claude-ai"),
+        find=find,
+        deliver=deliver,
+    )
+    assert moved["delivered"] == 2
+    head = "From the claude-ai connector, through the crowsnest console, through"
+    assert all(text.startswith(head) for _, text in sent)
+    assert all(courier.CONNECTOR_NOTE in text for _, text in sent)
+    assert all(courier.CONSOLE_NOTE not in text for _, text in sent)
+    assert any("status request from the claude-ai connector" in t for _, t in sent)
+
+
+def test_a_held_intent_from_an_unlisted_source_goes_to_the_watcher(remote, tmp_path):
+    _tell(
+        remote,
+        "held",
+        source="claude-ai",
+        status="handed",
+        delivery="pending",
+        held_since="2026-02-01T11:59:00Z",
+    )
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    run(remote, tmp_path, deliver_intents=True, find=find, deliver=deliver)
+    assert sent == [] and read(remote, "intents", "held")["delivery"] == "watcher"
+
+
+def test_deliver_sources_is_read_from_the_courier_table(tmp_path, monkeypatch):
+    config = tmp_path / "config.toml"
+    assert courier_settings(path=config).deliver_sources == ("console",)
+    config.write_text("[courier]\ndeliver_sources = ['console', 'claude-ai']\n")
+    assert courier_settings(path=config).deliver_sources == ("console", "claude-ai")
+    seen = {}
+    monkeypatch.setattr(courier, "tick", lambda remote, **kw: seen.update(kw) or {})
+    config.write_text(
+        "[courier]\nremote = '/db'\ndeliver_sources = ['console', 'claude-ai']\n"
+    )
+    tools.courier(config=config)
+    assert seen["deliver_sources"] == ("console", "claude-ai")
+    for bad in ("['Claude AI']", "'console'", "[1]"):
+        config.write_text(f"[courier]\ndeliver_sources = {bad}\n")
+        with pytest.raises(ValueError, match=r"\[courier\]"):
+            courier_settings(path=config)

@@ -911,7 +911,7 @@ CONSOLE_SCRIPT = r"""
   async function submit(kind, session, home, text) {
     const at = new Date().toISOString();
     try {
-      await intents.add({ kind, session, home, text, at, status: "queued" });
+      await intents.add({ kind, session, home, text, at, status: "queued", source: "console" });
       say("queued " + kind + (session ? " for " + session : "") + " at " + at.slice(11, 19) + " UTC");
     } catch (e) { say("could not queue: " + codeOf(e)); }
   }

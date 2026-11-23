@@ -1106,6 +1106,7 @@ def courier(
         store=store,
         events_path=events_path,
         deliver_intents=settings.deliver_intents,
+        deliver_sources=settings.deliver_sources,
         hold=timedelta(minutes=settings.hold_minutes),
         record=record_changes if settings.record_registry else None,
         find=find,
@@ -1209,12 +1210,15 @@ def intent_put(
     *,
     store: str | Path | None = None,
     idempotency_key: str | None = None,
+    source: str | None = None,
+    max_per_hour: int | None = None,
     config: str | Path | None = None,
 ) -> dict:
     """Queue an intent in this machine's console store, as the page's buttons do (#192).
 
     ``store`` defaults to the config file's ``[courier] remote``, which must be a directory
-    here. The courier carries it on its next tick (:func:`crowsnest.intents.put`).
+    here. The courier carries it on its next tick (:func:`crowsnest.intents.put`, which
+    says what ``source`` and ``max_per_hour`` do).
     """
     from crowsnest import intents
 
@@ -1224,6 +1228,8 @@ def intent_put(
         text,
         store=_console_root(store, config),
         idempotency_key=idempotency_key,
+        source=source,
+        max_per_hour=max_per_hour,
     )
 
 

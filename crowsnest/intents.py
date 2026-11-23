@@ -37,10 +37,10 @@ import os
 import re
 import secrets
 import unicodedata
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from crowsnest.courier import ANSWER_LIMIT, DOC_ID, HANDED
+from crowsnest.courier import ANSWER_LIMIT, DOC_ID, HANDED, SOURCE, source_of
 from crowsnest.live import publishable
 
 __all__ = ["KINDS", "STATUSES", "keyed_id", "put", "status"]
@@ -79,7 +79,10 @@ WAITING = {
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 
 #: The fields a retry with the same idempotency key must repeat.
-SAME_REQUEST = ("kind", "session", "home", "text")
+SAME_REQUEST = ("kind", "session", "home", "text", "source")
+
+#: The window ``max_per_hour`` counts over.
+RATE_WINDOW = timedelta(hours=1)
 
 #: The prefix of a keyed intent's id.
 KEYED_PREFIX = "key-"
@@ -101,6 +104,8 @@ def put(
     *,
     store: str | Path,
     idempotency_key: str | None = None,
+    source: str | None = None,
+    max_per_hour: int | None = None,
     now: datetime | None = None,
 ) -> dict:
     """Queue one intent in the console store at ``store``, as the page would; its record.
@@ -109,6 +114,12 @@ def put(
     another home (``refresh`` takes none: pass ``""``). Returns ``{"id", "doc",
     "reused"}``; ``reused`` is true when ``idempotency_key`` found an intent already
     queued with it, whose id is returned and nothing is written.
+
+    ``source`` says who wrote it (:data:`crowsnest.courier.SOURCE`; none for the page's
+    own CLI twin), and decides whether the courier may post it straight to its session
+    (``[courier] deliver_sources``). ``max_per_hour`` refuses a new intent when that many
+    from the same ``source`` were queued in the last hour; it needs a ``source``. A
+    retry that finds its keyed intent is never refused by it.
     """
     if kind not in KINDS:
         raise ValueError(f"an intent's kind is one of {', '.join(KINDS)}, not {kind!r}")
@@ -121,6 +132,12 @@ def put(
             "an idempotency key is 1 to 200 of A-Z a-z 0-9 _ . : @ + -, not "
             f"{idempotency_key!r}"
         )
+    if source is not None and not SOURCE.match(source):
+        raise ValueError(
+            f"a source is a short lowercase name ([a-z][a-z0-9-]*), not {source!r}"
+        )
+    if max_per_hour is not None and (source is None or max_per_hour < 1):
+        raise ValueError("--max-per-hour needs a --source and a count of at least 1")
     folder = _intents(store, create=True)
     moment = datetime.now(timezone.utc) if now is None else now
     doc = {
@@ -133,6 +150,8 @@ def put(
         .replace("+00:00", "Z"),
         "status": "queued",
     }
+    if source is not None:
+        doc["source"] = source
     if idempotency_key is not None:
         doc["idempotency_key"] = idempotency_key
         intent = keyed_id(idempotency_key)
@@ -143,6 +162,13 @@ def put(
         intent = (
             f"{moment.astimezone(timezone.utc):%Y%m%dT%H%M%SZ}-{secrets.token_hex(4)}"
         )
+    if max_per_hour is not None:
+        recent = _recent(folder, source, since=moment - RATE_WINDOW, until=moment)
+        if recent >= max_per_hour:
+            raise ValueError(
+                f"{source} already queued {recent} intents in the last hour (at most "
+                f"{max_per_hour}); nothing was queued"
+            )
     body = json.dumps(doc, ensure_ascii=False)
     if len(body.encode("utf-8")) > MAX_DOC_BYTES:
         raise ValueError(
@@ -165,12 +191,40 @@ def put(
 
 def _reused(intent: str, was: dict, doc: dict) -> dict:
     """The earlier keyed intent, if it asked for what ``doc`` asks for; else refuse."""
-    if any(was.get(f, "") != doc[f] for f in SAME_REQUEST):
-        raise ValueError(
-            f"that idempotency key already queued intent {intent}, "
-            "with another kind, session or text"
+    original = was
+    # An intent keyed before sources existed has none: a retry that names one still
+    # finds it (it writes nothing new).
+    was = was if "source" in was else {**was, "source": doc.get("source", "")}
+    differs = [f for f in SAME_REQUEST if was.get(f, "") != doc.get(f, "")]
+    if differs:
+        what = (
+            "from another source"
+            if differs == ["source"]
+            else ("with another kind, session or text")
         )
-    return {"id": intent, "doc": was, "reused": True}
+        raise ValueError(f"that idempotency key already queued intent {intent}, {what}")
+    return {"id": intent, "doc": original, "reused": True}
+
+
+def _recent(folder: Path, source: str, *, since: datetime, until: datetime) -> int:
+    """How many intents in ``folder`` from ``source`` were queued in ``[since, until]``.
+
+    An intent is counted by its ``at``; one with no readable time, or one dated after
+    ``until``, is not counted, so a document dated ahead cannot lock a source out. The
+    count is not locked against a racing call: two at once may both pass at the limit.
+    """
+    count = 0
+    for path in folder.glob("*.json"):
+        doc = _read(path)
+        if doc is None or source_of(doc) != source:
+            continue
+        try:
+            at = datetime.fromisoformat(str(doc.get("at")).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if at.tzinfo and since <= at <= until:
+            count += 1
+    return count
 
 
 def status(intent: str, *, store: str | Path) -> dict:
