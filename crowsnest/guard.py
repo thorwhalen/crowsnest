@@ -18,6 +18,10 @@ Three mechanisms here, each answering one way that happened:
   triage's swallow-and-decline, because here the expensive error is closing live work.
   Dry run unless told otherwise; each close is re-verified first and is a SIGTERM, never a
   SIGKILL, and is logged with the ``claude --resume`` line that brings the session back.
+  A person closes by name with :func:`close` (#193), where naming a session stands in for
+  the idle-age and ledger checks and nothing else; :func:`finished` proposes the names,
+  splitting what passes into finished (the ledger says done) and for review (it says
+  nothing), and closes nothing.
 * **OOM tiers** (:func:`oom_pass`): every registered session's process tree gets an
   ``oom_score_adj`` by what it is doing, so that when memory runs out anyway the kernel
   takes an idle worker first and the lookout last.
@@ -53,16 +57,22 @@ from crowsnest.registry import LiveSession, claude_home, live_sessions, pid_aliv
 
 __all__ = [
     "DFLT_CHECKS",
+    "NAMED_CHECKS",
+    "SELECT_CHECKS",
     "ReapContext",
     "SpawnRefused",
     "claude_alive",
+    "close",
+    "finished",
     "gate",
     "last_session",
+    "last_words",
     "meminfo",
     "notify",
     "oom_pass",
     "plan",
     "reap",
+    "resume_line",
     "session_cap",
     "tick",
     "tier_of",
@@ -848,6 +858,81 @@ def notify(url: str, title: str, body: str, *, timeout: float = 10.0) -> bool:
         return False
 
 
+#: The account home a resume line assumes when it names none.
+DFLT_HOME = Path("~/.claude")
+
+
+def resume_line(session: LiveSession) -> str:
+    """The shell line that brings a closed session back, in its own account.
+
+    ``claude --resume`` looks only in the account home it runs under, so a session from
+    another home (``CLAUDE_CONFIG_DIR``) gets that home stated, or the line would answer
+    "no conversation found" in a terminal opened with the default account.
+
+    >>> s = LiveSession(pid=1, session_id='abc', name='w', cwd='/r/my repo',
+    ...     kind='interactive', status='idle', waiting_for='', status_since=0.0,
+    ...     started_at=0.0, remote_control=True, version='2',
+    ...     transcript='/h/.claude-iq/projects/p/abc.jsonl')
+    >>> resume_line(s)
+    "cd '/r/my repo' && CLAUDE_CONFIG_DIR=/h/.claude-iq claude --remote-control -n w --resume abc"
+    """
+    import shlex
+
+    env = ""
+    parents = Path(session.transcript).parents
+    if len(parents) > 2:
+        home = parents[2]
+        if home.expanduser().resolve() != DFLT_HOME.expanduser().resolve():
+            env = f"CLAUDE_CONFIG_DIR={shlex.quote(str(home))} "
+    return (
+        f"cd {shlex.quote(session.cwd)} && {env}claude --remote-control "
+        f"-n {shlex.quote(session.label)} --resume {session.session_id}"
+    )
+
+
+def _close_each(
+    sessions: Sequence[LiveSession],
+    *,
+    settings: GuardSettings,
+    closer: Callable[[LiveSession], str] | None,
+    log_path: str | Path | None,
+    by: str,
+) -> list[dict]:
+    """Close each session, log its resume line, and push the closes to ``[guard] notify``.
+
+    The one loop that ends sessions, for :func:`reap` and :func:`close` alike: every close
+    goes through ``closer`` (:func:`sigterm_closer`, which re-reads the record first) and
+    appends ``{at, name, session_id, cwd, resume, result, by}`` to
+    ``data_dir()/guard/reaped.jsonl``.
+    """
+    closer = sigterm_closer if closer is None else closer
+    log = Path(log_path) if log_path else data_dir() / "guard" / "reaped.jsonl"
+    closed: list[dict] = []
+    for s in sessions:
+        result = closer(s)
+        entry = {
+            "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "name": s.label,
+            "session_id": s.session_id,
+            "cwd": s.cwd,
+            "resume": resume_line(s),
+            "result": result,
+            "by": by,
+        }
+        closed.append(entry)
+        log.parent.mkdir(parents=True, exist_ok=True)
+        with log.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    done = [c for c in closed if c["result"] == "closed"]
+    if done:
+        notify(
+            settings.notify,
+            f"crowsnest closed {len(done)} idle session(s)",
+            "\n".join(f"{c['name']}: {c['resume']}" for c in done),
+        )
+    return closed
+
+
 def reap(
     *,
     apply: bool = False,
@@ -881,34 +966,216 @@ def reap(
     closes = [r for r in rows if r["close"]]
     closed: list[dict] = []
     if apply:
-        closer = sigterm_closer if closer is None else closer
-        log = Path(log_path) if log_path else data_dir() / "guard" / "reaped.jsonl"
-        for row in closes[: settings.max_closes]:
-            s = by_pid[row["session"]["pid"]]
-            result = closer(s)
-            entry = {
-                "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "name": s.label,
-                "session_id": s.session_id,
-                "cwd": s.cwd,
-                "resume": f"cd {s.cwd} && claude --remote-control -n {s.label} --resume {s.session_id}",
-                "result": result,
-            }
-            closed.append(entry)
-            log.parent.mkdir(parents=True, exist_ok=True)
-            with log.open("a", encoding="utf-8") as f:
-                f.write(json.dumps(entry) + "\n")
-        done = [c for c in closed if c["result"] == "closed"]
-        if done:
-            notify(
-                settings.notify,
-                f"crowsnest closed {len(done)} idle session(s)",
-                "\n".join(f"{c['name']}: {c['resume']}" for c in done),
-            )
+        closed = _close_each(
+            [by_pid[r["session"]["pid"]] for r in closes[: settings.max_closes]],
+            settings=settings,
+            closer=closer,
+            log_path=log_path,
+            by="reap",
+        )
     return {
         "applied": apply,
         "would_close": [r["session"]["name"] for r in closes],
         "closed": closed,
+        "plan": rows,
+    }
+
+
+# --------------------------------------------------------------------------------------
+# Closing by name, and the selector that proposes the names (#193)
+
+#: The checks on a session a person closes by name. Naming it stands in for two of the
+#: reaper's checks -- how long it has been idle, and whether its ledger says it is done
+#: (most ledgers say nothing) -- and for nothing else: a protected session, one at work,
+#: the parent of a live session, or one with unlanded work is still kept.
+NAMED_CHECKS: tuple[Callable[[LiveSession, ReapContext], str | None], ...] = (
+    check_protected,
+    check_resting,
+    check_nothing_unlanded,
+)
+
+#: The selector's checks: the reaper's, less the ledger gate. :func:`finished` reads the
+#: ledger itself, to sort what passes into *finished* and *for review*.
+SELECT_CHECKS: tuple[Callable[[LiveSession, ReapContext], str | None], ...] = (
+    check_protected,
+    check_resting,
+    check_idle_for,
+    check_nothing_unlanded,
+)
+
+#: How much of a session's last reply :func:`finished` shows for review: its opening
+#: (what it did) and its end (where an ask to the person sits).
+LAST_WORDS_HEAD = 160
+LAST_WORDS_TAIL = 320
+
+
+def _pick(
+    names: Iterable[str], sessions: Sequence[LiveSession]
+) -> tuple[list[LiveSession], dict[str, str]]:
+    """The sessions ``names`` name exactly (whole label or whole id), and why any was not.
+
+    Exact only, never a prefix or a pid: a close is not undone by a second look, and a
+    prefix that matched one session at plan time can match another after it exits.
+    """
+    picked: dict[int, LiveSession] = {}
+    unknown: dict[str, str] = {}
+    for name in names:
+        hits = [s for s in sessions if name and name in (s.label, s.session_id)]
+        if len(hits) == 1:
+            picked.setdefault(hits[0].pid, hits[0])
+        elif not hits:
+            unknown[name] = "no live session on this machine has this name or id"
+        else:
+            unknown[name] = f"{len(hits)} live sessions answer to it; name one by its id"
+    return list(picked.values()), unknown
+
+
+def _ledger_group(session_id: str, ctx: ReapContext) -> str:
+    return str((ctx.verdicts.get(session_id) or {}).get("group") or "unclassified")
+
+
+def close(
+    names: Iterable[str],
+    *,
+    apply: bool = True,
+    home: str | Path | None = None,
+    config: str | Path | None = None,
+    settings: GuardSettings | None = None,
+    sessions: Sequence[LiveSession] | None = None,
+    ctx: ReapContext | None = None,
+    checks: Sequence[Callable[[LiveSession, ReapContext], str | None]] = NAMED_CHECKS,
+    closer: Callable[[LiveSession], str] | None = None,
+    log_path: str | Path | None = None,
+) -> dict:
+    """Close the sessions a person names, through the reaper's own checks and closer.
+
+    The person's naming replaces the idle-age and ledger checks (:data:`NAMED_CHECKS`);
+    every other check still keeps, each close is :func:`sigterm_closer`'s (re-read, then
+    SIGTERM), and each is logged with its resume line like a reap's. Not capped by
+    ``max_closes``: the person chose how many. ``apply=False`` only plans.
+
+    Returns ``{applied, would_close, closed, plan, unknown}``; ``unknown`` maps each name
+    that matched no single live session to why. Each plan row also carries ``ledger``,
+    the triage group, for the person to see what they are overriding.
+    """
+    settings = guard_settings(path=config) if settings is None else settings
+    if sessions is None:
+        sessions = _local_sessions(home=home, config=config, is_alive=claude_alive)
+    picked, unknown = _pick(names, sessions)
+    if ctx is None:
+        # Built over every live session, not only the named ones: a named session's live
+        # child is what makes it a parent.
+        ctx = _context(settings=settings, home=home, config=config, sessions=sessions)
+    rows = plan(sessions=picked, settings=settings, ctx=ctx, checks=checks)
+    for row in rows:
+        row["ledger"] = _ledger_group(row["session"]["session_id"], ctx)
+    by_pid = {s.pid: s for s in picked}
+    closes = [r for r in rows if r["close"]]
+    closed = (
+        _close_each(
+            [by_pid[r["session"]["pid"]] for r in closes],
+            settings=settings,
+            closer=closer,
+            log_path=log_path,
+            by="close",
+        )
+        if apply
+        else []
+    )
+    return {
+        "applied": apply,
+        "would_close": [r["session"]["name"] for r in closes],
+        "closed": closed,
+        "plan": rows,
+        "unknown": unknown,
+    }
+
+
+def last_words(session: LiveSession) -> str:
+    """The opening and the end of the session's last reply, on one line; ``""`` if none."""
+    from crowsnest.activity import read_activity
+
+    try:
+        text = read_activity(
+            session.transcript, session_id=session.session_id
+        ).last_assistant_text
+    except (OSError, ValueError):
+        return ""
+    text = " ".join(text.split())
+    if len(text) <= LAST_WORDS_HEAD + LAST_WORDS_TAIL:
+        return text
+    return f"{text[:LAST_WORDS_HEAD]} … {text[-LAST_WORDS_TAIL:]}"
+
+
+def finished(
+    *,
+    idle_hours: float | None = None,
+    home: str | Path | None = None,
+    config: str | Path | None = None,
+    settings: GuardSettings | None = None,
+    sessions: Sequence[LiveSession] | None = None,
+    ctx: ReapContext | None = None,
+    checks: Sequence[Callable[[LiveSession, ReapContext], str | None]] = SELECT_CHECKS,
+    words: Callable[[LiveSession], str] = last_words,
+) -> dict:
+    """Propose what to close: the sessions that pass every check but the ledger's, sorted.
+
+    Closes nothing. A session that is resting, idle for ``idle_hours`` (default
+    ``[guard] idle_hours``), not protected and with nothing unlanded is
+
+    * **finished** when its ledger says done, with an all-clear newer than its last
+      prompt (:func:`check_ledger_done`);
+    * **for review** when its ledger says nothing (``unclassified``) or its all-clear is
+      stale. Its last words come with it, for a person to read and decide: triage never
+      guesses, so a quiet ledger is never taken for a finished one;
+    * **kept** when its ledger says anything else (it needs the person, or is working).
+
+    ``command`` is the ``crowsnest close`` line for the finished ones -- what a lookout
+    proposes and the person answers yes to.
+    """
+    import shlex
+    from dataclasses import replace
+
+    settings = guard_settings(path=config) if settings is None else settings
+    if idle_hours is not None:
+        settings = replace(settings, idle_hours=float(idle_hours))
+    if sessions is None:
+        sessions = _local_sessions(home=home, config=config, is_alive=claude_alive)
+    if ctx is None:
+        ctx = _context(settings=settings, home=home, config=config, sessions=sessions)
+    elif idle_hours is not None:
+        ctx = replace(ctx, settings=settings)
+    by_pid = {s.pid: s for s in sessions}
+    rows = plan(sessions=sessions, settings=settings, ctx=ctx, checks=checks)
+    done, review = [], []
+    for row in rows:
+        s = by_pid[row["session"]["pid"]]
+        group = row["ledger"] = _ledger_group(s.session_id, ctx)
+        if not row["close"]:
+            continue
+        row["close"] = False
+        if group not in ("safe_to_close", "unclassified"):
+            row["keep_because"] = [f"its ledger says {group}"]
+            continue
+        try:
+            stale = check_ledger_done(s, ctx) if group == "safe_to_close" else None
+        except Exception as exc:  # noqa: BLE001 -- doubt sends it to review, never to close
+            stale = f"ledger_done could not tell: {exc}"
+        if group == "safe_to_close" and stale is None:
+            row["close"] = True
+            done.append(row)
+            continue
+        row["keep_because"] = [stale or "its ledger says nothing (unclassified)"]
+        row["last_words"] = words(s)
+        review.append(row)
+    names = [r["session"]["name"] for r in done]
+    return {
+        "idle_hours": settings.idle_hours,
+        "finished": names,
+        "review": [r["session"]["name"] for r in review],
+        "command": "crowsnest close " + " ".join(map(shlex.quote, names))
+        if names
+        else "",
         "plan": rows,
     }
 

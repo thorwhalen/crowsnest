@@ -46,7 +46,9 @@ __all__ = [
     "attention_import",
     "backfill_lineage",
     "brief",
+    "close",
     "done",
+    "finished",
     "guard_tick",
     "guard_units",
     "later",
@@ -2001,6 +2003,40 @@ def reap(
     from crowsnest import guard
 
     return guard.reap(apply=apply, home=home, config=config)
+
+
+def close(
+    names: Iterable[str],
+    *,
+    apply: bool = True,
+    home: str | Path | None = None,
+    config: str | Path | None = None,
+) -> dict:
+    """Close the named sessions (whole name or id), each through the reaper's checks.
+
+    Naming a session stands in for the reaper's idle-age and ledger checks; a protected
+    session, one at work, a parent of a live session or one with unlanded work is kept.
+    ``apply=False`` only plans. See :func:`crowsnest.guard.close`.
+    """
+    from crowsnest import guard
+
+    return guard.close(list(names), apply=apply, home=home, config=config)
+
+
+def finished(
+    *,
+    idle_hours: float | None = None,
+    home: str | Path | None = None,
+    config: str | Path | None = None,
+) -> dict:
+    """Which sessions look finished (ledger says done) and which to review (it says
+    nothing), with the ``crowsnest close`` line for the finished. Closes nothing.
+
+    See :func:`crowsnest.guard.finished`.
+    """
+    from crowsnest import guard
+
+    return guard.finished(idle_hours=idle_hours, home=home, config=config)
 
 
 def _url_of(

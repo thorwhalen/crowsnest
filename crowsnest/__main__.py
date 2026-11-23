@@ -1742,6 +1742,90 @@ def reap(*, apply: bool = False, home: str | None = None, json: bool = False) ->
     return "\n".join([head, *lines])
 
 
+def close(
+    *names: str,
+    dry_run: bool = False,
+    finished: bool = False,
+    idle_hours: float | None = None,
+    home: str | None = None,
+    json: bool = False,
+) -> str:
+    """Close the sessions you name; `--finished` lists what to name, and closes nothing.
+
+    NAMES are whole session names or ids, never a prefix. Naming a session stands in for
+    two of the reaper's checks -- how long it has been idle and whether its ledger says it
+    is done -- and nothing else: a protected session, the one running this, a parent of a
+    live session, one that is busy, waiting or running a shell, and one with unlanded work
+    are all kept, with the reason. Each close is re-checked, sent SIGTERM (never SIGKILL),
+    and logged with the `claude --resume` line that brings it back (in its own account).
+    `--dry-run` only says what would happen.
+
+    `--finished` sorts every session that passes the reaper's other checks, idle for
+    `--idle-hours` (default `[guard] idle_hours`): *finished* when its ledger says done,
+    *review* when it says nothing (shown with its last words, for you to decide), and
+    prints the `crowsnest close` line for the finished ones. A lookout proposes that line;
+    the person runs it.
+    """
+    if finished and names:
+        raise ValueError(
+            "name sessions to close, or pass --finished to list them, not both"
+        )
+    if finished:
+        result = tools.finished(idle_hours=idle_hours, home=home)
+        return _json.dumps(result, indent=2) if json else _finished_page(result)
+    if not names:
+        raise ValueError("name the sessions to close, or pass --finished to list them")
+    result = tools.close(names, apply=not dry_run, home=home)
+    if json:
+        return _json.dumps(result, indent=2)
+    lines = [f"?     {n:<20} {why}" for n, why in result["unknown"].items()]
+    for row in result["plan"]:
+        s = row["session"]
+        verdict = "CLOSE" if row["close"] else "keep "
+        why = "" if row["close"] else "  " + "; ".join(row["keep_because"])
+        lines.append(
+            f"{verdict} {s['name']:<20} {s['status']:<7} {s['idle_hours']:>6.1f}h"
+            f"  ledger: {row['ledger']}{why}"
+        )
+    for c in result["closed"]:
+        lines.append(f"{c['name']}: {c['result']} (resume: {c['resume']})")
+    head = f"{len(result['would_close'])} of {len(names)} named sessions " + (
+        "closed or tried" if result["applied"] else "would close (dry run)"
+    )
+    return "\n".join([head, *lines])
+
+
+def _finished_page(result: dict) -> str:
+    """`close --finished` as a person reads it: finished, then review, then the line."""
+    rows = {r["session"]["name"]: r for r in result["plan"]}
+
+    def line(name: str) -> str:
+        s = rows[name]["session"]
+        return f"  {name:<24} {s['idle_hours']:>6.1f}h  {s['cwd']}"
+
+    head = (
+        f"{len(result['finished'])} finished, {len(result['review'])} to review, of "
+        f"{len(result['plan'])} live sessions (idle {result['idle_hours']:g}h or more, "
+        "nothing unlanded); nothing was closed."
+    )
+    out = [head]
+    if result["finished"]:
+        out += ["", "Finished (the ledger says done):"]
+        out += [line(n) for n in result["finished"]]
+    if result["review"]:
+        out += [
+            "",
+            "Review (the ledger says nothing; read, then name the ones to close):",
+        ]
+        for n in result["review"]:
+            out.append(line(n))
+            words = rows[n].get("last_words") or "(no reply in view)"
+            out.append(f"      {words}")
+    if result["command"]:
+        out += ["", f"To close the finished ones: {result['command']}"]
+    return "\n".join(out)
+
+
 def revive(
     name: str,
     *,
@@ -1858,6 +1942,7 @@ _commands = [
     spawn,
     revive,
     reap,
+    close,
     open,
     init,
     install_skills,
