@@ -882,7 +882,7 @@ def resume_line(session: LiveSession) -> str:
 
     parents = Path(session.transcript).parents
     env = (
-        f"CLAUDE_CONFIG_DIR={shlex.quote(str(parents[2]))} "
+        f"CLAUDE_CONFIG_DIR={shlex.quote(parents[2].as_posix())} "
         if session.transcript and len(parents) > 2
         else ""
     )

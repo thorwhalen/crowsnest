@@ -1183,7 +1183,7 @@ def test_the_resume_line_always_names_the_sessions_home(tmp_path):
     s = _session(transcript=str(tmp_path / ".claude" / "projects" / "p" / "sid.jsonl"))
     home = tmp_path / ".claude"
     assert guard.resume_line(s) == (
-        f"cd /nowhere && CLAUDE_CONFIG_DIR={home} claude --remote-control -n worker "
+        f"cd /nowhere && CLAUDE_CONFIG_DIR={home.as_posix()} claude --remote-control -n worker "
         "--resume sid-101"
     )
 
