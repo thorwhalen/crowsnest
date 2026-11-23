@@ -96,6 +96,7 @@ is asked about every node, and what it answers stands.
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -275,7 +276,11 @@ def _web(value) -> str:
     >>> _web('javascript:alert(1)'), _web(None)
     ('', '')
     """
-    text = _text(value)
+    raw = str(value or "")
+    text = _text(raw)
+    # An address the sanitiser had to rewrite is no longer the address: text, not a link.
+    if text != raw:
+        return ""
     return text if text.lower().startswith(("http://", "https://")) else ""
 
 
@@ -349,7 +354,7 @@ def from_sessions(rows: Sequence[Mapping], *, owner: str = "you") -> Iterator[El
         yield node(
             "session",
             sid.split(":", 1)[1],
-            _text(address(row)),
+            _text(address(row)) or sid.split(":", 1)[1][:8],
             status=_text(row.get("status")),
             since=_iso(row.get("status_since")),
             waiting_for=_text(row.get("waiting_for"), limit=ASK_LIMIT),
@@ -377,7 +382,9 @@ def from_sessions(rows: Sequence[Mapping], *, owner: str = "you") -> Iterator[El
         kind, org, name, _ = github_ref(str(row.get("repo_url") or ""))
         if kind == "repo":
             org, name = _text(org), _text(name)
-            repo = node("repo", f"{org}/{name}", name, url=_web(row["repo_url"]), org=org)
+            repo = node(
+                "repo", f"{org}/{name}".lower(), name, url=_web(row["repo_url"]), org=org
+            )
             yield repo
             yield link("in_repo", folder["id"], repo["id"], by="sessions")
 
@@ -523,7 +530,7 @@ def from_references(rows: Sequence[Mapping]) -> Iterator[Element]:
                     continue
                 found = node(
                     kind,
-                    f"{org}/{name}#{number}",
+                    f"{org}/{name}#{number}".lower(),
                     f"{name}#{number}",
                     url=url,
                     repo=f"{org}/{name}",
@@ -531,7 +538,7 @@ def from_references(rows: Sequence[Mapping]) -> Iterator[Element]:
                 )
                 home = node(
                     "repo",
-                    f"{org}/{name}",
+                    f"{org}/{name}".lower(),
                     name,
                     url=f"https://github.com/{org}/{name}",
                     org=org,
@@ -549,7 +556,7 @@ def from_references(rows: Sequence[Mapping]) -> Iterator[Element]:
             elif kind == "repo":
                 if not name:
                     continue
-                found = node("repo", f"{org}/{name}", name, url=url, org=org)
+                found = node("repo", f"{org}/{name}".lower(), name, url=url, org=org)
             else:
                 found = node("doc", url, _text(ref.get("text")), url=url)
             yield found
@@ -580,7 +587,9 @@ def from_events(events: Iterable[Mapping]) -> Reader:
     kept = [e for e in events if e.get("event") in ("message", "intent")]
 
     def read(rows: Sequence[Mapping]) -> Iterator[Element]:
-        by_id = {str(r.get("session_id") or ""): _session_id_of(r) for r in rows}
+        by_id = {
+            str(r["session_id"]): _session_id_of(r) for r in rows if r.get("session_id")
+        }
         by_name: dict[str, str] = {}
         for row in rows:
             by_name.setdefault(address(row), _session_id_of(row))
@@ -948,7 +957,7 @@ def relations(
     links = kept + derived
     score = interest or (lambda found: dflt_interest(found, as_of=now))
     for found in nodes.values():
-        found["data"]["interest"] = float(score(found))
+        found["data"]["interest"] = _unit(score(found))
     if interest is None:
         # The default scores sessions only; everything else gets its neighbourhood's
         # score. A caller's function is asked about every node and its word is final.
@@ -986,6 +995,20 @@ def relations(
             "skipped": skipped,
         },
     }
+
+
+def _unit(value) -> float:
+    """``value`` as a score in ``[0, 1]``: clamped, and ``0`` for anything that is not a
+    number (a NaN in the document would be a page that cannot be read).
+
+    >>> _unit(0.4), _unit(7), _unit(float('nan')), _unit('x')
+    (0.4, 1.0, 0.0, 0.0)
+    """
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    return 0.0 if math.isnan(number) else min(1.0, max(0.0, number))
 
 
 def _merged(held: Mapping, new: Mapping) -> dict:

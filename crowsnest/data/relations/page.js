@@ -79,8 +79,11 @@
     new URLSearchParams(location.hash.slice(1)).forEach(function (v, k) {
       if (k === 'on') S.on = v ? v.split(',') : [];
       else if (k === 'refs') S.refs = v === '1';
-      else if (k in S) S[k] = v;
+      else if (Object.prototype.hasOwnProperty.call(S, k)) S[k] = v;
     });
+    if (['map', 'docket', 'board'].indexOf(S.lens) < 0) S.lens = 'map';
+    if (!BUILD[S.view]) S.view = 'all';
+    if (!SHOW.hasOwnProperty(S.show)) S.show = 'key';
   }
   function writeHash(push) {
     var p = new URLSearchParams();
@@ -88,8 +91,9 @@
     if (S.on.length) p.set('on', S.on.join(','));
     if (S.refs) p.set('refs', '1');
     var url = '#' + p.toString();
-    if (url === location.hash) return;
-    try { history[push ? 'pushState' : 'replaceState'](null, '', url); } catch (e) { /* a sandboxed frame: the view still works */ }
+    if (url === location.hash) return false;
+    try { history[push ? 'pushState' : 'replaceState'](null, '', url); } catch (e) { return false; /* a sandboxed frame: the view still works */ }
+    return !!push;
   }
   window.addEventListener('popstate', function () { S.sel = ''; S.focus = ''; readHash(); sheetPushed = false; render(); if (S.sel) { sheetFor(S.sel); } else hideSheet(); });
 
@@ -185,7 +189,7 @@
     var acts = el('div', { class: 'acts' });
     /* Only a web address becomes a link: a reference is text a session wrote. */
     if (/^https?:\/\//i.test(d.url || '')) acts.appendChild(el('a', { class: 'btn', href: d.url, target: '_blank', rel: 'noopener noreferrer', text: n.type === 'session' ? 'Open session ↗' : 'Open ↗' }));
-    acts.appendChild(el('button', { class: 'btn', type: 'button', text: 'Focus here', on: { click: function () { press(this); hideSheet(); sheetPushed = false; S.lens = 'map'; S.view = 'focus'; S.focus = id; writeHash(true); render(); } } }));
+    acts.appendChild(el('button', { class: 'btn', type: 'button', text: 'Focus here', on: { click: function () { press(this); hideSheet(); sheetPushed = false; S.lens = 'map'; S.view = 'focus'; S.focus = id; focusPushed = writeHash(true); render(); } } }));
     body.appendChild(acts);
     var t = function (type, dir) { return (dir === 'in' ? ins(type, id).map(function (l) { return l.source; }) : outs(type, id).map(function (l) { return l.target; })); };
     var linkAge = function (type, dir) { return function (other) { var l = (dir === 'in' ? ins(type, id) : outs(type, id)).filter(function (x) { return (dir === 'in' ? x.source : x.target) === other; })[0]; return l && l.data.at ? age(l.data.at) : (l && l.data.count ? l.data.count + '×' : ''); }; };
@@ -215,7 +219,7 @@
     body.appendChild(section('Sessions', b.members, function (s) { return CLASS_WORDS[cls(N.get(s))]; }, 12));
     openSheet();
   }
-  var sheetPushed = false;
+  var sheetPushed = false, focusPushed = false;
   function openSheet() { $('sheet').hidden = false; document.body.classList.add('sheet-open'); }
   function hideSheet() { $('sheet').hidden = true; document.body.classList.remove('sheet-open'); S.sel = ''; if (cy) cy.$(':selected').unselect(); }
   function closeSheet() {
@@ -228,7 +232,7 @@
     var fresh = !S.sel;
     S.sel = id;
     sheetFor(id);
-    if (fresh) { writeHash(true); sheetPushed = true; } else writeHash();
+    if (fresh) sheetPushed = writeHash(true); else writeHash();
     if (!cy || S.lens !== 'map') return;
     var node = cy.getElementById(id);
     if (!node.length && N.has(id) && N.get(id).type === 'session') { expanded.add(id); drawMap(); node = cy.getElementById(id); }
@@ -675,7 +679,7 @@
     box.appendChild(how);
     box.appendChild(el('h4', { text: 'Derived links' }));
     DERIVED.forEach(function (t) {
-      var id = 'on-' + t, input = el('input', { type: 'checkbox', id: id, on: { change: function () { S.on = S.on.filter(function (x) { return x !== t; }); if (this.checked) S.on.push(t); writeHash(); if (S.view === 'needs') S.view = 'free'; render(); } } });
+      var id = 'on-' + t, input = el('input', { type: 'checkbox', id: id, on: { change: function () { S.on = S.on.filter(function (x) { return x !== t; }); if (this.checked) S.on.push(t); if (S.view === 'needs' || S.view === 'all') S.view = 'free'; writeHash(); render(); } } });
       input.checked = S.on.indexOf(t) >= 0;
       box.appendChild(el('label', { class: 'check', for: id }, [input, el('span', {}, [el('b', { text: t.replace(/_/g, ' ') }), ' ', LINK_TYPES[t].says])]));
     });
@@ -702,7 +706,7 @@
     chips($('lenses'), [['map', 'Map'], ['docket', 'Docket'], ['board', 'Board']], S.lens, function (v) { S.lens = v; writeHash(); render(); });
     var views = VIEWS.slice();
     if (S.view === 'focus') views = [['back', '‹ Back', 'Back to the view before'], ['focus', 'Focus on ' + label(S.focus), '']];
-    chips($('views'), views, S.view, function (v) { if (v === 'back') { history.back(); return; } S.view = v; if (v !== 'focus') S.focus = ''; writeHash(); render(); });
+    chips($('views'), views, S.view, function (v) { if (v === 'back') { if (focusPushed) { focusPushed = false; history.back(); return; } v = 'all'; } S.view = v; if (v !== 'focus') S.focus = ''; writeHash(); render(); });
     sentence();
     layers();
     if (S.lens === 'map') { if (CFG.entry === 'hybrid') drawBrief(); drawMap(); }

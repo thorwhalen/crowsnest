@@ -118,6 +118,9 @@ def _nav(nav: Sequence[Sequence[str]] | Mapping[str, str], current: str) -> str:
     items = list(nav.items()) if isinstance(nav, Mapping) else [tuple(i) for i in nav]
     out = []
     for label, href in items:
+        # A page of one's own site or a web address; anything else is not a link.
+        if not str(href).lower().startswith(("/", "./", "#", "http://", "https://")):
+            continue
         here = ' aria-current="page"' if label == current else ""
         out.append(
             f'<a href="{_html.escape(str(href), quote=True)}" target="_top"{here}>'

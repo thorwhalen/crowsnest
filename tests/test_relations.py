@@ -547,3 +547,42 @@ def test_extra_sources_add_to_the_default_readers(tmp_path):
     )
     assert ("session:a1", "doc:annals:x") in links_of(doc, "mentions")
     assert links_of(doc, "works_in")  # the default readers still ran
+
+
+def test_a_score_is_a_number_between_nought_and_one_whatever_was_returned():
+    doc = graph(interest=lambda found: float("nan"))
+    assert {n["data"]["interest"] for n in doc["nodes"]} == {0.0}
+    json.loads(json.dumps(doc, allow_nan=False))
+
+
+def test_one_repository_is_one_node_however_its_name_is_cased():
+    rows = [
+        row(
+            "a1",
+            "parser",
+            links=[
+                {
+                    "type": "issue",
+                    "url": "https://github.com/I2mint/Mergeset/issues/7",
+                    "text": "#7",
+                }
+            ],
+        )
+    ]
+    doc = R.relations(rows, as_of=AS_OF)
+    assert [n["id"] for n in doc["nodes"] if n["type"] == "repo"] == [
+        "repo:i2mint/mergeset"
+    ]
+
+
+def test_nav_takes_a_page_or_a_web_address_and_nothing_else():
+    page = render_relations_page(
+        graph(),
+        nav=[
+            ("All", "/all/"),
+            ("Bad", "javascript:alert(1)"),
+            ("Web", "https://example.org/"),
+        ],
+    )
+    assert 'href="/all/"' in page and 'href="https://example.org/"' in page
+    assert "javascript:alert" not in page.split("<script", 1)[0]
