@@ -401,3 +401,149 @@ def test_one_command_writes_a_page_with_a_graph_in_it(tmp_path, monkeypatch, cap
     main(["relations", "--home", str(demo_home(tmp_path))])
     printed = capsys.readouterr().out
     assert "waits_on_owner" in printed and "session" in printed
+
+
+# --------------------------------------------------------------------------------------
+# What an adversarial review broke, and must stay fixed
+# --------------------------------------------------------------------------------------
+
+
+def test_a_chain_rule_stops_at_a_hub_on_every_hop():
+    # One dispatcher messages thirty sessions and each answers: without the guard on the
+    # first hop that is 30 x 29 "reaches" links through the dispatcher.
+    hub = [R.link("messaged", "s:boss", f"s:w{i}") for i in range(30)]
+    back = [R.link("messaged", f"s:w{i}", "s:boss") for i in range(30)]
+    chain = [R.link("messaged", "s:a", "s:b"), R.link("messaged", "s:b", "s:c")]
+    rule = R.Rule("reaches", ("messaged",), closure=True)
+    derived, skipped = R.infer(hub + back + chain, rules=[rule])
+    assert [(d["source"], d["target"]) for d in derived] == [("s:a", "s:c")]
+    assert {"rule": "reaches", "node": "s:boss", "fanout": 30} in skipped
+
+
+def test_a_dense_layered_graph_stays_cheap():
+    import time
+    from itertools import pairwise
+
+    layers = [[f"s:{d}-{i}" for i in range(8)] for d in range(8)]
+    links = [
+        R.link("messaged", a, b)
+        for upper, lower in pairwise(layers)
+        for a in upper
+        for b in lower
+    ]
+    began = time.perf_counter()
+    derived, _ = R.infer(links, rules=[R.Rule("reaches", ("messaged",), closure=True)])
+    assert time.perf_counter() - began < 5
+    assert derived and all(d["data"]["paths"] <= R.TRAIL_LIMIT for d in derived)
+
+
+def test_two_readers_of_one_link_make_one_link_that_keeps_both():
+    def events(rows):
+        yield R.link(
+            "messaged",
+            "session:a1",
+            "session:b2",
+            confidence="observed",
+            by="events",
+            at="2026-01-01T10:00:00Z",
+            count=2,
+        )
+
+    def transcripts(rows):
+        yield R.link(
+            "messaged",
+            "session:a1",
+            "session:b2",
+            confidence="recorded",
+            by="transcripts",
+            at="2026-01-01T11:00:00Z",
+            count=3,
+        )
+
+    doc = R.relations(ROWS, sources=[*R.dflt_sources(), events, transcripts], as_of=AS_OF)
+    (found,) = [f for f in doc["links"] if f["type"] == "messaged"]
+    assert found["data"]["count"] == 5 and found["data"]["confidence"] == "recorded"
+    assert found["data"]["at"] == "2026-01-01T11:00:00Z"
+    assert found["data"]["by"] == "events+transcripts"
+
+
+def test_an_old_ask_still_outranks_work_that_is_going_on():
+    asked = needs("question", "which one?", said="2025-12-01T00:00:00+00:00")
+    rows = [
+        row("a1", "old", verdict=asked),
+        row("b2", "busy", status="busy", verdict={"group": "working", "reason": "Bash"}),
+    ]
+    doc = R.relations(rows, as_of=AS_OF)
+    old = node_of(doc, "session:a1")["data"]["interest"]
+    assert old > node_of(doc, "session:b2")["data"]["interest"]
+
+
+def test_a_new_link_type_from_a_rule_or_a_reader_is_described_not_dropped():
+    def serves(rows):
+        yield R.node("doc", "app:x", "an app")
+        yield R.link("serves", "repo:i2mint/mergeset", "doc:app:x", confidence="recorded")
+
+    rule = R.Rule("touches_app", ("works_on", "serves"))
+    doc = R.relations(
+        ROWS,
+        sources=[*R.dflt_sources(), serves],
+        rules=[*R.DFLT_RULES, rule],
+        as_of=AS_OF,
+    )
+    types = doc["graph"]["types"]["link"]
+    assert types["serves"]["how"] == "read" and types["touches_app"]["how"] == "derived"
+    assert ("session:a1", "doc:app:x") in links_of(doc, "touches_app")
+
+
+def test_a_callers_interest_is_final_for_every_node():
+    doc = graph(interest=lambda found: 0.5 if found["type"] == "session" else 0.1)
+    assert {n["data"]["interest"] for n in doc["nodes"] if n["type"] != "session"} == {
+        0.1
+    }
+
+
+def test_a_shared_reference_is_one_two_sessions_point_at():
+    doc = graph()
+    shared = node_of(doc, "issue:i2mint/mergeset#7")["data"]["interest"]
+    lone_rows = [ROWS[2]]
+    alone = R.relations(lone_rows, as_of=AS_OF)
+    assert shared > node_of(alone, "issue:i2mint/mergeset#7")["data"]["interest"]
+
+
+def test_the_relations_page_never_lands_on_the_report(tmp_path, monkeypatch):
+    monkeypatch.setattr(tools, "live_sessions", lambda *a, **k: [])
+    cfg = tmp_path / "config.toml"
+    out = tmp_path / "out"
+    out.mkdir()
+    page = out / "index.html"
+    # the same file: refused before anything is rendered or sent
+    cfg.write_text(f"[publish]\nto = '{page}'\n[relations]\nto = '{page}'\n")
+    with pytest.raises(ValueError, match="report's own destination"):
+        tools.publish(config=cfg, home=demo_home(tmp_path), page_path=tmp_path / "k.html")
+    assert not page.exists()
+    # a directory: the relations page takes its own name there
+    cfg.write_text(f"[publish]\nto = '{page}'\n[relations]\nto = '{out}'\n")
+    sent = tools.publish(
+        config=cfg, home=demo_home(tmp_path), page_path=tmp_path / "k.html", tz="UTC"
+    )
+    assert sent["relations"]["to"].endswith("relations.html")
+    assert "relations-data" not in page.read_text()
+    assert "relations-data" in (out / "relations.html").read_text()
+
+
+def test_extra_sources_add_to_the_default_readers(tmp_path):
+    def published(rows):
+        yield R.node("doc", "annals:x", "Report")
+        yield R.link("mentions", "session:a1", "doc:annals:x", confidence="recorded")
+
+    doc = tools.relations(
+        rows=ROWS,
+        home=demo_home(tmp_path),
+        since="",
+        lineage_path=tmp_path / "lineage.jsonl",
+        events_path=tmp_path / "events.jsonl",
+        extra_sources=[published],
+        as_of=AS_OF,
+    )
+    assert ("session:a1", "doc:annals:x") in links_of(doc, "mentions")
+    assert links_of(doc, "works_in")  # the default readers still ran

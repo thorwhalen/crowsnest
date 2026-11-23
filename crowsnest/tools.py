@@ -10,6 +10,7 @@ here prints, exits, or knows which surface called it.
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from collections import Counter
@@ -978,6 +979,10 @@ def publish(
     from crowsnest.paths import data_dir
 
     settings = publish_settings(path=config)
+    from crowsnest.config import relations_settings
+
+    wanted = relations_settings(path=config)
+    beside_to = _relations_destination(wanted.to, to or settings.to)
     if console is None:
         console = settings.console
     if refs is None:
@@ -1032,10 +1037,7 @@ def publish(
         "made_at": made["made_at"],
         "generated": made.get("generated") or {},
     }
-    from crowsnest.config import relations_settings
-
-    wanted = relations_settings(path=config)
-    if wanted.to:
+    if beside_to:
         # The same rows, the same moment: the relations page never disagrees with the
         # page it sits beside, and costs no second reading of the sessions.
         drawn = relations_page(
@@ -1048,11 +1050,50 @@ def publish(
         beside = page.with_name("relations.html")
         beside.write_text(drawn["html"], encoding="utf-8")
         result["relations"] = {
-            "to": _publish.dflt_publisher(wanted.to)(beside, wanted.to),
+            "to": _publish.dflt_publisher(beside_to)(beside, beside_to),
             "bytes": beside.stat().st_size,
             "counts": drawn["counts"],
         }
     return result
+
+
+#: The file name the relations page takes where its destination is a directory.
+RELATIONS_PAGE_NAME = "relations.html"
+
+
+def _relations_destination(to: str, report_to: str) -> str:
+    """Where the relations page goes, given ``[relations] to`` and the report's ``to``.
+
+    A destination that is a directory (it ends with a slash, or is one on this machine)
+    gets :data:`RELATIONS_PAGE_NAME`, never the report's own file name. One that would
+    be the report's file is refused, before anything is rendered or sent.
+
+    >>> _relations_destination('', 'box:/srv/index.html')
+    ''
+    >>> _relations_destination('box:/srv/', 'box:/srv/index.html')
+    'box:/srv/relations.html'
+    >>> _relations_destination('box:/srv/index.html', 'box:/srv/index.html')
+    Traceback (most recent call last):
+      ...
+    ValueError: [relations] to is the report's own destination (box:/srv/index.html); give the relations page its own file
+    """
+    to = (to or "").strip()
+    if not to:
+        return ""
+    from crowsnest import publish as _publish
+
+    local = not _publish.is_remote(to)
+    if to.endswith(("/", os.sep)) or (local and Path(to).expanduser().is_dir()):
+        to = to.rstrip("/" + os.sep) + "/" + RELATIONS_PAGE_NAME
+    same = to == (report_to or "").strip()
+    if local and report_to and not _publish.is_remote(report_to):
+        same = same or Path(to).expanduser() == Path(report_to).expanduser()
+    if same:
+        raise ValueError(
+            f"[relations] to is the report's own destination ({to}); "
+            "give the relations page its own file"
+        )
+    return to
 
 
 def push_ledgers(
@@ -1583,6 +1624,7 @@ def relations(
     lineage_path: str | Path | None = None,
     events_path: str | Path | None = None,
     sources=None,
+    extra_sources=(),
     rules=None,
     interest=None,
     as_of: str | None = None,
@@ -1600,8 +1642,13 @@ def relations(
     them the sessions are read as :func:`report` reads them, with their ledgers, verdicts
     and references. ``since`` bounds the event log read for messages (default: the
     config file's ``[relations] since``). ``sources``, ``rules`` and ``interest`` are
-    :mod:`crowsnest.relations`'s seams, carried through: a reader for something
-    crowsnest does not own is added by passing it.
+    :mod:`crowsnest.relations`'s seams, carried through. ``sources`` replaces the
+    readers; ``extra_sources`` adds to the default ones, which is how a reader for
+    something crowsnest does not own is added without giving up the spawn forest and the
+    event log.
+
+    The spawn forest is read from the spawn records only, as :func:`report` reads it:
+    no ``ps`` runs, so this is safe on a schedule.
     """
     from crowsnest import eventlog
     from crowsnest import relations as _relations
@@ -1626,11 +1673,13 @@ def relations(
             config=config,
             lineage_path=lineage_path,
             sessions_read=rows,
+            sources=[lambda: _from_records(lineage_path=lineage_path)],
         )
         events = eventlog.read(
             since=since or None, events=("message", "intent"), events_path=events_path
         )
         sources = _relations.dflt_sources(lineage=forest, events=events)
+    sources = [*sources, *extra_sources]
     return _relations.relations(
         rows,
         sources=sources,

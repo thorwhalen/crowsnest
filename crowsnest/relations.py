@@ -61,12 +61,18 @@ why it is there. A middle node shared by more than ``max_fanout`` others is not
 expanded into pairs (forty sessions in one folder are one hub, not 780 links); what was
 left out is listed under ``graph.skipped``, never dropped in silence.
 
+A reader or a rule may bring a link type this module does not list: it is carried, and
+described under ``graph.types.link`` (a rule's by the path it walks), so a renderer can
+offer it without knowing it in advance. Two readers that yield the same link make one
+link: counts add up, the latest time and the strongest confidence win.
+
 **Interest** (the ``interest=`` seam) is one number per node in ``[0, 1]``: how much the
 owner would want to see it now. A view that opens on the few nodes above a threshold and
 expands on demand is the only way a graph of a fleet stays readable (degree of interest:
 Furnas 1986; van Ham and Perer 2009). The default scores a session by what triage says
 it needs and how recently it said so, and gives everything else the score of the most
-interesting session it is linked to, a little less.
+interesting session it is linked to, a little less. A function passed as ``interest``
+is asked about every node, and what it answers stands.
 
 >>> rows = [
 ...     {'session_id': 'a1', 'label': 'parser', 'status': 'idle', 'cwd': '/w/mergeset',
@@ -179,6 +185,11 @@ ASK_LIMIT = 200
 
 #: How many paths a derived link lists under ``via`` before it only counts them.
 VIA_LIMIT = 3
+
+#: How many trails a walk keeps per node it reaches. ``paths`` on a derived link counts
+#: up to this many; beyond it the number would only say "many", at the price of work
+#: that grows with every layer of a dense graph.
+TRAIL_LIMIT = 8
 
 #: A middle node shared by more than this many others is a hub, not a set of pairs.
 DFLT_MAX_FANOUT = 12
@@ -669,18 +680,34 @@ def _steps(links: Iterable[Mapping]) -> dict[str, dict[str, list[str]]]:
     return table
 
 
-def _walk(start: str, path: Sequence[str], table, *, max_fanout: int, skipped: set):
-    """Where ``path`` leads from ``start``: ``{end: [the nodes passed through]}``."""
+def _walk(
+    start: str,
+    path: Sequence[str],
+    table,
+    *,
+    max_fanout: int,
+    skipped: set,
+    guard_first: bool = False,
+):
+    """Where ``path`` leads from ``start``: ``{end: [the nodes passed through]}``.
+
+    A node with more than ``max_fanout`` ways on is a hub: it is not walked through, and
+    it is added to ``skipped``. The first step is exempt (a session may mention forty
+    issues) unless ``guard_first``, which a closure rule sets: there every step is one
+    more hop of the same relation, and a hub in the middle multiplies. Each end keeps at
+    most :data:`TRAIL_LIMIT` trails, so the work stays linear in the links walked.
+    """
     frontier: dict[str, list[tuple[str, ...]]] = {start: [()]}
     for position, step in enumerate(path):
         reached: dict[str, list[tuple[str, ...]]] = defaultdict(list)
         for at, trails in frontier.items():
             onward = table.get(step, {}).get(at, ())
-            if position and len(onward) > max_fanout:
+            if (position or guard_first) and len(onward) > max_fanout:
                 skipped.add((at, len(onward)))
                 continue
             for nxt in onward:
-                for trail in trails:
+                room = TRAIL_LIMIT - len(reached[nxt])
+                for trail in trails[: max(room, 0)]:
                     reached[nxt].append(trail + ((at,) if position else ()))
         frontier = reached
     return frontier
@@ -696,8 +723,11 @@ def infer(
 
     Returns ``(derived, skipped)``. Every derived link is ``inferred``, names its rule in
     ``by`` and lists under ``via`` the nodes it went through (the first
-    :data:`VIA_LIMIT` paths' worth, with ``paths`` counting all of them). ``skipped``
-    lists each hub a rule did not expand: ``{"rule", "node", "fanout"}``.
+    :data:`VIA_LIMIT` paths' worth, with ``paths`` counting them, up to
+    :data:`TRAIL_LIMIT`). ``skipped`` lists each hub a rule did not walk through:
+    ``{"rule", "node", "fanout"}``. A closure rule (``spawned``, ``messaged`` walked
+    again and again) stops at a hub on every hop, the first included: a dispatcher that
+    messaged a hundred sessions is one hub, not ten thousand chains.
 
     >>> base = [link('spawned', 's:a', 's:b'), link('spawned', 's:b', 's:c')]
     >>> derived, _ = infer(base, rules=[Rule('descends_from', ('~spawned',), closure=True)])
@@ -718,7 +748,14 @@ def infer(
         starts = sorted(table.get(rule.path[0], {}))
         found: dict[tuple[str, str], list[tuple[str, ...]]] = defaultdict(list)
         for start in starts:
-            ends = _walk(start, rule.path, table, max_fanout=max_fanout, skipped=hubs)
+            ends = _walk(
+                start,
+                rule.path,
+                table,
+                max_fanout=max_fanout,
+                skipped=hubs,
+                guard_first=rule.closure,
+            )
             if rule.closure:
                 ends = _closure(start, ends, rule, table, max_fanout, hubs)
             for end, trails in ends.items():
@@ -762,11 +799,19 @@ def _closure(start, first, rule, table, max_fanout, hubs):
     for _ in range(MAX_CLOSURE_DEPTH):
         onward: dict[str, list[tuple[str, ...]]] = defaultdict(list)
         for at, trails in frontier.items():
-            ends = _walk(at, rule.path, table, max_fanout=max_fanout, skipped=hubs)
+            ends = _walk(
+                at,
+                rule.path,
+                table,
+                max_fanout=max_fanout,
+                skipped=hubs,
+                guard_first=True,
+            )
             for end in ends:
                 if end in seen:
                     continue
-                onward[end].extend(trails)
+                room = TRAIL_LIMIT - len(onward[end])
+                onward[end].extend(trails[: max(room, 0)])
         if not onward:
             break
         for end, trails in onward.items():
@@ -798,6 +843,10 @@ _GROUP_INTEREST = {
 #: The least an old ask is worth, as a share of a fresh one: it still waits.
 _INTEREST_FLOOR = 0.55
 
+#: The least any ask is worth, whatever its age: just above work that is going on, so a
+#: view that shows what is working never hides a session that has waited a week.
+_ASK_FLOOR = 0.62
+
 #: What a node that is not a session keeps of its most interesting neighbour's score:
 #: where a session works is nearly as interesting as the session, what it merely refers
 #: to much less so, unless several sessions refer to it (:data:`_SHARED_BONUS`).
@@ -821,7 +870,7 @@ def dflt_interest(found: Mapping, *, as_of: datetime | None = None) -> float:
     ...                                      'said_at': '2026-01-01T11:30:00+00:00'}}
     >>> stale = {'type': 'session', 'data': {**fresh['data'],
     ...                                      'said_at': '2025-12-30T12:00:00+00:00'}}
-    >>> dflt_interest(fresh, as_of=now) > dflt_interest(stale, as_of=now) > 0.5
+    >>> dflt_interest(fresh, as_of=now) > dflt_interest(stale, as_of=now) > 0.6
     True
     >>> dflt_interest({'type': 'session', 'data': {'status': 'busy'}}, as_of=now)
     0.6
@@ -847,7 +896,7 @@ def dflt_interest(found: Mapping, *, as_of: datetime | None = None) -> float:
     decay = _INTEREST_FLOOR + (1 - _INTEREST_FLOOR) * 0.5 ** (
         hours / INTEREST_HALF_LIFE_HOURS
     )
-    return round(level * decay, 3)
+    return round(max(level * decay, _ASK_FLOOR), 3)
 
 
 # ---------------------------------------------------------------------------------------
@@ -883,7 +932,11 @@ def relations(
     for reader in readers:
         for element in reader(rows):
             if _is_link(element):
-                read.setdefault(element["id"], element)
+                held = read.get(element["id"])
+                if held is None:
+                    read[element["id"]] = element
+                else:
+                    held["data"] = _merged(held["data"], element["data"])
                 continue
             held = nodes.get(element["id"])
             if held is None:
@@ -896,7 +949,18 @@ def relations(
     score = interest or (lambda found: dflt_interest(found, as_of=now))
     for found in nodes.values():
         found["data"]["interest"] = float(score(found))
-    _spread_interest(nodes, kept)
+    if interest is None:
+        # The default scores sessions only; everything else gets its neighbourhood's
+        # score. A caller's function is asked about every node and its word is final.
+        _spread_interest(nodes, kept)
+    types = {k: {"says": v[0], "how": v[1]} for k, v in LINK_TYPES.items()}
+    for rule in rules:
+        types.setdefault(
+            rule.name,
+            {"says": "derived by walking " + ", ".join(rule.path), "how": "derived"},
+        )
+    for found in links:
+        types.setdefault(found["type"], {"says": "", "how": "read"})
     counts_nodes: dict[str, int] = defaultdict(int)
     counts_links: dict[str, int] = defaultdict(int)
     for found in nodes.values():
@@ -917,11 +981,36 @@ def relations(
             },
             "types": {
                 "node": dict(NODE_TYPES),
-                "link": {k: {"says": v[0], "how": v[1]} for k, v in LINK_TYPES.items()},
+                "link": types,
             },
             "skipped": skipped,
         },
     }
+
+
+def _merged(held: Mapping, new: Mapping) -> dict:
+    """What two readers know of one link, as one record: counts add up, the latest time
+    and the strongest confidence win, both readers are named, and for anything else the
+    first reader's word stands.
+
+    >>> _merged({'confidence': 'observed', 'by': 'events', 'count': 2, 'at': '2026-01-01'},
+    ...         {'confidence': 'recorded', 'by': 'transcripts', 'count': 3, 'at': '2026-01-02'})
+    {'confidence': 'recorded', 'by': 'events+transcripts', 'count': 5, 'at': '2026-01-02'}
+    """
+    out = {**new, **held}
+    if "count" in held and "count" in new:
+        out["count"] = held["count"] + new["count"]
+    if held.get("at") or new.get("at"):
+        out["at"] = max(str(held.get("at") or ""), str(new.get("at") or ""))
+    ranks = {name: rank for rank, name in enumerate(CONFIDENCES)}
+    out["confidence"] = min(
+        (held.get("confidence", "inferred"), new.get("confidence", "inferred")),
+        key=lambda name: ranks.get(name, len(ranks)),
+    )
+    names = [n for n in (held.get("by"), new.get("by")) if n]
+    if names:
+        out["by"] = "+".join(dict.fromkeys(names))
+    return out
 
 
 def _spread_interest(nodes: Mapping[str, dict], links: Sequence[Mapping]) -> None:
@@ -944,7 +1033,8 @@ def _spread_interest(nodes: Mapping[str, dict], links: Sequence[Mapping]) -> Non
                 share = level * _TYPE_SHARE.get(nodes[other]["type"], _CONTEXT_SHARE)
                 reached[other] = max(reached.get(other, 0.0), share)
         for other, share in reached.items():
-            shared = nodes[other]["type"] in _TYPE_SHARE and len(near[other]) > 1
+            pointing = sum(1 for n in near[other] if nodes[n]["type"] == "session")
+            shared = nodes[other]["type"] in _TYPE_SHARE and pointing > 1
             bonus = _SHARED_BONUS if shared and nodes[other]["type"] != "machine" else 0.0
             nodes[other]["data"]["interest"] = round(min(1.0, share + bonus), 3)
         settled.update(reached)

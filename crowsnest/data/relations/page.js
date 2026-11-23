@@ -271,7 +271,7 @@
   function visibleSessions(room) {
     var live = SESSIONS.filter(function (n) { return cls(n) !== 'gone'; }), picked;
     if (S.show === 'all') picked = live;
-    else if (S.show === 'more') picked = live.filter(function (n) { return n.data.interest >= SHOW.more || cls(n) === 'working'; });
+    else if (S.show === 'more') picked = live.filter(function (n) { var c = cls(n); return n.data.interest >= SHOW.more || c === 'working' || c === 'needs'; });
     else {
       room = room || 18;
       var working = BY_CLASS.working.slice(0, Math.max(2, Math.round(room * 0.25)));
