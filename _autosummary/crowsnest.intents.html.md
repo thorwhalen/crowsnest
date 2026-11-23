@@ -40,7 +40,7 @@ control, format and private-use character (Unicode Cc, Cf, Co) before clipping.
 
 | [`keyed_id`](#crowsnest.intents.keyed_id)(key)                                    | The id of the intent queued with idempotency key `key`: the same on every retry.   |
 |---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| [`put`](#crowsnest.intents.put)(kind, session[, text, idempotency_key, now]) | Queue one intent in the console store at `store`, as the page would; its record.   |
+| [`put`](#crowsnest.intents.put)(kind, session[, text, idempotency_key, ...]) | Queue one intent in the console store at `store`, as the page would; its record.   |
 | [`status`](#crowsnest.intents.status)(intent, \*, store)                        | What became of one intent: `{"id", "status", "answer"}`, a fixed shape.            |
 
 ### crowsnest.intents.KINDS *= ('ask', 'tell', 'start', 'recap', 'refresh')*
@@ -66,7 +66,7 @@ True
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
-### crowsnest.intents.put(kind, session, text='', , store, idempotency_key=None, now=None)
+### crowsnest.intents.put(kind, session, text='', , store, idempotency_key=None, source=None, max_per_hour=None, now=None)
 
 Queue one intent in the console store at `store`, as the page would; its record.
 
@@ -74,6 +74,12 @@ Queue one intent in the console store at `store`, as the page would; its record.
 another home (`refresh` takes none: pass `""`). Returns `{"id", "doc",
 "reused"}`; `reused` is true when `idempotency_key` found an intent already
 queued with it, whose id is returned and nothing is written.
+
+`source` says who wrote it (`crowsnest.courier.SOURCE`; none for the page’s
+own CLI twin), and decides whether the courier may post it straight to its session
+(`[courier] deliver_sources`). `max_per_hour` refuses a new intent when that many
+from the same `source` were queued in the last hour; it needs a `source`. A
+retry that finds its keyed intent is never refused by it.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)

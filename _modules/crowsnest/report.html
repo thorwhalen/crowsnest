@@ -1068,7 +1068,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="911"><span class="s2">  async function submit(kind, session, home, text) {</span>
 </span><span data-line="912"><span class="s2">    const at = new Date().toISOString();</span>
 </span><span data-line="913"><span class="s2">    try {</span>
-</span><span data-line="914"><span class="s2">      await intents.add({ kind, session, home, text, at, status: "queued" });</span>
+</span><span data-line="914"><span class="s2">      await intents.add({ kind, session, home, text, at, status: "queued", source: "console" });</span>
 </span><span data-line="915"><span class="s2">      say("queued " + kind + (session ? " for " + session : "") + " at " + at.slice(11, 19) + " UTC");</span>
 </span><span data-line="916"><span class="s2">    } catch (e) { say("could not queue: " + codeOf(e)); }</span>
 </span><span data-line="917"><span class="s2">  }</span>
@@ -5444,7 +5444,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=cdca99f8"></script>
+      <script src="../../_static/documentation_options.js?v=fa321392"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

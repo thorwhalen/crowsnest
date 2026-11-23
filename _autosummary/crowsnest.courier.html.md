@@ -100,7 +100,7 @@ pull, and a push makes it, with every directory above it.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None, deliver_intents=False, hold=datetime.timedelta(seconds=3600), find=None, deliver=None, record=None)
+### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None, deliver_intents=False, deliver_sources=('console',), hold=datetime.timedelta(seconds=3600), find=None, deliver=None, record=None)
 
 Carry the console store at `remote` both ways once; the summary of what moved.
 
@@ -118,7 +118,8 @@ unless the config file’s `[courier]` table turns them on (read by
   session it names (`_route()`), holding it while that session is busy or
   waiting, for at most `hold`. A `start`, an intent for a session that is gone
   or has no inbox here, and one held past `hold` go to the watching session as
-  before. `find` resolves a name to a live session (default
+  before. Only intents from `deliver_sources` (default: the page’s own) are
+  posted; the rest go to the watching session, which reads them first. `find` resolves a name to a live session (default
   `exact_session()` over this tick’s homes: a whole name or id, never a
   > prefix) and `deliver` is the switchboard’s transport, `(session, text)`.
 - `record`, when given, appends the registry’s changes to the event log

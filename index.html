@@ -564,9 +564,11 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="4"><span class="n">record_registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">   </span><span class="c1"># each minute tick writes the registry's changes to the event log</span>
 </span><span data-line="5"><span class="n">deliver_intents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">   </span><span class="c1"># the page's Ask/Tell go straight to the session they name,</span>
 </span><span data-line="6"><span class="n">hold_minutes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span><span class="w">        </span><span class="c1"># held while that session is busy or waiting, at most this long</span>
+</span><span data-line="7"><span class="n">deliver_sources</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"console"</span><span class="p">]</span><span class="w">   </span><span class="c1"># whose intents skip the watching session (the default)</span>
 </span></pre></div>
 </div>
 <p>With <code class="docutils literal notranslate"><span class="pre">deliver_intents</span></code>, an intent reaches its session without a watching session in between: the session named exactly (never a prefix), and only when its home’s <code class="docutils literal notranslate"><span class="pre">crossSessionInbound</span></code> is <code class="docutils literal notranslate"><span class="pre">accept</span></code>, since otherwise it would sit unapproved. An Ask with no text becomes a status request. The session reads the text marked as typed on the console page, with no more authority than a message from another session; that is also the trust it changes: page text reaches a session without the watching session reading it first. A <code class="docutils literal notranslate"><span class="pre">start</span></code>, an intent for a session that is gone or has no inbox here, and one held past <code class="docutils literal notranslate"><span class="pre">hold_minutes</span></code> still go to the watching session, as before.</p>
+<p><strong>Who wrote it decides whether it skips the watcher.</strong> Every intent says its <code class="docutils literal notranslate"><span class="pre">source</span></code>: the page stamps <code class="docutils literal notranslate"><span class="pre">console</span></code>, and a confined surface pins its own (<code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">intent</span> <span class="pre">put</span> <span class="pre">--source</span> <span class="pre">claude-ai</span></code>, which hatchway’s claude.ai connector passes, its caller unable to change it). Only the sources in <code class="docutils literal notranslate"><span class="pre">deliver_sources</span></code> (default: <code class="docutils literal notranslate"><span class="pre">console</span></code> alone) are delivered directly; any other, and an intent that names no source, goes to the watching session first, marked <code class="docutils literal notranslate"><span class="pre">(from</span> <span class="pre">&lt;source&gt;)</span></code>. A listed connector’s intent arrives signed by that connector, under a note saying its words may carry text other people wrote. <code class="docutils literal notranslate"><span class="pre">--max-per-hour</span> <span class="pre">N</span></code> caps one source’s intents. So with <code class="docutils literal notranslate"><span class="pre">deliver_intents</span></code> on, <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">intent</span> <span class="pre">put</span></code> from a shell reaches its session directly only with <code class="docutils literal notranslate"><span class="pre">--source</span> <span class="pre">console</span></code>, and an intent queued before sources existed (or from a page tab opened before) goes to the watching session, tagged <code class="docutils literal notranslate"><span class="pre">(source</span> <span class="pre">unknown)</span></code>: nothing is lost while a watcher runs.</p>
 </section>
 <section id="one-walk-end-to-end">
 <h2>One walk, end to end<a class="headerlink" href="#one-walk-end-to-end" title="Link to this heading">#</a></h2>
@@ -672,7 +674,7 @@ data-aria-dark="Switch to auto color mode">
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-23 09:21 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/98124cdb4c3baedc584b404b1363aebe35f00b35">98124cd</a> (main) · crowsnest 0.0.121 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-23 17:20 UTC from <a href="https://github.com/thorwhalen/crowsnest/commit/b7440dd8aea0fbcf37a731857e555557450df5c6">b7440dd</a> (main) · crowsnest 0.0.122 · <a href="about-this-build.html">about this build</a></p>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
@@ -707,7 +709,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="_static/documentation_options.js?v=cdca99f8"></script>
+      <script src="_static/documentation_options.js?v=fa321392"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
