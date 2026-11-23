@@ -1002,3 +1002,273 @@ def test_the_previous_link_is_read_from_the_transcript_after_a_clean_exit(tmp_pa
     assert guard.same_link(
         "https://claude.ai/code/session_01Vz", got["bridge_session_id"]
     )
+
+
+# --------------------------------------------------------------------------------------
+# Closing by name, and the selector that proposes the names (#193)
+
+
+def _worker(repo, tmp_path, pid=101, *, name=None, said="", **kw):
+    """A session resting in a clean checkout, its transcript ending in ``said``."""
+    from fixtures import assistant
+
+    records = [{"timestamp": "2026-01-01T00:00:00Z", "cwd": str(repo)}]
+    if said:
+        records.append(assistant(said, at="2026-01-01T00:01:00Z"))
+    t = _transcript(tmp_path / f"t{pid}", records)
+    name = f"w{pid}" if name is None else name
+    return _session(pid, name=name, cwd=str(repo), transcript=str(t), **kw)
+
+
+def _closing(tmp_path, closed):
+    return {
+        "closer": lambda s: closed.append(s.label) or "closed",
+        "log_path": tmp_path / "reaped.jsonl",
+        "settings": GuardSettings(),
+    }
+
+
+def test_naming_a_session_closes_it_however_recent_and_whatever_its_ledger_says(
+    repo, tmp_path
+):
+    s = _worker(repo, tmp_path, status_since=NOW - 600)  # active ten minutes ago
+    closed = []
+    got = guard.close(
+        ["w101"],
+        sessions=[s],
+        ctx=_ctx(touched_cache=tmp_path / "c"),  # no verdict: unclassified
+        **_closing(tmp_path, closed),
+    )
+    assert closed == ["w101"] and got["unknown"] == {}
+    assert got["plan"][0]["ledger"] == "unclassified"
+    entry = json.loads((tmp_path / "reaped.jsonl").read_text())
+    assert entry["by"] == "close" and "--resume sid-101" in entry["resume"]
+
+
+@pytest.mark.parametrize("status", ["busy", "shell", "waiting"])
+def test_naming_a_session_at_work_never_closes_it(repo, tmp_path, status):
+    s = _worker(repo, tmp_path, status=status)
+    closed = []
+    got = guard.close(
+        ["w101"],
+        sessions=[s],
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        **_closing(tmp_path, closed),
+    )
+    assert closed == [] and got["plan"][0]["keep_because"] == [f"it is {status}"]
+
+
+def test_naming_a_protected_session_a_parent_or_the_caller_never_closes_it(
+    repo, tmp_path
+):
+    lookout = _worker(repo, tmp_path, 1, name="cn-tw")
+    me = _worker(repo, tmp_path, 2, name="me")
+    parent = _worker(repo, tmp_path, 3, name="mgr")
+    closed = []
+    guard.close(
+        ["cn-tw", "me", "mgr"],
+        sessions=[lookout, me, parent],
+        ctx=_ctx(
+            settings=GuardSettings(protect=frozenset({"cn-tw"})),
+            callers=frozenset({me.session_id}),
+            parents=frozenset({"mgr"}),
+            touched_cache=tmp_path / "c",
+        ),
+        **_closing(tmp_path, closed),
+    )
+    assert closed == []
+
+
+def test_naming_a_session_with_unlanded_work_never_closes_it(repo, tmp_path):
+    (repo / "wip.py").write_text("x")  # untracked
+    s = _worker(repo, tmp_path)
+    closed = []
+    got = guard.close(
+        ["w101"],
+        sessions=[s],
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        **_closing(tmp_path, closed),
+    )
+    assert closed == [] and "unlanded" in got["plan"][0]["keep_because"][0]
+
+
+def test_a_name_must_match_one_session_whole_never_a_prefix(repo, tmp_path):
+    a = _worker(repo, tmp_path, 1, name="better-1")
+    b = _worker(repo, tmp_path, 2, name="twin")
+    c = _worker(repo, tmp_path, 3, name="twin")
+    closed = []
+    got = guard.close(
+        ["better", "twin", "nobody", "sid-3"],
+        sessions=[a, b, c],
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        **_closing(tmp_path, closed),
+    )
+    assert closed == ["twin"]  # sid-3, by its whole id
+    assert set(got["unknown"]) == {"better", "twin", "nobody"}
+    assert "name one by its id" in got["unknown"]["twin"]
+
+
+def test_a_named_close_is_not_capped_and_a_dry_run_closes_nothing(repo, tmp_path):
+    sessions = [_worker(repo, tmp_path, i) for i in range(1, 4)]
+    names = [s.label for s in sessions]
+    closed = []
+    kw = _closing(tmp_path, closed)
+    kw["settings"] = GuardSettings(max_closes=1)
+    ctx = _ctx(touched_cache=tmp_path / "c")
+    dry = guard.close(names, apply=False, sessions=sessions, ctx=ctx, **kw)
+    assert closed == [] and dry["would_close"] == names and not dry["applied"]
+    guard.close(names, sessions=sessions, ctx=ctx, **kw)
+    assert closed == names
+
+
+def test_a_named_close_counts_unnamed_children_when_it_finds_parents(
+    repo, tmp_path, monkeypatch
+):
+    seen = {}
+
+    def context(**k):
+        seen["names"] = {s.label for s in k["sessions"]}
+        return _ctx(touched_cache=tmp_path / "c")
+
+    monkeypatch.setattr(guard, "_context", context)
+    sessions = [_worker(repo, tmp_path, 1, name="mgr"), _worker(repo, tmp_path, 2)]
+    guard.close(["mgr"], apply=False, sessions=sessions, settings=GuardSettings())
+    assert seen["names"] == {"mgr", "w2"}
+
+
+def test_finished_sorts_what_passes_by_what_the_ledger_says(repo, tmp_path):
+    done = _worker(repo, tmp_path, 1, name="done")
+    quiet = _worker(repo, tmp_path, 2, name="quiet", said="Merged. Nothing needs you.")
+    asks = _worker(repo, tmp_path, 3, name="asks")
+    stale = _worker(repo, tmp_path, 4, name="stale")
+    busy = _worker(repo, tmp_path, 5, name="busy", status="busy")
+    verdicts = {
+        **_done(done),
+        **_done(stale, said_at="2025-01-01T00:00:00Z"),  # before its last prompt
+        asks.session_id: {"group": "needs_you", "said_at": ""},
+        busy.session_id: {"group": "safe_to_close", "said_at": "2099-01-01T00:00:00Z"},
+    }
+    got = guard.finished(
+        sessions=[done, quiet, asks, stale, busy],
+        settings=GuardSettings(),
+        ctx=_ctx(verdicts=verdicts, touched_cache=tmp_path / "c"),
+    )
+    assert got["finished"] == [done.session_id]
+    assert got["review"] == [quiet.session_id, stale.session_id]
+    assert got["command"] == f"crowsnest close -- {done.session_id}"
+    rows = {r["session"]["name"]: r for r in got["plan"]}
+    assert rows["quiet"]["last_words"] == "Merged. Nothing needs you."
+    assert rows["asks"]["keep_because"] == ["its ledger says needs_you"]
+    assert rows["busy"]["keep_because"] == ["it is busy"]
+    assert [n for n, r in rows.items() if r["close"]] == ["done"]
+
+
+def test_finished_takes_its_idle_window_from_the_caller(repo, tmp_path):
+    s = _worker(repo, tmp_path)
+    ctx = _ctx(verdicts=_done(s), touched_cache=tmp_path / "c")
+    kw = {"sessions": [s], "settings": GuardSettings(), "words": lambda s: ""}
+    # The transcript's only turn is from 2026-01-01, so idle is measured from it: make
+    # the clock two hours after it to test the window, not the fixture's date.
+    ctx.now = guard._epoch("2026-01-01T02:00:00Z")
+    assert guard.finished(ctx=ctx, **kw)["finished"] == []
+    assert guard.finished(ctx=ctx, idle_hours=1, **kw)["finished"] == ["sid-101"]
+    for bad in ("nan", -1):
+        with pytest.raises(ValueError, match="idle hours"):
+            guard.finished(ctx=ctx, idle_hours=bad, **kw)
+
+
+def test_the_resume_line_always_names_the_sessions_home(tmp_path):
+    # A terminal may export another account's CLAUDE_CONFIG_DIR, so even the default
+    # home is stated.
+    s = _session(transcript=str(tmp_path / ".claude" / "projects" / "p" / "sid.jsonl"))
+    home = tmp_path / ".claude"
+    assert guard.resume_line(s) == (
+        f"cd /nowhere && CLAUDE_CONFIG_DIR={home.as_posix()} claude --remote-control -n worker "
+        "--resume sid-101"
+    )
+
+
+def test_a_proposal_names_ids_so_a_reused_name_closes_nothing(repo, tmp_path):
+    old = _worker(repo, tmp_path, 1, name="w")
+    got = guard.finished(
+        sessions=[old],
+        settings=GuardSettings(),
+        ctx=_ctx(verdicts=_done(old), touched_cache=tmp_path / "c"),
+    )
+    assert got["command"] == "crowsnest close -- sid-1"
+    # The old session exits and a fresh one takes its name before the person answers.
+    new = _worker(repo, tmp_path, 2, name="w", status_since=NOW - 60)
+    closed = []
+    answer = guard.close(
+        got["finished"],
+        sessions=[new],
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        **_closing(tmp_path, closed),
+    )
+    assert closed == [] and set(answer["unknown"]) == {"sid-1"}
+
+
+def test_an_unnamed_sessions_label_is_not_a_name_to_close_it_by(repo, tmp_path):
+    s = _worker(repo, tmp_path, name="", session_id="abcdef0123456789")
+    closed = []
+    got = guard.close(
+        [s.label, "abcdef0123456789"[:12]],
+        sessions=[s],
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        **_closing(tmp_path, closed),
+    )
+    assert closed == [] and len(got["unknown"]) == 2
+
+
+def test_one_close_that_raises_never_stops_the_others(repo, tmp_path):
+    sessions = [_worker(repo, tmp_path, i) for i in (1, 2)]
+    tried = []
+
+    def closer(s):
+        tried.append(s.label)
+        if s.pid == 1:
+            raise ProcessLookupError("gone")
+        return "closed"
+
+    got = guard.close(
+        [s.label for s in sessions],
+        sessions=sessions,
+        ctx=_ctx(touched_cache=tmp_path / "c"),
+        settings=GuardSettings(),
+        closer=closer,
+        log_path=tmp_path / "reaped.jsonl",
+    )
+    assert tried == ["w1", "w2"]
+    assert [c["result"] for c in got["closed"]] == [
+        "not closed: ProcessLookupError: gone",
+        "closed",
+    ]
+    assert len((tmp_path / "reaped.jsonl").read_text().splitlines()) == 2
+
+
+def test_a_stale_all_clear_is_for_review_even_when_done_is_not_required(repo, tmp_path):
+    s = _worker(repo, tmp_path)
+    settings = GuardSettings(require_done=False)
+    got = guard.finished(
+        sessions=[s],
+        settings=settings,
+        ctx=_ctx(
+            settings=settings,
+            verdicts=_done(s, said_at="2025-01-01T00:00:00Z"),
+            touched_cache=tmp_path / "c",
+        ),
+        words=lambda s: "",
+    )
+    assert got["finished"] == [] and got["review"] == [s.session_id]
+
+
+def test_the_named_and_selector_checks_are_the_reapers_by_exclusion():
+    assert guard.NAMED_CHECKS == (
+        guard.check_protected,
+        guard.check_resting,
+        guard.check_nothing_unlanded,
+    )
+    assert guard.SELECT_CHECKS == tuple(
+        c for c in guard.DFLT_CHECKS if c is not guard.check_ledger_done
+    )
+    assert guard.DFLT_CHECKS[-1] is guard.NAMED_CHECKS[-1] is guard.SELECT_CHECKS[-1]
