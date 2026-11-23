@@ -219,6 +219,7 @@ transcript" and "it told me" are different kinds of evidence.
   comments that come back. When designing or changing how a report's items are seen,
   put off, marked done, or annotated, read `crowsnest-report/references/triage-ux.md`
   (sections 1-2 suffice).
+- **The question is about relations** (who waits on whom, who messaged whom, which sessions share a repository, what surrounds one session) → `crowsnest relations` prints the counts by kind, `--json` the typed graph (every link says how it is known and, when derived, through what), and `--page FILE` writes the map page. Send the scout for anything beyond the counts.
 - **You are being set up for the first time** → `crowsnest init` writes your `CLAUDE.md`,
   creates the data directory, and installs the hooks that push events at you.
 

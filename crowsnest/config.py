@@ -675,6 +675,89 @@ def publish_settings(*, path: str | Path | None = None) -> PublishSettings:
     )
 
 
+#: The config table for the relations page (:mod:`crowsnest.relations_page`).
+RELATIONS_KEY = "relations"
+
+#: The lenses a relations page may open on (:data:`crowsnest.relations_page.ENTRIES`,
+#: repeated here so that reading the config file does not import the page).
+RELATIONS_ENTRIES = ("map", "hybrid", "docket", "board")
+
+
+@dataclass(frozen=True)
+class RelationsSettings:
+    """The ``[relations]`` table: whether ``crowsnest publish`` also sends the relations
+    page, where, and how that page opens.
+
+    >>> RelationsSettings().to, RelationsSettings().entry, RelationsSettings().since
+    ('', 'map', '7d')
+    """
+
+    #: Where the relations page goes, as ``[publish] to`` is written. Empty: not sent.
+    to: str = ""
+    #: The lens it opens on.
+    entry: str = "map"
+    #: How far back the event log is read for who messaged whom.
+    since: str = "7d"
+    #: The page's title.
+    title: str = "crowsnest"
+    #: Links to the owner's other pages, in the order written: ``(label, address)``.
+    nav: tuple[tuple[str, str], ...] = ()
+
+
+def relations_settings(*, path: str | Path | None = None) -> RelationsSettings:
+    """The config file's ``[relations]`` table, or the defaults when it has none.
+
+    .. code-block:: toml
+
+        [relations]
+        to = "me@myserver:/srv/crowsnest/relations.html"   # or a local path
+        entry = "map"          # map, hybrid, docket or board
+        since = "7d"           # how far back messages are read
+
+        [relations.nav]        # links the page shows to your other pages
+        "Every session" = "/crowsnest/all/"
+        "Notes" = "https://example.org/notes/"
+
+    A key the table does not know is an error, as in ``[publish]``. The page names
+    sessions and folders and quotes what the sessions asked, so ``to`` is a place only
+    its owner can read, as ``[publish] to`` is.
+    """
+    file = config_path(path)
+    table = _loaded(path).get(RELATIONS_KEY)
+    if table is None:
+        return RelationsSettings()
+    if not isinstance(table, dict):
+        raise ValueError(f"{file}: [{RELATIONS_KEY}] must be a table")  # noqa: TRY004
+    known = {f.name for f in fields(RelationsSettings)}
+    unknown = sorted(set(table) - known)
+    if unknown:
+        raise ValueError(
+            f"{file}: [{RELATIONS_KEY}] has no {', '.join(unknown)}; "
+            f"it knows {', '.join(sorted(known))}"
+        )
+    texts = {}
+    for key in ("to", "entry", "since", "title"):
+        value = table.get(key, getattr(RelationsSettings, key))
+        if not isinstance(value, str):
+            raise ValueError(  # noqa: TRY004
+                f"{file}: [{RELATIONS_KEY}] {key} must be a string, not {value!r}"
+            )
+        texts[key] = value.strip()
+    if texts["entry"] not in RELATIONS_ENTRIES:
+        raise ValueError(
+            f"{file}: [{RELATIONS_KEY}] entry must be one of "
+            f"{', '.join(RELATIONS_ENTRIES)}, not {texts['entry']!r}"
+        )
+    nav = table.get("nav", {})
+    if not isinstance(nav, dict) or not all(isinstance(v, str) for v in nav.values()):
+        raise ValueError(
+            f"{file}: [{RELATIONS_KEY}.nav] must be a table of label = address, not {nav!r}"
+        )
+    return RelationsSettings(
+        **texts, nav=tuple((str(k), v.strip()) for k, v in nav.items())
+    )
+
+
 #: The config file's table for the courier (:mod:`crowsnest.courier`).
 COURIER_KEY = "courier"
 

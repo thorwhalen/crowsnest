@@ -197,6 +197,38 @@ A parent that has exited stays in the picture (`x gone`) so its children stay a 
 
 Recording only works forwards. For a machine that has been running sessions since before this shipped, `crowsnest lineage --backfill` recovers what it can, once, by scanning every transcript for the `crowsnest spawn` commands that created today's sessions, and writes what it finds into `lineage.jsonl` so the cheap reader has it from then on. That is *inference* — the command may have failed — so those edges are marked `~` wherever they are shown, and a recorded edge is never overwritten by a guessed one. A *mention* is not a spawn: the command has to be the head of a shell segment, so grepping for the phrase or writing a commit message about it does not invent a parent. `--dry-run` says what it would add and writes nothing.
 
+## What relates to what
+
+A roster is a list and the spawn forest is a tree. The questions a large fleet raises are about relations between things of several kinds: which sessions wait on you and what hangs off them, who messaged whom, which of these forty work on the same repository.
+
+```
+crowsnest relations                    # how many nodes and links of each kind
+crowsnest relations --json             # the whole document
+crowsnest relations --page map.html    # one self-contained page: a map, a docket, a board
+```
+
+The document is a typed graph in the plain nodes-and-links shape. **Nodes**: you, each session, its machine, its folder, the folder's repository, and the issues, pull requests and pages its words refer to. **Links** are read from what is already recorded: who waits on you (triage), who started whom (the spawn record), who messaged whom and what you asked of a session (the event log), where each session works, what it mentions. Every link says how it is known: `recorded`, `observed`, or `inferred`.
+
+**Rules derive the relations nobody recorded**, and a rule is data: a path of link types to walk. *Works in*, then *in repository*, is *works on*; *works on*, then *works on* backwards, is *shares a repository with*; *started* walked more than once is *descends from*. A derived link lists the nodes it went through, so you can ask why it is there. A node shared by more than a dozen others is reported as a hub rather than expanded into pairs.
+
+The page opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the docket and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing, as the report is.
+
+To have it sent beside the report on the same schedule, and to choose what it opens on (the page names your sessions and their folders and quotes what they asked, sanitised as the report is, so send it only where you alone can read it: behind your own login or in a private folder, never a public bucket):
+
+```toml
+[relations]
+to = "me@myserver:/srv/crowsnest/relations.html"   # or a local path; empty: not sent
+entry = "map"          # map, hybrid (the first asks, then the map), docket or board
+since = "7d"           # how far back messages are read
+
+[relations.nav]        # links the page shows to your other pages
+"Every session" = "/crowsnest/all/"
+```
+
+The map is drawn by [Cytoscape.js](https://js.cytoscape.org) 3.35.0 (MIT, with the MIT-licensed Thenable and bezier-easing it bundles), shipped in the package as `crowsnest/data/relations/cytoscape.min.js` beside its licence and inlined into the page with its notice.
+
+From Python, `crowsnest.tools.relations()` returns the document and `crowsnest.relations.relations(rows, sources=..., rules=..., interest=...)` builds one from rows you already have. `sources` are the readers (add one for something crowsnest does not own by passing it), `rules` the derivations, and `interest` the score that decides what a view shows first.
+
 ## Several accounts and machines in one roster
 
 Reading crosses accounts and machines; messaging does not, so a crowsnest session operates the fleet of its own account and machine and can *read* all the others. What it spawns lands on its own account too: `crowsnest spawn` starts the new session the way this one runs — same account (its `CLAUDE_CONFIG_DIR`, stated absolutely on the command line, because a `tmux` server hands a new session *its* environment rather than the client's) and same `claude` binary (`$CLAUDE_CODE_EXECPATH`, not whatever a login shell's `PATH` resolves) — so a second-account crowsnest never opens sessions under the default account by mistake, and `ANTHROPIC_API_KEY` is dropped so the child signs in as its account, not as an API bill. `--profile NAME` starts one on another account, `--home DIR` spells that home out, and `$CROWSNEST_PROFILE` is that choice made once. List the homes once:
