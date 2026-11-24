@@ -1272,3 +1272,74 @@ def test_the_named_and_selector_checks_are_the_reapers_by_exclusion():
         c for c in guard.DFLT_CHECKS if c is not guard.check_ledger_done
     )
     assert guard.DFLT_CHECKS[-1] is guard.NAMED_CHECKS[-1] is guard.SELECT_CHECKS[-1]
+
+
+# --------------------------------------------------------------------------------------
+# Homes: which sessions a reap covers, and whether its verdicts cover the same ones
+# (crowsnest#230: `--home iq` and `--home main` returned the same 106 sessions, and every
+# session of the account the lookout does not run in read "unclassified")
+
+
+@pytest.fixture
+def two_accounts(tmp_path, monkeypatch):
+    """Two accounts, a session each, a ledger each saying it is done, and a config naming
+    both: ``a`` is the running process's own home, ``b`` the other account's."""
+    homes = {}
+    # Real, live pids (the roster behind triage checks them itself): this process and its parent.
+    for pid, key in ((os.getpid(), "a"), (os.getppid(), "b")):
+        home = tmp_path / key
+        write_registry(
+            home,
+            registry_record(pid, f"sid-{key}", name=f"w-{key}", cwd=str(tmp_path)),
+        )
+        homes[key] = home
+    ledgers = tmp_path / "ledgers"
+    ledgers.mkdir()
+    for key in homes:
+        (ledgers / f"w-{key}.md").write_text(f"state: done - everything merged ({key})\n")
+    config = tmp_path / "config.toml"
+    config.write_text(
+        "\n".join(
+            [f"[[homes]]\nname = '{k}'\npath = '{h}'\n" for k, h in homes.items()]
+            + [f"[report]\nledger_dir = '{ledgers}'\n"]
+        )
+    )
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(homes["a"]))
+    monkeypatch.setattr(guard, "claude_alive", lambda pid, **kw: True)
+    return config, homes
+
+
+def _names(rows):
+    return sorted(r["session"]["name"] for r in rows)
+
+
+def test_a_home_name_is_resolved_and_a_reap_covers_that_home_alone(two_accounts):
+    config, homes = two_accounts
+    assert _names(guard.plan(config=config)) == ["w-a", "w-b"]
+    assert _names(guard.plan(config=config, home="a")) == ["w-a"]
+    assert _names(guard.plan(config=config, home="b")) == ["w-b"]
+    assert _names(guard.plan(config=config, home=homes["b"])) == ["w-b"]
+    assert guard.reap(config=config, home="b")["plan"][0]["session"]["name"] == "w-b"
+
+
+def test_an_unknown_home_name_is_an_error_not_a_relative_directory(two_accounts):
+    config, _ = two_accounts
+    with pytest.raises(ValueError, match="unknown profile 'c'"):
+        guard.plan(config=config, home="c")
+
+
+def test_the_verdicts_cover_the_account_the_reaper_is_not_running_in(two_accounts):
+    """Both ledgers say done. Whatever else keeps them, no row may read "unclassified"."""
+    config, _ = two_accounts
+    for home in (None, "a", "b"):
+        for row in guard.plan(config=config, home=home):
+            kept = " ".join(row["keep_because"])
+            assert "unclassified" not in kept, (home, row["session"]["name"], kept)
+            assert "ledger does not say" not in kept, (home, row["session"]["name"], kept)
+
+
+def test_the_memory_gate_still_counts_every_account(two_accounts):
+    """A machine's memory is shared: the gate and the OOM pass do not take a home's scope."""
+    config, homes = two_accounts
+    got = guard._local_sessions(home=homes["a"], config=config, is_alive=lambda pid: True)
+    assert sorted(s.name for s in got) == ["w-a", "w-b"]
