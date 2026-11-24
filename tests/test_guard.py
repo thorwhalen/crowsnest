@@ -1300,8 +1300,8 @@ def two_accounts(tmp_path, monkeypatch):
     config = tmp_path / "config.toml"
     config.write_text(
         "\n".join(
-            [f'[[homes]]\nname = "{k}"\npath = "{h}"\n' for k, h in homes.items()]
-            + [f'[report]\nledger_dir = "{ledgers}"\n']
+            [f"[[homes]]\nname = '{k}'\npath = '{h}'\n" for k, h in homes.items()]
+            + [f"[report]\nledger_dir = '{ledgers}'\n"]
         )
     )
     monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(homes["a"]))
@@ -1341,7 +1341,5 @@ def test_the_verdicts_cover_the_account_the_reaper_is_not_running_in(two_account
 def test_the_memory_gate_still_counts_every_account(two_accounts):
     """A machine's memory is shared: the gate and the OOM pass do not take a home's scope."""
     config, homes = two_accounts
-    got = guard._local_sessions(
-        home=homes["a"], config=config, is_alive=lambda pid: True
-    )
+    got = guard._local_sessions(home=homes["a"], config=config, is_alive=lambda pid: True)
     assert sorted(s.name for s in got) == ["w-a", "w-b"]

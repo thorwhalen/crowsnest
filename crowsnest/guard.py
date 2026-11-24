@@ -56,7 +56,6 @@ from crowsnest.paths import data_dir
 from crowsnest.registry import LiveSession, claude_home, live_sessions, pid_alive
 
 __all__ = [
-    "scoped_home",
     "DFLT_CHECKS",
     "NAMED_CHECKS",
     "SELECT_CHECKS",
@@ -74,6 +73,7 @@ __all__ = [
     "plan",
     "reap",
     "resume_line",
+    "scoped_home",
     "session_cap",
     "tick",
     "tier_of",
@@ -185,7 +185,9 @@ def same_process(pid: int, record: Mapping, *, proc: Path | None = None) -> bool
     return len(fields_) > 19 and fields_[19] == started
 
 
-def scoped_home(home: str | Path | None, *, config: str | Path | None = None) -> Path | None:
+def scoped_home(
+    home: str | Path | None, *, config: str | Path | None = None
+) -> Path | None:
     """The one home ``home`` names, or ``None`` for "this machine's homes".
 
     ``home`` is a path, or the name of a ``[[homes]]`` entry (``iq``, ``main``), which is
@@ -781,9 +783,7 @@ def _context(
     # told to read them all, so a session of the machine's other account had no verdict
     # and every ledger of it read "unclassified" (the reaper kept 106 sessions, #230).
     one = scoped_home(home, config=config)
-    found = tools.triage(
-        home=one, all_homes=one is None, config=config, activity=False
-    )
+    found = tools.triage(home=one, all_homes=one is None, config=config, activity=False)
     for group, rows in found["groups"].items():
         for row in rows:
             if row.get("session_id"):
