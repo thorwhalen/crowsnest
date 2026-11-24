@@ -203,7 +203,7 @@ def scoped_home(
     if home is None or home == "":
         return None
     text = str(home)
-    if os.sep in text or text.startswith(("~", ".")):
+    if "/" in text or "\\" in text or text.startswith(("~", ".")):
         return claude_home(text)
     from crowsnest.account import profile_home
 
