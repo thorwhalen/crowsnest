@@ -71,8 +71,10 @@ DFLT_KEEP_DAYS = 14
 #: so a limit here only bounds the file (#83 is what clipping first gets wrong).
 MAX_KEPT = 20_000
 
-#: Bumped when what a cache file holds changes, so an old one is read again.
-CACHE_VERSION = 3
+#: Bumped when what a cache file holds changes, so an old one is read again. 4: openloops
+#: 0.1.49 makes a message from another session start a turn, so a reply cached under the
+#: prompt before it was paired wrongly (#236).
+CACHE_VERSION = 4
 
 #: How much of every other turn the cache keeps, for finding an answer given elsewhere.
 TURN_PROMPT_KEPT = 1500
