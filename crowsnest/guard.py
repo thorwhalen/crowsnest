@@ -56,6 +56,7 @@ from crowsnest.paths import data_dir
 from crowsnest.registry import LiveSession, claude_home, live_sessions, pid_alive
 
 __all__ = [
+    "scoped_home",
     "DFLT_CHECKS",
     "NAMED_CHECKS",
     "SELECT_CHECKS",
@@ -184,16 +185,50 @@ def same_process(pid: int, record: Mapping, *, proc: Path | None = None) -> bool
     return len(fields_) > 19 and fields_[19] == started
 
 
+def scoped_home(home: str | Path | None, *, config: str | Path | None = None) -> Path | None:
+    """The one home ``home`` names, or ``None`` for "this machine's homes".
+
+    ``home`` is a path, or the name of a ``[[homes]]`` entry (``iq``, ``main``), which is
+    what a person types on the command line. A bare word no ``[[homes]]`` entry carries
+    is an error, never a relative directory that holds no sessions: ``--home iq`` once
+    read ``./iq`` and fell back to every home, so each home's plan came out the same.
+
+    >>> scoped_home(None) is None
+    True
+    >>> scoped_home('/x/y').as_posix()
+    '/x/y'
+    """
+    if home is None or home == "":
+        return None
+    text = str(home)
+    if os.sep in text or text.startswith(("~", ".")):
+        return claude_home(text)
+    from crowsnest.account import profile_home
+
+    return Path(profile_home(text, config=config)).expanduser()
+
+
 def _local_sessions(
-    *, home: str | Path | None, config: str | Path | None, is_alive: Callable[[int], bool]
+    *,
+    home: str | Path | None,
+    config: str | Path | None,
+    is_alive: Callable[[int], bool],
+    only_home: bool = False,
 ) -> list[LiveSession]:
-    """Every live session in this machine's homes: ``home`` and the configured local ones."""
+    """Every live session in this machine's homes: ``home`` and the configured local ones.
+
+    ``only_home`` narrows it to the one home ``home`` names (:func:`scoped_home`), for a
+    verb that reports on, or closes, the sessions of that home alone. The memory gate and
+    the OOM pass leave it off: a machine's memory is shared by every account on it.
+    """
     seen: dict[int, LiveSession] = {}
-    roots = [claude_home(home)]
-    try:
-        roots += [h.path for h in configured_homes(path=config) if not h.remote]
-    except ValueError:
-        pass
+    one = scoped_home(home, config=config) if only_home else None
+    roots = [one if one is not None else claude_home(home)]
+    if one is None:
+        try:
+            roots += [h.path for h in configured_homes(path=config) if not h.remote]
+        except ValueError:
+            pass
     for root in dict.fromkeys(Path(r).expanduser().resolve() for r in roots):
         for s in live_sessions(home=root, is_alive=is_alive):
             seen.setdefault(s.pid, s)
@@ -742,7 +777,13 @@ def _context(
     from crowsnest.spawn import _process_argv
 
     verdicts: dict[str, dict] = {}
-    found = tools.triage(home=home, config=config, activity=False)
+    # The verdicts must cover every session `sessions` holds. Triage reads one home unless
+    # told to read them all, so a session of the machine's other account had no verdict
+    # and every ledger of it read "unclassified" (the reaper kept 106 sessions, #230).
+    one = scoped_home(home, config=config)
+    found = tools.triage(
+        home=one, all_homes=one is None, config=config, activity=False
+    )
     for group, rows in found["groups"].items():
         for row in rows:
             if row.get("session_id"):
@@ -752,7 +793,7 @@ def _context(
                 }
     live_names = {s.label for s in sessions}
     parents = frozenset(e.parent for e in from_records() if e.child in live_names)
-    me = current_session(home=home)
+    me = current_session()  # the caller is in its own home, whatever home is scoped
     return ReapContext(
         settings=settings,
         verdicts=verdicts,
@@ -780,7 +821,7 @@ def plan(
     settings = guard_settings(path=config) if settings is None else settings
     if sessions is None:
         sessions = _local_sessions(
-            home=home, config=config, is_alive=is_alive or claude_alive
+            home=home, config=config, is_alive=is_alive or claude_alive, only_home=True
         )
     if ctx is None:
         ctx = _context(settings=settings, home=home, config=config, sessions=sessions)
@@ -958,7 +999,9 @@ def reap(
     """
     settings = guard_settings(path=config) if settings is None else settings
     if sessions is None:
-        sessions = _local_sessions(home=home, config=config, is_alive=claude_alive)
+        sessions = _local_sessions(
+            home=home, config=config, is_alive=claude_alive, only_home=True
+        )
     rows = plan(
         sessions=sessions,
         settings=settings,
@@ -1063,7 +1106,9 @@ def close(
     """
     settings = guard_settings(path=config) if settings is None else settings
     if sessions is None:
-        sessions = _local_sessions(home=home, config=config, is_alive=claude_alive)
+        sessions = _local_sessions(
+            home=home, config=config, is_alive=claude_alive, only_home=True
+        )
     picked, unknown = _pick(names, sessions)
     if ctx is None:
         # Built over every live session, not only the named ones: a named session's live
@@ -1150,7 +1195,9 @@ def finished(
             raise ValueError(f"idle hours must be a number of hours, not {idle_hours!r}")
         settings = replace(settings, idle_hours=hours)
     if sessions is None:
-        sessions = _local_sessions(home=home, config=config, is_alive=claude_alive)
+        sessions = _local_sessions(
+            home=home, config=config, is_alive=claude_alive, only_home=True
+        )
     if ctx is None:
         ctx = _context(settings=settings, home=home, config=config, sessions=sessions)
     elif idle_hours is not None:

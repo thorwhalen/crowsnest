@@ -562,6 +562,16 @@ def test_the_skills_own_state_example_is_safe_to_close():
         "- done — merged",
         "safe-to-close",
         "done — PR merged, no open PRs, nothing pending, nothing left for the user",
+        # the forms the fleet's real ledgers use (sampled 2026-11-24, crowsnest#230)
+        "done — thorwhalen/crowsnest#195 and #205 merged (CI green), released; Mac editable on main",
+        "safe_to_close — done: PR #130 merged, installed and verified on the Mac",
+        "done — every PR merged, CI green; no branch, worktree or open PR left",
+        "safe to close — everything is landed on main; no uncommitted change, branch or PR",
+        "done · page published 2026-11-20 13:35 (see Result)",
+        "safe_to_close · all landed: engine #1691 live, host guard merged",
+        "safe_to_close (2026-11-21 ~15:05 CET). Both PRs merged, work landed",
+        "done -- crowsnest#171 landed and live on tw",
+        "done, idle. Audit of 29 packages; no code or branches changed",
     ],
 )
 def test_a_status_token_in_the_state_field_is_safe_to_close(state):
@@ -608,6 +618,12 @@ def test_a_status_token_in_the_state_field_is_safe_to_close(state):
 def test_evidence_that_takes_the_status_back_is_not_safe_to_close(state):
     found = classify_row(_row(), ledger=_ledger(state=state))
     assert found["group"] != "safe_to_close", state
+
+
+def test_a_ledger_with_no_state_line_is_unclassified_not_safe_to_close():
+    """567 of 760 real ledgers had none; silence is never an all-clear."""
+    found = classify_row(_row(), ledger=_ledger("Session: building the thing.\n"))
+    assert found["group"] == "unclassified"
 
 
 def test_a_status_token_in_the_free_part_is_still_not_an_all_clear():

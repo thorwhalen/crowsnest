@@ -457,7 +457,7 @@ def _is_a_real_all_clear(text: str) -> re.Match | None:
 #: phase 1, not about the session. A leading bullet and markdown emphasis are allowed.
 _STATE_TOKEN = re.compile(
     r"(?i)^[\s*_`>-]*(?P<token>done|safe[ _-]to[ _-]close)[*_`]*"
-    r"(?:[ \t]*(?:\n|$)|[ \t]*[—–:;,.(!]|[ \t]+-+[ \t])"
+    r"(?:[ \t]*(?:\n|$)|[ \t]*[—–:;,.(!·]|[ \t]+-+[ \t])"
 )
 
 #: Evidence after a status token that takes the status back. A wrong ``safe_to_close``

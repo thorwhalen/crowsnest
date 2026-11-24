@@ -1785,6 +1785,9 @@ def reap(*, apply: bool = False, home: str | None = None, json: bool = False) ->
     With it, at most `[guard] max_closes` sessions get SIGTERM (never SIGKILL), each
     re-checked first, and each is logged with the `claude --resume` line that brings it
     back. A lookout never runs `--apply`: closing sessions is the person's or the timer's.
+
+    `--home` takes a path or the name of a `[[homes]]` entry (`iq`, `main`) and covers that
+    home alone; without it the reaper covers this machine's every local home.
     """
     result = tools.reap(apply=apply, home=home)
     if json:
