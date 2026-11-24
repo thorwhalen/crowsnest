@@ -141,6 +141,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#crowsnest.guard.plan"><code class="docutils literal notranslate"><span class="pre">plan()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.guard.reap"><code class="docutils literal notranslate"><span class="pre">reap()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.guard.resume_line"><code class="docutils literal notranslate"><span class="pre">resume_line()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.guard.scoped_home"><code class="docutils literal notranslate"><span class="pre">scoped_home()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.guard.session_cap"><code class="docutils literal notranslate"><span class="pre">session_cap()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.guard.tick"><code class="docutils literal notranslate"><span class="pre">tick()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.guard.tier_of"><code class="docutils literal notranslate"><span class="pre">tier_of()</span></code></a></li>
@@ -283,19 +284,22 @@ cap applies only when <code class="docutils literal notranslate"><span class="pr
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.guard.resume_line" title="crowsnest.guard.resume_line"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resume_line</span></code></a>(session)</p></td>
 <td><p>The shell line that brings a closed session back, in its own account.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.guard.session_cap" title="crowsnest.guard.session_cap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">session_cap</span></code></a>(settings, mem)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.guard.scoped_home" title="crowsnest.guard.scoped_home"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scoped_home</span></code></a>(home, *[, config])</p></td>
+<td><p>The one home <code class="docutils literal notranslate"><span class="pre">home</span></code> names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for &quot;this machine's homes&quot;.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.guard.session_cap" title="crowsnest.guard.session_cap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">session_cap</span></code></a>(settings, mem)</p></td>
 <td><p>How many sessions this machine may run: <code class="docutils literal notranslate"><span class="pre">max_sessions</span></code>, else derived from memory.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.guard.tick" title="crowsnest.guard.tick"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tick</span></code></a>(*[, home, config, settings])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.guard.tick" title="crowsnest.guard.tick"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tick</span></code></a>(*[, home, config, settings])</p></td>
 <td><p>What the timer runs: the OOM pass, then the reaper in <code class="docutils literal notranslate"><span class="pre">[guard]</span> <span class="pre">reap</span></code>'s mode.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.guard.tier_of" title="crowsnest.guard.tier_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tier_of</span></code></a>(session, settings)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.guard.tier_of" title="crowsnest.guard.tier_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tier_of</span></code></a>(session, settings)</p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">oom_score_adj</span></code> a session's processes get, by what it is doing.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.guard.units" title="crowsnest.guard.units"><code class="xref py py-obj docutils literal notranslate"><span class="pre">units</span></code></a>(*[, python, home, path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.guard.units" title="crowsnest.guard.units"><code class="xref py py-obj docutils literal notranslate"><span class="pre">units</span></code></a>(*[, python, home, path])</p></td>
 <td><p>The systemd units that run <a class="reference internal" href="#crowsnest.guard.tick" title="crowsnest.guard.tick"><code class="xref py py-func docutils literal notranslate"><span class="pre">tick()</span></code></a>, rendered for this machine.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.guard.unlanded" title="crowsnest.guard.unlanded"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlanded</span></code></a>(dirs, *, since[, is_landed])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.guard.unlanded" title="crowsnest.guard.unlanded"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlanded</span></code></a>(dirs, *, since[, is_landed])</p></td>
 <td><p>Why work in these directories is not landed; <code class="docutils literal notranslate"><span class="pre">[]</span></code> when all of it is.</p></td>
 </tr>
 </tbody>
@@ -561,6 +565,27 @@ terminal opened with another account.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.guard.scoped_home">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.guard.</span></span><span class="sig-name descname"><span class="pre">scoped_home</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">home</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/guard.html#scoped_home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.guard.scoped_home" title="Link to this definition">#</a></dt>
+<dd><p>The one home <code class="docutils literal notranslate"><span class="pre">home</span></code> names, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for “this machine’s homes”.</p>
+<p><code class="docutils literal notranslate"><span class="pre">home</span></code> is a path, or the name of a <code class="docutils literal notranslate"><span class="pre">[[homes]]</span></code> entry (<code class="docutils literal notranslate"><span class="pre">iq</span></code>, <code class="docutils literal notranslate"><span class="pre">main</span></code>), which is
+what a person types on the command line. A bare word no <code class="docutils literal notranslate"><span class="pre">[[homes]]</span></code> entry carries
+is an error, never a relative directory that holds no sessions: <code class="docutils literal notranslate"><span class="pre">--home</span> <span class="pre">iq</span></code> once
+read <code class="docutils literal notranslate"><span class="pre">./iq</span></code> and fell back to every home, so each home’s plan came out the same.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">scoped_home</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="2"><span class="go">True</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">scoped_home</span><span class="p">(</span><span class="s1">'/x/y'</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+</span><span data-line="4"><span class="go">'/x/y'</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.guard.session_cap">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.guard.</span></span><span class="sig-name descname"><span class="pre">session_cap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/guard.html#session_cap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.guard.session_cap" title="Link to this definition">#</a></dt>
 <dd><p>How many sessions this machine may run: <code class="docutils literal notranslate"><span class="pre">max_sessions</span></code>, else derived from memory.</p>
@@ -680,7 +705,7 @@ session.</p>
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=5e4a978b"></script>
+      <script src="../_static/documentation_options.js?v=95c30746"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -1,4 +1,4 @@
-> built 2026-11-23 18:56 UTC from dea929e (main) · crowsnest 0.0.123. Details: build_info.json
+> built 2026-11-24 08:11 UTC from d4bf788 (main) · crowsnest 0.0.124. Details: build_info.json
 
 # index.html.md
 
@@ -2796,6 +2796,7 @@ cap applies only when `max_sessions` is configured.
 | [`plan`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.plan)(\*[, home, config, settings, sessions, ...])  | Every live session, each `{"session": row, "close": bool, "keep_because": [...]}`.                                     |
 | [`reap`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.reap)(\*[, apply, home, config, settings, ...])     | The plan, and -- only with `apply=True` -- the closes, at most `max_closes`.                                           |
 | [`resume_line`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.resume_line)(session)                               | The shell line that brings a closed session back, in its own account.                                                  |
+| [`scoped_home`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.scoped_home)(home, \*[, config])                    | The one home `home` names, or `None` for "this machine's homes".                                                       |
 | [`session_cap`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.session_cap)(settings, mem)                         | How many sessions this machine may run: `max_sessions`, else derived from memory.                                      |
 | [`tick`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.tick)(\*[, home, config, settings])                 | What the timer runs: the OOM pass, then the reaper in `[guard] reap`'s mode.                                           |
 | [`tier_of`](_autosummary/crowsnest.guard.html.md#crowsnest.guard.tier_of)(session, settings)                         | The `oom_score_adj` a session's processes get, by what it is doing.                                                    |
@@ -3002,6 +3003,25 @@ terminal opened with another account.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.guard.scoped_home(home, , config=None)
+
+The one home `home` names, or `None` for “this machine’s homes”.
+
+`home` is a path, or the name of a `[[homes]]` entry (`iq`, `main`), which is
+what a person types on the command line. A bare word no `[[homes]]` entry carries
+is an error, never a relative directory that holds no sessions: `--home iq` once
+read `./iq` and fell back to every home, so each home’s plan came out the same.
+
+```pycon
+>>> scoped_home(None) is None
+True
+>>> scoped_home('/x/y').as_posix()
+'/x/y'
+```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.guard.session_cap(settings, mem)
 
@@ -9255,18 +9275,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-23 18:56 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/dea929ef6119ecd13afb356e7b69dec198db62b1"><code>dea929e</code></a> on branch <code>main</code>, for **crowsnest 0.0.123** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-24 08:11 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/d4bf7882bed080fae221ac2b23845a232973e77a"><code>d4bf788</code></a> on branch <code>main</code>, for **crowsnest 0.0.124** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.123) is behind the latest release on PyPI (0.0.124): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/dea929ef6119ecd13afb356e7b69dec198db62b1"><code>dea929ef6119ecd13afb356e7b69dec198db62b1</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/d4bf7882bed080fae221ac2b23845a232973e77a"><code>d4bf7882bed080fae221ac2b23845a232973e77a</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -9277,9 +9295,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/45243275771">45243275771</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/45353634635">45353634635</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>dea929ef6119ecd13afb356e7b69dec198db62b1</code> (in the history of the built commit) |
+| Event commit | <code>d4bf7882bed080fae221ac2b23845a232973e77a</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9304,13 +9322,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.124/">0.0.124</a>, newer than the documented version (0.0.123).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.124/">0.0.124</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout dea929ef6119ecd13afb356e7b69dec198db62b1
+git checkout d4bf7882bed080fae221ac2b23845a232973e77a
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

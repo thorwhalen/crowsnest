@@ -28,6 +28,7 @@ crowsnest.guard
       plan
       reap
       resume_line
+      scoped_home
       session_cap
       tick
       tier_of

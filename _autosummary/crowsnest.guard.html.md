@@ -64,6 +64,7 @@ cap applies only when `max_sessions` is configured.
 | [`plan`](#crowsnest.guard.plan)(\*[, home, config, settings, sessions, ...])  | Every live session, each `{"session": row, "close": bool, "keep_because": [...]}`.                                     |
 | [`reap`](#crowsnest.guard.reap)(\*[, apply, home, config, settings, ...])     | The plan, and -- only with `apply=True` -- the closes, at most `max_closes`.                                           |
 | [`resume_line`](#crowsnest.guard.resume_line)(session)                               | The shell line that brings a closed session back, in its own account.                                                  |
+| [`scoped_home`](#crowsnest.guard.scoped_home)(home, \*[, config])                    | The one home `home` names, or `None` for "this machine's homes".                                                       |
 | [`session_cap`](#crowsnest.guard.session_cap)(settings, mem)                         | How many sessions this machine may run: `max_sessions`, else derived from memory.                                      |
 | [`tick`](#crowsnest.guard.tick)(\*[, home, config, settings])                 | What the timer runs: the OOM pass, then the reaper in `[guard] reap`'s mode.                                           |
 | [`tier_of`](#crowsnest.guard.tier_of)(session, settings)                         | The `oom_score_adj` a session's processes get, by what it is doing.                                                    |
@@ -270,6 +271,25 @@ terminal opened with another account.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.guard.scoped_home(home, , config=None)
+
+The one home `home` names, or `None` for “this machine’s homes”.
+
+`home` is a path, or the name of a `[[homes]]` entry (`iq`, `main`), which is
+what a person types on the command line. A bare word no `[[homes]]` entry carries
+is an error, never a relative directory that holds no sessions: `--home iq` once
+read `./iq` and fell back to every home, so each home’s plan came out the same.
+
+```pycon
+>>> scoped_home(None) is None
+True
+>>> scoped_home('/x/y').as_posix()
+'/x/y'
+```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### crowsnest.guard.session_cap(settings, mem)
 
