@@ -445,11 +445,14 @@ record_registry = true   # each minute tick writes the registry's changes to the
 deliver_intents = true   # the page's Ask/Tell go straight to the session they name,
 hold_minutes = 60        # held while that session is busy or waiting, at most this long
 deliver_sources = ["console"]   # whose intents skip the watching session (the default)
+watcher = ["cn"]         # the watching session: posted to, not only logged for
 ```
 
 With `deliver_intents`, an intent reaches its session without a watching session in between: the session named exactly (never a prefix), and only when its home's `crossSessionInbound` is `accept`, since otherwise it would sit unapproved. An Ask with no text becomes a status request. The session reads the text marked as typed on the console page, with no more authority than a message from another session; that is also the trust it changes: page text reaches a session without the watching session reading it first. A `start`, an intent for a session that is gone or has no inbox here, and one held past `hold_minutes` still go to the watching session, as before.
 
 **Who wrote it decides whether it skips the watcher.** Every intent says its `source`: the page stamps `console`, and a confined surface pins its own (`crowsnest intent put --source claude-ai`, which hatchway's claude.ai connector passes, its caller unable to change it). Only the sources in `deliver_sources` (default: `console` alone) are delivered directly; any other, and an intent that names no source, goes to the watching session first, marked `(from <source>)`. A listed connector's intent arrives signed by that connector, under a note saying its words may carry text other people wrote. `--max-per-hour N` caps one source's intents. So with `deliver_intents` on, `crowsnest intent put` from a shell reaches its session directly only with `--source console`, and an intent queued before sources existed (or from a page tab opened before) goes to the watching session, tagged `(source unknown)`: nothing is lost while a watcher runs.
+
+**Name the watching session, or nothing reaches it unless a watch is armed.** What goes to the watching session is always one `intent` line in the event log, which only a `crowsnest watch` under that session's Monitor reads: when no watch runs, the intent says "handed" and nobody has read it. `watcher` names the lookout (exact session names, first live one wins), and the courier then also posts each such intent to it through the switchboard, between its tool calls if it is busy, as a message saying whom it was for and why it came to the lookout, under the same sender and note as a direct delivery. While no named watcher can take it (gone, waiting on its person, a home that would hold it for approval) it is held, for at most `hold_minutes`, and then its status says it is only in the event log. Rename the lookout, and update `watcher` with it.
 
 ## One walk, end to end
 
