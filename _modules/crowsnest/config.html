@@ -990,431 +990,443 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="798">    <span class="c1">#: (:data:`crowsnest.courier.DFLT_DELIVER_SOURCES`: the console page only). Any other,</span>
 </span><span data-line="799">    <span class="c1">#: such as ``claude-ai``, goes to the watching session first.</span>
 </span><span data-line="800">    <span class="n">deliver_sources</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_DELIVER_SOURCES</span>
-</span><span data-line="801">    <span class="c1">#: Append the registry's changes (started, exited, busy, idle, waiting, error) to</span>
-</span><span data-line="802">    <span class="c1">#: the event log each tick (:func:`crowsnest.eventlog.record_changes`, #141).</span>
-</span><span data-line="803">    <span class="n">record_registry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span data-line="804">
-</span><span data-line="805">
-</span><span data-line="806"><span class="c1">#: The config table holding ``crowsnest watch``'s selection (#141).</span>
-</span><span data-line="807"><span class="n">WATCH_KEY</span> <span class="o">=</span> <span class="s2">"watch"</span>
+</span><span data-line="801">    <span class="c1">#: The watching session, by exact name (first live one wins): what goes to the</span>
+</span><span data-line="802">    <span class="c1">#: watching session is also posted to it through the switchboard, so it never waits</span>
+</span><span data-line="803">    <span class="c1">#: for a ``crowsnest watch`` that is not running. Empty: the event log only.</span>
+</span><span data-line="804">    <span class="n">watcher</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</span><span data-line="805">    <span class="c1">#: Append the registry's changes (started, exited, busy, idle, waiting, error) to</span>
+</span><span data-line="806">    <span class="c1">#: the event log each tick (:func:`crowsnest.eventlog.record_changes`, #141).</span>
+</span><span data-line="807">    <span class="n">record_registry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 </span><span data-line="808">
 </span><span data-line="809">
+</span><span data-line="810"><span class="c1">#: The config table holding ``crowsnest watch``'s selection (#141).</span>
+</span><span data-line="811"><span class="n">WATCH_KEY</span> <span class="o">=</span> <span class="s2">"watch"</span>
+</span><span data-line="812">
+</span><span data-line="813">
 <div class="viewcode-block" id="WatchSettings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.WatchSettings">[docs]</a>
-</span><span data-line="810"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="811"><span class="k">class</span><span class="w"> </span><span class="nc">WatchSettings</span><span class="p">:</span>
-</span><span data-line="812"><span class="w">    </span><span class="sd">"""The ``[watch]`` table, validated: which kinds ``crowsnest watch`` prints</span>
-</span><span data-line="813"><span class="sd">    (``None``: all) and which sessions it never mentions.</span>
-</span><span data-line="814">
-</span><span data-line="815"><span class="sd">    &gt;&gt;&gt; WatchSettings().kinds is None</span>
-</span><span data-line="816"><span class="sd">    True</span>
-</span><span data-line="817"><span class="sd">    """</span>
+</span><span data-line="814"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="815"><span class="k">class</span><span class="w"> </span><span class="nc">WatchSettings</span><span class="p">:</span>
+</span><span data-line="816"><span class="w">    </span><span class="sd">"""The ``[watch]`` table, validated: which kinds ``crowsnest watch`` prints</span>
+</span><span data-line="817"><span class="sd">    (``None``: all) and which sessions it never mentions.</span>
 </span><span data-line="818">
-</span><span data-line="819">    <span class="n">kinds</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="820">    <span class="n">mute</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span></div>
-
-</span><span data-line="821">
+</span><span data-line="819"><span class="sd">    &gt;&gt;&gt; WatchSettings().kinds is None</span>
+</span><span data-line="820"><span class="sd">    True</span>
+</span><span data-line="821"><span class="sd">    """</span>
 </span><span data-line="822">
+</span><span data-line="823">    <span class="n">kinds</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="824">    <span class="n">mute</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span></div>
+
+</span><span data-line="825">
+</span><span data-line="826">
 <div class="viewcode-block" id="watch_settings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.watch_settings">[docs]</a>
-</span><span data-line="823"><span class="k">def</span><span class="w"> </span><span class="nf">watch_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WatchSettings</span><span class="p">:</span>
-</span><span data-line="824"><span class="w">    </span><span class="sd">"""The config file's ``[watch]`` table, or the defaults (everything) when it has none.</span>
-</span><span data-line="825">
-</span><span data-line="826"><span class="sd">    .. code-block:: toml</span>
-</span><span data-line="827">
-</span><span data-line="828"><span class="sd">        [watch]</span>
-</span><span data-line="829"><span class="sd">        kinds = "loud"            # or a list: ["waiting", "error", "stopped"]; "all"</span>
-</span><span data-line="830"><span class="sd">        mute = ["noisy-sweep"]    # session names, or name@home</span>
+</span><span data-line="827"><span class="k">def</span><span class="w"> </span><span class="nf">watch_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WatchSettings</span><span class="p">:</span>
+</span><span data-line="828"><span class="w">    </span><span class="sd">"""The config file's ``[watch]`` table, or the defaults (everything) when it has none.</span>
+</span><span data-line="829">
+</span><span data-line="830"><span class="sd">    .. code-block:: toml</span>
 </span><span data-line="831">
-</span><span data-line="832"><span class="sd">    ``kinds`` takes the names :func:`crowsnest.watch.kinds_of` knows; an unknown one, or</span>
-</span><span data-line="833"><span class="sd">    a key the table does not know, is an error, as in ``[attention]``.</span>
-</span><span data-line="834"><span class="sd">    """</span>
-</span><span data-line="835">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.watch</span><span class="w"> </span><span class="kn">import</span> <span class="n">kinds_of</span>
-</span><span data-line="836">
-</span><span data-line="837">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="838">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">WATCH_KEY</span><span class="p">)</span>
-</span><span data-line="839">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="840">        <span class="k">return</span> <span class="n">WatchSettings</span><span class="p">()</span>
-</span><span data-line="841">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="842">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">WATCH_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="843">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">WatchSettings</span><span class="p">)}</span>
-</span><span data-line="844">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
-</span><span data-line="845">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="846">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="847">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">WATCH_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
-</span><span data-line="848">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="849">        <span class="p">)</span>
-</span><span data-line="850">    <span class="n">mute</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mute"</span><span class="p">,</span> <span class="p">[])</span>
-</span><span data-line="851">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mute</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mute</span><span class="p">):</span>
-</span><span data-line="852">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">WATCH_KEY</span><span class="si">}</span><span class="s2">] mute must be a list of session names"</span><span class="p">)</span>
-</span><span data-line="853">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="854">        <span class="n">kinds</span> <span class="o">=</span> <span class="n">kinds_of</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kinds"</span><span class="p">))</span>
-</span><span data-line="855">    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="856">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">WATCH_KEY</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-</span><span data-line="857">    <span class="k">return</span> <span class="n">WatchSettings</span><span class="p">(</span><span class="n">kinds</span><span class="o">=</span><span class="n">kinds</span><span class="p">,</span> <span class="n">mute</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mute</span><span class="p">))</span></div>
+</span><span data-line="832"><span class="sd">        [watch]</span>
+</span><span data-line="833"><span class="sd">        kinds = "loud"            # or a list: ["waiting", "error", "stopped"]; "all"</span>
+</span><span data-line="834"><span class="sd">        mute = ["noisy-sweep"]    # session names, or name@home</span>
+</span><span data-line="835">
+</span><span data-line="836"><span class="sd">    ``kinds`` takes the names :func:`crowsnest.watch.kinds_of` knows; an unknown one, or</span>
+</span><span data-line="837"><span class="sd">    a key the table does not know, is an error, as in ``[attention]``.</span>
+</span><span data-line="838"><span class="sd">    """</span>
+</span><span data-line="839">    <span class="kn">from</span><span class="w"> </span><span class="nn">crowsnest.watch</span><span class="w"> </span><span class="kn">import</span> <span class="n">kinds_of</span>
+</span><span data-line="840">
+</span><span data-line="841">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="842">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">WATCH_KEY</span><span class="p">)</span>
+</span><span data-line="843">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="844">        <span class="k">return</span> <span class="n">WatchSettings</span><span class="p">()</span>
+</span><span data-line="845">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="846">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">WATCH_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="847">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">WatchSettings</span><span class="p">)}</span>
+</span><span data-line="848">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
+</span><span data-line="849">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="850">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="851">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">WATCH_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+</span><span data-line="852">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="853">        <span class="p">)</span>
+</span><span data-line="854">    <span class="n">mute</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mute"</span><span class="p">,</span> <span class="p">[])</span>
+</span><span data-line="855">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mute</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mute</span><span class="p">):</span>
+</span><span data-line="856">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">WATCH_KEY</span><span class="si">}</span><span class="s2">] mute must be a list of session names"</span><span class="p">)</span>
+</span><span data-line="857">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="858">        <span class="n">kinds</span> <span class="o">=</span> <span class="n">kinds_of</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kinds"</span><span class="p">))</span>
+</span><span data-line="859">    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="860">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">WATCH_KEY</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+</span><span data-line="861">    <span class="k">return</span> <span class="n">WatchSettings</span><span class="p">(</span><span class="n">kinds</span><span class="o">=</span><span class="n">kinds</span><span class="p">,</span> <span class="n">mute</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mute</span><span class="p">))</span></div>
 
-</span><span data-line="858">
-</span><span data-line="859">
-</span><span data-line="860"><span class="k">def</span><span class="w"> </span><span class="nf">courier_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CourierSettings</span><span class="p">:</span>
-</span><span data-line="861"><span class="w">    </span><span class="sd">"""The config file's ``[courier]`` table, or the defaults when it has none.</span>
 </span><span data-line="862">
-</span><span data-line="863"><span class="sd">    .. code-block:: toml</span>
-</span><span data-line="864">
-</span><span data-line="865"><span class="sd">        [courier]</span>
-</span><span data-line="866"><span class="sd">        remote = "me@myserver:/srv/crowsnest/db"   # or a local directory</span>
-</span><span data-line="867"><span class="sd">        deliver_intents = true   # ask/tell intents go to their session, not the watcher</span>
-</span><span data-line="868"><span class="sd">        hold_minutes = 60        # how long one waits for a busy session first</span>
-</span><span data-line="869"><span class="sd">        deliver_sources = ["console"]   # whose intents skip the watching session</span>
-</span><span data-line="870"><span class="sd">        record_registry = true   # write the registry's changes to the event log</span>
-</span><span data-line="871">
-</span><span data-line="872"><span class="sd">    Delivery and recording are off by default, so a table that says only ``remote``</span>
-</span><span data-line="873"><span class="sd">    behaves as it did before they existed. ``deliver_sources`` names sources as</span>
-</span><span data-line="874"><span class="sd">    :data:`crowsnest.courier.SOURCE` spells them.</span>
-</span><span data-line="875"><span class="sd">    """</span>
-</span><span data-line="876">    <span class="n">got</span> <span class="o">=</span> <span class="n">_typed_table</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">COURIER_KEY</span><span class="p">,</span> <span class="n">CourierSettings</span><span class="p">)</span>
-</span><span data-line="877">    <span class="n">bad</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">got</span><span class="o">.</span><span class="n">deliver_sources</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">SOURCE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
-</span><span data-line="878">    <span class="k">if</span> <span class="n">bad</span><span class="p">:</span>
-</span><span data-line="879">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="880">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] deliver_sources has "</span>
-</span><span data-line="881">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span><span class="w"> </span><span class="n">bad</span><span class="p">))</span><span class="si">}</span><span class="s2">, not a source name"</span>
-</span><span data-line="882">        <span class="p">)</span>
-</span><span data-line="883">    <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="n">got</span><span class="p">,</span> <span class="n">remote</span><span class="o">=</span><span class="n">got</span><span class="o">.</span><span class="n">remote</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-</span><span data-line="884">
-</span><span data-line="885">
-</span><span data-line="886"><span class="k">def</span><span class="w"> </span><span class="nf">_typed_table</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
-</span><span data-line="887"><span class="w">    </span><span class="sd">"""The ``[key]`` table read into ``cls``, every value checked against its default's type</span>
-</span><span data-line="888"><span class="sd">    (a float must also be positive); an unknown key is an error."""</span>
-</span><span data-line="889">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="890">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-</span><span data-line="891">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="892">        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span>
-</span><span data-line="893">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="894">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="895">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">)}</span>
-</span><span data-line="896">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">known</span><span class="p">))</span>
-</span><span data-line="897">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="898">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="899">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
-</span><span data-line="900">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="901">        <span class="p">)</span>
-</span><span data-line="902">    <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span data-line="903">    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span data-line="904">        <span class="n">wanted</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">(),</span> <span class="n">name</span><span class="p">))</span>
-</span><span data-line="905">        <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">and</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-</span><span data-line="906">            <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-</span><span data-line="907">        <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="nb">tuple</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-</span><span data-line="908">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">):</span>
-</span><span data-line="909">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a list of strings"</span><span class="p">)</span>
-</span><span data-line="910">            <span class="n">value</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-</span><span data-line="911">        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">wanted</span><span class="p">:</span>
-</span><span data-line="912">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="913">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a </span><span class="si">{</span><span class="n">wanted</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="914">            <span class="p">)</span>
-</span><span data-line="915">        <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="916">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be positive, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="917">        <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-</span><span data-line="918">    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
-</span><span data-line="919">
-</span><span data-line="920">
-</span><span data-line="921"><span class="c1">#: The config file's table for carrying ledgers to their page (:mod:`crowsnest.ledger_mirror`).</span>
-</span><span data-line="922"><span class="n">LEDGERS_KEY</span> <span class="o">=</span> <span class="s2">"ledgers"</span>
-</span><span data-line="923">
-</span><span data-line="924">
-</span><span data-line="925"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="926"><span class="k">class</span><span class="w"> </span><span class="nc">LedgerSettings</span><span class="p">:</span>
-</span><span data-line="927"><span class="w">    </span><span class="sd">"""The ``[ledgers]`` table: where this machine's ledgers are mirrored, and their page.</span>
-</span><span data-line="928">
-</span><span data-line="929"><span class="sd">    ``mirror`` is a directory or ``[user@]host:path`` that ``crowsnest publish`` pushes the</span>
-</span><span data-line="930"><span class="sd">    ledger folder into; ``url`` is one ledger's page with ``{name}`` for its stem; ``page``</span>
-</span><span data-line="931"><span class="sd">    lists them all.</span>
+</span><span data-line="863">
+</span><span data-line="864"><span class="k">def</span><span class="w"> </span><span class="nf">courier_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CourierSettings</span><span class="p">:</span>
+</span><span data-line="865"><span class="w">    </span><span class="sd">"""The config file's ``[courier]`` table, or the defaults when it has none.</span>
+</span><span data-line="866">
+</span><span data-line="867"><span class="sd">    .. code-block:: toml</span>
+</span><span data-line="868">
+</span><span data-line="869"><span class="sd">        [courier]</span>
+</span><span data-line="870"><span class="sd">        remote = "me@myserver:/srv/crowsnest/db"   # or a local directory</span>
+</span><span data-line="871"><span class="sd">        deliver_intents = true   # ask/tell intents go to their session, not the watcher</span>
+</span><span data-line="872"><span class="sd">        hold_minutes = 60        # how long one waits for a busy session first</span>
+</span><span data-line="873"><span class="sd">        deliver_sources = ["console"]   # whose intents skip the watching session</span>
+</span><span data-line="874"><span class="sd">        watcher = ["cn"]         # the watching session, posted to, not only logged for</span>
+</span><span data-line="875"><span class="sd">        record_registry = true   # write the registry's changes to the event log</span>
+</span><span data-line="876">
+</span><span data-line="877"><span class="sd">    Delivery and recording are off by default, so a table that says only ``remote``</span>
+</span><span data-line="878"><span class="sd">    behaves as it did before they existed. ``deliver_sources`` names sources as</span>
+</span><span data-line="879"><span class="sd">    :data:`crowsnest.courier.SOURCE` spells them.</span>
+</span><span data-line="880"><span class="sd">    """</span>
+</span><span data-line="881">    <span class="n">got</span> <span class="o">=</span> <span class="n">_typed_table</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">COURIER_KEY</span><span class="p">,</span> <span class="n">CourierSettings</span><span class="p">)</span>
+</span><span data-line="882">    <span class="n">bad</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">got</span><span class="o">.</span><span class="n">deliver_sources</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">SOURCE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+</span><span data-line="883">    <span class="k">if</span> <span class="n">bad</span><span class="p">:</span>
+</span><span data-line="884">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="885">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] deliver_sources has "</span>
+</span><span data-line="886">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span><span class="w"> </span><span class="n">bad</span><span class="p">))</span><span class="si">}</span><span class="s2">, not a source name"</span>
+</span><span data-line="887">        <span class="p">)</span>
+</span><span data-line="888">    <span class="n">blank</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">got</span><span class="o">.</span><span class="n">watcher</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">w</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+</span><span data-line="889">    <span class="k">if</span> <span class="n">blank</span><span class="p">:</span>
+</span><span data-line="890">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="891">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">COURIER_KEY</span><span class="si">}</span><span class="s2">] watcher has an empty name"</span>
+</span><span data-line="892">        <span class="p">)</span>
+</span><span data-line="893">    <span class="k">return</span> <span class="n">replace</span><span class="p">(</span>
+</span><span data-line="894">        <span class="n">got</span><span class="p">,</span> <span class="n">remote</span><span class="o">=</span><span class="n">got</span><span class="o">.</span><span class="n">remote</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">watcher</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">got</span><span class="o">.</span><span class="n">watcher</span><span class="p">)</span>
+</span><span data-line="895">    <span class="p">)</span>
+</span><span data-line="896">
+</span><span data-line="897">
+</span><span data-line="898"><span class="k">def</span><span class="w"> </span><span class="nf">_typed_table</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+</span><span data-line="899"><span class="w">    </span><span class="sd">"""The ``[key]`` table read into ``cls``, every value checked against its default's type</span>
+</span><span data-line="900"><span class="sd">    (a float must also be positive); an unknown key is an error."""</span>
+</span><span data-line="901">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="902">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span><span data-line="903">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="904">        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span>
+</span><span data-line="905">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="906">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="907">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">)}</span>
+</span><span data-line="908">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">known</span><span class="p">))</span>
+</span><span data-line="909">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="910">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="911">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+</span><span data-line="912">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="913">        <span class="p">)</span>
+</span><span data-line="914">    <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="915">    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="916">        <span class="n">wanted</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">(),</span> <span class="n">name</span><span class="p">))</span>
+</span><span data-line="917">        <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">and</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+</span><span data-line="918">            <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</span><span data-line="919">        <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="nb">tuple</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+</span><span data-line="920">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">):</span>
+</span><span data-line="921">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a list of strings"</span><span class="p">)</span>
+</span><span data-line="922">            <span class="n">value</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</span><span data-line="923">        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">wanted</span><span class="p">:</span>
+</span><span data-line="924">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="925">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a </span><span class="si">{</span><span class="n">wanted</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="926">            <span class="p">)</span>
+</span><span data-line="927">        <span class="k">if</span> <span class="n">wanted</span> <span class="ow">is</span> <span class="nb">float</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="928">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be positive, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="929">        <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</span><span data-line="930">    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
+</span><span data-line="931">
 </span><span data-line="932">
-</span><span data-line="933"><span class="sd">    &gt;&gt;&gt; LedgerSettings().mirror, LedgerSettings().url</span>
-</span><span data-line="934"><span class="sd">    ('', '')</span>
-</span><span data-line="935"><span class="sd">    """</span>
+</span><span data-line="933"><span class="c1">#: The config file's table for carrying ledgers to their page (:mod:`crowsnest.ledger_mirror`).</span>
+</span><span data-line="934"><span class="n">LEDGERS_KEY</span> <span class="o">=</span> <span class="s2">"ledgers"</span>
+</span><span data-line="935">
 </span><span data-line="936">
-</span><span data-line="937">    <span class="n">mirror</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="938">    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="939">    <span class="n">page</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="937"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="938"><span class="k">class</span><span class="w"> </span><span class="nc">LedgerSettings</span><span class="p">:</span>
+</span><span data-line="939"><span class="w">    </span><span class="sd">"""The ``[ledgers]`` table: where this machine's ledgers are mirrored, and their page.</span>
 </span><span data-line="940">
-</span><span data-line="941">
-</span><span data-line="942"><span class="k">def</span><span class="w"> </span><span class="nf">ledger_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LedgerSettings</span><span class="p">:</span>
-</span><span data-line="943"><span class="w">    </span><span class="sd">"""The config file's ``[ledgers]`` table, or the defaults (no mirror) when it has none.</span>
+</span><span data-line="941"><span class="sd">    ``mirror`` is a directory or ``[user@]host:path`` that ``crowsnest publish`` pushes the</span>
+</span><span data-line="942"><span class="sd">    ledger folder into; ``url`` is one ledger's page with ``{name}`` for its stem; ``page``</span>
+</span><span data-line="943"><span class="sd">    lists them all.</span>
 </span><span data-line="944">
-</span><span data-line="945"><span class="sd">    .. code-block:: toml</span>
-</span><span data-line="946">
-</span><span data-line="947"><span class="sd">        [ledgers]</span>
-</span><span data-line="948"><span class="sd">        mirror = "me@myserver:/srv/ledger-hosts/laptop"</span>
-</span><span data-line="949"><span class="sd">        url = "https://example.com/ledgers/laptop/{name}.md"</span>
-</span><span data-line="950"><span class="sd">        page = "https://example.com/ledgers"</span>
-</span><span data-line="951"><span class="sd">    """</span>
-</span><span data-line="952">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="953">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">LEDGERS_KEY</span><span class="p">)</span>
-</span><span data-line="954">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="955">        <span class="k">return</span> <span class="n">LedgerSettings</span><span class="p">()</span>
-</span><span data-line="956">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="957">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">LEDGERS_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="958">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">LedgerSettings</span><span class="p">)}</span>
-</span><span data-line="959">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
-</span><span data-line="960">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="961">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="962">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">LEDGERS_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
-</span><span data-line="963">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="964">        <span class="p">)</span>
-</span><span data-line="965">    <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span data-line="966">    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
-</span><span data-line="967">        <span class="n">value</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="968">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="969">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="970">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">LEDGERS_KEY</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a string, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="971">            <span class="p">)</span>
-</span><span data-line="972">        <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span data-line="973">    <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">"url"</span><span class="p">]</span> <span class="ow">and</span> <span class="s2">"</span><span class="si">{name}</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="s2">"url"</span><span class="p">]:</span>
-</span><span data-line="974">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="975">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">LEDGERS_KEY</span><span class="si">}</span><span class="s2">] url must hold </span><span class="se">{{</span><span class="s2">name</span><span class="se">}}</span><span class="s2"> where the ledger's name goes"</span>
+</span><span data-line="945"><span class="sd">    &gt;&gt;&gt; LedgerSettings().mirror, LedgerSettings().url</span>
+</span><span data-line="946"><span class="sd">    ('', '')</span>
+</span><span data-line="947"><span class="sd">    """</span>
+</span><span data-line="948">
+</span><span data-line="949">    <span class="n">mirror</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="950">    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="951">    <span class="n">page</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="952">
+</span><span data-line="953">
+</span><span data-line="954"><span class="k">def</span><span class="w"> </span><span class="nf">ledger_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LedgerSettings</span><span class="p">:</span>
+</span><span data-line="955"><span class="w">    </span><span class="sd">"""The config file's ``[ledgers]`` table, or the defaults (no mirror) when it has none.</span>
+</span><span data-line="956">
+</span><span data-line="957"><span class="sd">    .. code-block:: toml</span>
+</span><span data-line="958">
+</span><span data-line="959"><span class="sd">        [ledgers]</span>
+</span><span data-line="960"><span class="sd">        mirror = "me@myserver:/srv/ledger-hosts/laptop"</span>
+</span><span data-line="961"><span class="sd">        url = "https://example.com/ledgers/laptop/{name}.md"</span>
+</span><span data-line="962"><span class="sd">        page = "https://example.com/ledgers"</span>
+</span><span data-line="963"><span class="sd">    """</span>
+</span><span data-line="964">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="965">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">LEDGERS_KEY</span><span class="p">)</span>
+</span><span data-line="966">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="967">        <span class="k">return</span> <span class="n">LedgerSettings</span><span class="p">()</span>
+</span><span data-line="968">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="969">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">LEDGERS_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="970">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">LedgerSettings</span><span class="p">)}</span>
+</span><span data-line="971">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
+</span><span data-line="972">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="973">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="974">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">LEDGERS_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+</span><span data-line="975">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
 </span><span data-line="976">        <span class="p">)</span>
-</span><span data-line="977">    <span class="k">return</span> <span class="n">LedgerSettings</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
-</span><span data-line="978">
-</span><span data-line="979">
-</span><span data-line="980"><span class="k">def</span><span class="w"> </span><span class="nf">_default_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Home</span><span class="p">:</span>
-</span><span data-line="981">    <span class="k">return</span> <span class="n">Home</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">DFLT_HOME_NAME</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">claude_home</span><span class="p">())</span>
-</span><span data-line="982">
-</span><span data-line="983">
+</span><span data-line="977">    <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="978">    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
+</span><span data-line="979">        <span class="n">value</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="980">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="981">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="982">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">LEDGERS_KEY</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a string, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="983">            <span class="p">)</span>
+</span><span data-line="984">        <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span data-line="985">    <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="s2">"url"</span><span class="p">]</span> <span class="ow">and</span> <span class="s2">"</span><span class="si">{name}</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="s2">"url"</span><span class="p">]:</span>
+</span><span data-line="986">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="987">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">LEDGERS_KEY</span><span class="si">}</span><span class="s2">] url must hold </span><span class="se">{{</span><span class="s2">name</span><span class="se">}}</span><span class="s2"> where the ledger's name goes"</span>
+</span><span data-line="988">        <span class="p">)</span>
+</span><span data-line="989">    <span class="k">return</span> <span class="n">LedgerSettings</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
+</span><span data-line="990">
+</span><span data-line="991">
+</span><span data-line="992"><span class="k">def</span><span class="w"> </span><span class="nf">_default_home</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Home</span><span class="p">:</span>
+</span><span data-line="993">    <span class="k">return</span> <span class="n">Home</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">DFLT_HOME_NAME</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">claude_home</span><span class="p">())</span>
+</span><span data-line="994">
+</span><span data-line="995">
 <div class="viewcode-block" id="homes">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.homes">[docs]</a>
-</span><span data-line="984"><span class="k">def</span><span class="w"> </span><span class="nf">homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
-</span><span data-line="985"><span class="w">    </span><span class="sd">"""The configured homes, or the default one when the config file names none.</span>
-</span><span data-line="986">
-</span><span data-line="987"><span class="sd">    A config file that cannot be parsed is an error worth seeing, not a silent fallback:</span>
-</span><span data-line="988"><span class="sd">    a person who wrote one meant it.</span>
-</span><span data-line="989"><span class="sd">    """</span>
-</span><span data-line="990">    <span class="k">return</span> <span class="n">configured_homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span></div>
+</span><span data-line="996"><span class="k">def</span><span class="w"> </span><span class="nf">homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
+</span><span data-line="997"><span class="w">    </span><span class="sd">"""The configured homes, or the default one when the config file names none.</span>
+</span><span data-line="998">
+</span><span data-line="999"><span class="sd">    A config file that cannot be parsed is an error worth seeing, not a silent fallback:</span>
+</span><span data-line="1000"><span class="sd">    a person who wrote one meant it.</span>
+</span><span data-line="1001"><span class="sd">    """</span>
+</span><span data-line="1002">    <span class="k">return</span> <span class="n">configured_homes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="n">_default_home</span><span class="p">()]</span></div>
 
-</span><span data-line="991">
-</span><span data-line="992">
+</span><span data-line="1003">
+</span><span data-line="1004">
 <div class="viewcode-block" id="configured_homes">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.configured_homes">[docs]</a>
-</span><span data-line="993"><span class="k">def</span><span class="w"> </span><span class="nf">configured_homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
-</span><span data-line="994"><span class="w">    </span><span class="sd">"""The homes the config file's ``[[homes]]`` entries name; ``[]`` when it names none.</span>
-</span><span data-line="995">
-</span><span data-line="996"><span class="sd">    :func:`homes` falls back to the default home, whose path is whatever</span>
-</span><span data-line="997"><span class="sd">    ``$CLAUDE_CONFIG_DIR`` the *running* process has. That is right for reading, and</span>
-</span><span data-line="998"><span class="sd">    wrong for anything that must mean the same home in another account's terminal: a</span>
-</span><span data-line="999"><span class="sd">    command printed for later pasting (:func:`crowsnest.lineage.open_command`), say.</span>
-</span><span data-line="1000">
-</span><span data-line="1001"><span class="sd">    &gt;&gt;&gt; configured_homes(path='/nonexistent-config-for-doctest')</span>
-</span><span data-line="1002"><span class="sd">    []</span>
-</span><span data-line="1003"><span class="sd">    """</span>
-</span><span data-line="1004">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="1005">    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="1006">    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="1007">    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
-</span><span data-line="1008">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">):</span>
-</span><span data-line="1009">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: every [[homes]] entry needs a path"</span><span class="p">)</span>
-</span><span data-line="1010">        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="1011">            <span class="n">Home</span><span class="p">(</span>
-</span><span data-line="1012">                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
-</span><span data-line="1013">                <span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
-</span><span data-line="1014">                <span class="n">remote</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
-</span><span data-line="1015">                <span class="n">fresh_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fresh_seconds"</span><span class="p">,</span> <span class="n">DFLT_FRESH_SECONDS</span><span class="p">)),</span>
-</span><span data-line="1016">                <span class="n">liveness</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"liveness"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
-</span><span data-line="1017">            <span class="p">)</span>
-</span><span data-line="1018">        <span class="p">)</span>
-</span><span data-line="1019">    <span class="k">return</span> <span class="n">found</span></div>
+</span><span data-line="1005"><span class="k">def</span><span class="w"> </span><span class="nf">configured_homes</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Home</span><span class="p">]:</span>
+</span><span data-line="1006"><span class="w">    </span><span class="sd">"""The homes the config file's ``[[homes]]`` entries name; ``[]`` when it names none.</span>
+</span><span data-line="1007">
+</span><span data-line="1008"><span class="sd">    :func:`homes` falls back to the default home, whose path is whatever</span>
+</span><span data-line="1009"><span class="sd">    ``$CLAUDE_CONFIG_DIR`` the *running* process has. That is right for reading, and</span>
+</span><span data-line="1010"><span class="sd">    wrong for anything that must mean the same home in another account's terminal: a</span>
+</span><span data-line="1011"><span class="sd">    command printed for later pasting (:func:`crowsnest.lineage.open_command`), say.</span>
+</span><span data-line="1012">
+</span><span data-line="1013"><span class="sd">    &gt;&gt;&gt; configured_homes(path='/nonexistent-config-for-doctest')</span>
+</span><span data-line="1014"><span class="sd">    []</span>
+</span><span data-line="1015"><span class="sd">    """</span>
+</span><span data-line="1016">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="1017">    <span class="n">data</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="1018">    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="1019">    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"homes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
+</span><span data-line="1020">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">):</span>
+</span><span data-line="1021">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: every [[homes]] entry needs a path"</span><span class="p">)</span>
+</span><span data-line="1022">        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="1023">            <span class="n">Home</span><span class="p">(</span>
+</span><span data-line="1024">                <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+</span><span data-line="1025">                <span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(),</span>
+</span><span data-line="1026">                <span class="n">remote</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"remote"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+</span><span data-line="1027">                <span class="n">fresh_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fresh_seconds"</span><span class="p">,</span> <span class="n">DFLT_FRESH_SECONDS</span><span class="p">)),</span>
+</span><span data-line="1028">                <span class="n">liveness</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"liveness"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+</span><span data-line="1029">            <span class="p">)</span>
+</span><span data-line="1030">        <span class="p">)</span>
+</span><span data-line="1031">    <span class="k">return</span> <span class="n">found</span></div>
 
-</span><span data-line="1020">
-</span><span data-line="1021">
-</span><span data-line="1022"><span class="c1">#: The config table bounding how many sessions a machine runs, and how it sheds them (#171).</span>
-</span><span data-line="1023"><span class="n">GUARD_KEY</span> <span class="o">=</span> <span class="s2">"guard"</span>
-</span><span data-line="1024">
-</span><span data-line="1025"><span class="c1">#: What a session's process gets as ``oom_score_adj``, by what it is doing. A protected</span>
-</span><span data-line="1026"><span class="c1">#: session (the lookout) sits below every worker and above production services, which</span>
-</span><span data-line="1027"><span class="c1">#: their own units pin lower; idle workers are the kernel's first victims.</span>
-</span><span data-line="1028"><span class="n">DFLT_OOM_TIERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"protected"</span><span class="p">:</span> <span class="o">-</span><span class="mi">300</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">"waiting"</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">:</span> <span class="mi">800</span><span class="p">}</span>
-</span><span data-line="1029">
-</span><span data-line="1030"><span class="c1">#: Values an OOM tier may not take: ``0`` is a process nobody has biased, and ``700`` is</span>
-</span><span data-line="1031"><span class="c1">#: the bias tw_platform's ``reap-stale-claude.sh`` writes and then reaps by. A tier equal</span>
-</span><span data-line="1032"><span class="c1">#: to either would be mistaken for that script's own and killed at three days.</span>
-</span><span data-line="1033"><span class="n">RESERVED_OOM_VALUES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span> <span class="mi">700</span><span class="p">})</span>
-</span><span data-line="1034">
-</span><span data-line="1035"><span class="c1">#: The modes ``crowsnest guard tick`` can run the reaper in.</span>
-</span><span data-line="1036"><span class="n">REAP_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"off"</span><span class="p">,</span> <span class="s2">"report"</span><span class="p">,</span> <span class="s2">"apply"</span><span class="p">)</span>
-</span><span data-line="1037">
-</span><span data-line="1038"><span class="n">_SIZE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s*(\d+(?:\.\d+)?)\s*([MG])B?\s*$"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
-</span><span data-line="1039">
-</span><span data-line="1040">
-</span><span data-line="1041"><span class="k">def</span><span class="w"> </span><span class="nf">_megabytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="1042"><span class="w">    </span><span class="sd">"""A memory size in MB: a number of megabytes, or text like ``"800M"`` or ``"1.5G"``.</span>
-</span><span data-line="1043">
-</span><span data-line="1044"><span class="sd">    &gt;&gt;&gt; _megabytes(330, key='x'), _megabytes('1.5G', key='x'), _megabytes('800M', key='x')</span>
-</span><span data-line="1045"><span class="sd">    (330, 1536, 800)</span>
-</span><span data-line="1046"><span class="sd">    """</span>
-</span><span data-line="1047">    <span class="k">if</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="1048">        <span class="k">return</span> <span class="n">value</span>
-</span><span data-line="1049">    <span class="n">found</span> <span class="o">=</span> <span class="n">_SIZE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span data-line="1050">    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
-</span><span data-line="1051">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1052">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a number of megabytes or text like '800M' or '1.5G', "</span>
-</span><span data-line="1053">            <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="1054">        <span class="p">)</span>
-</span><span data-line="1055">    <span class="n">amount</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-</span><span data-line="1056">    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">amount</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1024</span> <span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"G"</span> <span class="k">else</span> <span class="mi">1</span><span class="p">))</span>
-</span><span data-line="1057">
-</span><span data-line="1058">
+</span><span data-line="1032">
+</span><span data-line="1033">
+</span><span data-line="1034"><span class="c1">#: The config table bounding how many sessions a machine runs, and how it sheds them (#171).</span>
+</span><span data-line="1035"><span class="n">GUARD_KEY</span> <span class="o">=</span> <span class="s2">"guard"</span>
+</span><span data-line="1036">
+</span><span data-line="1037"><span class="c1">#: What a session's process gets as ``oom_score_adj``, by what it is doing. A protected</span>
+</span><span data-line="1038"><span class="c1">#: session (the lookout) sits below every worker and above production services, which</span>
+</span><span data-line="1039"><span class="c1">#: their own units pin lower; idle workers are the kernel's first victims.</span>
+</span><span data-line="1040"><span class="n">DFLT_OOM_TIERS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"protected"</span><span class="p">:</span> <span class="o">-</span><span class="mi">300</span><span class="p">,</span> <span class="s2">"busy"</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">"waiting"</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">"idle"</span><span class="p">:</span> <span class="mi">800</span><span class="p">}</span>
+</span><span data-line="1041">
+</span><span data-line="1042"><span class="c1">#: Values an OOM tier may not take: ``0`` is a process nobody has biased, and ``700`` is</span>
+</span><span data-line="1043"><span class="c1">#: the bias tw_platform's ``reap-stale-claude.sh`` writes and then reaps by. A tier equal</span>
+</span><span data-line="1044"><span class="c1">#: to either would be mistaken for that script's own and killed at three days.</span>
+</span><span data-line="1045"><span class="n">RESERVED_OOM_VALUES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span> <span class="mi">700</span><span class="p">})</span>
+</span><span data-line="1046">
+</span><span data-line="1047"><span class="c1">#: The modes ``crowsnest guard tick`` can run the reaper in.</span>
+</span><span data-line="1048"><span class="n">REAP_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"off"</span><span class="p">,</span> <span class="s2">"report"</span><span class="p">,</span> <span class="s2">"apply"</span><span class="p">)</span>
+</span><span data-line="1049">
+</span><span data-line="1050"><span class="n">_SIZE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s*(\d+(?:\.\d+)?)\s*([MG])B?\s*$"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+</span><span data-line="1051">
+</span><span data-line="1052">
+</span><span data-line="1053"><span class="k">def</span><span class="w"> </span><span class="nf">_megabytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="1054"><span class="w">    </span><span class="sd">"""A memory size in MB: a number of megabytes, or text like ``"800M"`` or ``"1.5G"``.</span>
+</span><span data-line="1055">
+</span><span data-line="1056"><span class="sd">    &gt;&gt;&gt; _megabytes(330, key='x'), _megabytes('1.5G', key='x'), _megabytes('800M', key='x')</span>
+</span><span data-line="1057"><span class="sd">    (330, 1536, 800)</span>
+</span><span data-line="1058"><span class="sd">    """</span>
+</span><span data-line="1059">    <span class="k">if</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="1060">        <span class="k">return</span> <span class="n">value</span>
+</span><span data-line="1061">    <span class="n">found</span> <span class="o">=</span> <span class="n">_SIZE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="1062">    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+</span><span data-line="1063">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1064">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a number of megabytes or text like '800M' or '1.5G', "</span>
+</span><span data-line="1065">            <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="1066">        <span class="p">)</span>
+</span><span data-line="1067">    <span class="n">amount</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span><span data-line="1068">    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">amount</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1024</span> <span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"G"</span> <span class="k">else</span> <span class="mi">1</span><span class="p">))</span>
+</span><span data-line="1069">
+</span><span data-line="1070">
 <div class="viewcode-block" id="GuardSettings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.GuardSettings">[docs]</a>
-</span><span data-line="1059"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="1060"><span class="k">class</span><span class="w"> </span><span class="nc">GuardSettings</span><span class="p">:</span>
-</span><span data-line="1061"><span class="w">    </span><span class="sd">"""The ``[guard]`` table, validated: the spawn gate, the reaper and the OOM tiers.</span>
-</span><span data-line="1062">
-</span><span data-line="1063"><span class="sd">    Sizes are in megabytes. ``max_sessions`` ``None`` derives the cap from the machine's</span>
-</span><span data-line="1064"><span class="sd">    memory (:func:`crowsnest.guard.session_cap`); ``reap`` is what ``crowsnest guard</span>
-</span><span data-line="1065"><span class="sd">    tick`` does with the sessions it would close: ``"report"`` (the default) only says.</span>
-</span><span data-line="1066">
-</span><span data-line="1067"><span class="sd">    &gt;&gt;&gt; GuardSettings().reap, GuardSettings().oom["idle"]</span>
-</span><span data-line="1068"><span class="sd">    ('report', 800)</span>
-</span><span data-line="1069"><span class="sd">    &gt;&gt;&gt; GuardSettings(reap='kill')</span>
-</span><span data-line="1070"><span class="sd">    Traceback (most recent call last):</span>
-</span><span data-line="1071"><span class="sd">      ...</span>
-</span><span data-line="1072"><span class="sd">    ValueError: reap must be one of off, report, apply, not 'kill'</span>
-</span><span data-line="1073"><span class="sd">    """</span>
+</span><span data-line="1071"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="1072"><span class="k">class</span><span class="w"> </span><span class="nc">GuardSettings</span><span class="p">:</span>
+</span><span data-line="1073"><span class="w">    </span><span class="sd">"""The ``[guard]`` table, validated: the spawn gate, the reaper and the OOM tiers.</span>
 </span><span data-line="1074">
-</span><span data-line="1075">    <span class="n">protect</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
-</span><span data-line="1076">    <span class="n">max_sessions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="1077">    <span class="n">min_available_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1536</span>
-</span><span data-line="1078">    <span class="n">session_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">330</span>
-</span><span data-line="1079">    <span class="n">reserve_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span>
-</span><span data-line="1080">    <span class="n">idle_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">24.0</span>
-</span><span data-line="1081">    <span class="n">require_done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="1082">    <span class="n">reap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"report"</span>
-</span><span data-line="1083">    <span class="n">max_closes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
-</span><span data-line="1084">    <span class="n">notify</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span data-line="1085">    <span class="n">oom</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DFLT_OOM_TIERS</span><span class="p">))</span>
+</span><span data-line="1075"><span class="sd">    Sizes are in megabytes. ``max_sessions`` ``None`` derives the cap from the machine's</span>
+</span><span data-line="1076"><span class="sd">    memory (:func:`crowsnest.guard.session_cap`); ``reap`` is what ``crowsnest guard</span>
+</span><span data-line="1077"><span class="sd">    tick`` does with the sessions it would close: ``"report"`` (the default) only says.</span>
+</span><span data-line="1078">
+</span><span data-line="1079"><span class="sd">    &gt;&gt;&gt; GuardSettings().reap, GuardSettings().oom["idle"]</span>
+</span><span data-line="1080"><span class="sd">    ('report', 800)</span>
+</span><span data-line="1081"><span class="sd">    &gt;&gt;&gt; GuardSettings(reap='kill')</span>
+</span><span data-line="1082"><span class="sd">    Traceback (most recent call last):</span>
+</span><span data-line="1083"><span class="sd">      ...</span>
+</span><span data-line="1084"><span class="sd">    ValueError: reap must be one of off, report, apply, not 'kill'</span>
+</span><span data-line="1085"><span class="sd">    """</span>
 </span><span data-line="1086">
-</span><span data-line="1087">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1088">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reap</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">REAP_MODES</span><span class="p">:</span>
-</span><span data-line="1089">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1090">                <span class="sa">f</span><span class="s2">"reap must be one of </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REAP_MODES</span><span class="p">)</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reap</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="1091">            <span class="p">)</span>
-</span><span data-line="1092">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_sessions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
-</span><span data-line="1093">            <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_sessions</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_sessions</span> <span class="o">&lt;</span> <span class="mi">1</span>
-</span><span data-line="1094">        <span class="p">):</span>
-</span><span data-line="1095">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1096">                <span class="sa">f</span><span class="s2">"max_sessions must be a whole number of at least 1, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_sessions</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="1097">            <span class="p">)</span>
-</span><span data-line="1098">        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_closes</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_closes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="1099">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1100">                <span class="sa">f</span><span class="s2">"max_closes must be a whole number, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_closes</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="1101">            <span class="p">)</span>
-</span><span data-line="1102">        <span class="k">if</span> <span class="p">(</span>
-</span><span data-line="1103">            <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
-</span><span data-line="1104">            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
-</span><span data-line="1105">            <span class="ow">or</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span><span class="p">)</span>
-</span><span data-line="1106">            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span> <span class="o">&lt;=</span> <span class="mi">0</span>
-</span><span data-line="1107">        <span class="p">):</span>
-</span><span data-line="1108">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1109">                <span class="sa">f</span><span class="s2">"idle_hours must be a positive number, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="1110">            <span class="p">)</span>
-</span><span data-line="1111">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">require_done</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
-</span><span data-line="1112">            <span class="c1"># ValueError: `crowsnest` reports bad config cleanly only as ValueError.</span>
-</span><span data-line="1113">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="1114">                <span class="sa">f</span><span class="s2">"require_done must be true or false, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">require_done</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="1115">            <span class="p">)</span>
-</span><span data-line="1116">        <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oom</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">DFLT_OOM_TIERS</span><span class="p">))</span>
-</span><span data-line="1117">        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="1118">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1119">                <span class="sa">f</span><span class="s2">"oom has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DFLT_OOM_TIERS</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="1120">            <span class="p">)</span>
-</span><span data-line="1121">        <span class="k">for</span> <span class="n">tier</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">oom</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span data-line="1122">            <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="o">-</span><span class="mi">1000</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">1000</span><span class="p">:</span>
-</span><span data-line="1123">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1124">                    <span class="sa">f</span><span class="s2">"oom </span><span class="si">{</span><span class="n">tier</span><span class="si">}</span><span class="s2"> must be a whole number from -1000 to 1000, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
-</span><span data-line="1125">                <span class="p">)</span>
-</span><span data-line="1126">            <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">RESERVED_OOM_VALUES</span><span class="p">:</span>
-</span><span data-line="1127">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1128">                    <span class="sa">f</span><span class="s2">"oom </span><span class="si">{</span><span class="n">tier</span><span class="si">}</span><span class="s2"> may not be </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">: 0 is an unmanaged process and 700 is "</span>
-</span><span data-line="1129">                    <span class="s2">"what tw_platform's reap-stale-claude.sh writes, and kills at three days"</span>
-</span><span data-line="1130">                <span class="p">)</span></div>
+</span><span data-line="1087">    <span class="n">protect</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+</span><span data-line="1088">    <span class="n">max_sessions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="1089">    <span class="n">min_available_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1536</span>
+</span><span data-line="1090">    <span class="n">session_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">330</span>
+</span><span data-line="1091">    <span class="n">reserve_mb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span>
+</span><span data-line="1092">    <span class="n">idle_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">24.0</span>
+</span><span data-line="1093">    <span class="n">require_done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="1094">    <span class="n">reap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"report"</span>
+</span><span data-line="1095">    <span class="n">max_closes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+</span><span data-line="1096">    <span class="n">notify</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span data-line="1097">    <span class="n">oom</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">DFLT_OOM_TIERS</span><span class="p">))</span>
+</span><span data-line="1098">
+</span><span data-line="1099">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1100">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reap</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">REAP_MODES</span><span class="p">:</span>
+</span><span data-line="1101">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1102">                <span class="sa">f</span><span class="s2">"reap must be one of </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REAP_MODES</span><span class="p">)</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reap</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="1103">            <span class="p">)</span>
+</span><span data-line="1104">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_sessions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+</span><span data-line="1105">            <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_sessions</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_sessions</span> <span class="o">&lt;</span> <span class="mi">1</span>
+</span><span data-line="1106">        <span class="p">):</span>
+</span><span data-line="1107">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1108">                <span class="sa">f</span><span class="s2">"max_sessions must be a whole number of at least 1, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_sessions</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="1109">            <span class="p">)</span>
+</span><span data-line="1110">        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_closes</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_closes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="1111">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1112">                <span class="sa">f</span><span class="s2">"max_closes must be a whole number, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_closes</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="1113">            <span class="p">)</span>
+</span><span data-line="1114">        <span class="k">if</span> <span class="p">(</span>
+</span><span data-line="1115">            <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+</span><span data-line="1116">            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
+</span><span data-line="1117">            <span class="ow">or</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span><span class="p">)</span>
+</span><span data-line="1118">            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+</span><span data-line="1119">        <span class="p">):</span>
+</span><span data-line="1120">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1121">                <span class="sa">f</span><span class="s2">"idle_hours must be a positive number, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">idle_hours</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="1122">            <span class="p">)</span>
+</span><span data-line="1123">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">require_done</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span data-line="1124">            <span class="c1"># ValueError: `crowsnest` reports bad config cleanly only as ValueError.</span>
+</span><span data-line="1125">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="1126">                <span class="sa">f</span><span class="s2">"require_done must be true or false, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">require_done</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="1127">            <span class="p">)</span>
+</span><span data-line="1128">        <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oom</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">DFLT_OOM_TIERS</span><span class="p">))</span>
+</span><span data-line="1129">        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="1130">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1131">                <span class="sa">f</span><span class="s2">"oom has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DFLT_OOM_TIERS</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="1132">            <span class="p">)</span>
+</span><span data-line="1133">        <span class="k">for</span> <span class="n">tier</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">oom</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="1134">            <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="o">-</span><span class="mi">1000</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">1000</span><span class="p">:</span>
+</span><span data-line="1135">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1136">                    <span class="sa">f</span><span class="s2">"oom </span><span class="si">{</span><span class="n">tier</span><span class="si">}</span><span class="s2"> must be a whole number from -1000 to 1000, not </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span data-line="1137">                <span class="p">)</span>
+</span><span data-line="1138">            <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">RESERVED_OOM_VALUES</span><span class="p">:</span>
+</span><span data-line="1139">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1140">                    <span class="sa">f</span><span class="s2">"oom </span><span class="si">{</span><span class="n">tier</span><span class="si">}</span><span class="s2"> may not be </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">: 0 is an unmanaged process and 700 is "</span>
+</span><span data-line="1141">                    <span class="s2">"what tw_platform's reap-stale-claude.sh writes, and kills at three days"</span>
+</span><span data-line="1142">                <span class="p">)</span></div>
 
-</span><span data-line="1131">
-</span><span data-line="1132">
+</span><span data-line="1143">
+</span><span data-line="1144">
 <div class="viewcode-block" id="guard_settings">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.config.html#crowsnest.config.guard_settings">[docs]</a>
-</span><span data-line="1133"><span class="k">def</span><span class="w"> </span><span class="nf">guard_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuardSettings</span><span class="p">:</span>
-</span><span data-line="1134"><span class="w">    </span><span class="sd">"""The config file's ``[guard]`` table, or the defaults when it has none.</span>
-</span><span data-line="1135">
-</span><span data-line="1136"><span class="sd">    .. code-block:: toml</span>
-</span><span data-line="1137">
-</span><span data-line="1138"><span class="sd">        [guard]</span>
-</span><span data-line="1139"><span class="sd">        protect = ["cn-tw"]        # never gated, never reaped, OOM tier "protected"</span>
-</span><span data-line="1140"><span class="sd">        max_sessions = 12          # default: derived from MemTotal, reserve and session_mb</span>
-</span><span data-line="1141"><span class="sd">        min_available = "1.5G"     # refuse a spawn that would leave less MemAvailable</span>
-</span><span data-line="1142"><span class="sd">        session_mb = 330           # what one more session is expected to take</span>
-</span><span data-line="1143"><span class="sd">        reserve = "2G"             # memory kept for everything that is not a session</span>
-</span><span data-line="1144"><span class="sd">        idle_hours = 24            # the reaper's idle threshold</span>
-</span><span data-line="1145"><span class="sd">        require_done = true        # the reaper closes only a session whose ledger says done</span>
-</span><span data-line="1146"><span class="sd">        reap = "report"            # what `crowsnest guard tick` does: off, report, apply</span>
-</span><span data-line="1147"><span class="sd">        max_closes = 3             # at most this many closes per run</span>
-</span><span data-line="1148"><span class="sd">        notify = "https://ntfy.sh/&lt;topic&gt;"   # where closes and new lookout links are pushed</span>
+</span><span data-line="1145"><span class="k">def</span><span class="w"> </span><span class="nf">guard_settings</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuardSettings</span><span class="p">:</span>
+</span><span data-line="1146"><span class="w">    </span><span class="sd">"""The config file's ``[guard]`` table, or the defaults when it has none.</span>
+</span><span data-line="1147">
+</span><span data-line="1148"><span class="sd">    .. code-block:: toml</span>
 </span><span data-line="1149">
-</span><span data-line="1150"><span class="sd">        [guard.oom]</span>
-</span><span data-line="1151"><span class="sd">        protected = -300</span>
-</span><span data-line="1152"><span class="sd">        busy = 300</span>
-</span><span data-line="1153"><span class="sd">        waiting = 500</span>
-</span><span data-line="1154"><span class="sd">        idle = 800</span>
-</span><span data-line="1155">
-</span><span data-line="1156"><span class="sd">    A key the table does not know is an error, as in ``[attention]``.</span>
-</span><span data-line="1157"><span class="sd">    """</span>
-</span><span data-line="1158">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span data-line="1159">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">GUARD_KEY</span><span class="p">)</span>
-</span><span data-line="1160">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="1161">        <span class="k">return</span> <span class="n">GuardSettings</span><span class="p">()</span>
-</span><span data-line="1162">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="1163">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">GUARD_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="1164">    <span class="n">sizes</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="1165">        <span class="s2">"min_available"</span><span class="p">:</span> <span class="s2">"min_available_mb"</span><span class="p">,</span>
-</span><span data-line="1166">        <span class="s2">"session_mb"</span><span class="p">:</span> <span class="s2">"session_mb"</span><span class="p">,</span>
-</span><span data-line="1167">        <span class="s2">"reserve"</span><span class="p">:</span> <span class="s2">"reserve_mb"</span><span class="p">,</span>
-</span><span data-line="1168">    <span class="p">}</span>
-</span><span data-line="1169">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="1170">        <span class="s2">"protect"</span><span class="p">,</span>
-</span><span data-line="1171">        <span class="s2">"max_sessions"</span><span class="p">,</span>
-</span><span data-line="1172">        <span class="s2">"min_available"</span><span class="p">,</span>
-</span><span data-line="1173">        <span class="s2">"session_mb"</span><span class="p">,</span>
-</span><span data-line="1174">        <span class="s2">"reserve"</span><span class="p">,</span>
-</span><span data-line="1175">        <span class="s2">"idle_hours"</span><span class="p">,</span>
-</span><span data-line="1176">        <span class="s2">"require_done"</span><span class="p">,</span>
-</span><span data-line="1177">        <span class="s2">"reap"</span><span class="p">,</span>
-</span><span data-line="1178">        <span class="s2">"max_closes"</span><span class="p">,</span>
-</span><span data-line="1179">        <span class="s2">"notify"</span><span class="p">,</span>
-</span><span data-line="1180">        <span class="s2">"oom"</span><span class="p">,</span>
-</span><span data-line="1181">    <span class="p">}</span>
-</span><span data-line="1182">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
-</span><span data-line="1183">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-</span><span data-line="1184">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="1185">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">GUARD_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
-</span><span data-line="1186">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
-</span><span data-line="1187">        <span class="p">)</span>
-</span><span data-line="1188">    <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">}</span>
-</span><span data-line="1189">    <span class="k">try</span><span class="p">:</span>
-</span><span data-line="1190">        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">sizes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span data-line="1191">            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">table</span><span class="p">:</span>
-</span><span data-line="1192">                <span class="n">values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">_megabytes</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
-</span><span data-line="1193">        <span class="n">protect</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"protect"</span><span class="p">,</span> <span class="p">[])</span>
-</span><span data-line="1194">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">protect</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">protect</span><span class="p">):</span>
-</span><span data-line="1195">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"protect must be a list of session names"</span><span class="p">)</span>
-</span><span data-line="1196">        <span class="n">oom</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"oom"</span><span class="p">,</span> <span class="p">{})</span>
-</span><span data-line="1197">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">oom</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="1198">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"[guard.oom] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
-</span><span data-line="1199">        <span class="n">notify</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notify"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-</span><span data-line="1200">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">notify</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="1201">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"notify must be a URL, not </span><span class="si">{</span><span class="n">notify</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004 -- input</span>
-</span><span data-line="1202">        <span class="k">return</span> <span class="n">GuardSettings</span><span class="p">(</span>
-</span><span data-line="1203">            <span class="n">protect</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">protect</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()),</span>
-</span><span data-line="1204">            <span class="n">oom</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">DFLT_OOM_TIERS</span><span class="p">,</span> <span class="o">**</span><span class="n">oom</span><span class="p">},</span>
-</span><span data-line="1205">            <span class="o">**</span><span class="n">values</span><span class="p">,</span>
-</span><span data-line="1206">        <span class="p">)</span>
-</span><span data-line="1207">    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span data-line="1208">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">GUARD_KEY</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+</span><span data-line="1150"><span class="sd">        [guard]</span>
+</span><span data-line="1151"><span class="sd">        protect = ["cn-tw"]        # never gated, never reaped, OOM tier "protected"</span>
+</span><span data-line="1152"><span class="sd">        max_sessions = 12          # default: derived from MemTotal, reserve and session_mb</span>
+</span><span data-line="1153"><span class="sd">        min_available = "1.5G"     # refuse a spawn that would leave less MemAvailable</span>
+</span><span data-line="1154"><span class="sd">        session_mb = 330           # what one more session is expected to take</span>
+</span><span data-line="1155"><span class="sd">        reserve = "2G"             # memory kept for everything that is not a session</span>
+</span><span data-line="1156"><span class="sd">        idle_hours = 24            # the reaper's idle threshold</span>
+</span><span data-line="1157"><span class="sd">        require_done = true        # the reaper closes only a session whose ledger says done</span>
+</span><span data-line="1158"><span class="sd">        reap = "report"            # what `crowsnest guard tick` does: off, report, apply</span>
+</span><span data-line="1159"><span class="sd">        max_closes = 3             # at most this many closes per run</span>
+</span><span data-line="1160"><span class="sd">        notify = "https://ntfy.sh/&lt;topic&gt;"   # where closes and new lookout links are pushed</span>
+</span><span data-line="1161">
+</span><span data-line="1162"><span class="sd">        [guard.oom]</span>
+</span><span data-line="1163"><span class="sd">        protected = -300</span>
+</span><span data-line="1164"><span class="sd">        busy = 300</span>
+</span><span data-line="1165"><span class="sd">        waiting = 500</span>
+</span><span data-line="1166"><span class="sd">        idle = 800</span>
+</span><span data-line="1167">
+</span><span data-line="1168"><span class="sd">    A key the table does not know is an error, as in ``[attention]``.</span>
+</span><span data-line="1169"><span class="sd">    """</span>
+</span><span data-line="1170">    <span class="n">file</span> <span class="o">=</span> <span class="n">config_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span data-line="1171">    <span class="n">table</span> <span class="o">=</span> <span class="n">_loaded</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">GUARD_KEY</span><span class="p">)</span>
+</span><span data-line="1172">    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="1173">        <span class="k">return</span> <span class="n">GuardSettings</span><span class="p">()</span>
+</span><span data-line="1174">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="1175">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">GUARD_KEY</span><span class="si">}</span><span class="s2">] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="1176">    <span class="n">sizes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="1177">        <span class="s2">"min_available"</span><span class="p">:</span> <span class="s2">"min_available_mb"</span><span class="p">,</span>
+</span><span data-line="1178">        <span class="s2">"session_mb"</span><span class="p">:</span> <span class="s2">"session_mb"</span><span class="p">,</span>
+</span><span data-line="1179">        <span class="s2">"reserve"</span><span class="p">:</span> <span class="s2">"reserve_mb"</span><span class="p">,</span>
+</span><span data-line="1180">    <span class="p">}</span>
+</span><span data-line="1181">    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="1182">        <span class="s2">"protect"</span><span class="p">,</span>
+</span><span data-line="1183">        <span class="s2">"max_sessions"</span><span class="p">,</span>
+</span><span data-line="1184">        <span class="s2">"min_available"</span><span class="p">,</span>
+</span><span data-line="1185">        <span class="s2">"session_mb"</span><span class="p">,</span>
+</span><span data-line="1186">        <span class="s2">"reserve"</span><span class="p">,</span>
+</span><span data-line="1187">        <span class="s2">"idle_hours"</span><span class="p">,</span>
+</span><span data-line="1188">        <span class="s2">"require_done"</span><span class="p">,</span>
+</span><span data-line="1189">        <span class="s2">"reap"</span><span class="p">,</span>
+</span><span data-line="1190">        <span class="s2">"max_closes"</span><span class="p">,</span>
+</span><span data-line="1191">        <span class="s2">"notify"</span><span class="p">,</span>
+</span><span data-line="1192">        <span class="s2">"oom"</span><span class="p">,</span>
+</span><span data-line="1193">    <span class="p">}</span>
+</span><span data-line="1194">    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
+</span><span data-line="1195">    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+</span><span data-line="1196">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="1197">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">GUARD_KEY</span><span class="si">}</span><span class="s2">] has no </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+</span><span data-line="1198">            <span class="sa">f</span><span class="s2">"it knows </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="1199">        <span class="p">)</span>
+</span><span data-line="1200">    <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">}</span>
+</span><span data-line="1201">    <span class="k">try</span><span class="p">:</span>
+</span><span data-line="1202">        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">sizes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="1203">            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">table</span><span class="p">:</span>
+</span><span data-line="1204">                <span class="n">values</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">_megabytes</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+</span><span data-line="1205">        <span class="n">protect</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"protect"</span><span class="p">,</span> <span class="p">[])</span>
+</span><span data-line="1206">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">protect</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">protect</span><span class="p">):</span>
+</span><span data-line="1207">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"protect must be a list of session names"</span><span class="p">)</span>
+</span><span data-line="1208">        <span class="n">oom</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"oom"</span><span class="p">,</span> <span class="p">{})</span>
+</span><span data-line="1209">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">oom</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="1210">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"[guard.oom] must be a table"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004</span>
+</span><span data-line="1211">        <span class="n">notify</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"notify"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span data-line="1212">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">notify</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="1213">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"notify must be a URL, not </span><span class="si">{</span><span class="n">notify</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># noqa: TRY004 -- input</span>
+</span><span data-line="1214">        <span class="k">return</span> <span class="n">GuardSettings</span><span class="p">(</span>
+</span><span data-line="1215">            <span class="n">protect</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">protect</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()),</span>
+</span><span data-line="1216">            <span class="n">oom</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">DFLT_OOM_TIERS</span><span class="p">,</span> <span class="o">**</span><span class="n">oom</span><span class="p">},</span>
+</span><span data-line="1217">            <span class="o">**</span><span class="n">values</span><span class="p">,</span>
+</span><span data-line="1218">        <span class="p">)</span>
+</span><span data-line="1219">    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span data-line="1220">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="n">GUARD_KEY</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -1443,7 +1455,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=31bb835f"></script>
+      <script src="../../_static/documentation_options.js?v=06430935"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

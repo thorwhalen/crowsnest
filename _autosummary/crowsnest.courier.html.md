@@ -100,7 +100,7 @@ pull, and a push makes it, with every directory above it.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None, deliver_intents=False, deliver_sources=('console',), hold=datetime.timedelta(seconds=3600), find=None, deliver=None, record=None)
+### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None, deliver_intents=False, deliver_sources=('console',), watcher=(), hold=datetime.timedelta(seconds=3600), find=None, deliver=None, record=None)
 
 Carry the console store at `remote` both ways once; the summary of what moved.
 
@@ -122,6 +122,10 @@ unless the config file’s `[courier]` table turns them on (read by
   posted; the rest go to the watching session, which reads them first. `find` resolves a name to a live session (default
   `exact_session()` over this tick’s homes: a whole name or id, never a
   > prefix) and `deliver` is the switchboard’s transport, `(session, text)`.
+- `watcher` names the watching session (exact names, first live one wins). What
+  is handed to the watching session is then also posted to it through the
+  switchboard, held while none can take it, instead of only written to the event
+  log, where it waits for a `crowsnest watch` that may not be running.
 - `record`, when given, appends the registry’s changes to the event log
   ([`crowsnest.eventlog.record_changes()`](crowsnest.eventlog.html.md#crowsnest.eventlog.record_changes) is the one to give).
 

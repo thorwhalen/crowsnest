@@ -1,4 +1,4 @@
-> built 2026-11-24 12:58 UTC from a10480b (main) · crowsnest 0.0.125. Details: build_info.json
+> built 2026-11-25 11:19 UTC from a8f027f (main) · crowsnest 0.0.126. Details: build_info.json
 
 # index.html.md
 
@@ -450,11 +450,14 @@ record_registry = true   # each minute tick writes the registry's changes to the
 deliver_intents = true   # the page's Ask/Tell go straight to the session they name,
 hold_minutes = 60        # held while that session is busy or waiting, at most this long
 deliver_sources = ["console"]   # whose intents skip the watching session (the default)
+watcher = ["cn"]         # the watching session: posted to, not only logged for
 ```
 
 With `deliver_intents`, an intent reaches its session without a watching session in between: the session named exactly (never a prefix), and only when its home’s `crossSessionInbound` is `accept`, since otherwise it would sit unapproved. An Ask with no text becomes a status request. The session reads the text marked as typed on the console page, with no more authority than a message from another session; that is also the trust it changes: page text reaches a session without the watching session reading it first. A `start`, an intent for a session that is gone or has no inbox here, and one held past `hold_minutes` still go to the watching session, as before.
 
 **Who wrote it decides whether it skips the watcher.** Every intent says its `source`: the page stamps `console`, and a confined surface pins its own (`crowsnest intent put --source claude-ai`, which hatchway’s claude.ai connector passes, its caller unable to change it). Only the sources in `deliver_sources` (default: `console` alone) are delivered directly; any other, and an intent that names no source, goes to the watching session first, marked `(from <source>)`. A listed connector’s intent arrives signed by that connector, under a note saying its words may carry text other people wrote. `--max-per-hour N` caps one source’s intents. So with `deliver_intents` on, `crowsnest intent put` from a shell reaches its session directly only with `--source console`, and an intent queued before sources existed (or from a page tab opened before) goes to the watching session, tagged `(source unknown)`: nothing is lost while a watcher runs.
+
+**Name the watching session, or nothing reaches it unless a watch is armed.** What goes to the watching session is always one `intent` line in the event log, which only a `crowsnest watch` under that session’s Monitor reads: when no watch runs, the intent says “handed” and nobody has read it. `watcher` names the lookout (exact session names, first live one wins), and the courier then also posts each such intent to it through the switchboard, between its tool calls if it is busy, as a message saying whom it was for and why it came to the lookout, under the same sender and note as a direct delivery. While no named watcher can take it (gone, waiting on its person, a home that would hold it for approval) it is held, for at most `hold_minutes`, and then its status says it is only in the event log. Rename the lookout, and update `watcher` with it.
 
 ## One walk, end to end
 
@@ -2252,7 +2255,7 @@ pull, and a push makes it, with every directory above it.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None, deliver_intents=False, deliver_sources=('console',), hold=datetime.timedelta(seconds=3600), find=None, deliver=None, record=None)
+### crowsnest.courier.tick(remote, , mirror=None, copy=None, home=None, all_homes=False, config=None, store=None, events_path=None, now=None, recap=None, live=None, deliver_intents=False, deliver_sources=('console',), watcher=(), hold=datetime.timedelta(seconds=3600), find=None, deliver=None, record=None)
 
 Carry the console store at `remote` both ways once; the summary of what moved.
 
@@ -2274,6 +2277,10 @@ unless the config file’s `[courier]` table turns them on (read by
   posted; the rest go to the watching session, which reads them first. `find` resolves a name to a live session (default
   `exact_session()` over this tick’s homes: a whole name or id, never a
   > prefix) and `deliver` is the switchboard’s transport, `(session, text)`.
+- `watcher` names the watching session (exact names, first live one wins). What
+  is handed to the watching session is then also posted to it through the
+  switchboard, held while none can take it, instead of only written to the event
+  log, where it waits for a `crowsnest watch` that may not be running.
 - `record`, when given, appends the registry’s changes to the event log
   ([`crowsnest.eventlog.record_changes()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.record_changes) is the one to give).
 
@@ -9275,7 +9282,7 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-24 12:58 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/a10480b672af5568d3a6d115bf70cabcd6a5e509"><code>a10480b</code></a> on branch <code>main</code>, for **crowsnest 0.0.125** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-25 11:19 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/a8f027f7b5798bf3cfb43b736993c8cfaded1a0a"><code>a8f027f</code></a> on branch <code>main</code>, for **crowsnest 0.0.126** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9284,7 +9291,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/a10480b672af5568d3a6d115bf70cabcd6a5e509"><code>a10480b672af5568d3a6d115bf70cabcd6a5e509</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/a8f027f7b5798bf3cfb43b736993c8cfaded1a0a"><code>a8f027f7b5798bf3cfb43b736993c8cfaded1a0a</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -9295,9 +9302,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/45398381958">45398381958</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/45603069832">45603069832</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>a10480b672af5568d3a6d115bf70cabcd6a5e509</code> (in the history of the built commit) |
+| Event commit | <code>a8f027f7b5798bf3cfb43b736993c8cfaded1a0a</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9322,13 +9329,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.125/">0.0.125</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.126/">0.0.126</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout a10480b672af5568d3a6d115bf70cabcd6a5e509
+git checkout a8f027f7b5798bf3cfb43b736993c8cfaded1a0a
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
