@@ -798,6 +798,10 @@ class CourierSettings:
     #: (:data:`crowsnest.courier.DFLT_DELIVER_SOURCES`: the console page only). Any other,
     #: such as ``claude-ai``, goes to the watching session first.
     deliver_sources: tuple[str, ...] = DFLT_DELIVER_SOURCES
+    #: The watching session, by exact name (first live one wins): what goes to the
+    #: watching session is also posted to it through the switchboard, so it never waits
+    #: for a ``crowsnest watch`` that is not running. Empty: the event log only.
+    watcher: tuple[str, ...] = ()
     #: Append the registry's changes (started, exited, busy, idle, waiting, error) to
     #: the event log each tick (:func:`crowsnest.eventlog.record_changes`, #141).
     record_registry: bool = False
@@ -867,6 +871,7 @@ def courier_settings(*, path: str | Path | None = None) -> CourierSettings:
         deliver_intents = true   # ask/tell intents go to their session, not the watcher
         hold_minutes = 60        # how long one waits for a busy session first
         deliver_sources = ["console"]   # whose intents skip the watching session
+        watcher = ["cn"]         # the watching session, posted to, not only logged for
         record_registry = true   # write the registry's changes to the event log
 
     Delivery and recording are off by default, so a table that says only ``remote``
@@ -880,7 +885,14 @@ def courier_settings(*, path: str | Path | None = None) -> CourierSettings:
             f"{config_path(path)}: [{COURIER_KEY}] deliver_sources has "
             f"{', '.join(map(repr, bad))}, not a source name"
         )
-    return replace(got, remote=got.remote.strip())
+    blank = [w for w in got.watcher if not w.strip()]
+    if blank:
+        raise ValueError(
+            f"{config_path(path)}: [{COURIER_KEY}] watcher has an empty name"
+        )
+    return replace(
+        got, remote=got.remote.strip(), watcher=tuple(w.strip() for w in got.watcher)
+    )
 
 
 def _typed_table(path, key: str, cls):

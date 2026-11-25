@@ -1144,7 +1144,8 @@ def courier(
     disk, and wakes a session (through ``crowsnest watch``) only for an ask, a tell or a
     start. ``copy`` is the transport seam, ``(src, dst, collection) -> None``. The
     ``[courier]`` table's ``deliver_intents``, ``hold_minutes`` and ``record_registry``
-    turn on delivering intents to their session and recording the registry; ``find``
+    turn on delivering intents to their session and recording the registry, and
+    ``watcher`` posts what goes to the watching session to it by name; ``find``
     (a name to one live session) and ``deliver`` (the switchboard's transport,
     ``(session, text) -> None``) are the delivery's seams.
     """
@@ -1172,6 +1173,7 @@ def courier(
         events_path=events_path,
         deliver_intents=settings.deliver_intents,
         deliver_sources=settings.deliver_sources,
+        watcher=settings.watcher,
         hold=timedelta(minutes=settings.hold_minutes),
         record=record_changes if settings.record_registry else None,
         find=find,
