@@ -175,8 +175,10 @@ data-aria-dark="Switch to auto color mode">
 <p>The console’s courier with no LLM: carry an owner-served console store both ways.</p>
 <p>A page published with a console store (<a class="reference internal" href="crowsnest.report.html#crowsnest.report.ConsoleStore" title="crowsnest.report.ConsoleStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">crowsnest.report.ConsoleStore</span></code></a>) writes what
 its buttons do into that store, on its owner’s server, behind their login. This module is
-the other end (crowsnest#111). The scheduler that already publishes the page (launchd,
-cron, a systemd timer) runs <a class="reference internal" href="#crowsnest.courier.tick" title="crowsnest.courier.tick"><code class="xref py py-func docutils literal notranslate"><span class="pre">tick()</span></code></a> once a minute, and each tick does five things:</p>
+the other end (crowsnest#111). A scheduler (launchd, cron, a systemd timer) runs
+<a class="reference internal" href="#crowsnest.courier.tick" title="crowsnest.courier.tick"><code class="xref py py-func docutils literal notranslate"><span class="pre">tick()</span></code></a> once a minute as its own job: chained after <code class="docutils literal notranslate"><span class="pre">crowsnest</span> <span class="pre">publish</span></code>, it would
+wait out every slow publish, and the messages with it (crowsnest#226). Each tick does five
+things:</p>
 <ol class="arabic simple">
 <li><p>Pull the store’s <code class="docutils literal notranslate"><span class="pre">attention</span></code> and <code class="docutils literal notranslate"><span class="pre">intents</span></code> into a local mirror.</p></li>
 <li><p>Take the attention documents into this machine’s attention store, last write winning
@@ -396,7 +398,7 @@ gives when <code class="docutils literal notranslate"><span class="pre">watcher<
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=4a212eee"></script>
+      <script src="../_static/documentation_options.js?v=ee59aaf7"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -1,4 +1,4 @@
-> built 2026-11-26 14:20 UTC from 23f9f53 (main) · crowsnest 0.0.128. Details: build_info.json
+> built 2026-11-26 18:18 UTC from fb76b74 (main) · crowsnest 0.0.129. Details: build_info.json
 
 # index.html.md
 
@@ -374,6 +374,8 @@ page = "https://example.com/ledgers"                 # all of them
 ## A page that stays fresh without a session
 
 The artifact console needs a Claude session awake to courier it. For a page that is simply always current, render and send it on a schedule instead: `crowsnest publish` does both, and cron, launchd or a systemd timer runs it.
+
+**Schedule `crowsnest courier` as a job of its own**, once a minute, never chained after `publish` in the same job: a publish can take minutes, and every message the courier carries would wait behind it. A tick takes seconds and two never overlap (the courier holds a lock on its mirror). On macOS, do not mark the courier’s launchd job `ProcessType = Background`: macOS throttles such a job’s CPU and disk hard, and a tick of a few seconds then takes over a minute.
 
 Where it goes is yours to say, once, in `~/.config/crowsnest/config.toml`:
 
@@ -2159,8 +2161,10 @@ The console’s courier with no LLM: carry an owner-served console store both wa
 
 A page published with a console store ([`crowsnest.report.ConsoleStore`](_autosummary/crowsnest.report.html.md#crowsnest.report.ConsoleStore)) writes what
 its buttons do into that store, on its owner’s server, behind their login. This module is
-the other end (crowsnest#111). The scheduler that already publishes the page (launchd,
-cron, a systemd timer) runs [`tick()`](_autosummary/crowsnest.courier.html.md#crowsnest.courier.tick) once a minute, and each tick does five things:
+the other end (crowsnest#111). A scheduler (launchd, cron, a systemd timer) runs
+[`tick()`](_autosummary/crowsnest.courier.html.md#crowsnest.courier.tick) once a minute as its own job: chained after `crowsnest publish`, it would
+wait out every slow publish, and the messages with it (crowsnest#226). Each tick does five
+things:
 
 1. Pull the store’s `attention` and `intents` into a local mirror.
 2. Take the attention documents into this machine’s attention store, last write winning
@@ -9286,16 +9290,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-26 14:20 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/23f9f53dfc8cffc13f323bf28bbb039a6f20e4d3"><code>23f9f53</code></a> on branch <code>main</code>, for **crowsnest 0.0.128** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-26 18:18 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/fb76b74e3ed0f3e6c60cee4699faf7e05b753314"><code>fb76b74</code></a> on branch <code>main</code>, for **crowsnest 0.0.129** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.129) is behind the latest release on PyPI (0.0.130): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/23f9f53dfc8cffc13f323bf28bbb039a6f20e4d3"><code>23f9f53dfc8cffc13f323bf28bbb039a6f20e4d3</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/fb76b74e3ed0f3e6c60cee4699faf7e05b753314"><code>fb76b74e3ed0f3e6c60cee4699faf7e05b753314</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -9306,9 +9312,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/45837642957">45837642957</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/45874636081">45874636081</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>23f9f53dfc8cffc13f323bf28bbb039a6f20e4d3</code> (in the history of the built commit) |
+| Event commit | <code>fb76b74e3ed0f3e6c60cee4699faf7e05b753314</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9333,13 +9339,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.128/">0.0.128</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.130/">0.0.130</a>, newer than the documented version (0.0.129).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 23f9f53dfc8cffc13f323bf28bbb039a6f20e4d3
+git checkout fb76b74e3ed0f3e6c60cee4699faf7e05b753314
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
