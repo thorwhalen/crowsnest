@@ -1114,3 +1114,46 @@ def test_a_watcher_that_can_never_take_it_does_not_hold_it(remote, tmp_path):
     doc = read(remote, "intents", "voice")
     assert sent == [] and doc["delivery"] == "watcher"
     assert doc["answer"].startswith("only in the event log")
+
+
+# --------------------------------------------------------------------------------------
+# A renamed lookout is found without its name (#240)
+
+
+def test_a_renamed_lookout_takes_the_intent_with_no_config_change(remote, tmp_path):
+    _tell(remote, "voice", session="crowsnest", source="claude-ai", text="Dispatch #12.")
+    new = _session("cn-2", socket_path="/tmp/cc-socks/2.sock")
+    find, sent, deliver = _board({"fixer": _session("fixer")})
+    # The config still names "cn", which is gone; the lookout is now "cn-2".
+    run(
+        remote,
+        tmp_path,
+        deliver_intents=True,
+        watcher=("cn",),
+        lookouts=lambda: [new],
+        find=find,
+        deliver=deliver,
+    )
+    assert [s for s, _ in sent] == ["/tmp/cc-socks/2.sock"]
+    assert "handed to cn-2" in read(remote, "intents", "voice")["answer"]
+
+
+def test_lookout_sessions_are_the_live_ones_in_a_directory_init_set_up(
+    tmp_path, monkeypatch
+):
+    from crowsnest import tools
+
+    home = tmp_path / "lookout"
+    home.mkdir()
+    (home / "CLAUDE.md").write_text(courier.LOOKOUT_MARKER + "\n\nrules\n")
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "CLAUDE.md").write_text("# Something else\n")
+    import dataclasses
+
+    a, b, c = (
+        dataclasses.replace(_session(n), cwd=str(d))
+        for n, d in (("a", home), ("b", other), ("c", tmp_path / "none"))
+    )
+    monkeypatch.setattr(tools, "sessions", lambda **kw: [a, b, c])
+    assert [s.name for s in courier.lookout_sessions()] == ["a"]
