@@ -911,7 +911,9 @@ def _route(
         why = ""  # the misses say it now
         from crowsnest.hook import log_failure
 
-        log_failure(f"courier: no named or found watcher is live to take intents: {missed}")
+        log_failure(
+            f"courier: no named or found watcher is live to take intents: {missed}"
+        )
         if lasting == total or now - since >= hold:
             return handed(
                 f"only in the event log: no watching session took it ({'; '.join(missed)})",
