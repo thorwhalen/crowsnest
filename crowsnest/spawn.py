@@ -906,7 +906,8 @@ class StartupDialog:
     fix: str
 
 
-#: The dialogs a ``--trust`` spawn answers, in the order Claude Code asks them. Both list
+#: The dialogs a ``--trust`` spawn answers, in the order Claude Code asks them (the add-directory one
+#: covers ``--add-dirs`` folders, which a trust record for the cwd does not, crowsnest#217). Both list
 #: *No* first and focused, with no numbers, so a bare Enter declines.
 STARTUP_DIALOGS = (
     StartupDialog(
@@ -922,6 +923,13 @@ STARTUP_DIALOGS = (
         ("no, disable external imports",),
         "an external-imports dialog (a CLAUDE.md imports files outside the folder)",
         "allow the external CLAUDE.md imports",
+    ),
+    StartupDialog(
+        "add directory",
+        "yes, add it",
+        ("no, exit",),
+        "an add-directory dialog (an --add-dir folder the account has not opened before)",
+        "accept the add-directory dialog",
     ),
 )
 

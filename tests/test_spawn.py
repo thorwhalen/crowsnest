@@ -898,6 +898,22 @@ def _imports_dialog(yes_focused):
     )
 
 
+def _add_dir_dialog(yes_focused):
+    no, yes = ("  ", "\u276f ") if yes_focused else ("\u276f ", "  ")
+    return (
+        "Adding a new directory\nIs this a directory you created or one you trust?\n"
+        f"{no}No, exit\n{yes}Yes, add it\n"
+    )
+
+
+def test_the_add_directory_dialog_is_answered_towards_yes():
+    """crowsnest#217: an --add-dirs folder the account never opened stops at this dialog."""
+    dialog, key = spawn_module.startup_dialog(_add_dir_dialog(False))
+    assert dialog.name == "add directory" and key == "Down"
+    assert spawn_module.startup_dialog(_add_dir_dialog(True))[1] == "Enter"
+    assert spawn_module.trust_dialog_key(_add_dir_dialog(False)) is None
+
+
 def test_the_imports_dialog_is_not_named_a_trust_dialog():
     """crowsnest#157: its warning says "trust", which the old needle took for the trust dialog."""
     state = spawn_module.pane_state(_imports_dialog(False))
