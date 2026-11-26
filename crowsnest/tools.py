@@ -1136,6 +1136,7 @@ def courier(
     events_path: str | Path | None = None,
     find=None,
     deliver=None,
+    lookouts=None,
 ) -> dict:
     """One courier tick for the page's own console store (:func:`crowsnest.courier.tick`).
 
@@ -1147,9 +1148,13 @@ def courier(
     turn on delivering intents to their session and recording the registry, and
     ``watcher`` posts what goes to the watching session to it by name; ``find``
     (a name to one live session) and ``deliver`` (the switchboard's transport,
-    ``(session, text) -> None``) are the delivery's seams.
+    ``(session, text) -> None``) are the delivery's seams. With a ``watcher`` named,
+    ``lookouts`` (default :func:`crowsnest.courier.lookout_sessions`: the live sessions
+    started where `crowsnest init` set a lookout up) is tried after the names, so a
+    renamed lookout still takes what is handed to it (#240).
     """
     from datetime import timedelta
+    from functools import partial
 
     from crowsnest import courier as _courier
     from crowsnest.config import courier_settings
@@ -1161,6 +1166,10 @@ def courier(
         raise ValueError(
             "the courier needs the console store's root: --remote HOST:PATH or a "
             "[courier] table in the config file with `remote`"
+        )
+    if lookouts is None and settings.watcher:
+        lookouts = partial(
+            _courier.lookout_sessions, home=home, all_homes=all_homes, config=config
         )
     return _courier.tick(
         remote,
@@ -1174,6 +1183,7 @@ def courier(
         deliver_intents=settings.deliver_intents,
         deliver_sources=settings.deliver_sources,
         watcher=settings.watcher,
+        lookouts=lookouts,
         hold=timedelta(minutes=settings.hold_minutes),
         record=record_changes if settings.record_registry else None,
         find=find,

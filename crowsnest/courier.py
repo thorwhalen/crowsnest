@@ -347,6 +347,7 @@ def tick(
     deliver_intents: bool = False,
     deliver_sources: Iterable[str] = DFLT_DELIVER_SOURCES,
     watcher: Iterable[str] = (),
+    lookouts: Callable[[], Iterable] | None = None,
     hold: timedelta = DFLT_HOLD,
     find: Callable[[str], object] | None = None,
     deliver: Callable | None = None,
@@ -376,6 +377,10 @@ def tick(
       is handed to the watching session is then also posted to it through the
       switchboard, held while none can take it, instead of only written to the event
       log, where it waits for a ``crowsnest watch`` that may not be running.
+    - ``lookouts``, a callable returning live sessions, is tried after the names, so a
+      lookout that was replaced and renamed still gets what is handed to it with no
+      config change (:func:`lookout_sessions` is the default :func:`crowsnest.tools.courier`
+      gives when ``watcher`` is set; ``None`` is names only).
     - ``record``, when given, appends the registry's changes to the event log
       (:func:`crowsnest.eventlog.record_changes` is the one to give).
     """
@@ -456,6 +461,7 @@ def tick(
                 events_path=events_path,
                 all_homes=all_homes,
                 watcher=watcher,
+                lookouts=lookouts,
                 logged=intent in logged,
             )
         except Exception as exc:  # noqa: BLE001
@@ -658,6 +664,35 @@ def exact_session(
     return resolve(name, home=home, all_homes=all_homes, config=config, exact=True)
 
 
+#: The first line of the CLAUDE.md `crowsnest init` writes for a lookout.
+LOOKOUT_MARKER = "# The lookout session"
+
+
+def is_lookout_dir(cwd: str | Path) -> bool:
+    """Whether ``cwd`` holds the lookout's CLAUDE.md (the one `crowsnest init` wrote)."""
+    try:
+        with open(Path(cwd) / "CLAUDE.md", encoding="utf-8") as fh:
+            return fh.readline().strip() == LOOKOUT_MARKER
+    except OSError:
+        return False
+
+
+def lookout_sessions(
+    *,
+    home: str | Path | None = None,
+    all_homes: bool = False,
+    config: str | Path | None = None,
+) -> list:
+    """The live sessions whose working directory is a lookout's (:func:`is_lookout_dir`)."""
+    from crowsnest.tools import sessions
+
+    return [
+        s
+        for s in sessions(home=home, all_homes=all_homes, config=config)
+        if s.cwd and is_lookout_dir(s.cwd)
+    ]
+
+
 #: What the watching session does with a handed intent, by who wrote it: the page's own
 #: buttons are the person's, anything else is a request to relay and weigh.
 WATCHER_ACTS = {
@@ -731,6 +766,7 @@ def _route(
     all_homes: bool = False,
     deliver_sources: tuple[str, ...] = DFLT_DELIVER_SOURCES,
     watcher: tuple[str, ...] = (),
+    lookouts: Callable[[], Iterable] | None = None,
     logged: bool = False,
 ) -> dict:
     """Where an ``ask``, ``tell`` or ``start`` intent goes this tick: ``{"doc", "counted"}``,
@@ -809,26 +845,17 @@ def _route(
         source = source_of(doc)
         since = _since(doc.get("watcher_since"), now)
         missed, lasting = [], 0
-        for who in watcher:
-            try:
-                target = find(who)
-            except KeyError as exc:  # gone, or a name that matches several
-                missed.append(_one_line(str(exc.args[0] if exc.args else exc)))
-                lasting += "ambiguous" in str(exc)
-                continue
-            except Exception as exc:  # noqa: BLE001 -- the roster could not be read
-                missed.append(f"the roster could not be read for {who}")
-                from crowsnest.hook import log_failure
 
-                log_failure(f"courier: intent {intent}: watcher {who!r}: {exc!r}")
-                continue
+        def attempt(target, who: str):
+            """Post to ``target`` if it can take it; the handed outcome, else ``None``."""
+            nonlocal lasting
             if switchboard.inbound_of(target) != "accept":
                 missed.append(f"{target.label} would hold it for approval")
                 lasting += 1
-                continue
+                return None
             if reason := switchboard.deliverable(target, busy_ok=True):
                 missed.append(reason)
-                continue
+                return None
             try:
                 switchboard.tell(
                     target,
@@ -842,19 +869,50 @@ def _route(
                 )
             except switchboard.Refused as exc:
                 missed.append(f"{target.label}'s inbox did not take it: {exc}")
-                continue
+                return None
             out = handed(
                 f"handed to {target.label}, the watching session, at {stamp[11:16]} UTC; "
                 "no answer yet",
                 delivery=WATCHER,
             )
             return {**out, "posted": True}
-        why = ""  # the misses say it now
-        if lasting == len(watcher) or now - since >= hold:
-            if lasting == len(watcher):
+
+        total = len(watcher)
+        for who in watcher:
+            try:
+                target = find(who)
+            except KeyError as exc:  # gone, or a name that matches several
+                missed.append(_one_line(str(exc.args[0] if exc.args else exc)))
+                lasting += "ambiguous" in str(exc)
+                continue
+            except Exception as exc:  # noqa: BLE001 -- the roster could not be read
+                missed.append(f"the roster could not be read for {who}")
                 from crowsnest.hook import log_failure
 
-                log_failure(f"courier: no named watcher can ever take intents: {missed}")
+                log_failure(f"courier: intent {intent}: watcher {who!r}: {exc!r}")
+                continue
+            if out := attempt(target, who):
+                return out
+        # No name took it (or none is current: a lookout is replaced and renamed):
+        # the live sessions started where `crowsnest init` set a lookout up (#240).
+        if lookouts is not None:
+            try:
+                found = list(lookouts())
+            except Exception as exc:  # noqa: BLE001
+                found = []
+                missed.append("the roster could not be read for the lookout")
+                from crowsnest.hook import log_failure
+
+                log_failure(f"courier: intent {intent}: finding the lookout: {exc!r}")
+            total += len(found)
+            for target in found:
+                if out := attempt(target, target.label):
+                    return out
+        why = ""  # the misses say it now
+        from crowsnest.hook import log_failure
+
+        log_failure(f"courier: no named or found watcher is live to take intents: {missed}")
+        if lasting == total or now - since >= hold:
             return handed(
                 f"only in the event log: no watching session took it ({'; '.join(missed)})",
                 delivery=WATCHER,
