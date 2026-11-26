@@ -185,8 +185,8 @@ keeps two couriers from racing on the same page.
 console store (`crowsnest publish --console-url <base>`, or `console` in `[publish]`)
 talks to a small JSON store its owner serves behind their own login (the protocol is on
 `crowsnest.report.ConsoleStore`) instead of an artifact's `db`. `crowsnest courier`
-(`remote` in `[courier]`), run by the same scheduler right after `publish`, does steps 1
-to 4 above and answers Recap and Refresh from disk, all without a session. Ask, Tell and
+(`remote` in `[courier]`), run once a minute as its own scheduled job (never chained after
+`publish`, whose slow runs would hold every message up), does steps 1 to 4 above and answers Recap and Refresh from disk, all without a session. Ask, Tell and
 Start arrive as an `intent` line in `crowsnest watch`: act on it and answer with
 `crowsnest intent answer <id> "<one line>"`. No `/loop` is needed for such a page.
 

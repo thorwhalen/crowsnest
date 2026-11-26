@@ -2,8 +2,10 @@
 
 A page published with a console store (:class:`crowsnest.report.ConsoleStore`) writes what
 its buttons do into that store, on its owner's server, behind their login. This module is
-the other end (crowsnest#111). The scheduler that already publishes the page (launchd,
-cron, a systemd timer) runs :func:`tick` once a minute, and each tick does five things:
+the other end (crowsnest#111). A scheduler (launchd, cron, a systemd timer) runs
+:func:`tick` once a minute as its own job: chained after ``crowsnest publish``, it would
+wait out every slow publish, and the messages with it (crowsnest#226). Each tick does five
+things:
 
 1. Pull the store's ``attention`` and ``intents`` into a local mirror.
 2. Take the attention documents into this machine's attention store, last write winning

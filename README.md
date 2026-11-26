@@ -370,6 +370,8 @@ page = "https://example.com/ledgers"                 # all of them
 
 The artifact console needs a Claude session awake to courier it. For a page that is simply always current, render and send it on a schedule instead: `crowsnest publish` does both, and cron, launchd or a systemd timer runs it.
 
+**Schedule `crowsnest courier` as a job of its own**, once a minute, never chained after `publish` in the same job: a publish can take minutes, and every message the courier carries would wait behind it. A tick takes seconds and two never overlap (the courier holds a lock on its mirror). On macOS, do not mark the courier's launchd job `ProcessType = Background`: macOS throttles such a job's CPU and disk hard, and a tick of a few seconds then takes over a minute.
+
 Where it goes is yours to say, once, in `~/.config/crowsnest/config.toml`:
 
 ```toml
