@@ -121,7 +121,7 @@ Six parts, in this order, and nothing else:
    with an output: *before writing any script, list in your ledger the components and
    skills found for each part; a part with none is an issue (`gap-to-issue`), not a
    script.* "Use whatever fits" is satisfied by the first fit; a required list is not.
-4. **What not to touch** — the files another session owns, if any.
+4. **What not to touch** — the files another session owns, if any. When the corpus is a **public** repository and the brief carries a private example (a link, a query, a page title, a sample of the user's data) for the worker to test with, mark it *live check only: never in tests, fixtures, commits or PR text*. Otherwise the worker models its fixtures on it, and a paraphrase of private content ends up in public history.
 5. **The reply contract**, verbatim:
 
    > Reply in at most five lines. Anything longer goes in your ledger
