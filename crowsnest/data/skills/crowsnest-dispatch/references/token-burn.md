@@ -49,8 +49,12 @@ Order of preference, always from the owner's words first:
 
 1. Issues updated since the last burn closed, across all the owners the owner uses.
 2. Open issues that support or continue recent commits, merges and ledgers (the work that was just done is the work whose context is cheap to load).
-3. The themes the owner names for this burn.
+3. The themes the owner names, from the dated record (below), not only from this burn's message.
 4. A flex lane: the backlog's activity-weighted ranking of ready issues, for whatever headroom is left.
+
+**Recency of the package.** Rank the flex lane and a slow burn by how recently the owner worked on each package, counting only activity outside burn periods (the owner's commits, merges and sessions, not those of burn workers), so a burn's own output does not feed its next ranking. Between two ready issues, the one on the more recently worked package goes first.
+
+**Owner themes are dated and outlive a burn.** Record each theme the owner names in the lookout's own memory (never in this public file or a public repository) with the date said and the order given. Read them at the start of every burn and slow burn, and re-ask when the newest is about two weeks old.
 
 Refresh the backlog DAG first (sweep, then triage the new nodes in Sonnet batches), claim the lanes you will use for the burn's owner name in the delegation file, and return them when the burn closes. Skip anything the owner has parked: a package whose design awaits the owner's feedback stays untouched however ready its issues look.
 
@@ -76,6 +80,10 @@ The plan is one page the owner reads on a phone: the budget, the stay-out table,
 - **Each pace tick, look at the idle workers' panes.** A finished worker's report sometimes never reaches the manager, and a read-only command flagged as destructive can sit on a permission prompt for an hour.
 - **Review intensity is the owner's call and is written in the plan.** A default that has worked: an independent adversarial review (Fable, or a fresh Opus subagent) for security, production and public-API changes, one round; the author's careful read for docs, tests and mechanical changes.
 - **Merges ship.** Note each release. Nothing deploys to production from a burn; a needed deploy is recorded on the repository's deploy issue.
+
+## Pacing between burns
+
+When no burn runs nothing guards the weekly line, and manager-dispatched lanes can still spend several points an hour. The guard for that is a script, not a model: it reads the usage log, compares it with an even line to the reset (points left divided by hours left), and when an account is over its line sends each idle lane a stop. A lane stopping lands what is landable and writes a "resume from" line (the next concrete step) in its ledger; the script keeps the list of paused lanes and, after the reset, sends each one "resume from your ledger's resume line". A model that polls pays for every empty tick. Lanes that need not stop can move to the account with room, or drop to a cheaper model where quality holds. The aim is the allowance neither exhausted early nor left unspent.
 
 ## 7. Closing
 
