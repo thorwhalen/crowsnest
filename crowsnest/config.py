@@ -700,11 +700,27 @@ class RelationsSettings:
     since: str = "7d"
     #: The page's title.
     title: str = "crowsnest"
-    #: The address of the full record of the owner's questions (the report's questions
-    #: register), which the inbox links to under the unread answers. Empty: no link.
-    questions: str = ""
+    #: The address of the page with the full record of the owner's questions (the
+    #: report's questions register), which the inbox links to under the unread answers:
+    #: a page of the same site (``/all/#questions``) or a web address. Empty: no link.
+    questions_page: str = ""
     #: Links to the owner's other pages, in the order written: ``(label, address)``.
     nav: tuple[tuple[str, str], ...] = ()
+
+
+def is_page_address(value: str) -> bool:
+    """Whether ``value`` is an address a page may link to: a path on the same site or
+    an ``http(s)`` address. ``//host/...`` is another site written as a path, and is not.
+
+    >>> [is_page_address(a) for a in ("/all/#questions", "https://example.org/q", "#top")]
+    [True, True, True]
+    >>> [is_page_address(a) for a in ("//evil.example/x", "javascript:alert(1)", "all/")]
+    [False, False, False]
+    """
+    text = str(value or "").strip().lower()
+    if text.startswith("//"):
+        return False
+    return text.startswith(("/", "./", "#", "http://", "https://"))
 
 
 def relations_settings(*, path: str | Path | None = None) -> RelationsSettings:
@@ -716,14 +732,14 @@ def relations_settings(*, path: str | Path | None = None) -> RelationsSettings:
         to = "me@myserver:/srv/crowsnest/relations.html"   # or a local path
         entry = "inbox"        # inbox, map, hybrid (the map under the first asks) or board
         since = "7d"           # how far back messages are read
-        questions = "/crowsnest/all/#questions"   # the full record of your questions
+        questions_page = "/all/#questions"   # the full record of your questions
 
         [relations.nav]        # links the page shows to your other pages
         "Every session" = "/crowsnest/all/"
         "Notes" = "https://example.org/notes/"
 
     A key the table does not know is an error, as in ``[publish]``. The page names
-    sessions and folders and quotes what the sessions asked, so ``to`` is a place only
+    sessions and folders and quotes what the sessions asked and answered, so ``to`` is a place only
     its owner can read, as ``[publish] to`` is.
     """
     file = config_path(path)
@@ -740,7 +756,7 @@ def relations_settings(*, path: str | Path | None = None) -> RelationsSettings:
             f"it knows {', '.join(sorted(known))}"
         )
     texts = {}
-    for key in ("to", "entry", "since", "title", "questions"):
+    for key in ("to", "entry", "since", "title", "questions_page"):
         value = table.get(key, getattr(RelationsSettings, key))
         if not isinstance(value, str):
             raise ValueError(  # noqa: TRY004
@@ -751,6 +767,11 @@ def relations_settings(*, path: str | Path | None = None) -> RelationsSettings:
         raise ValueError(
             f"{file}: [{RELATIONS_KEY}] entry must be one of "
             f"{', '.join(RELATIONS_ENTRIES)}, not {texts['entry']!r}"
+        )
+    if texts["questions_page"] and not is_page_address(texts["questions_page"]):
+        raise ValueError(
+            f"{file}: [{RELATIONS_KEY}] questions_page must be a page of the same site "
+            f"(/path) or a web address (https://...), not {texts['questions_page']!r}"
         )
     nav = table.get("nav", {})
     if not isinstance(nav, dict) or not all(isinstance(v, str) for v in nav.values()):

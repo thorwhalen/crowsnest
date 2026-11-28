@@ -111,7 +111,10 @@ body[data-lens="inbox"] .sentence{display:none}
 .ans-full p{margin:0 0 .6rem}
 .ans-full .ans-item{margin:0 0 .25rem;padding-left:1rem;text-indent:-1rem}
 .ans-full .ans-head{font-weight:600}
-.ans-full code{font-family:var(--mono);font-size:.875rem}
+.ans-full code,.ans-full pre{font-family:var(--mono);font-size:.875rem}
+.ans-full pre{margin:0 0 .6rem;padding:.5rem .6rem;border:1px solid var(--rule);border-radius:.5rem;overflow-x:auto;white-space:pre}
+.ans-full .ans-line{margin:0;font-family:var(--mono);font-size:.75rem;white-space:pre;overflow-x:auto}
+.ans-full .goes{color:var(--ink-soft);font-size:.875rem}
 .ans-full a{color:var(--ink)}
 .ans-links{display:flex;flex-wrap:wrap;align-items:center;gap:.2rem 1rem;margin:0 0 .4rem;font-size:.875rem;color:var(--ink-soft)}
 .ans-links a{display:inline-flex;align-items:center;gap:.3rem;min-height:2.75rem;font-weight:600;color:var(--ink)}

@@ -65,11 +65,21 @@ from __future__ import annotations
 import html as _html
 import json
 from collections.abc import Mapping, Sequence
+from datetime import datetime, timezone
 from pathlib import Path
 
 from openloops.dashboard import CSS as _CSS
 
-__all__ = ["DFLT_STALE_MINUTES", "ENTRIES", "LIBRARY", "render_relations_page"]
+from crowsnest.config import is_page_address
+
+__all__ = [
+    "ANSWERS_SHOWN",
+    "DFLT_STALE_MINUTES",
+    "ENTRIES",
+    "LIBRARY",
+    "inbox_answers",
+    "render_relations_page",
+]
 
 #: The lens a page may open on. ``inbox`` is what waits on the owner; ``hybrid`` is the
 #: map with the first few asks above it; ``docket`` is the inbox's former name.
@@ -81,6 +91,10 @@ ANSWER_LIMIT = 3000
 
 #: How much of one question the page carries.
 QUESTION_LIMIT = 400
+
+#: What a question's state may be on the page (:mod:`crowsnest.questions`); anything else
+#: is sent as no state at all.
+_STATES = ("answered", "partly", "elsewhere", "unanswered", "pending")
 
 #: How many unread answers the page carries, the newest first. The count it shows is of
 #: all of them; the older ones are in the full record the inbox links to.
@@ -227,13 +241,24 @@ def inbox_answers(
     >>> few["unread"], [row["q"] for row in few["rows"]]
     (7, ['q7', 'q6'])
     """
-    from crowsnest.relations import _text, _web
+    from crowsnest.relations import _session_id_of, _text, _web
+
+    def when(row) -> float:
+        """When the row was answered (else asked), in Unix seconds; 0 when unknown, so
+        a row with no readable time is listed last and never ahead of today's."""
+        text = str(row.get("answered_at") or row.get("asked_at") or "").strip()
+        if text.endswith(("Z", "z")):
+            text = text[:-1] + "+00:00"
+        try:
+            found = datetime.fromisoformat(text)
+        except ValueError:
+            return 0.0
+        if found.tzinfo is None:
+            found = found.replace(tzinfo=timezone.utc)
+        return found.timestamp()
 
     asked = list(questions)
-    unread = [row for row in asked if row.get("unread")]
-    unread.sort(
-        key=lambda r: str(r.get("answered_at") or r.get("asked_at") or ""), reverse=True
-    )
+    unread = sorted((r for r in asked if r.get("unread")), key=when, reverse=True)
 
     def beginning(text) -> tuple[str, bool]:
         """Sanitised ``text`` with its line breaks, and whether it was cut to fit: at
@@ -249,23 +274,35 @@ def inbox_answers(
 
     rows = []
     for row in unread[: max(0, shown)]:
-        words, cut = beginning(row.get("answer"))
+        state = str(row.get("state") or "")
+        state = state if state in _STATES else ""
+        # The person said the answer shown is not this question's: none is shown, as on
+        # the report, until another comes.
+        refused = row.get("noted") == "pair"
+        words, cut = ("", False) if refused else beginning(row.get("answer"))
+        elsewhere = state == "elsewhere" and not refused
         rows.append(
             {
-                "id": str(row.get("item") or ""),
-                "rev": str(row.get("rev") or ""),
+                "id": _text(row.get("item"), limit=80),
+                "rev": _text(row.get("rev"), limit=80),
                 "q": _text(
                     row.get("q_gist") or row.get("question"), limit=question_limit
                 ),
-                "gist": _text(row.get("a_gist"), limit=question_limit),
+                "gist": (
+                    "" if refused else _text(row.get("a_gist"), limit=question_limit)
+                ),
                 "a": words,
                 "cut": cut,
-                "state": str(row.get("state") or ""),
+                "state": "unanswered" if refused else state,
                 "who": _text(row.get("label"), limit=80),
-                "session": str(row.get("session_id") or ""),
-                "asked": str(row.get("asked_at") or ""),
-                "answered": str(row.get("answered_at") or ""),
-                "url": _web(row.get("session_url")),
+                # the node of the session it was asked in, for the place it works in
+                "node": _session_id_of(row) if row.get("session_id") else "",
+                "asked": _text(row.get("asked_at"), limit=40),
+                "answered": _text(row.get("answered_at"), limit=40),
+                # where the answer is: the session that gave it, when that is another one
+                "by": _text(row.get("answered_by"), limit=80) if elsewhere else "",
+                "url": _web(row.get("answered_url") if elsewhere else None)
+                or _web(row.get("session_url")),
             }
         )
     return {"rows": rows, "unread": len(unread), "asked": len(asked)}
@@ -294,8 +331,8 @@ def render_relations_page(
     ``every`` is how many seconds usually pass between two snapshots, when that is
     known: the page says it when asked for a newer snapshot and there is none.
 
-    ``answers`` (:func:`inbox_answers`) are the owner's unread answers, listed in the
-    inbox under what the sessions ask; ``None`` leaves that lane out, which is not the
+    ``answers`` (:func:`inbox_answers`, whose strings are sanitised: pass nothing else)
+    are the owner's unread answers, listed in the inbox under what the sessions ask; ``None`` leaves that lane out, which is not the
     same as an empty one ("nothing unread"). ``questions_href`` is the address of the
     full record of the owner's questions, linked under them.
     """
@@ -306,9 +343,14 @@ def render_relations_page(
     if every and every > 0:
         config["every"] = round(float(every))
     if answers is not None:
-        config["answers"] = dict(answers)
-    if str(questions_href).lower().startswith(("/", "./", "#", "http://", "https://")):
-        config["questions_href"] = str(questions_href)
+        rows = [dict(row) for row in answers.get("rows") or ()]
+        config["answers"] = {
+            "rows": rows,
+            "unread": max(int(answers.get("unread") or 0), len(rows)),
+            "asked": int(answers.get("asked") or 0),
+        }
+    if is_page_address(questions_href):
+        config["questions_href"] = str(questions_href).strip()
     return _PAGE.format(
         title=_html.escape(title),
         tokens=_TOKENS,

@@ -883,6 +883,9 @@ def report(
                 sources=[lambda: _from_records(lineage_path=lineage_path)],
             ),
         }
+    # Before the questions, as it was when both were arguments of one call: a config
+    # file whose themes cannot be read fails here, before any gist is paid for.
+    themes = theme_table(path=config) if themes is None else themes
     asked = (
         questions_rows(
             data["sessions"],
@@ -917,7 +920,7 @@ def report(
         action_line=action_line,
         owed=owed_envelope,
         blocked=blocked_envelope,
-        themes=theme_table(path=config) if themes is None else themes,
+        themes=themes,
         questions=asked,
     )
     return {
@@ -940,7 +943,7 @@ def report(
                     asked,
                     question_marks(
                         asked,
-                        now=made.timestamp(),
+                        made_at=made_at,
                         store=store,
                         plain=plain,
                         row_context=ctx,
@@ -1812,7 +1815,7 @@ def relations_page(
         nav=settings.nav if nav is None else nav,
         every=_snapshot_period(),
         answers=None if questions is None else inbox_answers(questions),
-        questions_href=settings.questions,
+        questions_href=settings.questions_page,
     )
     return {
         "html": html,

@@ -340,6 +340,65 @@ def test_the_inbox_carries_the_newest_unread_answers_and_counts_them_all():
     assert "<" not in page.split('id="relations-config">', 1)[1].split("</script>", 1)[0]
 
 
+def test_the_inbox_lists_by_time_and_shows_what_the_report_would():
+    def row(i, at, **more):
+        return {
+            "question": f"q{i}",
+            "answer": f"a{i}",
+            "state": "answered",
+            "answered_at": at,
+            "unread": True,
+            "session_id": f"s{i}",
+            **more,
+        }
+
+    found = inbox_answers(
+        [
+            row(1, "2026-01-01T10:00:00Z"),
+            row(
+                2, "2026-01-01T12:30:00+01:00"
+            ),  # 11:30 UTC: the newest, whatever it sorts as text
+            row(3, "not a time"),
+            row(4, "2026-01-01T09:00:00.5Z", noted="pair", a_gist="gist"),
+            row(
+                5,
+                "2026-01-01T08:00:00Z",
+                state="elsewhere",
+                answered_by="other",
+                answered_url="https://claude.ai/code/other",
+                session_url="https://claude.ai/code/s5",
+            ),
+            row(6, "2026-01-01T07:00:00Z", state="<b>made up"),
+        ]
+    )
+    rows = found["rows"]
+    assert [r["q"] for r in rows] == ["q2", "q1", "q4", "q5", "q6", "q3"]
+    refused = rows[2]  # the person said this answer is not the question's: none is shown
+    assert (refused["a"], refused["gist"], refused["state"]) == ("", "", "unanswered")
+    assert (rows[3]["by"], rows[3]["url"]) == ("other", "https://claude.ai/code/other")
+    assert rows[0]["by"] == "" and rows[4]["state"] == ""
+    assert rows[0]["node"].startswith("session:") and "session" not in rows[0]
+
+
+def test_the_renderer_takes_only_what_an_inbox_holds_and_links_only_to_pages():
+    odd = config_of(render_relations_page(graph(), answers={}))
+    assert odd["answers"] == {"rows": [], "unread": 0, "asked": 0}
+    short = config_of(render_relations_page(graph(), answers={"rows": [{"q": "x"}]}))
+    assert short["answers"]["unread"] == 1  # never fewer than the rows it shows
+    for address in ("//evil.example/x", "javascript:alert(1)", "all/#questions"):
+        page = render_relations_page(graph(), questions_href=address)
+        assert "questions_href" not in config_of(page)
+
+
+def test_a_questions_page_that_is_not_an_address_is_refused(tmp_path):
+    cfg = tmp_path / "config.toml"
+    cfg.write_text("[relations]\nquestions_page = 'all/#questions'\n")
+    with pytest.raises(ValueError, match="questions_page must be a page"):
+        relations_settings(path=cfg)
+    cfg.write_text("[relations]\nquestions_page = '/all/#questions'\nentry = 'docket'\n")
+    assert relations_settings(path=cfg).questions_page == "/all/#questions"
+
+
 def test_a_page_made_without_the_questions_has_no_answers_lane():
     config = config_of(render_relations_page(graph(), entry="inbox"))
     assert "answers" not in config and "questions_href" not in config
@@ -440,7 +499,7 @@ def test_publish_gives_the_inbox_the_questions_the_report_drew(tmp_path, monkeyp
     page, beside = tmp_path / "out" / "index.html", tmp_path / "out" / "relations.html"
     cfg.write_text(
         f"[publish]\nto = '{page}'\nquestions = true\n"
-        f"[relations]\nto = '{beside}'\nentry = 'inbox'\nquestions = '/all/#questions'\n"
+        f"[relations]\nto = '{beside}'\nentry = 'inbox'\nquestions_page = '/all/#questions'\n"
     )
     tools.publish(config=cfg, home=home, page_path=tmp_path / "kept.html", tz="UTC")
     config = config_of(beside.read_text())

@@ -372,6 +372,8 @@ def test_an_answer_opens_in_place_and_an_ask_opens_its_session(inbox):
         "https://example.org/log",
     ]
     assert "[this](javascript:alert(1))" in words.inner_text()
+    # a link a session wrote says where it goes, beside its words
+    assert words.locator(".goes").inner_text().strip() == "(example.org)"
     assert "**" not in first.locator("summary").inner_text()
     opened = first.locator(".ans-links a")
     assert opened.get_attribute("href") == "https://claude.ai/code/s0"

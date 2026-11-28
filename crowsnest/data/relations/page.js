@@ -104,7 +104,7 @@
   var carry = null; /* what was chosen in a mode that is being left by going back: it stays chosen */
   window.addEventListener('popstate', function () {
     var ours = !!(history.state && history.state.ours);
-    S.sel = ''; S.focus = ''; S.explore = '';
+    S.sel = ''; S.focus = ''; S.explore = ''; S.box = 'all';
     readHash();
     if (carry) { S.view = carry.view; S.show = carry.show; S.on = carry.on; S.refs = carry.refs; carry = null; writeHash(); }
     if (S.explore && (WIDE.matches || S.lens !== 'map')) { S.explore = ''; writeHash(); }
@@ -723,8 +723,6 @@
      sessions said to the person's own questions, the ones not read yet. One count per
      lane, on the chip that filters to it; the same numbers the lists hold. */
   var KIND = { decision: 'Decide', action: 'Errand', question: 'Question' };
-  var BY_LABEL = {};
-  SESSIONS.forEach(function (n) { if (!BY_LABEL[n.data.label]) BY_LABEL[n.data.label] = n; });
   function asks() {
     var rank = { decision: 0, action: 1 };
     return BY_CLASS.needs.slice().sort(function (a, b) { var x = rank[a.data.why], y = rank[b.data.why]; return ((x === undefined ? 2 : x) - (y === undefined ? 2 : y)) || byInterest(a, b); });
@@ -744,20 +742,29 @@
       into.appendChild(linked(text.slice(last, m.index)));
       if (m[1]) into.appendChild(el('b', { text: m[1] }));
       else if (m[2]) into.appendChild(el('code', { text: m[2] }));
-      else into.appendChild(el('a', { href: m[4] || m[5], target: '_blank', rel: 'noopener noreferrer', text: m[3] || m[5] }));
+      else {
+        /* a link a session wrote: its words, and beside them where it really goes, so a label cannot pass for another address */
+        into.appendChild(el('a', { href: m[4] || m[5], target: '_blank', rel: 'noopener noreferrer', text: m[3] || m[5] }));
+        if (m[3] && m[3].indexOf(host(m[4])) < 0) into.appendChild(el('span', { class: 'goes', text: ' (' + host(m[4]) + ')' }));
+      }
       last = m.index + m[0].length;
     }
     into.appendChild(linked(text.slice(last)));
     return into;
   }
+  function host(url) { try { return new URL(url).host; } catch (e) { return ''; } }
   function plain(text) { /* the same words on one line, for a row that shows only their start */
     return String(text).replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/`([^`\n]+)`/g, '$1').replace(/\[([^\]\n]+)\]\(https?:\/\/[^\s)]+\)/g, '$1').replace(/^\s*#+\s+/gm, '').replace(/\s+/g, ' ').trim();
   }
   function prose(text) { /* paragraphs, list items and headings, as the session wrote them */
-    var box = el('div', { class: 'ans-full' });
+    var box = el('div', { class: 'ans-full' }), fence = null;
     String(text).split(/\n\s*\n/).forEach(function (para) {
       var p = null;
+      if (fence) fence.appendChild(document.createTextNode('\n'));
       para.split('\n').forEach(function (line) {
+        if (/^\s*```/.test(line)) { if (fence) fence = null; else { fence = el('pre'); box.appendChild(fence); } p = null; return; }
+        if (fence) { fence.appendChild(document.createTextNode(line + '\n')); return; } /* code, as written: never joined into one line */
+        if (/^\s*\|/.test(line)) { p = null; box.appendChild(el('p', { class: 'ans-line', text: line.trim() })); return; }
         var item = /^\s*(?:[-*•]|\d+[.)])\s+/.exec(line), head = /^\s*#+\s+(.*)$/.exec(line);
         if (!line.trim()) return;
         if (item || head) { p = null; box.appendChild(inline(head ? head[1] : line.trim(), el('p', { class: head ? 'ans-head' : 'ans-item' }))); return; }
@@ -768,17 +775,19 @@
     return box;
   }
   function answerRow(a) {
-    var from = BY_LABEL[a.who], where = from ? placeOf(from.id) : '', said = a.state === 'unanswered' ? 'No answer yet.' : plain(a.gist || a.a);
+    /* said on the row only when the answer is not simply the session's own: in part, or given by another session */
+    var how = a.state === 'partly' ? 'answered in part' : (a.by && a.by !== a.who ? 'answered by ' + a.by : '');
+    var where = a.node && N.get(a.node) ? placeOf(a.node) : '', said = a.state === 'unanswered' ? 'No answer yet.' : plain(a.gist || a.a);
     var turn = el('span', { class: 'turn' });
     turn.insertAdjacentHTML('beforeend', CHEVRON);
     var row = el('details', { class: 'ans' + (a.state === 'unanswered' ? ' none' : '') }, [el('summary', {}, [el('span', { class: 'ans-text' }, [
       el('span', { class: 'ans-q' }, [el('b', { text: 'You asked: ' }), plain(a.q)]),
       el('span', { class: 'ans-a', text: said }),
-      el('span', { class: 'row-meta' }, [el('b', { text: a.who }), where ? el('span', { class: 'row-place', text: label(where) }) : null, el('time', { text: clock(a.answered || a.asked) })])]), turn])]);
+      el('span', { class: 'row-meta' }, [el('b', { text: a.who }), where ? el('span', { class: 'row-place', text: label(where) }) : null, el('time', { text: clock(a.answered || a.asked) }), how ? el('span', { text: how }) : null])]), turn])]);
     row.appendChild(a.state === 'unanswered' ? el('div', { class: 'ans-full' }, [el('p', { text: 'No session has answered this yet.' })]) : prose(a.a));
     var links = el('p', { class: 'ans-links' });
     if (a.cut) links.appendChild(el('span', { text: 'This is its beginning; the rest is in the session.' }));
-    if (a.url) { links.appendChild(el('a', { href: a.url, target: '_blank', rel: 'noopener noreferrer', text: 'Open the session' })); links.lastChild.insertAdjacentHTML('beforeend', EXTERNAL); }
+    if (/^https?:\/\//i.test(a.url || '')) { links.appendChild(el('a', { href: a.url, target: '_blank', rel: 'noopener noreferrer', text: a.by && a.by !== a.who ? 'Open the session that answered' : 'Open the session' })); links.lastChild.insertAdjacentHTML('beforeend', EXTERNAL); }
     if (links.childNodes.length) row.appendChild(links);
     return row;
   }
@@ -801,7 +810,7 @@
   function dayOf(iso) { /* which of the list's three ages an answer has: 0 today, 1 this week, 2 older */
     var t = new Date(iso);
     if (isNaN(t)) return 2;
-    var days = Math.floor((new Date(AS_OF.getFullYear(), AS_OF.getMonth(), AS_OF.getDate()) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5);
+    var days = Math.round((new Date(AS_OF.getFullYear(), AS_OF.getMonth(), AS_OF.getDate()) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5);
     return days <= 0 ? 0 : days < 7 ? 1 : 2;
   }
   function answersLane(list, cap, grouped) {
@@ -851,7 +860,7 @@
     into.textContent = '';
     var rank = { decision: 0, action: 1 }, first = BY_CLASS.needs.slice().sort(function (a, b) { var x = rank[a.data.why], y = rank[b.data.why]; return ((x === undefined ? 2 : x) - (y === undefined ? 2 : y)) || byInterest(a, b); });
     first.slice(0, cap).forEach(function (n) { into.appendChild(docketRow(n)); });
-    if (BY_CLASS.needs.length > cap) into.appendChild(el('button', { class: 'all', type: 'button', text: (BY_CLASS.needs.length - cap) + ' more in the inbox', on: { click: function () { S.lens = 'inbox'; S.box = 'asks'; writeHash(true); render(); window.scrollTo(0, 0); } } }));
+    if (BY_CLASS.needs.length > cap) into.appendChild(el('button', { class: 'all', type: 'button', text: (BY_CLASS.needs.length - cap) + ' more in the inbox', on: { click: function () { S.lens = 'inbox'; S.box = ANSWERS ? 'asks' : 'all'; writeHash(true); render(); window.scrollTo(0, 0); } } }));
     if (BY_CLASS.needs.length > cap) into.lastChild.insertAdjacentHTML('beforeend', CHEVRON);
     if (!BY_CLASS.needs.length) into.appendChild(el('p', { class: 'calm', text: 'Nothing waits on you.' }));
   }
