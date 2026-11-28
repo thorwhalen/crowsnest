@@ -27,6 +27,7 @@ svg.i{width:1.25rem;height:1.25rem;flex:none;fill:none;stroke:currentColor;strok
 .fresh svg.i{width:1rem;height:1rem}
 .fresh.stale{background:var(--unsure-wash);color:var(--unsure);font-weight:700;border-color:var(--unsure)}
 .fresh[data-pending]{opacity:.6}
+.fresh.new{border-color:var(--ink);color:var(--ink);font-weight:700}
 .iconbtn{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:2.75rem;min-height:2.75rem;border:1px solid var(--rule);
   border-radius:.5rem;background:var(--surface);cursor:pointer}
 #nav{display:none;flex-direction:column;padding:.25rem 0 .1rem}

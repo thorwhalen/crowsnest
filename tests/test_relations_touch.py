@@ -225,3 +225,70 @@ def test_expand_gives_the_map_the_screen_and_the_gestures_until_back(phone):
     assert not phone.evaluate("() => document.body.classList.contains('exploring')")
     assert abs(phone.evaluate("() => window.scrollY") - y) <= 1
     assert not phone.errors
+
+
+# --------------------------------------------------------------------------------------
+# Reload: it asks whether a newer snapshot exists before it reloads
+# --------------------------------------------------------------------------------------
+
+
+@pytest.fixture
+def served(browser, tmp_path):
+    """The page behind a real HTTP server (one that says when the file was written)."""
+    import functools
+    import http.server
+    import os
+    import threading
+
+    def write(as_of, *, later=0):
+        doc = R.relations(_rows(), as_of=as_of)
+        target = tmp_path / "relations.html"
+        target.write_text(
+            render_relations_page(doc, entry="hybrid", every=240), encoding="utf-8"
+        )
+        if later:
+            stamp = target.stat().st_mtime + later
+            os.utime(target, (stamp, stamp))
+
+    write("2026-01-01T12:00:00+00:00")
+    handler = functools.partial(
+        http.server.SimpleHTTPRequestHandler, directory=str(tmp_path)
+    )
+    handler.log_message = lambda *a, **k: None
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    context = browser.new_context(
+        viewport=PHONE, device_scale_factor=2, is_mobile=True, has_touch=True
+    )
+    page = context.new_page()
+    page.goto(f"http://127.0.0.1:{server.server_address[1]}/relations.html#view=needs")
+    page.wait_for_timeout(900)
+    page.write = write
+    yield page
+    context.close()
+    server.shutdown()
+
+
+def test_reload_says_so_when_there_is_nothing_newer_and_loads_what_is(served):
+    page = served
+    page.evaluate("() => { window.__same_document = true; }")
+    page.locator("#fresh").tap()
+    page.wait_for_timeout(700)
+    # nothing newer: the page did not reload, and says why and when to expect one
+    assert page.evaluate("() => window.__same_document") is True
+    foot = page.locator("#foot").inner_text()
+    assert "this is the latest snapshot there is" in foot
+    assert "about every 4 min" in foot
+    assert not page.locator("#fresh").get_attribute("data-pending")
+    # a newer copy arrives: the page notices when it comes back into view, and says so
+    page.write("2026-01-01T12:30:00+00:00", later=5)
+    page.evaluate("() => document.dispatchEvent(new Event('visibilitychange'))")
+    page.wait_for_timeout(700)
+    assert page.locator("#fresh").inner_text() == "New snapshot"
+    assert page.evaluate("() => window.__same_document") is True  # never on its own
+    # and the tap now loads it, at the same view
+    page.locator("#fresh").tap()
+    page.wait_for_timeout(1200)
+    assert page.evaluate("() => window.__same_document") is None
+    assert "view=needs" in page.url
+    assert "this is the latest" not in page.locator("#foot").inner_text()

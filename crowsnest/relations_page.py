@@ -33,7 +33,15 @@ gesture only where the page has none to lose. ``DESIGN.md`` at the repository ro
 this page's design contract, and ``tests/test_relations_touch.py`` holds it to that with
 real touch gestures in a browser.
 
-**The contract** is the report's: one file, nothing fetched from anywhere, every string
+**Reload asks before it reloads.** The control that shows the snapshot's time asks the
+page's own address when the copy there was written (the ``Last-Modified`` its server
+sends), and only that. A newer copy is loaded at the same view and place; when there is
+none the page says so, with when the one shown was published and how often a new one
+usually arrives, in place of reloading the same page and looking broken. Served over
+http(s) it also asks once a minute while it is in view, and says when a newer snapshot is
+ready. That request to itself is the only one the page ever makes.
+
+**The contract** is the report's: one file, nothing fetched from anywhere else, every string
 already sanitised where the document was made (the script only sets text). The drawing
 library (Cytoscape.js, MIT, :data:`LIBRARY`) ships in the package and is inlined, with
 its licence. Colours are the report's own tokens, light and dark.
@@ -183,6 +191,7 @@ def render_relations_page(
     nav: Sequence[Sequence[str]] | Mapping[str, str] = (),
     current: str = "",
     stale_minutes: int = DFLT_STALE_MINUTES,
+    every: float | None = None,
 ) -> str:
     """``doc`` (:func:`crowsnest.relations.relations`'s document) as one self-contained
     HTML page.
@@ -191,12 +200,16 @@ def render_relations_page(
     address overrides it, so a link to a view reopens that view. ``nav`` is the links to
     show to other pages, as ``(label, href)`` pairs or a mapping, each opened in the top
     window (the page is usually framed); ``current`` is the label of this page among
-    them. ``stale_minutes`` is when the page's "as of" turns into a warning.
+    them. ``stale_minutes`` is when the page's "as of" turns into a warning, and
+    ``every`` is how many seconds usually pass between two snapshots, when that is
+    known: the page says it when asked for a newer snapshot and there is none.
     """
     if entry not in ENTRIES:
         raise ValueError(f"entry must be one of {', '.join(ENTRIES)}, not {entry!r}")
     links = _nav(nav, current)
     config = {"entry": entry, "stale_minutes": int(stale_minutes)}
+    if every and every > 0:
+        config["every"] = round(float(every))
     return _PAGE.format(
         title=_html.escape(title),
         tokens=_TOKENS,
