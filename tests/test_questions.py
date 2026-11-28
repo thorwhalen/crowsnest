@@ -14,7 +14,12 @@ import pytest
 from fixtures import assistant, stamp, user, write_transcript
 
 from crowsnest import attention, questions
-from crowsnest.report import QUESTIONS_SHOWN, render_report
+from crowsnest.report import (
+    QUESTIONS_SHOWN,
+    WRONG_PAIR,
+    question_marks,
+    render_report,
+)
 
 NOW = datetime.fromisoformat("2026-01-02T00:00:00+00:00").timestamp()
 MADE = "2026-01-02T00:00:00Z"
@@ -143,6 +148,27 @@ def test_the_figure_and_legend_count_unread_and_seen_takes_one_off(tmp_path):
     )
     marked = page(found, store=store)
     assert '<a href="#questions"><b>0</b> <span>unread</span></a>' in marked
+
+
+def test_question_marks_are_the_rule_the_register_counts_by(tmp_path):
+    found = rows(tmp_path)
+    (mark,) = question_marks(found, store={}, made_at=MADE)
+    assert mark["unread"] and mark["shown"] == "" and mark["noted"] == ""
+    assert mark["item"] == attention.item_id(found[0])
+    assert mark["rev"] == attention.fingerprint(found[0])
+    store = {}
+    attention.update(
+        mark["item"], lambda rec: attention.seen(rec, mark["rev"]), store=store
+    )
+    (after,) = question_marks(found, store=store)
+    assert not after["unread"] and after["shown"] == attention.SEEN
+    # the same answer as the page's own count, and a store left out is a store unread
+    assert "<b>0</b> <span>unread</span>" in page(found, store=store)
+    assert question_marks(found, store=store, plain=True)[0]["unread"]
+    assert question_marks([]) == []
+    # a correction is said too: the answer shown is not this question's
+    noted(store, found[0], f"{WRONG_PAIR} {found[0]['answer_hash']}")
+    assert question_marks(found, store=store)[0]["noted"] == "pair"
 
 
 def test_past_the_first_ten_the_rest_fold_under_more(tmp_path):

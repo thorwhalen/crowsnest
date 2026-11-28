@@ -388,8 +388,8 @@ def relations(
     Prints how many nodes and links of each kind there are. `--json` prints the whole
     document: nodes and links, each link saying how it is known (recorded, observed,
     inferred) and, when a rule derived it, through which nodes. `--page FILE` writes the
-    relations page instead: one self-contained HTML file with a map, a docket of what
-    waits on you, and a board of places. `--entry map|hybrid|docket|board` chooses what
+    relations page instead: one self-contained HTML file with an inbox of what waits on
+    you, a map, and a board of places. `--entry inbox|map|hybrid|board` chooses what
     that page opens on, and `--since 3d` how far back messages are read; both default to
     the config file's `[relations]` table, which can also have `crowsnest publish` send
     the page beside the report (`to = "..."`) and name links to your other pages

@@ -16,22 +16,27 @@
 - **What makes it this page's and not the template's:** it shares its colour tokens with the report page (`openloops.dashboard.CSS`), so the two read as one product, and the only saturated colours are the four session states.
 - **Deliberate departures from the direction, and why:**
   - **Type.** The page is one file that fetches nothing, so no web font can be loaded. It uses the platform's interface sans for text and controls, the tokens' serif for the two headings, and the tokens' mono only for session names, places and times. Sizes are 12, 14, 16 and 20 px and no others.
-  - **Icons.** Inline SVG paths in the Lucide style (`menu`, `x`, `sliders-horizontal`, `maximize-2`, `plus`, `minus`, `chevron-right`), 2 px stroke; no icon font, nothing fetched.
+  - **Icons.** Inline SVG paths in the Lucide style (`menu`, `x`, `sliders-horizontal`, `maximize-2`, `plus`, `minus`, `chevron-right`, `external-link`), 2 px stroke; no icon font, nothing fetched.
 - **Both modes ship** (the tokens carry light and dark; the page follows the system).
 
 ## 3. Layout
 
 - **Archetype:** Dashboard, with a stage inside it (the map).
 - **Phone (under 60rem): the page is an ordinary scrolling document.** Nothing is fixed at the bottom. Top to bottom: one sticky bar (the three lenses as a segmented control, how fresh the snapshot is, the menu of other pages), one status sentence that scrolls away with the page, then the content: the brief (the first asks), the map's own row of controls (the views, Layers), the map in a bounded frame, the rows for what is not drawn, a footer with the full time.
+- **The Inbox is the first lens, and what the page opens on when told to** (`entry = "inbox"`). Under the bar it has one row of filter chips (All, Asks, Answers), in place of the status sentence, which the Inbox does not show: a count is said once. Asks and Answers carry their counts; All carries none, because things to do and things to read do not add up to a number that means anything. With no Answers lane there is nothing to filter and no row of chips. Then two lanes on one screen. *Asks*: the sessions that cannot go on until their person answers, decisions first, the first three and a row that opens the rest. *Answers*: what the sessions said to the person's own questions, the unread ones, the newest first, the first two and a row that opens the rest. Then, folded, what does not wait on the person. The page carries the newest fifty unread answers; it counts all of them and says how many are not on the page and where they are. A page made without the person's questions has no Answers lane and no chip for it.
 - **The map never takes the page's scroll.** In the scrolling layout the map is a picture: a swipe that starts on it scrolls the page, a tap on a mark opens that mark. *Expand* gives the map the whole screen and every gesture (one finger pans, two zoom, plus and minus buttons for one hand); it is a history entry, so Back, Escape or the close button leave it at the scroll position it was opened from. One view, the Overview, is taller than a screen: on a phone its frame grows to the drawing, which is fitted to the width so that the project names stay readable, and the page scrolls past it.
 - **Wide (60rem and up): the page fits the window and does not scroll,** so the map takes gestures directly. One bar holds the brand, the lenses, the freshness and the links to other pages, with the status sentence on a line of its own under it; the brief is a left pane, the map fills the rest, a node's details open as a right pane.
-- **Chrome budget on a phone:** one bar and one sentence above the content; the first content item starts in the top 15% of a 390 by 844 screen.
+- **Chrome budget on a phone:** one bar and one more row above the content (the Inbox's chips, or the status sentence on the other lenses); the content starts in the top 20% of a 390 by 844 screen and the first item in the top quarter.
 
 ## 4. Actions and icons
 
 | Action | Tier | Shown as | Icon | Name (accessible name and tooltip) |
 |---|---|---|---|---|
-| Switch lens (Map, Docket, Board) | 1 | labels, segmented | none | the label |
+| Switch lens (Inbox, Map, Board) | 1 | labels, segmented | none | the label |
+| Filter the Inbox (All, Asks, Answers) | 1 for the Inbox | label chips, each with its count | none | the label |
+| Open an ask | content | the row | none | the row's text; opens the session's details |
+| Read an answer | content | the row, which opens in place; a link a session wrote shows the site it goes to beside its words | `chevron-right`, turned when open | the row's text |
+| Open the session | content, in an opened answer and in a session's details | label and icon | `external-link` | Open the session |
 | Reload the snapshot | 1 | text: the time, or how old when stale | none | "Snapshot from 07:43. Reload." |
 | Other pages | 1 on a phone; inline links when wide | icon | `menu` | Other pages |
 | Switch the map's view | 1 for the map | label chips | none | the label |
@@ -43,8 +48,8 @@
 
 ## 5. Information architecture
 
-- **Navigation model:** three lenses over one document (tabs), and inside the Map lens a row of views. Details of one node open in a sheet (phone) or a side pane (wide).
-- **Where each of the top three tasks starts:** 1. on the first screen (the sentence and the brief), no tap. 2. on the first screen below the brief, or one tap on *Map* then *Overview*. 3. one tap on a view chip, or a tap on a mark and then *Focus here*.
+- **Navigation model:** three lenses over one document (tabs); inside the Inbox a row of filters, inside the Map lens a row of views. Details of one node open in a sheet (phone) or a side pane (wide).
+- **Where each of the top three tasks starts:** 1. on the first screen (the Inbox: its counts and its first asks and answers), no tap. 2. on the first screen below the brief, or one tap on *Map* then *Overview*. 3. one tap on a view chip, or a tap on a mark and then *Focus here*.
 
 ## 6. Interaction rules
 
@@ -52,8 +57,8 @@ The behaviour rules are `tw-frontend-ux`. Specific here:
 
 - **Staleness is said once, where the eye lands:** the freshness control in the bar turns into "5 h old" in the warning colour; it is the reload button. A reload that brings nothing newer says so in the footer.
 - **Sheets:** one at a time; a transparent backdrop closes the open one and keeps a tap from reaching the page behind; focus moves into the sheet and back to where it came from.
-- **History:** opening a node's details, focusing on a node, expanding the map and going to the docket from the brief are entries; switching lens, view or level replaces.
-- **Empty and failing states:** a view with nothing to show says what is missing in the map's frame; if the drawing library cannot start, the frame says so and points at the Docket and the Board, which hold the same sessions.
+- **History:** opening a node's details, focusing on a node, expanding the map and going to the inbox from the brief are entries; switching lens, filter, view or level replaces.
+- **Empty and failing states:** a view with nothing to show says what is missing in the map's frame; if the drawing library cannot start, the frame says so and points at the Inbox and the Board, which hold the same sessions.
 
 ## 7. Components
 
@@ -67,7 +72,8 @@ The behaviour rules are `tw-frontend-ux`. Specific here:
 ## 9. Acceptance checks
 
 - [ ] `tests/test_relations_touch.py` passes (a real browser with touch emulation): a swipe that starts on the map scrolls the page and leaves the map where it was; everything below the map can be reached and hit; a tap opens a mark and Back closes it; Expand gives the map the screen and the gestures until Back.
-- [ ] `ui_probe.py` on a phone: the controls end and the content starts in the top 15% of the screen; no control under 44 px; no text under 12 px; no glyph used as an icon. The probe's `system-font` finding is expected (section 2).
+- [ ] The same tests, for the Inbox: it opens on what waits, the first ask starts in the top quarter of a phone screen and both lanes are on the first screen; each chip lists what it counts; an answer opens in place and an ask opens its session; a link made when the lens was called the docket still opens it.
+- [ ] `ui_probe.py` on a phone: the controls end and the content starts in the top 20% of the screen; no control under 44 px; no text under 12 px; no glyph used as an icon. The probe's `system-font` finding is expected (section 2).
 - [ ] At 1440 px the page uses the full width and does not scroll.
 
 ## 10. Decisions
@@ -79,3 +85,5 @@ The behaviour rules are `tw-frontend-ux`. Specific here:
 | 2026-11-28 | The map's views and Layers sit directly above the map; no bottom dock | A fixed bottom bar hid the rows under it once the phone's bottom inset was added. |
 | 2026-11-28 | System interface sans, no web font | The page fetches nothing. |
 | 2026-11-28 | After the design review: the Overview's frame grows on a phone; native checkboxes take the theme; links are ink; only the bar is sticky | The Overview's names were 4.5 px in a fixed frame; white checkboxes were the brightest marks in the dark sheet; teal was both link and state; the sticky header kept 100 px at every scroll position. |
+| 2026-11-28 | The Docket becomes the Inbox, the first lens and what a phone opens on: asks and unread answers on one screen, the counts on the filter chips | The owner asked for it to be obvious what needs him and easy to see his questions and their answers. "Questions" meant sessions asking him on one page and him asking sessions on the other, and one count was shown as four numbers. Two independent reads (behaviour, visual) reached the same two-lane model. |
+| 2026-11-28 | The page carries the newest fifty unread answers and counts them all | A record nobody has read through yet holds hundreds of unread answers: megabytes of text on a phone, and a list nobody scrolls. The count stays true and the page says where the rest are. |

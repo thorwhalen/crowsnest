@@ -102,6 +102,7 @@ __all__ = [
     "OPEN_SCRIPT",
     "REGISTER_CSS",
     "ConsoleStore",
+    "question_marks",
     "render_report",
 ]
 
@@ -3575,6 +3576,60 @@ def _is_unread(row: Mapping[str, Any]) -> bool:
     if row.get("state") == "pending" or row.get("unsure") or _noted(row) == "question":
         return False
     return _view.get().shown(row) not in _QUESTION_READ
+
+
+def question_marks(
+    questions: Sequence[Mapping[str, Any]],
+    *,
+    made_at: str | None = None,
+    now: float | None = None,
+    store: MutableMapping[str, dict] | None = None,
+    plain: bool = False,
+    row_context: RowContext | None = None,
+) -> list[dict]:
+    """What the person's record says of each question, in the order given.
+
+    One mapping per question: ``item`` and ``rev`` (what a mark on it names, empty for a
+    row with no identity), ``shown`` (how the record presents it), ``unread``, and
+    ``noted``: the person's correction of it, ``"question"`` (it was not one), ``"pair"``
+    (the answer shown is not its answer) or ``""``. It is the rule the questions
+    register's count is rendered by, for another view of the same questions (the
+    relations page's inbox), so that a page and the one beside it are counted alike.
+    ``made_at`` is the moment the page is made, read as :func:`render_report` reads it
+    (``now``, in Unix seconds, when there is no such text); ``store`` and ``plain`` mean
+    what they mean there.
+    """
+    import time
+
+    asked = list(questions)
+    if made_at is not None:
+        now = _epoch(made_at)
+    view = _attention_view(
+        (),
+        now=time.time() if now is None else now,
+        store=store,
+        plain=plain,
+        row_context=RowContext() if row_context is None else row_context,
+        with_ids=True,
+        also=asked,
+    )
+    token = _view.set(view)
+    try:
+        marks = []
+        for row in asked:
+            attended = view.of(row)
+            marks.append(
+                {
+                    "item": attended.item if attended else "",
+                    "rev": attended.rev if attended else "",
+                    "shown": attended.shown if attended else "",
+                    "unread": _is_unread(row),
+                    "noted": _noted(row),
+                }
+            )
+        return marks
+    finally:
+        _view.reset(token)
 
 
 def _question_order(rows: Sequence[Mapping[str, Any]]) -> list:

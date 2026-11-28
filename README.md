@@ -204,21 +204,22 @@ A roster is a list and the spawn forest is a tree. The questions a large fleet r
 ```
 crowsnest relations                    # how many nodes and links of each kind
 crowsnest relations --json             # the whole document
-crowsnest relations --page map.html    # one self-contained page: a map, a docket, a board
+crowsnest relations --page map.html    # one self-contained page: an inbox, a map, a board
 ```
 
 The document is a typed graph in the plain nodes-and-links shape. **Nodes**: you, each session, its machine, its folder, the folder's repository, and the issues, pull requests and pages its words refer to. **Links** are read from what is already recorded: who waits on you (triage), who started whom (the spawn record), who messaged whom and what you asked of a session (the event log), where each session works, what it mentions. Every link says how it is known: `recorded`, `observed`, or `inferred`.
 
 **Rules derive the relations nobody recorded**, and a rule is data: a path of link types to walk. *Works in*, then *in repository*, is *works on*; *works on*, then *works on* backwards, is *shares a repository with*; *started* walked more than once is *descends from*. A derived link lists the nodes it went through, so you can ask why it is there. A node shared by more than a dozen others is reported as a hub rather than expanded into pairs.
 
-The page opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. On a phone the page is an ordinary scrolling page and the map is a picture inside it: a swipe that starts on the map scrolls the page, a tap on a mark opens it, and *Expand* gives the map the whole screen and the gestures until you go back. In a wide window the page fits the window and the map takes gestures directly. The page's design contract is `DESIGN.md`. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the docket and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing from anywhere else. The control showing the snapshot's time asks the page's own address whether a newer copy exists: it loads one when there is, and says so plainly when there is not (when the one shown was published, and how often a new one arrives).
+Its first lens is the inbox: what your sessions ask of you, decisions first, and (when `crowsnest publish` sends it beside a report that lists your questions) the answers to your own questions that you have not read, with the counts on the filter chips over the list. The map opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. On a phone the page is an ordinary scrolling page and the map is a picture inside it: a swipe that starts on the map scrolls the page, a tap on a mark opens it, and *Expand* gives the map the whole screen and the gestures until you go back. In a wide window the page fits the window and the map takes gestures directly. The page's design contract is `DESIGN.md`. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the inbox and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing from anywhere else. The control showing the snapshot's time asks the page's own address whether a newer copy exists: it loads one when there is, and says so plainly when there is not (when the one shown was published, and how often a new one arrives).
 
-To have it sent beside the report on the same schedule, and to choose what it opens on (the page names your sessions and their folders and quotes what they asked, sanitised as the report is, so send it only where you alone can read it: behind your own login or in a private folder, never a public bucket):
+To have it sent beside the report on the same schedule, and to choose what it opens on (the page names your sessions and their folders and quotes what they asked and what they answered you, sanitised as the report is, so send it only where you alone can read it: behind your own login or in a private folder, never a public bucket):
 
 ```toml
 [relations]
 to = "me@myserver:/srv/crowsnest/relations.html"   # or a local path; empty: not sent
-entry = "map"          # map, hybrid (the first asks, then the map), docket or board
+entry = "inbox"        # inbox (what waits on you), map, hybrid (the first asks, then the map) or board
+questions_page = "/all/#questions"   # where the full record of your questions is, linked from the inbox
 since = "7d"           # how far back messages are read
 
 [relations.nav]        # links the page shows to your other pages

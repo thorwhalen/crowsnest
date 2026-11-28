@@ -7,6 +7,7 @@ feature: ``crowsnest relations --page FILE`` writes a page holding a non-empty g
 from __future__ import annotations
 
 import json
+import re
 
 import pytest
 from fixtures import demo_home
@@ -14,7 +15,7 @@ from fixtures import demo_home
 from crowsnest import relations as R
 from crowsnest import tools
 from crowsnest.config import RelationsSettings, relations_settings
-from crowsnest.relations_page import ENTRIES, render_relations_page
+from crowsnest.relations_page import ENTRIES, inbox_answers, render_relations_page
 
 REPO = "https://github.com/i2mint/mergeset"
 AS_OF = "2026-01-01T12:00:00+00:00"
@@ -303,6 +304,112 @@ def test_the_page_opens_on_the_lens_it_is_told(entry):
     assert f'"entry": "{entry}"' in render_relations_page(graph(), entry=entry)
 
 
+def config_of(page):
+    return json.loads(page.split('id="relations-config">', 1)[1].split("</script>", 1)[0])
+
+
+def test_the_inbox_carries_the_newest_unread_answers_and_counts_them_all():
+    asked = [
+        {
+            "question": f"Why {i}?",
+            "answer": "Because </script><b>x " + "word " * 900,
+            "a_gist": "" if i else "It was the cache.",
+            "state": "answered",
+            "label": "worker",
+            "session_url": "javascript:alert(1)" if i else "https://claude.ai/code/s1",
+            "answered_at": f"2026-01-0{i + 1}T10:00:00Z",
+            "unread": i != 3,
+            "item": f"item-{i}",
+            "rev": f"rev-{i}",
+        }
+        for i in range(5)
+    ]
+    found = inbox_answers(asked, shown=2, answer_limit=200)
+    assert (found["unread"], found["asked"]) == (4, 5)
+    assert [row["id"] for row in found["rows"]] == ["item-4", "item-2"]
+    assert all(len(row["a"]) <= 200 and row["cut"] for row in found["rows"])
+    kept = inbox_answers([{"answer": "One.\n\n- two\n- three", "unread": True}])
+    assert kept["rows"][0]["a"] == "One.\n\n- two\n- three" and not kept["rows"][0]["cut"]
+    assert found["rows"][0]["url"] == ""  # not a web address: never a link
+    page = render_relations_page(
+        graph(), entry="inbox", answers=found, questions_href="/all/#questions"
+    )
+    config = config_of(page)
+    assert config["answers"]["unread"] == 4 and len(config["answers"]["rows"]) == 2
+    assert config["questions_href"] == "/all/#questions"
+    assert "<" not in page.split('id="relations-config">', 1)[1].split("</script>", 1)[0]
+
+
+def test_the_inbox_lists_by_time_and_shows_what_the_report_would():
+    def row(i, at, **more):
+        return {
+            "question": f"q{i}",
+            "answer": f"a{i}",
+            "state": "answered",
+            "answered_at": at,
+            "unread": True,
+            "session_id": f"s{i}",
+            **more,
+        }
+
+    found = inbox_answers(
+        [
+            row(1, "2026-01-01T10:00:00Z"),
+            row(
+                2, "2026-01-01T12:30:00+01:00"
+            ),  # 11:30 UTC: the newest, whatever it sorts as text
+            row(3, "not a time"),
+            row(4, "2026-01-01T09:00:00.5Z", noted="pair", a_gist="gist"),
+            row(
+                5,
+                "2026-01-01T08:00:00Z",
+                state="elsewhere",
+                answered_by="other",
+                answered_url="https://claude.ai/code/other",
+                session_url="https://claude.ai/code/s5",
+            ),
+            row(6, "2026-01-01T07:00:00Z", state="<b>made up"),
+        ]
+    )
+    rows = found["rows"]
+    assert [r["q"] for r in rows] == ["q2", "q1", "q4", "q5", "q6", "q3"]
+    refused = rows[2]  # the person said this answer is not the question's: none is shown
+    assert (refused["a"], refused["gist"], refused["state"]) == ("", "", "unanswered")
+    assert (rows[3]["by"], rows[3]["url"]) == ("other", "https://claude.ai/code/other")
+    assert rows[0]["by"] == "" and rows[4]["state"] == ""
+    assert rows[0]["node"].startswith("session:") and "session" not in rows[0]
+
+
+def test_the_renderer_takes_only_what_an_inbox_holds_and_links_only_to_pages():
+    odd = config_of(render_relations_page(graph(), answers={}))
+    assert odd["answers"] == {"rows": [], "unread": 0, "asked": 0}
+    short = config_of(render_relations_page(graph(), answers={"rows": [{"q": "x"}]}))
+    assert short["answers"]["unread"] == 1  # never fewer than the rows it shows
+    for address in ("//evil.example/x", "javascript:alert(1)", "all/#questions"):
+        page = render_relations_page(graph(), questions_href=address)
+        assert "questions_href" not in config_of(page)
+
+
+def test_a_questions_page_that_is_not_an_address_is_refused(tmp_path):
+    cfg = tmp_path / "config.toml"
+    cfg.write_text("[relations]\nquestions_page = 'all/#questions'\n")
+    with pytest.raises(ValueError, match="questions_page must be a page"):
+        relations_settings(path=cfg)
+    cfg.write_text("[relations]\nquestions_page = '/all/#questions'\nentry = 'docket'\n")
+    assert relations_settings(path=cfg).questions_page == "/all/#questions"
+
+
+def test_a_page_made_without_the_questions_has_no_answers_lane():
+    config = config_of(render_relations_page(graph(), entry="inbox"))
+    assert "answers" not in config and "questions_href" not in config
+    # an address that is not a page of one's own site or a web address is not a link
+    odd = render_relations_page(graph(), questions_href="javascript:alert(1)")
+    assert "questions_href" not in config_of(odd)
+    # no unread answer is not the same as no questions: the lane is there, and empty
+    none = render_relations_page(graph(), answers=inbox_answers([]))
+    assert config_of(none)["answers"] == {"rows": [], "unread": 0, "asked": 0}
+
+
 def test_an_unknown_entry_is_refused():
     with pytest.raises(ValueError, match="entry"):
         render_relations_page(graph(), entry="spiral")
@@ -361,6 +468,50 @@ def test_publish_sends_the_relations_page_beside_the_report(tmp_path, monkeypatc
     sent = beside.read_text()
     assert '"entry": "docket"' in sent and 'href="/all/"' in sent
     assert (tmp_path / "relations.html").is_file()  # kept beside the kept page
+    # the report listed no questions, so this page has no answers lane
+    assert "answers" not in config_of(sent)
+
+
+def test_publish_gives_the_inbox_the_questions_the_report_drew(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    from fixtures import assistant, user, write_transcript
+
+    monkeypatch.setattr(tools, "live_sessions", lambda *a, **k: [])
+    monkeypatch.setenv("CROWSNEST_DATA_DIR", str(tmp_path / "data"))
+
+    def ago(minutes):
+        then = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        return then.isoformat().replace("+00:00", "Z")
+
+    home = demo_home(tmp_path)
+    write_transcript(
+        home,
+        "/w/demo",
+        "s9",
+        [
+            user("Fix the build. Why is CI slow?", at=ago(30), session="s9", uuid="p1"),
+            assistant("Because the cache was cold.", at=ago(29), session="s9"),
+            user("Thanks.", at=ago(28), session="s9", uuid="p2"),
+        ],
+    )
+    cfg = tmp_path / "config.toml"
+    page, beside = tmp_path / "out" / "index.html", tmp_path / "out" / "relations.html"
+    cfg.write_text(
+        f"[publish]\nto = '{page}'\nquestions = true\n"
+        f"[relations]\nto = '{beside}'\nentry = 'inbox'\nquestions_page = '/all/#questions'\n"
+    )
+    tools.publish(config=cfg, home=home, page_path=tmp_path / "kept.html", tz="UTC")
+    config = config_of(beside.read_text())
+    answers = config["answers"]
+    assert answers["unread"] == len(answers["rows"]) <= answers["asked"]
+    asked = {row["q"]: row for row in answers["rows"]}
+    assert asked["Why is CI slow?"]["a"] == "Because the cache was cold."
+    assert asked["Why is CI slow?"]["id"] and asked["Why is CI slow?"]["rev"]
+    assert config["questions_href"] == "/all/#questions"
+    # the same number the report's own register shows
+    shown = re.search(r"<b>(\d+)</b> <span>unread</span>", page.read_text())
+    assert int(shown.group(1)) == answers["unread"]
 
 
 def test_publish_without_the_table_sends_one_page(tmp_path, monkeypatch):

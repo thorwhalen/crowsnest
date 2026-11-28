@@ -37,9 +37,9 @@ svg.i{width:1.25rem;height:1.25rem;flex:none;fill:none;stroke:currentColor;strok
 .sentence b{color:var(--ink);font-weight:600}
 
 /* ---- lenses ---- */
-#lens-map,#docket,#board{display:none}
+#lens-map,#inbox,#board{display:none}
 body[data-lens="map"] #lens-map{display:block}
-body[data-lens="docket"] #docket,body[data-lens="board"] #board{display:block;padding:.5rem .75rem 1rem;max-width:52rem;margin:0 auto}
+body[data-lens="inbox"] #inbox,body[data-lens="board"] #board{display:block;padding:.5rem .75rem 1rem;max-width:52rem;margin:0 auto}
 #brief{display:none}
 body.hybrid[data-lens="map"] #brief{display:block;padding:.2rem .75rem .1rem;border-bottom:1px solid var(--rule)}
 #brief .all{display:flex;align-items:center;gap:.25rem;border:0;background:none;color:var(--ink);font-size:.875rem;font-weight:600;min-height:2.75rem;padding:0;cursor:pointer}
@@ -81,7 +81,48 @@ body.exploring .maphead{flex-wrap:wrap}
 body.exploring #views{order:5;flex-basis:100%}
 body.exploring #zoom-out{margin-left:auto}
 
-/* ---- rows (the brief, the docket, a card's sessions) ---- */
+/* ---- the inbox: the chips carry the counts, so the sentence above the other lenses is not said twice ---- */
+.boxes{flex:none;padding:.4rem .75rem;background:var(--surface);border-bottom:1px solid var(--rule)}
+.pick .n{margin-left:.4rem;font-family:var(--mono);font-size:.75rem;font-weight:400;color:var(--ink-soft)}
+body[data-lens="inbox"] .sentence{display:none}
+.lane+.lane{border-top:1px solid var(--rule);margin-top:.6rem}
+.reg h2.quiet{font-family:inherit;font-size:.875rem;font-weight:600;color:var(--ink-soft)}
+.reg h3{margin:.9rem 0 0;font-family:var(--mono);font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+.reg-note{margin:0 0 .15rem;font-size:.75rem;color:var(--ink-soft)}
+.row-kind{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;font-size:.75rem;color:var(--ink-soft)}
+.row-kind b{font-weight:600;color:var(--ink)}
+.row-kind time{font-family:var(--mono)}
+.ans{border-bottom:1px solid var(--rule-soft)}
+.ans>summary{display:flex;align-items:flex-start;gap:.5rem;list-style:none;cursor:pointer;padding:.5rem 0;min-height:2.75rem}
+.ans-text{flex:1 1 auto;min-width:0}
+.ans .turn{flex:none;display:flex;margin-top:.1rem;color:var(--ink-soft);transition:transform .12s}
+.ans .turn svg.i{width:1rem;height:1rem}
+.ans[open]{margin:0 -.75rem;padding:0 .75rem;background:var(--surface)}
+.ans[open] .turn{transform:rotate(90deg)}
+.ans>summary::-webkit-details-marker{display:none}
+.ans-q,.ans-a{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
+.ans-q{-webkit-line-clamp:2;font-size:.875rem;color:var(--ink-soft)}
+.ans-q b{font-weight:600}
+.ans-a{-webkit-line-clamp:3;font-size:1rem;color:var(--ink);margin-top:.1rem}
+.ans.none .ans-a{color:var(--ink-soft)}
+.ans[open] .ans-q{display:block}
+.ans[open] .ans-a{display:none}
+.ans-full{max-width:65ch;overflow-wrap:anywhere;font-size:1rem;line-height:1.5}
+.ans-full p{margin:0 0 .6rem}
+.ans-full .ans-item{margin:0 0 .25rem;padding-left:1rem;text-indent:-1rem}
+.ans-full .ans-head{font-weight:600}
+.ans-full code,.ans-full pre{font-family:var(--mono);font-size:.875rem}
+.ans-full pre{margin:0 0 .6rem;padding:.5rem .6rem;border:1px solid var(--rule);border-radius:.5rem;overflow-x:auto;white-space:pre}
+.ans-full .ans-line{margin:0;font-family:var(--mono);font-size:.75rem;white-space:pre;overflow-x:auto}
+.ans-full .goes{color:var(--ink-soft);font-size:.875rem}
+.ans-full a{color:var(--ink)}
+.ans-links{display:flex;flex-wrap:wrap;align-items:center;gap:.2rem 1rem;margin:0 0 .4rem;font-size:.875rem;color:var(--ink-soft)}
+.ans-links a{display:inline-flex;align-items:center;gap:.3rem;min-height:2.75rem;font-weight:600;color:var(--ink)}
+.ans-links a svg.i,.btn svg.i{width:1rem;height:1rem}
+.btn svg.i{margin-left:.35rem}
+.to-all{display:flex;align-items:center;gap:.25rem;width:100%;min-height:2.75rem;padding:0;border:0;background:none;color:var(--ink);font-size:.875rem;font-weight:600;text-decoration:none;cursor:pointer}
+.to-all svg.i{width:1rem;height:1rem}
+/* ---- rows (the brief, the inbox, a card's sessions) ---- */
 .reg h2,.fold>summary{font-family:var(--serif);font-weight:500;font-size:1.25rem;margin:1rem 0 .2rem;display:flex;align-items:baseline;gap:.5rem}
 .fold>summary{cursor:pointer;min-height:2.75rem;align-items:center;color:var(--ink-soft)}
 .count{font-family:var(--mono);font-size:.75rem;color:var(--ink-soft)}
@@ -153,7 +194,7 @@ body.exploring #zoom-out{margin-left:auto}
   .fresh{margin-left:0}
   main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   body[data-lens="map"] #lens-map{display:flex;flex:1 1 auto;min-height:0}
-  body[data-lens="docket"] #docket,body[data-lens="board"] #board{flex:1 1 auto;overflow-y:auto;width:100%}
+  body[data-lens="inbox"] #inbox,body[data-lens="board"] #board{flex:1 1 auto;overflow-y:auto;width:100%}
   body.hybrid[data-lens="map"] #brief{width:22rem;flex:none;border-bottom:0;border-right:1px solid var(--rule);overflow-y:auto;padding:.4rem .9rem}
   .stage{flex:1 1 auto;min-width:0;min-height:0}
   .mapbox{flex:1 1 auto;height:auto;min-height:0}
@@ -163,6 +204,7 @@ body.exploring #zoom-out{margin-left:auto}
   .foot{display:none}
   #sheet,#layers{left:auto;top:0;bottom:0;width:24rem;max-height:none;border-radius:0;border-top:0;border-left:1px solid var(--rule);padding-top:.8rem}
   body.sheet-open .stage{margin-right:24rem}
+  body.sheet-open[data-lens="inbox"] #inbox,body.sheet-open[data-lens="board"] #board{width:calc(100% - 24rem);margin:0 24rem 0 auto}
   .backdrop{display:none}
 }
 @media (hover:hover) and (pointer:fine){

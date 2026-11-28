@@ -4,9 +4,10 @@
 person looks at: it puts that document into a page that opens on the few things worth
 seeing and lets everything else be reached from there.
 
-**Three lenses, one document.** The *map* draws the nodes and links; the *docket* lists
-the sessions that wait on their person, most pressing first; the *board* gives one card
-per place (a repository or a folder). They are three readings of the same
+**Three lenses, one document.** The *inbox* lists what waits on the person: the sessions
+that ask something of them, most pressing first, and the answers to their own questions
+they have not read (:func:`inbox_answers`). The *map* draws the nodes and links; the
+*board* gives one card per place (a repository or a folder). They are three readings of the same
 nodes-and-links document, so they never disagree, and a view that cannot be read as a
 picture (a small screen, a screen reader) has the same content as a list.
 
@@ -52,8 +53,8 @@ never read from a global.
 
 >>> from crowsnest.relations import relations
 >>> doc = relations([{'session_id': 'a1', 'label': 'parser', 'cwd': '/w/x', 'project': 'x'}])
->>> page = render_relations_page(doc, nav=[('Everything', '/all/')], entry='docket')
->>> page.startswith('<!doctype html>'), '"entry": "docket"' in page, 'href="/all/"' in page
+>>> page = render_relations_page(doc, nav=[('Everything', '/all/')], entry='inbox')
+>>> page.startswith('<!doctype html>'), '"entry": "inbox"' in page, 'href="/all/"' in page
 (True, True, True)
 >>> '<script src' in page or 'https://' in page.split('<script', 1)[0]
 False
@@ -64,14 +65,40 @@ from __future__ import annotations
 import html as _html
 import json
 from collections.abc import Mapping, Sequence
+from datetime import datetime, timezone
 from pathlib import Path
 
 from openloops.dashboard import CSS as _CSS
 
-__all__ = ["DFLT_STALE_MINUTES", "ENTRIES", "LIBRARY", "render_relations_page"]
+from crowsnest.config import is_page_address
 
-#: The lens a page may open on. ``hybrid`` is the map with the first few asks above it.
-ENTRIES = ("map", "hybrid", "docket", "board")
+__all__ = [
+    "ANSWERS_SHOWN",
+    "DFLT_STALE_MINUTES",
+    "ENTRIES",
+    "LIBRARY",
+    "inbox_answers",
+    "render_relations_page",
+]
+
+#: The lens a page may open on. ``inbox`` is what waits on the owner; ``hybrid`` is the
+#: map with the first few asks above it; ``docket`` is the inbox's former name.
+ENTRIES = ("inbox", "map", "hybrid", "docket", "board")
+
+#: How much of one answer the page carries. The whole answer is in its session; the page
+#: is read on a phone and holds every unread answer at once.
+ANSWER_LIMIT = 3000
+
+#: How much of one question the page carries.
+QUESTION_LIMIT = 400
+
+#: What a question's state may be on the page (:mod:`crowsnest.questions`); anything else
+#: is sent as no state at all.
+_STATES = ("answered", "partly", "elsewhere", "unanswered", "pending")
+
+#: How many unread answers the page carries, the newest first. The count it shows is of
+#: all of them; the older ones are in the full record the inbox links to.
+ANSWERS_SHOWN = 50
 
 #: The drawing library inlined into the page, and where its licence is kept.
 LIBRARY = "cytoscape.min.js"
@@ -100,6 +127,7 @@ _PAGE = """<!doctype html>
 <button id="nav-open" class="iconbtn" type="button" aria-label="Other pages" aria-expanded="false"{nav_hidden}>{icon_menu}</button></div>
 <nav id="nav" aria-label="Other pages">{nav}</nav>
 </header>
+<div id="boxes" class="picks boxes" role="group" aria-label="What to list" hidden></div>
 <p id="sentence" class="sentence" role="status"></p>
 <main>
 <section id="lens-map" aria-label="Map"><div id="brief"></div>
@@ -111,12 +139,12 @@ _PAGE = """<!doctype html>
 <button id="fit" class="tool" type="button" hidden>Fit</button>
 <button id="layers-open" class="iconbtn" type="button" aria-label="Layers and key">{icon_layers}</button></div>
 <p id="view-note" hidden></p>
-<div class="mapbox"><div id="cy" role="img" aria-label="The sessions and what they relate to. The docket and the board list the same sessions."></div>
+<div class="mapbox"><div id="cy" role="img" aria-label="The sessions and what they relate to. The inbox and the board list the same sessions."></div>
 <div id="touch" class="touch"></div><p id="map-empty" hidden></p>
 <button id="explore" class="tool expand" type="button">{icon_expand}Expand</button></div>
 <div id="rest" class="rest" hidden></div>
 </div></section>
-<section id="docket" aria-label="Docket"></section>
+<section id="inbox" aria-label="Inbox"></section>
 <section id="board" aria-label="Board"></section>
 </main>
 <footer id="foot" class="foot"></footer>
@@ -183,6 +211,103 @@ def _nav(nav: Sequence[Sequence[str]] | Mapping[str, str], current: str) -> str:
     return "".join(out)
 
 
+def inbox_answers(
+    questions: Sequence[Mapping],
+    *,
+    shown: int = ANSWERS_SHOWN,
+    answer_limit: int = ANSWER_LIMIT,
+    question_limit: int = QUESTION_LIMIT,
+) -> dict:
+    """The owner's unread answers, as the page's inbox lists them.
+
+    ``questions`` are question rows that say what the owner's record holds of each
+    (``unread``, ``item``, ``rev``: :func:`crowsnest.report.question_marks`). The result
+    is ``{"rows", "unread", "asked"}``: the ``shown`` newest unread ones, each with its
+    question, its answer (the gist when there is one, and the words with their line
+    breaks, up to ``answer_limit``), its session and when; how many are unread in all; and how many
+    questions there are. Every string goes through the page's sanitiser, as every string
+    of the relations document does.
+
+    >>> found = inbox_answers([
+    ...     {"question": "Why so slow?", "answer": "A low priority.", "state": "answered",
+    ...      "label": "cn", "answered_at": "2026-11-28T13:31:00Z", "unread": True,
+    ...      "item": "q:1", "rev": "r1"},
+    ...     {"question": "Read already?", "answer": "Yes.", "state": "answered"}])
+    >>> found["unread"], found["asked"], found["rows"][0]["q"], found["rows"][0]["who"]
+    (1, 2, 'Why so slow?', 'cn')
+    >>> many = [{"question": f"q{i}", "answered_at": f"2026-11-{i:02}", "unread": True}
+    ...         for i in range(1, 8)]
+    >>> few = inbox_answers(many, shown=2)
+    >>> few["unread"], [row["q"] for row in few["rows"]]
+    (7, ['q7', 'q6'])
+    """
+    from crowsnest.relations import _session_id_of, _text, _web
+
+    def when(row) -> float:
+        """When the row was answered (else asked), in Unix seconds; 0 when unknown, so
+        a row with no readable time is listed last and never ahead of today's."""
+        text = str(row.get("answered_at") or row.get("asked_at") or "").strip()
+        if text.endswith(("Z", "z")):
+            text = text[:-1] + "+00:00"
+        try:
+            found = datetime.fromisoformat(text)
+        except ValueError:
+            return 0.0
+        if found.tzinfo is None:
+            found = found.replace(tzinfo=timezone.utc)
+        return found.timestamp()
+
+    asked = list(questions)
+    unread = sorted((r for r in asked if r.get("unread")), key=when, reverse=True)
+
+    def beginning(text) -> tuple[str, bool]:
+        """Sanitised ``text`` with its line breaks, and whether it was cut to fit: at
+        the end of a line or a sentence when that keeps half of it, else of a word."""
+        clean = _text(text)
+        if len(clean) <= answer_limit:
+            return clean, False
+        window = clean[:answer_limit]
+        stop = max(window.rfind("\n"), window.rfind(". ") + 1)
+        if stop < answer_limit // 2:
+            stop = window.rfind(" ")
+        return window[: stop if stop > 0 else answer_limit].rstrip(), True
+
+    rows = []
+    for row in unread[: max(0, shown)]:
+        state = str(row.get("state") or "")
+        state = state if state in _STATES else ""
+        # The person said the answer shown is not this question's: none is shown, as on
+        # the report, until another comes.
+        refused = row.get("noted") == "pair"
+        words, cut = ("", False) if refused else beginning(row.get("answer"))
+        elsewhere = state == "elsewhere" and not refused
+        rows.append(
+            {
+                "id": _text(row.get("item"), limit=80),
+                "rev": _text(row.get("rev"), limit=80),
+                "q": _text(
+                    row.get("q_gist") or row.get("question"), limit=question_limit
+                ),
+                "gist": (
+                    "" if refused else _text(row.get("a_gist"), limit=question_limit)
+                ),
+                "a": words,
+                "cut": cut,
+                "state": "unanswered" if refused else state,
+                "who": _text(row.get("label"), limit=80),
+                # the node of the session it was asked in, for the place it works in
+                "node": _session_id_of(row) if row.get("session_id") else "",
+                "asked": _text(row.get("asked_at"), limit=40),
+                "answered": _text(row.get("answered_at"), limit=40),
+                # where the answer is: the session that gave it, when that is another one
+                "by": _text(row.get("answered_by"), limit=80) if elsewhere else "",
+                "url": _web(row.get("answered_url") if elsewhere else None)
+                or _web(row.get("session_url")),
+            }
+        )
+    return {"rows": rows, "unread": len(unread), "asked": len(asked)}
+
+
 def render_relations_page(
     doc: Mapping,
     *,
@@ -192,6 +317,8 @@ def render_relations_page(
     current: str = "",
     stale_minutes: int = DFLT_STALE_MINUTES,
     every: float | None = None,
+    answers: Mapping | None = None,
+    questions_href: str = "",
 ) -> str:
     """``doc`` (:func:`crowsnest.relations.relations`'s document) as one self-contained
     HTML page.
@@ -203,6 +330,11 @@ def render_relations_page(
     them. ``stale_minutes`` is when the page's "as of" turns into a warning, and
     ``every`` is how many seconds usually pass between two snapshots, when that is
     known: the page says it when asked for a newer snapshot and there is none.
+
+    ``answers`` (:func:`inbox_answers`, whose strings are sanitised: pass nothing else)
+    are the owner's unread answers, listed in the inbox under what the sessions ask; ``None`` leaves that lane out, which is not the
+    same as an empty one ("nothing unread"). ``questions_href`` is the address of the
+    full record of the owner's questions, linked under them.
     """
     if entry not in ENTRIES:
         raise ValueError(f"entry must be one of {', '.join(ENTRIES)}, not {entry!r}")
@@ -210,6 +342,15 @@ def render_relations_page(
     config = {"entry": entry, "stale_minutes": int(stale_minutes)}
     if every and every > 0:
         config["every"] = round(float(every))
+    if answers is not None:
+        rows = [dict(row) for row in answers.get("rows") or ()]
+        config["answers"] = {
+            "rows": rows,
+            "unread": max(int(answers.get("unread") or 0), len(rows)),
+            "asked": int(answers.get("asked") or 0),
+        }
+    if is_page_address(questions_href):
+        config["questions_href"] = str(questions_href).strip()
     return _PAGE.format(
         title=_html.escape(title),
         tokens=_TOKENS,

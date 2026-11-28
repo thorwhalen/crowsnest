@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from crowsnest import relations as R
-from crowsnest.relations_page import render_relations_page
+from crowsnest.relations_page import inbox_answers, render_relations_page
 
 sync_api = pytest.importorskip("playwright.sync_api")
 
@@ -230,6 +230,180 @@ def test_expand_gives_the_map_the_screen_and_the_gestures_until_back(phone):
 # --------------------------------------------------------------------------------------
 # Reload: it asks whether a newer snapshot exists before it reloads
 # --------------------------------------------------------------------------------------
+
+
+def _answers(count=7):
+    return inbox_answers(
+        [
+            {
+                "question": f"Why is thing {i} slow?",
+                "answer": f"Because of cause {i}. "
+                + (
+                    "\n\nIt is **the cache**: see [the run](https://example.org/run), "
+                    "https://example.org/log. Not [this](javascript:alert(1)).\n\n"
+                    "- first item\n- second item"
+                    if i == 0
+                    else "More words follow here. " * 30
+                ),
+                "a_gist": f"Cause {i}.",
+                "state": "answered",
+                "label": f"session-{i}",
+                "session_url": f"https://claude.ai/code/s{i}",
+                # two today, three this week, the rest older
+                "answered_at": f"{'2026-01-01' if i < 2 else '2025-12-29' if i < 5 else '2025-12-01'}T10:{59 - i:02}:00+00:00",
+                "unread": True,
+                "item": f"item-{i}",
+                "rev": f"rev-{i}",
+            }
+            for i in range(count)
+        ],
+        shown=5,
+    )
+
+
+@pytest.fixture
+def inbox(browser, tmp_path):
+    doc = R.relations(_rows(), as_of="2026-01-01T12:00:00+00:00")
+    html = render_relations_page(
+        doc, entry="inbox", answers=_answers(), questions_href="/all/#questions"
+    )
+    target = tmp_path / "relations.html"
+    target.write_text(html, encoding="utf-8")
+    context = browser.new_context(
+        viewport=PHONE,
+        device_scale_factor=2,
+        is_mobile=True,
+        has_touch=True,
+        timezone_id="UTC",
+    )
+    page = context.new_page()
+    errors: list[str] = []
+    page.on("pageerror", lambda exc: errors.append(str(exc)))
+    page.goto(target.as_uri())
+    page.wait_for_timeout(400)
+    page.errors, page.target = errors, target
+    yield page
+    context.close()
+
+
+def box(page, name):
+    page.locator("#boxes .pick", has_text=name).tap()
+    page.wait_for_timeout(250)
+
+
+def counted(page):
+    """The number each chip shows, by its name."""
+    return page.evaluate(
+        "() => Object.fromEntries([...document.querySelectorAll('#boxes .pick')].map("
+        "(e) => [e.firstChild.textContent, e.querySelector('.n') ? "
+        "Number(e.querySelector('.n').textContent) : null]))"
+    )
+
+
+def test_the_inbox_opens_on_what_waits_and_starts_high_on_a_phone(inbox):
+    page = inbox
+    assert page.get_attribute("body", "data-lens") == "inbox"
+    # All has no number: things to do and things to read do not add up
+    assert counted(page) == {"All": None, "Asks": 14, "Answers": 7}
+    top = page.evaluate(
+        "() => document.querySelector('#asks .row').getBoundingClientRect().top"
+    )
+    assert top < PHONE["height"] * 0.25, f"the first ask starts at {top} px"
+    # both lanes are on the first screen, and the sentence the chips replace is not said
+    assert page.locator("#answers h2").bounding_box()["y"] < PHONE["height"]
+    assert not page.locator("#sentence").is_visible()
+    assert page.locator("#asks .row").count() == 3
+    assert page.locator("#answers .ans").count() == 2
+    # the row that opens the rest says what a tap gives, and where the others are
+    assert page.locator("#answers .to-all").inner_text() == "3 more answers on this page"
+    assert "2 older unread answers" in page.locator("#answers .reg-note").inner_text()
+    # what does not wait is there, folded, behind headings a thumb can hit
+    folds = page.locator("#not-waiting details.fold")
+    assert folds.count() == 3 and page.locator("#not-waiting details[open]").count() == 0
+    assert all(b["height"] >= 44 for b in (f.bounding_box() for f in folds.all()))
+    assert page.evaluate("document.documentElement.scrollWidth") <= PHONE["width"]
+    assert page.errors == []
+
+
+def test_each_chip_lists_what_it_counts(inbox):
+    page = inbox
+    entries = page.evaluate("history.length")
+    page.locator("#asks .to-all").tap()  # "11 more asks" is the Asks chip
+    page.wait_for_timeout(250)
+    assert page.locator("#boxes .pick[aria-pressed=true]").inner_text().startswith("Asks")
+    assert page.locator("#asks .row").count() == counted(page)["Asks"]
+    assert page.locator("#answers").count() == 0
+    assert page.evaluate("window.scrollY") == 0
+    box(page, "Answers")
+    assert "box=answers" in page.evaluate("location.hash")
+    # the page carries the five newest; it counts all seven and says where the others are
+    assert page.locator("#answers .ans").count() == 5
+    assert page.locator("#answers h2 .count").inner_text() == "7 unread"
+    assert page.locator("#answers h3").all_inner_texts() == ["TODAY", "THIS WEEK"]
+    assert (
+        "2 older unread answers are not on this page"
+        in page.locator("#answers .reg-note").inner_text()
+    )
+    link = page.locator("#answers a.to-all")
+    assert link.get_attribute("href") == "/all/#questions"
+    assert link.get_attribute("target") == "_top"
+    # a filter is the same screen: Back does not walk through them
+    assert page.evaluate("history.length") == entries
+
+
+def test_an_answer_opens_in_place_and_an_ask_opens_its_session(inbox):
+    page = inbox
+    first = page.locator("#answers .ans").first
+    assert "You asked: Why is thing 0 slow?" in first.inner_text()
+    assert first.locator(".ans-a").inner_text() == "Cause 0."
+    first.locator("summary").tap()
+    page.wait_for_timeout(200)
+    assert first.locator(".ans-full").is_visible()
+    words = first.locator(".ans-full")
+    assert words.inner_text().startswith("Because of cause 0.")
+    # what the session wrote reads as it was written, and only web addresses are links
+    assert words.locator("b").inner_text() == "the cache"
+    assert words.locator(".ans-item").all_inner_texts() == [
+        "- first item",
+        "- second item",
+    ]
+    assert [a.get_attribute("href") for a in words.locator("a").all()] == [
+        "https://example.org/run",
+        "https://example.org/log",
+    ]
+    assert "[this](javascript:alert(1))" in words.inner_text()
+    # a link a session wrote says where it goes, beside its words
+    assert words.locator(".goes").inner_text().strip() == "(example.org)"
+    assert "**" not in first.locator("summary").inner_text()
+    opened = first.locator(".ans-links a")
+    assert opened.get_attribute("href") == "https://claude.ai/code/s0"
+    assert opened.get_attribute("target") == "_blank"
+    page.locator("#asks .row").first.tap()
+    page.wait_for_timeout(300)
+    assert page.locator("#sheet").is_visible()
+    page.go_back()
+    page.wait_for_timeout(300)
+    assert not page.locator("#sheet").is_visible()
+    assert page.get_attribute("body", "data-lens") == "inbox"
+
+
+def test_a_link_to_the_docket_opens_the_inbox_and_no_questions_means_no_lane(
+    browser, tmp_path
+):
+    doc = R.relations(_rows(), as_of="2026-01-01T12:00:00+00:00")
+    target = tmp_path / "relations.html"
+    target.write_text(render_relations_page(doc, entry="map"), encoding="utf-8")
+    context = browser.new_context(viewport=PHONE, is_mobile=True, has_touch=True)
+    page = context.new_page()
+    page.goto(target.as_uri() + "#lens=docket&box=answers")
+    page.wait_for_timeout(400)
+    assert page.get_attribute("body", "data-lens") == "inbox"
+    # one lane: nothing to filter, so no chips; the lane's heading carries the count
+    assert not page.locator("#boxes").is_visible()
+    assert page.locator("#asks h2 .count").inner_text() == "14"
+    assert page.locator("#asks .row").count() == 3  # an unknown box is "All"
+    assert page.locator("#answers").count() == 0
+    context.close()
 
 
 @pytest.fixture
