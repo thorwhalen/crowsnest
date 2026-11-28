@@ -126,17 +126,21 @@
     var m = Math.max(0, Math.round(((from || new Date()) - d) / 60000));
     return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago';
   }
+  var FRESH = { newer: false, checked: null };
   function tickAge() {
     var m = Math.round((new Date() - AS_OF) / 60000), old = m >= (CFG.stale_minutes || 10);
-    var pill = $('fresh'), how = age(DOC.graph.as_of).replace(' ago', '');
-    if (!pill.hasAttribute('data-pending')) {
-      pill.textContent = old ? how + ' old' : clock(DOC.graph.as_of);
-      pill.classList.toggle('stale', old);
-      pill.setAttribute('aria-label', old ? 'This snapshot is ' + how + ' old, from ' + clock(DOC.graph.as_of) + '. Reload.' : 'Snapshot from ' + clock(DOC.graph.as_of) + '. Reload.');
-      if (old) pill.setAttribute('role', 'alert'); else pill.removeAttribute('role');
-    }
-    $('foot').textContent = 'As of ' + new Date(DOC.graph.as_of).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + (m >= 1 ? ', ' + age(DOC.graph.as_of) : '') + '.' + ($('foot').hasAttribute('data-same') ? ' Reloaded just now: nothing newer has been published.' : '');
-    if ($('foot').hasAttribute('data-same') && !pill.hasAttribute('data-pending')) pill.textContent = 'still ' + clock(DOC.graph.as_of);
+    var pill = $('fresh'), how = age(DOC.graph.as_of).replace(' ago', ''), foot = $('foot');
+    var said = 'As of ' + new Date(DOC.graph.as_of).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + (m >= 1 ? ', ' + age(DOC.graph.as_of) : '') + '.';
+    var every = CFG.every ? ' A new one usually arrives about every ' + Math.max(1, Math.round(CFG.every / 60)) + ' min.' : '';
+    if (FRESH.newer) said += ' A newer snapshot is ready: tap the time at the top to load it.';
+    else if (FRESH.checked) said += ' Checked at ' + clock(FRESH.checked.toISOString()) + ': this is the latest snapshot there is' + (MINE ? ', published at ' + clock(new Date(MINE).toISOString()) : '') + '.' + every + ' This page says when one does.';
+    foot.textContent = said;
+    if (pill.hasAttribute('data-pending')) return;
+    pill.textContent = FRESH.newer ? 'New snapshot' : (old ? how + ' old' : clock(DOC.graph.as_of));
+    pill.classList.toggle('stale', old && !FRESH.newer);
+    pill.classList.toggle('new', FRESH.newer);
+    pill.setAttribute('aria-label', FRESH.newer ? 'A newer snapshot is ready. Load it.' : (old ? 'This snapshot is ' + how + ' old, from ' + clock(DOC.graph.as_of) + '. Check for a newer one.' : 'Snapshot from ' + clock(DOC.graph.as_of) + '. Check for a newer one.'));
+    if ((old || FRESH.newer) && pill.getAttribute('role') !== 'status') pill.setAttribute('role', 'status');
   }
 
   /* ---------- the sentence every lens starts with ---------- */
@@ -808,14 +812,44 @@
 
   /* ---------- wiring ---------- */
   $('sheet-close').addEventListener('click', closeSheet);
-  $('fresh').addEventListener('click', function () {
-    this.setAttribute('data-pending', ''); this.setAttribute('aria-busy', 'true'); this.textContent = 'Reloading…';
-    try { sessionStorage.setItem('crowsnest:relations:asof', DOC.graph.as_of); } catch (e) { /* no storage here: the reload still happens */ }
+  /* ---------- is there a newer snapshot? The page asks only its own address ---------- */
+  var HTTP = /^https?:$/.test(location.protocol) && !!window.fetch;
+  var MINE = Date.parse(document.lastModified) || 0; /* when the copy being shown was written, as its server said */
+  function latest() { /* when the copy now at this address was written; fails where that cannot be learned */
+    var stop = window.AbortController ? new AbortController() : null;
+    return fetch(location.href.split('#')[0], { cache: 'no-store', credentials: 'same-origin', signal: stop ? stop.signal : undefined }).then(function (r) {
+      var when = Date.parse(r.headers.get('Last-Modified') || '');
+      if (stop) stop.abort(); /* the headers are all that was wanted */
+      if (!r.ok || !when) throw new Error(String(r.status));
+      return when;
+    });
+  }
+  function load() { /* the newer copy, at the same view and the same place on the page */
+    try { sessionStorage.setItem('crowsnest:relations:y', String(window.scrollY)); } catch (e) { /* no storage here: the reload still happens */ }
     location.reload();
+  }
+  $('fresh').addEventListener('click', function () {
+    var pill = this;
+    if (pill.hasAttribute('data-pending')) return;
+    pill.setAttribute('data-pending', ''); pill.setAttribute('aria-busy', 'true'); pill.textContent = FRESH.newer ? 'Loading…' : 'Checking…';
+    if (FRESH.newer || !HTTP || !MINE) return load();
+    latest().then(function (when) {
+      if (when - MINE >= 1000) return load();
+      pill.removeAttribute('data-pending'); pill.removeAttribute('aria-busy');
+      FRESH.checked = new Date(); /* nothing newer exists: say so, and do not pretend to reload */
+      tickAge();
+    }, load); /* could not ask (signed out, offline): reload and let the page say what happened */
   });
+  function watchForNewer() {
+    if (!HTTP || !MINE || FRESH.newer || document.visibilityState === 'hidden') return;
+    latest().then(function (when) { if (when - MINE >= 1000) { FRESH.newer = true; tickAge(); } }, function () { /* asked again in a minute */ });
+  }
+  setInterval(watchForNewer, 60000);
+  document.addEventListener('visibilitychange', watchForNewer);
   try {
-    if (sessionStorage.getItem('crowsnest:relations:asof') === DOC.graph.as_of) $('foot').setAttribute('data-same', '1');
-    sessionStorage.removeItem('crowsnest:relations:asof');
+    var kept = sessionStorage.getItem('crowsnest:relations:y');
+    sessionStorage.removeItem('crowsnest:relations:y');
+    if (kept) setTimeout(function () { window.scrollTo(0, Number(kept) || 0); }, 0);
   } catch (e) { /* no storage */ }
   $('explore').addEventListener('click', function () { press(this); explore(true); });
   function zoomBy(k) { if (cy) cy.animate({ zoom: { level: cy.zoom() * k, renderedPosition: { x: $('cy').clientWidth / 2, y: $('cy').clientHeight / 2 } } }, { duration: 160 }); }

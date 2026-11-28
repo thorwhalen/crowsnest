@@ -1735,6 +1735,22 @@ def relations(
     )
 
 
+#: The pause a scheduler leaves between two publish runs, in seconds: what is added to a
+#: run's own length to say how often a snapshot arrives. A minute is the schedule the
+#: README sets up.  # seam candidate: a [publish] interval key, if schedules ever differ
+SCHEDULE_PAUSE = 60.0
+
+
+def _snapshot_period() -> float | None:
+    """How many seconds usually pass between two published snapshots, from the last run's
+    record; ``None`` when nothing has published from this machine."""
+    from crowsnest import publish as _publish
+    from crowsnest.paths import data_dir
+
+    found = _publish.state(data_dir() / "publish")
+    return found["seconds"] + SCHEDULE_PAUSE if found.get("known") else None
+
+
 def relations_page(
     *,
     rows: Sequence[Mapping] | None = None,
@@ -1767,6 +1783,7 @@ def relations_page(
         title=settings.title if title is None else title,
         entry=settings.entry if entry is None else entry,
         nav=settings.nav if nav is None else nav,
+        every=_snapshot_period(),
     )
     return {
         "html": html,
