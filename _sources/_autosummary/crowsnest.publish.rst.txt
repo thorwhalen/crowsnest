@@ -8,12 +8,15 @@ crowsnest.publish
 
    .. autosummary::
    
+      STATUS_NAME
+      DFLT_PAGE_STALE_AFTER
       Publisher
       PAGE_PLACEHOLDER
       DFLT_PAGE_NAME
       DFLT_TIMEOUT
       DFLT_CONTROL_PERSIST
       TRANSIENT_EXITS
+      TOLD_NAME
    
    .. rubric:: Functions
 
@@ -23,8 +26,13 @@ crowsnest.publish
       command_publisher
       dflt_publisher
       is_remote
+      record_run
       rsync_argv
+      span
       ssh_command
+      staleness_event
+      state
       to_path
       to_rsync
+      told
    

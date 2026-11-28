@@ -62,7 +62,7 @@ gives each record that hash as `id` ([`line_id()`](#crowsnest.eventlog.line_id))
 | [`record_changes`](#crowsnest.eventlog.record_changes)(\*[, home, all_homes, config, ...]) | Append the registry's changes since the last call to the log; how many were written.                                       |
 | [`since_of`](#crowsnest.eventlog.since_of)(spec, \*[, now])                          | A lower time bound from `spec`: a span back from now (`90m`, `2h`, `3d`), an ISO time, a datetime, or `None` for no bound. |
 
-### crowsnest.eventlog.EVENTS *= {'courier': ('intent',), 'hook': ('stop', 'notification', 'ask'), 'registry': ('started', 'exited', 'busy', 'idle', 'waiting', 'error'), 'switchboard': ('message',)}*
+### crowsnest.eventlog.EVENTS *= {'courier': ('intent', 'page_stale', 'page_fresh'), 'hook': ('stop', 'notification', 'ask'), 'registry': ('started', 'exited', 'busy', 'idle', 'waiting', 'error'), 'switchboard': ('message',)}*
 
 [`read()`](#crowsnest.eventlog.read)
 passes any event through, so a writer added later is read without a change here.

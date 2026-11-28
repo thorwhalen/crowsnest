@@ -126,18 +126,26 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#crowsnest.publish.DFLT_CONTROL_PERSIST"><code class="docutils literal notranslate"><span class="pre">DFLT_CONTROL_PERSIST</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.DFLT_PAGE_NAME"><code class="docutils literal notranslate"><span class="pre">DFLT_PAGE_NAME</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.DFLT_PAGE_STALE_AFTER"><code class="docutils literal notranslate"><span class="pre">DFLT_PAGE_STALE_AFTER</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.DFLT_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">DFLT_TIMEOUT</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.PAGE_PLACEHOLDER"><code class="docutils literal notranslate"><span class="pre">PAGE_PLACEHOLDER</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.Publisher"><code class="docutils literal notranslate"><span class="pre">Publisher</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.STATUS_NAME"><code class="docutils literal notranslate"><span class="pre">STATUS_NAME</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.TOLD_NAME"><code class="docutils literal notranslate"><span class="pre">TOLD_NAME</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.TRANSIENT_EXITS"><code class="docutils literal notranslate"><span class="pre">TRANSIENT_EXITS</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.attempt"><code class="docutils literal notranslate"><span class="pre">attempt()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.command_publisher"><code class="docutils literal notranslate"><span class="pre">command_publisher()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.dflt_publisher"><code class="docutils literal notranslate"><span class="pre">dflt_publisher()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.is_remote"><code class="docutils literal notranslate"><span class="pre">is_remote()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.record_run"><code class="docutils literal notranslate"><span class="pre">record_run()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.rsync_argv"><code class="docutils literal notranslate"><span class="pre">rsync_argv()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.span"><code class="docutils literal notranslate"><span class="pre">span()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.ssh_command"><code class="docutils literal notranslate"><span class="pre">ssh_command()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.staleness_event"><code class="docutils literal notranslate"><span class="pre">staleness_event()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.state"><code class="docutils literal notranslate"><span class="pre">state()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.to_path"><code class="docutils literal notranslate"><span class="pre">to_path()</span></code></a></li>
 <li><a class="reference internal" href="#crowsnest.publish.to_rsync"><code class="docutils literal notranslate"><span class="pre">to_rsync()</span></code></a></li>
+<li><a class="reference internal" href="#crowsnest.publish.told"><code class="docutils literal notranslate"><span class="pre">told()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -204,6 +212,12 @@ and says in one line where it went. <a class="reference internal" href="#crowsne
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.STATUS_NAME" title="crowsnest.publish.STATUS_NAME"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STATUS_NAME</span></code></a></p></td>
+<td><p>when it started and finished, and the moment its page shows.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.DFLT_PAGE_STALE_AFTER" title="crowsnest.publish.DFLT_PAGE_STALE_AFTER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_PAGE_STALE_AFTER</span></code></a></p></td>
+<td><p>How old the published page may be before it counts as stale.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.Publisher" title="crowsnest.publish.Publisher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Publisher</span></code></a></p></td>
 <td><p>deliver <code class="docutils literal notranslate"><span class="pre">page</span></code> to <code class="docutils literal notranslate"><span class="pre">to</span></code>, say where it went.</p></td>
 </tr>
@@ -221,6 +235,9 @@ and says in one line where it went. <a class="reference internal" href="#crowsne
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.TRANSIENT_EXITS" title="crowsnest.publish.TRANSIENT_EXITS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TRANSIENT_EXITS</span></code></a></p></td>
 <td><p>ssh's 255, and rsync's socket (10), stream (12) and timeout (30, 35) errors.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.TOLD_NAME" title="crowsnest.publish.TOLD_NAME"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TOLD_NAME</span></code></a></p></td>
+<td><p>Where <a class="reference internal" href="#crowsnest.publish.staleness_event" title="crowsnest.publish.staleness_event"><code class="xref py py-func docutils literal notranslate"><span class="pre">staleness_event()</span></code></a> remembers what it last said, beside the run record.</p></td>
 </tr>
 </tbody>
 </table>
@@ -241,17 +258,32 @@ and says in one line where it went. <a class="reference internal" href="#crowsne
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.is_remote" title="crowsnest.publish.is_remote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_remote</span></code></a>(to)</p></td>
 <td><p>Whether <code class="docutils literal notranslate"><span class="pre">to</span></code> names a file on another machine (<code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.rsync_argv" title="crowsnest.publish.rsync_argv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsync_argv</span></code></a>(page, to, *[, timeout, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.record_run" title="crowsnest.publish.record_run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">record_run</span></code></a>(folder, *, made_at, started_at[, ...])</p></td>
+<td><p>Write what one publish run did into <code class="docutils literal notranslate"><span class="pre">folder</span></code> (<a class="reference internal" href="#crowsnest.publish.STATUS_NAME" title="crowsnest.publish.STATUS_NAME"><code class="xref py py-data docutils literal notranslate"><span class="pre">STATUS_NAME</span></code></a>), and return it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.rsync_argv" title="crowsnest.publish.rsync_argv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsync_argv</span></code></a>(page, to, *[, timeout, ...])</p></td>
 <td><p>The rsync command <a class="reference internal" href="#crowsnest.publish.to_rsync" title="crowsnest.publish.to_rsync"><code class="xref py py-func docutils literal notranslate"><span class="pre">to_rsync()</span></code></a> runs: quiet, bounded, and never asking for input.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.span" title="crowsnest.publish.span"><code class="xref py py-obj docutils literal notranslate"><span class="pre">span</span></code></a>(seconds)</p></td>
+<td><p>A length of time as a person says it: <code class="docutils literal notranslate"><span class="pre">42</span> <span class="pre">s</span></code>, <code class="docutils literal notranslate"><span class="pre">7</span> <span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">h</span> <span class="pre">18</span> <span class="pre">min</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.ssh_command" title="crowsnest.publish.ssh_command"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ssh_command</span></code></a>(*[, connect_timeout, ...])</p></td>
 <td><p>The ssh rsync runs (its <code class="docutils literal notranslate"><span class="pre">-e</span></code>): never prompting, bounded, and sharing a connection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.staleness_event" title="crowsnest.publish.staleness_event"><code class="xref py py-obj docutils literal notranslate"><span class="pre">staleness_event</span></code></a>(folder, *[, now, stale_after])</p></td>
+<td><p>The event-log line to write now about the page's age, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.state" title="crowsnest.publish.state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">state</span></code></a>(folder, *[, now, stale_after])</p></td>
+<td><p>How old the published page is: <code class="docutils literal notranslate"><span class="pre">{&quot;known&quot;,</span> <span class="pre">&quot;made_at&quot;,</span> <span class="pre">&quot;seconds&quot;,</span> <span class="pre">&quot;age&quot;,</span> <span class="pre">&quot;stale&quot;}</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.to_path" title="crowsnest.publish.to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_path</span></code></a>(page, to)</p></td>
 <td><p>Copy <code class="docutils literal notranslate"><span class="pre">page</span></code> to the local path <code class="docutils literal notranslate"><span class="pre">to</span></code>, atomically: a reader never sees half a page.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crowsnest.publish.to_rsync" title="crowsnest.publish.to_rsync"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_rsync</span></code></a>(page, to)</p></td>
 <td><p>Send <code class="docutils literal notranslate"><span class="pre">page</span></code> to the remote <code class="docutils literal notranslate"><span class="pre">[user&#64;]host:path</span></code> <code class="docutils literal notranslate"><span class="pre">to</span></code> with rsync over ssh.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crowsnest.publish.told" title="crowsnest.publish.told"><code class="xref py py-obj docutils literal notranslate"><span class="pre">told</span></code></a>(folder, event)</p></td>
+<td><p>Remember that <code class="docutils literal notranslate"><span class="pre">event</span></code> (a line <a class="reference internal" href="#crowsnest.publish.staleness_event" title="crowsnest.publish.staleness_event"><code class="xref py py-func docutils literal notranslate"><span class="pre">staleness_event()</span></code></a> gave) is in the log, so the same change is not said again.</p></td>
 </tr>
 </tbody>
 </table>
@@ -269,6 +301,13 @@ exit 255, about one publish in twenty before this).</p>
 <dt class="sig sig-object py" id="crowsnest.publish.DFLT_PAGE_NAME">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">DFLT_PAGE_NAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'index.html'</span></span><a class="headerlink" href="#crowsnest.publish.DFLT_PAGE_NAME" title="Link to this definition">#</a></dt>
 <dd><p>The file name a destination that is a directory receives.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.DFLT_PAGE_STALE_AFTER">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">DFLT_PAGE_STALE_AFTER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.timedelta(seconds=900)</span></span><a class="headerlink" href="#crowsnest.publish.DFLT_PAGE_STALE_AFTER" title="Link to this definition">#</a></dt>
+<dd><p>How old the published page may be before it counts as stale. The page is meant to be
+as fresh as its schedule (a minute); a quarter of an hour is no longer a slow run.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -294,6 +333,26 @@ scheduled publish that hangs would pile up behind itself.</p>
 </dd>
 </dl>
 <p>alias of <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.STATUS_NAME">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">STATUS_NAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'status.json'</span></span><a class="headerlink" href="#crowsnest.publish.STATUS_NAME" title="Link to this definition">#</a></dt>
+<dd><p>when it started and finished,
+and the moment its page shows. It is how anything else can tell that the page a
+person is looking at is old (<a class="reference internal" href="#crowsnest.publish.state" title="crowsnest.publish.state"><code class="xref py py-func docutils literal notranslate"><span class="pre">state()</span></code></a>), which the publisher itself cannot say
+while it is the thing that is late.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The file a publish run leaves beside the page it kept</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="crowsnest.publish.TOLD_NAME">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">TOLD_NAME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'status-told.json'</span></span><a class="headerlink" href="#crowsnest.publish.TOLD_NAME" title="Link to this definition">#</a></dt>
+<dd><p>Where <a class="reference internal" href="#crowsnest.publish.staleness_event" title="crowsnest.publish.staleness_event"><code class="xref py py-func docutils literal notranslate"><span class="pre">staleness_event()</span></code></a> remembers what it last said, beside the run record.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -364,12 +423,40 @@ the command says where the page goes.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.record_run">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">record_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">made_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">started_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finished_at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#record_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.record_run" title="Link to this definition">#</a></dt>
+<dd><p>Write what one publish run did into <code class="docutils literal notranslate"><span class="pre">folder</span></code> (<a class="reference internal" href="#crowsnest.publish.STATUS_NAME" title="crowsnest.publish.STATUS_NAME"><code class="xref py py-data docutils literal notranslate"><span class="pre">STATUS_NAME</span></code></a>), and return it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">made_at</span></code> is the moment the page shows (a slow run publishes an old moment);
+<code class="docutils literal notranslate"><span class="pre">seconds</span></code> is how long the run took. Written whole, so a reader never sees half.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.publish.rsync_argv">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">rsync_argv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#rsync_argv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.rsync_argv" title="Link to this definition">#</a></dt>
 <dd><p>The rsync command <a class="reference internal" href="#crowsnest.publish.to_rsync" title="crowsnest.publish.to_rsync"><code class="xref py py-func docutils literal notranslate"><span class="pre">to_rsync()</span></code></a> runs: quiet, bounded, and never asking for input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.span">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">span</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#span"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.span" title="Link to this definition">#</a></dt>
+<dd><p>A length of time as a person says it: <code class="docutils literal notranslate"><span class="pre">42</span> <span class="pre">s</span></code>, <code class="docutils literal notranslate"><span class="pre">7</span> <span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">h</span> <span class="pre">18</span> <span class="pre">min</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">span</span><span class="p">(</span><span class="mi">42</span><span class="p">),</span> <span class="n">span</span><span class="p">(</span><span class="mi">420</span><span class="p">),</span> <span class="n">span</span><span class="p">(</span><span class="mi">11880</span><span class="p">),</span> <span class="n">span</span><span class="p">(</span><span class="mi">7200</span><span class="p">)</span>
+</span><span data-line="2"><span class="go">('42 s', '7 min', '3 h 18 min', '2 h')</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -396,6 +483,78 @@ which rsync’s <code class="docutils literal notranslate"><span class="pre">-e<
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.staleness_event">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">staleness_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.timedelta(seconds=900)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#staleness_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.staleness_event" title="Link to this definition">#</a></dt>
+<dd><p>The event-log line to write now about the page’s age, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>One <code class="docutils literal notranslate"><span class="pre">page_stale</span></code> line when the page first counts as stale, and one <code class="docutils literal notranslate"><span class="pre">page_fresh</span></code>
+line when a run has brought it back: a change is said once, never on every tick.
+Something that runs on its own schedule calls this (the courier’s tick does): the
+publisher cannot, because a publisher that is late is not there to say so.</p>
+<p>This only reads. Once the line is in the log, the caller says so with <a class="reference internal" href="#crowsnest.publish.told" title="crowsnest.publish.told"><code class="xref py py-func docutils literal notranslate"><span class="pre">told()</span></code></a>;
+a line that could not be written is then offered again at the next tick.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">where</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">at</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">record_run</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">made_at</span><span class="o">=</span><span class="s2">"2026-01-01T11:59:00+00:00"</span><span class="p">,</span>
+</span><span data-line="5"><span class="gp">... </span>               <span class="n">started_at</span><span class="o">=</span><span class="n">at</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">finished_at</span><span class="o">=</span><span class="n">at</span><span class="p">)</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">staleness_event</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">at</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="7"><span class="go">True</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="n">late</span> <span class="o">=</span> <span class="n">staleness_event</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="n">late</span><span class="p">[</span><span class="s2">"event"</span><span class="p">],</span> <span class="n">late</span><span class="p">[</span><span class="s2">"detail"</span><span class="p">]</span>
+</span><span data-line="10"><span class="go">('page_stale', 'the published page shows 11:59 UTC, 2 h 1 min ago; its last run took 60 s')</span>
+</span><span data-line="11"><span class="gp">&gt;&gt;&gt; </span><span class="n">staleness_event</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">3</span><span class="p">))[</span><span class="s2">"event"</span><span class="p">]</span>  <span class="c1"># not told yet</span>
+</span><span data-line="12"><span class="go">'page_stale'</span>
+</span><span data-line="13"><span class="gp">&gt;&gt;&gt; </span><span class="n">told</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">late</span><span class="p">)</span>
+</span><span data-line="14"><span class="gp">&gt;&gt;&gt; </span><span class="n">staleness_event</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span data-line="15"><span class="go">True</span>
+</span><span data-line="16"><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">record_run</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">made_at</span><span class="o">=</span><span class="s2">"2026-01-01T15:00:00+00:00"</span><span class="p">,</span>
+</span><span data-line="17"><span class="gp">... </span>               <span class="n">started_at</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span> <span class="n">finished_at</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+</span><span data-line="18"><span class="gp">&gt;&gt;&gt; </span><span class="n">staleness_event</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">))[</span><span class="s2">"event"</span><span class="p">]</span>
+</span><span data-line="19"><span class="go">'page_fresh'</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.state">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.timedelta(seconds=900)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.state" title="Link to this definition">#</a></dt>
+<dd><p>How old the published page is: <code class="docutils literal notranslate"><span class="pre">{&quot;known&quot;,</span> <span class="pre">&quot;made_at&quot;,</span> <span class="pre">&quot;seconds&quot;,</span> <span class="pre">&quot;age&quot;,</span> <span class="pre">&quot;stale&quot;}</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">age</span></code> is the seconds between <code class="docutils literal notranslate"><span class="pre">now</span></code> and the moment the last finished run’s page
+shows. The page is <code class="docutils literal notranslate"><span class="pre">stale</span></code> when nothing has finished for <code class="docutils literal notranslate"><span class="pre">stale_after</span></code>, or when
+the last run itself took that long: runs that each take forty minutes leave a page
+that is never current, and a test on the page’s age alone would call it stale and
+fresh in turn at every run. With no record yet (nothing has published from this
+folder) <code class="docutils literal notranslate"><span class="pre">known</span></code> is false and nothing is called stale: an unknown is never reported
+as a fault.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">where</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">state</span><span class="p">(</span><span class="n">where</span><span class="p">)[</span><span class="s2">"known"</span><span class="p">]</span>
+</span><span data-line="4"><span class="go">False</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">at</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">record_run</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">made_at</span><span class="o">=</span><span class="s2">"2026-01-01T08:42:00+00:00"</span><span class="p">,</span>
+</span><span data-line="7"><span class="gp">... </span>               <span class="n">started_at</span><span class="o">=</span><span class="n">at</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">18</span><span class="p">),</span> <span class="n">finished_at</span><span class="o">=</span><span class="n">at</span><span class="p">)</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="n">found</span> <span class="o">=</span> <span class="n">state</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="n">found</span><span class="p">[</span><span class="s2">"stale"</span><span class="p">],</span> <span class="n">span</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]),</span> <span class="n">span</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s2">"seconds"</span><span class="p">])</span>
+</span><span data-line="10"><span class="go">(True, '3 h 23 min', '3 h 18 min')</span>
+</span><span data-line="11"><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">record_run</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">made_at</span><span class="o">=</span><span class="s2">"2026-01-01T12:00:00+00:00"</span><span class="p">,</span>
+</span><span data-line="12"><span class="gp">... </span>               <span class="n">started_at</span><span class="o">=</span><span class="n">at</span><span class="p">,</span> <span class="n">finished_at</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">9</span><span class="p">))</span>
+</span><span data-line="13"><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">state</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">at</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">m</span><span class="p">))[</span><span class="s2">"stale"</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">25</span><span class="p">)]</span>
+</span><span data-line="14"><span class="go">[False, False, True]</span>
+</span></pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.publish.to_path">
 <span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">to_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#to_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.to_path" title="Link to this definition">#</a></dt>
 <dd><p>Copy <code class="docutils literal notranslate"><span class="pre">page</span></code> to the local path <code class="docutils literal notranslate"><span class="pre">to</span></code>, atomically: a reader never sees half a page.</p>
@@ -414,6 +573,18 @@ which rsync’s <code class="docutils literal notranslate"><span class="pre">-e<
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crowsnest.publish.told">
+<span class="sig-prename descclassname"><span class="pre">crowsnest.publish.</span></span><span class="sig-name descname"><span class="pre">told</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/publish.html#told"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.publish.told" title="Link to this definition">#</a></dt>
+<dd><p>Remember that <code class="docutils literal notranslate"><span class="pre">event</span></code> (a line <a class="reference internal" href="#crowsnest.publish.staleness_event" title="crowsnest.publish.staleness_event"><code class="xref py py-func docutils literal notranslate"><span class="pre">staleness_event()</span></code></a> gave) is in the log, so the
+same change is not said again.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -460,7 +631,7 @@ which rsync’s <code class="docutils literal notranslate"><span class="pre">-e<
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=0d7dcda5"></script>
+      <script src="../_static/documentation_options.js?v=a90549bc"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

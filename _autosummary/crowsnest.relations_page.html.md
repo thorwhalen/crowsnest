@@ -26,6 +26,15 @@ the middle with what is linked to it around it. *Important*, *More* and *Everyth
 set how much the views that select show. Derived links are drawn dotted and are off
 until switched on.
 
+**On a phone the map is a picture, not a trap.** Under 60rem the page is an ordinary
+scrolling document: a layer over the map takes the touches, so a swipe that starts on it
+scrolls the page and a tap is passed to the mark under it. *Expand* gives the map the
+screen and the gestures (a history entry: Back leaves it). In a wide window the page fits
+the window, cannot scroll, and the map takes gestures directly. The rule: the map takes a
+gesture only where the page has none to lose. `DESIGN.md` at the repository root is
+this page’s design contract, and `tests/test_relations_touch.py` holds it to that with
+real touch gestures in a browser.
+
 **The contract** is the report’s: one file, nothing fetched from anywhere, every string
 already sanitised where the document was made (the script only sets text). The drawing
 library (Cytoscape.js, MIT, [`LIBRARY`](#crowsnest.relations_page.LIBRARY)) ships in the package and is inlined, with

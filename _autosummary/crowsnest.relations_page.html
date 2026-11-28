@@ -190,6 +190,14 @@ clusters around what (<em>Free</em>, the one force layout), and <em>Focus</em>, 
 the middle with what is linked to it around it. <em>Important</em>, <em>More</em> and <em>Everything</em>
 set how much the views that select show. Derived links are drawn dotted and are off
 until switched on.</p>
+<p><strong>On a phone the map is a picture, not a trap.</strong> Under 60rem the page is an ordinary
+scrolling document: a layer over the map takes the touches, so a swipe that starts on it
+scrolls the page and a tap is passed to the mark under it. <em>Expand</em> gives the map the
+screen and the gestures (a history entry: Back leaves it). In a wide window the page fits
+the window, cannot scroll, and the map takes gestures directly. The rule: the map takes a
+gesture only where the page has none to lose. <code class="docutils literal notranslate"><span class="pre">DESIGN.md</span></code> at the repository root is
+this page’s design contract, and <code class="docutils literal notranslate"><span class="pre">tests/test_relations_touch.py</span></code> holds it to that with
+real touch gestures in a browser.</p>
 <p><strong>The contract</strong> is the report’s: one file, nothing fetched from anywhere, every string
 already sanitised where the document was made (the script only sets text). The drawing
 library (Cytoscape.js, MIT, <a class="reference internal" href="#crowsnest.relations_page.LIBRARY" title="crowsnest.relations_page.LIBRARY"><code class="xref py py-data docutils literal notranslate"><span class="pre">LIBRARY</span></code></a>) ships in the package and is inlined, with
@@ -310,7 +318,7 @@ them. <code class="docutils literal notranslate"><span class="pre">stale_minutes
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=0d7dcda5"></script>
+      <script src="../_static/documentation_options.js?v=a90549bc"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

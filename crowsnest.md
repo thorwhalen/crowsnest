@@ -1,4 +1,4 @@
-> built 2026-11-27 11:52 UTC from d659705 (main) · crowsnest 0.0.130. Details: build_info.json
+> built 2026-11-28 13:03 UTC from 2a1843c (main) · crowsnest 0.0.131. Details: build_info.json
 
 # index.html.md
 
@@ -216,7 +216,7 @@ The document is a typed graph in the plain nodes-and-links shape. **Nodes**: you
 
 **Rules derive the relations nobody recorded**, and a rule is data: a path of link types to walk. *Works in*, then *in repository*, is *works on*; *works on*, then *works on* backwards, is *shares a repository with*; *started* walked more than once is *descends from*. A derived link lists the nodes it went through, so you can ask why it is there. A node shared by more than a dozen others is reported as a hub rather than expanded into pairs.
 
-The page opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the docket and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing, as the report is.
+The page opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. On a phone the page is an ordinary scrolling page and the map is a picture inside it: a swipe that starts on the map scrolls the page, a tap on a mark opens it, and *Expand* gives the map the whole screen and the gestures until you go back. In a wide window the page fits the window and the map takes gestures directly. The page’s design contract is `DESIGN.md`. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the docket and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing, as the report is.
 
 To have it sent beside the report on the same schedule, and to choose what it opens on (the page names your sessions and their folders and quotes what they asked, sanitised as the report is, so send it only where you alone can read it: behind your own login or in a private folder, never a public bucket):
 
@@ -375,7 +375,9 @@ page = "https://example.com/ledgers"                 # all of them
 
 The artifact console needs a Claude session awake to courier it. For a page that is simply always current, render and send it on a schedule instead: `crowsnest publish` does both, and cron, launchd or a systemd timer runs it.
 
-**Schedule `crowsnest courier` as a job of its own**, once a minute, never chained after `publish` in the same job: a publish can take minutes, and every message the courier carries would wait behind it. A tick takes seconds and two never overlap (the courier holds a lock on its mirror). On macOS, do not mark the courier’s launchd job `ProcessType = Background`: macOS throttles such a job’s CPU and disk hard, and a tick of a few seconds then takes over a minute.
+**Schedule `crowsnest courier` as a job of its own**, once a minute, never chained after `publish` in the same job: a publish can take minutes, and every message the courier carries would wait behind it. A tick takes seconds and two never overlap (the courier holds a lock on its mirror). On macOS, do not mark the courier’s launchd job `ProcessType = Background`: macOS throttles such a job’s CPU and disk hard, and a tick of a few seconds then takes over a minute. The same goes for the publish job: at background priority on a busy machine, a run that needs about a minute of CPU was seen to take over three hours, and the page it then sent was three hours old on arrival.
+
+**A late page says so, twice.** Every run prints how long it took (`published 1943349 bytes to ... in 2 min`) and leaves a record beside the page it kept (`<data dir>/publish/status.json`: when it started and finished, and the moment its page shows). The publisher cannot report its own lateness, so the courier’s tick does: when the page is more than fifteen minutes old it writes one `page_stale` line into the event log (`the published page shows 07:43 UTC, 3 h 19 min ago; its last run took 3 h 18 min`), and one `page_fresh` line when a run has caught up. `crowsnest watch` shows the first as a `stale` line, which is one of the loud kinds, so a session watching with `--kinds loud` is told; the page itself shows its age where the time is.
 
 Where it goes is yours to say, once, in `~/.config/crowsnest/config.toml`:
 
@@ -2499,7 +2501,7 @@ gives each record that hash as `id` ([`line_id()`](_autosummary/crowsnest.eventl
 | [`record_changes`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.record_changes)(\*[, home, all_homes, config, ...]) | Append the registry's changes since the last call to the log; how many were written.                                       |
 | [`since_of`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.since_of)(spec, \*[, now])                          | A lower time bound from `spec`: a span back from now (`90m`, `2h`, `3d`), an ISO time, a datetime, or `None` for no bound. |
 
-### crowsnest.eventlog.EVENTS *= {'courier': ('intent',), 'hook': ('stop', 'notification', 'ask'), 'registry': ('started', 'exited', 'busy', 'idle', 'waiting', 'error'), 'switchboard': ('message',)}*
+### crowsnest.eventlog.EVENTS *= {'courier': ('intent', 'page_stale', 'page_fresh'), 'hook': ('stop', 'notification', 'ask'), 'registry': ('started', 'exited', 'busy', 'idle', 'waiting', 'error'), 'switchboard': ('message',)}*
 
 [`read()`](_autosummary/crowsnest.eventlog.html.md#crowsnest.eventlog.read)
 passes any event through, so a writer added later is read without a change here.
@@ -5692,25 +5694,33 @@ and says in one line where it went. [`dflt_publisher()`](_autosummary/crowsnest.
 
 ### Module Attributes
 
-| [`Publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.Publisher)            | deliver `page` to `to`, say where it went.                                    |
-|-----------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER)     | The placeholder a `command` publisher replaces with the rendered page's path. |
-| [`DFLT_PAGE_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_PAGE_NAME)       | The file name a destination that is a directory receives.                     |
-| [`DFLT_TIMEOUT`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_TIMEOUT)         | Seconds rsync may stall, and ssh may take to connect, before a run gives up.  |
-| [`DFLT_CONTROL_PERSIST`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_CONTROL_PERSIST) | How long an idle shared ssh connection stays open, in seconds.                |
-| [`TRANSIENT_EXITS`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.TRANSIENT_EXITS)      | ssh's 255, and rsync's socket (10), stream (12) and timeout (30, 35) errors.  |
+| [`STATUS_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.STATUS_NAME)           | when it started and finished, and the moment its page shows.                                                                 |
+|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| [`DFLT_PAGE_STALE_AFTER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_PAGE_STALE_AFTER) | How old the published page may be before it counts as stale.                                                                 |
+| [`Publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.Publisher)             | deliver `page` to `to`, say where it went.                                                                                   |
+| [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER)      | The placeholder a `command` publisher replaces with the rendered page's path.                                                |
+| [`DFLT_PAGE_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_PAGE_NAME)        | The file name a destination that is a directory receives.                                                                    |
+| [`DFLT_TIMEOUT`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_TIMEOUT)          | Seconds rsync may stall, and ssh may take to connect, before a run gives up.                                                 |
+| [`DFLT_CONTROL_PERSIST`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.DFLT_CONTROL_PERSIST)  | How long an idle shared ssh connection stays open, in seconds.                                                               |
+| [`TRANSIENT_EXITS`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.TRANSIENT_EXITS)       | ssh's 255, and rsync's socket (10), stream (12) and timeout (30, 35) errors.                                                 |
+| [`TOLD_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.TOLD_NAME)             | Where [`staleness_event()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.staleness_event) remembers what it last said, beside the run record. |
 
 ### Functions
 
-| [`attempt`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.attempt)(argv, \*[, retries, pause, sleep])   | Run `argv`, again after `pause` seconds (`RETRY_PAUSE`) while it exits with a dropped connection ([`TRANSIENT_EXITS`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.TRANSIENT_EXITS)), at most `retries` more times; the last run is returned.   |
-|-----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`command_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.command_publisher)(argv)                      | A publisher running `argv`, with [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER) replaced by the page.                                                                                                       |
-| [`dflt_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.dflt_publisher)(to)                           | rsync over ssh for a `[user@]host:path`, an atomic local write for anything else.                                                                                                                                              |
-| [`is_remote`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.is_remote)(to)                                | Whether `to` names a file on another machine (`[user@]host:path`).                                                                                                                                                             |
-| [`rsync_argv`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.rsync_argv)(page, to, \*[, timeout, ...])     | The rsync command [`to_rsync()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input.                                                                                                |
-| [`ssh_command`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.ssh_command)(\*[, connect_timeout, ...])      | The ssh rsync runs (its `-e`): never prompting, bounded, and sharing a connection.                                                                                                                                             |
-| [`to_path`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_path)(page, to)                            | Copy `page` to the local path `to`, atomically: a reader never sees half a page.                                                                                                                                               |
-| [`to_rsync`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync)(page, to)                           | Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.                                                                                                                                                         |
+| [`attempt`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.attempt)(argv, \*[, retries, pause, sleep])         | Run `argv`, again after `pause` seconds (`RETRY_PAUSE`) while it exits with a dropped connection ([`TRANSIENT_EXITS`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.TRANSIENT_EXITS)), at most `retries` more times; the last run is returned.   |
+|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`command_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.command_publisher)(argv)                            | A publisher running `argv`, with [`PAGE_PLACEHOLDER`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.PAGE_PLACEHOLDER) replaced by the page.                                                                                                       |
+| [`dflt_publisher`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.dflt_publisher)(to)                                 | rsync over ssh for a `[user@]host:path`, an atomic local write for anything else.                                                                                                                                              |
+| [`is_remote`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.is_remote)(to)                                      | Whether `to` names a file on another machine (`[user@]host:path`).                                                                                                                                                             |
+| [`record_run`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.record_run)(folder, \*, made_at, started_at[, ...]) | Write what one publish run did into `folder` ([`STATUS_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.STATUS_NAME)), and return it.                                                                                                    |
+| [`rsync_argv`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.rsync_argv)(page, to, \*[, timeout, ...])           | The rsync command [`to_rsync()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input.                                                                                                |
+| [`span`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.span)(seconds)                                      | A length of time as a person says it: `42 s`, `7 min`, `3 h 18 min`.                                                                                                                                                           |
+| [`ssh_command`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.ssh_command)(\*[, connect_timeout, ...])            | The ssh rsync runs (its `-e`): never prompting, bounded, and sharing a connection.                                                                                                                                             |
+| [`staleness_event`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.staleness_event)(folder, \*[, now, stale_after])    | The event-log line to write now about the page's age, or `None`.                                                                                                                                                               |
+| [`state`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.state)(folder, \*[, now, stale_after])              | How old the published page is: `{"known", "made_at", "seconds", "age", "stale"}`.                                                                                                                                              |
+| [`to_path`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_path)(page, to)                                  | Copy `page` to the local path `to`, atomically: a reader never sees half a page.                                                                                                                                               |
+| [`to_rsync`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync)(page, to)                                 | Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.                                                                                                                                                         |
+| [`told`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.told)(folder, event)                                | Remember that `event` (a line [`staleness_event()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.staleness_event) gave) is in the log, so the same change is not said again.                                                                    |
 
 ### crowsnest.publish.DFLT_CONTROL_PERSIST *= 120*
 
@@ -5722,6 +5732,11 @@ exit 255, about one publish in twenty before this).
 ### crowsnest.publish.DFLT_PAGE_NAME *= 'index.html'*
 
 The file name a destination that is a directory receives.
+
+### crowsnest.publish.DFLT_PAGE_STALE_AFTER *= datetime.timedelta(seconds=900)*
+
+How old the published page may be before it counts as stale. The page is meant to be
+as fresh as its schedule (a minute); a quarter of an hour is no longer a slow run.
 
 ### crowsnest.publish.DFLT_TIMEOUT *= 20*
 
@@ -5740,6 +5755,20 @@ deliver `page` to `to`, say where it went.
   `(page, to) -> str`
 
 alias of [`Callable`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.STATUS_NAME *= 'status.json'*
+
+when it started and finished,
+and the moment its page shows. It is how anything else can tell that the page a
+person is looking at is old ([`state()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.state)), which the publisher itself cannot say
+while it is the thing that is late.
+
+* **Type:**
+  The file a publish run leaves beside the page it kept
+
+### crowsnest.publish.TOLD_NAME *= 'status-told.json'*
+
+Where [`staleness_event()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.staleness_event) remembers what it last said, beside the run record.
 
 ### crowsnest.publish.TRANSIENT_EXITS *= frozenset({10, 12, 30, 35, 255})*
 
@@ -5790,12 +5819,34 @@ Whether `to` names a file on another machine (`[user@]host:path`).
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
+### crowsnest.publish.record_run(folder, , made_at, started_at, finished_at=None, to='', size=0)
+
+Write what one publish run did into `folder` ([`STATUS_NAME`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.STATUS_NAME)), and return it.
+
+`made_at` is the moment the page shows (a slow run publishes an old moment);
+`seconds` is how long the run took. Written whole, so a reader never sees half.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### crowsnest.publish.rsync_argv(page, to, , timeout=20, connect_timeout=10)
 
 The rsync command [`to_rsync()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.to_rsync) runs: quiet, bounded, and never asking for input.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### crowsnest.publish.span(seconds)
+
+A length of time as a person says it: `42 s`, `7 min`, `3 h 18 min`.
+
+```pycon
+>>> span(42), span(420), span(11880), span(7200)
+('42 s', '7 min', '3 h 18 min', '2 h')
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### crowsnest.publish.ssh_command(, connect_timeout=10, control_dir=None, control_persist=120)
 
@@ -5816,6 +5867,75 @@ which rsync’s `-e` would split.
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
+### crowsnest.publish.staleness_event(folder, , now=None, stale_after=datetime.timedelta(seconds=900))
+
+The event-log line to write now about the page’s age, or `None`.
+
+One `page_stale` line when the page first counts as stale, and one `page_fresh`
+line when a run has brought it back: a change is said once, never on every tick.
+Something that runs on its own schedule calls this (the courier’s tick does): the
+publisher cannot, because a publisher that is late is not there to say so.
+
+This only reads. Once the line is in the log, the caller says so with [`told()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.told);
+a line that could not be written is then offered again at the next tick.
+
+```pycon
+>>> import tempfile
+>>> where = tempfile.mkdtemp()
+>>> at = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
+>>> _ = record_run(where, made_at="2026-01-01T11:59:00+00:00",
+...                started_at=at - timedelta(minutes=1), finished_at=at)
+>>> staleness_event(where, now=at) is None
+True
+>>> late = staleness_event(where, now=at + timedelta(hours=2))
+>>> late["event"], late["detail"]
+('page_stale', 'the published page shows 11:59 UTC, 2 h 1 min ago; its last run took 60 s')
+>>> staleness_event(where, now=at + timedelta(hours=3))["event"]  # not told yet
+'page_stale'
+>>> told(where, late)
+>>> staleness_event(where, now=at + timedelta(hours=3)) is None
+True
+>>> _ = record_run(where, made_at="2026-01-01T15:00:00+00:00",
+...                started_at=at + timedelta(hours=3), finished_at=at + timedelta(hours=3))
+>>> staleness_event(where, now=at + timedelta(hours=3, minutes=1))["event"]
+'page_fresh'
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### crowsnest.publish.state(folder, , now=None, stale_after=datetime.timedelta(seconds=900))
+
+How old the published page is: `{"known", "made_at", "seconds", "age", "stale"}`.
+
+`age` is the seconds between `now` and the moment the last finished run’s page
+shows. The page is `stale` when nothing has finished for `stale_after`, or when
+the last run itself took that long: runs that each take forty minutes leave a page
+that is never current, and a test on the page’s age alone would call it stale and
+fresh in turn at every run. With no record yet (nothing has published from this
+folder) `known` is false and nothing is called stale: an unknown is never reported
+as a fault.
+
+```pycon
+>>> import tempfile
+>>> where = tempfile.mkdtemp()
+>>> state(where)["known"]
+False
+>>> at = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
+>>> _ = record_run(where, made_at="2026-01-01T08:42:00+00:00",
+...                started_at=at - timedelta(hours=3, minutes=18), finished_at=at)
+>>> found = state(where, now=at + timedelta(minutes=5))
+>>> found["stale"], span(found["age"]), span(found["seconds"])
+(True, '3 h 23 min', '3 h 18 min')
+>>> _ = record_run(where, made_at="2026-01-01T12:00:00+00:00",
+...                started_at=at, finished_at=at + timedelta(minutes=9))
+>>> [state(where, now=at + timedelta(minutes=m))["stale"] for m in (10, 23, 25)]
+[False, False, True]
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
 ### crowsnest.publish.to_path(page, to)
 
 Copy `page` to the local path `to`, atomically: a reader never sees half a page.
@@ -5831,6 +5951,14 @@ Send `page` to the remote `[user@]host:path` `to` with rsync over ssh.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### crowsnest.publish.told(folder, event)
+
+Remember that `event` (a line [`staleness_event()`](_autosummary/crowsnest.publish.html.md#crowsnest.publish.staleness_event) gave) is in the log, so the
+same change is not said again.
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 
 # _autosummary/crowsnest.questions.html.md
@@ -6742,6 +6870,15 @@ clusters around what (*Free*, the one force layout), and *Focus*, which puts any
 the middle with what is linked to it around it. *Important*, *More* and *Everything*
 set how much the views that select show. Derived links are drawn dotted and are off
 until switched on.
+
+**On a phone the map is a picture, not a trap.** Under 60rem the page is an ordinary
+scrolling document: a layer over the map takes the touches, so a swipe that starts on it
+scrolls the page and a tap is passed to the mark under it. *Expand* gives the map the
+screen and the gestures (a history entry: Back leaves it). In a wide window the page fits
+the window, cannot scroll, and the map takes gestures directly. The rule: the map takes a
+gesture only where the page has none to lose. `DESIGN.md` at the repository root is
+this page’s design contract, and `tests/test_relations_touch.py` holds it to that with
+real touch gestures in a browser.
 
 **The contract** is the report’s: one file, nothing fetched from anywhere, every string
 already sanitised where the document was made (the script only sets text). The drawing
@@ -9061,19 +9198,19 @@ session’s conversation.
 Seconds between snapshots. A turn takes seconds to minutes; five seconds is invisible
 to a human and two file listings per tick is nothing.
 
-### crowsnest.watch.HOOK_KINDS *= {'ask': 'ask', 'intent': 'intent', 'notification': 'needs-you', 'stop': 'stopped'}*
+### crowsnest.watch.HOOK_KINDS *= {'ask': 'ask', 'intent': 'intent', 'notification': 'needs-you', 'page_fresh': 'fresh', 'page_stale': 'stale', 'stop': 'stopped'}*
 
 What a hook event is called in the stream. `needs-you` and `stopped` are named for
 what the human should do about them, which is what the registry statuses are not.
 
-### crowsnest.watch.KINDS *= frozenset({'ask', 'busy', 'error', 'exited', 'idle', 'intent', 'needs-you', 'shell', 'started', 'stopped', 'waiting', 'woke'})*
+### crowsnest.watch.KINDS *= frozenset({'ask', 'busy', 'error', 'exited', 'fresh', 'idle', 'intent', 'needs-you', 'shell', 'stale', 'started', 'stopped', 'waiting', 'woke'})*
 
 the registry diff’s, the hook log’s, and `woke`.
 
 * **Type:**
   Every kind [`events()`](_autosummary/crowsnest.watch.html.md#crowsnest.watch.events) yields
 
-### crowsnest.watch.LOUD_KINDS *= frozenset({'ask', 'error', 'intent', 'needs-you', 'waiting', 'woke'})*
+### crowsnest.watch.LOUD_KINDS *= frozenset({'ask', 'error', 'intent', 'needs-you', 'stale', 'waiting', 'woke'})*
 
 The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
 catches “waiting” and “error” without reading the line.
@@ -9290,16 +9427,18 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-27 11:52 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/d659705875383737d23a6dfaed6dadfc0d346bdc"><code>d659705</code></a> on branch <code>main</code>, for **crowsnest 0.0.130** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-28 13:03 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/2a1843caf4f46e815cbed18e6d832f06afde1ab1"><code>2a1843c</code></a> on branch <code>main</code>, for **crowsnest 0.0.131** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.131) is behind the latest release on PyPI (0.0.132): `pip install crowsnest` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/d659705875383737d23a6dfaed6dadfc0d346bdc"><code>d659705875383737d23a6dfaed6dadfc0d346bdc</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/2a1843caf4f46e815cbed18e6d832f06afde1ab1"><code>2a1843caf4f46e815cbed18e6d832f06afde1ab1</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -9310,9 +9449,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/45993696686">45993696686</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/46147517581">46147517581</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d659705875383737d23a6dfaed6dadfc0d346bdc</code> (in the history of the built commit) |
+| Event commit | <code>2a1843caf4f46e815cbed18e6d832f06afde1ab1</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9337,13 +9476,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.130/">0.0.130</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.132/">0.0.132</a>, newer than the documented version (0.0.131).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout d659705875383737d23a6dfaed6dadfc0d346bdc
+git checkout 2a1843caf4f46e815cbed18e6d832f06afde1ab1
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
