@@ -24,6 +24,15 @@ the middle with what is linked to it around it. *Important*, *More* and *Everyth
 set how much the views that select show. Derived links are drawn dotted and are off
 until switched on.
 
+**On a phone the map is a picture, not a trap.** Under 60rem the page is an ordinary
+scrolling document: a layer over the map takes the touches, so a swipe that starts on it
+scrolls the page and a tap is passed to the mark under it. *Expand* gives the map the
+screen and the gestures (a history entry: Back leaves it). In a wide window the page fits
+the window, cannot scroll, and the map takes gestures directly. The rule: the map takes a
+gesture only where the page has none to lose. ``DESIGN.md`` at the repository root is
+this page's design contract, and ``tests/test_relations_touch.py`` holds it to that with
+real touch gestures in a browser.
+
 **The contract** is the report's: one file, nothing fetched from anywhere, every string
 already sanitised where the document was made (the script only sets text). The drawing
 library (Cytoscape.js, MIT, :data:`LIBRARY`) ships in the package and is inlined, with
@@ -77,32 +86,69 @@ _PAGE = """<!doctype html>
 <style>{tokens}{css}</style></head>
 <body data-lens="map">
 <header class="top">
-<div class="bar"><span class="brand-box"><a class="brand" href="#">{title}</a><span id="asof" class="asof"></span></span>
-<div id="lenses" class="picks seg" role="group" aria-label="How to look at it"></div>
+<div class="bar"><span class="brand">{title}</span>
+<div id="lenses" class="seg" role="group" aria-label="How to look at it"></div>
+<button id="fresh" class="fresh" type="button"></button>
+<button id="nav-open" class="iconbtn" type="button" aria-label="Other pages" aria-expanded="false"{nav_hidden}>{icon_menu}</button></div>
 <nav id="nav" aria-label="Other pages">{nav}</nav>
-<button id="nav-open" class="icon" type="button" aria-label="Other pages" aria-expanded="false"{nav_hidden}>&#8801;</button></div>
-<p id="sentence" class="sentence" role="status"></p>
-<p id="stale" class="stale-line" role="alert" hidden><span id="stale-text"></span> <button id="reload" class="tool" type="button">Reload</button></p>
 </header>
+<p id="sentence" class="sentence" role="status"></p>
 <main>
 <section id="lens-map" aria-label="Map"><div id="brief"></div>
-<div class="stage"><div id="cy" role="img" aria-label="The sessions and what they relate to. The docket and the board list the same sessions."></div>
-<p id="map-empty" hidden></p><p id="view-note"></p>
-<div class="tools"><button id="fit" class="tool" type="button">Fit</button>
-<button id="layers-open" class="tool" type="button">Layers</button></div>
+<div class="stage">
+<div class="maphead"><button id="explore-close" class="iconbtn" type="button" aria-label="Close the map" hidden>{icon_x}</button>
+<div id="views" class="picks" role="group" aria-label="View"></div>
+<button id="zoom-out" class="iconbtn" type="button" aria-label="Zoom out" hidden>{icon_minus}</button>
+<button id="zoom-in" class="iconbtn" type="button" aria-label="Zoom in" hidden>{icon_plus}</button>
+<button id="fit" class="tool" type="button" hidden>Fit</button>
+<button id="layers-open" class="iconbtn" type="button" aria-label="Layers and key">{icon_layers}</button></div>
+<p id="view-note" hidden></p>
+<div class="mapbox"><div id="cy" role="img" aria-label="The sessions and what they relate to. The docket and the board list the same sessions."></div>
+<div id="touch" class="touch"></div><p id="map-empty" hidden></p>
+<button id="explore" class="tool expand" type="button">{icon_expand}Expand</button></div>
 <div id="rest" class="rest" hidden></div>
-<div class="dock"><div id="views" class="picks" role="group" aria-label="View"></div></div></div></section>
+</div></section>
 <section id="docket" aria-label="Docket"></section>
 <section id="board" aria-label="Board"></section>
 </main>
-<aside id="sheet" aria-label="Details" hidden><button id="sheet-close" class="shut" type="button" aria-label="Close">&#10005;</button><div id="sheet-body"></div></aside>
-<aside id="layers" aria-label="Layers" hidden><button id="layers-close" class="shut" type="button" aria-label="Close">&#10005;</button><div id="layers-body"></div></aside>
+<footer id="foot" class="foot"></footer>
+<div id="backdrop" class="backdrop" hidden></div>
+<aside id="sheet" aria-label="Details" hidden><button id="sheet-close" class="iconbtn shut" type="button" aria-label="Close">{icon_x}</button><div id="sheet-body"></div></aside>
+<aside id="layers" aria-label="Layers and key" hidden><button id="layers-close" class="iconbtn shut" type="button" aria-label="Close">{icon_x}</button><div id="layers-body"></div></aside>
 <script type="application/json" id="relations-data">{data}</script>
 <script type="application/json" id="relations-config">{config}</script>
 <script>{library}</script>
 <script>{script}</script>
 </body></html>
 """
+
+
+def _icon(*paths: str) -> str:
+    """One inline icon (24 by 24, drawn with strokes): no icon font, nothing fetched."""
+    drawn = "".join(f'<path d="{d}"/>' for d in paths)
+    return f'<svg class="i" viewBox="0 0 24 24" aria-hidden="true">{drawn}</svg>'
+
+
+#: The page's icons, from the standard vocabulary: a menu, close, layers (sliders),
+#: expand. Every button that shows one alone carries its name as its ``aria-label``.
+ICONS = {
+    "icon_menu": _icon("M4 6h16", "M4 12h16", "M4 18h16"),
+    "icon_x": _icon("M18 6 6 18", "M6 6l12 12"),
+    "icon_layers": _icon(
+        "M21 4h-7",
+        "M10 4H3",
+        "M21 12h-9",
+        "M8 12H3",
+        "M21 20h-5",
+        "M12 20H3",
+        "M14 2v4",
+        "M8 10v4",
+        "M16 18v4",
+    ),
+    "icon_expand": _icon("M15 3h6v6", "M9 21H3v-6", "M21 3l-7 7", "M3 21l7-7"),
+    "icon_plus": _icon("M12 5v14", "M5 12h14"),
+    "icon_minus": _icon("M5 12h14"),
+}
 
 
 def _embedded(value) -> str:
@@ -161,4 +207,5 @@ def render_relations_page(
         config=json.dumps(config).replace("<", "\\u003c"),
         library=(_DATA / LIBRARY).read_text(encoding="utf-8"),
         script=(_DATA / "page.js").read_text(encoding="utf-8"),
+        **ICONS,
     )

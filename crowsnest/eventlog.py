@@ -73,7 +73,7 @@ __all__ = [
 #: passes any event through, so a writer added later is read without a change here.
 EVENTS = {
     "hook": ("stop", "notification", "ask"),
-    "courier": ("intent",),
+    "courier": ("intent", "page_stale", "page_fresh"),
     "registry": ("started", "exited", "busy", "idle", "waiting", "error"),
     "switchboard": ("message",),
 }
