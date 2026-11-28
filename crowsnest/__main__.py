@@ -878,7 +878,10 @@ def publish(
             "set claude_bin in the config file",
             file=sys.stderr,
         )
-    return f"published {result['bytes']} bytes to {result['to']}"
+    from crowsnest.publish import span
+
+    took = f" in {span(result['seconds'])}" if "seconds" in result else ""
+    return f"published {result['bytes']} bytes to {result['to']}{took}"
 
 
 def _doc(doc: dict) -> str:

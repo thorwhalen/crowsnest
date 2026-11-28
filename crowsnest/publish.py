@@ -28,14 +28,26 @@ and says in one line where it went. :func:`dflt_publisher` picks one by the shap
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
 import subprocess
 import tempfile
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+#: The file a publish run leaves beside the page it kept: when it started and finished,
+#: and the moment its page shows. It is how anything else can tell that the page a
+#: person is looking at is old (:func:`state`), which the publisher itself cannot say
+#: while it is the thing that is late.
+STATUS_NAME = "status.json"
+
+#: How old the published page may be before it counts as stale. The page is meant to be
+#: as fresh as its schedule (a minute); a quarter of an hour is no longer a slow run.
+DFLT_PAGE_STALE_AFTER = timedelta(minutes=15)
 
 #: ``(page, to) -> str``: deliver ``page`` to ``to``, say where it went.
 Publisher = Callable[[Path, str], str]
@@ -212,3 +224,196 @@ def _run(argv: list[str], *, what: str) -> None:
         said = (done.stderr or done.stdout).strip().splitlines()
         tail = said[-1] if said else "no output"
         raise ValueError(f"publishing failed: {what} exited {done.returncode}: {tail}")
+
+
+# ---------------------------------------------------------------------------------------
+# The record of the last run, and whether the page it left is stale
+# ---------------------------------------------------------------------------------------
+
+
+def _moment(text) -> datetime | None:
+    """An ISO time as an aware datetime, or ``None``."""
+    try:
+        found = datetime.fromisoformat(str(text).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return found if found.tzinfo else found.replace(tzinfo=timezone.utc)
+
+
+def span(seconds: float) -> str:
+    """A length of time as a person says it: ``42 s``, ``7 min``, ``3 h 18 min``.
+
+    >>> span(42), span(420), span(11880), span(7200)
+    ('42 s', '7 min', '3 h 18 min', '2 h')
+    """
+    seconds = max(0, int(seconds))
+    if seconds < 90:
+        return f"{seconds} s"
+    hours, minutes = divmod(round(seconds / 60), 60)
+    if not hours:
+        return f"{minutes} min"
+    return f"{hours} h {minutes} min" if minutes else f"{hours} h"
+
+
+def record_run(
+    folder: str | Path,
+    *,
+    made_at: str,
+    started_at: datetime,
+    finished_at: datetime | None = None,
+    to: str = "",
+    size: int = 0,
+) -> dict:
+    """Write what one publish run did into ``folder`` (:data:`STATUS_NAME`), and return it.
+
+    ``made_at`` is the moment the page shows (a slow run publishes an old moment);
+    ``seconds`` is how long the run took. Written whole, so a reader never sees half.
+    """
+    finished_at = finished_at or datetime.now(timezone.utc)
+    run = {
+        "made_at": made_at,
+        "started_at": started_at.isoformat(timespec="seconds"),
+        "finished_at": finished_at.isoformat(timespec="seconds"),
+        "seconds": round((finished_at - started_at).total_seconds(), 1),
+        "to": to,
+        "bytes": size,
+    }
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    handle, temp = tempfile.mkstemp(dir=folder, prefix=".status-")
+    with os.fdopen(handle, "w", encoding="utf-8") as stream:
+        json.dump(run, stream)
+    os.replace(temp, folder / STATUS_NAME)
+    return run
+
+
+def state(
+    folder: str | Path,
+    *,
+    now: datetime | None = None,
+    stale_after: timedelta = DFLT_PAGE_STALE_AFTER,
+) -> dict:
+    """How old the published page is: ``{"known", "made_at", "seconds", "age", "stale"}``.
+
+    ``age`` is the seconds between ``now`` and the moment the last finished run's page
+    shows. The page is ``stale`` when nothing has finished for ``stale_after``, or when
+    the last run itself took that long: runs that each take forty minutes leave a page
+    that is never current, and a test on the page's age alone would call it stale and
+    fresh in turn at every run. With no record yet (nothing has published from this
+    folder) ``known`` is false and nothing is called stale: an unknown is never reported
+    as a fault.
+
+    >>> import tempfile
+    >>> where = tempfile.mkdtemp()
+    >>> state(where)["known"]
+    False
+    >>> at = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
+    >>> _ = record_run(where, made_at="2026-01-01T08:42:00+00:00",
+    ...                started_at=at - timedelta(hours=3, minutes=18), finished_at=at)
+    >>> found = state(where, now=at + timedelta(minutes=5))
+    >>> found["stale"], span(found["age"]), span(found["seconds"])
+    (True, '3 h 23 min', '3 h 18 min')
+    >>> _ = record_run(where, made_at="2026-01-01T12:00:00+00:00",
+    ...                started_at=at, finished_at=at + timedelta(minutes=9))
+    >>> [state(where, now=at + timedelta(minutes=m))["stale"] for m in (10, 23, 25)]
+    [False, False, True]
+    """
+    try:
+        run = json.loads((Path(folder) / STATUS_NAME).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"known": False, "stale": False}
+    made = _moment(run.get("made_at")) if isinstance(run, dict) else None
+    if made is None:
+        return {"known": False, "stale": False}
+    now = now or datetime.now(timezone.utc)
+    age = max(0.0, (now - made).total_seconds())
+    try:
+        seconds = max(0.0, float(run.get("seconds") or 0))
+    except (TypeError, ValueError):
+        seconds = 0.0
+    finished = _moment(run.get("finished_at")) or made
+    limit = stale_after.total_seconds()
+    return {
+        "known": True,
+        "made_at": str(run["made_at"]),
+        "finished_at": str(run.get("finished_at") or ""),
+        "seconds": seconds,
+        "age": age,
+        "stale": (now - finished).total_seconds() > limit or seconds > limit,
+    }
+
+
+#: Where :func:`staleness_event` remembers what it last said, beside the run record.
+TOLD_NAME = "status-told.json"
+
+
+def staleness_event(
+    folder: str | Path,
+    *,
+    now: datetime | None = None,
+    stale_after: timedelta = DFLT_PAGE_STALE_AFTER,
+) -> dict | None:
+    """The event-log line to write now about the page's age, or ``None``.
+
+    One ``page_stale`` line when the page first counts as stale, and one ``page_fresh``
+    line when a run has brought it back: a change is said once, never on every tick.
+    Something that runs on its own schedule calls this (the courier's tick does): the
+    publisher cannot, because a publisher that is late is not there to say so.
+
+    This only reads. Once the line is in the log, the caller says so with :func:`told`;
+    a line that could not be written is then offered again at the next tick.
+
+    >>> import tempfile
+    >>> where = tempfile.mkdtemp()
+    >>> at = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
+    >>> _ = record_run(where, made_at="2026-01-01T11:59:00+00:00",
+    ...                started_at=at - timedelta(minutes=1), finished_at=at)
+    >>> staleness_event(where, now=at) is None
+    True
+    >>> late = staleness_event(where, now=at + timedelta(hours=2))
+    >>> late["event"], late["detail"]
+    ('page_stale', 'the published page shows 11:59 UTC, 2 h 1 min ago; its last run took 60 s')
+    >>> staleness_event(where, now=at + timedelta(hours=3))["event"]  # not told yet
+    'page_stale'
+    >>> told(where, late)
+    >>> staleness_event(where, now=at + timedelta(hours=3)) is None
+    True
+    >>> _ = record_run(where, made_at="2026-01-01T15:00:00+00:00",
+    ...                started_at=at + timedelta(hours=3), finished_at=at + timedelta(hours=3))
+    >>> staleness_event(where, now=at + timedelta(hours=3, minutes=1))["event"]
+    'page_fresh'
+    """
+    now = now or datetime.now(timezone.utc)
+    found = state(folder, now=now, stale_after=stale_after)
+    if not found["known"]:
+        return None
+    try:
+        was = json.loads((Path(folder) / TOLD_NAME).read_text(encoding="utf-8"))
+        was = isinstance(was, dict) and was.get("stale") is True
+    except (OSError, ValueError):
+        was = False
+    if found["stale"] == was:
+        return None
+    shown = _moment(found["made_at"]).astimezone(timezone.utc).strftime("%H:%M UTC")
+    if found["stale"]:
+        detail = (
+            f"the published page shows {shown}, {span(found['age'])} ago; "
+            f"its last run took {span(found['seconds'])}"
+        )
+    else:
+        detail = f"the published page is current again (shows {shown})"
+    return {
+        "event": "page_stale" if found["stale"] else "page_fresh",
+        "at": now.isoformat(timespec="seconds"),
+        "name": "page",
+        "project": "",
+        "detail": detail,
+    }
+
+
+def told(folder: str | Path, event: Mapping) -> None:
+    """Remember that ``event`` (a line :func:`staleness_event` gave) is in the log, so the
+    same change is not said again."""
+    (Path(folder) / TOLD_NAME).write_text(
+        json.dumps({"stale": event.get("event") == "page_stale"}), encoding="utf-8"
+    )

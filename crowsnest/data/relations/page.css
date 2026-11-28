@@ -1,98 +1,128 @@
+/* The relations page. Phone first: the page is an ordinary scrolling document, the map
+   is a bounded frame inside it that never takes a swipe, and nothing is fixed at the
+   bottom. From 60rem wide the page fits the window and the map takes gestures directly.
+   Sizes are 12 / 14 / 16 / 20 px only. Mono is for names, places and times. */
 [hidden]{display:none!important}
 *{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;
-  display:flex;flex-direction:column;min-height:100dvh;-webkit-text-size-adjust:100%}
-button{font:inherit;color:inherit;touch-action:manipulation}
-a{color:var(--accent)}
-.top{flex:none;background:var(--surface);border-bottom:1px solid var(--rule);padding:.35rem .75rem .5rem;
-  padding-top:max(.35rem,env(safe-area-inset-top))}
-.bar{display:flex;align-items:center;gap:.6rem;min-height:2.75rem}
-.brand-box{display:flex;flex-direction:column;min-width:0;margin-right:auto}
-.brand{font-family:var(--serif);font-weight:600;font-size:1.05rem;line-height:1.15;color:var(--ink);text-decoration:none;white-space:nowrap}
-.asof{font-family:var(--mono);font-size:.66rem;color:var(--ink-soft);white-space:nowrap}
-.asof.stale{color:var(--unsure);font-weight:600}
-.icon{border:1px solid var(--rule);background:var(--surface);border-radius:.5rem;min-width:2.75rem;min-height:2.75rem;font-size:1.1rem}
-.picks{display:flex;gap:.3rem;overflow-x:auto;scrollbar-width:none}
-.picks::-webkit-scrollbar{display:none}
-.pick{flex:none;border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:.3rem .8rem;
-  min-height:2.25rem;font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);white-space:nowrap;cursor:pointer;
-  transition:transform .08s,background .08s}
-.pick[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-[data-pressed]{transform:scale(.96);background:var(--sunk)}
-.seg .pick{border-radius:.5rem;padding:.3rem .6rem}
-.bar #lenses{flex:none}
-#nav{display:none;flex-wrap:wrap;gap:.2rem .9rem;padding:.4rem 0 .2rem;font-family:var(--mono);font-size:.82rem}
+html{-webkit-text-size-adjust:100%;color-scheme:light dark}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font:1rem/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  min-height:100vh;min-height:100svh}
+button{font:inherit;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+/* Teal is the colour of a working session, so a link is ink, underlined. */
+a{color:var(--ink);text-underline-offset:.15em}
+svg.i{width:1.25rem;height:1.25rem;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+[data-pressed]{transform:scale(.97);background:var(--sunk)}
+
+/* ---- the bar: lenses, how fresh, the other pages ---- */
+.top{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--rule-soft);
+  padding:.25rem .75rem;padding-top:max(.25rem,env(safe-area-inset-top))}
+.bar{display:flex;align-items:center;gap:.5rem;min-height:2.75rem}
+.brand{display:none;font-family:var(--serif);font-weight:600;font-size:1.25rem;white-space:nowrap}
+.seg{display:flex;flex:none;background:var(--sunk);border-radius:.5rem;padding:.15rem;gap:.1rem}
+.seg .pick{border:0;background:none;border-radius:.4rem;min-height:2.75rem;padding:0 .7rem;font-size:.875rem;color:var(--ink-soft);cursor:pointer}
+.seg .pick[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--rule)}
+.fresh{margin-left:auto;display:inline-flex;align-items:center;gap:.35rem;min-height:2.75rem;padding:0 .6rem;border:1px solid transparent;
+  border-radius:.5rem;background:none;font-family:var(--mono);font-size:.75rem;color:var(--ink-soft);white-space:nowrap;cursor:pointer}
+.fresh svg.i{width:1rem;height:1rem}
+.fresh.stale{background:var(--unsure-wash);color:var(--unsure);font-weight:700;border-color:var(--unsure)}
+.fresh[data-pending]{opacity:.6}
+.iconbtn{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:2.75rem;min-height:2.75rem;border:1px solid var(--rule);
+  border-radius:.5rem;background:var(--surface);cursor:pointer}
+#nav{display:none;flex-direction:column;padding:.25rem 0 .1rem}
 #nav.open{display:flex}
-#nav a{display:inline-flex;align-items:center;min-height:2.75rem;text-decoration:none;border-bottom:2px solid transparent}
-#nav a[aria-current]{color:var(--ink);border-bottom-color:var(--ink)}
-.sentence{margin:.25rem 0 0;font-size:.92rem;color:var(--ink-soft);line-height:1.35}
+#nav a{display:flex;align-items:center;min-height:2.75rem;font-size:1rem;text-decoration:none;border-bottom:1px solid var(--rule-soft)}
+.sentence{margin:0;padding:.4rem .75rem;font-size:.875rem;line-height:1.35;color:var(--ink-soft);background:var(--surface);border-bottom:1px solid var(--rule)}
 .sentence b{color:var(--ink);font-weight:600}
-main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+
+/* ---- lenses ---- */
 #lens-map,#docket,#board{display:none}
-body[data-lens="map"] #lens-map{display:flex;flex:1 1 auto;min-height:0;flex-direction:column}
-body[data-lens="docket"] #docket,body[data-lens="board"] #board{display:block;padding:.5rem .75rem 3rem;max-width:52rem;width:100%;margin:0 auto}
-.stage{position:relative;flex:1 1 auto;min-height:18rem}
-#cy{position:absolute;inset:2.9rem 0 3.5rem 0}
-#map-empty{position:absolute;inset:40% 1rem auto;text-align:center;color:var(--ink-soft)}
-#view-note{position:absolute;left:.75rem;right:9.5rem;top:.45rem;margin:0;font-size:.74rem;line-height:1.3;color:var(--ink-soft);pointer-events:none;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-  text-shadow:0 0 4px var(--ground),0 0 4px var(--ground)}
-.tools{position:absolute;right:.5rem;top:.4rem;display:flex;gap:.35rem;z-index:2}
-.dock{position:absolute;left:0;right:0;bottom:0;display:flex;gap:.4rem;align-items:center;padding:.4rem .6rem;
-  padding-bottom:max(.4rem,env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--rule)}
-.dock #views{flex:1 1 auto;min-width:0}
-.tool{flex:none;border:1px solid var(--rule);background:var(--surface);border-radius:.5rem;padding:.3rem .7rem;min-height:2.25rem;
-  font-family:var(--mono);font-size:.78rem;cursor:pointer}
+body[data-lens="map"] #lens-map{display:block}
+body[data-lens="docket"] #docket,body[data-lens="board"] #board{display:block;padding:.5rem .75rem 1rem;max-width:52rem;margin:0 auto}
 #brief{display:none}
-body.hybrid[data-lens="map"] #brief{display:block;flex:none;padding:.35rem .75rem .2rem;border-bottom:1px solid var(--rule);background:var(--ground)}
-#brief .row{padding:.35rem 0}
-#brief .all{border:0;background:none;color:var(--accent);font-family:var(--mono);font-size:.8rem;min-height:2.75rem;padding:0;cursor:pointer}
-.reg h2,.fold>summary{font-family:var(--serif);font-weight:500;font-size:1.15rem;margin:1rem 0 .2rem;display:flex;align-items:baseline;gap:.5rem}
+body.hybrid[data-lens="map"] #brief{display:block;padding:.2rem .75rem .1rem;border-bottom:1px solid var(--rule)}
+#brief .all{display:flex;align-items:center;gap:.25rem;border:0;background:none;color:var(--ink);font-size:.875rem;font-weight:600;min-height:2.75rem;padding:0;cursor:pointer}
+#brief .all svg.i{width:1rem;height:1rem}
+
+/* ---- the map: its controls right above it, a bounded frame, what is not drawn below ---- */
+.stage{display:flex;flex-direction:column;background:var(--ground)}
+.maphead{display:flex;align-items:center;gap:.4rem;padding:.4rem .75rem}
+.picks{display:flex;gap:.35rem;overflow-x:auto;scrollbar-width:none;flex:1 1 auto;min-width:0}
+.picks::-webkit-scrollbar{display:none}
+.picks .pick{flex:none;border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:0 .85rem;min-height:2.75rem;
+  font-size:.875rem;color:var(--ink-soft);white-space:nowrap;cursor:pointer}
+.picks .pick[aria-pressed="true"]{color:var(--ink);font-weight:600;border:1.5px solid var(--ink)}
+.tool{flex:none;display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--rule);background:var(--surface);border-radius:.5rem;
+  padding:0 .8rem;min-height:2.75rem;font-size:.875rem;cursor:pointer}
+#view-note{margin:0;padding:0 .75rem .35rem;font-size:.875rem;color:var(--ink-soft)}
+.mapbox{position:relative;height:22.5rem;height:clamp(17.5rem,calc(100svh - 18.75rem),22.5rem);background:var(--sunk);
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);overflow:hidden}
+#cy{position:absolute;inset:0}
+/* Over the map while it is a picture: a swipe that starts here scrolls the page, as it
+   would anywhere else, and a tap is passed to the mark under it. */
+.touch{position:absolute;inset:0;z-index:1;cursor:pointer;touch-action:pan-y pinch-zoom;background:transparent;border:0;padding:0;width:100%}
+#map-empty{position:absolute;inset:40% 1rem auto;margin:0;text-align:center;color:var(--ink-soft);font-size:.875rem}
+.expand{position:absolute;right:.6rem;bottom:.6rem;z-index:2;box-shadow:0 1px 6px rgba(0,0,0,.18)}
+.rest{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:.6rem .75rem}
+.restb{display:flex;align-items:center;gap:.5rem;min-height:3rem;padding:0 .7rem;border:1px solid var(--rule);border-radius:.5rem;background:var(--surface);
+  font-size:.875rem;text-align:left;cursor:pointer}
+.restb span:nth-child(2){flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.restb svg.i{width:1rem;height:1rem;color:var(--ink-soft)}
+.foot{padding:.75rem .75rem max(1rem,env(safe-area-inset-bottom));padding-bottom:max(1rem,var(--safe-b,env(safe-area-inset-bottom)));font-family:var(--mono);font-size:.75rem;color:var(--ink-soft)}
+
+/* ---- the map expanded: it takes the screen and every gesture, until closed ---- */
+body.exploring{overflow:hidden}
+body.exploring .stage{position:fixed;inset:0;z-index:6;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+body.exploring .mapbox{flex:1 1 auto;height:auto;min-height:0;border-bottom:0}
+body.exploring .rest,body.exploring .expand,body.exploring .touch{display:none}
+/* Expanded, the bar has two rows: close and the map's tools, then the views at full width. */
+body.exploring .maphead{flex-wrap:wrap}
+body.exploring #views{order:5;flex-basis:100%}
+body.exploring #zoom-out{margin-left:auto}
+
+/* ---- rows (the brief, the docket, a card's sessions) ---- */
+.reg h2,.fold>summary{font-family:var(--serif);font-weight:500;font-size:1.25rem;margin:1rem 0 .2rem;display:flex;align-items:baseline;gap:.5rem}
 .fold>summary{cursor:pointer;min-height:2.75rem;align-items:center;color:var(--ink-soft)}
 .count{font-family:var(--mono);font-size:.75rem;color:var(--ink-soft)}
-.row{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule-soft);background:none;padding:.55rem 0;min-height:2.75rem;cursor:pointer}
-.row-say{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.98rem;color:var(--ink)}
-.row.needs .row-say{font-weight:500}
+.row{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule-soft);background:none;padding:.5rem 0;min-height:2.75rem;cursor:pointer}
+.row-say{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:1rem;line-height:1.35;color:var(--ink)}
 .row.closable .row-say,.row.quiet .row-say{color:var(--ink-soft)}
-.row-meta{display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;margin-top:.15rem;font-family:var(--mono);font-size:.74rem;color:var(--ink-soft)}
-.row-meta time{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
-.row-meta b{font-weight:600}
-.row-place{margin-left:auto}
-.stale-line{margin:.35rem 0 0;padding:.35rem .6rem;border-radius:.5rem;background:var(--unsure-wash);color:var(--unsure);font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:.6rem;justify-content:space-between}
-.rest{position:absolute;left:0;right:0;bottom:3.5rem;display:flex;gap:.4rem;overflow-x:auto;padding:.3rem .6rem;scrollbar-width:none}
-.restb{flex:none;min-height:2.75rem;padding:.3rem .8rem;border:1.5px dashed var(--ink-soft);border-radius:.6rem;background:var(--surface);font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);cursor:pointer}
-.restb.needs{border-color:var(--needs);color:var(--needs);font-weight:700}
-body.has-rest #cy{bottom:7rem}
-.more>summary{cursor:pointer;font-family:var(--mono);font-size:.8rem;color:var(--accent);min-height:2.75rem;display:flex;align-items:center}
+.row-meta{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin-top:.15rem;font-family:var(--mono);font-size:.75rem;color:var(--ink-soft)}
+.row-meta b{font-weight:600;color:var(--ink)}
+.more>summary{cursor:pointer;font-size:.875rem;color:var(--ink);font-weight:600;min-height:2.75rem;display:flex;align-items:center}
 .calm{color:var(--ink-soft);padding:1rem 0}
-.card{border:1px solid var(--rule);border-radius:.6rem;background:var(--surface);margin:.5rem 0;padding:0 .75rem}
+.card{border:1px solid var(--rule);border-radius:.5rem;background:var(--surface);margin:.5rem 0;padding:0 .75rem}
 .card.hot{border-left:4px solid var(--needs)}
 .card>summary{cursor:pointer;display:flex;flex-direction:column;gap:.15rem;padding:.6rem 0;min-height:2.75rem;list-style:none}
 .card>summary::-webkit-details-marker{display:none}
 .card-name{font-weight:600}
-.card-dots{display:flex;flex-wrap:wrap;gap:.2rem .7rem;font-family:var(--mono);font-size:.74rem;color:var(--ink-soft)}
-.card-say{font-size:.86rem;color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-dots{display:flex;flex-wrap:wrap;gap:.2rem .7rem;font-family:var(--mono);font-size:.75rem;color:var(--ink-soft)}
+.card-say{font-size:.875rem;color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tally.needs{color:var(--needs);font-weight:700}
 .tally.working{color:var(--accent)}
-#sheet,#layers{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--rule);
-  border-radius:.9rem .9rem 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);max-height:62dvh;overflow-y:auto;
+
+/* ---- sheets: one node's details, and layers ---- */
+/* Behind an open sheet: a tap there closes it and reaches nothing underneath. */
+.backdrop{position:fixed;inset:0;z-index:7;background:transparent;touch-action:none}
+#sheet,#layers{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--rule);
+  border-radius:.9rem .9rem 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);max-height:62vh;max-height:62svh;overflow-y:auto;
   padding:.4rem .9rem max(1rem,env(safe-area-inset-bottom));overscroll-behavior:contain}
-.shut{position:sticky;top:0;float:right;border:1px solid var(--rule);background:var(--surface);border-radius:.5rem;min-width:2.75rem;min-height:2.75rem;cursor:pointer;z-index:1}
+.shut{position:sticky;top:0;float:right;z-index:1}
 .sheet-head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding-top:.5rem}
-.sheet-head h3{margin:0;font-family:var(--serif);font-weight:600;font-size:1.2rem;overflow-wrap:anywhere}
-.said{margin:.5rem 0;font-size:.95rem}
-.said time{font-family:var(--mono);font-size:.78rem;font-weight:700}
-.facts{margin:.3rem 0;font-family:var(--mono);font-size:.74rem;color:var(--ink-soft);overflow-wrap:anywhere}
+.sheet-head h3{margin:0;font-family:var(--serif);font-weight:600;font-size:1.25rem;overflow-wrap:anywhere}
+.said{margin:.5rem 0;font-size:1rem}
+.said time{font-family:var(--mono);font-size:.75rem;color:var(--ink-soft)}
+.facts{margin:.3rem 0;font-family:var(--mono);font-size:.75rem;color:var(--ink-soft);overflow-wrap:anywhere}
 .acts{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
-.btn{display:inline-flex;align-items:center;min-height:2.75rem;padding:.3rem .9rem;border:1px solid var(--ink);border-radius:.5rem;background:var(--surface);
-  color:var(--ink);text-decoration:none;font-family:var(--mono);font-size:.82rem;cursor:pointer}
-.rel-sec h4,#layers-body h4{margin:.9rem 0 .2rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+.btn{display:inline-flex;align-items:center;min-height:2.75rem;padding:0 .9rem;border:1px solid var(--ink);border-radius:.5rem;background:var(--surface);
+  color:var(--ink);text-decoration:none;font-size:.875rem;cursor:pointer}
+.rel-sec h4,#layers-body h4{margin:.9rem 0 .2rem;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
 .rel-row{display:flex;align-items:center;gap:.5rem;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule-soft);background:none;min-height:2.75rem;padding:.2rem 0;cursor:pointer}
-.rel-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rel-note{flex:none;font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
-.chip{font-family:var(--mono);font-size:.7rem;border:1px solid var(--rule);border-radius:999px;padding:.05rem .5rem;color:var(--ink-soft)}
+.rel-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:.875rem}
+.rel-note{flex:none;font-size:.75rem;color:var(--ink-soft)}
+.chip{font-size:.75rem;border:1px solid var(--rule);border-radius:999px;padding:.05rem .5rem;color:var(--ink-soft)}
 .chip.needs{color:var(--needs);border-color:var(--needs)}
+.note{margin:.6rem 0 0;font-size:.875rem;color:var(--ink-soft)}
 .dot{flex:none;display:inline-block;width:.7rem;height:.7rem;border-radius:50%;background:var(--waits)}
 .dot.big{width:1rem;height:1rem}
 .dot.needs{background:var(--needs)}.dot.working{background:var(--accent)}.dot.closable{background:var(--free)}
@@ -100,31 +130,42 @@ body.has-rest #cy{bottom:7rem}
 .dot.owner{background:var(--ink)}
 .dot.repo,.dot.folder,.dot.machine,.dot.doc{border-radius:.15rem;background:var(--surface);border:2px solid var(--ink-soft)}
 .dot.issue,.dot.pr{border-radius:0;transform:rotate(45deg) scale(.8);background:var(--surface);border:2px solid var(--unsure)}
-.check{display:flex;gap:.6rem;align-items:flex-start;min-height:2.75rem;padding:.3rem 0;font-size:.86rem;color:var(--ink-soft);cursor:pointer}
-.check input{width:1.2rem;height:1.2rem;flex:none;margin-top:.15rem}
+.check{display:flex;gap:.6rem;align-items:flex-start;min-height:2.75rem;padding:.3rem 0;font-size:.875rem;color:var(--ink-soft);cursor:pointer}
+.check input{width:1.25rem;height:1.25rem;flex:none;margin-top:.1rem;accent-color:var(--ink)}
 .check b{color:var(--ink);font-weight:600}
-.find{width:100%;font-size:16px;padding:.55rem .7rem;border:1px solid var(--rule);border-radius:.5rem;background:var(--ground);color:var(--ink)}
-.key{display:flex;align-items:center;gap:.6rem;margin:.25rem 0;font-size:.84rem;color:var(--ink-soft)}
+.find{width:100%;font-size:1rem;min-height:2.75rem;padding:0 .7rem;border:1px solid var(--rule);border-radius:.5rem;background:var(--ground);color:var(--ink)}
+.key{display:flex;align-items:center;gap:.6rem;margin:.25rem 0;font-size:.875rem;color:var(--ink-soft)}
 .line{display:inline-block;width:1.6rem;border-top:2px solid var(--ink-soft)}
 .line.dashed{border-top-style:dashed}.line.dotted{border-top-style:dotted;border-color:var(--unsure)}
+
+/* ---- a wide window: the page fits it, and the map takes gestures directly ---- */
 @media (min-width:60rem){
-  #nav{display:flex;padding:0;margin-left:.5rem;flex:0 1 auto;order:3}
-  .brand-box{margin-right:.5rem}
-  .bar #lenses{margin-right:auto}
-  #nav a{min-height:2rem}
+  html,body{height:100%}
+  body{display:flex;flex-direction:column;overflow:hidden}
+  .top{position:static;flex:none;display:flex;align-items:center;gap:1rem;padding:.25rem .9rem}
+  .bar{flex:1 1 auto;gap:.75rem}
+  .brand{display:block}
+  .sentence{flex:none;padding:.3rem .9rem}
+  #nav{display:flex;flex-direction:row;gap:1rem;padding:0;flex:none;order:3}
+  #nav a{min-height:2.75rem;min-width:1.5rem;padding:0 .25rem;border:0;font-size:.875rem}
   #nav-open{display:none}
-  .bar{flex-wrap:nowrap}
-  .top{display:grid;grid-template-columns:1fr;gap:0}
+  .fresh{margin-left:0}
+  main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+  body[data-lens="map"] #lens-map{display:flex;flex:1 1 auto;min-height:0}
+  body[data-lens="docket"] #docket,body[data-lens="board"] #board{flex:1 1 auto;overflow-y:auto;width:100%}
+  body.hybrid[data-lens="map"] #brief{width:22rem;flex:none;border-bottom:0;border-right:1px solid var(--rule);overflow-y:auto;padding:.4rem .9rem}
+  .stage{flex:1 1 auto;min-width:0;min-height:0}
+  .mapbox{flex:1 1 auto;height:auto;min-height:0}
+  .touch,.expand{display:none}
+  .rest{display:flex;gap:.5rem}
+  .restb{flex:none;min-height:2.75rem}
+  .foot{display:none}
   #sheet,#layers{left:auto;top:0;bottom:0;width:24rem;max-height:none;border-radius:0;border-top:0;border-left:1px solid var(--rule);padding-top:.8rem}
-  body.sheet-open #cy{right:24rem}
-  body.hybrid[data-lens="map"] #lens-map{flex-direction:row}
-  body.hybrid[data-lens="map"] #brief{width:22rem;border-bottom:0;border-right:1px solid var(--rule);overflow-y:auto;padding:.6rem .9rem}
+  body.sheet-open .stage{margin-right:24rem}
+  .backdrop{display:none}
 }
 @media (hover:hover) and (pointer:fine){
-  .pick:hover,.btn:hover,.tool:hover{border-color:var(--ink)}
+  .picks .pick:hover,.btn:hover,.tool:hover,.iconbtn:hover,.restb:hover{border-color:var(--ink)}
   .row:hover,.rel-row:hover{background:var(--sunk)}
-}
-@media (pointer:coarse){
-  .pick,.tool{min-height:2.75rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}

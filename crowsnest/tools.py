@@ -978,6 +978,7 @@ def publish(
     from crowsnest.config import publish_settings
     from crowsnest.paths import data_dir
 
+    began = datetime.now(timezone.utc)
     settings = publish_settings(path=config)
     from crowsnest.config import relations_settings
 
@@ -1054,6 +1055,21 @@ def publish(
             "bytes": beside.stat().st_size,
             "counts": drawn["counts"],
         }
+    # What this run did, beside the page it kept: the moment the page shows and how long
+    # the run took. A run that took hours has just published an old moment, and this is
+    # what lets the courier's tick (and anyone else) say so. Written last, and never a
+    # reason for a run that delivered its page to fail.
+    try:
+        run = _publish.record_run(
+            page.parent,
+            made_at=made["made_at"],
+            started_at=began,
+            to=where,
+            size=result["bytes"],
+        )
+        result["seconds"] = run["seconds"]
+    except OSError as exc:
+        result["record"] = f"not written: {exc}"
     return result
 
 
@@ -1171,7 +1187,7 @@ def courier(
         lookouts = partial(
             _courier.lookout_sessions, home=home, all_homes=all_homes, config=config
         )
-    return _courier.tick(
+    done = _courier.tick(
         remote,
         mirror=mirror,
         copy=copy,
@@ -1189,6 +1205,24 @@ def courier(
         find=find,
         deliver=deliver,
     )
+    # The tick runs on its own schedule, so it is what can say that the publisher is
+    # late: one line in the event log when the page goes stale, one when it is current
+    # again. Never a reason for the tick to fail.
+    try:
+        from crowsnest import publish as _publish
+        from crowsnest.hook import append_event
+        from crowsnest.paths import data_dir
+
+        said = _publish.staleness_event(data_dir() / "publish")
+        if said:
+            append_event(said, events_path=events_path)
+            _publish.told(data_dir() / "publish", said)
+            if isinstance(done, dict):
+                done["page"] = said["event"]
+    except Exception as exc:  # noqa: BLE001 -- a note about the page never stops the courier
+        if isinstance(done, dict):
+            done["page"] = f"not noted: {exc}"
+    return done
 
 
 def intent_answer(

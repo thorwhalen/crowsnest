@@ -6,6 +6,7 @@
   var DOC = JSON.parse(document.getElementById('relations-data').textContent);
   var CFG = JSON.parse(document.getElementById('relations-config').textContent);
   var $ = function (id) { return document.getElementById(id); };
+  var CHEVRON = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
@@ -73,7 +74,7 @@
     ['talk', 'Talk', 'Who messaged whom, and what you asked of a session.'],
     ['free', 'Free', 'Everything shown, pulled together by its links: what clusters around what.']
   ];
-  var S = { lens: CFG.entry === 'docket' || CFG.entry === 'board' ? CFG.entry : 'map', view: 'all', show: 'key', focus: '', sel: '', on: [], refs: false };
+  var S = { lens: CFG.entry === 'docket' || CFG.entry === 'board' ? CFG.entry : 'map', view: 'all', show: 'key', focus: '', sel: '', explore: '', on: [], refs: false };
   var expanded = new Set();
   function readHash() {
     new URLSearchParams(location.hash.slice(1)).forEach(function (v, k) {
@@ -87,15 +88,28 @@
   }
   function writeHash(push) {
     var p = new URLSearchParams();
-    ['lens', 'view', 'show', 'focus', 'sel'].forEach(function (k) { if (S[k]) p.set(k, S[k]); });
+    ['lens', 'view', 'show', 'focus', 'sel', 'explore'].forEach(function (k) { if (S[k]) p.set(k, S[k]); });
     if (S.on.length) p.set('on', S.on.join(','));
     if (S.refs) p.set('refs', '1');
     var url = '#' + p.toString();
     if (url === location.hash) return false;
-    try { history[push ? 'pushState' : 'replaceState'](null, '', url); } catch (e) { return false; /* a sandboxed frame: the view still works */ }
+    try { if (push) history.pushState({ ours: true }, '', url); else history.replaceState(history.state, '', url); } catch (e) { return false; /* a sandboxed frame: the view still works */ }
     return !!push;
   }
-  window.addEventListener('popstate', function () { S.sel = ''; S.focus = ''; readHash(); sheetPushed = false; render(); if (S.sel) { sheetFor(S.sel); } else hideSheet(); });
+  var carry = null; /* what was chosen in a mode that is being left by going back: it stays chosen */
+  window.addEventListener('popstate', function () {
+    var ours = !!(history.state && history.state.ours);
+    S.sel = ''; S.focus = ''; S.explore = '';
+    readHash();
+    if (carry) { S.view = carry.view; S.show = carry.show; S.on = carry.on; S.refs = carry.refs; carry = null; writeHash(); }
+    if (S.explore && (WIDE.matches || S.lens !== 'map')) { S.explore = ''; writeHash(); }
+    sheetPushed = ours && !!S.sel;
+    explorePushed = ours && !!S.explore && !S.sel;
+    focusPushed = ours && S.view === 'focus' && !S.sel;
+    document.body.classList.toggle('exploring', !!S.explore);
+    render();
+    if (S.sel) { sheetFor(S.sel); } else hideSheet();
+  });
 
   /* ---------- times: always the source's, with its age beside it ---------- */
   var AS_OF = new Date(DOC.graph.as_of);
@@ -113,13 +127,16 @@
     return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago';
   }
   function tickAge() {
-    var m = Math.round((new Date() - AS_OF) / 60000);
-    var chip = $('asof');
-    chip.textContent = 'as of ' + clock(DOC.graph.as_of) + (m >= 1 ? ', ' + age(DOC.graph.as_of).replace(' min', 'm').replace(' h', 'h').replace(' d', 'd') : '');
-    var old = m >= (CFG.stale_minutes || 10);
-    chip.classList.toggle('stale', old);
-    $('stale').hidden = !old;
-    $('stale-text').textContent = 'This snapshot is ' + age(DOC.graph.as_of).replace(' ago', '') + ' old.';
+    var m = Math.round((new Date() - AS_OF) / 60000), old = m >= (CFG.stale_minutes || 10);
+    var pill = $('fresh'), how = age(DOC.graph.as_of).replace(' ago', '');
+    if (!pill.hasAttribute('data-pending')) {
+      pill.textContent = old ? how + ' old' : clock(DOC.graph.as_of);
+      pill.classList.toggle('stale', old);
+      pill.setAttribute('aria-label', old ? 'This snapshot is ' + how + ' old, from ' + clock(DOC.graph.as_of) + '. Reload.' : 'Snapshot from ' + clock(DOC.graph.as_of) + '. Reload.');
+      if (old) pill.setAttribute('role', 'alert'); else pill.removeAttribute('role');
+    }
+    $('foot').textContent = 'As of ' + new Date(DOC.graph.as_of).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + (m >= 1 ? ', ' + age(DOC.graph.as_of) : '') + '.' + ($('foot').hasAttribute('data-same') ? ' Reloaded just now: nothing newer has been published.' : '');
+    if ($('foot').hasAttribute('data-same') && !pill.hasAttribute('data-pending')) pill.textContent = 'still ' + clock(DOC.graph.as_of);
   }
 
   /* ---------- the sentence every lens starts with ---------- */
@@ -220,8 +237,21 @@
     openSheet();
   }
   var sheetPushed = false, focusPushed = false;
-  function openSheet() { $('sheet').hidden = false; document.body.classList.add('sheet-open'); }
-  function hideSheet() { $('sheet').hidden = true; document.body.classList.remove('sheet-open'); S.sel = ''; if (cy) cy.$(':selected').unselect(); }
+  var cameFrom = null;
+  function backdrop() { $('backdrop').hidden = $('sheet').hidden && $('layers').hidden; }
+  function openSheet() {
+    if ($('sheet').hidden) cameFrom = document.activeElement;
+    $('layers').hidden = true; $('sheet').hidden = false; document.body.classList.add('sheet-open'); backdrop();
+    var head = $('sheet-body').querySelector('h3');
+    if (head) { head.setAttribute('tabindex', '-1'); head.focus({ preventScroll: true }); }
+  }
+  function hideSheet() {
+    var was = !$('sheet').hidden;
+    $('sheet').hidden = true; document.body.classList.remove('sheet-open'); S.sel = ''; if (cy) cy.$(':selected').unselect(); backdrop();
+    if (was && cameFrom && cameFrom.focus && document.contains(cameFrom)) cameFrom.focus({ preventScroll: true });
+    cameFrom = null;
+  }
+  function layersOpen(open) { if (open && !$('sheet').hidden) closeSheet(); $('layers').hidden = !open; backdrop(); }
   function closeSheet() {
     if ($('sheet').hidden) return;
     if (sheetPushed) { sheetPushed = false; try { history.back(); return; } catch (e) { /* fall through */ } }
@@ -240,12 +270,49 @@
     if (!node.length) return;
     node.select();
     var at = node.renderedPosition(), st = stage();
+    if (still()) return;
     if (narrow(st) && at.y > st.h * 0.3) cy.animate({ panBy: { x: 0, y: st.h * 0.22 - at.y } }, { duration: 220 });
     else if (centre) cy.animate({ center: { eles: node } }, { duration: 250 });
   }
 
   /* ---------- the map: which nodes a view shows, and where each goes ---------- */
-  var cy = null, bundles = {};
+  var cy = null, bundles = {}, explorePushed = false, lastTall = 0;
+  var WIDE = window.matchMedia ? window.matchMedia('(min-width: 60rem)') : { matches: true };
+  function exploring() { return document.body.classList.contains('exploring'); }
+  function still() { return !WIDE.matches && !exploring(); } /* the map is a picture: it takes no gesture */
+  function gestures() {
+    var on = !still();
+    $('touch').hidden = on;
+    $('fit').hidden = !on;
+    $('explore').hidden = on;
+    $('explore-close').hidden = !exploring();
+    if (!cy) return;
+    $('zoom-in').hidden = $('zoom-out').hidden = !on;
+    cy.userPanningEnabled(on); cy.userZoomingEnabled(on); cy.autoungrabify(!WIDE.matches);
+  }
+  function explore(open, fromHistory) {
+    if (open === exploring()) return;
+    if (open) { explorePushed = false; S.explore = '1'; if (!fromHistory) explorePushed = writeHash(true); }
+    else if (!fromHistory && explorePushed) { explorePushed = false; if (S.view !== 'focus') carry = { view: S.view, show: S.show, on: S.on.slice(), refs: S.refs }; history.back(); return; }
+    else { S.explore = ''; if (!fromHistory) writeHash(); }
+    document.body.classList.toggle('exploring', open);
+    gestures();
+    drawMap();
+    (open ? $('explore-close') : $('explore')).focus();
+  }
+  function hit(x, y) { /* what a tap means: a mark of the box it fell in, else that box, else the nearest mark within a thumb's reach */
+    var inside = null, best = null, bestD = 34;
+    cy.nodes('[type = "box"]').forEach(function (n) {
+      var b = n.renderedBoundingBox({ includeLabels: true });
+      if (!inside && x >= b.x1 && x <= b.x2 && y >= b.y1 && y <= b.y2) inside = n;
+    });
+    if (inside) bestD = 15;
+    (inside ? inside.children() : cy.nodes('[type != "box"]')).forEach(function (n) {
+      var q = n.renderedPosition(), dd = Math.hypot(q.x - x, q.y - y);
+      if (dd < bestD) { bestD = dd; best = n.id(); }
+    });
+    return best || (inside ? inside.data('of') || '' : '');
+  }
   function stage() { var b = $('cy').getBoundingClientRect(); return { w: Math.max(b.width, 300), h: Math.max(b.height, 320) }; }
   function narrow(st) { return st.w < 560; }
   function ringOf(rx, ry, tight) {
@@ -309,7 +376,8 @@
       if (!rest.length) return;
       var id = 'bundle:rest-' + c;
       bundles[id] = { members: rest.map(function (n) { return n.id; }), title: rest.length + ' more ' + CLASS_WORDS[c] };
-      out.rest.push([id, '+' + rest.length + ' ' + CLASS_WORDS[c], c]);
+      var words = CLASS_WORDS[c].replace('need you', rest.length === 1 ? 'needs you' : 'need you');
+      out.rest.push([id, rest.length + ' ' + words, c, rest.length + ' more ' + words + ', not drawn']);
     });
   }
   function wedges(keys, sizes, total) { /* a share of the ring per place, none over a third of it, a gap between two */
@@ -378,11 +446,12 @@
       calm = calm.concat(groups[p]);
       return false;
     }).sort(function (a, b) { return label(a).toLowerCase() < label(b).toLowerCase() ? -1 : 1; });
-    var order = { needs: 0, working: 1, closable: 2, quiet: 3 }, cell = 24, pad = 30, wrap = Math.max(st.w - 16, 300) * Math.max(1, Math.sqrt(live.length * 2600 / (st.w * st.h))), x = 0, y = 0, rowH = 0;
+    var order = { needs: 0, working: 1, closable: 2, quiet: 3 }, cell = 24, pad = 30, x = 0, y = 0, rowH = 0;
+    var wrap = Math.max(st.w - 16, 300) * (WIDE.matches ? Math.max(1, Math.sqrt(live.length * 2600 / (st.w * st.h))) : 1);
     function box(id, name, members, of) {
       members.sort(function (a, b) { return (order[cls(a)] - order[cls(b)]) || byInterest(a, b); });
       var cols = Math.min(members.length, Math.max(2, Math.ceil(Math.sqrt(members.length * 1.8)))), rows = Math.ceil(members.length / cols);
-      var w = Math.max(cols * cell, 7 * Math.min(name.length, 18) + 6), h = rows * cell;
+      var w = Math.max(cols * cell, Math.min(6.7 * name.length + 8, wrap - pad)), h = rows * cell;
       if (x && x + w > wrap) { x = 0; y += rowH + pad + 20; rowH = 0; }
       out.nodes.push({ id: id, type: 'box', label: name, of: of, tight: 1, tw: w + 14 });
       members.forEach(function (n, i) {
@@ -399,6 +468,7 @@
       bundles['bundle:calm'] = { members: calm.map(function (n) { return n.id; }), title: calm.length + ' sessions quiet or done in ' + (Object.keys(groups).length - keys.length) + ' other places' };
       box('box:calm', 'quiet or done elsewhere', calm, 'bundle:calm');
     }
+    out.tall = y + rowH + 60; /* what the drawing needs at its own size: a phone's frame grows to it */
     return out;
   }
   function crossLinks(shown, out, types) {
@@ -510,7 +580,7 @@
     var needs = token('--needs'), accent = token('--accent'), free = token('--free'), waits = token('--waits'), unsure = token('--unsure');
     var font = token('--mono') || 'monospace';
     return [
-      { selector: 'node', style: { 'label': 'data(label)', 'font-family': font, 'font-size': 11, 'color': ink, 'text-valign': 'bottom', 'text-margin-y': 4, 'text-wrap': 'ellipsis', 'text-max-width': 96, 'min-zoomed-font-size': 6, 'width': 'data(size)', 'height': 'data(size)', 'background-color': waits, 'border-width': 0, 'text-outline-color': ground, 'text-outline-width': 2, 'text-outline-opacity': 0.9 } },
+      { selector: 'node', style: { 'label': 'data(label)', 'font-family': font, 'font-size': 11, 'color': ink, 'text-valign': 'bottom', 'text-margin-y': 4, 'text-wrap': 'ellipsis', 'text-max-width': WIDE.matches ? 150 : 96, 'min-zoomed-font-size': 6, 'width': 'data(size)', 'height': 'data(size)', 'background-color': waits, 'border-width': 0, 'text-outline-color': ground, 'text-outline-width': 2, 'text-outline-opacity': 0.9 } },
       { selector: 'node[lv="top"]', style: { 'text-valign': 'top', 'text-margin-y': -4 } },
       { selector: 'node[lh="right"]', style: { 'text-valign': 'center', 'text-halign': 'right', 'text-margin-x': 5, 'text-margin-y': 0 } },
       { selector: 'node[lh="left"]', style: { 'text-valign': 'center', 'text-halign': 'left', 'text-margin-x': -5, 'text-margin-y': 0 } },
@@ -564,42 +634,61 @@
   function drawMap() {
     if (!window.cytoscape) { $('map-empty').textContent = 'The map could not start in this browser. The docket and the board hold the same sessions.'; $('map-empty').hidden = false; return; }
     bundles = {};
+    $('cy').parentNode.style.height = '';
     var built = (BUILD[S.view] || viewAll)();
     var known = {};
     if (cy) cy.nodes().forEach(function (n) { known[n.id()] = n.position(); });
     if (!cy) {
       cy = window.cytoscape({ container: $('cy'), style: style(), layout: { name: 'preset' }, minZoom: 0.15, maxZoom: 3, boxSelectionEnabled: false, autoungrabify: false });
+      cy.on('viewport', function () { var at = cy.pan(), box = $('cy'); box.setAttribute('data-zoom', cy.zoom().toFixed(3)); box.setAttribute('data-pan', Math.round(at.x) + ',' + Math.round(at.y)); });
       cy.on('tap', function (ev) {
         if (ev.target !== cy) { if (ev.target.isNode() && ev.target.data('type') !== 'box') select(ev.target.id()); else if (ev.target.isNode() && ev.target.data('of')) select(ev.target.data('of')); return; }
-        var p = ev.renderedPosition, best = null, bestD = 30;
-        cy.nodes().forEach(function (n) { if (n.data('type') === 'box') return; var q = n.renderedPosition(), dd = Math.hypot(q.x - p.x, q.y - p.y); if (dd < bestD) { bestD = dd; best = n; } });
-        if (best) select(best.id()); else closeSheet();
+        var near = hit(ev.renderedPosition.x, ev.renderedPosition.y);
+        if (near) select(near); else closeSheet();
       });
     }
+    lastTall = !WIDE.matches && built.tall ? built.tall : 0;
+    $('cy').parentNode.style.height = lastTall && still() ? Math.max(280, lastTall) + 'px' : '';
     var next = elements(built);
     cy.batch(function () {
       cy.elements().remove();
       cy.add(next);
     });
+    gestures();
+    if (!WIDE.matches) cy.nodes().panify();
     var rest = $('rest');
     rest.textContent = '';
-    (built.rest || []).forEach(function (r) { rest.appendChild(el('button', { type: 'button', class: 'restb ' + r[2], text: r[1], on: { click: function () { press(this); select(r[0]); } } })); });
+    (built.rest || []).forEach(function (r) {
+      var row = el('button', { type: 'button', class: 'restb', 'aria-label': r[3], on: { click: function () { press(this); select(r[0]); } } }, [el('span', { class: 'dot ' + r[2] }), el('span', { text: r[1] })]);
+      row.insertAdjacentHTML('beforeend', CHEVRON);
+      rest.appendChild(row);
+    });
     rest.hidden = !(built.rest || []).length;
-    document.body.classList.toggle('has-rest', !rest.hidden);
     $('map-empty').hidden = !built.empty;
     $('map-empty').textContent = built.empty || '';
     if (built.layout === 'cose') {
       cy.layout({ name: 'cose', animate: false, randomize: false, nodeRepulsion: function () { return 60000; }, idealEdgeLength: function () { return 90; }, gravity: 0.4, numIter: 1500, padding: 20, nodeDimensionsIncludeLabels: true }).run();
     } else {
-      cy.nodes().forEach(function (n) { var was = known[n.id()], to = n.position(); if (was && n.data('type') !== 'box' && (was.x !== to.x || was.y !== to.y)) { var goal = { x: to.x, y: to.y }; n.position(was); n.animate({ position: goal }, { duration: 320 }); } });
+      if (!lastTall) cy.nodes().forEach(function (n) { var was = known[n.id()], to = n.position(); if (was && n.data('type') !== 'box' && (was.x !== to.x || was.y !== to.y)) { var goal = { x: to.x, y: to.y }; n.position(was); n.animate({ position: goal }, { duration: 320 }); } });
     }
     cy.resize();
     fit();
-    var note = VIEWS.filter(function (v) { return v[0] === S.view; })[0];
-    $('view-note').textContent = built.note || (note ? note[2] : '');
+    $('view-note').textContent = built.note || '';
+    $('view-note').hidden = !built.note;
     if (S.sel && cy.getElementById(S.sel).length) cy.getElementById(S.sel).select();
   }
-  function fit() { if (!cy) return; var pad = 14; cy.fit(cy.elements(), pad); if (cy.zoom() > 1.15) { cy.zoom(1.15); cy.center(); } setTimeout(function () { cy.animate({ fit: { eles: cy.elements(), padding: pad } }, { duration: 200, complete: function () { if (cy.zoom() > 1.15) { cy.zoom(1.15); cy.center(); } } }); }, 360); }
+  function fit() {
+    if (!cy) return;
+    var pad = 14, box = $('cy');
+    if (lastTall) { /* a drawing taller than the screen is fitted to the width and read from its top */
+      var bb = cy.elements().boundingBox(), z = Math.min(1.15, (box.clientWidth - 2 * pad) / Math.max(bb.w, 1));
+      cy.viewport({ zoom: z, pan: { x: (box.clientWidth - bb.w * z) / 2 - bb.x1 * z, y: pad - bb.y1 * z } });
+      return;
+    }
+    cy.fit(cy.elements(), pad);
+    if (cy.zoom() > 1.15) { cy.zoom(1.15); cy.center(); }
+    setTimeout(function () { if (!lastTall) cy.animate({ fit: { eles: cy.elements(), padding: pad } }, { duration: 200, complete: function () { if (cy.zoom() > 1.15) { cy.zoom(1.15); cy.center(); } } }); }, 360);
+  }
 
   /* ---------- the docket: the same sessions as a list a thumb can read ---------- */
   function docketRow(n) {
@@ -640,7 +729,8 @@
     into.textContent = '';
     var rank = { decision: 0, action: 1 }, first = BY_CLASS.needs.slice().sort(function (a, b) { var x = rank[a.data.why], y = rank[b.data.why]; return ((x === undefined ? 2 : x) - (y === undefined ? 2 : y)) || byInterest(a, b); });
     first.slice(0, cap).forEach(function (n) { into.appendChild(docketRow(n)); });
-    if (BY_CLASS.needs.length > cap) into.appendChild(el('button', { class: 'all', type: 'button', text: (BY_CLASS.needs.length - cap) + ' more in the docket', on: { click: function () { S.lens = 'docket'; writeHash(); render(); } } }));
+    if (BY_CLASS.needs.length > cap) into.appendChild(el('button', { class: 'all', type: 'button', text: (BY_CLASS.needs.length - cap) + ' more in the docket', on: { click: function () { S.lens = 'docket'; writeHash(true); render(); window.scrollTo(0, 0); } } }));
+    if (BY_CLASS.needs.length > cap) into.lastChild.insertAdjacentHTML('beforeend', CHEVRON);
     if (!BY_CLASS.needs.length) into.appendChild(el('p', { class: 'calm', text: 'Nothing waits on you.' }));
   }
 
@@ -673,6 +763,17 @@
   function layers() {
     var box = $('layers-body');
     box.textContent = '';
+    box.appendChild(el('h4', { text: 'Find' }));
+    var results = el('div', { class: 'results' });
+    box.appendChild(el('input', { type: 'search', class: 'find', placeholder: 'a session, a repository, an issue', 'aria-label': 'Find a node', on: { input: function () {
+      var q = this.value.trim().toLowerCase();
+      results.textContent = '';
+      if (q.length < 2) return;
+      DOC.nodes.filter(function (n) { return (n.data.label || '').toLowerCase().indexOf(q) >= 0; }).sort(byInterest).slice(0, 12).forEach(function (n) { results.appendChild(nodeRow(n.id, n.type)); });
+    } } }));
+    box.appendChild(results);
+    var about = VIEWS.filter(function (v) { return v[0] === S.view; })[0];
+    if (about) box.appendChild(el('p', { class: 'note', text: about[1] + ': ' + about[2] }));
     box.appendChild(el('h4', { text: 'How much' }));
     var how = el('div', { class: 'picks' });
     chips(how, [['key', 'Important'], ['more', 'More'], ['all', 'Everything']], S.show, function (v) { S.show = v; expanded.clear(); writeHash(); render(); });
@@ -686,15 +787,6 @@
     var refs = el('input', { type: 'checkbox', id: 'on-refs', on: { change: function () { S.refs = this.checked; writeHash(); render(); } } });
     refs.checked = S.refs;
     box.appendChild(el('label', { class: 'check', for: 'on-refs' }, [refs, el('span', {}, [el('b', { text: 'references' }), ' issues, pull requests and pages, two links out, when a node is in focus'])]));
-    box.appendChild(el('h4', { text: 'Find' }));
-    var results = el('div', { class: 'results' });
-    box.appendChild(el('input', { type: 'search', class: 'find', placeholder: 'a session, a repository, an issue', 'aria-label': 'Find a node', on: { input: function () {
-      var q = this.value.trim().toLowerCase();
-      results.textContent = '';
-      if (q.length < 2) return;
-      DOC.nodes.filter(function (n) { return (n.data.label || '').toLowerCase().indexOf(q) >= 0; }).sort(byInterest).slice(0, 12).forEach(function (n) { results.appendChild(nodeRow(n.id, n.type)); });
-    } } }));
-    box.appendChild(results);
     box.appendChild(el('h4', { text: 'Reading the map' }));
     [['dot needs', 'needs you (a ring: a decision)'], ['dot working', 'working'], ['dot closable', 'can be closed'], ['dot quiet', 'quiet'], ['dot repo', 'a repository or folder'], ['line solid', 'recorded'], ['line dashed', 'seen, not recorded'], ['line dotted', 'derived by a rule']].forEach(function (k) {
       box.appendChild(el('p', { class: 'key' }, [el('span', { class: k[0] }), k[1]]));
@@ -703,7 +795,7 @@
   function render() {
     document.body.setAttribute('data-lens', S.lens);
     document.body.classList.toggle('hybrid', CFG.entry === 'hybrid');
-    chips($('lenses'), [['map', 'Map'], ['docket', 'Docket'], ['board', 'Board']], S.lens, function (v) { S.lens = v; writeHash(); render(); });
+    chips($('lenses'), [['map', 'Map'], ['docket', 'Docket'], ['board', 'Board']], S.lens, function (v) { S.lens = v; writeHash(); render(); window.scrollTo(0, 0); });
     var views = VIEWS.slice();
     if (S.view === 'focus') views = [['back', '‹ Back', 'Back to the view before'], ['focus', 'Focus on ' + label(S.focus), '']];
     chips($('views'), views, S.view, function (v) { if (v === 'back') { if (focusPushed) { focusPushed = false; history.back(); return; } v = 'all'; } S.view = v; if (v !== 'focus') S.focus = ''; writeHash(); render(); });
@@ -716,15 +808,46 @@
 
   /* ---------- wiring ---------- */
   $('sheet-close').addEventListener('click', closeSheet);
-  $('reload').addEventListener('click', function () { this.setAttribute('data-pending', ''); this.textContent = 'Reloading…'; location.reload(); });
-  $('layers-open').addEventListener('click', function () { press(this); $('layers').hidden = !$('layers').hidden; });
-  $('layers-close').addEventListener('click', function () { $('layers').hidden = true; });
+  $('fresh').addEventListener('click', function () {
+    this.setAttribute('data-pending', ''); this.setAttribute('aria-busy', 'true'); this.textContent = 'Reloading…';
+    try { sessionStorage.setItem('crowsnest:relations:asof', DOC.graph.as_of); } catch (e) { /* no storage here: the reload still happens */ }
+    location.reload();
+  });
+  try {
+    if (sessionStorage.getItem('crowsnest:relations:asof') === DOC.graph.as_of) $('foot').setAttribute('data-same', '1');
+    sessionStorage.removeItem('crowsnest:relations:asof');
+  } catch (e) { /* no storage */ }
+  $('explore').addEventListener('click', function () { press(this); explore(true); });
+  function zoomBy(k) { if (cy) cy.animate({ zoom: { level: cy.zoom() * k, renderedPosition: { x: $('cy').clientWidth / 2, y: $('cy').clientHeight / 2 } } }, { duration: 160 }); }
+  $('zoom-in').addEventListener('click', function () { press(this); zoomBy(1.4); });
+  $('zoom-out').addEventListener('click', function () { press(this); zoomBy(1 / 1.4); });
+  $('explore-close').addEventListener('click', function () { press(this); explore(false); });
+  /* A tap on the picture goes to the mark under it; a swipe never reaches the map at all. */
+  $('touch').addEventListener('click', function (ev) {
+    if (!cy) return;
+    var box = $('cy').getBoundingClientRect(), near = hit(ev.clientX - box.left, ev.clientY - box.top);
+    if (near) select(near); else closeSheet();
+  });
+  if (WIDE.addEventListener) WIDE.addEventListener('change', function () { if (WIDE.matches && exploring()) explore(false, true); if (S.lens === 'map') drawMap(); });
+  $('layers-open').addEventListener('click', function () { press(this); layersOpen($('layers').hidden); });
+  $('layers-close').addEventListener('click', function () { layersOpen(false); });
+  $('backdrop').addEventListener('click', function () { if (!$('layers').hidden) layersOpen(false); else closeSheet(); });
   $('fit').addEventListener('click', function () { press(this); fit(); });
   $('nav-open').addEventListener('click', function () { press(this); this.setAttribute('aria-expanded', String($('nav').classList.toggle('open'))); });
-  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { closeSheet(); $('layers').hidden = true; } });
-  window.addEventListener('resize', function () { if (cy && S.lens === 'map') { cy.resize(); fit(); } });
+  document.addEventListener('keydown', function (ev) { if (ev.key !== 'Escape') return; if (!$('layers').hidden) layersOpen(false); else if (!$('sheet').hidden) closeSheet(); else if (exploring()) explore(false); });
+  var lastWidth = 0, lastWindow = window.innerWidth;
+  function refit() {
+    var w = $('cy').clientWidth;
+    if (!cy || S.lens !== 'map' || !w || w === lastWidth) return;
+    lastWidth = w;
+    if (window.innerWidth === lastWindow) { cy.resize(); return; } /* a pane opened or closed: same drawing, same zoom */
+    lastWindow = window.innerWidth;
+    drawMap();
+  }
+  if (window.ResizeObserver) new ResizeObserver(refit).observe($('cy')); else window.addEventListener('resize', refit);
   if (window.matchMedia) { var dark = window.matchMedia('(prefers-color-scheme: dark)'); var restyle = function () { if (cy) cy.style(style()); }; if (dark.addEventListener) dark.addEventListener('change', restyle); }
   readHash();
+  if (S.explore && S.lens === 'map' && !WIDE.matches) document.body.classList.add('exploring'); else S.explore = '';
   tickAge();
   setInterval(tickAge, 30000);
   render();

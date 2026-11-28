@@ -87,6 +87,11 @@ HOOK_KINDS = {
     "stop": "stopped",
     "intent": "intent",
     "ask": "ask",
+    # The published page is older than it should be (``page_stale``), or current again
+    # (``page_fresh``): written by the courier's tick, which runs on its own schedule
+    # and so can say that the publisher is late.
+    "page_stale": "stale",
+    "page_fresh": "fresh",
 }
 
 #: Notification types that are not a request. Claude Code sends ``idle_prompt`` when a
@@ -102,7 +107,9 @@ def _now() -> str:
 
 #: The kinds that need the person. In a Markdown line the kind is bolded too, so a scan
 #: catches "waiting" and "error" without reading the line.
-LOUD_KINDS = frozenset({"waiting", "error", "needs-you", "woke", "intent", "ask"})
+LOUD_KINDS = frozenset(
+    {"waiting", "error", "needs-you", "woke", "intent", "ask", "stale"}
+)
 
 
 #: Every kind :func:`events` yields: the registry diff's, the hook log's, and ``woke``.

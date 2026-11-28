@@ -128,8 +128,8 @@ To be woken only for what needs the person, filter with the stream's own flags, 
 with a `grep` chain you keep in context (a compaction loses it, a line-format change
 breaks it silently): `crowsnest watch --kinds loud --mute noisy-sweep`, or the same once
 in the config file's `[watch]` table (`kinds = "loud"`, `mute = [...]`), so the command
-stays the bare `crowsnest watch`. `loud` is waiting, error, needs-you, woke, intent and
-ask. An **ask** is a turn that ended asking the person for something ("For the user: ..."),
+stays the bare `crowsnest watch`. `loud` is waiting, error, needs-you, woke, intent, ask
+and stale (the published page is old). An **ask** is a turn that ended asking the person for something ("For the user: ..."),
 promoted from its stop line by the hook, so filtering out `stopped` does not lose it. A
 wait is announced once, by whichever of `waiting` and `needs-you` comes first.
 
@@ -146,6 +146,7 @@ error, or an item the person put off **woke** (its time passed, or it changed wh
 - **woke** with `group: needs_you` → tell the user now, quoting the `detail` (the plan
   they left, else the reason); push if they may have walked away. Otherwise → fold it
   into your next summary.
+- **stale** → the published page is old (`detail` says what moment it shows and how long its last run took). Tell the user once, with that detail: the usual cause is the publish job starved of CPU (a background-priority job on a busy machine) or stuck. **fresh** → a run caught up; fold it into your next summary.
 - **busy**, **started**, **exited** → note it; mention it only when asked.
 - **intent** → a button on the page's own-server console (`crowsnest courier`) asked for
   an Ask, a Tell or a Start; `detail` is `<kind> <intent id>: <text>` and `name` the
