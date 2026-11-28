@@ -206,6 +206,9 @@ def test_a_stale_page_is_said_once_and_loudly_and_its_recovery_once(tmp_path):
     said = publish.staleness_event(tmp_path, now=at + timedelta(minutes=1))
     assert said["event"] == "page_stale" and "3 h 19 min ago" in said["detail"]
     assert "its last run took 3 h 18 min" in said["detail"]
+    # until the line is in the log it is offered again; once told, it is not
+    assert publish.staleness_event(tmp_path, now=at + timedelta(minutes=2)) is not None
+    publish.told(tmp_path, said)
     assert publish.staleness_event(tmp_path, now=at + timedelta(minutes=2)) is None
     # the lookout's stream carries it as a loud line
     line = watch.hook_event(said)
@@ -221,9 +224,89 @@ def test_a_stale_page_is_said_once_and_loudly_and_its_recovery_once(tmp_path):
     back = publish.staleness_event(tmp_path, now=at + timedelta(minutes=7))
     assert back["event"] == "page_fresh"
     assert watch.hook_event(back)["kind"] == "fresh" and "fresh" not in watch.LOUD_KINDS
+    publish.told(tmp_path, back)
     assert publish.staleness_event(tmp_path, now=at + timedelta(minutes=8)) is None
 
 
 def test_nothing_published_yet_is_not_called_stale(tmp_path):
     assert publish.staleness_event(tmp_path) is None
     assert publish.state(tmp_path) == {"known": False, "stale": False}
+
+
+def test_slow_runs_back_to_back_are_stale_once_not_at_every_run(tmp_path):
+    """Runs of forty minutes each: the page is never current. That is one stale line,
+    not a stale and a fresh at every run."""
+    from datetime import datetime, timedelta, timezone
+
+    at = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
+    lines = []
+    for run in range(4):
+        began = at + timedelta(minutes=40 * run)
+        publish.record_run(
+            tmp_path,
+            made_at=began.isoformat(),
+            started_at=began,
+            finished_at=began + timedelta(minutes=40),
+        )
+        for minute in range(40, 80, 2):  # the courier ticks while the next run goes on
+            said = publish.staleness_event(
+                tmp_path, now=began + timedelta(minutes=minute)
+            )
+            if said:
+                publish.told(tmp_path, said)
+                lines.append(said["event"])
+    assert lines == ["page_stale"]
+    # and quick runs back to back are never stale at all
+    quick = tmp_path / "quick"
+    for run in range(6):
+        began = at + timedelta(minutes=12 * run)
+        publish.record_run(
+            quick,
+            made_at=began.isoformat(),
+            started_at=began,
+            finished_at=began + timedelta(minutes=12),
+        )
+        for minute in range(12, 24, 2):
+            assert (
+                publish.staleness_event(quick, now=began + timedelta(minutes=minute))
+                is None
+            )
+
+
+def test_a_record_of_the_wrong_shape_is_unknown_not_a_crash(tmp_path):
+    for text in (
+        "[]",
+        "{}",
+        '{"made_at": null}',
+        '{"made_at": "soon", "seconds": "x"}',
+        "not json",
+    ):
+        (tmp_path / publish.STATUS_NAME).write_text(text)
+        assert publish.state(tmp_path)["known"] is False
+        assert publish.staleness_event(tmp_path) is None
+
+
+def test_the_courier_writes_the_stale_line_into_the_event_log_once(tmp_path, monkeypatch):
+    import json
+    from datetime import datetime, timedelta, timezone
+
+    from crowsnest import courier
+    from crowsnest.paths import data_dir
+
+    monkeypatch.setattr(courier, "tick", lambda remote, **kw: {"in": 0})
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(f"[courier]\nremote = '{tmp_path / 'db'}'\n")
+    long_ago = datetime.now(timezone.utc) - timedelta(hours=5)
+    publish.record_run(
+        data_dir() / "publish",
+        made_at=long_ago.isoformat(),
+        started_at=long_ago,
+        finished_at=long_ago + timedelta(minutes=1),
+    )
+    log = tmp_path / "events.jsonl"
+    first = tools.courier(config=cfg, events_path=log)
+    second = tools.courier(config=cfg, events_path=log)
+    assert first["page"] == "page_stale" and "page" not in second
+    lines = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [line["event"] for line in lines] == ["page_stale"]
+    assert "5 h" in lines[0]["detail"]

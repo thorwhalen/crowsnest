@@ -35,7 +35,7 @@ import shutil
 import subprocess
 import tempfile
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -296,9 +296,12 @@ def state(
     """How old the published page is: ``{"known", "made_at", "seconds", "age", "stale"}``.
 
     ``age`` is the seconds between ``now`` and the moment the last finished run's page
-    shows; ``stale`` is that age past ``stale_after``. With no record yet (nothing has
-    published from this folder) ``known`` is false and nothing is called stale: an
-    unknown is never reported as a fault.
+    shows. The page is ``stale`` when nothing has finished for ``stale_after``, or when
+    the last run itself took that long: runs that each take forty minutes leave a page
+    that is never current, and a test on the page's age alone would call it stale and
+    fresh in turn at every run. With no record yet (nothing has published from this
+    folder) ``known`` is false and nothing is called stale: an unknown is never reported
+    as a fault.
 
     >>> import tempfile
     >>> where = tempfile.mkdtemp()
@@ -310,6 +313,10 @@ def state(
     >>> found = state(where, now=at + timedelta(minutes=5))
     >>> found["stale"], span(found["age"]), span(found["seconds"])
     (True, '3 h 23 min', '3 h 18 min')
+    >>> _ = record_run(where, made_at="2026-01-01T12:00:00+00:00",
+    ...                started_at=at, finished_at=at + timedelta(minutes=9))
+    >>> [state(where, now=at + timedelta(minutes=m))["stale"] for m in (10, 23, 25)]
+    [False, False, True]
     """
     try:
         run = json.loads((Path(folder) / STATUS_NAME).read_text(encoding="utf-8"))
@@ -320,13 +327,19 @@ def state(
         return {"known": False, "stale": False}
     now = now or datetime.now(timezone.utc)
     age = max(0.0, (now - made).total_seconds())
+    try:
+        seconds = max(0.0, float(run.get("seconds") or 0))
+    except (TypeError, ValueError):
+        seconds = 0.0
+    finished = _moment(run.get("finished_at")) or made
+    limit = stale_after.total_seconds()
     return {
         "known": True,
-        "made_at": run["made_at"],
-        "finished_at": run.get("finished_at", ""),
-        "seconds": float(run.get("seconds") or 0),
+        "made_at": str(run["made_at"]),
+        "finished_at": str(run.get("finished_at") or ""),
+        "seconds": seconds,
         "age": age,
-        "stale": age > stale_after.total_seconds(),
+        "stale": (now - finished).total_seconds() > limit or seconds > limit,
     }
 
 
@@ -347,6 +360,9 @@ def staleness_event(
     Something that runs on its own schedule calls this (the courier's tick does): the
     publisher cannot, because a publisher that is late is not there to say so.
 
+    This only reads. Once the line is in the log, the caller says so with :func:`told`;
+    a line that could not be written is then offered again at the next tick.
+
     >>> import tempfile
     >>> where = tempfile.mkdtemp()
     >>> at = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
@@ -357,6 +373,9 @@ def staleness_event(
     >>> late = staleness_event(where, now=at + timedelta(hours=2))
     >>> late["event"], late["detail"]
     ('page_stale', 'the published page shows 11:59 UTC, 2 h 1 min ago; its last run took 60 s')
+    >>> staleness_event(where, now=at + timedelta(hours=3))["event"]  # not told yet
+    'page_stale'
+    >>> told(where, late)
     >>> staleness_event(where, now=at + timedelta(hours=3)) is None
     True
     >>> _ = record_run(where, made_at="2026-01-01T15:00:00+00:00",
@@ -368,14 +387,13 @@ def staleness_event(
     found = state(folder, now=now, stale_after=stale_after)
     if not found["known"]:
         return None
-    told_path = Path(folder) / TOLD_NAME
     try:
-        told = json.loads(told_path.read_text(encoding="utf-8")).get("stale") is True
-    except (OSError, ValueError, AttributeError):
-        told = False
-    if found["stale"] == told:
+        was = json.loads((Path(folder) / TOLD_NAME).read_text(encoding="utf-8"))
+        was = isinstance(was, dict) and was.get("stale") is True
+    except (OSError, ValueError):
+        was = False
+    if found["stale"] == was:
         return None
-    told_path.write_text(json.dumps({"stale": found["stale"]}), encoding="utf-8")
     shown = _moment(found["made_at"]).astimezone(timezone.utc).strftime("%H:%M UTC")
     if found["stale"]:
         detail = (
@@ -391,3 +409,11 @@ def staleness_event(
         "project": "",
         "detail": detail,
     }
+
+
+def told(folder: str | Path, event: Mapping) -> None:
+    """Remember that ``event`` (a line :func:`staleness_event` gave) is in the log, so the
+    same change is not said again."""
+    (Path(folder) / TOLD_NAME).write_text(
+        json.dumps({"stale": event.get("event") == "page_stale"}), encoding="utf-8"
+    )

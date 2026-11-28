@@ -152,6 +152,45 @@ def test_everything_below_the_map_can_be_reached_and_hit(phone):
     assert all(n["h"] >= TARGET and n["inside"] and n["hit"] for n in names), names
 
 
+def zoom_at(page, view):
+    """The map's zoom when the page is opened directly on ``view``."""
+    page.goto(page.url.split("#")[0] + f"#view={view}")
+    page.reload()
+    page.wait_for_timeout(900)
+    return float(where(page)["zoom"])
+
+
+def chip(page, name):
+    page.locator("#views .pick", has_text=name).tap()
+    page.wait_for_timeout(900)
+    return float(where(page)["zoom"])
+
+
+def test_a_view_looks_the_same_however_it_was_reached(phone):
+    """The Overview's frame is tall on a phone; the view after it must not be laid out
+    for that frame, nor the Overview fitted to where the last view's marks were."""
+    direct = {view: zoom_at(phone, view) for view in ("needs", "places", "all")}
+    zoom_at(phone, "all")
+    assert chip(phone, "Needs you") == pytest.approx(direct["needs"], rel=0.05)
+    assert chip(phone, "Overview") == pytest.approx(direct["all"], rel=0.05)
+    assert chip(phone, "Places") == pytest.approx(direct["places"], rel=0.05)
+    assert chip(phone, "Overview") == pytest.approx(direct["all"], rel=0.05)
+    chip(phone, "Needs you")
+    # back in a bounded frame, whatever height the Overview took
+    assert phone.locator(".mapbox").bounding_box()["height"] <= 400
+
+
+def test_what_was_chosen_while_expanded_stays_chosen_after_closing(phone):
+    phone.locator("#explore").scroll_into_view_if_needed()
+    phone.locator("#explore").tap()
+    phone.wait_for_timeout(500)
+    chip(phone, "Family")
+    phone.locator("#explore-close").tap()
+    phone.wait_for_timeout(600)
+    assert "view=family" in phone.url and "explore" not in phone.url
+    assert phone.locator('#views .pick[aria-pressed="true"]').inner_text() == "Family"
+
+
 def test_a_tap_on_the_map_opens_a_mark_and_back_closes_it(phone):
     phone.locator("#cy").scroll_into_view_if_needed()
     y = phone.evaluate("() => window.scrollY")
@@ -160,6 +199,7 @@ def test_a_tap_on_the_map_opens_a_mark_and_back_closes_it(phone):
     )  # the owner sits in the middle of this view
     phone.wait_for_timeout(300)
     assert phone.locator("#sheet").is_visible() and "sel=" in phone.url
+    assert phone.locator("#sheet h3").inner_text() == "you"  # the mark that was tapped
     phone.go_back()
     phone.wait_for_timeout(300)
     assert not phone.locator("#sheet").is_visible()

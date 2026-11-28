@@ -1032,21 +1032,10 @@ def publish(
     page.parent.mkdir(parents=True, exist_ok=True)
     page.write_text(made["html"], encoding="utf-8")
     where = publisher(page, to or "")
-    # What this run did, beside the page it kept: the moment the page shows and how long
-    # the run took. A run that took hours has just published an old moment, and this is
-    # what lets the courier's tick (and anyone else) say so.
-    run = _publish.record_run(
-        page.parent,
-        made_at=made["made_at"],
-        started_at=began,
-        to=where,
-        size=page.stat().st_size,
-    )
     result = {
         "to": where,
         "bytes": page.stat().st_size,
         "made_at": made["made_at"],
-        "seconds": run["seconds"],
         "generated": made.get("generated") or {},
     }
     if beside_to:
@@ -1066,6 +1055,21 @@ def publish(
             "bytes": beside.stat().st_size,
             "counts": drawn["counts"],
         }
+    # What this run did, beside the page it kept: the moment the page shows and how long
+    # the run took. A run that took hours has just published an old moment, and this is
+    # what lets the courier's tick (and anyone else) say so. Written last, and never a
+    # reason for a run that delivered its page to fail.
+    try:
+        run = _publish.record_run(
+            page.parent,
+            made_at=made["made_at"],
+            started_at=began,
+            to=where,
+            size=result["bytes"],
+        )
+        result["seconds"] = run["seconds"]
+    except OSError as exc:
+        result["record"] = f"not written: {exc}"
     return result
 
 
@@ -1212,9 +1216,12 @@ def courier(
         said = _publish.staleness_event(data_dir() / "publish")
         if said:
             append_event(said, events_path=events_path)
-            done["page"] = said["event"]
-    except Exception:  # noqa: BLE001, S110 -- a note about the page never stops the courier
-        pass
+            _publish.told(data_dir() / "publish", said)
+            if isinstance(done, dict):
+                done["page"] = said["event"]
+    except Exception as exc:  # noqa: BLE001 -- a note about the page never stops the courier
+        if isinstance(done, dict):
+            done["page"] = f"not noted: {exc}"
     return done
 
 

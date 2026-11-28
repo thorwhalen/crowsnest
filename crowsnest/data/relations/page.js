@@ -93,10 +93,23 @@
     if (S.refs) p.set('refs', '1');
     var url = '#' + p.toString();
     if (url === location.hash) return false;
-    try { history[push ? 'pushState' : 'replaceState'](null, '', url); } catch (e) { return false; /* a sandboxed frame: the view still works */ }
+    try { if (push) history.pushState({ ours: true }, '', url); else history.replaceState(history.state, '', url); } catch (e) { return false; /* a sandboxed frame: the view still works */ }
     return !!push;
   }
-  window.addEventListener('popstate', function () { S.sel = ''; S.focus = ''; S.explore = ''; readHash(); sheetPushed = false; explorePushed = false; document.body.classList.toggle('exploring', !!S.explore && S.lens === 'map'); render(); if (S.sel) { sheetFor(S.sel); } else hideSheet(); });
+  var carry = null; /* what was chosen in a mode that is being left by going back: it stays chosen */
+  window.addEventListener('popstate', function () {
+    var ours = !!(history.state && history.state.ours);
+    S.sel = ''; S.focus = ''; S.explore = '';
+    readHash();
+    if (carry) { S.view = carry.view; S.show = carry.show; S.on = carry.on; S.refs = carry.refs; carry = null; writeHash(); }
+    if (S.explore && (WIDE.matches || S.lens !== 'map')) { S.explore = ''; writeHash(); }
+    sheetPushed = ours && !!S.sel;
+    explorePushed = ours && !!S.explore && !S.sel;
+    focusPushed = ours && S.view === 'focus' && !S.sel;
+    document.body.classList.toggle('exploring', !!S.explore);
+    render();
+    if (S.sel) { sheetFor(S.sel); } else hideSheet();
+  });
 
   /* ---------- times: always the source's, with its age beside it ---------- */
   var AS_OF = new Date(DOC.graph.as_of);
@@ -280,21 +293,25 @@
   function explore(open, fromHistory) {
     if (open === exploring()) return;
     if (open) { explorePushed = false; S.explore = '1'; if (!fromHistory) explorePushed = writeHash(true); }
-    else if (!fromHistory && explorePushed) { explorePushed = false; history.back(); return; }
+    else if (!fromHistory && explorePushed) { explorePushed = false; if (S.view !== 'focus') carry = { view: S.view, show: S.show, on: S.on.slice(), refs: S.refs }; history.back(); return; }
     else { S.explore = ''; if (!fromHistory) writeHash(); }
     document.body.classList.toggle('exploring', open);
     gestures();
     drawMap();
     (open ? $('explore-close') : $('explore')).focus();
   }
-  function hit(x, y) { /* the mark nearest a tap, within a thumb's reach; else the box it fell in */
-    var best = null, bestD = 34, box = '';
-    cy.nodes().forEach(function (n) {
-      if (n.data('type') === 'box') { var b = n.renderedBoundingBox(); if (!box && x >= b.x1 && x <= b.x2 && y >= b.y1 && y <= b.y2) box = n.data('of') || ''; return; }
+  function hit(x, y) { /* what a tap means: a mark of the box it fell in, else that box, else the nearest mark within a thumb's reach */
+    var inside = null, best = null, bestD = 34;
+    cy.nodes('[type = "box"]').forEach(function (n) {
+      var b = n.renderedBoundingBox({ includeLabels: true });
+      if (!inside && x >= b.x1 && x <= b.x2 && y >= b.y1 && y <= b.y2) inside = n;
+    });
+    if (inside) bestD = 15;
+    (inside ? inside.children() : cy.nodes('[type != "box"]')).forEach(function (n) {
       var q = n.renderedPosition(), dd = Math.hypot(q.x - x, q.y - y);
       if (dd < bestD) { bestD = dd; best = n.id(); }
     });
-    return best || box;
+    return best || (inside ? inside.data('of') || '' : '');
   }
   function stage() { var b = $('cy').getBoundingClientRect(); return { w: Math.max(b.width, 300), h: Math.max(b.height, 320) }; }
   function narrow(st) { return st.w < 560; }
@@ -617,6 +634,7 @@
   function drawMap() {
     if (!window.cytoscape) { $('map-empty').textContent = 'The map could not start in this browser. The docket and the board hold the same sessions.'; $('map-empty').hidden = false; return; }
     bundles = {};
+    $('cy').parentNode.style.height = '';
     var built = (BUILD[S.view] || viewAll)();
     var known = {};
     if (cy) cy.nodes().forEach(function (n) { known[n.id()] = n.position(); });
@@ -651,7 +669,7 @@
     if (built.layout === 'cose') {
       cy.layout({ name: 'cose', animate: false, randomize: false, nodeRepulsion: function () { return 60000; }, idealEdgeLength: function () { return 90; }, gravity: 0.4, numIter: 1500, padding: 20, nodeDimensionsIncludeLabels: true }).run();
     } else {
-      cy.nodes().forEach(function (n) { var was = known[n.id()], to = n.position(); if (was && n.data('type') !== 'box' && (was.x !== to.x || was.y !== to.y)) { var goal = { x: to.x, y: to.y }; n.position(was); n.animate({ position: goal }, { duration: 320 }); } });
+      if (!lastTall) cy.nodes().forEach(function (n) { var was = known[n.id()], to = n.position(); if (was && n.data('type') !== 'box' && (was.x !== to.x || was.y !== to.y)) { var goal = { x: to.x, y: to.y }; n.position(was); n.animate({ position: goal }, { duration: 320 }); } });
     }
     cy.resize();
     fit();
@@ -817,8 +835,15 @@
   $('fit').addEventListener('click', function () { press(this); fit(); });
   $('nav-open').addEventListener('click', function () { press(this); this.setAttribute('aria-expanded', String($('nav').classList.toggle('open'))); });
   document.addEventListener('keydown', function (ev) { if (ev.key !== 'Escape') return; if (!$('layers').hidden) layersOpen(false); else if (!$('sheet').hidden) closeSheet(); else if (exploring()) explore(false); });
-  var lastWidth = 0;
-  function refit() { var w = $('cy').clientWidth; if (!cy || S.lens !== 'map' || !w || w === lastWidth) return; lastWidth = w; drawMap(); }
+  var lastWidth = 0, lastWindow = window.innerWidth;
+  function refit() {
+    var w = $('cy').clientWidth;
+    if (!cy || S.lens !== 'map' || !w || w === lastWidth) return;
+    lastWidth = w;
+    if (window.innerWidth === lastWindow) { cy.resize(); return; } /* a pane opened or closed: same drawing, same zoom */
+    lastWindow = window.innerWidth;
+    drawMap();
+  }
   if (window.ResizeObserver) new ResizeObserver(refit).observe($('cy')); else window.addEventListener('resize', refit);
   if (window.matchMedia) { var dark = window.matchMedia('(prefers-color-scheme: dark)'); var restyle = function () { if (cy) cy.style(style()); }; if (dark.addEventListener) dark.addEventListener('change', restyle); }
   readHash();
