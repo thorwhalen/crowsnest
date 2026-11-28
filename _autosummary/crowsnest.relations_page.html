@@ -198,7 +198,14 @@ the window, cannot scroll, and the map takes gestures directly. The rule: the ma
 gesture only where the page has none to lose. <code class="docutils literal notranslate"><span class="pre">DESIGN.md</span></code> at the repository root is
 this page’s design contract, and <code class="docutils literal notranslate"><span class="pre">tests/test_relations_touch.py</span></code> holds it to that with
 real touch gestures in a browser.</p>
-<p><strong>The contract</strong> is the report’s: one file, nothing fetched from anywhere, every string
+<p><strong>Reload asks before it reloads.</strong> The control that shows the snapshot’s time asks the
+page’s own address when the copy there was written (the <code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code> its server
+sends), and only that. A newer copy is loaded at the same view and place; when there is
+none the page says so, with when the one shown was published and how often a new one
+usually arrives, in place of reloading the same page and looking broken. Served over
+http(s) it also asks once a minute while it is in view, and says when a newer snapshot is
+ready. That request to itself is the only one the page ever makes.</p>
+<p><strong>The contract</strong> is the report’s: one file, nothing fetched from anywhere else, every string
 already sanitised where the document was made (the script only sets text). The drawing
 library (Cytoscape.js, MIT, <a class="reference internal" href="#crowsnest.relations_page.LIBRARY" title="crowsnest.relations_page.LIBRARY"><code class="xref py py-data docutils literal notranslate"><span class="pre">LIBRARY</span></code></a>) ships in the package and is inlined, with
 its licence. Colours are the report’s own tokens, light and dark.</p>
@@ -261,14 +268,16 @@ schedule; one that has not been replaced in this long is not showing the present
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crowsnest.relations_page.render_relations_page">
-<span class="sig-prename descclassname"><span class="pre">crowsnest.relations_page.</span></span><span class="sig-name descname"><span class="pre">render_relations_page</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'crowsnest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_minutes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/relations_page.html#render_relations_page"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.relations_page.render_relations_page" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">crowsnest.relations_page.</span></span><span class="sig-name descname"><span class="pre">render_relations_page</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'crowsnest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stale_minutes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/crowsnest/relations_page.html#render_relations_page"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crowsnest.relations_page.render_relations_page" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">doc</span></code> (<a class="reference internal" href="crowsnest.relations.html#crowsnest.relations.relations" title="crowsnest.relations.relations"><code class="xref py py-func docutils literal notranslate"><span class="pre">crowsnest.relations.relations()</span></code></a>’s document) as one self-contained
 HTML page.</p>
 <p><code class="docutils literal notranslate"><span class="pre">entry</span></code> is the lens it opens on (<a class="reference internal" href="#crowsnest.relations_page.ENTRIES" title="crowsnest.relations_page.ENTRIES"><code class="xref py py-data docutils literal notranslate"><span class="pre">ENTRIES</span></code></a>); a lens named in the page’s
 address overrides it, so a link to a view reopens that view. <code class="docutils literal notranslate"><span class="pre">nav</span></code> is the links to
 show to other pages, as <code class="docutils literal notranslate"><span class="pre">(label,</span> <span class="pre">href)</span></code> pairs or a mapping, each opened in the top
 window (the page is usually framed); <code class="docutils literal notranslate"><span class="pre">current</span></code> is the label of this page among
-them. <code class="docutils literal notranslate"><span class="pre">stale_minutes</span></code> is when the page’s “as of” turns into a warning.</p>
+them. <code class="docutils literal notranslate"><span class="pre">stale_minutes</span></code> is when the page’s “as of” turns into a warning, and
+<code class="docutils literal notranslate"><span class="pre">every</span></code> is how many seconds usually pass between two snapshots, when that is
+known: the page says it when asked for a newer snapshot and there is none.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
@@ -318,7 +327,7 @@ them. <code class="docutils literal notranslate"><span class="pre">stale_minutes
     </div>
   </div>
 </footer>
-      <script src="../_static/documentation_options.js?v=a90549bc"></script>
+      <script src="../_static/documentation_options.js?v=9efdc3d6"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

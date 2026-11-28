@@ -1,4 +1,4 @@
-> built 2026-11-28 13:03 UTC from 2a1843c (main) · crowsnest 0.0.131. Details: build_info.json
+> built 2026-11-28 14:03 UTC from a466bc3 (main) · crowsnest 0.0.132. Details: build_info.json
 
 # index.html.md
 
@@ -216,7 +216,7 @@ The document is a typed graph in the plain nodes-and-links shape. **Nodes**: you
 
 **Rules derive the relations nobody recorded**, and a rule is data: a path of link types to walk. *Works in*, then *in repository*, is *works on*; *works on*, then *works on* backwards, is *shares a repository with*; *started* walked more than once is *descends from*. A derived link lists the nodes it went through, so you can ask why it is there. A node shared by more than a dozen others is reported as a hub rather than expanded into pairs.
 
-The page opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. On a phone the page is an ordinary scrolling page and the map is a picture inside it: a swipe that starts on the map scrolls the page, a tap on a mark opens it, and *Expand* gives the map the whole screen and the gestures until you go back. In a wide window the page fits the window and the map takes gestures directly. The page’s design contract is `DESIGN.md`. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the docket and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing, as the report is.
+The page opens on an overview: every live session as a mark, boxed by what it works on, coloured by whether it needs you, is working, or is done. On a phone the page is an ordinary scrolling page and the map is a picture inside it: a swipe that starts on the map scrolls the page, a tap on a mark opens it, and *Expand* gives the map the whole screen and the gestures until you go back. In a wide window the page fits the window and the map takes gestures directly. The page’s design contract is `DESIGN.md`. Six more views answer one question each (who waits on you, which sessions share a place, who started whom, who messaged whom, what clusters around what, and what surrounds any one node), and the docket and the board list the same sessions for a small screen or a screen reader. It is one file that fetches nothing from anywhere else. The control showing the snapshot’s time asks the page’s own address whether a newer copy exists: it loads one when there is, and says so plainly when there is not (when the one shown was published, and how often a new one arrives).
 
 To have it sent beside the report on the same schedule, and to choose what it opens on (the page names your sessions and their folders and quotes what they asked, sanitised as the report is, so send it only where you alone can read it: behind your own login or in a private folder, never a public bucket):
 
@@ -6880,7 +6880,15 @@ gesture only where the page has none to lose. `DESIGN.md` at the repository root
 this page’s design contract, and `tests/test_relations_touch.py` holds it to that with
 real touch gestures in a browser.
 
-**The contract** is the report’s: one file, nothing fetched from anywhere, every string
+**Reload asks before it reloads.** The control that shows the snapshot’s time asks the
+page’s own address when the copy there was written (the `Last-Modified` its server
+sends), and only that. A newer copy is loaded at the same view and place; when there is
+none the page says so, with when the one shown was published and how often a new one
+usually arrives, in place of reloading the same page and looking broken. Served over
+http(s) it also asks once a minute while it is in view, and says when a newer snapshot is
+ready. That request to itself is the only one the page ever makes.
+
+**The contract** is the report’s: one file, nothing fetched from anywhere else, every string
 already sanitised where the document was made (the script only sets text). The drawing
 library (Cytoscape.js, MIT, [`LIBRARY`](_autosummary/crowsnest.relations_page.html.md#crowsnest.relations_page.LIBRARY)) ships in the package and is inlined, with
 its licence. Colours are the report’s own tokens, light and dark.
@@ -6924,7 +6932,7 @@ The lens a page may open on. `hybrid` is the map with the first few asks above i
 
 The drawing library inlined into the page, and where its licence is kept.
 
-### crowsnest.relations_page.render_relations_page(doc, , title='crowsnest', entry='map', nav=(), current='', stale_minutes=10)
+### crowsnest.relations_page.render_relations_page(doc, , title='crowsnest', entry='map', nav=(), current='', stale_minutes=10, every=None)
 
 `doc` ([`crowsnest.relations.relations()`](_autosummary/crowsnest.relations.html.md#crowsnest.relations.relations)’s document) as one self-contained
 HTML page.
@@ -6933,7 +6941,9 @@ HTML page.
 address overrides it, so a link to a view reopens that view. `nav` is the links to
 show to other pages, as `(label, href)` pairs or a mapping, each opened in the top
 window (the page is usually framed); `current` is the label of this page among
-them. `stale_minutes` is when the page’s “as of” turns into a warning.
+them. `stale_minutes` is when the page’s “as of” turns into a warning, and
+`every` is how many seconds usually pass between two snapshots, when that is
+known: the page says it when asked for a newer snapshot and there is none.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
@@ -9427,18 +9437,16 @@ Where a reader that wants only *new* lines should start: the end of the file now
 
 # About this build
 
-This documentation was built on **2026-11-28 13:03 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/2a1843caf4f46e815cbed18e6d832f06afde1ab1"><code>2a1843c</code></a> on branch <code>main</code>, for **crowsnest 0.0.131** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-28 14:03 UTC** from commit <a href="https://github.com/thorwhalen/crowsnest/commit/a466bc3967c1ba3640ca3e4a9d3d9f45dd91fb33"><code>a466bc3</code></a> on branch <code>main</code>, for **crowsnest 0.0.132** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.131) is behind the latest release on PyPI (0.0.132): `pip install crowsnest` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                             |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/2a1843caf4f46e815cbed18e6d832f06afde1ab1"><code>2a1843caf4f46e815cbed18e6d832f06afde1ab1</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/crowsnest/commit/a466bc3967c1ba3640ca3e4a9d3d9f45dd91fb33"><code>a466bc3967c1ba3640ca3e4a9d3d9f45dd91fb33</code></a> |
 | Branch              | <code>main</code>                                                                                                                                           |
 | Tags at this commit | none                                                                                                                                                        |
 | Working tree        | clean                                                                                                                                                       |
@@ -9449,9 +9457,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/crowsnest</code>                                                          |
-| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/46147517581">46147517581</a> |
+| Run          | <a href="https://github.com/thorwhalen/crowsnest/actions/runs/46152496509">46152496509</a> |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>2a1843caf4f46e815cbed18e6d832f06afde1ab1</code> (in the history of the built commit) |
+| Event commit | <code>a466bc3967c1ba3640ca3e4a9d3d9f45dd91fb33</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9476,13 +9484,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/crowsnest/0.0.132/">0.0.132</a>, newer than the documented version (0.0.131).
+Latest release: <a href="https://pypi.org/project/crowsnest/0.0.132/">0.0.132</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/crowsnest && cd crowsnest
-git checkout 2a1843caf4f46e815cbed18e6d832f06afde1ab1
+git checkout a466bc3967c1ba3640ca3e4a9d3d9f45dd91fb33
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

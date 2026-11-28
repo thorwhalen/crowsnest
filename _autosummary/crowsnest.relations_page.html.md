@@ -35,7 +35,15 @@ gesture only where the page has none to lose. `DESIGN.md` at the repository root
 this page’s design contract, and `tests/test_relations_touch.py` holds it to that with
 real touch gestures in a browser.
 
-**The contract** is the report’s: one file, nothing fetched from anywhere, every string
+**Reload asks before it reloads.** The control that shows the snapshot’s time asks the
+page’s own address when the copy there was written (the `Last-Modified` its server
+sends), and only that. A newer copy is loaded at the same view and place; when there is
+none the page says so, with when the one shown was published and how often a new one
+usually arrives, in place of reloading the same page and looking broken. Served over
+http(s) it also asks once a minute while it is in view, and says when a newer snapshot is
+ready. That request to itself is the only one the page ever makes.
+
+**The contract** is the report’s: one file, nothing fetched from anywhere else, every string
 already sanitised where the document was made (the script only sets text). The drawing
 library (Cytoscape.js, MIT, [`LIBRARY`](#crowsnest.relations_page.LIBRARY)) ships in the package and is inlined, with
 its licence. Colours are the report’s own tokens, light and dark.
@@ -79,7 +87,7 @@ The lens a page may open on. `hybrid` is the map with the first few asks above i
 
 The drawing library inlined into the page, and where its licence is kept.
 
-### crowsnest.relations_page.render_relations_page(doc, , title='crowsnest', entry='map', nav=(), current='', stale_minutes=10)
+### crowsnest.relations_page.render_relations_page(doc, , title='crowsnest', entry='map', nav=(), current='', stale_minutes=10, every=None)
 
 `doc` ([`crowsnest.relations.relations()`](crowsnest.relations.html.md#crowsnest.relations.relations)’s document) as one self-contained
 HTML page.
@@ -88,7 +96,9 @@ HTML page.
 address overrides it, so a link to a view reopens that view. `nav` is the links to
 show to other pages, as `(label, href)` pairs or a mapping, each opened in the top
 window (the page is usually framed); `current` is the label of this page among
-them. `stale_minutes` is when the page’s “as of” turns into a warning.
+them. `stale_minutes` is when the page’s “as of” turns into a warning, and
+`every` is how many seconds usually pass between two snapshots, when that is
+known: the page says it when asked for a newer snapshot and there is none.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

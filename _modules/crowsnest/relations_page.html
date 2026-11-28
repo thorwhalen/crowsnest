@@ -189,184 +189,197 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="33"><span class="sd">this page's design contract, and ``tests/test_relations_touch.py`` holds it to that with</span>
 </span><span data-line="34"><span class="sd">real touch gestures in a browser.</span>
 </span><span data-line="35">
-</span><span data-line="36"><span class="sd">**The contract** is the report's: one file, nothing fetched from anywhere, every string</span>
-</span><span data-line="37"><span class="sd">already sanitised where the document was made (the script only sets text). The drawing</span>
-</span><span data-line="38"><span class="sd">library (Cytoscape.js, MIT, :data:`LIBRARY`) ships in the package and is inlined, with</span>
-</span><span data-line="39"><span class="sd">its licence. Colours are the report's own tokens, light and dark.</span>
-</span><span data-line="40">
-</span><span data-line="41"><span class="sd">``entry=`` is which lens the page opens on (:data:`ENTRIES`), and ``nav=`` the links to</span>
-</span><span data-line="42"><span class="sd">the owner's other pages: both are the embedding's to choose, so they are arguments and</span>
-</span><span data-line="43"><span class="sd">never read from a global.</span>
-</span><span data-line="44">
-</span><span data-line="45"><span class="sd">&gt;&gt;&gt; from crowsnest.relations import relations</span>
-</span><span data-line="46"><span class="sd">&gt;&gt;&gt; doc = relations([{'session_id': 'a1', 'label': 'parser', 'cwd': '/w/x', 'project': 'x'}])</span>
-</span><span data-line="47"><span class="sd">&gt;&gt;&gt; page = render_relations_page(doc, nav=[('Everything', '/all/')], entry='docket')</span>
-</span><span data-line="48"><span class="sd">&gt;&gt;&gt; page.startswith('&lt;!doctype html&gt;'), '"entry": "docket"' in page, 'href="/all/"' in page</span>
-</span><span data-line="49"><span class="sd">(True, True, True)</span>
-</span><span data-line="50"><span class="sd">&gt;&gt;&gt; '&lt;script src' in page or 'https://' in page.split('&lt;script', 1)[0]</span>
-</span><span data-line="51"><span class="sd">False</span>
-</span><span data-line="52"><span class="sd">"""</span>
-</span><span data-line="53">
-</span><span data-line="54"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-</span><span data-line="55">
-</span><span data-line="56"><span class="kn">import</span><span class="w"> </span><span class="nn">html</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_html</span>
-</span><span data-line="57"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-</span><span data-line="58"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
-</span><span data-line="59"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span data-line="60">
-</span><span data-line="61"><span class="kn">from</span><span class="w"> </span><span class="nn">openloops.dashboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSS</span> <span class="k">as</span> <span class="n">_CSS</span>
-</span><span data-line="62">
-</span><span data-line="63"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"DFLT_STALE_MINUTES"</span><span class="p">,</span> <span class="s2">"ENTRIES"</span><span class="p">,</span> <span class="s2">"LIBRARY"</span><span class="p">,</span> <span class="s2">"render_relations_page"</span><span class="p">]</span>
-</span><span data-line="64">
-</span><span data-line="65"><span class="c1">#: The lens a page may open on. ``hybrid`` is the map with the first few asks above it.</span>
-</span><span data-line="66"><span class="n">ENTRIES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"map"</span><span class="p">,</span> <span class="s2">"hybrid"</span><span class="p">,</span> <span class="s2">"docket"</span><span class="p">,</span> <span class="s2">"board"</span><span class="p">)</span>
-</span><span data-line="67">
-</span><span data-line="68"><span class="c1">#: The drawing library inlined into the page, and where its licence is kept.</span>
-</span><span data-line="69"><span class="n">LIBRARY</span> <span class="o">=</span> <span class="s2">"cytoscape.min.js"</span>
+</span><span data-line="36"><span class="sd">**Reload asks before it reloads.** The control that shows the snapshot's time asks the</span>
+</span><span data-line="37"><span class="sd">page's own address when the copy there was written (the ``Last-Modified`` its server</span>
+</span><span data-line="38"><span class="sd">sends), and only that. A newer copy is loaded at the same view and place; when there is</span>
+</span><span data-line="39"><span class="sd">none the page says so, with when the one shown was published and how often a new one</span>
+</span><span data-line="40"><span class="sd">usually arrives, in place of reloading the same page and looking broken. Served over</span>
+</span><span data-line="41"><span class="sd">http(s) it also asks once a minute while it is in view, and says when a newer snapshot is</span>
+</span><span data-line="42"><span class="sd">ready. That request to itself is the only one the page ever makes.</span>
+</span><span data-line="43">
+</span><span data-line="44"><span class="sd">**The contract** is the report's: one file, nothing fetched from anywhere else, every string</span>
+</span><span data-line="45"><span class="sd">already sanitised where the document was made (the script only sets text). The drawing</span>
+</span><span data-line="46"><span class="sd">library (Cytoscape.js, MIT, :data:`LIBRARY`) ships in the package and is inlined, with</span>
+</span><span data-line="47"><span class="sd">its licence. Colours are the report's own tokens, light and dark.</span>
+</span><span data-line="48">
+</span><span data-line="49"><span class="sd">``entry=`` is which lens the page opens on (:data:`ENTRIES`), and ``nav=`` the links to</span>
+</span><span data-line="50"><span class="sd">the owner's other pages: both are the embedding's to choose, so they are arguments and</span>
+</span><span data-line="51"><span class="sd">never read from a global.</span>
+</span><span data-line="52">
+</span><span data-line="53"><span class="sd">&gt;&gt;&gt; from crowsnest.relations import relations</span>
+</span><span data-line="54"><span class="sd">&gt;&gt;&gt; doc = relations([{'session_id': 'a1', 'label': 'parser', 'cwd': '/w/x', 'project': 'x'}])</span>
+</span><span data-line="55"><span class="sd">&gt;&gt;&gt; page = render_relations_page(doc, nav=[('Everything', '/all/')], entry='docket')</span>
+</span><span data-line="56"><span class="sd">&gt;&gt;&gt; page.startswith('&lt;!doctype html&gt;'), '"entry": "docket"' in page, 'href="/all/"' in page</span>
+</span><span data-line="57"><span class="sd">(True, True, True)</span>
+</span><span data-line="58"><span class="sd">&gt;&gt;&gt; '&lt;script src' in page or 'https://' in page.split('&lt;script', 1)[0]</span>
+</span><span data-line="59"><span class="sd">False</span>
+</span><span data-line="60"><span class="sd">"""</span>
+</span><span data-line="61">
+</span><span data-line="62"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="63">
+</span><span data-line="64"><span class="kn">import</span><span class="w"> </span><span class="nn">html</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_html</span>
+</span><span data-line="65"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span data-line="66"><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+</span><span data-line="67"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="68">
+</span><span data-line="69"><span class="kn">from</span><span class="w"> </span><span class="nn">openloops.dashboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSS</span> <span class="k">as</span> <span class="n">_CSS</span>
 </span><span data-line="70">
-</span><span data-line="71"><span class="c1">#: After how many minutes the page says its document is stale. The page is rendered on a</span>
-</span><span data-line="72"><span class="c1">#: schedule; one that has not been replaced in this long is not showing the present.</span>
-</span><span data-line="73"><span class="n">DFLT_STALE_MINUTES</span> <span class="o">=</span> <span class="mi">10</span>
-</span><span data-line="74">
-</span><span data-line="75"><span class="n">_DATA</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"relations"</span>
-</span><span data-line="76">
-</span><span data-line="77"><span class="c1">#: The colour and type tokens of the report's stylesheet (everything before its first</span>
-</span><span data-line="78"><span class="c1">#: rule), so this page and the report are one palette, light and dark.</span>
-</span><span data-line="79"><span class="n">_TOKENS</span> <span class="o">=</span> <span class="n">_CSS</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"*{box-sizing"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-</span><span data-line="80">
-</span><span data-line="81"><span class="n">_PAGE</span> <span class="o">=</span> <span class="s2">"""&lt;!doctype html&gt;</span>
-</span><span data-line="82"><span class="s2">&lt;html lang="en"&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;</span>
-</span><span data-line="83"><span class="s2">&lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"&gt;</span>
-</span><span data-line="84"><span class="s2">&lt;meta name="referrer" content="no-referrer"&gt;</span>
-</span><span data-line="85"><span class="s2">&lt;title&gt;</span><span class="si">{title}</span><span class="s2">&lt;/title&gt;</span>
-</span><span data-line="86"><span class="s2">&lt;style&gt;</span><span class="si">{tokens}{css}</span><span class="s2">&lt;/style&gt;&lt;/head&gt;</span>
-</span><span data-line="87"><span class="s2">&lt;body data-lens="map"&gt;</span>
-</span><span data-line="88"><span class="s2">&lt;header class="top"&gt;</span>
-</span><span data-line="89"><span class="s2">&lt;div class="bar"&gt;&lt;span class="brand"&gt;</span><span class="si">{title}</span><span class="s2">&lt;/span&gt;</span>
-</span><span data-line="90"><span class="s2">&lt;div id="lenses" class="seg" role="group" aria-label="How to look at it"&gt;&lt;/div&gt;</span>
-</span><span data-line="91"><span class="s2">&lt;button id="fresh" class="fresh" type="button"&gt;&lt;/button&gt;</span>
-</span><span data-line="92"><span class="s2">&lt;button id="nav-open" class="iconbtn" type="button" aria-label="Other pages" aria-expanded="false"</span><span class="si">{nav_hidden}</span><span class="s2">&gt;</span><span class="si">{icon_menu}</span><span class="s2">&lt;/button&gt;&lt;/div&gt;</span>
-</span><span data-line="93"><span class="s2">&lt;nav id="nav" aria-label="Other pages"&gt;</span><span class="si">{nav}</span><span class="s2">&lt;/nav&gt;</span>
-</span><span data-line="94"><span class="s2">&lt;/header&gt;</span>
-</span><span data-line="95"><span class="s2">&lt;p id="sentence" class="sentence" role="status"&gt;&lt;/p&gt;</span>
-</span><span data-line="96"><span class="s2">&lt;main&gt;</span>
-</span><span data-line="97"><span class="s2">&lt;section id="lens-map" aria-label="Map"&gt;&lt;div id="brief"&gt;&lt;/div&gt;</span>
-</span><span data-line="98"><span class="s2">&lt;div class="stage"&gt;</span>
-</span><span data-line="99"><span class="s2">&lt;div class="maphead"&gt;&lt;button id="explore-close" class="iconbtn" type="button" aria-label="Close the map" hidden&gt;</span><span class="si">{icon_x}</span><span class="s2">&lt;/button&gt;</span>
-</span><span data-line="100"><span class="s2">&lt;div id="views" class="picks" role="group" aria-label="View"&gt;&lt;/div&gt;</span>
-</span><span data-line="101"><span class="s2">&lt;button id="zoom-out" class="iconbtn" type="button" aria-label="Zoom out" hidden&gt;</span><span class="si">{icon_minus}</span><span class="s2">&lt;/button&gt;</span>
-</span><span data-line="102"><span class="s2">&lt;button id="zoom-in" class="iconbtn" type="button" aria-label="Zoom in" hidden&gt;</span><span class="si">{icon_plus}</span><span class="s2">&lt;/button&gt;</span>
-</span><span data-line="103"><span class="s2">&lt;button id="fit" class="tool" type="button" hidden&gt;Fit&lt;/button&gt;</span>
-</span><span data-line="104"><span class="s2">&lt;button id="layers-open" class="iconbtn" type="button" aria-label="Layers and key"&gt;</span><span class="si">{icon_layers}</span><span class="s2">&lt;/button&gt;&lt;/div&gt;</span>
-</span><span data-line="105"><span class="s2">&lt;p id="view-note" hidden&gt;&lt;/p&gt;</span>
-</span><span data-line="106"><span class="s2">&lt;div class="mapbox"&gt;&lt;div id="cy" role="img" aria-label="The sessions and what they relate to. The docket and the board list the same sessions."&gt;&lt;/div&gt;</span>
-</span><span data-line="107"><span class="s2">&lt;div id="touch" class="touch"&gt;&lt;/div&gt;&lt;p id="map-empty" hidden&gt;&lt;/p&gt;</span>
-</span><span data-line="108"><span class="s2">&lt;button id="explore" class="tool expand" type="button"&gt;</span><span class="si">{icon_expand}</span><span class="s2">Expand&lt;/button&gt;&lt;/div&gt;</span>
-</span><span data-line="109"><span class="s2">&lt;div id="rest" class="rest" hidden&gt;&lt;/div&gt;</span>
-</span><span data-line="110"><span class="s2">&lt;/div&gt;&lt;/section&gt;</span>
-</span><span data-line="111"><span class="s2">&lt;section id="docket" aria-label="Docket"&gt;&lt;/section&gt;</span>
-</span><span data-line="112"><span class="s2">&lt;section id="board" aria-label="Board"&gt;&lt;/section&gt;</span>
-</span><span data-line="113"><span class="s2">&lt;/main&gt;</span>
-</span><span data-line="114"><span class="s2">&lt;footer id="foot" class="foot"&gt;&lt;/footer&gt;</span>
-</span><span data-line="115"><span class="s2">&lt;div id="backdrop" class="backdrop" hidden&gt;&lt;/div&gt;</span>
-</span><span data-line="116"><span class="s2">&lt;aside id="sheet" aria-label="Details" hidden&gt;&lt;button id="sheet-close" class="iconbtn shut" type="button" aria-label="Close"&gt;</span><span class="si">{icon_x}</span><span class="s2">&lt;/button&gt;&lt;div id="sheet-body"&gt;&lt;/div&gt;&lt;/aside&gt;</span>
-</span><span data-line="117"><span class="s2">&lt;aside id="layers" aria-label="Layers and key" hidden&gt;&lt;button id="layers-close" class="iconbtn shut" type="button" aria-label="Close"&gt;</span><span class="si">{icon_x}</span><span class="s2">&lt;/button&gt;&lt;div id="layers-body"&gt;&lt;/div&gt;&lt;/aside&gt;</span>
-</span><span data-line="118"><span class="s2">&lt;script type="application/json" id="relations-data"&gt;</span><span class="si">{data}</span><span class="s2">&lt;/script&gt;</span>
-</span><span data-line="119"><span class="s2">&lt;script type="application/json" id="relations-config"&gt;</span><span class="si">{config}</span><span class="s2">&lt;/script&gt;</span>
-</span><span data-line="120"><span class="s2">&lt;script&gt;</span><span class="si">{library}</span><span class="s2">&lt;/script&gt;</span>
-</span><span data-line="121"><span class="s2">&lt;script&gt;</span><span class="si">{script}</span><span class="s2">&lt;/script&gt;</span>
-</span><span data-line="122"><span class="s2">&lt;/body&gt;&lt;/html&gt;</span>
-</span><span data-line="123"><span class="s2">"""</span>
-</span><span data-line="124">
-</span><span data-line="125">
-</span><span data-line="126"><span class="k">def</span><span class="w"> </span><span class="nf">_icon</span><span class="p">(</span><span class="o">*</span><span class="n">paths</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="127"><span class="w">    </span><span class="sd">"""One inline icon (24 by 24, drawn with strokes): no icon font, nothing fetched."""</span>
-</span><span data-line="128">    <span class="n">drawn</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;path d="</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s1">"/&gt;'</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">)</span>
-</span><span data-line="129">    <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;svg class="i" viewBox="0 0 24 24" aria-hidden="true"&gt;</span><span class="si">{</span><span class="n">drawn</span><span class="si">}</span><span class="s1">&lt;/svg&gt;'</span>
-</span><span data-line="130">
-</span><span data-line="131">
-</span><span data-line="132"><span class="c1">#: The page's icons, from the standard vocabulary: a menu, close, layers (sliders),</span>
-</span><span data-line="133"><span class="c1">#: expand. Every button that shows one alone carries its name as its ``aria-label``.</span>
-</span><span data-line="134"><span class="n">ICONS</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="135">    <span class="s2">"icon_menu"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M4 6h16"</span><span class="p">,</span> <span class="s2">"M4 12h16"</span><span class="p">,</span> <span class="s2">"M4 18h16"</span><span class="p">),</span>
-</span><span data-line="136">    <span class="s2">"icon_x"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M18 6 6 18"</span><span class="p">,</span> <span class="s2">"M6 6l12 12"</span><span class="p">),</span>
-</span><span data-line="137">    <span class="s2">"icon_layers"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span>
-</span><span data-line="138">        <span class="s2">"M21 4h-7"</span><span class="p">,</span>
-</span><span data-line="139">        <span class="s2">"M10 4H3"</span><span class="p">,</span>
-</span><span data-line="140">        <span class="s2">"M21 12h-9"</span><span class="p">,</span>
-</span><span data-line="141">        <span class="s2">"M8 12H3"</span><span class="p">,</span>
-</span><span data-line="142">        <span class="s2">"M21 20h-5"</span><span class="p">,</span>
-</span><span data-line="143">        <span class="s2">"M12 20H3"</span><span class="p">,</span>
-</span><span data-line="144">        <span class="s2">"M14 2v4"</span><span class="p">,</span>
-</span><span data-line="145">        <span class="s2">"M8 10v4"</span><span class="p">,</span>
-</span><span data-line="146">        <span class="s2">"M16 18v4"</span><span class="p">,</span>
-</span><span data-line="147">    <span class="p">),</span>
-</span><span data-line="148">    <span class="s2">"icon_expand"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M15 3h6v6"</span><span class="p">,</span> <span class="s2">"M9 21H3v-6"</span><span class="p">,</span> <span class="s2">"M21 3l-7 7"</span><span class="p">,</span> <span class="s2">"M3 21l7-7"</span><span class="p">),</span>
-</span><span data-line="149">    <span class="s2">"icon_plus"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M12 5v14"</span><span class="p">,</span> <span class="s2">"M5 12h14"</span><span class="p">),</span>
-</span><span data-line="150">    <span class="s2">"icon_minus"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M5 12h14"</span><span class="p">),</span>
-</span><span data-line="151"><span class="p">}</span>
-</span><span data-line="152">
-</span><span data-line="153">
-</span><span data-line="154"><span class="k">def</span><span class="w"> </span><span class="nf">_embedded</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="155"><span class="w">    </span><span class="sd">"""``value`` as JSON that is safe inside a ``&lt;script&gt;`` element: no ``&lt;`` survives, so</span>
-</span><span data-line="156"><span class="sd">    no text can close the element or open a comment in it."""</span>
-</span><span data-line="157">    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">":"</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
-</span><span data-line="158">        <span class="s2">"&lt;"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">u003c"</span>
-</span><span data-line="159">    <span class="p">)</span>
+</span><span data-line="71"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"DFLT_STALE_MINUTES"</span><span class="p">,</span> <span class="s2">"ENTRIES"</span><span class="p">,</span> <span class="s2">"LIBRARY"</span><span class="p">,</span> <span class="s2">"render_relations_page"</span><span class="p">]</span>
+</span><span data-line="72">
+</span><span data-line="73"><span class="c1">#: The lens a page may open on. ``hybrid`` is the map with the first few asks above it.</span>
+</span><span data-line="74"><span class="n">ENTRIES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"map"</span><span class="p">,</span> <span class="s2">"hybrid"</span><span class="p">,</span> <span class="s2">"docket"</span><span class="p">,</span> <span class="s2">"board"</span><span class="p">)</span>
+</span><span data-line="75">
+</span><span data-line="76"><span class="c1">#: The drawing library inlined into the page, and where its licence is kept.</span>
+</span><span data-line="77"><span class="n">LIBRARY</span> <span class="o">=</span> <span class="s2">"cytoscape.min.js"</span>
+</span><span data-line="78">
+</span><span data-line="79"><span class="c1">#: After how many minutes the page says its document is stale. The page is rendered on a</span>
+</span><span data-line="80"><span class="c1">#: schedule; one that has not been replaced in this long is not showing the present.</span>
+</span><span data-line="81"><span class="n">DFLT_STALE_MINUTES</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span data-line="82">
+</span><span data-line="83"><span class="n">_DATA</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"relations"</span>
+</span><span data-line="84">
+</span><span data-line="85"><span class="c1">#: The colour and type tokens of the report's stylesheet (everything before its first</span>
+</span><span data-line="86"><span class="c1">#: rule), so this page and the report are one palette, light and dark.</span>
+</span><span data-line="87"><span class="n">_TOKENS</span> <span class="o">=</span> <span class="n">_CSS</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"*{box-sizing"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="88">
+</span><span data-line="89"><span class="n">_PAGE</span> <span class="o">=</span> <span class="s2">"""&lt;!doctype html&gt;</span>
+</span><span data-line="90"><span class="s2">&lt;html lang="en"&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;</span>
+</span><span data-line="91"><span class="s2">&lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"&gt;</span>
+</span><span data-line="92"><span class="s2">&lt;meta name="referrer" content="no-referrer"&gt;</span>
+</span><span data-line="93"><span class="s2">&lt;title&gt;</span><span class="si">{title}</span><span class="s2">&lt;/title&gt;</span>
+</span><span data-line="94"><span class="s2">&lt;style&gt;</span><span class="si">{tokens}{css}</span><span class="s2">&lt;/style&gt;&lt;/head&gt;</span>
+</span><span data-line="95"><span class="s2">&lt;body data-lens="map"&gt;</span>
+</span><span data-line="96"><span class="s2">&lt;header class="top"&gt;</span>
+</span><span data-line="97"><span class="s2">&lt;div class="bar"&gt;&lt;span class="brand"&gt;</span><span class="si">{title}</span><span class="s2">&lt;/span&gt;</span>
+</span><span data-line="98"><span class="s2">&lt;div id="lenses" class="seg" role="group" aria-label="How to look at it"&gt;&lt;/div&gt;</span>
+</span><span data-line="99"><span class="s2">&lt;button id="fresh" class="fresh" type="button"&gt;&lt;/button&gt;</span>
+</span><span data-line="100"><span class="s2">&lt;button id="nav-open" class="iconbtn" type="button" aria-label="Other pages" aria-expanded="false"</span><span class="si">{nav_hidden}</span><span class="s2">&gt;</span><span class="si">{icon_menu}</span><span class="s2">&lt;/button&gt;&lt;/div&gt;</span>
+</span><span data-line="101"><span class="s2">&lt;nav id="nav" aria-label="Other pages"&gt;</span><span class="si">{nav}</span><span class="s2">&lt;/nav&gt;</span>
+</span><span data-line="102"><span class="s2">&lt;/header&gt;</span>
+</span><span data-line="103"><span class="s2">&lt;p id="sentence" class="sentence" role="status"&gt;&lt;/p&gt;</span>
+</span><span data-line="104"><span class="s2">&lt;main&gt;</span>
+</span><span data-line="105"><span class="s2">&lt;section id="lens-map" aria-label="Map"&gt;&lt;div id="brief"&gt;&lt;/div&gt;</span>
+</span><span data-line="106"><span class="s2">&lt;div class="stage"&gt;</span>
+</span><span data-line="107"><span class="s2">&lt;div class="maphead"&gt;&lt;button id="explore-close" class="iconbtn" type="button" aria-label="Close the map" hidden&gt;</span><span class="si">{icon_x}</span><span class="s2">&lt;/button&gt;</span>
+</span><span data-line="108"><span class="s2">&lt;div id="views" class="picks" role="group" aria-label="View"&gt;&lt;/div&gt;</span>
+</span><span data-line="109"><span class="s2">&lt;button id="zoom-out" class="iconbtn" type="button" aria-label="Zoom out" hidden&gt;</span><span class="si">{icon_minus}</span><span class="s2">&lt;/button&gt;</span>
+</span><span data-line="110"><span class="s2">&lt;button id="zoom-in" class="iconbtn" type="button" aria-label="Zoom in" hidden&gt;</span><span class="si">{icon_plus}</span><span class="s2">&lt;/button&gt;</span>
+</span><span data-line="111"><span class="s2">&lt;button id="fit" class="tool" type="button" hidden&gt;Fit&lt;/button&gt;</span>
+</span><span data-line="112"><span class="s2">&lt;button id="layers-open" class="iconbtn" type="button" aria-label="Layers and key"&gt;</span><span class="si">{icon_layers}</span><span class="s2">&lt;/button&gt;&lt;/div&gt;</span>
+</span><span data-line="113"><span class="s2">&lt;p id="view-note" hidden&gt;&lt;/p&gt;</span>
+</span><span data-line="114"><span class="s2">&lt;div class="mapbox"&gt;&lt;div id="cy" role="img" aria-label="The sessions and what they relate to. The docket and the board list the same sessions."&gt;&lt;/div&gt;</span>
+</span><span data-line="115"><span class="s2">&lt;div id="touch" class="touch"&gt;&lt;/div&gt;&lt;p id="map-empty" hidden&gt;&lt;/p&gt;</span>
+</span><span data-line="116"><span class="s2">&lt;button id="explore" class="tool expand" type="button"&gt;</span><span class="si">{icon_expand}</span><span class="s2">Expand&lt;/button&gt;&lt;/div&gt;</span>
+</span><span data-line="117"><span class="s2">&lt;div id="rest" class="rest" hidden&gt;&lt;/div&gt;</span>
+</span><span data-line="118"><span class="s2">&lt;/div&gt;&lt;/section&gt;</span>
+</span><span data-line="119"><span class="s2">&lt;section id="docket" aria-label="Docket"&gt;&lt;/section&gt;</span>
+</span><span data-line="120"><span class="s2">&lt;section id="board" aria-label="Board"&gt;&lt;/section&gt;</span>
+</span><span data-line="121"><span class="s2">&lt;/main&gt;</span>
+</span><span data-line="122"><span class="s2">&lt;footer id="foot" class="foot"&gt;&lt;/footer&gt;</span>
+</span><span data-line="123"><span class="s2">&lt;div id="backdrop" class="backdrop" hidden&gt;&lt;/div&gt;</span>
+</span><span data-line="124"><span class="s2">&lt;aside id="sheet" aria-label="Details" hidden&gt;&lt;button id="sheet-close" class="iconbtn shut" type="button" aria-label="Close"&gt;</span><span class="si">{icon_x}</span><span class="s2">&lt;/button&gt;&lt;div id="sheet-body"&gt;&lt;/div&gt;&lt;/aside&gt;</span>
+</span><span data-line="125"><span class="s2">&lt;aside id="layers" aria-label="Layers and key" hidden&gt;&lt;button id="layers-close" class="iconbtn shut" type="button" aria-label="Close"&gt;</span><span class="si">{icon_x}</span><span class="s2">&lt;/button&gt;&lt;div id="layers-body"&gt;&lt;/div&gt;&lt;/aside&gt;</span>
+</span><span data-line="126"><span class="s2">&lt;script type="application/json" id="relations-data"&gt;</span><span class="si">{data}</span><span class="s2">&lt;/script&gt;</span>
+</span><span data-line="127"><span class="s2">&lt;script type="application/json" id="relations-config"&gt;</span><span class="si">{config}</span><span class="s2">&lt;/script&gt;</span>
+</span><span data-line="128"><span class="s2">&lt;script&gt;</span><span class="si">{library}</span><span class="s2">&lt;/script&gt;</span>
+</span><span data-line="129"><span class="s2">&lt;script&gt;</span><span class="si">{script}</span><span class="s2">&lt;/script&gt;</span>
+</span><span data-line="130"><span class="s2">&lt;/body&gt;&lt;/html&gt;</span>
+</span><span data-line="131"><span class="s2">"""</span>
+</span><span data-line="132">
+</span><span data-line="133">
+</span><span data-line="134"><span class="k">def</span><span class="w"> </span><span class="nf">_icon</span><span class="p">(</span><span class="o">*</span><span class="n">paths</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="135"><span class="w">    </span><span class="sd">"""One inline icon (24 by 24, drawn with strokes): no icon font, nothing fetched."""</span>
+</span><span data-line="136">    <span class="n">drawn</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">'&lt;path d="</span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s1">"/&gt;'</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">)</span>
+</span><span data-line="137">    <span class="k">return</span> <span class="sa">f</span><span class="s1">'&lt;svg class="i" viewBox="0 0 24 24" aria-hidden="true"&gt;</span><span class="si">{</span><span class="n">drawn</span><span class="si">}</span><span class="s1">&lt;/svg&gt;'</span>
+</span><span data-line="138">
+</span><span data-line="139">
+</span><span data-line="140"><span class="c1">#: The page's icons, from the standard vocabulary: a menu, close, layers (sliders),</span>
+</span><span data-line="141"><span class="c1">#: expand. Every button that shows one alone carries its name as its ``aria-label``.</span>
+</span><span data-line="142"><span class="n">ICONS</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="143">    <span class="s2">"icon_menu"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M4 6h16"</span><span class="p">,</span> <span class="s2">"M4 12h16"</span><span class="p">,</span> <span class="s2">"M4 18h16"</span><span class="p">),</span>
+</span><span data-line="144">    <span class="s2">"icon_x"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M18 6 6 18"</span><span class="p">,</span> <span class="s2">"M6 6l12 12"</span><span class="p">),</span>
+</span><span data-line="145">    <span class="s2">"icon_layers"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span>
+</span><span data-line="146">        <span class="s2">"M21 4h-7"</span><span class="p">,</span>
+</span><span data-line="147">        <span class="s2">"M10 4H3"</span><span class="p">,</span>
+</span><span data-line="148">        <span class="s2">"M21 12h-9"</span><span class="p">,</span>
+</span><span data-line="149">        <span class="s2">"M8 12H3"</span><span class="p">,</span>
+</span><span data-line="150">        <span class="s2">"M21 20h-5"</span><span class="p">,</span>
+</span><span data-line="151">        <span class="s2">"M12 20H3"</span><span class="p">,</span>
+</span><span data-line="152">        <span class="s2">"M14 2v4"</span><span class="p">,</span>
+</span><span data-line="153">        <span class="s2">"M8 10v4"</span><span class="p">,</span>
+</span><span data-line="154">        <span class="s2">"M16 18v4"</span><span class="p">,</span>
+</span><span data-line="155">    <span class="p">),</span>
+</span><span data-line="156">    <span class="s2">"icon_expand"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M15 3h6v6"</span><span class="p">,</span> <span class="s2">"M9 21H3v-6"</span><span class="p">,</span> <span class="s2">"M21 3l-7 7"</span><span class="p">,</span> <span class="s2">"M3 21l7-7"</span><span class="p">),</span>
+</span><span data-line="157">    <span class="s2">"icon_plus"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M12 5v14"</span><span class="p">,</span> <span class="s2">"M5 12h14"</span><span class="p">),</span>
+</span><span data-line="158">    <span class="s2">"icon_minus"</span><span class="p">:</span> <span class="n">_icon</span><span class="p">(</span><span class="s2">"M5 12h14"</span><span class="p">),</span>
+</span><span data-line="159"><span class="p">}</span>
 </span><span data-line="160">
 </span><span data-line="161">
-</span><span data-line="162"><span class="k">def</span><span class="w"> </span><span class="nf">_nav</span><span class="p">(</span><span class="n">nav</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">current</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="163"><span class="w">    </span><span class="sd">"""The links to the owner's other pages, the one named ``current`` marked as here."""</span>
-</span><span data-line="164">    <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nav</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nav</span><span class="p">]</span>
-</span><span data-line="165">    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="166">    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">href</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
-</span><span data-line="167">        <span class="c1"># A page of one's own site or a web address; anything else is not a link.</span>
-</span><span data-line="168">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">href</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"/"</span><span class="p">,</span> <span class="s2">"./"</span><span class="p">,</span> <span class="s2">"#"</span><span class="p">,</span> <span class="s2">"http://"</span><span class="p">,</span> <span class="s2">"https://"</span><span class="p">)):</span>
-</span><span data-line="169">            <span class="k">continue</span>
-</span><span data-line="170">        <span class="n">here</span> <span class="o">=</span> <span class="s1">' aria-current="page"'</span> <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="n">current</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span data-line="171">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span data-line="172">            <span class="sa">f</span><span class="s1">'&lt;a href="</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">href</span><span class="p">),</span><span class="w"> </span><span class="n">quote</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s1">" target="_top"</span><span class="si">{</span><span class="n">here</span><span class="si">}</span><span class="s1">&gt;'</span>
-</span><span data-line="173">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">))</span><span class="si">}</span><span class="s2">&lt;/a&gt;"</span>
-</span><span data-line="174">        <span class="p">)</span>
-</span><span data-line="175">    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-</span><span data-line="176">
-</span><span data-line="177">
+</span><span data-line="162"><span class="k">def</span><span class="w"> </span><span class="nf">_embedded</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="163"><span class="w">    </span><span class="sd">"""``value`` as JSON that is safe inside a ``&lt;script&gt;`` element: no ``&lt;`` survives, so</span>
+</span><span data-line="164"><span class="sd">    no text can close the element or open a comment in it."""</span>
+</span><span data-line="165">    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">":"</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+</span><span data-line="166">        <span class="s2">"&lt;"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">u003c"</span>
+</span><span data-line="167">    <span class="p">)</span>
+</span><span data-line="168">
+</span><span data-line="169">
+</span><span data-line="170"><span class="k">def</span><span class="w"> </span><span class="nf">_nav</span><span class="p">(</span><span class="n">nav</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">current</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="171"><span class="w">    </span><span class="sd">"""The links to the owner's other pages, the one named ``current`` marked as here."""</span>
+</span><span data-line="172">    <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nav</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nav</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nav</span><span class="p">]</span>
+</span><span data-line="173">    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="174">    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">href</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+</span><span data-line="175">        <span class="c1"># A page of one's own site or a web address; anything else is not a link.</span>
+</span><span data-line="176">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">href</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"/"</span><span class="p">,</span> <span class="s2">"./"</span><span class="p">,</span> <span class="s2">"#"</span><span class="p">,</span> <span class="s2">"http://"</span><span class="p">,</span> <span class="s2">"https://"</span><span class="p">)):</span>
+</span><span data-line="177">            <span class="k">continue</span>
+</span><span data-line="178">        <span class="n">here</span> <span class="o">=</span> <span class="s1">' aria-current="page"'</span> <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="n">current</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span data-line="179">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span data-line="180">            <span class="sa">f</span><span class="s1">'&lt;a href="</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">href</span><span class="p">),</span><span class="w"> </span><span class="n">quote</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s1">" target="_top"</span><span class="si">{</span><span class="n">here</span><span class="si">}</span><span class="s1">&gt;'</span>
+</span><span data-line="181">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">))</span><span class="si">}</span><span class="s2">&lt;/a&gt;"</span>
+</span><span data-line="182">        <span class="p">)</span>
+</span><span data-line="183">    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+</span><span data-line="184">
+</span><span data-line="185">
 <div class="viewcode-block" id="render_relations_page">
 <a class="viewcode-back" href="../../_autosummary/crowsnest.relations_page.html#crowsnest.relations_page.render_relations_page">[docs]</a>
-</span><span data-line="178"><span class="k">def</span><span class="w"> </span><span class="nf">render_relations_page</span><span class="p">(</span>
-</span><span data-line="179">    <span class="n">doc</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
-</span><span data-line="180">    <span class="o">*</span><span class="p">,</span>
-</span><span data-line="181">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"crowsnest"</span><span class="p">,</span>
-</span><span data-line="182">    <span class="n">entry</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"map"</span><span class="p">,</span>
-</span><span data-line="183">    <span class="n">nav</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
-</span><span data-line="184">    <span class="n">current</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span data-line="185">    <span class="n">stale_minutes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_STALE_MINUTES</span><span class="p">,</span>
-</span><span data-line="186"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span data-line="187"><span class="w">    </span><span class="sd">"""``doc`` (:func:`crowsnest.relations.relations`'s document) as one self-contained</span>
-</span><span data-line="188"><span class="sd">    HTML page.</span>
-</span><span data-line="189">
-</span><span data-line="190"><span class="sd">    ``entry`` is the lens it opens on (:data:`ENTRIES`); a lens named in the page's</span>
-</span><span data-line="191"><span class="sd">    address overrides it, so a link to a view reopens that view. ``nav`` is the links to</span>
-</span><span data-line="192"><span class="sd">    show to other pages, as ``(label, href)`` pairs or a mapping, each opened in the top</span>
-</span><span data-line="193"><span class="sd">    window (the page is usually framed); ``current`` is the label of this page among</span>
-</span><span data-line="194"><span class="sd">    them. ``stale_minutes`` is when the page's "as of" turns into a warning.</span>
-</span><span data-line="195"><span class="sd">    """</span>
-</span><span data-line="196">    <span class="k">if</span> <span class="n">entry</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ENTRIES</span><span class="p">:</span>
-</span><span data-line="197">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"entry must be one of </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ENTRIES</span><span class="p">)</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">entry</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-</span><span data-line="198">    <span class="n">links</span> <span class="o">=</span> <span class="n">_nav</span><span class="p">(</span><span class="n">nav</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
-</span><span data-line="199">    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"entry"</span><span class="p">:</span> <span class="n">entry</span><span class="p">,</span> <span class="s2">"stale_minutes"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">stale_minutes</span><span class="p">)}</span>
-</span><span data-line="200">    <span class="k">return</span> <span class="n">_PAGE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-</span><span data-line="201">        <span class="n">title</span><span class="o">=</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">title</span><span class="p">),</span>
-</span><span data-line="202">        <span class="n">tokens</span><span class="o">=</span><span class="n">_TOKENS</span><span class="p">,</span>
-</span><span data-line="203">        <span class="n">css</span><span class="o">=</span><span class="p">(</span><span class="n">_DATA</span> <span class="o">/</span> <span class="s2">"page.css"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">),</span>
-</span><span data-line="204">        <span class="n">nav</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
-</span><span data-line="205">        <span class="n">nav_hidden</span><span class="o">=</span><span class="s2">""</span> <span class="k">if</span> <span class="n">links</span> <span class="k">else</span> <span class="s2">" hidden"</span><span class="p">,</span>
-</span><span data-line="206">        <span class="n">data</span><span class="o">=</span><span class="n">_embedded</span><span class="p">(</span><span class="n">doc</span><span class="p">),</span>
-</span><span data-line="207">        <span class="n">config</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&lt;"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">u003c"</span><span class="p">),</span>
-</span><span data-line="208">        <span class="n">library</span><span class="o">=</span><span class="p">(</span><span class="n">_DATA</span> <span class="o">/</span> <span class="n">LIBRARY</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">),</span>
-</span><span data-line="209">        <span class="n">script</span><span class="o">=</span><span class="p">(</span><span class="n">_DATA</span> <span class="o">/</span> <span class="s2">"page.js"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">),</span>
-</span><span data-line="210">        <span class="o">**</span><span class="n">ICONS</span><span class="p">,</span>
-</span><span data-line="211">    <span class="p">)</span></div>
+</span><span data-line="186"><span class="k">def</span><span class="w"> </span><span class="nf">render_relations_page</span><span class="p">(</span>
+</span><span data-line="187">    <span class="n">doc</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">,</span>
+</span><span data-line="188">    <span class="o">*</span><span class="p">,</span>
+</span><span data-line="189">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"crowsnest"</span><span class="p">,</span>
+</span><span data-line="190">    <span class="n">entry</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"map"</span><span class="p">,</span>
+</span><span data-line="191">    <span class="n">nav</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+</span><span data-line="192">    <span class="n">current</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span data-line="193">    <span class="n">stale_minutes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_STALE_MINUTES</span><span class="p">,</span>
+</span><span data-line="194">    <span class="n">every</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="195"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span data-line="196"><span class="w">    </span><span class="sd">"""``doc`` (:func:`crowsnest.relations.relations`'s document) as one self-contained</span>
+</span><span data-line="197"><span class="sd">    HTML page.</span>
+</span><span data-line="198">
+</span><span data-line="199"><span class="sd">    ``entry`` is the lens it opens on (:data:`ENTRIES`); a lens named in the page's</span>
+</span><span data-line="200"><span class="sd">    address overrides it, so a link to a view reopens that view. ``nav`` is the links to</span>
+</span><span data-line="201"><span class="sd">    show to other pages, as ``(label, href)`` pairs or a mapping, each opened in the top</span>
+</span><span data-line="202"><span class="sd">    window (the page is usually framed); ``current`` is the label of this page among</span>
+</span><span data-line="203"><span class="sd">    them. ``stale_minutes`` is when the page's "as of" turns into a warning, and</span>
+</span><span data-line="204"><span class="sd">    ``every`` is how many seconds usually pass between two snapshots, when that is</span>
+</span><span data-line="205"><span class="sd">    known: the page says it when asked for a newer snapshot and there is none.</span>
+</span><span data-line="206"><span class="sd">    """</span>
+</span><span data-line="207">    <span class="k">if</span> <span class="n">entry</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ENTRIES</span><span class="p">:</span>
+</span><span data-line="208">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"entry must be one of </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ENTRIES</span><span class="p">)</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">entry</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="209">    <span class="n">links</span> <span class="o">=</span> <span class="n">_nav</span><span class="p">(</span><span class="n">nav</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
+</span><span data-line="210">    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"entry"</span><span class="p">:</span> <span class="n">entry</span><span class="p">,</span> <span class="s2">"stale_minutes"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">stale_minutes</span><span class="p">)}</span>
+</span><span data-line="211">    <span class="k">if</span> <span class="n">every</span> <span class="ow">and</span> <span class="n">every</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="212">        <span class="n">config</span><span class="p">[</span><span class="s2">"every"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">every</span><span class="p">))</span>
+</span><span data-line="213">    <span class="k">return</span> <span class="n">_PAGE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+</span><span data-line="214">        <span class="n">title</span><span class="o">=</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">title</span><span class="p">),</span>
+</span><span data-line="215">        <span class="n">tokens</span><span class="o">=</span><span class="n">_TOKENS</span><span class="p">,</span>
+</span><span data-line="216">        <span class="n">css</span><span class="o">=</span><span class="p">(</span><span class="n">_DATA</span> <span class="o">/</span> <span class="s2">"page.css"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">),</span>
+</span><span data-line="217">        <span class="n">nav</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+</span><span data-line="218">        <span class="n">nav_hidden</span><span class="o">=</span><span class="s2">""</span> <span class="k">if</span> <span class="n">links</span> <span class="k">else</span> <span class="s2">" hidden"</span><span class="p">,</span>
+</span><span data-line="219">        <span class="n">data</span><span class="o">=</span><span class="n">_embedded</span><span class="p">(</span><span class="n">doc</span><span class="p">),</span>
+</span><span data-line="220">        <span class="n">config</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&lt;"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">u003c"</span><span class="p">),</span>
+</span><span data-line="221">        <span class="n">library</span><span class="o">=</span><span class="p">(</span><span class="n">_DATA</span> <span class="o">/</span> <span class="n">LIBRARY</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">),</span>
+</span><span data-line="222">        <span class="n">script</span><span class="o">=</span><span class="p">(</span><span class="n">_DATA</span> <span class="o">/</span> <span class="s2">"page.js"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">),</span>
+</span><span data-line="223">        <span class="o">**</span><span class="n">ICONS</span><span class="p">,</span>
+</span><span data-line="224">    <span class="p">)</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
@@ -395,7 +408,7 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </footer>
-      <script src="../../_static/documentation_options.js?v=a90549bc"></script>
+      <script src="../../_static/documentation_options.js?v=9efdc3d6"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
