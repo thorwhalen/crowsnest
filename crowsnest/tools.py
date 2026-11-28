@@ -39,7 +39,7 @@ from crowsnest.registry import (
     claude_home,
     live_sessions,
 )
-from crowsnest.report import DFLT_TITLE, render_report
+from crowsnest.report import DFLT_TITLE, question_marks, render_report
 from crowsnest.rows import RowContext, dflt_row_context
 
 __all__ = [
@@ -883,6 +883,21 @@ def report(
                 sources=[lambda: _from_records(lineage_path=lineage_path)],
             ),
         }
+    asked = (
+        questions_rows(
+            data["sessions"],
+            home=home,
+            all_homes=all_homes,
+            config=config,
+            lineage_path=lineage_path,
+            cache_dir=question_cache,
+            generate=actions,
+            row_context=ctx,
+            counts=generated,
+        )
+        if questions
+        else None
+    )
     html = render_report(
         data,
         made_at=made_at,
@@ -903,21 +918,7 @@ def report(
         owed=owed_envelope,
         blocked=blocked_envelope,
         themes=theme_table(path=config) if themes is None else themes,
-        questions=(
-            questions_rows(
-                data["sessions"],
-                home=home,
-                all_homes=all_homes,
-                config=config,
-                lineage_path=lineage_path,
-                cache_dir=question_cache,
-                generate=actions,
-                row_context=ctx,
-                counts=generated,
-            )
-            if questions
-            else None
-        ),
+        questions=asked,
     )
     return {
         "html": html,
@@ -928,6 +929,25 @@ def report(
         # The rows the page was drawn from, so a second view of the same moment (the
         # relations page) is made without reading every session again.
         "rows": rows,
+        # The person's questions as the page drew them, each with what their record says
+        # of it (`item`, `rev`, `shown`, `unread`): `None` when the page has no questions.
+        "questions": (
+            None
+            if asked is None
+            else [
+                {**row, **mark}
+                for row, mark in zip(
+                    asked,
+                    question_marks(
+                        asked,
+                        now=made.timestamp(),
+                        store=store,
+                        plain=plain,
+                        row_context=ctx,
+                    ),
+                )
+            ]
+        ),
     }
 
 
@@ -1047,6 +1067,7 @@ def publish(
             all_homes=all_homes,
             config=config,
             as_of=made["made_at"],
+            questions=made.get("questions"),
         )
         beside = page.with_name("relations.html")
         beside.write_text(drawn["html"], encoding="utf-8")
@@ -1761,18 +1782,24 @@ def relations_page(
     nav=None,
     title: str | None = None,
     as_of: str | None = None,
+    questions: Sequence[Mapping] | None = None,
     **read,
 ) -> dict:
     """The relations document as one self-contained page: ``{"html", "made_at", "counts"}``.
 
     :func:`relations`, drawn by :func:`crowsnest.relations_page.render_relations_page`:
-    a map of the nodes and links, a docket of what waits on the owner, and a board of
+    an inbox of what waits on the owner, a map of the nodes and links, and a board of
     places, opening on ``entry``. ``entry``, ``nav`` (links to the owner's other pages)
     and ``title`` default to the config file's ``[relations]`` table. ``read`` goes to
     :func:`relations` (``since``, ``sources``, ``rules``, ``interest``).
+
+    ``questions`` are the owner's questions with what their record says of each, as
+    :func:`report` returns them under ``"questions"``; the inbox lists the unread ones as
+    answers. Without them the inbox shows what the sessions ask and nothing else: reading
+    every transcript for the questions is the report's work, not this page's.
     """
     from crowsnest.config import relations_settings
-    from crowsnest.relations_page import render_relations_page
+    from crowsnest.relations_page import inbox_answers, render_relations_page
 
     settings = relations_settings(path=config)
     doc = relations(
@@ -1784,6 +1811,8 @@ def relations_page(
         entry=settings.entry if entry is None else entry,
         nav=settings.nav if nav is None else nav,
         every=_snapshot_period(),
+        answers=None if questions is None else inbox_answers(questions),
+        questions_href=settings.questions,
     )
     return {
         "html": html,

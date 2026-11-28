@@ -1,4 +1,4 @@
-/* The relations page: three lenses (map, docket, board) over one nodes-and-links
+/* The relations page: three lenses (inbox, map, board) over one nodes-and-links
    document. Everything shown comes from that document, already sanitised where it was
    made; this script only ever sets textContent, never markup. No request goes anywhere. */
 (function () {
@@ -6,6 +6,7 @@
   var DOC = JSON.parse(document.getElementById('relations-data').textContent);
   var CFG = JSON.parse(document.getElementById('relations-config').textContent);
   var $ = function (id) { return document.getElementById(id); };
+  var EXTERNAL = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
   var CHEVRON = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -74,7 +75,8 @@
     ['talk', 'Talk', 'Who messaged whom, and what you asked of a session.'],
     ['free', 'Free', 'Everything shown, pulled together by its links: what clusters around what.']
   ];
-  var S = { lens: CFG.entry === 'docket' || CFG.entry === 'board' ? CFG.entry : 'map', view: 'all', show: 'key', focus: '', sel: '', explore: '', on: [], refs: false };
+  var S = { lens: CFG.entry === 'inbox' || CFG.entry === 'docket' ? 'inbox' : CFG.entry === 'board' ? 'board' : 'map', box: 'all', view: 'all', show: 'key', focus: '', sel: '', explore: '', on: [], refs: false };
+  var ANSWERS = CFG.answers || null; /* null: the page was made without the person's questions */
   var expanded = new Set();
   function readHash() {
     new URLSearchParams(location.hash.slice(1)).forEach(function (v, k) {
@@ -82,7 +84,9 @@
       else if (k === 'refs') S.refs = v === '1';
       else if (Object.prototype.hasOwnProperty.call(S, k)) S[k] = v;
     });
-    if (['map', 'docket', 'board'].indexOf(S.lens) < 0) S.lens = 'map';
+    if (S.lens === 'docket') S.lens = 'inbox'; /* its former name, in links made before */
+    if (['map', 'inbox', 'board'].indexOf(S.lens) < 0) S.lens = 'map';
+    if (['all', 'asks', 'answers'].indexOf(S.box) < 0 || !ANSWERS) S.box = 'all';
     if (!BUILD[S.view]) S.view = 'all';
     if (!SHOW.hasOwnProperty(S.show)) S.show = 'key';
   }
@@ -91,6 +95,7 @@
     ['lens', 'view', 'show', 'focus', 'sel', 'explore'].forEach(function (k) { if (S[k]) p.set(k, S[k]); });
     if (S.on.length) p.set('on', S.on.join(','));
     if (S.refs) p.set('refs', '1');
+    if (S.lens === 'inbox' && S.box !== 'all') p.set('box', S.box);
     var url = '#' + p.toString();
     if (url === location.hash) return false;
     try { if (push) history.pushState({ ours: true }, '', url); else history.replaceState(history.state, '', url); } catch (e) { return false; /* a sandboxed frame: the view still works */ }
@@ -209,7 +214,7 @@
     if (facts.length) body.appendChild(el('p', { class: 'facts', text: facts.join(' · ') }));
     var acts = el('div', { class: 'acts' });
     /* Only a web address becomes a link: a reference is text a session wrote. */
-    if (/^https?:\/\//i.test(d.url || '')) acts.appendChild(el('a', { class: 'btn', href: d.url, target: '_blank', rel: 'noopener noreferrer', text: n.type === 'session' ? 'Open session ↗' : 'Open ↗' }));
+    if (/^https?:\/\//i.test(d.url || '')) { acts.appendChild(el('a', { class: 'btn', href: d.url, target: '_blank', rel: 'noopener noreferrer', text: n.type === 'session' ? 'Open session' : 'Open' })); acts.lastChild.insertAdjacentHTML('beforeend', EXTERNAL); }
     acts.appendChild(el('button', { class: 'btn', type: 'button', text: 'Focus here', on: { click: function () { press(this); hideSheet(); sheetPushed = false; S.lens = 'map'; S.view = 'focus'; S.focus = id; focusPushed = writeHash(true); render(); } } }));
     body.appendChild(acts);
     var t = function (type, dir) { return (dir === 'in' ? ins(type, id).map(function (l) { return l.source; }) : outs(type, id).map(function (l) { return l.target; })); };
@@ -636,7 +641,7 @@
     return list;
   }
   function drawMap() {
-    if (!window.cytoscape) { $('map-empty').textContent = 'The map could not start in this browser. The docket and the board hold the same sessions.'; $('map-empty').hidden = false; return; }
+    if (!window.cytoscape) { $('map-empty').textContent = 'The map could not start in this browser. The inbox and the board hold the same sessions.'; $('map-empty').hidden = false; return; }
     bundles = {};
     $('cy').parentNode.style.height = '';
     var built = (BUILD[S.view] || viewAll)();
@@ -694,7 +699,7 @@
     setTimeout(function () { if (!lastTall) cy.animate({ fit: { eles: cy.elements(), padding: pad } }, { duration: 200, complete: function () { if (cy.zoom() > 1.15) { cy.zoom(1.15); cy.center(); } } }); }, 360);
   }
 
-  /* ---------- the docket: the same sessions as a list a thumb can read ---------- */
+  /* ---------- rows: the same sessions as a list a thumb can read ---------- */
   function docketRow(n) {
     var d = n.data, c = cls(n), where = placeOf(n.id);
     return el('button', { class: 'row ' + c, type: 'button', on: { click: function () { select(n.id); } } }, [
@@ -713,19 +718,132 @@
     if (!open) { var fold = el('details', { class: 'fold' }, [el('summary', {}, [title, el('span', { class: 'count', text: String(nodes.length) })])]); Array.from(box.children).slice(1).forEach(function (c) { fold.appendChild(c); }); return fold; }
     return box;
   }
-  function drawDocket(into, cap) {
-    into.textContent = '';
-    var any = false;
-    ['decision', 'action', 'question'].forEach(function (why) {
-      var rows = BY_CLASS.needs.filter(function (n) { return (n.data.why || 'question') === why; });
-      var made = listOf(WHY_WORDS[why], rows, true, cap);
-      if (made) { into.appendChild(made); any = true; }
+  /* ---------- the inbox: what waits on the owner, and nothing else first ----------
+     Two lanes. Asks: a session cannot go on until its person answers. Answers: what the
+     sessions said to the person's own questions, the ones not read yet. One count per
+     lane, on the chip that filters to it; the same numbers the lists hold. */
+  var KIND = { decision: 'Decide', action: 'Errand', question: 'Question' };
+  var BY_LABEL = {};
+  SESSIONS.forEach(function (n) { if (!BY_LABEL[n.data.label]) BY_LABEL[n.data.label] = n; });
+  function asks() {
+    var rank = { decision: 0, action: 1 };
+    return BY_CLASS.needs.slice().sort(function (a, b) { var x = rank[a.data.why], y = rank[b.data.why]; return ((x === undefined ? 2 : x) - (y === undefined ? 2 : y)) || byInterest(a, b); });
+  }
+  function askRow(n) {
+    var d = n.data, where = placeOf(n.id);
+    return el('button', { class: 'row ask', type: 'button', on: { click: function () { select(n.id); } } }, [
+      el('span', { class: 'row-kind' }, [el('b', { text: KIND[d.why] || KIND.question }), el('time', { text: clock(d.said_at || d.since) })]),
+      el('span', { class: 'row-say', text: plainAsk(n) || CLASS_WORDS.needs }),
+      el('span', { class: 'row-meta' }, [el('b', { text: d.label }), where ? el('span', { class: 'row-place', text: label(where) }) : null])]);
+  }
+  var INLINE = /\*\*([^*\n]+)\*\*|`([^`\n]+)`|\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>"')\]]+[^\s<>"')\].,;:!?])/g;
+  function inline(text, into) { /* bold, code, links: built as nodes, never as markup */
+    var last = 0, m;
+    INLINE.lastIndex = 0;
+    while ((m = INLINE.exec(text))) {
+      into.appendChild(linked(text.slice(last, m.index)));
+      if (m[1]) into.appendChild(el('b', { text: m[1] }));
+      else if (m[2]) into.appendChild(el('code', { text: m[2] }));
+      else into.appendChild(el('a', { href: m[4] || m[5], target: '_blank', rel: 'noopener noreferrer', text: m[3] || m[5] }));
+      last = m.index + m[0].length;
+    }
+    into.appendChild(linked(text.slice(last)));
+    return into;
+  }
+  function plain(text) { /* the same words on one line, for a row that shows only their start */
+    return String(text).replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/`([^`\n]+)`/g, '$1').replace(/\[([^\]\n]+)\]\(https?:\/\/[^\s)]+\)/g, '$1').replace(/^\s*#+\s+/gm, '').replace(/\s+/g, ' ').trim();
+  }
+  function prose(text) { /* paragraphs, list items and headings, as the session wrote them */
+    var box = el('div', { class: 'ans-full' });
+    String(text).split(/\n\s*\n/).forEach(function (para) {
+      var p = null;
+      para.split('\n').forEach(function (line) {
+        var item = /^\s*(?:[-*•]|\d+[.)])\s+/.exec(line), head = /^\s*#+\s+(.*)$/.exec(line);
+        if (!line.trim()) return;
+        if (item || head) { p = null; box.appendChild(inline(head ? head[1] : line.trim(), el('p', { class: head ? 'ans-head' : 'ans-item' }))); return; }
+        if (!p) { p = el('p'); box.appendChild(p); } else p.appendChild(document.createTextNode(' '));
+        inline(line.trim(), p);
+      });
     });
-    if (!any) into.appendChild(el('p', { class: 'calm', text: 'Nothing waits on you.' }));
+    return box;
+  }
+  function answerRow(a) {
+    var from = BY_LABEL[a.who], where = from ? placeOf(from.id) : '', said = a.state === 'unanswered' ? 'No answer yet.' : plain(a.gist || a.a);
+    var turn = el('span', { class: 'turn' });
+    turn.insertAdjacentHTML('beforeend', CHEVRON);
+    var row = el('details', { class: 'ans' + (a.state === 'unanswered' ? ' none' : '') }, [el('summary', {}, [el('span', { class: 'ans-text' }, [
+      el('span', { class: 'ans-q' }, [el('b', { text: 'You asked: ' }), plain(a.q)]),
+      el('span', { class: 'ans-a', text: said }),
+      el('span', { class: 'row-meta' }, [el('b', { text: a.who }), where ? el('span', { class: 'row-place', text: label(where) }) : null, el('time', { text: clock(a.answered || a.asked) })])]), turn])]);
+    row.appendChild(a.state === 'unanswered' ? el('div', { class: 'ans-full' }, [el('p', { text: 'No session has answered this yet.' })]) : prose(a.a));
+    var links = el('p', { class: 'ans-links' });
+    if (a.cut) links.appendChild(el('span', { text: 'This is its beginning; the rest is in the session.' }));
+    if (a.url) { links.appendChild(el('a', { href: a.url, target: '_blank', rel: 'noopener noreferrer', text: 'Open the session' })); links.lastChild.insertAdjacentHTML('beforeend', EXTERNAL); }
+    if (links.childNodes.length) row.appendChild(links);
+    return row;
+  }
+  function more(text, box) {
+    var b = el('button', { class: 'to-all', type: 'button', text: text, on: { click: function () { press(this); S.box = box; writeHash(); render(); window.scrollTo(0, 0); } } });
+    b.insertAdjacentHTML('beforeend', CHEVRON);
+    return b;
+  }
+  function head(title, count, word) { return el('h2', {}, [title, el('span', { class: 'count', text: count + (word ? ' ' + word : '') })]); }
+  function asksLane(list, cap) {
+    var box = el('section', { class: 'reg lane', id: 'asks' }, [head('Asks', list.length)]);
+    if (!list.length) { box.appendChild(el('p', { class: 'calm', text: 'No session waits on you.' })); return box; }
+    var why = { decision: 0, action: 0, question: 0 };
+    list.forEach(function (n) { why[n.data.why in why ? n.data.why : 'question'] += 1; });
+    box.appendChild(el('p', { class: 'reg-note', text: [[why.decision, 'decision', 'decisions'], [why.action, 'errand', 'errands'], [why.question, 'question', 'questions']].filter(function (p) { return p[0]; }).map(function (p) { return p[0] + ' ' + (p[0] === 1 ? p[1] : p[2]); }).join(' · ') }));
+    list.slice(0, cap).forEach(function (n) { box.appendChild(askRow(n)); });
+    if (list.length > cap) box.appendChild(more((list.length - cap) + ' more ' + (list.length - cap === 1 ? 'ask' : 'asks'), 'asks'));
+    return box;
+  }
+  function dayOf(iso) { /* which of the list's three ages an answer has: 0 today, 1 this week, 2 older */
+    var t = new Date(iso);
+    if (isNaN(t)) return 2;
+    var days = Math.floor((new Date(AS_OF.getFullYear(), AS_OF.getMonth(), AS_OF.getDate()) - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5);
+    return days <= 0 ? 0 : days < 7 ? 1 : 2;
+  }
+  function answersLane(list, cap, grouped) {
+    var unread = ANSWERS.unread, box = el('section', { class: 'reg lane', id: 'answers' }, [head('Answers', unread, 'unread')]);
+    if (!list.length) box.appendChild(el('p', { class: 'calm', text: 'No unread answers.' }));
+    var last = -1;
+    list.slice(0, cap).forEach(function (a) {
+      var day = dayOf(a.answered || a.asked);
+      if (grouped && day !== last) { box.appendChild(el('h3', { text: ['Today', 'This week', 'Older'][day] })); last = day; }
+      box.appendChild(answerRow(a));
+    });
+    /* the page carries the newest ones; the count is of all of them, and it says where the others are */
+    var older = unread - list.length, oldest = list.length ? list[list.length - 1] : null, here = list.length - cap;
+    if (here > 0) box.appendChild(more(here + ' more ' + (here === 1 ? 'answer' : 'answers') + (older > 0 ? ' on this page' : ''), 'answers'));
+    if (older > 0) box.appendChild(el('p', { class: 'reg-note', text: older + ' older unread ' + (older === 1 ? 'answer is' : 'answers are') + ' not on this page' + (oldest ? ' (from before ' + clock(oldest.answered || oldest.asked) + ')' : '') + '.' }));
+    if (here <= 0 && CFG.questions_href) {
+      var all = el('a', { class: 'to-all', href: CFG.questions_href, target: '_top', text: 'Everything you asked' + (ANSWERS.asked ? ' (' + ANSWERS.asked + ')' : '') });
+      all.insertAdjacentHTML('beforeend', CHEVRON);
+      box.appendChild(all);
+    }
+    return box;
+  }
+  function drawInbox() {
+    var into = $('inbox'), mine = asks(), theirs = ANSWERS ? ANSWERS.rows : [], bar = $('boxes');
+    /* All carries no number: asks are things to do and unread answers are things to read, and their sum is neither.
+       With one lane there is nothing to filter, so no row of chips. */
+    var boxes = ANSWERS ? [['all', 'All', null], ['asks', 'Asks', mine.length], ['answers', 'Answers', ANSWERS.unread]] : [];
+    bar.textContent = '';
+    bar.hidden = !boxes.length;
+    boxes.forEach(function (b) {
+      bar.appendChild(el('button', { type: 'button', class: 'pick', 'aria-pressed': String(b[0] === S.box), on: { click: function () { press(this); S.box = b[0]; writeHash(); render(); window.scrollTo(0, 0); } } }, [b[1], b[2] === null ? null : el('span', { class: 'n', text: String(b[2]) })]));
+    });
+    into.textContent = '';
+    if (S.box !== 'answers') into.appendChild(asksLane(mine, S.box === 'all' ? 3 : Infinity));
+    if (ANSWERS && S.box !== 'asks') into.appendChild(answersLane(theirs, S.box === 'all' ? 2 : Infinity, S.box === 'answers'));
+    if (S.box !== 'all') return;
+    var rest = el('section', { class: 'reg lane', id: 'not-waiting' }, [el('h2', { class: 'quiet', text: 'Not waiting on you' })]);
     [['Working', BY_CLASS.working], ['Can be closed', BY_CLASS.closable], ['Quiet', BY_CLASS.quiet]].forEach(function (g) {
       var made = listOf(g[0], g[1], false, 12);
-      if (made) into.appendChild(made);
+      if (made) rest.appendChild(made);
     });
+    if (rest.children.length > 1) into.appendChild(rest);
   }
 
   function drawBrief() {
@@ -733,7 +851,7 @@
     into.textContent = '';
     var rank = { decision: 0, action: 1 }, first = BY_CLASS.needs.slice().sort(function (a, b) { var x = rank[a.data.why], y = rank[b.data.why]; return ((x === undefined ? 2 : x) - (y === undefined ? 2 : y)) || byInterest(a, b); });
     first.slice(0, cap).forEach(function (n) { into.appendChild(docketRow(n)); });
-    if (BY_CLASS.needs.length > cap) into.appendChild(el('button', { class: 'all', type: 'button', text: (BY_CLASS.needs.length - cap) + ' more in the docket', on: { click: function () { S.lens = 'docket'; writeHash(true); render(); window.scrollTo(0, 0); } } }));
+    if (BY_CLASS.needs.length > cap) into.appendChild(el('button', { class: 'all', type: 'button', text: (BY_CLASS.needs.length - cap) + ' more in the inbox', on: { click: function () { S.lens = 'inbox'; S.box = 'asks'; writeHash(true); render(); window.scrollTo(0, 0); } } }));
     if (BY_CLASS.needs.length > cap) into.lastChild.insertAdjacentHTML('beforeend', CHEVRON);
     if (!BY_CLASS.needs.length) into.appendChild(el('p', { class: 'calm', text: 'Nothing waits on you.' }));
   }
@@ -799,14 +917,15 @@
   function render() {
     document.body.setAttribute('data-lens', S.lens);
     document.body.classList.toggle('hybrid', CFG.entry === 'hybrid');
-    chips($('lenses'), [['map', 'Map'], ['docket', 'Docket'], ['board', 'Board']], S.lens, function (v) { S.lens = v; writeHash(); render(); window.scrollTo(0, 0); });
+    chips($('lenses'), [['inbox', 'Inbox'], ['map', 'Map'], ['board', 'Board']], S.lens, function (v) { S.lens = v; writeHash(); render(); window.scrollTo(0, 0); });
     var views = VIEWS.slice();
     if (S.view === 'focus') views = [['back', '‹ Back', 'Back to the view before'], ['focus', 'Focus on ' + label(S.focus), '']];
     chips($('views'), views, S.view, function (v) { if (v === 'back') { if (focusPushed) { focusPushed = false; history.back(); return; } v = 'all'; } S.view = v; if (v !== 'focus') S.focus = ''; writeHash(); render(); });
+    if (S.lens !== 'inbox') $('boxes').hidden = true; /* the inbox shows its own, when it has two lanes */
     sentence();
     layers();
     if (S.lens === 'map') { if (CFG.entry === 'hybrid') drawBrief(); drawMap(); }
-    else if (S.lens === 'docket') drawDocket($('docket'), 5);
+    else if (S.lens === 'inbox') drawInbox();
     else drawBoard();
   }
 

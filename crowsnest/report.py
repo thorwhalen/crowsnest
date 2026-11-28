@@ -3577,6 +3577,52 @@ def _is_unread(row: Mapping[str, Any]) -> bool:
     return _view.get().shown(row) not in _QUESTION_READ
 
 
+def question_marks(
+    questions: Sequence[Mapping[str, Any]],
+    *,
+    now: float | None = None,
+    store: MutableMapping[str, dict] | None = None,
+    plain: bool = False,
+    row_context: RowContext | None = None,
+) -> list[dict]:
+    """What the person's record says of each question, in the order given.
+
+    One mapping per question: ``item`` and ``rev`` (what a mark on it names, empty for a
+    row with no identity), ``shown`` (how the record presents it) and ``unread``. It is
+    the rule the questions register counts by, for another view of the same questions
+    (the relations page's inbox), so the two never show different numbers. ``store`` and
+    ``plain`` mean what they mean to :func:`render_report`.
+    """
+    import time
+
+    asked = list(questions)
+    view = _attention_view(
+        (),
+        now=time.time() if now is None else now,
+        store=store,
+        plain=plain,
+        row_context=RowContext() if row_context is None else row_context,
+        with_ids=True,
+        also=asked,
+    )
+    token = _view.set(view)
+    try:
+        marks = []
+        for row in asked:
+            attended = view.of(row)
+            marks.append(
+                {
+                    "item": attended.item if attended else "",
+                    "rev": attended.rev if attended else "",
+                    "shown": attended.shown if attended else "",
+                    "unread": _is_unread(row),
+                }
+            )
+        return marks
+    finally:
+        _view.reset(token)
+
+
 def _question_order(rows: Sequence[Mapping[str, Any]]) -> list:
     """Unanswered first, then the freshest asked; one message's questions keep their order.
     Seen and Later do not move a row."""

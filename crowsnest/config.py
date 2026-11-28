@@ -680,7 +680,7 @@ RELATIONS_KEY = "relations"
 
 #: The lenses a relations page may open on (:data:`crowsnest.relations_page.ENTRIES`,
 #: repeated here so that reading the config file does not import the page).
-RELATIONS_ENTRIES = ("map", "hybrid", "docket", "board")
+RELATIONS_ENTRIES = ("inbox", "map", "hybrid", "docket", "board")
 
 
 @dataclass(frozen=True)
@@ -700,6 +700,9 @@ class RelationsSettings:
     since: str = "7d"
     #: The page's title.
     title: str = "crowsnest"
+    #: The address of the full record of the owner's questions (the report's questions
+    #: register), which the inbox links to under the unread answers. Empty: no link.
+    questions: str = ""
     #: Links to the owner's other pages, in the order written: ``(label, address)``.
     nav: tuple[tuple[str, str], ...] = ()
 
@@ -711,8 +714,9 @@ def relations_settings(*, path: str | Path | None = None) -> RelationsSettings:
 
         [relations]
         to = "me@myserver:/srv/crowsnest/relations.html"   # or a local path
-        entry = "map"          # map, hybrid, docket or board
+        entry = "inbox"        # inbox, map, hybrid (the map under the first asks) or board
         since = "7d"           # how far back messages are read
+        questions = "/crowsnest/all/#questions"   # the full record of your questions
 
         [relations.nav]        # links the page shows to your other pages
         "Every session" = "/crowsnest/all/"
@@ -736,7 +740,7 @@ def relations_settings(*, path: str | Path | None = None) -> RelationsSettings:
             f"it knows {', '.join(sorted(known))}"
         )
     texts = {}
-    for key in ("to", "entry", "since", "title"):
+    for key in ("to", "entry", "since", "title", "questions"):
         value = table.get(key, getattr(RelationsSettings, key))
         if not isinstance(value, str):
             raise ValueError(  # noqa: TRY004
